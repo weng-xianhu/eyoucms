@@ -1,0 +1,18 @@
+
+<IfModule mod_rewrite.c>
+    Options +FollowSymlinks -Multiviews
+    RewriteEngine On
+
+    #httpÌø×ªµ½https
+    #RewriteCond %{SERVER_PORT} !^443$
+    #RewriteRule ^(.*)$ https://www.xxxxx.com/$1 [L,R=301]
+
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ index.php?s=/$1 [QSA,PT,L]
+    #RewriteRule ^(.*)$ index.php/$1 [QSA,PT,L]
+    #RewriteRule ^(.*)$ index.php?/$1 [QSA,PT,L]
+
+    RewriteCond % !^$
+    RewriteRule ^/?(.*)/.*\.sql - [F]
+</IfModule>

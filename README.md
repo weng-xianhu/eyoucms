@@ -20,8 +20,6 @@
 2. 后台登录：http://demo.eyoucms.com/login.php
 3. Demo下载：http://www.eyoucms.com/plus/down.php
 4. 更多模板：http://www.eyoucms.com/moban/
-5. 后台账号：admin
-6. 后台密码：admin
 
 #### 安装教程
 
