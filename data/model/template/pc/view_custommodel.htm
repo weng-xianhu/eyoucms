@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head> 
+        <title>{$eyou.field.seo_title}</title> 
+        <meta name="renderer" content="webkit" /> 
+        <meta charset="utf-8" /> 
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=0,minimal-ui" /> 
+        <meta name="description" content="{$eyou.field.seo_description}" /> 
+        <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+        <link href="{eyou:global name='web_cmspath' /}/favicon.ico" rel="shortcut icon" type="image/x-icon" /> 
+        <link rel="stylesheet" type="text/css" href="https://www.eyoucms.com/skin/css/model-style.css" />
+    </head>
+    <body>
+        <div class="wrapper">
+            <header>
+                <div class="description">
+                    <h1>{eyou:global name='web_name' /}</h1>
+                    <h2></h2>
+                    <nav>
+                        <div class="bitcron_nav_container">
+                            <div class="bitcron_nav">
+                                <div class="mixed_site_nav_wrap site_nav_wrap">
+                                    <ul class="mixed_site_nav site_nav sm sm-base">
+                                         <li><a href="/" class="active current">首页</a></li>
+                                         {eyou:channel type='top' currentstyle='selected'}
+                                         <li><a href="{$field.typeurl}" class="{$field.currentstyle}">{$field.typename}</a></li>
+                                         {/eyou:channel}
+                                    </ul>
+                                    <div class="clear clear_nav_inline_end"></div>
+                                </div>
+                            </div>
+                            <div class="clear clear_nav_end">
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </header>
+            <main>
+                <article class="content">
+                    <h1>{$eyou.field.title}</h1>
+                    <div class="meta">
+                        <span class="item"><time>{$eyou.field.add_time|MyDate='Y-m-d H:i:s',###}</time></span>
+                        <span class="item">{eyou:arcclick /} °C</span>
+                        <span>{$eyou.field.author}</span>
+                    </div>
+                    <div class="post">
+                        <!-- #product# -->
+                        <!-- #images# -->
+                        <!-- #download# -->
+                        <!-- #content# -->
+                    </div>
+                </article>
+                <section class="pager">
+                    <p>
+                        上一篇：
+                        {eyou:prenext get='pre'}
+                        <a href="{$field.arcurl}" title="{$field.title}">{$field.title|html_msubstr=###,0,20}</a>  
+                        {eyou:else /}
+                        没有了
+                        {/eyou:prenext}
+                    </p>
+                    <p>
+                        下一篇：
+                        {eyou:prenext get='next'}
+                        <a href="{$field.arcurl}" title="{$field.title}">{$field.title|html_msubstr=###,0,20}</a>  
+                        {eyou:else /}
+                        没有了
+                        {/eyou:prenext}
+                    </p>
+                </section>
+            </main>
+        </div>
+        <footer><span>{eyou:global name='web_copyright' /}</span></footer>
+    </body>
+</html>

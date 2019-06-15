@@ -1,0 +1,38 @@
+{include file="header.htm" /}
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="bar.htm" /}
+    <form class="form-horizontal" id="post_form" action="{:weapp_url('Sample/Sample/conf')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label>调用方式</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="tag_weapp1" class="cb-enable {if condition='!isset($row.tag_weapp) || $row.tag_weapp eq 1'}selected{/if}">系统自动</label>
+                        <label for="tag_weapp0" class="cb-disable {if condition='isset($row.tag_weapp) && $row.tag_weapp eq 2'}selected{/if}">手工调用</label>
+                        <input id="tag_weapp1" name="tag_weapp" value="1" type="radio" {if condition="!isset($row.tag_weapp) || $row.tag_weapp eq 1"} checked="checked"{/if}>
+                        <input id="tag_weapp0" name="tag_weapp" value="2" type="radio" {if condition="isset($row.tag_weapp) && $row.tag_weapp eq 2"} checked="checked"{/if}>
+                    </div>
+                    <p class="notic">自动调用会默认绑定weapp模板标签，手工调用请参考使用指南的调用方法。</p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <input type="hidden" name="code" value="{$row.code}" />
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    // 判断输入框是否为空
+    function checkForm(){
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+</script>
+{include file="footer.htm" /}

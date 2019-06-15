@@ -1,0 +1,16 @@
+{include file="header.htm" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div class="page">
+    {include file="bar.htm" /}
+    <div class="flexigrid">
+        <div class="mDiv" style="margin-left: 30px;">
+            <p style="font-size: 15px;line-height: 2em;">【标签调用方法】</p>
+            <ol style="font-size: 15px;line-height: 2em;">
+                <li>默认系统自动显示，如果关闭了自动调用，请手工复制以下代码到模板文件底部： </li>
+                <li>第一种默认：{literal}{:hookexec('Sample/Sample/show')}{/literal}</li>
+                <li>第二种传参：{literal}{:hookexec('Sample/Sample/show', '这里传字符串，或数组形式')}{/literal}</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{include file="footer.htm" /}

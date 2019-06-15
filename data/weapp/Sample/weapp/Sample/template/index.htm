@@ -1,0 +1,164 @@
+{include file="header.htm" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="bar.htm" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>文档列表</h3>
+                <h5>(共{$pageObj->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:weapp_url('Sample/Sample/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <div class="sDiv2">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:weapp_url('Sample/Sample/index')}';">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc">选择</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w250">
+                            <div class="tc">网站名称</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">链接地址</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">新窗口</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w160">
+                            <div class="tc">更新时间</div>
+                        </th>
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {volist name="list" id="vo"}
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc"><input type="checkbox" name="ids[]" value="{$vo.id}"></div>
+                            </td>
+                            <td class="sort">
+                                <div class="w40 tc">
+                                    {$vo.id}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w250 tc">
+                                    <a href="{:weapp_url('Sample/Sample/edit',array('id'=>$vo['id']))}">{$vo.title}</a>
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                    {$vo.url}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {eq name="$vo['target']" value='1'}
+                                        <span class="yes" onClick="changeTableVal('weapp_sample','id','{$vo.id}','target',this);"><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                        <span class="no" onClick="changeTableVal('weapp_sample','id','{$vo.id}','target',this);"><i class="fa fa-ban"></i>否</span>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w160 tc">
+                                    {$vo.update_time|MyDate='Y-m-d H:i:s',###}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w120 tc">
+                                    <a href="{:weapp_url('Sample/Sample/edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    <a class="btn red"  href="javascript:void(0)" data-url="{:weapp_url('Sample/Sample/del')}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                </div>
+                            </td>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    <input style="text-align: left;" type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'');" onchange="changeTableVal('weapp_sample','id','{$vo.id}','sort_order',this);" size="4"  value="{$vo.sort_order}" />
+                                </div>
+                            </td>
+                        </tr>
+                        {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                </div>
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:weapp_url('Sample/Sample/del')}">
+                        <div class="add" title="批量删除">
+                            <span><i class="fa fa-close"></i>批量删除</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="fbutton">
+                    <a href="{:weapp_url('Sample/Sample/add')}">
+                        <div class="add" title="新增">
+                            <span class="red"><i class="fa fa-plus"></i>新增</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$pageStr}
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+{include file="footer.htm" /}

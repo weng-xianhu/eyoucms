@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- Apple devices fullscreen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Apple devices fullscreen -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link href="__WEAPP_TEMPLATE__/skin/css/main.css?v={$weappInfo.version|default='v1.0.0'}" rel="stylesheet" type="text/css">
+<link href="__WEAPP_TEMPLATE__/skin/css/page.css?v={$weappInfo.version|default='v1.0.0'}" rel="stylesheet" type="text/css">
+<link href="__SKIN__/font/css/font-awesome.min.css?v={$version|default='v1.0.0'}" rel="stylesheet" />
+<link href="__WEAPP_TEMPLATE__/skin/js/jquery-ui/jquery-ui.min.css" rel="stylesheet" type="text/css"/>
+<link href="__WEAPP_TEMPLATE__/skin/css/perfect-scrollbar.min.css" rel="stylesheet" type="text/css"/>
+<style type="text/css">html, body { overflow: visible;}</style>
+<script type="text/javascript">
+    // 入口路径
+    var eyou_basefile = "{$Request.baseFile}";
+    var module_name = "{$Think.const.MODULE_NAME}";
+    var GetUploadify_url = "{:url('Uploadify/upload')}";
+</script>  
+<script type="text/javascript" src="__WEAPP_TEMPLATE__/skin/js/jquery.js"></script>
+<script type="text/javascript" src="__WEAPP_TEMPLATE__/skin/js/jquery-ui/jquery-ui.min.js"></script>
+<script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js?v={$version|default='v1.0.0'}"></script>
+<script type="text/javascript" src="__WEAPP_TEMPLATE__/skin/js/admin.js?v={$weappInfo.version|default='v1.0.0'}"></script>
+<script type="text/javascript" src="__WEAPP_TEMPLATE__/skin/js/perfect-scrollbar.min.js"></script>
+<script src="__WEAPP_TEMPLATE__/skin/js/global.js?v={$weappInfo.version|default='v1.0.0'}"></script>
+</head>
