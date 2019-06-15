@@ -1,0 +1,84 @@
+  <header class="ey-head"> 
+   <nav class="navbar navbar-default box-shadow-none ey-nav"> 
+    <div class="container"> 
+     <div class="row"> 
+      <h1 hidden="">{eyou:global name="web_name" /}</h1> 
+      <div class="navbar-header pull-xs-left"> 
+       <a href="{eyou:global name='web_cmsurl' /}/" class="navbar-logo vertical-align block pull-xs-left" title="{eyou:global name='web_name' /}"> 
+        <div class="vertical-align-middle"> 
+         <img src="{eyou:global name='web_logo' /}" alt="{eyou:global name='web_name' /}" /> 
+        </div> </a> 
+      </div>
+     
+      <button type="button" class="navbar-toggler hamburger hamburger-close collapsed p-x-5 ey-nav-toggler" data-target="#ey-nav-collapse" data-toggle="collapse">
+        <span class="sr-only"></span>
+        <span class="hamburger-bar"></span>
+      </button> 
+      <div class="collapse navbar-collapse navbar-collapse-toolbar pull-md-right p-0" id="ey-nav-collapse"> 
+       <ul class="nav navbar-nav navlist"> 
+        <li class="nav-item"> <a href="{eyou:global name='web_cmsurl' /}" title="{eyou:lang name='yybl1' /}" class="nav-link {eyou:eq name='$Think.const.CONTROLLER_NAME' value='Index'}active{/eyou:eq}">{eyou:lang name='yybl1' /}</a> </li> 
+
+        {eyou:channel type="top" row="60" id="field" currentstyle="active"}
+        <li class="nav-item dropdown m-l-10"> <a href="{$field.typeurl}" class="nav-link dropdown-toggle {$field.currentstyle}" {eyou:notempty name="$field.children"}data-toggle="dropdown"{/eyou:notempty} data-hover="dropdown" aria-haspopup="true" aria-expanded="false"> {$field.typename}{eyou:notempty name="$field.children"}<span class="fa fa-angle-down p-l-5"></span>{/eyou:notempty}</a> 
+         {eyou:notempty name="$field.children"}
+         <div class="dropdown-menu dropdown-menu-right dropdown-menu-bullet"> 
+          {eyou:channel name="$field.children" row="100" id="field2"}
+          <div class="dropdown-item dropdown-submenu"> 
+           <a href="{$field2.typeurl}" class="dropdown-item ">{$field2.typename}</a> 
+           {eyou:notempty name="$field2.children"}
+           <div class="dropdown-menu animate"> 
+            {eyou:channel name="$field2.children" row="100" id="field3"}
+            <a href="{$field3.typeurl}" class="dropdown-item ">{$field3.typename}</a> 
+            {/eyou:channel}
+           </div> 
+           {/eyou:notempty}
+          </div> 
+          {/eyou:channel}
+         </div>
+         {/eyou:notempty}
+        </li> 
+        {/eyou:channel}
+
+        {notempty name="$eyou.global.web_language_switch"}
+        <li class="nav-item dropdown m-l-10 ey-langlist">
+          <a href="{eyou:lang const='url' /}" class="nav-link dropdown-toggle " data-toggle="dropdown" data-hover="dropdown" aria-haspopup="true" aria-expanded="false"><img src="{eyou:lang const='logo' /}" alt="{eyou:lang const='title' /}" width="20" />{eyou:lang const='title' /}<span class="fa fa-angle-down p-l-5"></span></a> 
+          <div class="dropdown-menu dropdown-menu-right dropdown-menu-bullet"> 
+            {eyou:language type='default'}
+            <div class="dropdown-item dropdown-submenu ey-langlist"> 
+              <a href="{$field.url}" class="dropdown-item "><img src="{$field.logo}" alt="{$field.title}" width="20" />{$field.title}</a> 
+            </div> 
+            {/eyou:language}
+         </div>
+        </li>
+        {/notempty}
+
+        {eyou:user type='open'}
+          <li class="nav-item m-l-10 ey-login">
+            {eyou:user type='cart'}
+              <a href="{$field.url}" id="{$field.id}" class="navlog">购物车</a><span>|</span>
+              {$field.hidden}
+            {/eyou:user}
+            
+            {eyou:user type='login'}
+              <a href="{$field.url}" id="{$field.id}" class="navlog">登录</a><span>|</span>
+              {$field.hidden}
+            {/eyou:user}
+          
+            {eyou:user type='reg'}
+              <a href="{$field.url}" id="{$field.id}" class="navreg">注册</a>
+              {$field.hidden}
+            {/eyou:user}
+
+            {eyou:user type='logout'}
+              <a href="{$field.url}" id="{$field.id}" class="navreg">退出</a>
+              {$field.hidden}
+            {/eyou:user}
+          </li>
+        {/eyou:user}
+
+       </ul> 
+      </div> 
+     </div> 
+    </div> 
+   </nav> 
+  </header> 

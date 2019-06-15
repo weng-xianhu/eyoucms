@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+ <head> 
+  <title>{$eyou.field.seo_title}</title> 
+  <meta name="renderer" content="webkit" /> 
+  <meta charset="utf-8" /> 
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=0,minimal-ui" /> 
+  <meta name="description" content="{$eyou.field.seo_description}" /> 
+  <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+  <link href="{eyou:global name='web_cmspath' /}/favicon.ico" rel="shortcut icon" type="image/x-icon" /> 
+  {eyou:static file="skin/css/basic.css" /} 
+  {eyou:static file="skin/css/common.css" /} 
+    <!--[if lte IE 9]>
+    {eyou:static file="skin/js/lteie9.js" /}
+    <![endif]--> 
+ </head> 
+ <!--[if lte IE 8]>
+    <div class="text-xs-center m-b-0 bg-blue-grey-100 alert">
+    <button type="button" class="close" aria-label="Close" data-dismiss="alert">
+        <span>×</span>
+    </button>
+    你正在使用一个 <strong>过时</strong> 的浏览器。请 <a href=https://browsehappy.com/ target=_blank>升级您的浏览器</a>，以提高您的体验。</div>
+<![endif]--> 
+ <body> 
+<!--header-s-->
+    {eyou:include file="header.htm"/}
+<!--header-e-->
+  <div class="ey-banner-ny vertical-align text-center"> 
+   <h1 class="vertical-align-middle">{$eyou.field.typename}</h1> 
+  </div> 
+  <section class="ey-crumbs hidden-sm-down"> 
+   <div class="container"> 
+    <div class="row"> 
+     <div class="border-bottom clearfix"> 
+      <ol class="breadcrumb m-b-0 subcolumn-crumbs breadcrumb-arrow"> 
+       <li class="breadcrumb-item"> {eyou:lang name='yybl5' /}：{eyou:position style="crumb" /} </li>
+      </ol> 
+     </div> 
+    </div> 
+   </div> 
+  </section> 
+  <section class="ey-column-nav"> 
+   <div class="container"> 
+    <div class="row"> 
+     <ul class="clearfix ey-column-nav-ul"> 
+      <li> <a href="{$eyou.field.toptypeurl}" title="{eyou:lang name='yybl2' /}" {eyou:gt name="$eyou.field.has_children" value="0"}class="active"{/eyou:gt}>{eyou:lang name='yybl2' /}</a> </li> 
+      {eyou:channel type="first" currentstyle="active" id="field"}
+      <li class="dropdown"> <a href="{$field.typeurl}" title="{$field.typename}" {eyou:notempty name="$field.children"}class="dropdown-toggle" data-toggle="dropdown"{/eyou:notempty}>{$field.typename}</a> 
+        {eyou:notempty name="$field.children"}
+        <div class="dropdown-menu animate"> 
+          <a href="{$field.typeurl}" title="{eyou:lang name='yybl2' /}" class="dropdown-item ">{eyou:lang name='yybl2' /}</a> 
+          {eyou:channel name="$field.children" id="field2"}
+          <a href="{$field2.typeurl}" title="{$field2.typename}" class="dropdown-item ">{$field2.typename}</a> 
+          {/eyou:channel}
+        </div>
+        {/eyou:notempty}
+      </li> 
+      {/eyou:channel}
+     </ul> 
+    </div> 
+   </div> 
+  </section> 
+  <div class="ey-product-list animsition"> 
+   <div class="container"> 
+    <div class="less-page-content"> 
+     <ul class="ey-product blocks blocks-100 blocks-xlg-5 blocks-md-4 blocks-sm-3 blocks-xs-2 ulstyle ey-pager-ajax imagesize" data-scale="400x400"> 
+      {eyou:list pagesize="8" titlelen="20"}
+      <li class=" shown"> 
+       <div class="card card-shadow"> 
+        <figure class="card-header cover"> 
+         <a href="{$field.arcurl}" title="{$field.title}"> <img class="cover-image" src="{$field.litpic}" alt="{$field.title}" /> </a> 
+        </figure> 
+        <h4 class="card-title m-0 p-x-10 font-size-16 text-xs-center"> <a href="{$field.arcurl}" title="{$field.title}" class="block text-truncate">{$field.title}</a></h4> 
+       </div>
+      </li>
+      {/eyou:list}
+     </ul> 
+     <div class="m-t-20 text-xs-center hidden-sm-down"> 
+      <ul class="tcdPageCode">
+      {eyou:pagelist listitem="index,end,pre,next" listsize="2"/}
+      </ul>
+     </div> 
+    </div> 
+   </div> 
+  </div> 
+  <!--footer-s-->
+  {eyou:include file="footer.htm" /}
+  <!--footer-e-->
+  {eyou:ui open='off' /}
+ </body>
+</html>

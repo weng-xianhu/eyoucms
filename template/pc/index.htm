@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <title>{eyou:global name='web_title' /}</title>
+  <meta name="renderer" content="webkit" />
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=0,minimal-ui" />
+  <meta name="description" content="{eyou:global name='web_description' /}" />
+  <meta name="keywords" content="{eyou:global name='web_keywords' /}" />
+  <link href="{eyou:global name='web_cmspath' /}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+  {eyou:static file="skin/css/basic.css" /}
+  {eyou:static file="skin/css/common.css" /}
+ 
+  <!--[if lte IE 9]>
+    {eyou:static file="skin/js/lteie9.js" /}
+    <![endif]-->
+  </head>
+  <!--[if lte IE 8]>
+    <div class="text-xs-center m-b-0 bg-blue-grey-100 alert">
+    <button type="button" class="close" aria-label="Close" data-dismiss="alert">
+        <span>×</span>
+    </button>
+    你正在使用一个 <strong>过时</strong> 的浏览器。请 <a href=https://browsehappy.com/ target=_blank>升级您的浏览器</a>，以提高您的体验。</div>
+<![endif]-->
+
+  <body>
+<!--header-s--> 
+{eyou:include file="header.htm" /} 
+<!--header-e--> 
+<!--main-s-->
+  <div class="ey-banner carousel slide" id="exampleCarouselDefault" e-page="index"> 
+   <ol class="carousel-indicators carousel-indicators-fall"> 
+      {eyou:adv pid='1' currentstyle='active'}
+      <li data-slide-to="{$key}" data-target="#exampleCarouselDefault" class="{$field.currentstyle}"></li>
+      {/eyou:adv}
+   </ol> 
+   <div class="carousel-inner" role="listbox"> 
+    {eyou:adv pid='1' currentstyle='active'}
+    <div class="carousel-item eyou-edit {$field.currentstyle}" e-id="{$field.id}" e-type="adv">
+      <a href="{$field.links}" title="{$field.title}" {$field.target}><img class="w-full" src="{$field.litpic}" srcset="{$field.litpic} 767w,{$field.litpic}" sizes="(max-width: 767px) 767px" /></a>
+    </div>
+    {/eyou:adv}
+    <a class="left carousel-control" href="#exampleCarouselDefault" role="button" data-slide="prev"> <span class="icon">&lt;</span> <span class="sr-only">Previous</span> </a>
+    <a class="right carousel-control" href="#exampleCarouselDefault" role="button" data-slide="next"> <span class="icon">&gt;</span> <span class="sr-only">Next</span> </a>
+   </div> 
+  </div>
+    <main class="ey-index-body" e-page="index">
+     {eyou:channelartlist typeid='3'}
+      <section class="service_list_met_11_3 text-xs-center">
+        <div class="container">
+        <div class="title-box clearfix">
+            <div class="head">
+            <h2 class="title newpro">{eyou:field name='typename' /}</h2>
+            <p class="desc newpro"></p>
+          </div>
+            <ul class="tabs ulstyle">
+            <li class="active newpro"> <a href="javascript:void(0);" onClick="tabspro(this);" data-typeid="{eyou:field name='typeid' /}" data-url="{eyou:field name='typeurl' /}" title="{eyou:field name='typename' /}">
+              <h3>{eyou:lang name='yybl2' /}</h3>
+              </a> </li>
+            {eyou:channel row="100" type ='son'}
+            <li class="newpro">
+              <a href="javascript:void(0);" onClick="tabspro(this);" data-typeid="{$field.typeid}" data-url="{$field.typeurl}" title="{$field.typename}">
+                <h3>{$field.typename}</h3>
+              </a>
+            </li>
+            {/eyou:channel} 
+          </ul>
+        </div>
+        <ul class="list m-0 clearfix ulstyle tabspro" id="pro_{eyou:field name='typeid' /}">
+          {eyou:arclist row='3' titlelen='20' infolen='22'}
+            <li class="item col-xs-12 col-md-6 col-lg-4 col-xxl-3 newpro">
+            <div class="content"> <a href="{$field.arcurl}" title="{$field.title}" target="_self"> <img data-original="{$field.litpic}" alt="{$field.title}" src="{$field.litpic}" style="display: inline;">
+              <h4>{$field.title}</h4>
+              <p>{$field.seo_description|html_msubstr=###,0,20,true}</p>
+              </a> </div>
+          </li>
+          {/eyou:arclist}
+        </ul>
+        {eyou:channel row="100" type='son' id='field'}
+        <ul class="list m-0 clearfix ulstyle tabspro" style="display: none;" id="pro_{$field.typeid}">
+          {eyou:arclist typeid='$field.typeid' row='3' titlelen='20' infolen='22' id='field2'}
+            <li class="item col-xs-12 col-md-6 col-lg-4 col-xxl-3 newpro">
+            <div class="content"> <a href="{$field2.arcurl}" title="{$field2.title}" target="_self"> <img data-original="{$field2.litpic}" alt="{$field2.title}" src="{$field2.litpic}" style="display: inline;">
+              <h4>{$field2.title}</h4>
+              <p>{$field2.seo_description|html_msubstr=###,0,20,true}</p>
+              </a> </div>
+          </li>
+          {/eyou:arclist}
+        </ul>
+        {/eyou:channel}
+        <a id="tabspro_more" href="{eyou:field name='typeurl' /}" title="{eyou:field name='typename' /}" class="btn-more">{eyou:lang name='yybl3' /}<i class="fa fa-angle-right"></i> </a> </div>
+      </section>
+    {/eyou:channelartlist}
+
+    {eyou:channelartlist typeid='8'}
+    <section class="about_list_met_11_3">
+      <div class="background">
+        <div style="height: 505px;" class="eyou-edit" e-id="206" e-type="upload">
+        {eyou:uiupload e-id='206' e-page="index"}
+          {$field.value}
+        {eyou:else /}
+          <img style="display: inline;" src="{eyou:global name='web_templets_pc' /}/skin/images/aboutpic.jpg" class="">
+        {/eyou:uiupload}
+        </div>
+      </div>
+      <div class="container">
+        <div class="about-us col-md-12">
+          <div class="head">
+            <h2 class="title newpro">{eyou:field name='typename' /}</h2>
+            <p class="desc newpro"></p>
+          </div>
+          <div class="content">
+            <div class="left col-md-5 col-sm-5">
+              <div class="img eyou-edit" e-id="208" e-type="upload">
+                {eyou:uiupload e-id='208' e-page="index"}
+                  {$field.value}
+                {eyou:else /}
+                  <img style="display: inline;" src="{eyou:global name='web_templets_pc' /}/skin/images/1516784706.jpg" class="">
+                {/eyou:uiupload}
+              </div>
+            </div>
+            <div class="right">
+              <div class="text" style="visibility: inherit; opacity: 1;">
+                <p class="desc newpro">
+               <span>
+                {eyou:type addtable='single_content'}
+                  {$field.content|html_msubstr=###,0,135}...
+                {/eyou:type}
+               </span>
+                <a href="{eyou:field name='typeurl' /}" title="{eyou:field name='typename' /}" class="btn-more" target="_blank">{eyou:lang name='yybl3' /}<i class="fa fa-angle-right"></i></a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    {/eyou:channelartlist}
+
+    <div class="ey-index-news">
+        <div class="container">
+        <div class="col-lg-4 col-md-4 col-xs-12 eyou-edit" e-id="203" e-type="arclist">
+            <ul class="list-group">
+            {eyou:uiarclist e-id='203' typeid='11' e-page="index"}
+            {eyou:type empty='默认值'}
+            <li class="list-group-item active clearfix">
+                <h4 class="pull-xs-left m-y-0">{$field.typename}</h4>
+                <a href="{$field.typeurl}" class="pull-xs-right eyou-edit" e-id='2030' e-type='text'> {eyou:uitext e-id='2030' e-page="index" id="vo"}
+              {$vo.value}
+              {eyou:else /}
+              MORE
+              {/eyou:uitext} </a> </li>
+            {/eyou:type}
+            {eyou:arclist row='4' titlelen='30' infolen='160'}
+            <li class="list-group-item news-li clearfix"> <span>{$field.add_time|MyDate='Y-m-d',###}</span> <a href="{$field.arcurl}" title="{$field.title}" target="_self"> {$field.title} </a> </li>
+            {/eyou:arclist} 
+            {/eyou:uiarclist}
+          </ul>
+          </div>
+        <div class="col-lg-4 col-md-4 col-xs-12 eyou-edit" e-id="204" e-type="arclist">
+            <ul class="list-group">
+            {eyou:uiarclist e-id='204' typeid='12' e-page="index"}
+            {eyou:type empty='默认值'}
+            <li class="list-group-item active clearfix">
+                <h4 class="pull-xs-left m-y-0">{$field.typename}</h4>
+                <a href="{$field.typeurl}" class="pull-xs-right eyou-edit" e-id='2040' e-type='text'> {eyou:uitext e-id='2040' e-page="index" id="vo"}
+              {$vo.value}
+              {eyou:else /}
+              MORE
+              {/eyou:uitext} </a> </li>
+            {/eyou:type}
+            {eyou:arclist row='4' titlelen='30' infolen='160'}
+            <li class="list-group-item news-li clearfix"> <span>{$field.add_time|MyDate='Y-m-d',###}</span> <a href="{$field.arcurl}" title="{$field.title}" target="_self"> {$field.title} </a> </li>
+            {/eyou:arclist} 
+            {/eyou:uiarclist}
+          </ul>
+          </div>
+        <div class="col-lg-4 col-md-4 col-xs-12 eyou-edit" e-id="205" e-type="arclist">
+            <ul class="list-group">
+            {eyou:uiarclist e-id='205' typeid='3' e-page="index"}
+            {eyou:type empty='默认值'}
+            <li class="list-group-item active clearfix">
+                <h4 class="pull-xs-left m-y-0">{$field.typename}</h4>
+                <a href="{$field.typeurl}" class="pull-xs-right eyou-edit" e-id='2050' e-type='text'> {eyou:uitext e-id='2050' e-page="index" id="vo"}
+              {$vo.value}
+              {eyou:else /}
+              MORE
+              {/eyou:uitext} </a> </li>
+            {/eyou:type}
+            {eyou:arclist row='4' titlelen='30' infolen='160'}
+            <li class="list-group-item news-li clearfix"> <span>{$field.add_time|MyDate='Y-m-d',###}</span> <a href="{$field.arcurl}" title="{$field.title}" target="_self"> {$field.title} </a> </li>
+            {/eyou:arclist} 
+            {/eyou:uiarclist}
+          </ul>
+          </div>
+      </div>
+      </div>
+    </div>
+  </main>
+<!--main-e--> 
+<!--footer-s--> 
+{eyou:include file="footer.htm" /} 
+<!--footer-e--> 
+
+
+{eyou:ui open='off' /}
+</body>
+</html>

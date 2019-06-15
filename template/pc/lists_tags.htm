@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+ <head> 
+  <title>标签页_{eyou:global name="web_name" /}</title> 
+  <meta name="renderer" content="webkit" /> 
+  <meta charset="utf-8" /> 
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=0,minimal-ui" /> 
+  <meta name="description" content="" /> 
+  <meta name="keywords" content="" />
+  <link href="{eyou:global name='web_cmspath' /}/favicon.ico" rel="shortcut icon" type="image/x-icon" /> 
+  {eyou:static file="skin/css/basic.css" /} 
+  {eyou:static file="skin/css/common.css" /} 
+    <!--[if lte IE 9]>
+    {eyou:static file="skin/js/lteie9.js" /}
+    <![endif]--> 
+ </head> 
+ <!--[if lte IE 8]>
+    <div class="text-xs-center m-b-0 bg-blue-grey-100 alert">
+    <button type="button" class="close" aria-label="Close" data-dismiss="alert">
+        <span>×</span>
+    </button>
+    你正在使用一个 <strong>过时</strong> 的浏览器。请 <a href=https://browsehappy.com/ target=_blank>升级您的浏览器</a>，以提高您的体验。</div>
+<![endif]--> 
+ <body> 
+<!--header-s-->
+    {eyou:include file="header.htm"/}
+<!--header-e-->
+<main e-page="lists_article">
+  <div class="ey-banner-ny vertical-align text-center"> 
+   <h1 class="vertical-align-middle">{eyou:lang name='sys7' /} <strong>{$eyou.field.tag}</strong> {eyou:lang name='yybl12' /}</h1> 
+  </div> 
+  <section class="ey-news animsition"> 
+   <div class="container"> 
+    <div class="row"> 
+     <div class="col-md-9 ey-news-body"> 
+      <div class="row"> 
+       <div class="ey-news-list"> 
+        <ul class="ulstyle ey-pager-ajax imagesize"> 
+         {eyou:list pagesize="10" titlelen="30"}
+         <li class="media media-lg border-bottom1"> 
+          <div class="media-left"> 
+           <a href="{$field.arcurl}" title="{$field.title}"> <img class="media-object" src="{$field.litpic}" alt="{$field.title}" /></a> 
+          </div> 
+          <div class="media-body"> 
+           <h4> <a href="{$field.arcurl}" title="{$field.title}" target="_self">{$field.title}</a> </h4> 
+           <p class="des font-weight-300"> {$field.seo_description}</p> 
+           <p class="info font-weight-300"> <span>{$field.add_time|MyDate='Y-m-d',###}</span> <span></span> <span> <i class="icon fa-eye m-r-5 font-weight-300"></i> {$field.click} </span> </p> 
+          </div>
+         </li> 
+         {/eyou:list}
+        </ul> 
+        <div class="m-t-20 text-xs-center hidden-sm-down"> 
+          <ul class="tcdPageCode">
+          {eyou:pagelist listitem="index,end,pre,next" listsize="2"/}
+          </ul>
+        </div> 
+       </div> 
+      </div> 
+     </div> 
+     <div class="col-md-3"> 
+      <div class="row"> 
+       <div class="ey-bar"> 
+        {eyou:searchform type='default'}
+        <form class="sidebar-search" method="get" action="{$field.action}">
+          {$field.hidden}
+         <div class="form-group"> 
+          <div class="input-search"> 
+           <button type="submit" class="input-search-btn"> <i class="icon fa-search"></i> </button> 
+           <input type="text" class="form-control" name="keywords" placeholder="{eyou:lang name='yybl6' /}" /> 
+          </div> 
+         </div> 
+        </form> 
+        {/eyou:searchform}
+        <div class="sidebar-news-list recommend"> 
+         <h3 class=" font-weight-300 m-0">{eyou:lang name='yybl7' /}</h3> 
+         <ul class="list-icons list-group-bordered m-t-10 m-b-0"> 
+         <!-- 循环输出指定最顶级栏目ID的文档列表，并按随机排序 start -->
+         {eyou:arclist limit="0,5" titlelen="30" orderby='rand'}
+         <li> <a href="{$field.arcurl}" title="{$field.title}">{$field.title}</a> </li> 
+         {/eyou:arclist}
+         <!-- 循环输出指定最顶级栏目ID的文档列表，并按随机排序 end -->
+         </ul> 
+        </div> 
+       </div> 
+      </div> 
+     </div> 
+    </div> 
+   </div> 
+  </section> 
+</main>
+  <!--footer-s-->
+  {eyou:include file="footer.htm" /}
+  <!--footer-e-->
+  {eyou:ui open='off' /}
+ </body>
+</html>
