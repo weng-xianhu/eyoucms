@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /extend
+Disallow: /install_*
+Disallow: /template
+Disallow: /core
+Disallow: /vendor
+Disallow: /application
