@@ -1,0 +1,13 @@
+
+    <div class="fixed-bar">
+        <div class="item-title">
+            <div class="subject">
+                <h3>备份还原</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                <li><a href="{:url("Tools/index")}" class="tab {eq name="$Request.action" value="index"}current{/eq}"><span>数据备份</span></a></li>
+                <li><a href="{:url("Tools/restore")}" class="tab {if condition="in_array($Request.action, array('restore'))"}current{/if}"><span>数据还原</span></a></li>
+            </ul>
+        </div>
+    </div>

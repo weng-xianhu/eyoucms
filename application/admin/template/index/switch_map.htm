@@ -1,0 +1,368 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow: auto;min-width: auto;">
+<style type="text/css">
+    .ncap-form-default dd.opt{
+        width: auto;
+    }
+</style>
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <div class="subject">
+                <h3>功能开关</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    <div class="ncap-form-default">
+        <dl class="row">
+            <dt class="tit">
+                <label for="site_url">插件应用</label>
+            </dt>
+            <dd class="opt">
+                <div class="onoff">
+                    <label for="web_weapp_switch1" class="cb-enable {if condition='isset($globalConfig.web_weapp_switch) && $globalConfig.web_weapp_switch eq 1'}selected{/if}">开启</label>
+                    <label for="web_weapp_switch0" class="cb-disable {if condition='!isset($globalConfig.web_weapp_switch) || $globalConfig.web_weapp_switch eq -1'}selected{/if}">关闭</label>
+                    <input id="web_weapp_switch1" name="web[web_weapp_switch]" value="1" type="radio" {if condition="isset($globalConfig.web_weapp_switch) && $globalConfig.web_weapp_switch eq 1"} checked="checked"{/if} onclick="ajax_submit(this, 'web', 'web_weapp_switch');" data-lmenuid="Weapp_index">
+                    <input id="web_weapp_switch0" name="web[web_weapp_switch]" value="-1" type="radio" {if condition="!isset($globalConfig.web_weapp_switch) || $globalConfig.web_weapp_switch eq -1"} checked="checked"{/if} onclick="ajax_submit(this, 'web', 'web_weapp_switch');" data-lmenuid="Weapp_index">
+                </div>
+                <p class="notic">开启之后，左侧菜单会显示插件应用入口</p>
+                <span id="guide_web_weapp_switch" style="{if condition='1 != $globalConfig.web_weapp_switch'} display: none;{/if}">
+                    &nbsp;<a href="{:url('Weapp/index')}">[上传管理]</a>
+                </span>
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="tit">
+                <label for="site_url">多语言</label>
+            </dt>
+            <dd class="opt">
+                <div class="onoff">
+                    <label for="web_language_switch1" class="cb-enable {if condition='isset($globalConfig.web_language_switch) && $globalConfig.web_language_switch eq 1'}selected{/if}">开启</label>
+                    <label for="web_language_switch0" class="cb-disable {if condition='empty($globalConfig.web_language_switch)'}selected{/if}">关闭</label>
+                    <input id="web_language_switch1" name="web[web_language_switch]" value="1" type="radio" {if condition="isset($globalConfig.web_language_switch) && $globalConfig.web_language_switch eq 1"} checked="checked"{/if} onclick="ajax_submit(this, 'web', 'web_language_switch');" data-lmenuid="Language_index">
+                    <input id="web_language_switch0" name="web[web_language_switch]" value="0" type="radio" {if condition="empty($globalConfig.web_language_switch)"} checked="checked"{/if} onclick="ajax_submit(this, 'web', 'web_language_switch');" data-lmenuid="Language_index">
+                </div>
+                <p class="notic">开启之后，顶部菜单会显示多语言入口</p>
+                <span id="guide_web_language_switch" style="{if condition='empty($globalConfig.web_language_switch)'} display: none;{/if}">
+                    &nbsp;<a href="{:url('Language/index')}">[多语言设置]</a>
+                    &nbsp;<a href="javascript:void(0);" onclick="tag_call('web_language_switch');" class="red">[标签调用]</a>
+                </span>
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="tit">
+                <label for="site_url">会员中心</label>
+            </dt>
+            <dd class="opt">
+                <div class="onoff">
+                    <label for="web_users_switch1" class="cb-enable {if condition='isset($globalConfig.web_users_switch) && $globalConfig.web_users_switch eq 1'}selected{/if}">开启</label>
+                    <label for="web_users_switch0" class="cb-disable {if condition='empty($globalConfig.web_users_switch)'}selected{/if}">关闭</label>
+                    <input id="web_users_switch1" name="web[web_users_switch]" value="1" type="radio" {if condition="isset($globalConfig.web_users_switch) && $globalConfig.web_users_switch eq 1"} checked="checked"{/if} onclick="ajax_submit(this, 'web', 'web_users_switch');" data-lmenuid="Member_users_index">
+                    <input id="web_users_switch0" name="web[web_users_switch]" value="0" type="radio" {if condition="empty($globalConfig.web_users_switch)"} checked="checked"{/if} onclick="ajax_submit(this, 'web', 'web_users_switch');" data-lmenuid="Member_users_index">
+                </div>
+                <p class="notic">开启之后，左侧菜单会显示会员中心入口</p>
+                <span id="guide_web_users_switch" style="{if condition='empty($globalConfig.web_users_switch)'} display: none;{/if}">
+                    &nbsp;<a href="{:url('Member/users_index')}">[用户列表]</a>
+                    &nbsp;<a href="{:url('Member/users_config')}">[功能配置]</a>
+                    &nbsp;<a href="javascript:void(0);" onclick="tag_call('web_users_switch');" class="red">[标签调用]</a>
+                </span>
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="tit">
+                <label for="uname">支付功能</label>
+            </dt>
+            <dd class="opt">
+                <div class="onoff">
+                    <label for="pay_open1" class="cb-enable {if condition="$userConfig.pay_open == 1"}selected{/if}">开启</label>
+                    <label for="pay_open0" class="cb-disable {if condition="!isset($userConfig.pay_open) || empty($userConfig.pay_open)"}selected{/if}">关闭</label>
+                    <input id="pay_open1" name="pay[pay_open]" value="1" type="radio" {if condition="$userConfig.pay_open == 1"} checked="checked"{/if} onclick="ajax_submit(this, 'pay', 'pay_open');">
+                    <input id="pay_open0" name="pay[pay_open]" value="0" type="radio" {if condition="!isset($userConfig.pay_open) || empty($userConfig.pay_open)"} checked="checked"{/if} onclick="ajax_submit(this, 'pay', 'pay_open');">
+                </div>
+                <p class="notic">关闭则自动隐藏支付入口。</p>
+                <span id="guide_pay_open" style="{if condition='!isset($userConfig.pay_open) || empty($userConfig.pay_open)'} display: none;{/if}">
+                    &nbsp;<a href="{:url('Member/money_index')}">[充值列表]</a>
+                    &nbsp;<a href="{:url('Member/pay_set')}">[接口配置]</a>
+                </span>
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="tit">
+                <label for="uname">商城中心</label>
+            </dt>
+            <dd class="opt">
+                <div class="onoff">
+                    <label for="shop_open1" class="cb-enable {if condition="$userConfig.shop_open == 1"}selected{/if}">开启</label>
+                    <label for="shop_open0" class="cb-disable {if condition="!isset($userConfig.shop_open) || empty($userConfig.shop_open)"}selected{/if}">关闭</label>
+                    <input id="shop_open1" name="shop[shop_open]" value="1" type="radio" {if condition="$userConfig.shop_open == 1"} checked="checked"{/if} data-authortoken="{$is_eyou_authortoken}" data-is_online="{$is_online}" onclick="ajax_submit(this, 'shop', 'shop_open');" data-lmenuid="Shop_index">
+                    <input id="shop_open0" name="shop[shop_open]" value="0" type="radio" {if condition="!isset($userConfig.shop_open) || empty($userConfig.shop_open)"} checked="checked"{/if} data-authortoken="{$is_eyou_authortoken}" data-is_online="{$is_online}" onclick="ajax_submit(this, 'shop', 'shop_open');" data-lmenuid="Shop_index">
+                </div>
+                <p class="notic">关闭则自动隐藏商城中心入口。</p>
+                <span id="guide_shop_open" style="{if condition='!isset($userConfig.shop_open) || empty($userConfig.shop_open)'} display: none;{/if}">
+                    &nbsp;<a href="{:url('Shop/index')}">[订单列表]</a>
+                    &nbsp;<a href="{:url('Shop/conf')}">[功能配置]</a>
+                    &nbsp;<a href="javascript:void(0);" onclick="tag_call('shop_open');" class="red">[标签调用]</a>
+                </span>
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<input type="hidden" name="is_themeusers_exist" id="is_themeusers_exist" value="{$is_themeusers_exist}">
+<input type="hidden" name="is_themeshop_exist" id="is_themeshop_exist" value="{$is_themeshop_exist}">
+
+<script type="text/javascript">
+
+    // 提交表单
+    function ajax_submit(obj, inc_type, name){
+        var _parent = parent;
+        var value = $(obj).val();
+        var lmenuid = $(obj).attr('data-lmenuid');
+        var url = "{:url('Index/switch_map')}";
+        // 验证
+        switch (name)
+        {
+            case 'shop_open':
+            case 'pay_open':
+                // 第一次使用会员中心，其他功能开关不与会员中心开关关联
+                var web_users_switch = $('input[name="web[web_users_switch]"]:checked').val();
+                if (1 == $('#is_themeusers_exist').val() && 1 != web_users_switch) {
+                    $('label[for='+name+'1]').removeClass('selected');
+                    $('#'+name+'1').attr('checked','');
+                    $('label[for='+name+'0]').addClass('selected');
+                    $('#'+name+'0').attr('checked','checked');
+                    if ('pay_open' == name) {
+                        nameTitle = '支付功能';
+                    } else if ('shop_open' == name) {
+                        nameTitle = '商城功能';
+                    }
+                    parent.layer.alert('使用【<font color="red">'+nameTitle+'</font>】请先开启【<font color="red">会员中心</font>】！', {icon: 3, title:false}, function(){
+                        parent.layer.closeAll();
+                        // $('label[for=web_users_switch0]').removeClass('selected');
+                        // $('#web_users_switch0').attr('checked','');
+                        // $('label[for=web_users_switch1]').addClass('selected');
+                        // $('#web_users_switch1').attr('checked','checked');
+                        // ajax_submit($('#web_users_switch1'), 'web', 'web_users_switch');
+                    });
+                    return false;
+                }
+                // --end
+                if(false == check_shop_open())
+                {
+                    return false;
+                }
+                // 同时开启会员中心
+                if (1 == value) {
+                    $('label[for=web_users_switch0]').removeClass('selected');
+                    $('#web_users_switch0').attr('checked','');
+                    $('label[for=web_users_switch1]').addClass('selected');
+                    $('#web_users_switch1').attr('checked','checked');
+                }
+                break;
+        }
+        // 标签调用按钮的显示与隐藏
+        if (1 == value) {
+            $('#guide_'+name).show();
+        } else {
+            $('#guide_'+name).hide();
+        }
+
+        if (1 == $('#is_themeusers_exist').val()) {
+            $('#is_themeusers_exist').val(0)
+            loadmsg = '初始化中';
+        } else if (1 == $('#is_themeshop_exist').val()) {
+            $('#is_themeshop_exist').val(0)
+            loadmsg = '初始化中';
+        } else {
+            loadmsg = '正在处理';
+        }
+        parent_layer_loading(loadmsg);
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: {inc_type:inc_type,name:name,value:value,lmenuid:lmenuid},
+            dataType: 'json',
+            success: function (res) {
+                if(res.code == 1){
+                    // 第一次模板同步下载
+                    if ('web_users_switch' == name && 1 == res.data.is_syn) { // 会员中心模板下载
+                        syn_theme_users(value,lmenuid);
+                        return false;
+                    } else if ('shop_open' == name && 1 == res.data.is_syn) { // 订单中心模板下载
+                        syn_theme_shop(value,lmenuid);
+                        return false;
+                    } else {
+                        _parent.layer.closeAll();
+                        // 根据不同场景进行页面加载的处理
+                        _parent.layer.msg(res.msg, {icon: 1, time: 1000}, function(){
+                            if (1 == res.data.reload) {
+                                window.location.reload();
+                            } else if (2 == res.data.reload) {
+                                top.window.location.reload();
+                            }
+                        });
+                    }
+                }else{
+                    if (1 == res.data.code) {
+                        _parent.layer.closeAll();
+                        _parent.layer.alert(res.msg, {btn: ['购买授权'], icon: 2, title:false}, function(){
+                            _parent.layer.closeAll();
+                            window.location.reload();
+                            window.open('http://www.eyoucms.com/buy');
+                        });
+                    } else {
+                        _parent.layer.closeAll();
+                        _parent.layer.alert(res.msg, {icon: 2, title:false}, function(){
+                            _parent.layer.closeAll();
+                            window.location.reload();
+                        });
+                    }
+                }
+                // 控制顶部与左侧菜单的显示与隐藏
+                if (1 == value) {
+                    $('#'+lmenuid, window.parent.document).show();
+                } else {
+                    $('#'+lmenuid, window.parent.document).hide();
+                }
+            },
+            error:function(){
+                _parent.layer.closeAll();
+                _parent.layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false}, function(){
+                    _parent.layer.closeAll();
+                    window.location.reload();
+                });
+            }
+        });
+    }
+
+    // 会员模板初始化下载
+    function syn_theme_users(value,lmenuid)
+    {
+        $.ajax({
+            type : 'get',
+            url : "{:url('Member/ajax_syn_theme_users')}",
+            data : {},
+            dataType : 'json',
+            success : function(res){
+                parent.layer.closeAll();
+                if(res.code == 1){
+                    parent.layer.msg(res.msg, {icon: 1, time: 1000});
+                }else{
+                    parent.layer.alert(res.msg, {icon: 2, title:false}, function(){
+                        parent.layer.closeAll();
+                        window.location.reload();
+                    });
+                }
+                // 控制顶部与左侧菜单的显示与隐藏
+                if (1 == value) {
+                    $('#'+lmenuid, window.parent.document).show();
+                } else {
+                    $('#'+lmenuid, window.parent.document).hide();
+                }
+            },
+            error: function(e){
+                parent.layer.closeAll();
+                parent.layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false}, function(){
+                    parent.layer.closeAll();
+                    window.location.reload();
+                });
+            }
+        })
+    }
+
+    // 订单模板初始化下载
+    function syn_theme_shop(value,lmenuid)
+    {
+        var url = "{:url('Index/switch_map')}";
+        $.ajax({
+            type : 'get',
+            url : "{:url('Shop/ajax_syn_theme_shop')}",
+            data : {},
+            dataType : 'json',
+            success : function(res){
+                parent.layer.closeAll();
+                if(res.code == 1){
+                    parent.layer.msg(res.msg, {icon: 1, time: 1000});
+                }else{
+                    parent.layer.alert(res.msg, {icon: 2, title:false}, function(){
+                        parent.layer.closeAll();
+                        window.location.reload();
+                    });
+                }
+                // 控制顶部与左侧菜单的显示与隐藏
+                if (1 == value) {
+                    $('#'+lmenuid, window.parent.document).show();
+                } else {
+                    $('#'+lmenuid, window.parent.document).hide();
+                }
+            },
+            error: function(e){
+                parent.layer.closeAll();
+                parent.layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false}, function(){
+                    parent.layer.closeAll();
+                    window.location.reload();
+                });
+            }
+        })
+    }
+
+    function check_shop_open()
+    {
+        var obj = $('input[name="shop[shop_open]"]:checked');
+        var is_online = $(obj).attr('data-is_online');
+        if (1 == is_online) {
+            var shop_open = $(obj).val();
+            if (1 == shop_open && $(obj).attr('data-authortoken') == -1) {
+                $('label[for=shop_open1]').removeClass('selected');
+                $('#shop_open1').attr('checked','');
+                $('label[for=shop_open0]').addClass('selected');
+                $('#shop_open0').attr('checked','checked');
+                var alert1 = layer.alert('订单功能只限于授权域名！', {
+                    icon: 4,
+                    title:false,
+                    btn: ['购买授权']
+                }, function(){
+                    window.open('http://www.eyoucms.com/buy');
+                    layer.close(alert1);
+                });
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function tag_call(name)
+    {
+        $.ajax({
+            type: "POST",
+            url: "{:url('System/ajax_tag_call')}",
+            data: {name:name},
+            dataType: 'json',
+            success: function (res) {
+                if(res.code == 1){
+                    //询问框
+                    var confirm = layer.confirm(res.data.msg, {
+                            title: false,
+                            area: ['60%','80%'],
+                            btn: ['关闭'] //按钮
+
+                        }, function(){
+                            layer.close(confirm);
+                        }
+                    );  
+                }else{
+                    layer.alert(res.msg, {icon: 2, title:false});
+                }
+            },
+            error:function(){
+                layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

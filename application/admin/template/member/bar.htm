@@ -1,0 +1,52 @@
+    <div class="fixed-bar">
+        <div class="item-title">
+            {if condition="preg_match('/^money_/i', $Think.const.ACTION_NAME)"}
+                <a class="back" href="{:url($Think.const.CONTROLLER_NAME.'/money_index')}" title="返回列表">
+                    <i class="fa fa-arrow-circle-o-left"></i>
+                </a>
+            {else /}
+                {if condition="preg_match('/^shop/i', $Think.const.CONTROLLER_NAME)"}
+                    <a class="back" href="{:url("Shop/index")}" title="返回列表">
+                        <i class="fa fa-arrow-circle-o-left"></i>
+                    </a>
+                {else /}
+                    <a class="back" href="{:url($Think.const.CONTROLLER_NAME.'/users_index')}" title="返回列表">
+                        <i class="fa fa-arrow-circle-o-left"></i>
+                    </a>
+                {/if}
+            {/if}
+            <div class="subject">
+                <h3>会员中心</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                {eq name="'Member@users_index'|is_check_access" value="1"}
+                    <li>
+                        <a href="{:url('Member/users_index')}" {if condition="in_array($Think.const.ACTION_NAME, ['users_index','level_index','attr_index','users_config'])"}class="current"{/if}>
+                            <span>用户列表</span>
+                        </a>
+                    </li>
+                {/eq}
+
+                {eq name="'Member@pay_set'|is_check_access" value="1"}
+                    {if condition="1 == $userConfig.pay_open"}
+                        <li>
+                            <a href="{:url('Member/pay_set')}" {if condition="in_array($Think.const.ACTION_NAME, ['pay_set','money_index','money_edit'])"}class="current"{/if}>
+                                <span>支付功能</span>
+                            </a>
+                        </li>
+                    {/if}
+                {/eq}
+
+                {eq name="'Shop@index'|is_check_access" value="1"}
+                    {if condition="1 == $userConfig.shop_open"}
+                        <li>
+                            <a href="{:url('Shop/index')}" {if condition="in_array($Think.const.CONTROLLER_NAME, ['Shop'])"}class="current"{/if}>
+                                <span>商城中心</span>
+                            </a>
+                        </li>
+                    {/if}
+                {/eq}
+            </ul>
+        </div>
+    </div>

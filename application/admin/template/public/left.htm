@@ -1,0 +1,30 @@
+<div class="eycms_cont_left hidden-xs">
+    <dl class="eylogo">
+        {notempty name="$is_eyou_authortoken"}
+        <a href="{$Request.url}"><img src="__SKIN__/images/logo_ey.png?v={php}echo time();{/php}" alt="点击刷新" title="点击刷新"></a>
+        {else /}
+        <a href="{$Request.url}"><img src="__SKIN__/images/logo.png?v={php}echo time();{/php}" alt="点击刷新" title="点击刷新"></a>
+        {/notempty}
+    </dl>
+    {volist name="menu" id="vo"}
+        <dl style="{if condition='$vo.is_menu == 0'}display: none;{/if}">
+            {notempty name="vo.name"}<dt>{$vo.name}</dt>{/notempty}
+            <dd class="sub-menu">
+            {volist name="vo['child']" id="v2" key="k2"}
+                {empty name="v2['child']"}
+                    <a id="{$v2.controller}_{$v2.action}" href="{$v2.url|default='javascript:void(0);'}" {empty name="$v2.url"}data-param="{$v2.controller}|{$v2.action}"{/empty} target="{$v2.target}" style="{if condition='$v2.is_menu == 0'}display: none;{/if}"><i class="{$v2.icon|default='fa fa-minus'}"></i>{$v2.name}</a>
+                {else/}
+                    <dl class="jslist" style="border-bottom:none;{if condition='$v2.is_menu == 0'}display: none;{/if}">
+                        <dt><i class="{$v2.icon|default='fa fa-minus'}"></i>{$v2.name}<i class="fa fa-angle-right"></i>{if condition="$v2.controller == 'Senior' and !empty($upgradeMsg)"}{/if}</dt>
+                        <dd style="display: none;">
+                            {volist name="v2['child']" id="v3" key="k3"}
+                                <a id="{$v3.controller}_{$v3.action}" href="{$v3.url|default='javascript:void(0);'}" {empty name="$v3.url"}data-param="{$v3.controller}|{$v3.action}"{/empty} target="{$v3.target}" style="{if condition='$v3.is_menu == 0'}display: none;{/if}"><i class="{$v3.icon|default='fa fa-minus'}"></i>{$v3.name}{if condition="$v3.controller == 'Upgrade' and !empty($upgradeMsg)"}{/if}</a>
+                            {/volist}
+                        </dd>
+                    </dl>
+                {/empty}
+            {/volist}
+            </dd>
+        </dl>
+    {/volist}
+</div>

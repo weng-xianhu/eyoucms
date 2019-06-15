@@ -1,0 +1,108 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow-y: scroll;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="system/bar" /}
+    <!-- 操作说明 -->
+    <div class="explanation" id="explanation">
+        <div class="title" id="checkZoom"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">操作提示</h4>
+            <span id="explanationZoom" title="收起提示"></span> </div>
+        <ul>
+            <li>阿里云OSS存储相关设置, 请从阿里云注册账户, 并在其控制台获取相关信息。</li>
+        </ul>
+    </div>
+    <form method="post" id="handlepost" action="{:U('System/handle')}" enctype="multipart/form-data" name="form1">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="oss_switch">上传OSS开关</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="switch1" class="cb-enable  {if condition="isset($config.oss_switch) && $config.oss_switch eq 1"}selected{/if}">开启</label>
+                        <label for="switch0" class="cb-disable {if condition="!isset($config.oss_switch) || $config.oss_switch eq 0"}selected{/if}">关闭</label>
+                        <input type="radio" id="switch1" name="oss_switch" value="1" {if condition="isset($config.oss_switch) && $config.oss_switch eq 1"}checked="checked"{/if}>
+                        <input type="radio" id="switch0" name="oss_switch" value="0" {if condition="!isset($config.oss_switch) || $config.oss_switch eq 0"}checked="checked"{/if} >
+                    </div>
+                    <p class="notic">是否对全站图片启用对象存储功能，减少图片占用主站点带宽</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="oss_key_id">AccessKeyId</label>
+                </dt>
+                <dd class="opt">
+                    <input id="oss_key_id" name="oss_key_id" value="{$config.oss_key_id|default=''}" class="input-txt" type="text" />
+                    <p class="notic">对象存储的key id</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="oss_key_secret">AccessKeySecret</label>
+                </dt>
+                <dd class="opt">
+                    <input id="oss_key_secret" name="oss_key_secret" value="{$config.oss_key_secret|default=''}" class="input-txt" type="text" />
+                    <p class="notic">对象存储的key secret</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="oss_endpoint">Endpoint</label>
+                </dt>
+                <dd class="opt">
+                    <input id="oss_endpoint" name="oss_endpoint" value="{$config.oss_endpoint|default=''}" class="input-txt" type="text" />
+                    <p class="notic">对象存储的Endpoint，比如 oss-cn-shenzhen.aliyuncs.com</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="oss_bucket">Bucket</label>
+                </dt>
+                <dd class="opt">
+                    <input id="oss_bucket" name="oss_bucket" value="{$config.oss_bucket|default=''}" class="input-txt" type="text" />
+                    <p class="notic">对象存储的 Bucket</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="oss_domain">Domain</label>
+                </dt>
+                <dd class="opt">
+                    <input id="oss_domain" name="oss_domain" value="{$config.oss_domain|default=''}" class="input-txt" type="text" />
+                    <p class="notic">OSS对应的域名别名</p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <input type="hidden" name="inc_type" value="{$inc_type}">
+                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="check_form();">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function check_form()
+    {
+        if(!$('#oss_key_id').val()){
+            layer.alert('AccessKeyId 不能为空！',{icon:2, title:false});
+            return false;
+        }
+        if(!$('#oss_key_secret').val()){
+            layer.alert('AccessKeySecret 不能为空！',{icon:2, title:false});
+            return false;
+        }
+        if(!$('#oss_endpoint').val()){
+            layer.alert('Endpoint 不能为空！',{icon:2, title:false});
+            return false;
+        }
+        if(!$('#oss_bucket').val()){
+            layer.alert('Bucket 不能为空！',{icon:2, title:false});
+            return false;
+        }
+        layer_loading('正在处理');
+        document.form1.submit();
+    }
+</script>
+
+{include file="public/footer" /}

@@ -1,0 +1,564 @@
+{include file="public/layout" /}
+<script type="text/javascript" src="__PUBLIC__/plugins/laydate/laydate.js"></script>
+
+{load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+{load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+{load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+
+<body style="background-color: #FFF; overflow: auto;min-width:auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;">
+    <div class="fixed-bar">
+        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
+            <div class="subject">
+                <h3>新增产品</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                <li><a href="javascript:void(0);" data-index='1' class="tab current"><span>常规选项</span></a></li>
+                <li><a href="javascript:void(0);" data-index='2' class="tab"><span>参数选项</span></a></li>
+                <li><a href="javascript:void(0);" data-index='3' class="tab"><span>SEO选项</span></a></li>
+                <li><a href="javascript:void(0);" data-index='4' class="tab"><span>其他选项</span></a></li>
+            </ul>
+        </div>
+    </div>
+    <form class="form-horizontal" id="post_form" action="{:url('Product/add')}" method="post">
+        <!-- 常规信息 -->
+        <div class="ncap-form-default tab_div_1">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>标题</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="title" value="" id="title" class="input-txt" maxlength="100">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>所属栏目</label>
+                </dt>
+                <dd class="opt"> 
+                    <select name="typeid" id="typeid">
+                        <option value="0">请选择栏目…</option>
+                        {$arctype_html}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>文档属性</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="checkbox" name="is_head" value="1">头条[h]</label>&nbsp;
+                    <label><input type="checkbox" name="is_recom" value="1">推荐[c]</label>&nbsp;
+                    <label><input type="checkbox" name="is_special" value="1">特荐[a]</label>&nbsp;
+                    <label><input type="checkbox" name="is_b" value="1">加粗[b]</label>&nbsp;
+                    <label><input type="checkbox" name="is_litpic" value="1">图片[p]</label>&nbsp;
+                    <label><input type="checkbox" name="is_jump" value="1">跳转[j]</label>&nbsp;
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row none dl_jump">
+                <dt class="tit">
+                    <label>跳转网址</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="" name="jumplinks" id="jumplinks" class="input-txt" placeholder="http://">
+                    <span class="err"></span>
+                    <p class="notic">请输入完整的URL网址（包含http或https），设置后访问该条信息将直接跳转到设置的网址</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                  <label>缩略图</label>
+                </dt>
+                <dd class="opt">
+                    <div class="input-file-show div_litpic_local">
+                        <span class="show">
+                            <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="javascript:void(0);">
+                                <i id="img_i" class="fa fa-picture-o" onmouseover="" onmouseout="layer.close(layer_tips);"></i>
+                            </a>
+                        </span>
+                        <span class="type-file-box">
+                            <input type="text" id="litpic_local" name="litpic_local" value="" class="type-file-text">
+                            <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                            <input class="type-file-file" onClick="GetUploadify(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
+                                 title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                        </span>
+                    </div>
+                    <input type="text" id="litpic_remote" name="litpic_remote" value="" placeholder="http://" class="input-txt" style="display: none;">
+                    &nbsp;
+                    <label><input type="checkbox" name="is_remote" id="is_remote" value="1" onClick="clickRemote(this, 'litpic');">远程图片</label>
+                    <span class="err"></span>
+                    <p class="notic">当没有手动上传图片时候，会自动提取正文的第一张图片作为缩略图</p>
+                    &nbsp;<a href="javascript:void(0);" onclick="system_thumb();" class="ncap-btn ncap-btn-green">缩略图配置</a>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>图片集</label>
+                </dt>
+                <dd class="opt">
+                    <div class="tab-pane pics" id="tab_proimg">
+                        <a href="javascript:void(0);" onClick="GetUploadify(30,'','allimg','proimg_call_back');" class="imgupload">
+                            <i class="fa fa-photo"></i>上传图片
+                        </a>
+                        <table class="table table-bordered">
+                            <tbody>
+                            <tr>
+                                <td class="sort-list">
+                                    <div class="images_upload">
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- 上传图片显示的样板 start -->
+                    <div class="images_upload_tpl none">
+                        <div class="images_upload">
+                            <input type="hidden" name="proimg[]" value="" />
+                            <a href="javascript:void(0);" onClick="" class="upimg" title="拖动修改排序">
+                                <img src="__STATIC__/admin/images/add-button.jpg" width="120" height="120" />
+                            </a>
+                            <a href="javascript:void(0)" class="delect">&nbsp;&nbsp;</a>
+                        </div>
+                    </div>
+                    <!-- 上传图片显示的样板 end -->
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+
+    
+        {if condition="!empty($shopConfig['shop_open']) && 1 == $shopConfig['shop_open']"}
+            <!-- 产品价格属性 -->
+            {empty name="$shopConfig['shop_type']"}
+                <input type="hidden" name="prom_type" value="0"/>
+            {/empty}
+
+            {eq name="$shopConfig['shop_type']" value="1"}
+                <input type="hidden" name="prom_type" value="1"/>
+            {/eq}
+
+            {eq name="$shopConfig['shop_type']" value="2"}
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="uname"><em></em>产品类型</label>
+                    </dt>
+                    <dd class="opt">
+                        <label>
+                            <input type="radio" name="prom_type" value="0" checked="checked"/>普通产品
+                        </label>
+                        <br/>
+                        <label>
+                            <input type="radio" name="prom_type" value="1" />虚拟产品
+                        </label>
+                    </dd>
+                </dl>
+            {/eq}
+            
+            <dl class="row">
+                <dt class="tit">
+                    <label for="users_price"><em>*</em>价格</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="users_price" value="" id="users_price" class="input-txt" maxlength="100">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <!-- 产品价格属性 -->
+        {/if}
+
+            {include file="field/addonextitem" /}
+        </div>
+        <!-- 常规信息 -->
+        <!-- 产品参数 -->
+        <div class="ncap-form-default tab_div_2" style="display:none;">
+            <dl class="row">
+                <div class="tab-pane" id="tab_product_spec">
+                    <table class="table table-bordered" width="100%">
+                        <tr>
+                            <td>
+                                <!-- 操作说明 -->
+                                <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+                                    <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                                        <h4 title="提示相关设置操作时应注意的要点">操作提示</h4>
+                                        <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            {empty name='$typeid'}
+                                            请先在【常规选项】里选择产品主栏目，再点击【<a href="{:url('Product/attribute_index', array('typeid'=>$typeid))}">参数选项</a>】进行更多操作。
+                                            {else /}
+                                            如果想对产品参数进行新增、修改、删除等操作，请点击【<a href="{:url('Product/attribute_index', array('typeid'=>$typeid))}">参数选项</a>】进行更多操作。
+                                            {/empty}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </dl>
+            <dl class="row" style="margin-top: 10px;" id="product_attr_table">
+                {empty name='$canshu'}
+                <div style="color: red;font-size: 12px;text-align: center;">提示：该主栏目还没有参数值，若有需要请点击【<a href="{:url('Product/attribute_index', array('typeid'=>$typeid))}">参数选项</a>】进行更多操作。</div>
+                {else /}
+                {$canshu}
+                {/empty}
+            </dl> 
+        </div>
+        <!-- 产品参数 -->
+        <!-- SEO设置 -->
+        <div class="ncap-form-default tab_div_3" style="display:none;">
+            <dl class="row">
+                <dt class="tit">
+                    <label>TAG标签</label>
+                </dt>
+                <dd class="opt">          
+                    <input type="text" value="" name="tags" id="tags" class="input-txt">
+                    &nbsp;<a href="javascript:void(0);" onclick="tags_list(this);" class="ncap-btn ncap-btn-green">管理</a>
+                    <span class="err"></span>
+                    <p class="notic">多个标签用英文逗号（,）分开，单个标签小于12字节</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="seo_title">SEO标题</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="" name="seo_title" id="seo_title" class="input-txt">
+                    <p class="notic">一般不超过80个字符，为空时系统自动构成，可以到 <a href="{:url('Seo/index', array('inc_type'=>'seo'))}">SEO设置 - SEO基础</a> 中设置构成规则。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>SEO关键词</label>
+                </dt>
+                <dd class="opt">          
+                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:40px;"></textarea>
+                    <span class="err"></span>
+                    <p class="notic">一般不超过100个字符，多个关键词请用英文逗号（,）隔开，建议3到5个关键词。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>SEO描述</label>
+                </dt>
+                <dd class="opt">          
+                    <textarea rows="5" cols="60" id="seo_description" name="seo_description" style="height:60px;"></textarea>
+                    <span class="err"></span>
+                    <p class="notic">一般不超过200个字符，不填写时系统自动提取正文的前200个字符</p>
+                </dd>
+            </dl>
+        </div>
+        <!-- SEO设置 -->
+        <!-- 其他参数 -->
+        <div class="ncap-form-default tab_div_4" style="display:none;">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="author">作者</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$Think.session.admin_info.pen_name|default='小编'}" name="author" id="author" class="input-txt">
+                    &nbsp;<a href="javascript:void(0);" onclick="set_author();" class="ncap-btn ncap-btn-green">设置</a>
+                    <p class="notic">设置作者默认名称（将同步至管理员笔名）</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>浏览量</label>
+                </dt>
+                <dd class="opt">    
+                    <input type="text" value="{php}echo mt_rand(100, 300);{/php}" name="click" id="click" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>阅读权限</label>
+                </dt>
+                <dd class="opt">
+                    <select name="arcrank" id="arcrank">
+                        {volist name="arcrank_list" id="vo"}
+                        <option value="{$vo.rank}">{$vo.name}</option>
+                        {/volist}
+                    </select>    
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="articleForm">发布时间</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" class="input-txt" id="add_time" name="add_time" value="{php}echo date('Y-m-d H:i:s'){/php}">        
+                    <span class="add-on input-group-addon">
+                        <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                    </span> 
+                    <span class="err"></span>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="tempview">文档模板</label>
+                </dt>
+                <dd class="opt">
+                    <select name="tempview" id="tempview">
+                        {volist name='$templateList' id='vo'}
+                        <option value="{$vo}" {eq name='$vo' value='$tempview'}selected{/eq}>{$vo}</option>
+                        {/volist}
+                    </select>
+                    <input type="hidden" name="type_tempview" value="{$tempview}" />
+                    <span class="err"></span>
+                </dd>
+            </dl>
+<!--             <dl class="row">
+                <dt class="tit">
+                    <label>排序号</label>
+                </dt>
+                <dd class="opt">    
+                    <input type="text" value="100" name="sort_order" id="sort_order" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic">越小越靠前</p>
+                </dd>
+            </dl> -->
+        </div>
+        <!-- 其他参数 -->
+        <div class="ncap-form-default">
+            <div class="bot">
+                <input type="hidden" name="gourl" value="{$gourl}">
+                <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div> 
+    </form>
+</div>
+<script type="text/javascript">
+
+    $(function () {
+        $('#add_time').layDate();   
+     
+        //选项卡切换列表
+        $('.tab-base').find('.tab').click(function(){
+            $('.tab-base').find('.tab').each(function(){
+                $(this).removeClass('current');
+            });
+            $(this).addClass('current');
+            var tab_index = $(this).data('index');          
+            $(".tab_div_1, .tab_div_2, .tab_div_3, .tab_div_4").hide();          
+            $(".tab_div_"+tab_index).show();
+        });
+
+        $('input[name=is_jump]').click(function(){
+            if ($(this).is(':checked')) {
+                $('.dl_jump').show();
+            } else {
+                $('.dl_jump').hide();
+            }
+        });
+
+        var dftypeid = {$typeid|default='0'};
+        $('#typeid').change(function(){
+            var current_channel = $(this).find('option:selected').data('current_channel');
+            if (0 < $(this).val() && {$channeltype} != current_channel) {
+                showErrorMsg('请选择对应模型的栏目！');
+                $(this).val(dftypeid);
+            } else if ({$channeltype} == current_channel) {
+                layer.closeAll();
+            }
+        });
+    });
+
+    function set_author()
+    {
+        layer.prompt({
+                title:'<font color="red">设置作者默认名称</font>'
+            },
+            function(val, index){
+                var admin_id = '{$Think.session.admin_info.admin_id}';
+                $.ajax({
+                    url: "{:url('Admin/ajax_setfield')}",
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: {id_name:'admin_id',id_value:admin_id,field:'pen_name',value:val},
+                    success: function(res){
+                        if (res.code == 1) {
+                            $('#author').val(val);
+                            layer.msg(res.msg, {icon: 1, time:1000});
+                        } else {
+                            showErrorMsg(res.msg);
+                            return false;
+                        }
+                    },
+                    error: function(e){
+                        showErrorMsg('网络失败，请刷新页面后重试');
+                        return false;
+                    }
+                });
+                layer.close(index);
+            }
+        );
+    }
+
+    function tags_list(obj)
+    {
+        var url = "{:url('Tags/index')}";
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: 'TAG标签管理',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            maxmin: true, //开启最大化最小化按钮
+            area: ['80%', '80%'],
+            content: url
+        });
+    }
+
+    function system_thumb()
+    {
+        var url = "{:url('System/thumb', ['tabase'=>-1])}";
+        //iframe窗
+        var iframes = layer.open({
+            type: 2,
+            title: '缩略图配置',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            content: url
+        });
+        layer.full(iframes);
+    }
+
+    // 判断输入框是否为空
+    function check_submit(){
+        if($.trim($('input[name=title]').val()) == ''){
+            showErrorMsg('标题不能为空！');
+            $('input[name=title]').focus();
+            return false;
+        }
+        if ($('#typeid').val() == 0) {
+            showErrorMsg('请选择栏目…！');
+            $('#typeid').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+
+    function img_call_back(fileurl_tmp)
+    {
+      $("#litpic_local").val(fileurl_tmp);
+      $("#img_a").attr('href', fileurl_tmp);
+      $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+    }
+
+    // 上传产品相册回调函数
+    function proimg_call_back(paths){
+        
+        var  last_div = $(".images_upload_tpl").html();
+        for (var i=0;i<paths.length ;i++ )
+        {
+            $(".images_upload:eq(0)").before(last_div);  // 插入一个 新图片
+            $(".images_upload:eq(0)").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+            $(".images_upload:eq(0)").find('img').attr('src',paths[i]);// 修改他的图片路径
+            $(".images_upload:eq(0)").find('a:eq(1)').attr('onclick',"ClearPicArr2(this,'"+paths[i]+"')").text('删除');
+            $(".images_upload:eq(0)").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+        }             
+    }
+    /*
+     * 上传之后删除组图input     
+     * @access   public
+     * @val      string  删除的图片input
+     */
+    function ClearPicArr2(obj,path)
+    {
+        // 删除数据库记录
+        $.ajax({
+            type:'POST',
+            url:"{:url('Product/del_proimg')}",
+            data:{filename:path},
+            success:function(){
+                $(obj).parent().remove(); // 删除完服务器的, 再删除 html上的图片 
+                $.ajax({
+                    type:'POST',
+                    url:"{:url('Uploadify/delupload')}",
+                    data:{action:"del", filename:path},
+                    success:function(){}
+                });     
+            }
+        });     
+    }
+
+
+    /** 以下 产品参数相关 js*/
+    $(document).ready(function(){
+        // 产品栏目切换时 ajax 调用  返回不同的属性输入框
+        $("#typeid").change(function(){
+            get_attr_input();
+        });
+        // 触发产品栏目
+        // $("#typeid").trigger('change'); 
+    });
+
+    // 产品栏目切换时 ajax 调用  返回不同的参数输入框
+    function get_attr_input()
+    {
+        var aid = '';
+        var typeid = $("#typeid").val();
+        if (parseInt(typeid) < 1) {
+            return false;
+        }
+        $('#product_attr_table').html('<div style="color: red;font-size: 12px;text-align: center;">加载中……</div>');
+        // 产品栏目切换时 ajax 调用  返回不同的属性输入框     
+        $.ajax({
+            type:'GET',
+            data:{aid:aid,typeid:typeid}, 
+            url:"{:url('Product/ajax_get_attr_input')}",
+            success:function(data){
+                $("#product_attr_table").html('').append(data);
+            },
+            error: function(e){
+                $('#product_attr_table').html('<div style="color: red;font-size: 12px;text-align: center;">加载失败，点击此处<a href="javascript:void(0);" onClick="get_attr_input();">刷新</a></div>');
+            }
+       });
+    }
+
+    /** 以下 产品相册的拖动排序相关 js*/
+
+    $( ".sort-list" ).sortable({
+        start: function( event, ui) {
+        
+        }
+        ,stop: function( event, ui ) {
+            // var rdata = '', url="{:url('Product/ajax_sort_proimg')}";
+            // var container = $(ui.item).closest("TB");
+            // var LIs = $(container).find("DIV");
+            // $(LIs).each(function(){
+            //     console.log($(this))
+            //     rdata += $(this).attr('rel') + ',' + $(this).index() + '|';
+            // });
+            // rdata = rdata.substr(0, (rdata.length-1));
+            // console.log(rdata)
+            // $.post(url, {str:rdata}, function(){
+            
+            // });
+        }
+    });
+    $( ".sort-list" ).disableSelection();
+
+</script>
+
+{include file="public/footer" /}

@@ -1,0 +1,76 @@
+{include file="public/layout" /}
+
+<link rel="stylesheet" type="text/css" href="__SKIN__/js/codemirror/codemirror.css">
+<script type="text/javascript" src="__SKIN__/js/codemirror/codemirror.js"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/xml/xml.js"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/javascript/javascript.js"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/css/css.js"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/php/php.js"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/clike/clike.js"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="filemanager/bar" /}
+    <form class="form-horizontal" id="post_form" action="{:url('Filemanager/edit')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">工作目录</dt>
+                <dd class="opt">
+                    <input type="text" name="activepath" value="{$info['activepath']|default=''}" id="activepath" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic">空白表示根目录，不允许用 “..” 形式的路径</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="url">文件名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="filename" value="{$info['filename']|default=''}" id="filename" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic">不允许用 “..” 形式的路径</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="content">HTML代码</label>
+                </dt>
+                <dd class="opt">
+                    <textarea name='content' id='content' style='width:99%;height:450px;background:#ffffff;'>{$info.content|default=''}</textarea>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <div class="bot"><a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a></div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+
+    var editor = CodeMirror.fromTextArea(document.getElementById('content'), {
+        lineNumbers: true,
+        lineWrapping: true,
+        mode: '{$info.extension}'
+    });
+
+    // 判断输入框是否为空
+    function checkForm(){
+        if($.trim($('input[name=activepath]').val()) == ''){
+            showErrorMsg('工作目录不能为空！');
+            $('input[name=activepath]').focus();
+            return false;
+        }
+        if($.trim($('input[name=filename]').val()) == ''){
+            showErrorMsg('文件名称不能为空！');
+            $('input[name=filename]').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+</script>
+{include file="public/footer" /}

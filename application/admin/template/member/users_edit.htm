@@ -1,0 +1,143 @@
+{include file="public/layout" /}
+
+<body style="background-color: #FFF; overflow-y: scroll;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title"><a class="back" href="{$backurl}" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
+            <div class="subject">
+                <h3>会员中心 - 编辑用户</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    <form class="form-horizontal" id="postForm" action="{:url('Member/users_edit')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row"><dt class="tit"><label><b>基本资料</b></label></dt></dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="username">用户头像</label>
+                </dt>
+                <dd class="opt">
+                    <div class="txpic" onClick="GetUploadify(1,'','allimg','head_pic_call_back');">
+                        <input type="hidden" name="head_pic" id="head_pic" value="{$info.head_pic}" />
+                        <img id="img_head_pic" src="{$info.head_pic|get_head_pic=###}" />
+                        <em>更换头像</em>
+                    </div>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="username">用&nbsp;&nbsp;户&nbsp;&nbsp;名</label>
+                </dt>
+                <dd class="opt">
+                    {$info.username}
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="nickname">用户昵称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="nickname" id="nickname" value="{$info.nickname}" class="input-txt">
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="password">登录密码</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="password" id="password" class="input-txt">
+                    <p class="notic">如不修改，请为空</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="level">用户级别</label>
+                </dt>
+                <dd class="opt">
+                    <select name="level" id="level">
+                        {volist name='$level' id='vo'}
+                            <option value="{$vo.level_id}" {eq name="$info.level" value="$vo.level_id"}selected{/eq}>{$vo.level_name}</option>
+                        {/volist}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            {if condition="1 == $userConfig.pay_open"}
+            <dl class="row">
+                <dt class="tit">
+                    <label for="users_money">账户余额</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="users_money" id="users_money" value="{$info.users_money|default='0.00'}">&nbsp;元
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            {/if}
+            <dl class="row">
+                <dt class="tit">
+                    <label>是否激活</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="is_activation1" class="cb-enable {if condition='$info.is_activation eq 1'}selected{/if}">是</label>
+                        <label for="is_activation0" class="cb-disable {if condition='$info.is_activation eq 0'}selected{/if}">否</label>
+                        <input id="is_activation1" name="is_activation" value="1" type="radio" {if condition="$info.is_activation eq 1"} checked="checked"{/if}>
+                        <input id="is_activation0" name="is_activation" value="0" type="radio" {if condition="$info.is_activation eq 0"} checked="checked"{/if}>
+                    </div>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="reg_time">注册日期</label>
+                </dt>
+                <dd class="opt">
+                    {$info.reg_time|date='Y-m-d H:i:s',###}
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="last_login">最后登录日期</label>
+                </dt>
+                <dd class="opt">
+                    {$info.last_login|date='Y-m-d H:i:s',###}
+                </dd>
+            </dl>
+            {notempty name='$users_para'}
+            <dl class="row"><dt class="tit"><label><b>更多资料</b></label></dt></dl>
+            {include file="member/users_field"/}
+            {/notempty}
+            <div class="bot">
+                <input type="hidden" name="users_id" value="{$info.users_id}">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    // 判断输入框是否为空
+    function checkForm(){
+        if($('input[name=username]').val() == ''){
+            showErrorMsg('用户名不能为空！');
+            $('input[name=username]').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $('#postForm').submit();
+    }
+
+    function head_pic_call_back(fileurl_tmp)
+    {
+      $("#head_pic").val(fileurl_tmp);
+      $("#img_head_pic").attr('src', fileurl_tmp);
+    }
+</script>
+
+{include file="public/footer" /}

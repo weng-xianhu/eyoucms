@@ -1,0 +1,57 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;min-width:auto;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;">
+    {include file="language/bar" /}
+    <form class="form-horizontal" id="post_form" action="{:url('Language/pack_edit')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="name"><em>*</em>变量名</label>
+                </dt>
+                <dd class="opt">
+                    {eq name='$row.is_syn' value='1'}
+                    {$row.name}
+                    <input type="hidden" name="name" value="{$row.name}" />
+                    <span class="err"></span>
+                    <p class="notic">官方同步语言包，禁止修改</p>
+                    {else /}
+                    <input type="text" name="name" value="{$row.name}" id="name" class="input-txt" onkeyup="this.value=this.value.replace(/[^a-zA-Z0-9_-]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/\[^a-zA-Z0-9_-]/g,''));">
+                    <span class="err"></span>
+                    <p class="notic">保持唯一性，不可重复</p>
+                    <p class="">仅支持字母、数字、下划线、连接符，不区分大小写</p>
+                    {/eq}
+                </dd>
+            </dl>
+            <dl class="row"><dt class="tit"><label><b>语言名称</b></label></dt><dd class="opt"><label><b>变量值</b></label></dd></dl>
+            {volist name='$languageRow' id='vo'}
+            <dl class="row">
+                <dt class="tit">
+                    <label for="value">{$vo.title}</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="value[{$vo.mark}]" value="{$values[$vo['mark']]['value']}" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            {/volist}
+            <div class="bot">
+                <input type="hidden" id="old_name" value="{$row.name}">
+                <input type="hidden" name="id" value="{$row.id}">
+                <input type="hidden" name="official" value="{$official|default='0'}">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    // 判断输入框是否为空
+    function checkForm(){
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+</script>
+{include file="public/footer" /}

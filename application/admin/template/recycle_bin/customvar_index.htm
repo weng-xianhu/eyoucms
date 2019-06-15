@@ -1,0 +1,301 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="recycle_bin/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>自定义变量回收列表</h3>
+                <h5>(共{$pageObj->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:url('RecycleBin/customvar_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    {include file="recycle_bin/btn" /}
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="名称搜索...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <!-- <div class="sDiv2">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('RecycleBin/customvar_index')}';">
+                    </div> -->
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc">选择</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w60">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w250">
+                            <div class="">变量标题</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">变量名</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">删除时间</div>
+                        </th>
+                        <th axis="col1" class="w150">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc"><input type="checkbox" name="ids[]" value="{$vo.id}"></div>
+                            </td>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {$vo.id}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w250">
+                                    {$vo.attr_name}
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                    {$vo.attr_var_name}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {$vo.update_time|date='Y-m-d',###}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w150 tc">
+                                    {eq name="'RecycleBin@customvar_recovery'|is_check_access" value="1"}
+                                    <a class="btn blue" href="javascript:void(0);" data-url="{:url('RecycleBin/customvar_recovery')}" data-id="{$vo.id}" data-attr_var_name="{$vo.attr_var_name}" onClick="recovery(this);"><i class="fa fa-trash-o"></i>还原</a>
+                                    {/eq}
+                                    {eq name="'RecycleBin@customvar_del'|is_check_access" value="1"}
+                                    <a class="btn red" href="javascript:void(0);" data-url="{:url('RecycleBin/customvar_del')}" data-id="{$vo.id}" data-attr_var_name="{$vo.attr_var_name}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>彻底删除</a>
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                </div>
+                {eq name="'RecycleBin@customvar_recovery'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_recovery(this, 'ids');" data-url="{:url('RecycleBin/customvar_recovery')}">
+                        <div class="add" title="批量还原">
+                            <span><i class="fa fa-rotate-left"></i>批量还原</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {eq name="'RecycleBin@customvar_del'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('RecycleBin/customvar_del')}">
+                        <div class="add" title="批量彻底删除">
+                            <span><i class="fa fa-close"></i>批量彻底删除</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$pageStr}
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    // 还原
+    function recovery(obj){
+        var attr_var_name = $(obj).attr('data-attr_var_name');
+        layer.confirm('变量【<font color="red">'+attr_var_name+'</font>】还原可用，确认还原？', {
+            title: false,//attr_var_name,
+            btn: ['确定','取消'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id')},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }
+
+    /**
+     * 批量还原提交
+     */
+    function batch_recovery(obj, name) {
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {icon: 2, title:false});
+            return;
+        }
+        // 删除按钮
+        layer.confirm('已选定自定义变量，确认批量还原？', {
+            title: false,
+            btn: ['确定', '取消'] //按钮
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:a},
+                dataType: 'json',
+                success: function (data) {
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                },
+                error:function(){
+                    layer.closeAll();
+                    layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+
+    // 删除
+    function delfun(obj){
+        layer.confirm('此操作不可逆，确认彻底删除？', {
+            title: false,//$(obj).attr('data-attr_var_name'),
+            btn: ['确定','取消'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id')},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }
+
+    /**
+     * 批量删除提交
+     */
+    function batch_del(obj, name) {
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {icon: 2, title:false});
+            return;
+        }
+        // 删除按钮
+        layer.confirm('此操作不可逆，确认批量彻底删除？', {
+            title: false,
+            btn: ['确定', '取消'] //按钮
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:a},
+                dataType: 'json',
+                success: function (data) {
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                },
+                error:function(){
+                    layer.closeAll();
+                    layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+</script>
+
+{include file="public/footer" /}

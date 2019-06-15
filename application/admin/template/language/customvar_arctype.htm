@@ -1,0 +1,154 @@
+{include file="public/layout" /}
+<script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="language/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>模板变量列表</h3>
+                <h5>(共{$pageObj->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:url('Language/customvar_arctype')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <!-- <div class="sDiv2">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Language/customvar_arctype')}';">
+                    </div> -->
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w10" axis="col0">
+                            <div class="tc"></div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">变量说明</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w350">
+                            <div class="tc" style="text-align: left;">关联绑定数据</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">更新时间</div>
+                        </th>
+                        <th axis="col1" class="w180">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {volist name="list" key="k1" id="vo"}
+                        <tr>
+                            <td class="">
+                                <div class="w10 tc">
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                    {$vo.attr_title}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w350 tc" style="text-align: left;">
+                                {eq name="$vo.attr_group" value="arctype"}
+                                    {notempty name="$arctypeList"}
+                                    <select>
+                                        {foreach name="$bindAttrList[$vo.attr_name]" key="k2" item="v2"}
+                                          {if condition="!empty($arctypeList[$v2['attr_value']])"}
+                                            <option {if condition="$admin_lang == $v2['lang']"}selected="true"{/if} disabled="true">{$arctypeList[$v2['attr_value']]['typename']|default='找不到…'}</option>
+                                          {/if}
+                                        {/foreach}
+                                    </select>
+                                    {/notempty}
+                                {/eq}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {$vo.update_time|MyDate='Y-m-d',###}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w180 tc">
+                                    <a href="javascript:void(0);" onclick="showtext('{$vo['attr_name']}');" class="btn blue {$vo['attr_name']}" data-clipboard-text="${php}echo 'lang.';{/php}{$vo['attr_name']}">复制标签</a>
+                                    {neq name="$admin_lang" value="$main_lang"}
+                                    <a class="btn blue" href="javascript:void(0)" data-url="{:url('Language/customvar_bind', ['attr_id'=>$vo.attr_id])}" onClick="customvar_bind(this);"><i class="fa fa-trash-o"></i>关联绑定</a>
+                                    {/neq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$pageStr}
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    // 关联绑定
+    function customvar_bind(obj)
+    {
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: '关联绑定',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            maxmin: true, //开启最大化最小化按钮
+            area: ['600px', '520px'],
+            content: $(obj).data('url')
+        });
+    }
+
+    // 复制标签
+    function showtext(classname){
+        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:2});}); 
+    }
+</script>
+{include file="public/footer" /}

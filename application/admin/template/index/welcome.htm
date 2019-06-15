@@ -1,0 +1,296 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- Apple devices fullscreen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Apple devices fullscreen -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link href="__SKIN__/css/main.css?v={$version}" rel="stylesheet" type="text/css">
+<link href="__SKIN__/font/css/font-awesome.min.css" rel="stylesheet" />
+<link href="__SKIN__/css/index.css?v={$version}" rel="stylesheet" type="text/css">
+<!--[if IE 7]>
+  <link rel="stylesheet" href="__SKIN__/font/css/font-awesome-ie7.min.css">
+<![endif]-->
+<script type="text/javascript">
+    var eyou_basefile = "{$Request.baseFile}";
+    var module_name = "{$Think.const.MODULE_NAME}";
+</script>  
+<script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
+<script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
+<script src="__SKIN__/js/upgrade.js?v={$version}"></script>
+
+</head>
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{empty name="$system_explanation_welcome"}
+<div class="page" id="explanation_welcome">
+    <!-- 操作说明 -->
+    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+            <h4>系统提示</h4>
+            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+        </div>
+        <ul>
+            <li style="color: red;">系统检测当前版本尚未备份数据库，请点击<a href="{:url('Tools/index')}">【数据备份】</a>进入操作。</li>
+        </ul>
+    </div>
+</div>
+{/empty}
+<div class="warpper">
+    <div class="title">管理中心</div>
+    <div class="content start_content">
+        <div class="contentWarp">
+            <div class="index_box">
+                <section class="index_point hidden-xs">
+                    <h3>快捷入口</h3>
+                    <div class="container-fluid">
+                        <ul>
+                            {eq name="'System@index'|is_check_access" value="1"}
+                            <li>
+                                <a href="{:url('System/index', array('inc_type'=>'web'))}">
+                                    <i class="fa fa-newspaper-o"></i>
+                                    基本信息
+                                </a>
+                                <i class="fa fa-angle-right"></i>
+                            </li>
+                            {/eq}
+                            {eq name="'Arctype@index'|is_check_access" value="1"}
+                            <li>
+                                <a href="{:url('Arctype/index')}" >
+                                    <i class="fa fa-sitemap"></i>
+                                    栏目管理
+                                </a>
+                                <i class="fa fa-angle-right"></i>
+                            </li>
+                            {/eq}
+                            {eq name="'Filemanager@index'|is_check_access" value="1"}
+                            <li>
+                                <a href="{:url('Filemanager/index')}">
+                                    <i class="fa fa-folder-open"></i>
+                                    模板管理
+                                </a>
+                                <i class="fa fa-angle-right"></i>
+                            </li>
+                            {/eq}
+                            {eq name="'Archives@release'|is_check_access" value="1"}
+                            <li>
+                                <a href="{:url('Archives/release')}">
+                                    <i class="fa fa-plus"></i>
+                                    发布内容
+                                </a>
+                                <i class="fa fa-angle-right"></i>
+                            </li>
+                            {/eq}
+                            <li>
+                                <div class="">
+                                    <a href="javascript:void(0);" class="bds_more bdsharebuttonbox" data-cmd="more">
+                                        <i class="fa fa-share-alt"></i>分享成果
+                                    </a>
+                                </div>
+                                <script>
+                                    window._bd_share_config = {
+                                        "common":{
+                                            "bdSnsKey":{},
+                                            "bdText":"{$share.bdText}",
+                                            "bdMini":"2",
+                                            "bdMiniList":false,
+                                            "bdPic":"",
+                                            "bdStyle":"2",
+                                            "bdSize":"32",
+                                            "bdUrl":"{$share.bdUrl}",
+                                            "bdRootPath":"__ROOT_DIR__"
+                                        },
+                                        "share":{}
+                                    };
+                                    with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='public/plugins/share/api/js/share.js?v={$version}.js?cdnversion='+~(-new Date()/36e5)];
+                                </script>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+            <div class="section system_section" style="float: none;width: inherit;">
+                <div class="system_section_con">
+                    <div class="sc_title" style="padding: 26px 0 14px;border-bottom: 1px solid #e4eaec;">
+                        <i class="sc_icon"></i>
+                        <h3>程序信息</h3>
+                    </div>
+                    <div class="sc_warp" id="system_warp" style="display: block;">
+                        <table cellpadding="0" cellspacing="0" class="system_table">
+                            <tbody>
+                                <tr>
+                                    <td class="gray_bg">系统更新：</td>
+                                    <td id="td_upgrade_msg">
+                                        <div id="upgrade_filelist" style="display:none;"></div> 
+                                        <div id="upgrade_intro" style="display:none;"></div> 
+                                        <div id="upgrade_notice" style="display:none;"></div> 
+                                        <a href="javascript:void(0);" id="a_upgrade" data-version="" data-max_version="" data-iframe="workspace" title="" data-tips_url="{:url('Upgrade/setPopupUpgrade')}" data-upgrade_url="{:url('Upgrade/OneKeyUpgrade')}" data-check_authority="{:url('Upgrade/check_authority')}">正在版本检测中……</a>
+                                    </td>
+                                    <td class="gray_bg">当前版本：</td>
+                                    <td>{$sys_info.curent_version|default='v1.0'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray_bg">程序名称：</td>
+                                    <td>{$sys_info.web_name|default='Eyoucms企业网站管理系统'}</td>
+                                    <td class="gray_bg">版权所有：</td>
+                                    <td>{notempty name="$is_eyou_authortoken"}盗版必究{else /}正版软件{/notempty}</td>
+                                </tr>
+                                {notempty name="$is_eyou_authortoken"}
+                                <tr>
+                                    <td class="gray_bg">更新日志：</td>
+                                    <td><a href="http://www.eyoucms.com/news/rizhi/" target="_blank">查看</a></td>
+                                    <td class="gray_bg">帮助中心:</td>
+                                    <td><a href="http://www.eyoucms.com/bbs/" target="_blank">查看</a></td>
+                                </tr>
+                                {/notempty}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="system_section_con">
+                    <div class="sc_title" style="padding: 26px 0 14px;border-bottom: 1px solid #e4eaec;">
+                        <i class="sc_icon"></i>
+                        <h3>
+                            服务器信息
+                        </h3>
+                    </div>
+                    <div class="sc_warp" id="system_warp" style="display: block;padding-bottom: 20px;">
+                        <table cellpadding="0" cellspacing="0" class="system_table">
+                            <tbody><tr>
+                                <td class="gray_bg">服务器操作系统：</td>
+                                <td>{$sys_info.os}</td>
+                                <td class="gray_bg">服务器域名/IP：</td>
+                                <td>{$sys_info.domain} [ {$sys_info.ip} ]</td>
+                            </tr>
+                            <tr>
+                                <td class="gray_bg">服务器环境：</td>
+                                <td>{$sys_info.web_server}</td>
+                                <td class="gray_bg">PHP 版本：</td>
+                                <td>{$sys_info.phpv}</td>
+                            </tr>
+                            <tr>
+                                <td class="gray_bg">Mysql 版本：</td>
+                                <td>{$sys_info.mysql_version}</td>
+                                <td class="gray_bg">GD 版本：</td>
+                                <td>{$sys_info.gdinfo}</td>
+                            </tr>
+                            <tr>
+                                <td class="gray_bg">文件上传限制：</td>
+                                <td>{$sys_info.fileupload}</td>
+                                <td class="gray_bg">最大占用内存：</td>
+                                <td>{$sys_info.memory_limit}</td>
+                            </tr>
+                            <tr>
+                                <td class="gray_bg">POST限制：</td>
+                                <td>{$sys_info.postsize|default='unknown'}</td>
+                                <td class="gray_bg">最大执行时间：</td>
+                                <td>{$sys_info.max_ex_time}</td>
+                            </tr>
+                            <tr>
+                                <td class="gray_bg">Zip支持：</td>
+                                <td>{$sys_info.zip}</td>
+                                <td class="gray_bg">Zlib支持：</td>
+                                <td>{$sys_info.zlib}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="footer" style="position: static; bottom: 0px; font-size:14px;">
+    <p>
+        <b>{$global.web_copyright|htmlspecialchars_decode}</b>
+    </p>
+</div>
+<script type="text/javascript">
+    $(function () {
+        check_upgrade_version();
+        $.get("{:url('Ajax/welcome_handle')}"); // 进入欢迎页面需要异步处理的业务
+        // 版本检测更新弹窗
+        function check_upgrade_version(){
+            $.ajax({
+                type : "GET",
+                url  : "{:url('Ajax/check_upgrade_version')}",
+                data : {},
+                dataType : "JSON",
+                success: function(res) {
+                    if (1 == res.code) {
+                        if (2 == res.data.code) {
+                            $('#upgrade_filelist').html(res.data.msg.upgrade);
+                            $('#upgrade_intro').html(res.data.msg.intro);
+                            $('#upgrade_notice').html(res.data.msg.notice);
+                            $('#a_upgrade').attr('data-version', res.data.msg.key_num)
+                            .attr('data-max_version', res.data.msg.max_version)
+                            .attr('title', res.data.msg.tips);
+                            $('#a_upgrade').html('检测到新版本'+res.data.msg.key_num+'[点击查看]').css('color', '#F00');
+
+                            {if condition="-1 != $web_show_popup_upgrade AND (0 >= $Think.session.admin_info.role_id OR 1 == $Think.session.admin_info.auth_role_info.online_update)"}
+                                btn_upgrade($("#a_upgrade"), 1);
+                            {/if}
+                        } else {
+                            $('#td_upgrade_msg').html(res.data.msg);
+                        }
+                    }
+                }
+            }); 
+        }
+    });
+
+    $(function() {
+        //操作提示缩放动画
+        $("#checkZoom").click(function(){
+            $("#explanation").animate({
+                color: "#FFF",
+                backgroundColor: "#4FD6BE",             
+                width: "0",
+                height: "0",                             
+            },300,function(){
+                $("#explanation_welcome").hide();
+            });
+            $("#explanationZoom").hide();
+            $.get("{:url('Ajax/explanation_welcome')}");
+        });
+
+        checkInlet(); // 自动检测隐藏index.php
+    });
+
+    // 自动检测隐藏index.php
+    function checkInlet() {
+        layer.open({
+            type: 2,
+            title: false,
+            area: ['0px', '0px'],
+            shade: 0.0,
+            closeBtn: 0,
+            shadeClose: true,
+            content: '//{$Request.host}__ROOT_DIR__/api/Rewrite/setInlet.html',
+            success: function(layero, index){
+                layer.close(index);
+                var body = layer.getChildFrame('body', index);
+                var content = body.html();
+                if (content.indexOf("Congratulations on passing") == -1)
+                {
+                    $.ajax({
+                        type : "POST",
+                        url  : "__ROOT_DIR__/index.php?m=api&c=Rewrite&a=setInlet",
+                        data : {seo_inlet:0},
+                        dataType : "JSON",
+                        success: function(res) {
+
+                        }
+                    }); 
+                }
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

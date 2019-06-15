@@ -1,0 +1,53 @@
+{include file="public/layout" /}
+
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="filemanager/bar" /}
+    <form class="form-horizontal" id="post_form" action="{:url('Filemanager/upload')}" method="post" enctype="multipart/form-data">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">当前目录</dt>
+                <dd class="opt">
+                    {$info['activepathname']|default=''}
+                    <input type="hidden" name="activepath" value="{$info['activepath']|default=''}">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            {volist name="$info.uploadlist" id="vo"}
+            <dl class="row">
+                <dt class="tit">
+                    <label for="url">上传文件{$vo}</label>
+                </dt>
+                <dd class="opt">
+                    <input type="file" name="upfile[]" value="" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            {/volist}
+            <div class="bot"><a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a></div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    // 判断输入框是否为空
+    function checkForm(){
+        var isempty = true;
+        $.each($('input[name^=upfile]'), function(index, item){
+            if ($.trim($(item).val()) != '' && $(item).val() != undefined && $(item).val() != null) {
+                isempty = false;
+            }
+        })
+        if(isempty == true){
+            showErrorMsg('请选择上传文件！');
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+</script>
+{include file="public/footer" /}

@@ -1,0 +1,229 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow-y: scroll;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
+            <div class="subject">
+                <h3>新增广告</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    <form class="form-horizontal" id="post_form" action="{:url('AdPosition/add')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>广告名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="title" value="" id="title" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic">保持唯一性，不可重复</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                  <label>广告内容</label>
+                </dt>
+                <dd class="opt">
+                    <div class="tab-pane" id="tab_imgupload">
+                        <a href="javascript:void(0);" onClick="GetUploadify(30,'','allimg','imgupload_call_back');" class="imgupload">
+                            <i class="fa fa-photo"></i>上传图片
+                        </a>
+                        <table class="table table-bordered">
+                            <tbody>
+                            <tr>
+                                <td class="sort-list">
+                                    <div class="images_upload">
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- 上传图片显示的样板 start -->
+                    <div class="images_upload_tpl none">
+                        <div class="images_upload ic">
+                            <div class="ic">
+                                <div class='upimg' title="拖动修改排序" >
+                                    <div class='icaction' style="display: none">
+                                        <span class="load_images" onclick="">
+                                            <a href="javascript:void(0);" style="color: white">
+                                                <i class='fa fa-search-plus'></i>查看大图
+                                            </a>
+                                        </span>
+                                    </div>
+                                    <div class='cover-bg' style="display: none"></div>
+                                    <img src="__STATIC__/admin/images/add-button.jpg"/>
+                                </div>
+                                <input type="hidden"/>
+                                <span class="span_input">
+                                    <input type="hidden"/>
+                                </span>
+                                <textarea placeholder="请输入标题..."></textarea>
+                                <textarea placeholder="请输入链接网址..."></textarea>
+                                <div class="operation">
+                                    <a href="javascript:void(0)">&nbsp;&nbsp;</a>
+                                    <a href="javascript:void(0)">&nbsp;&nbsp;</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 上传图片显示的样板 end -->
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>广告备注</label>
+                </dt>
+                <dd class="opt">          
+                    <textarea rows="5" cols="60" id="intro" name="intro" style="height:60px;"></textarea>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl> 
+            <div class="bot"><a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a></div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    // 勾选新窗口打开链接
+    function CheckedTarget(t){
+        if ($(t).is(':checked')) {
+            $(t).parent().find('input[name="img_target[]"]').val(1);
+        }else{
+            $(t).parent().find('input[name="img_target[]"]').val(0);
+        }
+    }
+
+    // 鼠标事件，加载查看大图和更新图片
+    $(document).ready(function(){
+       $(".upimg").live('mouseover', function(){
+            $(this).find('div.icaction').show();
+            $(this).find('div.cover-bg').show();
+       }).live('mouseout', function(){
+            $(this).find('div.icaction').hide();
+            $(this).find('div.cover-bg').hide();
+       });
+    });
+
+    // 查看大图
+    function Images(links){
+        var max_width = 900;
+        var max_height = 600;
+        var img = "<img src='"+links+"'/>";
+        $(img).load(function() {
+            width  = this.width;
+            height = this.height;
+            if (width > height) {
+                if (width > max_width) {
+                    width = max_width;
+                }
+                width += 'px';
+            } else {
+                width = 'auto';
+            }
+            if (width < height) {
+                if (height > max_height) {
+                    height = max_height;
+                }
+                height += 'px';
+            } else {
+                height = 'auto';
+            }
+
+            var links_img = "<img style='width:"+width+";height:"+height+";' src="+links+">";
+            
+            layer.open({
+                type: 1,
+                title: false,
+                closeBtn: true,
+                area: [width, height],
+                skin: 'layui-layer-nobg', //没有背景色
+                content: links_img
+            });
+        });
+    }
+
+    // 判断输入框是否为空
+    function checkForm(){
+        if($('input[name=title]').val() == ''){
+            layer.msg('广告位名称不能为空！', {icon: 2,time: 1000});
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+
+    // 上传图集相册回调函数
+    function imgupload_call_back(paths){
+        var last_div = $(".images_upload_tpl").html();
+        var inputs   = $('.span_input input');
+
+        for (var i=0;i<paths.length ;i++){
+            $(".images_upload:eq(0)").before(last_div);  // 插入一个 新图片
+            // 修改他的链接地址
+            $(".images_upload:eq(0)").find('span:eq(0)').attr('onclick',"Images('"+paths[i]+"');");
+            // 修改他的图片路径
+            $(".images_upload:eq(0)").find('img').attr('src',paths[i]);
+            // 处理图片路径及隐藏域
+            if (inputs.length > '0') {
+                // 修改隐藏域，提交ID隐藏域
+                $(".images_upload:eq(0)").find('input:eq(0)').attr('name','img_id[]').attr('value',''); 
+                // 修改隐藏域，提交图片隐藏域
+                $(".span_input:eq(0)").find('input:eq(0)').attr('name','img_litpic[]').attr('value',paths[i]);
+                // 提交标题
+                $(".images_upload:eq(0)").find('textarea:eq(0)').attr('name','img_title[]');
+                // 提交跳转链接
+                $(".images_upload:eq(0)").find('textarea:eq(1)').attr('name','img_links[]');
+                // 提交新窗口选项
+                $(".images_upload:eq(0)").find('div.operation a:eq(0)').html("<label><input type='checkbox' title='在新窗口打开' onclick='CheckedTarget(this)'/>新窗口<input type='hidden' name='img_target[]' value='0'></label>");
+                // 删除按钮
+                $(".images_upload:eq(0)").find('div.operation a:eq(1)').attr('onclick',"ClearPicArr(this,'"+paths[i]+"')").html("<i class='fa fa-remove'></i>删除");
+            }
+        }
+    }
+
+    // 上传之后删除组图input
+    function ClearPicArr(obj,path)
+    {
+        $(obj).parent().parent().parent().remove(); // 删除完服务器的, 再删除 html上的图片
+        $.ajax({
+            type:'POST',
+            url:"{:url('Uploadify/delupload')}",
+            data:{action:"del", filename:path},
+            success:function(){}
+        }); 
+    }
+
+    // 代码调用js
+    function copyToClipBoard(id) {
+        var adstr = "{eyou:ad aid='" + id + "'}\r\n   <a href='{$"+"field.links}' {$"+"field.target}><img src='{$"+"field.litpic}' alt='{$"+"field.title}' /></a>\r\n{/eyou:ad";
+        var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px"><dd>标签 ad 调用:</dd>'
+        contentdiv += '<textarea rows="4" cols="60" style="width:400px;height:80px;">' + adstr + '}</textarea>'
+        contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color: #F60;">请将对应标签代码复制并粘贴到对应模板文件中！</dd></dl></div>'
+        layer.open({
+            title: '代码调用',
+            type: 1,
+            skin: 'layui-layer-demo',
+            area: ['480px', '240px'], //宽高
+            content: contentdiv
+        });
+    }
+
+    // 图集相册的拖动排序相关 js
+    $( ".sort-list" ).sortable({
+        start: function( event, ui) {
+        
+        }
+        ,stop: function( event, ui ) {
+
+        }
+    });
+    $( ".sort-list" ).disableSelection();
+</script>
+
+{include file="public/footer" /}

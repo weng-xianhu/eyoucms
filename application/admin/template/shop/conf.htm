@@ -1,0 +1,128 @@
+{include file="public/layout" /}
+
+<body style="background-color: #FFF; overflow-y: scroll;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="member/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>功能配置</h3>
+            </div>
+            <div class="sDiv">
+                {include file="shop/shop_bar" /}
+            </div>
+        </div>
+        <form class="form-horizontal" id="post_form" action="{:url('Shop/conf')}" method="post">
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="uname">商家提示</label>
+                    </dt>
+                    <dd class="opt">
+                        <textarea name="shop[shop_prompt]" style="width: 30%; height: 60px;">{$userConfig.shop_prompt}</textarea>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="uname">货到付款</label>
+                    </dt>
+                    <dd class="opt">
+                        <label>
+                            <input type="radio" name="shop[shop_open_offline]" value="0" {if condition="!isset($userConfig.shop_open_offline) || empty($userConfig.shop_open_offline)"}checked="checked"{/if}/>开启
+                        </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label>
+                            <input type="radio" name="shop[shop_open_offline]" value="1" {if condition="$userConfig.shop_open_offline == 1"}checked="checked"{/if}/>关闭
+                        </label>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="username">运费模板</label>
+                    </dt>
+                    <dd class="opt" style="line-height: 30px;">
+                        <label>
+                            <input type="radio" name="shop[shop_open_shipping]" value="0" {if condition="!isset($userConfig.shop_open_shipping) || empty($userConfig.shop_open_shipping)"}checked="checked"{/if}/>包邮
+                        </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label>
+                            <input type="radio" name="shop[shop_open_shipping]" value="1" {if condition="$userConfig.shop_open_shipping == 1"}checked="checked"{/if}/>需要运费
+                            &nbsp;<a id="a_shop_open_shipping" href="javascript:void(0);" onclick="SetShipping();" class="ncap-btn ncap-btn-green" {if condition="!isset($userConfig.shop_open_shipping) || empty($userConfig.shop_open_shipping)"}style="display:none;"{/if}>设置价格</a>
+                        </label>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="uname">产品类型</label>
+                    </dt>
+                    <dd class="opt">
+                        <label>
+                            <input type="radio" name="shop[shop_type]" value="0" {if condition="!isset($userConfig.shop_type) || empty($userConfig.shop_type)"}checked="checked"{/if}/>实物
+                        </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label>
+                            <input type="radio" name="shop[shop_type]" value="1" {if condition="$userConfig.shop_type == 1"}checked="checked"{/if}/>虚拟
+                        </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label>
+                            <input type="radio" name="shop[shop_type]" value="2" {if condition="$userConfig.shop_type == 2"}checked="checked"{/if}/>两者均有
+                        </label>
+                    </dd>
+                </dl>
+            </div>
+
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <div class="bot">
+                        <a href="JavaScript:void(0);" onclick="ShopConfig();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                    </div>
+                </dl>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function(){
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        $('input[name="shop[shop_open_shipping]"]').click(function(){
+            var shop_open_shipping = $(this).val();
+            if (1 == shop_open_shipping) {
+                $('#a_shop_open_shipping').show();
+            } else {
+                $('#a_shop_open_shipping').hide();
+            }
+        });
+    });
+
+    function SetShipping(){
+        var url = "{:url('Shop/shipping_template')}";
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: '运费模板管理',
+            shadeClose: false,
+            maxmin: false, //开启最大化最小化按钮
+            area: ['60%', '80%'],
+            content: url
+        });
+    }
+
+    // 判断输入框是否为空
+    function ShopConfig(){
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+</script>
+{include file="public/footer" /}

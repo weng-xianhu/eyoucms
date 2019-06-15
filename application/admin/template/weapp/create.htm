@@ -1,0 +1,199 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="weapp/bar" /}
+    <form class="form-horizontal" id="post_form" action="{:url('Weapp/create')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="code"><em>*</em>插件标识</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="code" placeholder="比如：Demo" id="code" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                    <p class="">易优插件库中唯一的标识，首字母必须大写，只支持大小字母与数字。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="name"><em>*</em>插件名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="name" value="" id="name" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="version">插件版本号</label>
+                </dt>
+                <dd class="opt">
+                    v1.0.0
+                    <input type="hidden" name="version" value="v1.0.0" id="version" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="min_version">CMS版本号</label>
+                </dt>
+                <dd class="opt">
+                    {$min_version|default='v1.1.6'}
+                    <input type="hidden" name="min_version" value="{$min_version|default='v1.1.6'}" id="min_version" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="author"><em>*</em>开发者</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="author" value="" id="author" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="scene"><em>*</em>应用场景</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="radio" value="0" name="scene" checked="checked" />手机端+PC端</label>&nbsp;&nbsp;
+                    <label><input type="radio" value="1" name="scene" />手机端</label>&nbsp;&nbsp;
+                    <label><input type="radio" value="2" name="scene" />PC端</label>&nbsp;&nbsp;
+                    <p class="">在哪种场景展现，不指定的场景调用插件无效。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="description"><em>*</em>插件描述</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="80" id="description" name="description" style="height:80px;" placeholder=""></textarea>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <div class="bot"><a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">初始化结构</a></div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+
+    /**
+     * 插件标识格式判断
+     * @param str
+     */
+    function checkCode(str){
+        var reg = /^[A-Z]([a-zA-Z0-9]*)$/;
+        if(reg.test(str)){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * 版本号格式判断
+     * @param str
+     */
+    function checkVersion(str){
+        var reg = /^v([0-9]+)\.([0-9]+)\.([0-9]+)$/i;
+        if(reg.test(str)){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * 插件标识验证
+     * @param str
+     */
+    function ajax_check_code()
+    {
+        var flag = false;
+        var code = $.trim($('input[name=code]').val());
+        var reg = /(^[a-zA-Z0-9]{1,}$)/;
+        if (!reg.test(code)) {
+            showErrorMsg('插件标识格式不正确！');
+            $('input[name=code]').focus();
+            return false;
+        }
+        if ('Sample' == code) {
+            showErrorMsg('插件标识已被占用！');
+            $('input[name=code]').focus();
+            return false;
+        }
+
+        $.ajax({
+            url: "{:url('Weapp/ajax_check_code')}",
+            type: 'GET',
+            async: false,
+            dataType: 'JSON',
+            data: {code: code},
+            success: function(res){
+                console.log(res)
+                if(res.code == 1){
+                    flag = true;
+                } else {
+                    showErrorMsg(res.msg);
+                    $('input[name=code]').focus();
+                }
+            },
+            error: function(e){}
+        });
+
+        return flag;
+    }
+
+    // 判断输入框是否为空
+    function checkForm(){
+        if(!checkCode($('input[name=code]').val())){
+            showErrorMsg('插件标识格式不正确！');
+            $('input[name=code]').focus();
+            return false;
+        }
+        if(!ajax_check_code())
+        {
+            return false;
+        }
+        if($('input[name=name]').val() == ''){
+            showErrorMsg('插件名称不能为空！');
+            $('input[name=name]').focus();
+            return false;
+        }
+        if(!checkVersion($('input[name=version]').val())){
+            showErrorMsg('插件版本号格式不正确！');
+            $('input[name=version]').focus();
+            return false;
+        }
+        if(!checkVersion($('input[name=min_version]').val())){
+            showErrorMsg('CMS最低版本号格式不正确！');
+            $('input[name=min_version]').focus();
+            return false;
+        }
+        if($('input[name=author]').val() == ''){
+            showErrorMsg('开发者不能为空！');
+            $('input[name=author]').focus();
+            return false;
+        }
+        if($('input[name=scene]').val() == ''){
+            showErrorMsg('应用场景不能为空！');
+            $('input[name=scene]').focus();
+            return false;
+        }
+        if($('#description').val() == ''){
+            showErrorMsg('插件名称不能为空！');
+            $('#description').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+</script>
+{include file="public/footer" /}

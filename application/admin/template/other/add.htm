@@ -1,0 +1,201 @@
+{include file="public/layout" /}
+
+{load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+{load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+{load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+
+<body style="background-color: #FFF; overflow: auto;min-width:auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;">
+    <div class="fixed-bar">
+        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
+            <div class="subject">
+                <h3>新增广告</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                <li><a href="javascript:void(0);" data-index='1' class="tab current"><span>常规选项</span></a></li>
+                <li><a href="javascript:void(0);" data-index='2' class="tab"><span>高级选项</span></a></li>
+            </ul>
+        </div>
+    </div>
+    <form class="form-horizontal" id="post_form" action="{:U('Other/add')}" method="post">
+        <!-- 常规信息 -->
+        <div class="ncap-form-default tab_div_1">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>广告名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="title" placeholder="" id="title" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic">有规则填写便于自己识别与记忆</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>广告位置</label>
+                </dt>
+                <dd class="opt"> 
+                    <select name="pid" id="pid">
+                        <option value="0">--请选择--</option>
+                        {volist name="ad_position" id="vo"}
+                        <option value="{$vo.id}" {eq name="$pid" value="$vo.id"}selected{/eq}>{$vo.title}&nbsp;({$vo.width}*{$vo.height})</option>
+                        {/volist}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic">请先新增广告位置，再进行广告发布</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit" colspan="2">
+                    <label>广告类型</label>
+                </dt>
+                <dd class="opt">
+                    <div id="gcategory">
+                        <select name="media_type" class="input-sm" class="form-control">
+                            {volist name="ad_media_type" id="vo"}
+                            <option value="{$key}">{$vo}</option>
+                            {/volist}
+                        </select>
+                    </div>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>广告链接</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="links" placeholder="http://" value="" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                  <label>广告图片</label>
+                </dt>
+                <dd class="opt">
+                    <div class="input-file-show div_litpic_local">
+                        <span class="show">
+                            <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="javascript:void(0);">
+                                <i id="img_i" class="fa fa-picture-o" onmouseover="" onmouseout="layer.close(layer_tips);"></i>
+                            </a>
+                        </span>
+                        <span class="type-file-box">
+                            <input type="text" id="litpic_local" name="litpic_local" value="" class="type-file-text">
+                            <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                            <input class="type-file-file" onClick="GetUploadify(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
+                                 title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                        </span>
+                    </div>
+                    <input type="text" id="litpic_remote" name="litpic_remote" value="" placeholder="http://" class="input-txt" style="display: none;">
+                    &nbsp;
+                    <label><input type="checkbox" name="is_remote" id="is_remote" value="1" onClick="clickRemote(this, 'litpic');">远程图片</label>
+                    <span class="err"></span>
+                    <p class="notic">请填写图片链接，或上传图片格式文件，具体像素大小视网站模板而定</p>
+                </dd>
+            </dl>
+        </div>
+        <!-- 常规信息 -->
+        <!-- 高级参数 -->
+        <div class="ncap-form-default tab_div_2" style="display:none;">
+<!--             <dl class="row">
+                <dt class="tit">
+                    <label for="author">排序</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="sort_order" value="100" id="sort_order" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic">越小越靠前</p>
+                </dd>
+            </dl> -->
+            <dl class="row">
+                <dt class="tit">
+                    <label>新窗口打开</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="target1" class="cb-enable selected">是</label>
+                        <label for="target0" class="cb-disable">否</label>
+                        <input id="target1" name="target" value="1" type="radio" checked="checked">
+                        <input id="target0" name="target" value="0" type="radio">
+                    </div>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>备注信息</label>
+                </dt>
+                <dd class="opt">    
+                    <textarea class="span12 ckeditor" id="post_content" name="intro" title=""></textarea>      
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+        </div>
+        <!-- 高级参数 -->
+        <div class="ncap-form-default">
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div> 
+    </form>
+</div>
+<script type="text/javascript">
+    $(function () {
+     
+        //选项卡切换列表
+        $('.tab-base').find('.tab').click(function(){
+            $('.tab-base').find('.tab').each(function(){
+                $(this).removeClass('current');
+            });
+            $(this).addClass('current');
+            var tab_index = $(this).data('index');          
+            $(".tab_div_1, .tab_div_2").hide();          
+            $(".tab_div_"+tab_index).show();
+        });
+    });
+
+    var url="{:U('Ueditor/index',array('savepath'=>'ueditor'))}";
+    var ue = UE.getEditor('post_content',{
+        serverUrl :url,
+        zIndex: 999,
+        initialFrameWidth: "100%", //初化宽度
+        initialFrameHeight: 500, //初化高度            
+        focus: false, //初始化时，是否让编辑器获得焦点true或false
+        maximumWords: 99999,
+        removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
+        pasteplain:false, //是否默认为纯文本粘贴。false为不使用纯文本粘贴，true为使用纯文本粘贴
+        autoHeightEnabled: false,
+        toolbars: ueditor_toolbars
+    });
+
+    // 判断输入框是否为空
+    function check_submit(){
+        if($('input[name=title]').val() == ''){
+            layer.msg('广告名称不能为空！', {icon: 2,time: 1000});
+            $('input[name=title]').focus();
+            return false;
+        }
+        if($('#pid').val() == 0){
+            layer.msg('请选择位置！', {icon: 2,time: 1000});
+            $('#pid').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+
+    function img_call_back(fileurl_tmp)
+    {
+      $("#litpic_local").val(fileurl_tmp);
+      $("#img_a").attr('href', fileurl_tmp);
+      $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+    }
+</script>
+
+{include file="public/footer" /}

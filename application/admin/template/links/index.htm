@@ -1,0 +1,183 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="links/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>友链列表</h3>
+                <h5>(共{$pager->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:U('Links/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索相关数据...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <!-- <div class="sDiv2">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:U('Links/index')}';">
+                    </div> -->
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc">选择</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w250">
+                            <div class="">网站名称</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">链接地址</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">新窗口打开</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">更新时间</div>
+                        </th>
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                       
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc"><input type="checkbox" name="ids[]" value="{$vo.id}"></div>
+                            </td>
+                            <td class="sort">
+                                <div class="w40 tc">
+                                    {$vo.id}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w250">
+                                    {eq name="'Links@edit'|is_check_access" value="1"}
+                                    <a href="{:U('Links/edit',array('id'=>$vo['id']))}">{$vo.title}</a>
+                                    {else /}
+                                    {$vo.title}
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                    {$vo.url}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {eq name="$vo['target']" value='1'}
+                                        <span class="yes" {eq name="'Links@edit'|is_check_access" value="1"}onClick="changeTableVal('links','id','{$vo.id}','target',this);"{/eq}><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                        <span class="no" {eq name="'Links@edit'|is_check_access" value="1"}onClick="changeTableVal('links','id','{$vo.id}','target',this);"{/eq}><i class="fa fa-ban"></i>否</span>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {$vo.update_time|date='Y-m-d',###}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w120 tc">
+                                    {eq name="'Links@edit'|is_check_access" value="1"}
+                                    <a href="{:U('Links/edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    {/eq}
+                                    {eq name="'Links@del'|is_check_access" value="1"}
+                                    <a class="btn red"  href="javascript:void(0)" data-url="{:U('Links/del')}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {eq name="'Links@edit'|is_check_access" value="1"}
+                                    <input style="text-align: left;" type="text" onchange="changeTableVal('links','id','{$vo.id}','sort_order',this);" size="4"  value="{$vo.sort_order}" />
+                                    {else /}
+                                    {$vo.sort_order}
+                                    {/eq}
+                                </div>
+                            </td>
+                           
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                </div>
+                {eq name="'Links@del'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:U('Links/del')}">
+                        <div class="add" title="批量删除">
+                            <span><i class="fa fa-close"></i>批量删除</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {eq name="'Links@add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="{:U('Links/add')}">
+                        <div class="add" title="新增链接">
+                            <span class="red"><i class="fa fa-plus"></i>新增链接</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$page}
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+
+{include file="public/footer" /}

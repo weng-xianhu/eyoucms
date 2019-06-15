@@ -1,0 +1,140 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="__SKIN__/css/index.css" rel="stylesheet" type="text/css">
+    <link href="__SKIN__/font/css/font-awesome.min.css" rel="stylesheet" />
+    <script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
+    <!-- <script type="text/javascript" src="__PUBLIC__/plugins/layer/layer.js"></script> -->
+    <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
+    <script type="text/javascript">
+        var module_name = "{$Think.const.MODULE_NAME}";
+        var eyou_basefile = "{$Request.baseFile}";
+    </script>
+    <script src="__SKIN__/js/upgrade.js?v={$version}"></script>
+    <style>
+        .contentWarp_item .section_select .item_comment{
+            padding: 83px 0 31px 38px;
+        }
+        .contentWarp_item .section_select .item {
+            padding: 83px 0 38px 38px;
+        }
+        .contentWarp_item .section_order_select li{
+            width: 23%;
+        }
+        .contentWarp .section {
+            margin: 0px;
+        }
+    </style>
+</head>
+<body class="iframe_body">
+<div class="warpper">
+    <div class="content start_content">
+        <div class="contentWarp">
+            <div class="section system_section" style="float: none;width: inherit;">
+                <div class="system_section_con">
+                    <div class="sc_title" style="padding: 26px 0 14px;border-bottom: 1px solid #e4eaec;">
+                        <i class="sc_icon"></i>
+                        <h3>程序信息</h3>
+                    </div>
+                    <div class="sc_warp" id="system_warp" style="display: block;">
+                        <table cellpadding="0" cellspacing="0" class="system_table">
+                            <tbody>
+                                <tr>
+                                    <td class="gray_bg">系统更新：</td>
+                                    <td>
+                                        {notempty name="$upgradeMsg"}
+                                          <textarea id="textarea_filelist" style="display:none;">{$upgradeMsg['upgrade']}</textarea> 
+                                          <textarea id="textarea_intro" style="display:none;">{$upgradeMsg['intro']}</textarea> 
+                                          <textarea id="textarea_notice" style="display:none;">{$upgradeMsg['notice']}</textarea> 
+                                          <a href="javascript:void(0);" id="a_upgrade" data-version="{$upgradeMsg['key_num']}" data-max_version="{$upgradeMsg['max_version']}" data-iframe="workspace" title="{$upgradeMsg['tips']}" data-tips_url="{:U('Upgrade/setPopupUpgrade')}" data-upgrade_url="{:U('Upgrade/OneKeyUpgrade')}" style="color:#F00;">检测到新版本{$upgradeMsg['key_num']}[点击查看]</a>
+                                          {neq name="$web_show_popup_upgrade" value="-1"}
+                                          <script type="text/javascript">
+                                            $(document).ready(function(){
+                                                btn_upgrade($("#a_upgrade"), 1);
+                                            });
+                                          </script>
+                                          {/neq}
+                                        {else /}
+                                        已是最新版
+                                        {/notempty}
+                                    </td>
+                                    <td class="gray_bg">当前版本：</td>
+                                    <td>{$sys_info.curent_version|default='v1.0'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray_bg">程序名称：</td>
+                                    <td>{$sys_info.web_name|default='Eyoucms企业网站管理系统'}</td>
+                                    <td class="gray_bg">版权所有：</td>
+                                    <td>{notempty name="$is_eyou_authortoken"}盗版必究{else /}正版软件{/notempty}</td>
+                                </tr>
+                                {notempty name="$is_eyou_authortoken"}
+                                <tr>
+                                    <td class="gray_bg">更新日志：</td>
+                                    <td><a href="http://www.eyoucms.com/news/rizhi/" target="_blank">查看</a></td>
+                                    <td class="gray_bg">帮助中心:</td>
+                                    <td><a href="http://www.eyoucms.com/bbs/" target="_blank">查看</a></td>
+                                </tr>
+                                {/notempty}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="system_section_con">
+                    <div class="sc_title" style="padding: 26px 0 14px;border-bottom: 1px solid #e4eaec;">
+                        <i class="sc_icon"></i>
+                        <h3>服务器信息</h3>
+                    </div>
+                    <div class="sc_warp" id="system_warp" style="display: block;padding-bottom: 20px;">
+                        <table cellpadding="0" cellspacing="0" class="system_table">
+                            <tbody><tr>
+                                <td class="gray_bg">服务器操作系统：</td>
+                                <td>{$sys_info.os}</td>
+                                <td class="gray_bg">服务器域名/IP：</td>
+                                <td>{$sys_info.domain} [ {$sys_info.ip} ]</td>
+                            </tr>
+                            <tr>
+                                <td class="gray_bg">服务器环境：</td>
+                                <td>{$sys_info.web_server}</td>
+                                <td class="gray_bg">PHP 版本：</td>
+                                <td>{$sys_info.phpv}</td>
+                            </tr>
+                            <tr>
+                                <td class="gray_bg">Mysql 版本：</td>
+                                <td>{$sys_info.mysql_version}</td>
+                                <td class="gray_bg">GD 版本：</td>
+                                <td>{$sys_info.gdinfo}</td>
+                            </tr>
+                            <tr>
+                                <td class="gray_bg">文件上传限制：</td>
+                                <td>{$sys_info.fileupload}</td>
+                                <td class="gray_bg">最大占用内存：</td>
+                                <td>{$sys_info.memory_limit}</td>
+                            </tr>
+                            <tr>
+                                <td class="gray_bg">最大执行时间：</td>
+                                <td>{$sys_info.max_ex_time}</td>
+                                <td class="gray_bg">安全模式：</td>
+                                <td>{$sys_info.safe_mode}</td>
+                            </tr>
+                            <tr>
+                                <td class="gray_bg">Zlib支持：</td>
+                                <td>{$sys_info.zlib}</td>
+                                <td class="gray_bg">Curl支持：</td>
+                                <td>{$sys_info.curl}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="footer" style="position: static; bottom: 0px; font-size:14px;">
+    <p>
+        <b>{$global.web_copyright|htmlspecialchars_decode}</b>
+    </p>
+</div>
+
+{include file="public/footer" /}

@@ -1,0 +1,233 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="tools/bar" /}
+    <!-- 操作说明 -->
+    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">操作提示</h4>
+            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+        </div>
+        <ul>
+            <li> 数据还原, 点击恢复选项进行数据库导入.</li>
+            <li> 导入的SQL文件语句必须按照MYSQL的语法编写</li>
+        </ul>
+    </div>
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>sql文件列表</h3>
+                <h5>(备份文件数量：{$filenum}，占空间大小：{$total|format_bytes})</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc">选择</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="">
+                            <div class="">文件名称</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w100">
+                            <div class="tc">系统版本</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w40">
+                            <div class="tc">卷号</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w60">
+                            <div class="tc">压缩</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">数据大小</div>
+                        </th>
+                        <th abbr="article_show" axis="col7" class="w160">
+                            <div class="tc">备份时间</div>
+                        </th>
+                       
+                        <th axis="col1" class="w160">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr data-id="{$vo.basename}">
+                            <td class="sign">
+                                <div class="w40 tc"><input type="checkbox" name="ids[]" value="{$vo.time}"></div>
+                            </td>
+                            <td style="width: 100%">
+                                <div>{$vo.basename}</div>
+                            </td>
+                            <td>
+                                <div class="w100 tc">{$vo.version}</div>
+                            </td>
+                            <td class="">
+                                <div class="w40 tc">{$vo.part}</div>
+                            </td>
+                            <td>
+                                <div class="w60 tc">{$vo.compress}</div>
+                            </td>
+                            <td>
+                                <div class="w100 tc">{$vo.size|format_bytes}</div>
+                            </td>
+                            <td>
+                                <div class="w160 tc">{$vo.time|date="Y-m-d H:i:s",###}</div>
+                            </td>
+                           
+                            <td>
+                                <div class="w160 tc">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@new_import'|is_check_access" value="1"}
+                                    <a href="javascript:void(0);" data-url="{:U('Tools/new_import', array('time'=>$vo['time']))}" class="btn blue db-import"><i class="fa fa-repeat"></i>恢复</a>
+                                    {/eq}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@downFile'|is_check_access" value="1"}
+                                    <a href="{:U('Tools/downFile',array('time'=>$vo['time']))}" class="btn green"><i class="fa fa-download"></i>下载</a>
+                                    {/eq}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:U('Tools/del')}" data-id="{$vo.time}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    {/eq}
+                                </div>
+                            </td>
+                          
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                </div>
+                {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:U('Tools/del')}">
+                        <div class="add" title="批量删除">
+                            <span><i class="fa fa-close"></i>批量删除</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {eq name="$Think.const.CONTROLLER_NAME.'@restoreUpload'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <form class="navbar-form form-inline" action="{:U('Tools/restoreUpload')}" name="change_System" id="change_System" method="post" enctype="multipart/form-data">
+                        <a href="javascript:void(0);" class="a-upload"><input type="file" name="sqlfile" id="sqlfile" title="请选择…"><i class="fa fa-upload"></i>上传执行sql文件</a>
+                    </form>
+                </div>
+                {/eq}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<form class="none" name="form_tmp" id="form_tmp" action="" method="POST">
+
+</form>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        $('#sqlfile').change(function(){
+            restoreUpload();
+        });
+    
+        function restoreUpload()
+        {
+            var sqlfile = $('input[name=sqlfile]').val();
+            var ext = sqlfile.substr(sqlfile.lastIndexOf('.')).toLowerCase();
+            if ($.trim(sqlfile) == '' || ext != '.sql') {
+                showErrorMsg('请上传sql文件！');
+                return false;
+            }
+
+            layer.confirm('此操作不可逆，确认执行？', {
+                title: false,//'<font color="red">重要提示</font>',
+                btn: ['确定', '取消'] //按钮
+            }, function () {
+                layer_loading('正在处理');
+                $('#change_System').submit();
+                return false;
+            }, function (index) {
+                $('#sqlfile').val('');
+                layer.closeAll();
+                return false;
+            });
+        }
+
+    });
+
+    $(".db-import").click(function(){
+        var url = $(this).attr('data-url');
+        $('#form_tmp').attr('action', url);
+        layer_loading('正在处理');
+        $('#form_tmp').submit();
+    }); 
+
+/*    $(".db-import").click(function(){
+        var self = this, status = ".";
+        $.get(self.href, success, "json");
+        window.onbeforeunload = function(){ return "正在还原数据库，请不要关闭！" }
+        return false;
+        function success(data){
+            if(data.code){
+                if(data.gz){
+                    data.info += status;
+                    if(status.length === 5){
+                        status = ".";
+                    } else {
+                        status += ".";
+                    }
+                }
+                var loading = layer.msg(data.msg+data.rate+'，请不要关闭本页面！', 
+                {
+                    icon: 1,
+                    time: 3600000, //1小时后后自动关闭
+                    shade: [0.2] //0.1透明度的白色背景
+                });
+                $(self).parent().parent().prev().find('div').text(data.msg+data.rate);
+                if(data.data){
+                    $.get(self.href, {"part" : data.data.part, "start" : data.data.start}, success, "json");
+                }  else {
+                    setTimeout(function(){
+                        layer.closeAll();
+                        layer.alert('还原成功！', {icon: 6, title:false});
+                    }, 1000);
+                    window.onbeforeunload = function(){ return null; }
+                }
+            } else {
+                layer.alert(data.msg,{icon:2, title:false});
+            }
+        }
+    });*/
+</script>
+
+{include file="public/footer" /}

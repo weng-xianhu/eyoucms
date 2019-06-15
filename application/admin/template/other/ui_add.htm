@@ -1,0 +1,190 @@
+{include file="public/layout" /}
+
+<body style="background-color: #FFF; overflow-x:hidden;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <div class="subject">
+                <h3>广告管理</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                <li><a href="{:url('Other/ui_edit', array('id'=>$edit_id))}" class="tab"><span>编辑</span></a></li>
+                <li><a href="javascript:void(0);" class="tab" data-url="{:url('Other/ui_del')}" data-id="{$edit_id}" onClick="ui_delfun(this);"><span>删除</span></a></li>
+                <li><a href="javascript:void(0);" class="tab current"><span>新增</span></a></li>
+            </ul>
+        </div>
+    </div>
+    <form class="form-horizontal" id="post_form" action="" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>广告名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="title" value="" id="title" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title">广告位说明</label>
+                </dt>
+                <dd class="opt"> 
+                    {$ad_position['title']}&nbsp;({$ad_position['width']}*{$ad_position['height']}&nbsp;像素)
+                    <input type="hidden" name="pid" id="pid" value="{$ad_position['id']}" />
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>广告链接</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="links" value="" placeholder="http://" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                  <label>广告图片</label>
+                </dt>
+                <dd class="opt">
+                    <div class="input-file-show div_litpic_local">
+                        <span class="show">
+                            <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="javascript:void(0);" target="_blank">
+                                <i id="img_i" class="fa fa-picture-o" onmouseover="" onmouseout="layer.closeAll();"></i>
+                            </a>
+                        </span>
+                        <span class="type-file-box">
+                            <input type="text" id="litpic_local" name="litpic_local" value="" class="type-file-text">
+                            <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                            <input class="type-file-file" onClick="GetUploadify(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
+                                 title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                        </span>
+                    </div>
+                    <input type="text" id="litpic_remote" name="litpic_remote" value="" placeholder="http://" class="input-txt" style="display: none;">
+                    &nbsp;
+                    <label><input type="checkbox" name="is_remote" id="is_remote" value="1" onClick="clickRemote(this, 'litpic');">远程图片</label>
+                    <span class="err"></span>
+                    <p class="notic">请填写图片链接，或上传图片格式文件，具体像素大小视网站模板而定</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="author">排序</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="sort_order" value="100" id="sort_order" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic">越小越靠前</p>
+                </dd>
+            </dl>
+        </div>
+        <!-- 常规信息 -->
+        <div class="ncap-form-default">
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div> 
+    </form>
+</div>
+<script type="text/javascript">
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+    $(function () {
+        //选项卡切换列表
+    });
+
+    // 远程/本地上传图片切换
+    function clickRemote(obj, id)
+    {
+        if ($(obj).is(':checked')) {
+            $('#'+id+'_remote').show();
+            $('.div_'+id+'_local').hide();
+        } else {
+            $('.div_'+id+'_local').show();
+            $('#'+id+'_remote').hide();
+        }
+    }
+    
+    // 判断输入框是否为空
+    function check_submit(){
+        if($('input[name=title]').val() == ''){
+            layer.msg('广告名称不能为空！', {icon: 2,time: 1000});
+            return false;
+        }
+
+        layer_loading('正在处理');
+
+        $.ajax({
+            url: "{:url('Other/ui_add')}",
+            type: 'POST',
+            dataType: 'JSON',
+            data: $('#post_form').serialize(),
+            success: function(res){
+                layer.closeAll();
+                if (res.code == 1) {
+                    parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        parent.window.location.reload();
+                        parent.layer.close(parentObj);
+                    });
+                } else {
+                    // parent.showErrorMsg(res.msg);
+                    layer.alert(res.msg, {icon:5});
+                }
+                return false;
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert('操作失败', {icon:5});
+                return false;
+            }
+        });
+
+        return false;
+    }
+
+    function img_call_back(fileurl_tmp)
+    {
+      $("#litpic_local").val(fileurl_tmp);
+      $("#img_a").attr('href', fileurl_tmp);
+      $("#img_i").attr('onmouseover', "layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+    }
+
+    function ui_delfun(obj) {
+        layer.confirm('此操作不可逆，确认删除？', {
+              btn: ['确定','取消'] //按钮
+            }, function(){
+                // 确定
+                layer_loading('正在处理');
+                $.ajax({
+                    type : 'post',
+                    url : $(obj).attr('data-url'),
+                    data : {del_id:$(obj).attr('data-id')},
+                    dataType : 'json',
+                    success : function(data){
+                        layer.closeAll();
+                        if(data.code == 1){
+                            parent.layer.msg(data.msg, {shade: 0.3, time: 1000}, function(){
+                                parent.window.location.reload();
+                                parent.layer.close(parentObj);
+                            });
+                        }else{
+                            layer.msg(data.msg, {icon: 2,time: 2000});
+                        }
+                    }
+                })
+            }, function(index){
+                layer.close(index);
+                return false;// 取消
+            }
+        );
+    }
+</script>
+
+{include file="public/footer" /}

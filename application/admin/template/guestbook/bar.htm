@@ -1,0 +1,14 @@
+
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
+            <div class="subject">
+                <h3>内容管理</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                <li><a href="{eq name='$Request.action' value='index'}javascript:void(0);{else /}{:U('Guestbook/index', array('typeid'=>$Request.param.typeid))}{/eq}" data-index='1' class="tab {eq name='$Request.action' value='index'}current{/eq}"><span>留言列表</span></a></li>
+                <li><a href="{eq name='$Request.action' value='attribute_index'}javascript:void(0);{else /}{:U('Guestbook/attribute_index', array('typeid'=>$Request.param.typeid))}{/eq}" data-index='2' class="tab {eq name='$Request.action' value='attribute_index'}current{/eq}"><span>属性列表</span></a></li>
+            </ul>
+        </div>
+    </div>

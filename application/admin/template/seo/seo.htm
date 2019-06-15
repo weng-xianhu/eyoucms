@@ -1,0 +1,179 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow: auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page atta">
+    {include file="seo/bar" /}
+    <form method="post" id="handlepost" action="{:U('Seo/handle')}" enctype="multipart/form-data" name="form1">
+        <div class="ncap-form-default">
+<!--             <dl class="row">
+    <dt class="tit">
+        <label for="site_url">隐藏index.php</label>
+    </dt>
+    <dd class="opt">
+        <div class="onoff">
+            <label for="seo_inlet1" class="cb-enable {if condition='isset($config.seo_inlet) && $config.seo_inlet eq 1'}selected{/if}">是</label>
+            <label for="seo_inlet0" class="cb-disable {if condition='!isset($config.seo_inlet) || $config.seo_inlet eq 0'}selected{/if}">否</label>
+            <input id="seo_inlet1" name="seo_inlet" value="1" type="radio" {if condition="isset($config.seo_inlet) && $config.seo_inlet eq 1"} checked="checked"{/if}>
+            <input id="seo_inlet0" name="seo_inlet" value="0" type="radio" {if condition="!isset($config.seo_inlet) || $config.seo_inlet eq 0"} checked="checked"{/if}>
+        </div>
+        <p class="notic">空间支持伪静态才能启用，否则前台访问404错误</p>
+    </dd>
+</dl> -->
+            <dl class="row">
+                <dt class="tit">
+                    <label for="seo_pseudo">URL模式</label>
+                </dt>
+                <dd class="opt">
+                    <select name="seo_pseudo" id="seo_pseudo">
+                        {volist name="seo_pseudo_list" id="vo"}
+                        <option value="{$key}" {if condition='isset($config.seo_pseudo) && $config.seo_pseudo eq $key'}selected{/if}>{$vo}</option>
+                        {/volist}
+                    </select>
+                    <p class="notic">开启后能够简化前台网页URL（网址），有利于搜索引擎的收录排名</p>
+                </dd>
+            </dl>
+            <dl class="row {if condition="!empty($config['seo_pseudo']) && 1 != $config['seo_pseudo']"}none{/if}" id="dl_seo_dynamic_format">
+                <dt class="tit">
+                    <label>动态格式</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="radio" name="seo_dynamic_format" value="1" {if condition="!isset($config.seo_dynamic_format) OR $config.seo_dynamic_format eq 1"}checked="checked"{/if}>完全兼容（如：http://127.0.0.1__ROOT_DIR__/index.php?m=home&amp;c=Lists&amp;a=index&amp;tid=1）</label>&nbsp;
+                    <label class="none"><input type="radio" name="seo_dynamic_format" value="2" {if condition="isset($config.seo_dynamic_format) AND $config.seo_dynamic_format eq 2"}checked="checked"{/if}>部分兼容&nbsp;<font color="red">[部分空间不支持]</font>（如：http://127.0.0.1__ROOT_DIR__/home/Lists/index.html?tid=1）</label>&nbsp;
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row {if condition="isset($config['seo_pseudo']) && $config['seo_pseudo'] != 3"}none{/if}" id="dl_seo_rewrite_format">
+                <dt class="tit">
+                    <label>伪静态格式</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="radio" name="seo_rewrite_format" value="1" {if condition="!isset($config.seo_rewrite_format) OR $config.seo_rewrite_format eq 1"}checked="checked"{/if}>目录名称（如：http://127.0.0.1__ROOT_DIR__/about/）</label>&nbsp;
+                    <br/>
+                    <label><input type="radio" name="seo_rewrite_format" value="2" {if condition="isset($config.seo_rewrite_format) AND $config.seo_rewrite_format eq 2"}checked="checked"{/if}>模型标识（如：http://127.0.0.1__ROOT_DIR__/single/about.html）</label>&nbsp;
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>栏目页SEO标题</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="radio" name="seo_liststitle_format" value="1" {if condition="isset($config.seo_liststitle_format) AND $config.seo_liststitle_format eq 1"}checked="checked"{/if}>栏目名称_网站名称</label>&nbsp;
+                    <br/>
+                    <label><input type="radio" name="seo_liststitle_format" value="2" {if condition="!isset($config.seo_liststitle_format) OR $config.seo_liststitle_format eq 2"}checked="checked"{/if}>栏目名称_第N页_网站名称</label>&nbsp;
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>内容页SEO标题</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="radio" name="seo_viewtitle_format" value="1" {if condition="isset($config.seo_viewtitle_format) AND $config.seo_viewtitle_format eq 1"}checked="checked"{/if}>内容标题</label>&nbsp;
+                    <br/>
+                    <label><input type="radio" name="seo_viewtitle_format" value="2" {if condition="!isset($config.seo_viewtitle_format) OR $config.seo_viewtitle_format eq 2"}checked="checked"{/if}>内容标题_网站名称</label>&nbsp;
+                    <br/>
+                    <label><input type="radio" name="seo_viewtitle_format" value="3" {if condition="isset($config.seo_viewtitle_format) AND $config.seo_viewtitle_format eq 3"}checked="checked"{/if}>内容标题_栏目名称_网站名称</label>&nbsp;
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row {if condition="empty($config['seo_inlet']) OR (1 == $config['seo_inlet'] AND 1 == $config['seo_force_inlet'])"}{else /}none{/if}" id="dl_seo_force_inlet">
+                <dt class="tit">
+                    <label for="site_url">强制去除index.php</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="seo_force_inlet1" class="cb-enable {if condition='isset($config.seo_force_inlet) && $config.seo_force_inlet eq 1'}selected{/if}">开启</label>
+                        <label for="seo_force_inlet0" class="cb-disable {if condition='empty($config.seo_force_inlet)'}selected{/if}">关闭</label>
+                        <input id="seo_force_inlet1" name="seo_force_inlet" value="1" type="radio" {if condition="isset($config.seo_force_inlet) && $config.seo_force_inlet eq 1"} checked="checked"{/if}>
+                        <input id="seo_force_inlet0" name="seo_force_inlet" value="0" type="radio" {if condition="empty($config.seo_force_inlet)"} checked="checked"{/if}>
+                    </div>
+                    <br/>
+                    <p class=""></p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <input type="hidden" name="inc_type" value="{$inc_type}">
+                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+
+    $(function(){
+        $('#seo_pseudo').change(function(){
+            var seo_pseudo = $(this).val();
+            if (seo_pseudo == 3) {
+                $('#dl_seo_dynamic_format').hide();
+                $('#dl_seo_rewrite_format').show();
+            } else {
+                $('#dl_seo_dynamic_format').show();
+                $('#dl_seo_rewrite_format').hide();
+            }
+        });
+
+        $('input[name="seo_force_inlet"]').click(function(){
+            if (1 == $(this).val()) {
+                layer.open({
+                    type: 2,
+                    title: false,
+                    area: ['0px', '0px'],
+                    shade: 0.0,
+                    closeBtn: 0,
+                    shadeClose: true,
+                    content: '//{$Request.host}__ROOT_DIR__/api/Rewrite/testing.html',
+                    success: function(layero, index){
+                        layer.close(index);
+                        var body = layer.getChildFrame('body', index);
+                        var content = body.html();
+                        if (content.indexOf("Congratulations on passing") == -1)
+                        {
+                            $('label[for=seo_force_inlet1]').removeClass('selected');
+                            $('#seo_force_inlet1').attr('checked','');
+                            $('label[for=seo_force_inlet0]').addClass('selected');
+                            $('#seo_force_inlet0').attr('checked','checked');
+                            layer.alert('不支持去除index.php，请<a href="http://www.eyoucms.com/wenda/860.html" target="_blank">点击查看教程</a>', {icon: 2, title:false});
+                        }
+                    }
+                });
+            }
+        });
+
+        checkInlet();
+
+        // 自动检测隐藏index.php
+        function checkInlet() {
+            layer.open({
+                type: 2,
+                title: false,
+                area: ['0px', '0px'],
+                shade: 0.0,
+                closeBtn: 0,
+                shadeClose: true,
+                content: '//{$Request.host}__ROOT_DIR__/api/Rewrite/testing.html',
+                success: function(layero, index){
+                    layer.close(index);
+                    var body = layer.getChildFrame('body', index);
+                    var content = body.html();
+                    if (content.indexOf("Congratulations on passing") == -1)
+                    {
+                        $('#dl_seo_force_inlet').show();
+                    }
+                }
+            });
+        }
+    });
+
+    function adsubmit(){
+        layer_loading("正在处理");
+        $('#handlepost').submit();
+    }
+</script>
+
+{include file="public/footer" /}

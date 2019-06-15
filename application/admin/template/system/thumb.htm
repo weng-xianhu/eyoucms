@@ -1,0 +1,206 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow-y: scroll;min-width:auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<style>
+    .span_1 {
+        float: left;
+        margin-left: 0px;
+        height: 130px;
+        line-height: 130px;
+    }
+
+    .span_1 ul {
+        list-style: none;
+        padding: 0px;
+    }
+
+    .span_1 ul li {
+        border: 1px solid #CCC;
+        height: 40px;
+        padding: 0px 10px;
+        margin-left: -1px;
+        margin-top: -1px;
+        line-height: 40px;
+    }
+    #thumb_color {
+        /*margin:0;*/
+        /*padding:0;*/
+        border:solid 1px #ccc;
+        width:70px;
+        height:20px;
+        border-right:40px solid green;
+        /*line-height:20px;*/
+    }
+</style>
+<script type="text/javascript" src="__PUBLIC__/plugins/colpick/js/colpick.js"></script>
+<link href="__PUBLIC__/plugins/colpick/css/colpick.css" rel="stylesheet" type="text/css"/>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;">
+    {include file="system/bar" /}
+    <div class="flexigrid">
+        {if condition="-1 != $Request.param.tabase"}
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>缩略图配置</h3>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <div class="sDiv">
+                <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
+                    <input type="button" class="btn" value="缩略图配置" onclick="window.location.href='{:url("System/thumb", ['tabase'=>$Request.param.tabase])}';">
+                </div>
+            </div>
+            <div class="sDiv">
+                <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
+                    <input type="button" class="btn current" value="水印配置" onclick="window.location.href='{:url("System/water", ['tabase'=>$Request.param.tabase])}';">
+                </div>
+            </div>
+        </div>
+        {/if}
+        <form class="form-horizontal" method="post" id="handlepost" action="{:url('System/thumb')}">
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">缩略图功能</dt>
+                    <dd class="opt">
+                        <div class="onoff">
+                            <label for="thumb_open1" class="cb-enable {if condition='isset($config.thumb_open) && $config.thumb_open eq 1'}selected{/if}" >开启</label>
+                            <label for="thumb_open0" class="cb-disable {if condition='!isset($config.thumb_open) || $config.thumb_open eq 0'}selected{/if}" >关闭</label>
+                            <input id="thumb_open1" name="thumb_open" onclick="setthumb(this);" value="1" {if condition="isset($config.thumb_open) && $config.thumb_open eq 1"}checked{/if} type="radio">
+                            <input id="thumb_open0" name="thumb_open" onclick="setthumb(this);" value="0" {if condition="!isset($config.thumb_open) || $config.thumb_open eq 0"}checked{/if} type="radio">
+                        </div>
+                        <p class="notic">全站图片进行缩略图处理</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>生成方式</label>
+                    </dt>
+                    <dd class="opt">
+                        <label><input type="radio" name="thumb_mode" value="1" {if condition="isset($config.thumb_mode) AND $config.thumb_mode eq 1"}checked="checked"{/if}>拉伸</label>&nbsp;
+                        <br/>
+                        <label><input type="radio" name="thumb_mode" value="2" {if condition="!isset($config.thumb_mode) OR $config.thumb_mode eq 2"}checked="checked"{/if}>留白</label>&nbsp;
+                        <br/>
+                        <label><input type="radio" name="thumb_mode" value="3" {if condition="isset($config.thumb_mode) AND $config.thumb_mode eq 3"}checked="checked"{/if}>截减</label>&nbsp;
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row thumb_mode_2" style="display:none;">
+                    <dt class="tit">
+                        <label for="thumb_color">填充颜色</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="thumb_color" value="{$config.thumb_color|default='#FFFFFF'}" id="thumb_color" style="border-color: {$config.thumb_color|default='#FFFFFF'};" />
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="title">缩略图大小</label>
+                    </dt>
+                    <dd class="opt">
+                        <input name="thumb_width" id="thumb_width" value="{$config.thumb_width}" type="text" style="width: 50px;" /> X <input name="thumb_height" id="thumb_height" value="{$config.thumb_height}" type="text" style="width: 50px;" /> (宽 X 高) (像素)
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <div class="bot">
+                    <input type="hidden" name="tabase" value="{$Request.param.tabase}">
+                    <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">确认提交</a>
+                    &nbsp;&nbsp;<a href="javascript:void(0);" onclick="tag_call('thumb_open');">缩略图标签高级调用？</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        setthumb('auto'); // 关闭状态下禁用表单录入
+
+        // 颜色选择
+        $('#thumb_color').colpick({
+            flat:false,
+            layout:'rgbhex',
+            submit:0,
+            colorScheme:'light',
+            color:$('#thumb_color').val(),
+            onChange:function(hsb,hex,rgb,el,bySetColor) {
+                $(el).css('border-color','#'+hex);
+                // Fill the text box just if the color was set using the picker, and not the colpickSetColor function.
+                if(!bySetColor) $(el).val('#'+hex);
+            }
+        }).keyup(function(){
+            $(this).colpickSetColor('#'+this.value);
+        });
+    });
+
+    function adsubmit(){
+        layer_loading('正在处理');
+        $('#handlepost').submit();
+    }
+
+    function setthumb(obj){
+        if ('auto' == obj) {
+            $('input[name="thumb_mode"]').attr('disabled', true);
+            $('input[name="thumb_width"]').attr('disabled', true);
+            $('input[name="thumb_height"]').attr('disabled', true);
+            $('input[name="thumb_color"]').attr('disabled', true);
+            var thumb_open = $('input[name="thumb_open"]:checked').val();
+            if (1 == thumb_open) {
+                $('input[name="thumb_mode"]').attr('disabled', false);
+                $('input[name="thumb_width"]').attr('disabled', false);
+                $('input[name="thumb_height"]').attr('disabled', false);
+                $('input[name="thumb_color"]').attr('disabled', false);
+            }
+        } else {
+            var thumb_open = $(obj).val();
+            if (1 == thumb_open) {
+                $('input[name="thumb_mode"]').attr('disabled', false);
+                $('input[name="thumb_width"]').attr('disabled', false);
+                $('input[name="thumb_height"]').attr('disabled', false);
+                $('input[name="thumb_color"]').attr('disabled', false);
+            } else {
+                $('input[name="thumb_mode"]').attr('disabled', true);
+                $('input[name="thumb_width"]').attr('disabled', true);
+                $('input[name="thumb_height"]').attr('disabled', true);
+                $('input[name="thumb_color"]').attr('disabled', true);
+            } 
+        }
+    }
+
+    function tag_call(name)
+    {
+        $.ajax({
+            type: "POST",
+            url: "{:url('System/ajax_tag_call')}",
+            data: {name:name},
+            dataType: 'json',
+            success: function (res) {
+                if(res.code == 1){
+                    //询问框
+                    var confirm = layer.confirm(res.data.msg, {
+                            title: false,
+                            area: ['70%','80%'],
+                            btn: ['关闭'] //按钮
+
+                        }, function(){
+                            layer.close(confirm);
+                        }
+                    );  
+                }else{
+                    layer.alert(res.msg, {icon: 2, title:false});
+                }
+            },
+            error:function(){
+                layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

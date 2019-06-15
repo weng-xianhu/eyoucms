@@ -1,0 +1,177 @@
+{include file="public/layout" /}
+
+<body style="background-color: #FFF; overflow-y: scroll;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title"><a class="back" href="{:url('Member/money_index')}" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
+            <div class="subject">
+                <h3>充值管理 - 编辑订单</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    <form class="form-horizontal" id="postForm" action="{:url('Member/money_mark_order')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row"><dt class="tit"><label><b>用户信息</b></label></dt></dl>
+            <input type="hidden" name="users_id" value="{$UsersData.users_id}">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="username">用户名</label>
+                </dt>
+                <dd class="opt">
+                    {$UsersData.username}
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="username">用户余额</label>
+                </dt>
+                <dd class="opt">
+                    {$UsersData.users_money}
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="username">手机号</label>
+                </dt>
+                <dd class="opt">
+                    {$UsersData.mobile}
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="username">邮箱地址</label>
+                </dt>
+                <dd class="opt">
+                    {$UsersData.email}
+                </dd>
+            </dl>
+        </div>
+        <div class="ncap-form-default">
+            <dl class="row"><dt class="tit"><label><b>充值订单信息</b></label></dt></dl>
+            <input type="hidden" name="moneyid" value="{$MoneyData.moneyid}">
+            <input type="hidden" name="order_number" value="{$MoneyData.order_number}">
+            <input type="hidden" name="return" value="{$return}">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="username">充值订单号</label>
+                </dt>
+                <dd class="opt">
+                    {$MoneyData.order_number}
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="username">充值方式</label>
+                </dt>
+                <dd class="opt">
+                    {$pay_method_arr[$MoneyData['pay_method']]}
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="username">充值金额</label>
+                </dt>
+                <dd class="opt">
+                    {$MoneyData.money}
+                </dd>
+            </dl>
+
+            <!-- <dl class="row">
+                <dt class="tit">
+                    <label for="username">用户充值后的总金额</label>
+                </dt>
+                <dd class="opt">
+                    {$MoneyData.users_money}
+                </dd>
+            </dl> -->
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="username">订单状态</label>
+                </dt>
+                <dd class="opt">
+                    {$pay_status_arr[$MoneyData['status']]}
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="username">充值详情</label>
+                </dt>
+                <dd class="opt">
+                    {$return}
+                </dd>
+            </dl>
+
+            {eq name="$MoneyData['status']" value="1"}
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="username">订单操作</label>
+                    </dt>
+                    <dd class="opt">
+                        <a href="JavaScript:void(0);" onclick="MarkOrder('yfk');" class="ncap-btn-big ncap-btn-green" id="submitBtn">
+                            标记为已付款
+                        </a>
+                        <span style="padding-left: 10px; color: blue;">
+                            若执行此操作，订单状态将会变为充值成功(已完成)，订单对应用户余额也将加上该笔订单金额
+                            <b style="color: red;">({$MoneyData.money}+{$UsersData.users_money})</b>
+                            ，谨慎执行！
+                        </span>
+                    </dd>
+                </dl>
+            {/eq}
+
+            {eq name="$MoneyData['status']" value="3"}
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="username">订单操作</label>
+                    </dt>
+                    <dd class="opt">
+                        <a href="JavaScript:void(0);" onclick="MarkOrder('wfk');" class="ncap-btn-big ncap-btn-green" id="submitBtn">
+                            标记为未付款
+                        </a>
+                        <span style="padding-left: 10px; color: blue;">
+                            若执行此操作，订单状态将会变为未付款，订单对应用户余额也将减去该笔订单金额
+                            <b style="color: red;">({$UsersData.users_money}-{$MoneyData.money})</b>
+                            ，若余额不足则减为0，谨慎执行！
+                        </span>
+                    </dd>
+                </dl>
+            {/eq}
+            <input type="hidden" name="status_name" id="status_name">
+
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    // 判断输入框是否为空
+    function MarkOrder(status_name){
+        if('wfk' == status_name){
+            var msg = '确定要标记订单为未付款？';
+        }else{
+            var msg = '确定要标记订单为已付款？';
+        }
+        layer.confirm(msg, {
+            title: false,
+            btn: ['确定','取消']
+        },function(){
+            $('#status_name').val(status_name);
+            layer_loading('正在处理');
+            $('#postForm').submit();
+        },function(index){
+            layer.closeAll(index);
+        });
+    }
+</script>
+
+{include file="public/footer" /}

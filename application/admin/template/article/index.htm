@@ -1,0 +1,257 @@
+{include file="public/layout" /}
+
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="article/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>{$arctype_info.typename|default=''}</h3>
+                <h5>(共{$pager->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:url('Article/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    {include file="archives/tags_btn" /}
+                    <div class="sDiv2">  
+                        <select name="flag" class="select" style="margin:0px 5px;">
+                            <option value="">--属性--</option>
+                            <option value="is_recom" {eq name="$Request.param.flag" value="is_recom"}selected{/eq}>推荐</option>
+                        </select>
+                    </div>
+                    <div class="sDiv2">
+                        <input type="hidden" name="typeid" id="typeid" value="{$Request.param.typeid|default=''}">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="标题搜索...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <!-- <div class="sDiv2">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Article/index', array("typeid"=>$Request.param.typeid))}';">
+                    </div> -->
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc">选择</div>
+                        </th>
+                        
+                        <th abbr="article_title" axis="col3" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="">
+                            <div style="text-align: left; padding-left: 10px;" class="">标题</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">所属栏目</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w50">
+                            <div class="tc">推荐</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">浏览量</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">更新时间</div>
+                        </th>
+                        <th axis="col1" class="w180">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                        
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%;">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="tc w40"><input type="checkbox" name="ids[]" value="{$vo.aid}"></div>
+                            </td>
+                           
+                            <td class="sort">
+                                <div class="tc w40">
+                                    {$vo.aid}
+                                </div>
+                            </td>
+                            <td class="" style="width: 100%;">
+                                <div class="tl" style="padding-left: 10px;">
+                                    {notempty name="vo.litpic"}
+                                        <img src="__SKIN__/images/pic.gif" onmouseover="layer_tips=layer.tips('<img src={$vo.litpic} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});" onmouseout="layer.close(layer_tips);">&nbsp;
+                                    {/notempty}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
+                                    <a href="{:url('Article/edit',array('id'=>$vo['aid']))}" style="{eq name="vo.is_b" value="1"} font-weight: bold;{/eq}">{$vo.title}</a>
+                                    {else /}
+                                    {$vo.title}
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc"><a href="{:url('Article/index', array('typeid'=>$vo['typeid'], 'tab'=>3))}">{$vo.typename|default='<i class="red">数据出错！</i>'}</a></div>
+                            </td>
+                            <td>
+                                <div class="tc w50">
+                                    {if condition="$vo['is_recom'] eq 1"}
+                                        <span class="yes" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('archives','aid','{$vo.aid}','is_recom',this);"{/eq} ><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                        <span class="no" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('archives','aid','{$vo.aid}','is_recom',this);"{/eq} ><i class="fa fa-ban"></i>否</span>
+                                    {/if}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tc w60">
+                                    {$vo.click}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w100 tc">
+                                    {$vo.update_time|date='Y-m-d',###}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w180 tc">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
+                                    <a href="{:url('Article/edit',array('id'=>$vo['aid']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    {/eq}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Article/del')}" data-id="{$vo.aid}" data-deltype="pseudo" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    {/eq}
+                                    <a href="{$vo.arcurl}" target="_blank" class="btn blue"><i class="fa fa-pencil-square-o"></i>浏览</a>
+                                </div>
+                            </td>
+                             <td class="sort">
+                                <div class="w60 tc">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
+                                    <input style="text-align: left;" type="text" onchange="changeTableVal('archives','aid','{$vo.aid}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                    {else /}
+                                    {$vo.sort_order}
+                                    {/eq}
+                                </div>
+                            </td>
+                            
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                </div>
+                {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Article/del')}" data-deltype="pseudo">
+                        <div class="add" title="批量删除">
+                            <span><i class="fa fa-close"></i>批量删除</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {eq name="'Archives@move'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="func_move(this, 'ids');" data-url="{:url('Archives/move', array('typeid'=>$Request.param.typeid))}">
+                        <div class="add" title="批量移动">
+                            <span><i class="fa fa-hdd-o"></i>批量移动</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {eq name="$Think.const.CONTROLLER_NAME.'@add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="{:url('Article/add', array('typeid'=>$Request.param.typeid))}">
+                        <div class="add" title="新增文章">
+                            <span class="red"><i class="fa fa-plus"></i>新增文章</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$page}
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function(){
+
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    var aids = '';
+    function func_move(obj, name)
+    {
+        var a = [];
+        var k = 0;
+        aids = '';
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+                if (k > 0) {
+                    aids += ',';
+                }
+                aids += $(o).val();
+                k++;
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {icon: 2, title:false});
+            return;
+        }
+
+        var url = $(obj).attr('data-url');
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: '移动文档',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            maxmin: false, //开启最大化最小化按钮
+            area: ['350px', '260px'],
+            content: url
+        });
+    }
+
+    /**
+     * 获取修改之前的内容
+     */
+    function get_aids()
+    {
+        return aids;
+    }
+</script>
+
+{include file="public/footer" /}

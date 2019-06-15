@@ -1,0 +1,496 @@
+{include file="public/layout" /}
+<script type="text/javascript" src="__PUBLIC__/plugins/laydate/laydate.js"></script>
+
+{load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+{load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+{load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
+            <div class="subject">
+                <h3>编辑栏目</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                <li><a href="javascript:void(0);" data-index='1' class="tab {eq name='$tab' value='1'}current{/eq}"><span>常规选项</span></a></li>
+                <li><a href="javascript:void(0);" data-index='2' class="tab {eq name='$tab' value='2'}current{/eq}"><span>高级选项</span></a></li>
+            </ul>
+        </div>
+    </div>
+    <form class="form-horizontal" id="post_form" action="{:url('Arctype/edit')}" method="post">
+        <!-- 常规选项 -->
+        <div class="ncap-form-default tab_div_1" {neq name='$tab' value='1'}style="display:none;"{/neq}>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="typename"><em>*</em>栏目名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$field.typename|default=''}" name="typename" id="name" class="input-txt">
+                    <p class="notic">保持唯一性，不可重复</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="dirname">目录名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$field.dirname|default=''}" name="dirname" id="dirname" class="input-txt" onkeyup="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^a-zA-Z0-9_]/g,''));">
+                    <p class="notic">系统默认为全拼音，开启伪静态后，将作为URL优化</p>
+                    <p class="">不填写系统自动生成全拼音，仅支持字母、数字、下划线</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="current_channel">内容模型</label>
+                </dt>
+                <dd class="opt">
+                    <select class="small form-control" id="current_channel" name="current_channel" onchange="ajax_get_template();">
+                        {volist name="channeltype_list" id="vo"}
+                        <option value="{$vo.id}" data-nid="{$vo.nid}" {eq name="$field['current_channel']" value="$vo.id"}selected="true"{/eq}>{$vo.title}</option>
+                        {/volist}
+                    </select>
+                    <span class="err"></span>
+                    <p class="" id="notic_current_channel"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="parent_id">所属栏目</label>
+                </dt>
+                <dd class="opt">
+                    {gt name="$hasChildren" value="0"}
+                    {$select_html}
+                    <input type="hidden" name="parent_id" id="parent_id" value="{$field.parent_id|default=''}" />
+                    {else /}
+                    <select class="small form-control" id="parent_id" name="parent_id" onchange="set_grade(this);">
+                        {$select_html}
+                    </select>
+                    {/gt}
+                    <span class="err"></span>
+                    <p class="notic">如果选择上级栏目，那么新增的栏目则为被选择上级栏目的子栏目</p>
+                </dd>
+            </dl>
+            <input type="hidden" name="channeltype" id="channeltype" value="{$field.channeltype|default=''}" />
+            <dl class="row none" id="row_url">
+                <dt class="tit">
+                    <label for="dirpath">文件保存目录</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$field.dirpath|default=$predirpath}" name="dirpath" id="dirpath" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9a-zA-Z\/-]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-zA-Z\/-]/g,''));">&nbsp;<a href="javascript:void(0);" onclick="get_dirpinyin(this);" id="getpinyin" class="ncap-btn ncap-btn-green">获取拼音</a>
+                    <p class="notic">生成的文章HTML页面会存放在该目录下</p>
+                </dd>
+            </dl>
+<!--             <dl class="row">
+                <dt class="tit">
+                    <label for="sort_order">排序</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$field.sort_order|default='100'}" name="sort_order" id="sort_order" class="input-txt">
+                    <p class="notic">越小越靠前</p>
+                </dd>
+            </dl> -->
+            <dl class="row">
+                <dt class="tit">
+                    <label>隐藏栏目</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="is_hidden1" class="cb-enable {if condition='$field.is_hidden eq 1'}selected{/if}">是</label>
+                        <label for="is_hidden0" class="cb-disable {if condition='$field.is_hidden eq 0'}selected{/if}">否</label>
+                        <input id="is_hidden1" name="is_hidden" value="1" type="radio" {if condition="$field.is_hidden eq 1"} checked="checked"{/if}>
+                        <input id="is_hidden0" name="is_hidden" value="0" type="radio" {if condition="$field.is_hidden eq 0"} checked="checked"{/if}>
+                    </div>
+                    <p class="notic">隐藏之后，不显示在前台页面</p>
+                </dd>
+            </dl>
+            {include file="field/addonitem" /}
+        </div>
+        <!-- 常规选项 -->
+        <!-- 高级选项 -->        
+        <div class="ncap-form-default tab_div_2" {neq name='$tab' value='2'}style="display:none;"{/neq}>
+            <dl class="row">
+                <dt class="tit">
+                    <label>栏目属性</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="is_part1" class="cb-enable {if condition='$field.is_part eq 1'}selected{/if}">外部链接</label>
+                        <label for="is_part0" class="cb-disable {if condition='$field.is_part eq 0'}selected{/if}">内容栏目</label>
+                        <input id="is_part1" name="is_part" value="1" type="radio" {if condition="$field.is_part eq 1"} checked="checked"{/if}>
+                        <input id="is_part0" name="is_part" value="0" type="radio" {if condition="$field.is_part eq 0"} checked="checked"{/if}>
+                    </div>
+                    <p class="notic">外部连接（在"下方文本框"处填写网址）</p>
+                </dd>
+            </dl>
+            <dl class="row is_part1 {if condition="$field.is_part eq 0"}none{/if}" id="row_url">
+                <dt class="tit">
+                    <label for="typelink"><em>*</em>外部链接</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$field.typelink|default=''}" name="typelink" id="typelink" class="input-txt" placeholder="http://">
+                    <p class="notic">请填写完整外部链接</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="englist_name">英文别名</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$field.englist_name|default=''}" name="englist_name" id="englist_name" class="input-txt">
+                    <p class="notic">显示英文名栏目的网站</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                  <label>栏目图片</label>
+                </dt>
+                <dd class="opt">
+                    <div class="input-file-show div_litpic_local" {neq name="$field.is_remote" value="0"}style="display: none;"{/neq}>
+                        <span class="show">
+                            <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="{$field.litpic_local|default='javascript:void(0);'}" target="_blank">
+                                <i id="img_i" class="fa fa-picture-o" {notempty name="$field.litpic_local"}onmouseover="layer_tips=layer.tips('<img src={$field.litpic_local} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                            </a>
+                        </span>
+                        <span class="type-file-box">
+                            <input type="text" id="litpic_local" name="litpic_local" value="{$field.litpic_local|default=''}" class="type-file-text">
+                            <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                            <input class="type-file-file" onClick="GetUploadify(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
+                                 title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                        </span>
+                    </div>
+                    <input type="text" id="litpic_remote" name="litpic_remote" value="{$field.litpic_remote|default=''}" placeholder="http://" class="input-txt" {neq name="$field.is_remote" value="1"}style="display: none;"{/neq}>
+                    &nbsp;
+                    <label><input type="checkbox" name="is_remote" id="is_remote" value="1" {eq name="$field.is_remote" value="1"}checked="checked"{/eq} onClick="clickRemote(this, 'litpic');">远程图片</label>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row" id="dl_templist">
+                <dt class="tit">
+                    <label for="templist"><em>*</em>列表模板</label>
+                </dt>
+                <dd class="opt">
+                    <select name="templist" id="templist">
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic">模板命名规则：<br/>lists_<font class="font_nid">模型标识</font>.html<br/>lists_<font class="font_nid">模型标识</font>_自定义.html</p>
+                    &nbsp;<a href="javascript:void(0);" onclick="newtpl('lists');" class="ncap-btn ncap-btn-green">新建模板</a>
+                </dd>
+            </dl>
+            <dl class="row" id="dl_tempview">
+                <dt class="tit">
+                    <label for="tempview"><em>*</em>文档模板</label>
+                </dt>
+                <dd class="opt">
+                    <select name="tempview" id="tempview">
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic">模板命名规则：<br/>view_<font class="font_nid">模型标识</font>.html<br/>view_<font class="font_nid">模型标识</font>_自定义.html</p>
+                    &nbsp;<a href="javascript:void(0);" onclick="newtpl('view');" class="ncap-btn ncap-btn-green">新建模板</a>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="seo_title">SEO标题</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$field.seo_title|default=''}" name="seo_title" id="seo_title" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>SEO关键字</label>
+                </dt>
+                <dd class="opt">          
+                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:40px;">{$field.seo_keywords|default=''}</textarea>
+                    <span class="err"></span>
+                    <p class="notic">多个关键词请用英文逗号（,）隔开，建议3到5个关键词。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>SEO描述</label>
+                </dt>
+                <dd class="opt">          
+                    <textarea rows="5" cols="60" id="seo_description" name="seo_description" style="height:60px;">{$field.seo_description|default=''}</textarea>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+        </div>
+        <!-- 高级选项 -->
+        <div class="ncap-form-default">
+            <div class="bot">
+                <input type="hidden" name="tab" value="{$tab|default='0'}">
+                <input type="hidden" name="id" id="id" value="{$field.id|default=''}">
+                <input type="hidden" name="grade" id="grade" value="{$field.grade|default=0}">
+                <input type="hidden" name="oldgrade" id="oldgrade" value="{$field.grade|default=0}">
+                <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div> 
+    </form>
+</div>
+<script type="text/javascript">
+
+    var templateList = {$templateList|json_encode};
+
+    $(document).ready(function(){    
+        //选项卡切换列表
+        $('.tab-base').find('.tab').click(function(){
+            $('.tab-base').find('.tab').each(function(){
+                $(this).removeClass('current');
+            });
+            $(this).addClass('current');
+            var tab_index = $(this).data('index');          
+            $(".tab_div_1, .tab_div_2").hide();          
+            $(".tab_div_"+tab_index).show();
+        });    
+
+        $('input[name=is_part]').click(function(){
+            var val = $(this).val();
+            if (val == 1) {
+                $('.is_part1').show();
+            } else {
+                $('.is_part1').hide();
+            }
+        });
+
+        ajax_get_template();
+    });
+
+    /*根据模型ID获取模板文件名*/
+    function ajax_get_template() {
+        var obj = $('#current_channel');
+        var channel = parseInt($(obj).val());
+        var js_allow_channel_arr = {$js_allow_channel_arr};
+        $('#notic_current_channel').html('');
+
+        // 重新定义模板变量，专用于新建模板功能
+        $.ajax({
+            url: "{:url('Arctype/ajax_getTemplateList')}",
+            type: 'GET',
+            dataType: 'JSON',
+            data: {},
+            success: function(res){
+                if (res.code == 1) {
+                    templateList = res.data.templateList;
+                }
+            }
+        });
+        // end
+
+        if (templateList[channel] == undefined || templateList[channel] == '') {
+            showErrorMsg('模板文件不存在！');
+            return false;
+        } else if (templateList[channel]['msg'] != '') {
+            $('#notic_current_channel').html(templateList[channel]['msg']);
+        }
+
+        $('#templist').html(templateList[channel]['lists']);
+        if ($.inArray(channel, js_allow_channel_arr) == -1) {
+            if (channel == 6) {
+                $('#dl_templist').find('label[for=templist]').html('<em>*</em>单页模板');
+            } else if (channel == 8) {
+                $('#dl_templist').find('label[for=templist]').html('<em>*</em>留言模板');
+            }
+            $('#dl_tempview').hide();
+        } else {
+            $('#dl_templist').find('label[for=templist]').html('<em>*</em>列表模板');
+            $('#dl_tempview').show();
+        }
+        $('#tempview').html(templateList[channel]['view']);
+
+        $('.font_nid').html(templateList[channel]['nid']);
+        
+        return false;
+    }
+    /*--end*/
+
+    function get_dirpinyin(obj)
+    {
+        var typename = $('input[name=typename]').val();
+        if ($.trim(typename) == '') {
+            showErrorMsg('先填写栏目名称！');
+            $('input[name=typename]').focus();
+            return false;
+        }
+        $(obj).html('正在处理');
+        $.ajax({
+            url: "{:url('Arctype/ajax_get_dirpinyin')}",
+            type: 'POST',
+            dataType: 'JSON',
+            data: {typename: typename},
+            success: function(res){
+                $(obj).html('获取拼音');
+                if (res.status == 1) {
+                    dirpath = $('#dirpath').val() + '/' + res.msg;
+                    $('#dirpath').val(dirpath);
+                    return true;
+                } else {
+                    showErrorMsg('操作失败');
+                    return false;
+                }
+            },
+            error: function(e){
+                $(obj).html('获取拼音');
+                showErrorMsg('网络失败，请刷新页面后重试');
+                return false;
+            }
+        });
+    }
+
+    function get_arctype(obj) {
+        $('#parent_id').html('<option value="">加载中……</option>');
+        var channeltype = parseInt($(obj).find("option:selected").val());
+        $.ajax({
+            url: "{:url('Arctype/ajax_get_arctype')}",
+            type: 'POST',
+            dataType: 'JSON',
+            data: {channeltype:channeltype},
+            success: function(res){
+                if (res.status == 1) {
+                    $('#parent_id').html(res.select_html);
+                } else {
+                    showErrorMsg('操作失败');
+                    return false;
+                }
+            },
+            error: function(e){
+                showErrorMsg('网络失败，请刷新页面后重试');
+                return false;
+            }
+        });
+    }
+
+    function set_grade(obj) {
+        var grade = parseInt($(obj).find("option:selected").attr("data-grade"));
+        $('#grade').val(grade + 1);
+        var dirpath = $(obj).find("option:selected").attr("data-dirpath");
+        $('#dirpath').val(dirpath);
+    }
+
+    function check_submit(){
+        if($('input[name="typename"]').val() == ''){
+            showErrorMsg('栏目名称不能为空！');
+            $('input[name=typename]').focus();
+            return false;
+        }
+        if ($('input[name=is_part]:checked').val() == 1) {
+            if($('input[name=typelink]').val() == ''){
+                showErrorMsg('外部链接不能为空！');
+                $('input[name=typelink]').focus();
+                return false;
+            }
+        }
+        var dirname = $('input[name="dirname"]').val();
+        var patrn = /^\d+$/;
+        if (patrn.test(dirname) == true) {
+            showErrorMsg('栏目英文名不能为纯数字！');
+            $('input[name=dirname]').focus();
+            return false;
+        }
+        if($('#templist').val() == ''){
+            $('.tab-base').find('.tab').each(function(){
+                $(this).removeClass('current');
+            });
+            $($('.tab-base').find('.tab').get(1)).addClass('current');
+            $('.tab_div_1').hide();
+            $('.tab_div_2').show();
+            showErrorMsg('请选择列表模板');
+            $('#templist').focus();
+            return false;
+        }
+
+        var channel = parseInt($('#current_channel').val());
+        var js_allow_channel_arr = {$js_allow_channel_arr};
+        if($('#tempview').val() == '' && $.inArray(channel, js_allow_channel_arr) != -1){
+            $('.tab-base').find('.tab').each(function(){
+                $(this).removeClass('current');
+            });
+            $($('.tab-base').find('.tab').get(1)).addClass('current');
+            $('.tab_div_1').hide();
+            $('.tab_div_2').show();
+            showErrorMsg('请选择文档模板');
+            $('#tempview').focus();
+            return false;
+        }
+        
+        layer_loading('正在处理');
+        if(!ajax_check_dirpath())
+        {
+            layer.closeAll();
+            showErrorMsg('文件保存目录已存在！');
+            $('input[name=dirpath]').focus();
+            return false;
+        }
+        $('#post_form').submit();
+    }
+
+    function ajax_check_dirpath()
+    {
+        return true;
+/*
+        var flag = false;
+        var dirpath = $.trim($('input[name=dirpath]').val());
+        $.ajax({
+            url: "{:url('Arctype/ajax_check_dirpath')}",
+            type: 'POST',
+            async: false,
+            dataType: 'JSON',
+            data: {dirpath: dirpath, id: $('#id').val()},
+            success: function(res){
+                if(res.status == 1){
+                    flag = true;
+                }
+            },
+            error: function(e){}
+        });
+
+        return flag;
+        */
+    }
+
+    function img_call_back(fileurl_tmp)
+    {
+      $("#litpic_local").val(fileurl_tmp);
+      $("#img_a").attr('href', fileurl_tmp);
+      $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+    }
+
+    function newtpl(type)
+    {
+        var nid = $('#current_channel').find('option:selected').attr('data-nid');
+        var url = "{:url('Arctype/ajax_newtpl')}";
+        if (url.indexOf('?') > -1) {
+            url += '&';
+        } else {
+            url += '?';
+        }
+        url += 'type='+type+'&nid='+nid;
+
+        if ('lists' == type) {
+            var title = '新建列表模板';
+        } else {
+            var title = '新建文档模板';
+        }
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: title,
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            maxmin: true, //开启最大化最小化按钮
+            area: ['90%', '90%'],
+            content: url
+        });
+    }
+</script>
+
+{include file="public/footer" /}

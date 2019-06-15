@@ -1,0 +1,15 @@
+<div class="fixed-bar">
+    <div class="item-title">
+        <div class="subject">
+            <h3>广告管理</h3>
+            <h5></h5>
+        </div>
+        <ul class="tab-base nc-row">
+            {eq name='$main_lang' value='$admin_lang'}
+                <li>
+                    <a href="{:url("AdPosition/index")}" class="tab {if condition="$Request.controller == 'AdPosition'"}current{/if}"><span>广告位置</span></a>
+                </li>
+            {/eq}
+        </ul>
+    </div>
+</div>

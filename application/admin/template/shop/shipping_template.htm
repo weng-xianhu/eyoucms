@@ -1,0 +1,105 @@
+{include file="public/layout" /}
+
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width: auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;">
+    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">操作提示</h4>
+            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+        </div>
+        <ul>
+            <li>若填写了统一配送金额，则其他没有设置配送金额的城市默认使用统一配送金额。</li>
+        </ul>
+    </div>
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>{$info.template_region}：￥</h3>
+                <input type="text" value="{$info.template_money}" onchange="changeTableVal('shop_shipping_template','template_id','{$info.template_id}','template_money',this);" style="padding: 0px 6px;width: 80px;" title="输入价格后，点击空白处即可保存！">
+            </div>
+            <form class="navbar-form form-inline" action="{:url('Shop/shipping_template')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <!-- 区域查询 -->
+                    <div class="sDiv2">
+                        <input type="text" size="50"  name="region_name" class="qsbox" style="width: 150px;" value="{$Request.param.region_name}" placeholder="搜索区域...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <div class="sDiv2">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Shop/shipping_template')}';">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w10" axis="col0">
+                            <div class="tc"></div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">配送区域</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w100">
+                            <div class="tc">配送金额</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="Template"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {volist name="Template" id="vo"}
+                            <tr>
+                                <td class="sign">
+                                    <div class="w10 tc">
+                                    </div>
+                                </td>
+                                <td style="width: 100%">
+                                    <div style="">
+                                        {$vo.name}
+                                    </div>
+                                </td>
+                                <td class="">
+                                    <div class="w100 tc">
+                                        ￥<input type="text" onchange="changeTableVal('shop_shipping_template','template_id','{$vo.template_id}','template_money',this);"  size="4"  value="{$vo.template_money}" style="width: 60px;" title="输入价格后，点击空白处即可保存！"/>
+                                    </div>
+                                </td>
+                            </tr>
+                        {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+{include file="public/footer" /}

@@ -1,0 +1,58 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;min-width:auto;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;">
+    {include file="language/bar" /}
+    <form class="form-horizontal" id="post_form" action="{:url('Language/pack_add')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="name"><em>*</em>变量名</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="name" value="" id="name" class="input-txt" onkeyup="this.value=this.value.replace(/[^a-zA-Z0-9_-]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/\[^a-zA-Z0-9_-]/g,''));">
+                    <span class="err"></span>
+                    <p class="notic">保持唯一性，不可重复</p>
+                    <p class="">仅支持字母、数字、下划线、连接符，不区分大小写</p>
+                </dd>
+            </dl>
+            <dl class="row"><dt class="tit"><label><b>语言名称</b></label></dt><dd class="opt"><label><b>变量值</b></label></dd></dl>
+            {volist name='$languageRow' id='vo'}
+            <dl class="row">
+                <dt class="tit">
+                    <label for="value">{$vo.title}</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="value[{$vo.mark}]" value="" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            {/volist}
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    // 判断输入框是否为空
+    function checkForm(){
+        var name = $.trim($('#name').val());
+        var reg = /(^sys([0-9]+)$)/;
+        if(name == ''){
+            showErrorMsg('变量名不能为空！');
+            $('#name').focus();
+            return false;
+        } else if (reg.test(name)) {
+            showErrorMsg('禁止使用sys+数字的变量名，请更换');
+            $('#name').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+</script>
+{include file="public/footer" /}

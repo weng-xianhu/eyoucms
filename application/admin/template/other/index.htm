@@ -1,0 +1,233 @@
+{include file="public/layout" /}
+<script type="text/javascript" src="__PUBLIC__/plugins/laydate/laydate.js"></script>
+
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page other">
+    {include file="other/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>广告列表</h3>
+                <h5>(共{$pager->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:U('Other/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">  
+                        <select name="pid" class="select" style="margin:0px 5px;">
+                            <option value="">--查看全部--</option>
+                            {volist name="ad_position" id="vo"}
+                            <option value="{$vo.id}" {eq name="$Request.param.pid" value="$vo.id"}selected{/eq}>{$vo.title}</option>
+                            {/volist}
+                        </select>
+                    </div>
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="广告名称搜索...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <!-- <div class="sDiv2">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:U('Other/index')}';">
+                    </div> -->
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        {eq name='$main_lang' value='$admin_lang'}
+                        <th class="sign w40" axis="col0">
+                            <div class="tc">选择</div>
+                        </th>
+                        {/eq}
+                        <th abbr="article_title" axis="col3" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="">
+                            <div style="text-align: left; padding-left: 10px;" class="">广告名称</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w160">
+                            <div class="tc">广告位置</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w120">
+                            <div class="tc">广告图片</div>
+                        </th>
+<!--                         <th align="center" abbr="article_time" axis="col6" class="">
+    <div style="text-align: left; width: 120px;" class="">投放时间</div>
+</th>
+<th align="center" abbr="article_time" axis="col6" class="">
+    <div style="text-align: left; width: 120px;" class="">结束时间</div>
+</th> -->
+                        <th axis="col1" class="w180">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                       
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%;">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            {eq name='$main_lang' value='$admin_lang'}
+                            <td class="sign w40">
+                                <div class="tc">
+                                    <input type="checkbox" name="ids[]" value="{$vo.id}"></div>
+                            </td>
+                            {/eq}
+                            <td class="sort w40">
+                                <div class="tc">
+                                    {$vo.id}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tl" style="padding-left: 10px;">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
+                                    <a href="{:U('Other/edit',array('id'=>$vo['id']))}">{$vo.title}</a>
+                                    {else /}
+                                    {$vo.title}
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="w160">
+                                <div class="tc">{$ad_position[$vo['pid']]['title']|default='<i class="red">数据出错！</i>'}</div>
+                            </td>
+                            <td class="w120">
+                                <div class="tc">
+                                    <img src="{$vo.litpic|default='__STATIC__/common/images/not_adv.jpg'}" width="60" onmouseover="layer_tips=layer.tips('<img src={$vo.litpic|default='__STATIC__/common/images/not_adv.jpg'} width=150 style=\'max-height:250px;\'>',this,{tips: [1, '#fff']});" onmouseout="layer.close(layer_tips);">&nbsp;
+                                </div>
+                            </td>
+<!--                             <td align="center" class="">
+    <div style="text-align: left; width: 120px;">
+      {empty name="vo.start_time"}
+        —————
+      {else /}
+        {$vo.start_time|date='Y-m-d H:i:s',###}
+      {/empty}
+    </div>
+</td>
+<td align="center" class="">
+    <div style="text-align: left; width: 120px;">
+      {empty name="vo.end_time"}
+        —————
+      {else /}
+        {$vo.end_time|date='Y-m-d H:i:s',###}
+      {/empty}
+    </div>
+</td> -->
+                            <td class="w180">
+                                <div class="tc">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
+                                    <a href="{:U('Other/edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    {/eq}
+                                    {eq name='$main_lang' value='$admin_lang'}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:U('Other/del')}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    {/eq}
+                                    {/eq}
+                                    <a class="btn blue" href="javascript:void(0);" onclick="copyToClipBoard({$vo['id']})">标签调用</a>
+                                </div>
+                            </td>
+                            <td class="sort w60">
+                                <div class="tc">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
+                                    <input style="text-align: center;" type="text" onchange="changeTableVal('ad','id','{$vo.id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                    {else /}
+                                    {$vo.sort_order}
+                                    {/eq}
+                                </div>
+                            </td>
+                            
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                {eq name='$main_lang' value='$admin_lang'}
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                </div>
+                {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:U('Other/del')}">
+                        <div class="add" title="批量删除">
+                            <span><i class="fa fa-close"></i>批量删除</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {eq name="$Think.const.CONTROLLER_NAME.'@add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="{:U('Other/add', array('pid'=>$pid))}">
+                        <div class="add" title="新增广告">
+                            <span class="red"><i class="fa fa-plus"></i>新增广告</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {/eq}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$page}
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function(){
+
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    /**
+     * 代码调用js
+     * @param id  id
+     * @param limit 条数
+     */
+    function copyToClipBoard(id) {
+      var adstr = "{eyou:ad aid='" + id + "'}\r\n   <a href='{$"+"field.links}' {$"+"field.target}><img src='{$"+"field.litpic}' alt='{$"+"field.title}' /></a>\r\n{/eyou:ad";
+      var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px"><dd>标签 ad 调用:</dd>'
+      contentdiv += '<textarea rows="4" cols="60" style="width:400px;height:80px;">' + adstr + '}</textarea>'
+      contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color: #F60;">请将对应标签代码复制并粘贴到对应模板文件中！</dd></dl></div>'
+      layer.open({
+        title: '代码调用',
+        type: 1,
+        skin: 'layui-layer-demo',
+        area: ['480px', '240px'], //宽高
+        content: contentdiv
+      });
+    }
+</script>
+
+{include file="public/footer" /}

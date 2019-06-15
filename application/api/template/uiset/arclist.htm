@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>可视化编辑</title>
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/bootstrap/css/bootstrap.min.css">
+    {load href="__STATIC__/common/js/jquery.min.js" /}
+    {load href="__PUBLIC__/plugins/layer-v3.1.0/layer.js" /}
+    <style type="text/css">
+        .container-fluid {
+            padding: 10px 10px;
+            overflow: hidden;
+        }
+        .control-group {
+            padding: 5px 0px;
+        }
+        .input{
+            width: 92px;
+        }
+        .select {
+            height: 28px;
+            font-size: 12px;
+        }
+        .btn{
+            font: bold 14px/20px "microsoft yahei", arial;
+            background-color: #4fc0e8;
+            color: #FFF;
+            text-shadow: 0 -1px 0 rgba(0,0,0,0.10);
+            border-color: #3aa8cf;
+        }
+        .btn:hover {
+            color: #FFF;
+            background-color: #3aa8cf;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span12">
+                <form class="form-horizontal" id="post_form" onsubmit="return check_submit();">
+                    <div class="control-group">
+                        <div class="controls"><label class="control-label" for="inputEmail">请选择栏目：</label>
+                            <select id="typeid" name="typeid" class="select">
+                                {$arctype_html}
+                            </select>
+                        </div>
+                    </div>
+                    <!-- <div class="control-group">
+                        <div class="controls">
+                            <label class="control-label" for="inputPassword">调用条数：</label>
+                            <input type="text" name="row" value="{$field.info.row|default=5}" class="input">
+                        </div>
+                    </div> -->
+                    <div class="control-group">
+                        <div class="controls">
+                            <input type="hidden" name="id" value="{$field.id|default=''}">
+                            <input type="hidden" name="type" value="{$field.type|default=''}">
+                            <input type="hidden" name="page" value="{$field.page|default=''}">
+                            <input type="hidden" name="v" value="{$v|default='pc'}">
+                            <input type="hidden" name="lang" value="{$field.lang|default='cn'}">
+                            <label class="checkbox"><input type="button" class="btn" value="确认提交" onclick="check_submit();" /></label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        
+        function check_submit()
+        {
+            var current_channel = $('#typeid').find('option:selected').attr('data-current_channel');
+            current_channel = parseInt(current_channel);
+            var js_allow_channel_arr = {$js_allow_channel_arr};
+            if ($.inArray(current_channel, js_allow_channel_arr) == -1) {
+                layer.msg('该栏目没有文档列表！', {icon: 5});
+                return false;
+            }
+
+            layer_loading('正在处理');
+            var url = "{:url('api/Uiset/submit')}";
+            $.ajax({
+                url: url,
+                type: 'POST',
+                dataType: 'JSON',
+                data: $('#post_form').serialize(),
+                success: function(res){
+                    layer.closeAll();
+                    if (res.code == 1) {
+                        parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                            parent.window.location.reload();
+                            parent.layer.close(parentObj);
+                        });
+                    } else {
+                        // parent.showErrorMsg(res.msg);
+                        layer.alert(res.msg, {icon:5});
+                    }
+                    return false;
+                },
+                error: function(e){
+                    layer.closeAll();
+                    layer.alert('操作失败', {icon:5});
+                    return false;
+                }
+            });
+        }
+
+        /**
+         * 封装的加载层
+         */
+        function layer_loading(msg){
+            var loading = layer.msg(
+            msg+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请勿刷新页面', 
+            {
+                icon: 1,
+                time: 3600000, //1小时后后自动关闭
+                shade: [0.2] //0.1透明度的白色背景
+            });
+            //loading层
+            var index = layer.load(3, {
+                shade: [0.1,'#fff'] //0.1透明度的白色背景
+            });
+
+            return loading;
+        }
+    </script>
+</body>
+</html>

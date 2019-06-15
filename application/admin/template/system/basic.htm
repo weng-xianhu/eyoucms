@@ -1,0 +1,90 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow-y: scroll;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page atta">
+    {include file="system/bar" /}
+    <form method="post" enctype="multipart/form-data" name="form1" id="handlepost" action="{:U('System/basic')}">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="basic_indexname">主页链接名</label>
+                </dt>
+                <dd class="opt">
+                    <input id="basic_indexname" name="basic_indexname" value="{$config.basic_indexname|default='首页'}" class="input-txt" type="text" />
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            {eq name='$main_lang' value='$admin_lang'}
+            <dl class="row">
+                <dt class="tit">
+                    <label for="list_symbol">栏目位置的间隔符号</label>
+                </dt>
+                <dd class="opt">
+                    <input id="list_symbol" name="list_symbol" value="{$config.list_symbol|default=' > '}" class="input-txt" type="text" />
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="image_type">允许上传的图片类型</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="60" id="image_type" name="image_type" style="height:40px;">{empty name='config.image_type'}jpg|gif|png|bmp|jpeg|ico{else /}{$config.image_type}{/empty}</textarea>
+                    <p class="notic">禁止非图片的扩展名，比如：php</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="file_type">允许上传的软件类型</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="60" id="file_type" name="file_type" style="height:40px;">{empty name='config.file_type'}zip|gz|rar|iso|doc|xsl|ppt|wps{else /}{$config.file_type}{/empty}</textarea>
+                    <p class="notic">禁止非软件的扩展名，比如：php</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="media_type">允许多媒体文件类型</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="60" id="media_type" name="media_type" style="height:40px;">{empty name='config.media_type'}swf|mpg|mp3|rm|rmvb|wmv|wma|wav|mid|mov|mp4{else /}{$config.media_type}{/empty}</textarea>
+                    <p class="notic">禁止非媒体的扩展名，比如：php</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="file_size">附件上传大小</label>
+                </dt>
+                <dd class="opt">
+                    <input id="file_size" name="file_size" value="{$config.file_size|default=$max_filesize}" type="text" style="width: 60px;" /> {$max_sizeunit}
+                    <p class="notic">附件上传大小限制，如果空间不支持，请与空间商联系修改php.ini部分参数</p>
+                </dd>
+            </dl>
+            {/eq}
+            <div class="bot">
+                <input type="hidden" name="max_filesize" id="max_filesize" value="{$max_filesize}">
+                <input type="hidden" name="max_sizeunit" id="max_sizeunit" value="{$max_sizeunit}">
+                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    function adsubmit(){
+        var file_size = parseInt($('#file_size').val());
+        var max_filesize = parseInt($('#max_filesize').val());
+        var max_sizeunit = $('#max_sizeunit').val();
+        if (0 < max_filesize && max_filesize < file_size) {
+            showErrorMsg('附件上传大小超过空间的最大限制'+max_filesize+max_sizeunit);
+            $('input[name=file_size]').focus();
+            return false;
+        }
+
+        layer_loading("正在处理");
+        $('#handlepost').submit();
+    }
+</script>
+
+{include file="public/footer" /}

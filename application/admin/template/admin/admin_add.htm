@@ -1,0 +1,464 @@
+{include file="public/layout" /}
+<body class="rolecss">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="admin/admin_bar" /}
+    <form class="form-horizontal" id="postForm" action="{:url('Admin/admin_add')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="user_name"><em>*</em>用户名</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="user_name" value="" id="user_name" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="password"><em>*</em>登录密码</label>
+                </dt>
+                <dd class="opt">
+                    <input type="password" name="password" value="" id="password" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="password"><em>*</em>确认密码</label>
+                </dt>
+                <dd class="opt">
+                    <input type="password" name="password2" value="" id="password2" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="pen_name">笔名</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="pen_name" value="" id="pen_name" class="input-txt">
+                    <p class="notic">发布文档后显示责任编辑的名字</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="true_name">真实姓名</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="true_name" value="" id="true_name" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="mobile">手机号码</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="mobile" value="" id="mobile" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row"><dt class="tit"><label><b>管理员权限设置</b></label></dt></dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="name">管理员权限组</label>
+                </dt>
+                <dd class="opt">
+                    <p><label><input type="radio" name="role_id" value="-1" onclick="changeRole(-1);" checked="checked" />超级管理员</label></p>
+                    {foreach name="admin_role_list" item="role" key="k"}
+                    <p>
+                        <label><input type="radio" name="role_id" value="{$role.id}" onclick="changeRole({$role.id});" {if condition="$role.id == $Request.param.role_id"} checked="checked"{/if} />{$role.name}</label>
+                        <!-- &nbsp;<a href="javascript:void;" data-url="{:url('AuthRole/edit', array('id'=>$role.id,'iframe'=>1))}" onclick="addRole(this);">[编辑]</a>&nbsp;&nbsp;<a href="javascript:void;" data-url="{:url('AuthRole/del')}" data-id="{$role.id}" onclick="delfun(this);">[删除]</a> -->
+                    </p>
+                    {/foreach}
+                    <p id="custom_role" style="padding-left: 13px; text-decoration:underline;"><label><a href="javascript:void(0);" data-url="{:url('AuthRole/add', array('iframe'=>1))}" onclick="addRole(this);">自定义</a></label></p>
+                </dd>
+            </dl>
+            <dl class="row"><dt class="tit"><label><b>当前权限组预览</b></label></dt></dl>
+<!--             <dl class="row">
+                <dt class="tit">
+                    <label for="name">语言权限</label>
+                </dt>
+                <dd class="opt">
+                    <label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" name="language[]" value="cn" class="none" />简体中文</label>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl> -->
+            <dl class="row">
+                <dt class="tit">
+                    <label for="name">在线升级</label>
+                </dt>
+                <dd class="opt">
+                    <label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" name="online_update" value="1" class="none" />允许操作</label>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="name">文档权限</label>
+                </dt>
+                <dd class="opt">
+                    <label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" name="only_oneself" value="1" class="none" />只允许查看自己发布的文档</label>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="name">操作权限</label>
+                </dt>
+                <dd class="opt">
+                    <p><label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" id="select_cud" class="none" />完全控制</label></p>
+                    <p><label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" name="cud[]" value="add" class="none" />添加信息</label></p>
+                    <p><label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" name="cud[]" value="edit" class="none" />修改信息</label></p>
+                    <p><label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" name="cud[]" value="del" class="none" />删除信息</label></p>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="name">功能权限</label>
+                </dt>
+                <dd class="opt">
+                    <p>
+                        <label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" id="select_all_permission" class="none" />全部选择</label>
+                    </p>
+
+                    {foreach name="modules" item="vo"}
+                      {foreach name="vo.child" item="vo2"}
+                        {if condition="1 == $vo2['is_modules'] AND ! empty($auth_rule_list[$vo2.id])"}
+                          {if condition="1002 == $vo2['id']"}
+                            <div class="admin_poplistdiv">
+                                <h2>{$vo2.name}</h2>
+                            {if condition="! empty($arctypes)"}
+                                <p>
+                                    {php}$first_arctype_id = '';{/php}
+                                    {foreach name="arctypes" item="arctype" key="k"}
+                                        {if condition="isset($arctype_array[$arctype['id']])"}
+                                            {if condition="$k>0"}
+                                            <em class="arctype_bg expandable"></em>
+                                            {else /}
+                                            <em class="arctype_bg collapsable"></em>
+                                            {php}$first_arctype_id = $arctype['id'];{/php}
+                                            {/if}
+                                        {/if}
+                                        <label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" class="arctype_cbox arctype_id_{$arctype.id} none" name="permission[arctype][]" value="{$arctype.id}" />{$arctype.typename}</label>
+                                    {/foreach}
+                                </p>
+                                
+                                {foreach name="arctypes" item="arctype" key="k"}
+                                {if condition="isset($arctype_array[$arctype['id']])"}
+                                    <div class="arctype_child" id="arctype_child_{$arctype['id']}"{if condition="$first_arctype_id==$arctype['id']"} style="display: block;"{/if}>
+                                    {foreach $arctype_array[$arctype['id']] as $item}
+                                        <div class="arctype_child1">
+                                            <label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" class="arctype_cbox arctype_id_{$item.id} none" name="permission[arctype][]" value="{$item.id}" data-pid="{$item.parent_id}" />{$item.typename}</label>
+                                        </div>
+                                        {if condition="isset($arctype_array[$item['id']])"}
+                                        <div class="arctype_child2" id="arctype_child_{$item['id']}">
+                                            <span class="button level1 switch center_docu"></span>
+                                            {foreach $arctype_array[$item['id']] as $vo}
+                                            <label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" class="arctype_cbox none" data-pid="{$vo.parent_id}" data-tpid="{$item.parent_id}" name="permission[arctype][]" value="{$vo.id}" />{$vo.typename}</label>
+                                            {/foreach}
+                                        </div>
+                                        {/if}
+                                    {/foreach}
+                                    </div>
+                                {/if}
+                                {/foreach}
+                            {/if}
+                            </div>
+                          {else /}
+                            <div class="admin_poplistdiv">
+                                <h2>{$vo2.name}</h2>
+                                <p>
+                                    {foreach name="auth_rule_list[$vo2.id]" item="rule"}
+                                    <label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" class="none" name="permission[rules][]" value="{$rule.id}" />{$rule.name}</label>
+                                    {/foreach}
+                                </p>
+                            </div>
+                          {/if}
+                        {/if}
+                      {/foreach}
+                    {/foreach}
+                    
+                    {if condition="! empty($plugins)"}
+                    <div class="admin_poplistdiv">
+                        <h2>插件应用</h2>
+                        <ul>
+                            {foreach name="plugins" item="plugin"}
+                            <li>
+                                <label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" class="none" name="permission[plugins][{$plugin.code}][code]" value="{$plugin.code}" />{$plugin.name}</label>
+                                {php}$config = json_decode($plugin['config'], true);{/php}
+                                {if condition="! empty($config['permission'])"}
+                                <p style="padding-left:10px;">
+                                    <span class="button level1 switch center_docu"></span>
+                                    {foreach $config['permission'] as $index => $text}
+                                    <label><img class="cboximg" src="__SKIN__/images/ok.png" /><input type="checkbox" class="none" name="permission[plugins][{$plugin.code}][child][]" value="{$index}" />{$text}</label>
+                                    {/foreach}
+                                </p>
+                                {/if}
+                            </li>
+                            {/foreach}
+                        </ul>
+                    </div>
+                    {/if}
+                </dd>
+            </dl>
+            <div class="bot"><a href="JavaScript:void(0);" onclick="adsubmit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a></div>
+        </div>
+    </form>
+</div>
+<textarea name="admin_role_list" id="admin_role_list" class="none">{$admin_role_list|json_encode}</textarea>
+<script type="text/javascript">
+    $(function(){
+        // 默认全部禁用复选框
+        $('#postForm input[type="checkbox"]').attr("disabled","disabled");
+
+        /*超级管理员默认全选复选框*/
+        if (-1 == $('#postForm input[name="role_id"]').val()) {
+            $('#postForm input[type="checkbox"]').attr('checked', 'checked');
+            $('#postForm img.cboximg').attr('src', '__SKIN__/images/ok.png');
+        }
+        /*--end*/
+
+        $('.arctype_bg').bind('click', function(){
+            var acid = $(this).next().find('input').val(), input = 'arctype_child_' + acid;
+            $('.arctype_child').hide();
+            if( $(this).attr('class').indexOf('expandable') == -1 ){
+                $(this).removeClass('collapsable').addClass('expandable');
+            }else{
+                $('.arctype_bg').removeClass('collapsable').addClass('expandable');
+                $(this).removeClass('expandable').addClass('collapsable');
+                $('#'+input).show();
+            }
+        });
+        $('.arctype_cbox').bind('click', function(){
+            var acid = $(this).val(), input = 'arctype_child_' + acid;
+            var pid = $(this).data('pid');
+            var tpid = $(this).data('tpid');
+            if($(this).attr('checked')){
+                if (0 < $('input[data-pid="'+pid+'"]:checked').length) {
+                    $('.arctype_id_'+pid).attr('checked', 'checked');
+                    $('.arctype_id_'+pid).parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+                }
+                if (0 < $('#arctype_child_'+tpid).find('input[type="checkbox"]:checked').length) {
+                    $('.arctype_id_'+tpid).attr('checked', 'checked');
+                    $('.arctype_id_'+tpid).parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+                }
+                $('#'+input).find('input[type="checkbox"]').attr('checked', 'checked');
+                $('#'+input).find('input[type="checkbox"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+            }else{
+                if (1 > $('input[data-pid="'+pid+'"]:checked').length) {
+                    $('.arctype_id_'+pid).removeAttr('checked');
+                    $('.arctype_id_'+pid).parent().find('img.cboximg').attr('src', '__SKIN__/images/del.png');
+                }
+                if (1 > $('#arctype_child_'+tpid).find('input[type="checkbox"]:checked').length) {
+                    $('.arctype_id_'+tpid).removeAttr('checked');
+                    $('.arctype_id_'+tpid).parent().find('img.cboximg').attr('src', '__SKIN__/images/del.png');
+                }
+                $('#'+input).find('input[type="checkbox"]').removeAttr('checked');
+                $('#'+input).find('input[type="checkbox"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/del.png');
+            }
+        });
+        $('#select_cud').bind('click', function(){
+            if($(this).attr('checked')){
+                $('#postForm input[name^="cud"]').attr('checked', 'checked');
+                $('#postForm input[name^="cud"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+            }else{
+                $('#postForm input[name^="cud"]').removeAttr('checked');
+                $('#postForm input[name^="cud"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/del.png');
+            }
+        });
+
+        $('#select_all_permission').bind('click', function(){
+            if($(this).attr('checked')){
+                $('#postForm input[name^="permission"]').attr('checked', 'checked');
+                $('#postForm input[name^="permission"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+            }else{
+                $('#postForm input[name^="permission"]').removeAttr('checked');
+                $('#postForm input[name^="permission"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/del.png');
+            }
+        });
+        $('#postForm input[name^="permission"],#postForm input[name^="cud"]').bind('click', function(){
+            hasSelectAll();
+        });
+    });
+
+    function hasSelectAll(){
+        var c = true;
+        $('#postForm input[name^="permission"]').each(function(idx, ele){
+            if(! $(ele).attr('checked')){
+                c = false;
+                return;
+            }
+        });
+        if(c){
+            $('#select_all_permission').attr('checked', 'checked');
+            $('#select_all_permission').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+        }else{
+            $('#select_all_permission').removeAttr('checked');
+            $('#select_all_permission').parent().find('img.cboximg').attr('src', '__SKIN__/images/del.png');
+        }
+
+        var c1 = true;
+        $('#postForm input[name^="cud"]').each(function(idx, ele){
+            if(! $(ele).attr('checked')){
+                c1 = false;
+                return;
+            }
+        });
+        if(c1){
+            $('#select_cud').attr('checked', 'checked');
+            $('#select_cud').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+        }else{
+            $('#select_cud').removeAttr('checked');
+            $('#select_cud').parent().find('img.cboximg').attr('src', '__SKIN__/images/del.png');
+        }
+    }
+
+    function changeRole(value){
+        if (-1 == value) {
+            $('#postForm input[type="checkbox"]').attr("checked","checked").attr('disabled', 'disabled');
+            $('#postForm img.cboximg').attr('src', '__SKIN__/images/ok.png');
+            return;
+        }
+        
+        $('#postForm input[name!="role_id"]').removeAttr('checked').removeAttr('disabled');
+        $('#postForm img.cboximg').attr('src', '__SKIN__/images/del.png');
+
+        /*自定义权限组*/
+        // if(value == "0"){
+        //     $('#postForm input[name!="role_id"]').attr('checked', 'checked');
+        //     $('#postForm input[name="online_update"]').removeAttr('checked');
+        //     $('#postForm input[name="only_oneself"]').removeAttr('checked');
+        //     return ;
+        // }
+        /*--end*/
+        var admin_role_list = JSON.parse($('#admin_role_list').val());
+        for(var i in admin_role_list){
+            var item = admin_role_list[i];
+            if(item.id == value){
+                if(item.language){
+                    item.language.map(function(row){
+                        $('#postForm input[name^="language"][value="'+row+'"]').attr('checked', 'checked');
+                        $('#postForm input[name^="language"][value="'+row+'"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+                    });
+                }
+
+                if(item.online_update){
+                    $('#postForm input[name="online_update"]').attr('checked', 'checked');
+                    $('#postForm input[name="online_update"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+                };
+                // if(item.editor_visual){
+                //     $('#postForm input[name="editor_visual"]').attr('checked', 'checked');
+                //     $('#postForm input[name="editor_visual"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+                // };
+                if(item.only_oneself){
+                    $('#postForm input[name="only_oneself"]').attr('checked', 'checked');
+                    $('#postForm input[name="only_oneself"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+                };
+                if(item.cud){
+                    item.cud.map(function(row){
+                        $('#postForm input[name^="cud"][value="'+row+'"]').attr('checked', 'checked');
+                        $('#postForm input[name^="cud"][value="'+row+'"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+                    });
+                }
+
+                if(item.permission){
+                    for(var p in item.permission){
+                        if(p == 'plugins'){
+                            if(item.permission[p]){
+                                for(var pluginId in item.permission[p]){
+                                    $('#postForm input[name="permission['+p+']['+pluginId+'][code]"][value="'+pluginId+'"]').attr('checked', 'checked');
+                                    $('#postForm input[name="permission['+p+']['+pluginId+'][code]"][value="'+pluginId+'"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+                                    if(item.permission[p][pluginId].child){
+                                        item.permission[p][pluginId].child.map(function(row){
+                                            $('#postForm input[name="permission['+p+']['+pluginId+'][child][]"][value="'+row+'"]').attr('checked', 'checked');
+                                            $('#postForm input[name="permission['+p+']['+pluginId+'][child][]"][value="'+row+'"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+                                        });
+                                    }
+                                }
+                            }
+                        }else{
+                            item.permission[p].map(function(row){
+                                $('#postForm input[name="permission['+p+'][]"][value="'+row+'"]').attr('checked', 'checked');
+                                $('#postForm input[name="permission['+p+'][]"][value="'+row+'"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+                            });
+                        }
+                        
+                    }
+                }
+
+                hasSelectAll();
+                $('#postForm input[type="checkbox"]').attr('disabled', 'disabled');
+                break;
+            }
+        }
+    }
+
+    function addRole(obj)
+    {
+        var url = $(obj).data('url');
+        // iframe窗
+        layer.open({
+            type: 2,
+            title: '自定义权限组',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            maxmin: false, //开启最大化最小化按钮
+            area: ['90%', '90%'],
+            content: url
+        });
+    }
+
+    function custom_role(str, new_role_id, auth_role_list)
+    {
+        $('#custom_role').before(str);
+        $('#admin_role_list').val(auth_role_list);
+        changeRole(new_role_id);
+    }
+
+    // 判断输入框是否为空
+    function adsubmit(){
+        if($('input[name=user_name]').val() == ''){
+            showErrorMsg('用户名不能为空！');
+            $('input[name=user_name]').focus();
+            return false;
+        }
+        var password = $('#password').val();
+        var password2 = $('#password2').val();
+        if(password == ''){
+            showErrorMsg('登录密码不能为空！');
+            $('input[name=password]').focus();
+            return false;
+        }
+        if(password2 == ''){
+            showErrorMsg('确认密码不能为空！');
+            $('input[name=password2]').focus();
+            return false;
+        }
+        if (password != password2) {
+            showErrorMsg('两次密码输入不一致！');
+            $('input[name=password]').focus();
+            return false;
+        }
+        var role_id = $('input[name=role_id]:checked').val();
+        if(role_id == '' || undefined == role_id){
+            showErrorMsg('请选择权限组！');
+            $('input[name=role_id]').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $('#postForm').submit();
+    }
+</script>
+
+{include file="public/footer" /}

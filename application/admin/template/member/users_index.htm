@@ -1,0 +1,269 @@
+{include file="public/layout" /}
+
+<body style="background-color: rgb(255, 255, 255); overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="member/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>用户列表</h3>
+                <h5>(共{$pager->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:url('Member/users_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2 fl" style="margin-right: 6px;">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索用户名...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <!-- <div class="sDiv2 fl" style="margin-right: 6px;">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Member/users_index')}';">
+                    </div> -->
+                    {include file="member/users_bar" /}
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc">选择</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">用户名</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w100">
+                            <div class="tc">用户级别</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w60">
+                            <div class="tc">是否激活</div>
+                        </th>
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc">
+                                    <input type="checkbox" name="ids[]" value="{$vo.users_id}">
+                                </div>
+                            </td>
+                            <td class="sort">
+                                <div class="w40 tc">{$vo.users_id}</div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                    {eq name="'Member@users_edit'|is_check_access" value="1"}
+                                        <a href="{:url('Member/users_edit',array('id'=>$vo['users_id']))}">{$vo.username}</a>
+                                    {else /}
+                                        {$vo.username}
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w100 tc">
+                                    {$vo.level_name}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w60 tc">
+                                    {eq name="$vo['is_activation']" value='1'}
+                                        <span class="yes" {eq name="'Member@users_edit'|is_check_access" value="1"}onClick="changeTableVal('users','users_id','{$vo.users_id}','is_activation',this);"{/eq}><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                        <span class="no" {eq name="'Member@users_edit'|is_check_access" value="1"}onClick="changeTableVal('users','users_id','{$vo.users_id}','is_activation',this);"{/eq}><i class="fa fa-ban"></i>否</span>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w120 tc">
+                                    {eq name="'Member@users_edit'|is_check_access" value="1"}
+                                        <a href="{:url('Member/users_edit',array('id'=>$vo['users_id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    {/eq}
+                                    {eq name="'Member@users_del'|is_check_access" value="1"}
+                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Member/users_del')}" data-id="{$vo.users_id}" data-username="{$vo.username}" onClick="usersdel(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                {eq name="'Member@users_del'|is_check_access" value="1"}
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                </div>
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Member/users_del')}">
+                        <div class="add" title="批量删除">
+                            <span><i class="fa fa-close"></i>批量删除</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {eq name="'Member@users_batch_add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="{:url('Member/users_batch_add')}">
+                        <div class="add" title="批量新增">
+                            <span class="red"><i class="fa fa-plus"></i>批量新增</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$page} </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        {eq name="$is_syn_theme_users" value="1"}
+            syn_theme_users();
+        {/eq}
+        function syn_theme_users()
+        {
+            layer_loading('初始化中');
+            // 确定
+            $.ajax({
+                type : 'get',
+                url : "{:url('Member/ajax_syn_theme_users')}",
+                data : {},
+                dataType : 'json',
+                success : function(res){
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 1, time: 1000}, function(){
+                            window.location.href = res.url;
+                        });
+                    }else{
+                        layer.alert(res.msg, {icon: 2, title:false}, function(){
+                            window.location.reload();
+                        });
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false}, function(){
+                        window.location.reload();
+                    });
+                }
+            })
+        }
+    });
+
+    // 删除
+    function usersdel(obj){
+        layer.confirm('此操作不可逆，确认彻底删除？', {
+            title: false,//$(obj).attr('data-username'),
+            btn: ['确定','取消'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id')},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }
+
+    /**
+     * 批量删除提交
+     */
+    function batch_del(obj, name) {
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {icon: 2, title:false});
+            return;
+        }
+        // 删除按钮
+        layer.confirm('此操作不可逆，确认批量彻底删除？', {
+            title: false,
+            btn: ['确定', '取消'] //按钮
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:a},
+                dataType: 'json',
+                success: function (data) {
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                },
+                error:function(){
+                    layer.closeAll();
+                    layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+    
+</script>
+
+{include file="public/footer" /}

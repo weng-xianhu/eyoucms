@@ -1,0 +1,177 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>广告管理</h3>
+                <h5>(共{$pager->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:url('AdPosition/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="名称搜索...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <!-- <div class="sDiv2">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('AdPosition/index')}';">
+                    </div> -->
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        {eq name='$main_lang' value='$admin_lang'}
+                        <th class="sign w40" axis="col0">
+                            <div class="tc">选择</div>
+                        </th>
+                        {/eq}
+                        <th abbr="article_title" axis="col3" class="w60">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_title" axis="col3">
+                            <div class="tl" style="width: 100%">广告名称</div>
+                        </th>
+                        <th axis="col1" class="w250">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            {eq name='$main_lang' value='$admin_lang'}
+                            <td class="sign">
+                                <div class="w40 tc">
+                                    <input type="checkbox" name="ids[]" value="{$vo.id}">
+                                </div>
+                            </td>
+                            {/eq}
+                            <td class="">
+                                <div class="w60 tc">
+                                    {$vo.id}
+                                </div>
+                            </td>
+                            <td align="left" class="" style="width: 100%">
+                                <div class="tl">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
+                                    <a href="{:url('AdPosition/edit',array('id'=>$vo['id']))}">{$vo.title}</a>
+                                    {else /}
+                                    {$vo.title}
+                                    {/eq}
+                                </div>
+                            </td>
+                           
+                            <td class="">
+                                <div class="w250 tc">
+                                    <!-- <a class="btn blue" href="{:url('Other/index',array('pid'=>$vo['id']))}"><i class="fa fa-search"></i>查看</a> -->
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
+                                    <a href="{:url('AdPosition/edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    {/eq}
+                                {eq name='$main_lang' value='$admin_lang'}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('AdPosition/del')}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    {/eq}
+                                {/eq}
+                                    <a class="btn blue" href="javascript:void(0);" onclick="copyToClipBoard({$vo['id']}, 1)">标签调用</a>
+                                </div>
+                            </td>
+                            
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+            {eq name='$main_lang' value='$admin_lang'}
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                </div>
+                {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('AdPosition/del')}">
+                        <div class="add" title="批量删除">
+                            <span><i class="fa fa-close"></i>批量删除</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {eq name="$Think.const.CONTROLLER_NAME.'@add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="{:url('AdPosition/add')}">
+                        <div class="add" title="新增广告">
+                            <span class="red"><i class="fa fa-plus"></i>新增广告</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+            {/eq}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$page}
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    /**
+     * 代码调用js
+     * @param id  id
+     * @param limit 条数
+     */
+    function copyToClipBoard(id, limit) {
+      var advstr = "{eyou:adv pid='" + id + "'}\r\n   <img src='{$"+"field.litpic}' alt='{$"+"field.title}' />\r\n{/eyou:adv";
+      var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px"><dd>标签 adv 调用：</dd>'
+      contentdiv += '<textarea rows="4" cols="60" style="width:400px;height:60px;">' + advstr + '}</textarea>'
+      contentdiv += '<dd>JavaScript：</dd>'
+      contentdiv += '<dd><input type="text" style=" width:400px;" value="<script type=&quot;text/javascript&quot; src=&quot;http://' + '{$Think.server.http_host}' + '/index.php?m=api&amp;c=Other&amp;a=other_show&amp;pid=' + id + '&amp;row='+limit+'&quot;><\/script>"></dd>'
+      contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color: #F60;">请将标签adv或JavaScript代码复制并粘贴到对应模板文件中！</dd></dl></div>'
+      layer.open({
+        title: '代码调用',
+        type: 1,
+        skin: 'layui-layer-demo',
+        area: ['480px', '280px'], //宽高
+        content: contentdiv
+      });
+    }
+
+</script>
+
+{include file="public/footer" /}

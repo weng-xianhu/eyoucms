@@ -1,0 +1,41 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;min-width:auto;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;">
+    {include file="language/bar" /}
+    <form class="form-horizontal" id="post_form" action="{:url('Language/pack_batch_add')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="attr_name"><em>*</em>批量新增变量</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="60" id="content" name="content" style="width:800px;height:300px;" placeholder="按照以下格式填写：第一种语言值=第二种语言值=第三种语言值
+{$languageStr}
+网站首页=Home
+你的位置=Your position"></textarea>
+                    <span class="err"></span>
+                    <p class="">一行代表一个多语言值，系统会自动生成变量名</p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    // 判断输入框是否为空
+    function checkForm(){
+        if($.trim($('#content').val()) == ''){
+            showErrorMsg('批量替换语言不能为空！');
+            $('#content').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+</script>
+{include file="public/footer" /}

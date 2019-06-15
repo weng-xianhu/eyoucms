@@ -1,0 +1,119 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow: auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="seo/bar" /}
+    <form method="get" id="handlepost" name="form1">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">请选择栏目</dt>
+                <dd class="opt">
+                    <select name="html_typeid" id="html_typeid">
+                        <option value="0">更新所有文档…</option>
+                        {$select_html}
+                    </select>
+                    <p class="notic">开启静态页面模式才有效</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>文档起始ID</label>
+                </dt>
+                <dd class="opt">       
+                    <input id="html_startid" name="html_startid" value="" type="text" style="width: 80px;"/>
+                    <span class="err"></span>
+                    <p class="notic">（空或0表示从头开始）</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>文档结束ID</label>
+                </dt>
+                <dd class="opt">
+                    <input id="html_endid" name="html_endid" value="" type="text" style="width: 80px;"/>
+                    <span class="err"></span>
+                    <p class="notic">（空或0表示直到结束ID）</p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <input type="hidden" name="inc_type" value="{$inc_type}">
+                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green a_btn" data-type="archives" data-disabled=0 onclick="
+        return adsubmit(this);">更新文档HTML</a>
+                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green a_btn" data-type="arctype" data-disabled=0 onclick="
+        return adsubmit(this);">更新栏目HTML</a>
+                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green a_btn" data-type="index" data-disabled=0 onclick="
+        return adsubmit(this);">更新首页HTML</a>
+                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green a_btn" data-type="all" data-disabled=0 onclick="
+        return adsubmit(this);">一键更新</a>
+            </div>
+            <div class="bot">
+                <div id='mdv' style='width:100%;height:200px;'> 
+                    <iframe name="stafrm" frameborder="0" id="stafrm" width="100%" height="100%"></iframe>
+              </div>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+
+    function adsubmit(obj){
+        var typeid = $('#html_typeid').val();
+        var startid = $('#html_startid').val();
+        var endid = $('#html_endid').val();
+        var updatetype = $(obj).attr('data-type');
+
+        if ($('.a_btn').attr('data-disabled') == 1) {
+            return false;
+        }
+
+        $('.a_btn').attr('data-disabled', 1);
+        $(obj).html('正在更新中……');
+        $($("#stafrm")[0].contentWindow.document.body).html('准备进入更新，请勿刷新页面！');
+        layer_loading('正在处理');
+        $.ajax({
+            url: "{:url('Seo/bindHtml')}",
+            type: "POST",
+            dataType: "JSON",
+            data: {typeid: typeid, startid: startid, endid: endid, updatetype: updatetype},
+            // async: false,
+            success: function(res){
+                $('.a_btn').attr('data-disabled', 0);
+                $(obj).html('更新生成HTML');
+                layer.closeAll();
+                setCookies('binghtml_i', 0);
+                $.each(res.urls, function(index, item){
+                    $.ajax({
+                        url: item,
+                        type: "GET",
+                        dataType: "JSON",
+                        data: {},
+                        // async: false,
+                        success: function(res2){
+                            var body = '<a href="'+res.nowurls[index]+'" target="_blank">'+res.nowurls[index]+'</a><br/>';
+                            $($("#stafrm")[0].contentWindow.document.body).prepend(body);
+                            var i = getCookie('binghtml_i');
+                            i = parseInt(i) + 1;
+                            setCookies('binghtml_i', i);
+                            if (i >= parseInt(res.total)) {
+                                layer.alert('更新完成！', {icon: 1, title:false});
+                            }
+                        },
+                        error: function(e){
+                            var i = getCookie('binghtml_i');
+                            i = parseInt(i) + 1;
+                            setCookies('binghtml_i', i);
+                        }
+                    });
+                });
+            },
+            error: function(e){
+                $('.a_btn').attr('data-disabled', 0);
+                layer.closeAll();
+                layer.alert('网络超时！', {icon: 2, title:false});
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

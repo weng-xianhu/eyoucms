@@ -1,0 +1,131 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit; min-width:400px;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: 400px;">
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w10" axis="col0">
+                            <div class="tc">&nbsp;</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w250">
+                            <div class="">变量标题</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">变量名</div>
+                        </th>
+                        <th axis="col1" class="w150">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="w10 tc">&nbsp;</div>
+                            </td>
+                            <td class="">
+                                <div class="w250">
+                                    {$vo.attr_name}
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                    {$vo.attr_var_name}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w150 tc">
+                                    {eq name="'System@customvar_recovery'|is_check_access" value="1"}
+                                    <a href="javascript:void(0);" class="btn blue" onclick="customvar_recovery(this);" data-id="{$vo['id']}"><i class="fa fa-pencil-square-o"></i>恢复</a>
+                                    {/eq}
+                                    {eq name="'System@customvar_del_thorough'|is_check_access" value="1"}
+                                    <a class="btn red"  href="javascript:void(0)" data-id="{$vo.id}" onClick="customvar_del_thorough(this);"><i class="fa fa-trash-o"></i>彻底删除</a>
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <!--分页位置-->
+        {$page}
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    function customvar_recovery(obj) {
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('System/customvar_recovery')}",
+            data : {del_id:$(obj).attr('data-id')},
+            dataType : 'json',
+            success : function(data){
+                layer.closeAll();
+                if(data.status == 1){
+                    layer.msg(data.msg, {time:500, icon: 1}, function(){
+                        window.location.reload();
+                        // parent.location.reload();
+                    });
+                }else{
+                    layer.msg(data.msg, {icon: 2,time: 2000});
+                }
+            }
+        });
+    }
+
+    function customvar_del_thorough(obj) {
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('System/customvar_del_thorough')}",
+            data : {del_id:$(obj).attr('data-id')},
+            dataType : 'json',
+            success : function(data){
+                layer.closeAll();
+                if(data.status == 1){
+                    layer.msg(data.msg, {icon: 1});
+                    window.location.reload();
+                }else{
+                    layer.msg(data.msg, {icon: 2,time: 2000});
+                }
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

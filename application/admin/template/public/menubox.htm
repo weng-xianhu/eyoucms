@@ -1,0 +1,19 @@
+
+  <script type="text/javascript">
+  //固定层移动
+  $(function(){
+      //管理显示与隐藏
+      $('img[tptype="admin_avatar"], #admin-manager-btn').click(function () {
+          if ($(".manager-menu").css("display") == "none") {
+              $(".manager-menu").css('display', 'block'); 
+              $("#admin-manager-btn").attr("title","关闭快捷管理"); 
+              $("#admin-manager-btn").removeClass().addClass("arrow-close");
+          }
+          else {
+              $(".manager-menu").css('display', 'none');
+              $("#admin-manager-btn").attr("title","显示快捷管理");
+              $("#admin-manager-btn").removeClass().addClass("arrow");
+          }           
+      });
+  });
+  </script> 

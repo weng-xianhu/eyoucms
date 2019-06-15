@@ -1,0 +1,56 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow: auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="seo/bar" /}
+    <!-- 操作说明 -->
+    <div class="explanation" id="explanation">
+        <div class="title" id="checkZoom"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">操作提示</h4>
+            <span id="explanationZoom" title="收起提示"></span></div>
+        <ul>
+            <li>开启伪静态化需空间环境配置开启mod_rewrite模块，如没有开启则联系空间商解决。</li>
+        </ul>
+    </div>
+    <form method="post" id="handlepost" action="{:url('Seo/handle')}" enctype="multipart/form-data" name="form1">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">首页</dt>
+                <dd class="opt">
+                    {notempty name='$root_dir'}子目录名称/{/notempty}/（如：http://127.0.0.1__ROOT_DIR__/）
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">列表页</dt>
+                <dd class="opt">
+                    {notempty name='$root_dir'}子目录名称/{/notempty}目录名称.html（如：http://127.0.0.1__ROOT_DIR__/about/）
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">文档页</dt>
+                <dd class="opt">
+                    {notempty name='$root_dir'}子目录名称/{/notempty}目录名称/ID.html（如：http://127.0.0.1__ROOT_DIR__/about/250.html）
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">伪静态规则</dt>
+                <dd class="opt">
+                    <a href="http://www.eyoucms.com/wenda/860.html" target="_blank">EyouCms去除URL中的index.php</a>
+                    <p class="notic">部分空间需要手动设置伪静态规则文件</p>
+                </dd>
+            </dl>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function adsubmit(){
+        layer_loading("正在处理");
+        $('#handlepost').submit();
+    }
+</script>
+
+{include file="public/footer" /}

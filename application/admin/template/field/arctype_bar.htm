@@ -1,0 +1,17 @@
+
+    <div class="fixed-bar">
+        <div class="item-title">
+            {in name="$Think.const.ACTION_NAME" value='arctype_index'}
+            <a class="back" href="{:url('channeltype/index')}" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
+            {else /}
+            <a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
+            {/in}
+            <div class="subject">
+                <h3>字段管理</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                <li><a href="{:url('Field/arctype_index', array('typeid'=>$Request.param.typeid))}" data-index='2' class="tab current"><span>栏目字段</span></a></li>
+            </ul>
+        </div>
+    </div>

@@ -1,0 +1,176 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="member/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>用户级别列表</h3>
+                <h5>(共{$pager->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:url('Member/level_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    {include file="member/users_bar" /}
+                </div>
+            </form>
+        </div>
+        <!-- 操作说明 -->
+        <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+            <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                <h4 title="提示相关设置操作时应注意的要点">操作提示</h4>
+                <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+            </div>
+            <ul>
+                <li>由于用户升级是以等级值由低向高升级的，因此增加组别时需注意此值的设置。</li>
+                <li>如果你增加新的用户组的等级值低于10，将自动被视为普通的注册会员。</li>
+            </ul>
+        </div>
+        <br/>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w20" axis="col0">
+                            <div class="tc"></div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">级别名称</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w160">
+                            <div class="tc">用户等级值</div>
+                        </th>
+                        <th axis="col1" class="w150">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto; min-height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="w20 tc">
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                    {eq name="'Member@level_edit'|is_check_access" value="1"}
+                                        <input type="text" name="level_name" value="{$vo.level_name}" onchange="changeTableVal('users_level','level_id','{$vo.level_id}','level_name',this);">
+                                    {else /}
+                                        {$vo.level_name}
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w160 tc">
+                                    {eq name="'Member@level_edit'|is_check_access" value="1"}
+                                        <input type="text" name="level_value" value="{$vo.level_value}" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" onchange="changeTableVal('users_level','level_id','{$vo.level_id}','level_value',this);" class="tc w60">
+                                    {else /}
+                                        {$vo.level_value}
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w150 tc">
+                                    {eq name="'Member@level_del'|is_check_access" value="1"}
+                                        <!-- 判断是否属于系统定义级别，0为用户级别 -->
+                                        {eq name="$vo.is_system" value="0"}  
+                                            <!-- 判断是否级别下是否存在用户，是否可以删除。0可删除 -->
+                                            {if condition="empty($levelgroup[$vo['level_id']])"}
+                                                <a class="btn red"  href="javascript:void(0);" data-url="{:url('Member/level_del')}" data-level_name="{$vo.level_name}" data-id="{$vo.level_id}" onClick="usersdel(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                            {else/}
+                                                正在使用
+                                            {/if}
+                                        {else /}
+                                            系统内置
+                                        {/eq}
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                {eq name="$Think.const.CONTROLLER_NAME.'@level_add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="{:url('Member/level_add')}">
+                        <div class="add" title="新增级别">
+                            <span class="red"><i class="fa fa-plus"></i>新增级别</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$page}
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    // 删除
+    function usersdel(obj){
+        layer.confirm('此操作不可逆，确认彻底删除？', {
+            title: false, // $(obj).attr('data-level_name'),
+            btn: ['确定','取消'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id')},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }
+</script>
+
+{include file="public/footer" /}

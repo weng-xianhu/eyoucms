@@ -1,0 +1,9 @@
+{volist name="ad" id="vo"}
+    {if condition="$vo.media_type == 1"}
+        document.write('<a href="{$vo.links}" title="{$vo.title}" {$vo.target}><img border="0" src="{$vo.litpic}" alt="{$vo.title}"/></a>');
+    {elseif condition="$vo.media_type == 2"}
+
+    {elseif condition="$vo.media_type == 3"}
+        document.write('{$vo.intro|htmlspecialchars_decode|str_replace="\'", "\\'",###}');
+    {/if}
+{/volist}

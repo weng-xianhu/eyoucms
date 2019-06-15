@@ -1,0 +1,17 @@
+    <div class="fixed-bar">
+        <div class="item-title">
+            <div class="subject">
+                <h3>SEO设置</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                <li><a href="{:url('Seo/index',['inc_type'=>'seo'])}" {if condition="'seo'==$inc_type"}class="current"{/if}><span>SEO基础</span></a></li>
+
+                <li><a href="{:url('Seo/index',['inc_type'=>'sitemap'])}" {if condition="'sitemap'==$inc_type"}class="current"{/if}><span>Sitemp</span></a></li>
+
+                <li id="tab_base_html" {if condition='isset($config.seo_pseudo) && $config.seo_pseudo != 2'}style="display: none!important;"{/if}><a href="{:url('Seo/index',['inc_type'=>'html'])}" {if condition="'html'==$inc_type"}class="current"{/if}><span>生成静态</span></a></li>
+
+                <!-- <li id="tab_base_rewrite" {if condition='isset($config.seo_pseudo) && $config.seo_pseudo != 3'}style="display: none!important;"{/if}><a href="{:url('Seo/index',['inc_type'=>'rewrite'])}" {if condition="'rewrite'==$inc_type"}class="current"{/if}><span>伪静态</span></a></li> -->
+            </ul>
+        </div>
+    </div>

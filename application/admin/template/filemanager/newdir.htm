@@ -1,0 +1,46 @@
+{include file="public/layout" /}
+
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="filemanager/bar" /}
+    <form class="form-horizontal" id="post_form" action="{:url('Filemanager/newdir')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">当前目录</dt>
+                <dd class="opt">
+                    {$info['activepathname']|default=''}
+                    <input type="hidden" name="activepath" value="{$info['activepath']|default=''}">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="url">新目录</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="newpath" value="" id="newpath" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <div class="bot"><a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a></div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    // 判断输入框是否为空
+    function checkForm(){
+        if($.trim($('input[name=newpath]').val()) == ''){
+            showErrorMsg('新目录不能为空！');
+            $('input[name=newpath]').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+</script>
+{include file="public/footer" /}

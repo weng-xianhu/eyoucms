@@ -1,0 +1,272 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="language/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>语言列表</h3>
+                <h5>(共{$pageObj->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:U('Language/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索相关数据...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <!-- <div class="sDiv2">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:U('Language/index')}';">
+                    </div> -->
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        {eq name='$main_lang' value='$admin_lang'}
+                        <th class="sign w40" axis="col0">
+                            <div class="tc">选择</div>
+                        </th>
+                        {/eq}
+                        <th abbr="article_show" axis="col5" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">语言名称</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w180">
+                            <div class="">中文名称</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w40">
+                            <div class="tl">国旗</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">前台默认语言</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w50">
+                            <div class="tc">开启</div>
+                        </th>
+                        <!-- <th abbr="article_time" axis="col6" class="w200">
+                            <div class="tc">单独域名</div>
+                        </th> -->
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            {eq name='$main_lang' value='$admin_lang'}
+                            <td class="sign">
+                                <div class="w40 tc">
+                                    {if condition="1 != $vo.is_home_default AND 0 < $k"}
+                                    <input type="checkbox" name="ids[]" value="{$vo.id}">
+                                    {/if}
+                                </div>
+                            </td>
+                            {/eq}
+                            <td class="sort">
+                                <div class="w40 tc">
+                                    {$vo.id}
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                    <a href="{:url('Language/edit',array('id'=>$vo['id']))}">
+                                    {$vo.title}</a>
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w180">
+                                    {$languagemarkList[$vo['mark']]['cn_title']}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w40 tc">
+                                    <img src="__STATIC__/common/images/language/{$vo.mark}.gif" alt="{$vo.cn_title}"/>
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {eq name="$vo['is_home_default']" value='1'}
+                                        <span class="yes">是</span>
+                                    {else /}
+                                        <span class="no">否</span>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w50 tc">
+                                    {eq name="$vo['status']" value='1'}
+                                        <span class="yes" {eq name="'Language@edit'|is_check_access" value="1"}onClick="changeTableVal('language','id','{$vo.id}','status',this);"{/eq}><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                        <span class="no" {eq name="'Language@edit'|is_check_access" value="1"}onClick="changeTableVal('language','id','{$vo.id}','status',this);"{/eq}><i class="fa fa-ban"></i>否</span>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <!-- <td class="">
+                                <div class="w200 tc">
+                                    {$vo.url}
+                                </div>
+                            </td> -->
+                            <td>
+                                <div class="w120 tc">
+                                    {eq name="'Language@edit'|is_check_access" value="1"}
+                                    <a href="{:U('Language/edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    {/eq}
+                                    {eq name='$main_lang' value='$admin_lang'}
+                                    {eq name="'Language@del'|is_check_access" value="1"}
+                                    <a class="btn red"  href="javascript:void(0)" data-url="{:U('Language/del')}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    {/eq}
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {eq name="'Language@edit'|is_check_access" value="1"}
+                                    <input style="text-align: left;" type="text" onchange="changeTableVal('language','id','{$vo.id}','sort_order',this);" size="4"  value="{$vo.sort_order}" />
+                                    {else /}
+                                    {$vo.sort_order}
+                                    {/eq}
+                                </div>
+                            </td>
+                           
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                {eq name='$main_lang' value='$admin_lang'}
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                </div>
+                {eq name="'Language@del'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:U('Language/del')}">
+                        <div class="add" title="批量删除">
+                            <span><i class="fa fa-close"></i>批量删除</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {eq name="'Language@add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="{:U('Language/add')}">
+                        <div class="add" title="新增语言">
+                            <span class="red"><i class="fa fa-plus"></i>新增语言</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {/eq}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$page}
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        // 显示顶部菜单语言列表
+        append_lang();
+        function append_lang(){
+            $(".em_lang ul li.lang", window.parent.document).remove();
+            var htmlstr = '';
+            {volist name='$list' id='vo'}
+                htmlstr += '<li class="ey-tool-list text-center lang"><a class="liaojie" href="?lang={$vo.mark}">{$vo.title}</a></li>';
+            {/volist}
+            $('#addlang', window.parent.document).before(htmlstr);
+        }
+    });
+
+    function pack_iframe(obj)
+    {
+        var url = $(obj).data('url');
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: '模板语言变量',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            maxmin: false, //开启最大化最小化按钮
+            area: ['90%', '90%'],
+            content: url,
+            end: function(){ //结束弹窗之后的处理
+
+            }
+        });
+    }
+  
+    function delfun(obj){
+      var title = $(obj).attr('data-typename');
+      layer.confirm('<font color="#ff0000">将同步清空该语言的全部数据</font>，确认删除？', {
+          title: false,
+          btn: ['确定','取消'] //按钮
+        }, function(){
+          layer_loading('正在处理');
+        // 确定
+          $.ajax({
+            type : 'post',
+            url : $(obj).attr('data-url'),
+            data : {del_id:$(obj).attr('data-id')},
+            dataType : 'json',
+            success : function(data){
+              layer.closeAll();
+              if(data.code == 1){
+                layer.msg(data.msg, {icon: 1});
+                window.location.reload();
+                // $('tr[data-id="'+$(obj).attr('data-id')+'"]').remove();
+              }else{
+                layer.alert(data.msg, {icon: 2, title:false});
+              }
+            }
+          })
+        }, function(index){
+          layer.close(index);
+        }
+      );
+      return false;
+    }  
+</script>
+
+{include file="public/footer" /}

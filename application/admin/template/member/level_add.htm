@@ -1,0 +1,103 @@
+{include file="public/layout" /}
+
+<body style="background-color: #FFF; overflow-y: scroll;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title"><a class="back" href="{:url('Member/level_index')}" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
+            <div class="subject">
+                <h3>会员中心 - 新增级别</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    <!-- 操作说明 -->
+    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">操作提示</h4>
+            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+        </div>
+        <ul>
+            <li>由于用户升级是以等级值由低向高升级的，因此增加组别时需注意此值的设置。</li>
+            <li>如果你增加新的用户组的等级值低于10，将自动被视为普通的注册会员。</li>
+        </ul>
+    </div>
+    <form class="form-horizontal" id="postForm" action="{:url('Member/level_add')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="level_name"><em>*</em>级别名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="level_name" id="level_name" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <!-- <dl class="row">
+                <dt class="tit">
+                    <label for="amount"><em>*</em>消费额度</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="amount" id="amount" class="input-txt">
+                    <p class="notic">设置用户等级所需要的消费额度，单位：元</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="discount"><em>*</em>折扣率</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="discount" id="discount" class="input-txt">
+                    <p class="notic">折扣率单位为百分比，如输入90，表示该用户等级的用户可以以商品原价的90%购买</p>
+                </dd>
+            </dl> -->
+            <dl class="row">
+                <dt class="tit">
+                    <label for="discount"><em>*</em>用户等级值</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="level_value" id="level_value" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9]/g,'');">
+                    <p class="notic">只输入数字，更多说明请阅读上方提示</p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    // 判断输入框是否为空
+    function checkForm(){
+        if($('input[name=level_name]').val() == ''){
+            showErrorMsg('级别名称不能为空！');
+            $('input[name=level_name]').focus();
+            return false;
+        }
+        if($('input[name=level_value]').val() == ''){
+            showErrorMsg('用户等级值不能为空！');
+            $('input[name=level_value]').focus();
+            return false;
+        }
+
+        // if($('input[name=amount]').val() == ''){
+        //     showErrorMsg('消费额度不能为空！');
+        //     $('input[name=amount]').focus();
+        //     return false;
+        // }
+
+        // if($('input[name=discount]').val() == ''){
+        //     showErrorMsg('折扣率不能为空！');
+        //     $('input[name=discount]').focus();
+        //     return false;
+        // }
+
+        layer_loading('正在处理');
+        $('#postForm').submit();
+    }
+</script>
+
+{include file="public/footer" /}

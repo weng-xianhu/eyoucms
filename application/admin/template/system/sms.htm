@@ -1,0 +1,131 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow-y: scroll;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="system/bar" /}
+    <form method="post" enctype="multipart/form-data" name="form1" id="handlepost" action="{:U('System/handle')}">
+        <input type="hidden" name="inc_type" value="{$inc_type}">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="sms_platform">选择短信平台</label>
+                </dt>
+                <dd class="opt">
+                    <select name="sms_platform" id="sms_platform">
+                        <option value="1" {if condition="isset($config.sms_platform) && $config.sms_platform eq 1"}selected="selected"{/if}>阿里云短信</option>
+						<option value="2" {if condition="isset($config.sms_platform) && $config.sms_platform eq 2"}selected="selected"{/if}>阿里大于</option>
+                    </select>
+                    <p class="notic">短信平台选择</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="sms_appkey">短信平台[appkey]</label>
+                </dt>
+                <dd class="opt">
+                    <input id="sms_appkey" name="sms_appkey" value="{$config.sms_appkey|default=''}" class="input-txt" type="text"/>
+                    <p class="notic">短信平台配置appkey/keyid</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="sms_secretKey">短信平台[secretKey]</label>
+                </dt>
+                <dd class="opt">
+                    <input id="sms_secretKey" name="sms_secretKey" value="{$config.sms_secretKey|default=''}" class="input-txt" type="text"/>
+                    <p class="notic">短信平台配置secretKey</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="sms_product">公司名/品牌名/产品名</label>
+                </dt>
+                <dd class="opt">
+                    <input id="sms_product" name="sms_product" value="{$config.sms_product|default=''}" class="input-txt" type="text"/>
+                    <p class="notic">公司名/品牌名/产品名</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="sms_time_out">短信码超时时间</label>
+                </dt>
+                <dd class="opt">
+                    <select id="sms_time_out" name="sms_time_out">
+                        <option value="60" {if condition="isset($config.sms_time_out) && $config.sms_time_out eq 60"}selected="selected"{/if}>1分钟</option>
+                        <option value="120"{if condition="isset($config.sms_time_out) && $config.sms_time_out eq 120"}selected="selected"{/if}>2分钟</option>
+                        <option value="300"{if condition="isset($config.sms_time_out) && $config.sms_time_out eq 300"}selected="selected"{/if}>5分钟</option>
+                        <option value="600"{if condition="isset($config.sms_time_out) && $config.sms_time_out eq 600"}selected="selected"{/if}>10分钟</option>
+                        <option value="1200"{if condition="isset($config.sms_time_out) && $config.sms_time_out eq 1200"}selected="selected"{/if}>20分钟</option>
+                        <option value="1800"{if condition="isset($config.sms_time_out) && $config.sms_time_out eq 1800"}selected="selected"{/if}>30分钟</option>
+                    </select>
+                    <p class="notic">发送短信验证码间隔时间</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">测试接收的手机号码</dt>
+                <dd class="opt">
+                    <input value="{$config.sms_test_mobile|default=''}" name="sms_test_mobile" id="sms_test_mobile" class="input-txt" type="text">
+                    <input value="测试" class="input-btn" onclick="sendMobile();" type="button">
+                    <p class="notic">首次请先保存配置再测试</p>
+                </dd>
+            </dl>
+            <div class="bot"><a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">确认提交</a></div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    var flag = true;
+    function adsubmit(){
+        check_form();
+        if(flag){
+            layer_loading("正在处理");
+            $('#handlepost').submit();
+        }
+    }
+
+    function check_form(){
+        if($('input[name="sms_appkey"]').val() == ''){
+            layer.alert("请填写短信平台[appkey]！",{icon:2, title:false});
+            flag = false;
+            return;
+        }
+        if($('input[name="sms_secretKey"]').val() == ''){
+            layer.alert("请填写短信平台[secretKey]！",{icon:2, title:false});
+            flag = false;
+            return;
+        }
+        if($('input[name="sms_product"]').val() == ''){
+            layer.alert("请填写公司名/品牌名/产品名！",{icon:2, title:false});
+            flag = false;
+            return;
+        }
+    }
+
+    function sendMobile() {
+        var mobile = $('#test_mobile').val();
+        if (mobile == '') {
+            layer.alert("请填写正确的测试手机号码！",{icon:2, title:false});
+            return;
+        } else {
+            var loading = layer_loading('发送中');
+            $.ajax({
+                type: "post",
+                data: $('#handlepost').serialize(),
+                dataType: 'json',
+                url: "{:U('System/send_mobile')}",
+                success: function (res) {
+                    layer.closeAll();
+                    if (res.status == 1) {
+                        layer.msg('发送成功', {icon: 1, time:1000});
+                    } else {
+                        layer.msg(res.msg, {icon: 2, time: 1000});
+                    }
+                }
+            })
+        }
+    }
+</script>
+
+{include file="public/footer" /}

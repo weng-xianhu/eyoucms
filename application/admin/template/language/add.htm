@@ -1,0 +1,132 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="language/bar" /}
+    <form class="form-horizontal" id="post_form" action="{:url('Language/add')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>选择语言</label>
+                </dt>
+                <dd class="opt">
+                    <select name="mark" id="languagemark">
+                        <option value="">请选择语言…</option>
+                        {volist name="$languagemark" id="vo"}
+                        <option value="{$vo.mark}" data-title="{$vo.title}">{$vo.cn_title}</option>
+                        {/volist}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>语言名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="title" id="title" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic">在前台显示</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>语言状态</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="status1" class="cb-enable selected">开启</label>
+                        <label for="status0" class="cb-disable ">关闭</label>
+                        <input id="status1" name="status" value="1" type="radio" checked="checked">
+                        <input id="status0" name="status" value="0" type="radio">
+                    </div>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>前台默认语言</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="is_home_default1" class="cb-enable">是</label>
+                        <label for="is_home_default0" class="cb-disable selected">否</label>
+                        <input id="is_home_default1" name="is_home_default" value="1" type="radio">
+                        <input id="is_home_default0" name="is_home_default" value="0" type="radio" checked="checked">
+                    </div>
+                    <!-- <p class="clear"></p> -->
+                    <p class=""></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>新窗口打开</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="target1" class="cb-enable">是</label>
+                        <label for="target0" class="cb-disable selected">否</label>
+                        <input id="target1" name="target" value="1" type="radio">
+                        <input id="target0" name="target" value="0" type="radio" checked="checked">
+                    </div>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <!-- <dl class="row">
+                <dt class="tit">
+                    <label for="url">单独域名</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="url" value="" id="url" class="input-txt">
+                    <span class="err"></span>
+                    <p class=""><font color="red">务必包含http://或https://，访问该域名程序将自动跳转到此语言（需先做好域名解析绑定），或者做外部链接用。</font></p>
+                </dd>
+            </dl> -->
+            <dl class="row">
+                <dt class="tit">
+                    <label for="sort_order">排序</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="sort_order" value="100" id="sort_order" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic">越小越靠前</p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <input type="hidden" name="copy_lang" value="{$main_lang}" />
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+
+    $(function(){
+        /*选择多语言*/
+        $('#languagemark').change(function(){
+            var title = $(this).find("option:selected").data('title');
+            $('input[name=title]').val(title);
+        });
+        /*--end*/
+    });
+
+    // 判断输入框是否为空
+    function checkForm(){
+        if($('#languagemark').val() == ''){
+            showErrorMsg('请选择语言！');
+            $('#languagemark').focus();
+            return false;
+        }
+        if($('input[name=title]').val() == ''){
+            showErrorMsg('语言名称不能为空！');
+            $('input[name=title]').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+</script>
+{include file="public/footer" /}

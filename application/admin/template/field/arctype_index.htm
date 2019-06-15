@@ -1,0 +1,277 @@
+{include file="public/layout" /}
+
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="field/arctype_bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>栏目字段列表</h3>
+                <h5>(共{$pager->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:url('Field/arctype_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="hidden" name="searchopt" value="1">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="字段搜索...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <!-- <div class="sDiv2">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Field/arctype_index')}';">
+                    </div> -->
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th abbr="article_title" axis="col3" class="w50">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="">
+                            <div class="">字段标题</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w160">
+                            <div class="tc">字段名称</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w120">
+                            <div class="tc">字段类型</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w70">
+                            <div class="tc">字段分类</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">更新时间</div>
+                        </th>
+                        <th axis="col1" class="w180">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%;">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sort">
+                                <div class="tc w50">
+                                    {$vo.id}
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                {if condition="empty($vo['ifsystem'])"}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@arctype_edit'|is_check_access" value="1"}
+                                    <a href="{:url('Field/arctype_edit',array('id'=>$vo['id']))}">{$vo.title}</a>
+                                    {else /}
+                                    {$vo.title}
+                                    {/eq}
+                                {else /}
+                                    {$vo.title}
+                                {/if}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w160 tc">
+                                    {$vo.name}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w120 tc">
+                                    {$fieldtypeList[$vo['dtype']]['title']|default='数据出错'}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tc w70">
+                                    {if condition="$vo['ifsystem'] eq 1"}
+                                        系统
+                                    {else /}
+                                        自定义
+                                    {/if}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w100 tc">
+                                    {$vo.update_time|date='Y-m-d',###}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w180 tc">
+                                {if condition="empty($vo['ifsystem'])"}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@arctype_edit'|is_check_access" value="1"}
+                                    <a href="{:url('Field/arctype_edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    {/eq}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@arctype_del'|is_check_access" value="1"}
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Field/arctype_del')}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    {/eq}
+                                {else /}
+                                    ——————
+                                {/if}
+                                <a class="btn blue" href="javascript:void(0);" data-name="{$vo.name}" data-dtype="{$vo.dtype}" onclick="copyToClipBoard(this)">标签调用</a>
+                                </div>
+                            </td>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                {if condition="empty($vo['ifsystem'])"}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@arctype_edit'|is_check_access" value="1"}
+                                    <input style="text-align: left;" type="text" onchange="changeTableVal('channelfield','id','{$vo.id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                    {else /}
+                                    {$vo.sort_order}
+                                    {/eq}
+                                {else /}
+                                    ————
+                                {/if}
+                                </div>
+                            </td>
+                            
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                {eq name="$Think.const.CONTROLLER_NAME.'@arctype_add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="{:url('Field/arctype_add')}">
+                        <div class="add" title="新增字段">
+                            <span class="red"><i class="fa fa-plus"></i>新增字段</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$page}
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function(){
+
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    function delfun(obj){
+      var title = $(obj).attr('data-typename');
+      layer.confirm('<font color="#ff0000">数据将无法恢复</font>，确认删除？', {
+          title: false,
+          btn: ['确定','取消'] //按钮
+        }, function(){
+          layer_loading('正在处理');
+        // 确定
+          $.ajax({
+            type : 'post',
+            url : $(obj).attr('data-url'),
+            data : {del_id:$(obj).attr('data-id')},
+            dataType : 'json',
+            success : function(data){
+              layer.closeAll();
+              if(data.code == 1){
+                layer.msg(data.msg, {icon: 1});
+                window.location.reload();
+                // $('tr[data-id="'+$(obj).attr('data-id')+'"]').remove();
+              }else{
+                layer.alert(data.msg, {icon: 2, title:false});
+              }
+            }
+          })
+        }, function(index){
+          layer.close(index);
+        }
+      );
+      return false;
+    }  
+
+    /**
+     * 标签调用js
+     * @param string  fieldname 字段名称
+     */
+    function copyToClipBoard(obj) {
+        var fieldname = $(obj).attr('data-name');
+        var dtype = $(obj).attr('data-dtype');
+        var height = '250px';
+
+        var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px">';
+
+        switch(dtype)
+        {
+            case 'imgs':
+                {
+                    height = '400px';
+                    var viewstr = "{eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyou.field."+fieldname+"'}\r\n    <img src='{$"+fieldname+".image_url}' />\r\n{/eyou:diyfield";
+                    contentdiv += '<dd>列表/内容页：</dd>';
+                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:60px;">' + viewstr + '}</textarea></dd>';
+                    var liststr = "{eyou:type typeid='$"+"field.typeid' id='eyoav'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        <img src='{$"+fieldname+".image_url}' />\r\n    {/eyou:diyfield"+"}\r\n{/eyou:type";
+                    contentdiv += '<dd>标签 arclist / list 内调用 <font color="red">(更多简洁调法请参考标签 arclist /list)</font>：</dd>';
+                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:100px;">' + liststr + '}</textarea></dd>';
+                }
+                break;
+
+            case 'checkbox':
+                {
+                    height = '400px';
+                    var viewstr = "{eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyou.field."+fieldname+"'}\r\n    {$"+fieldname+".value}\r\n{/eyou:diyfield";
+                    contentdiv += '<dd>列表/内容页：</dd>';
+                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:60px;">' + viewstr + '}</textarea></dd>';
+                    var liststr = "{eyou:type typeid='$"+"field.typeid' id='eyoav'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        {$"+fieldname+".value}\r\n    {/eyou:diyfield"+"}\r\n{/eyou:type";
+                    contentdiv += '<dd>标签 arclist / list 内调用 <font color="red">(更多简洁调法请参考标签 arclist /list)</font>：</dd>';
+                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:100px;">' + liststr + '}</textarea></dd>';
+                }
+                break;
+
+            default:
+                {
+                    contentdiv += '<dd>列表/内容页：</dd>';
+                    contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{$'+'eyou.field.'+fieldname+'}"></dd>'
+                    contentdiv += '<dd>标签 type / arclist / list 内调用：</dd>'
+                    contentdiv += '<dd><input type="text" style=" width:470px;" value="{$'+'field.'+fieldname+'}"></dd>'
+                }
+                break;
+        }
+
+        contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color: #F60;">请将相应标签复制并粘贴到对应模板文件中！</dd></dl></div>';
+
+        layer.open({
+            title: '标签调用',
+            type: 1,
+            skin: 'layui-layer-demo',
+            area: ['550px', height], //宽高
+            content: contentdiv
+        });
+    }
+</script>
+
+{include file="public/footer" /}

@@ -1,0 +1,220 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; overflow-y: scroll;">
+<style type="text/css">
+  .flexigrid .none{
+    display: none;
+  }
+  .flexigrid .bDiv a.btn i{
+    display: inline-block;
+  }
+  .tb_child {
+    background:#FFFFDF;
+  }
+  .flexigrid .hDiv th, .flexigrid .bDiv td{
+      border-top: 1px solid #f7f7f7;
+  }
+  .flexigrid .bDiv td div{
+    padding:12px 8px;
+  }
+  .flexigrid .container-fluid{
+    padding: 20px;
+  }
+  .flexigrid .pubuliu{
+    margin-bottom: 20px;
+    float: left;
+    width: 47%;
+  }
+</style>
+<div class="page">
+  <form method="post">
+    <div class="flexigrid">
+      <div class="mDiv none">
+        <div class="ftitle">
+          <h3>内容列表</h3>
+          <h5>(共{$arctype_list|count}条记录)</h5>
+        </div>
+        <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+        <div class="fbutton none">
+              <a href="javascript:void(0);" id="all_treeclicked" data-status="close" onclick="treeClicked(this, 'all', '');">
+                  <div class="add">
+                      <span><i class="fa"></i>展开所有子栏目</span>
+                  </div>
+              </a>
+        </div>
+      </div>
+      {empty name="arctype_list"}
+      <div class="bDiv" style="height: auto;">
+        <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+            <table>
+                <tbody>
+                    <tr>
+                        <td class="no-data" align="center" axis="col0" colspan="50">
+                            <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="iDiv" style="display: none;"></div>
+      </div>
+      {else /}
+        {volist name="arctype_list" id="vo"}
+          {if condition="1 == $i"}
+        <div id="masonry" class="container-fluid">
+          <div class="bDiv pubuliu">
+            <table class="flex-table autoht" cellpadding="0" cellspacing="0" border="0" id="arctype_table_{$vo.id}" style="width: 100%">
+              <tbody>
+          {/if}
+          {if condition="0 == $vo.level AND 1 < $i"}
+              </tbody>
+            </table>
+          </div>
+          <div class="bDiv pubuliu">
+            <table class="flex-table autoht" cellpadding="0" cellspacing="0" border="0" id="arctype_table_{$vo.id}" style="width: 100%">
+              <tbody> 
+          {/if}
+                <tr nctype="0" class="parent_id_{$vo['parent_id']}" data-level="{$vo['level']}" data-id="{$vo['id']}">
+                  <td class="typename" style="width: 100%">
+                    <div>
+                      {gt name='vo.level' value='0'}
+                      {php}
+                      if (1 == $vo['level']) {
+                        echo '<span class="w40x"></span>';
+                      } elseif (2 == $vo['level']) {
+                        echo '<span class="w40x w40xc"></span>';
+                      }
+                      {/php}
+                      {/gt}
+
+                      {gt name="vo.has_children" value="0"}
+                      <img src="__SKIN__/images/tv-expandable.gif" style="float: none;" fieldid="2" status="open" nc_type="flex" onClick="treeClicked(this,{$vo['id']},{$vo['id']|gettoptype=###,'id'});" class="has_children">
+                      {else /}
+                      <img src="__SKIN__/images/tv-collapsable-last.gif" style="float: none;" fieldid="2" status="open" nc_type="flex">
+                      {/gt}
+
+                      {if condition="$vo['current_channel'] == 6" /}
+                      <a href="{:url('Arctype/single_edit',array('typeid'=>$vo['id']))}">{$vo.typename}</a>
+                      {else /}
+                      <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',array('typeid'=>$vo['id'], 'tab'=>3))}">{$vo.typename}</a>
+                      <i class="arctotal">（文档：{$vo.id|get_total_arc=###}条）</i>
+                      {/if}
+                    </div>
+                  </td>
+                  <td>
+                      <div class="w160 tr pb0">
+                         {if condition="in_array($vo['current_channel'], $allow_release_channel)"}
+                          <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/add',array('typeid'=>$vo['id'], 'tab'=>3))}" class="btn blue"><i class="fa fa-plus"></i>发布</a>
+                          {/if}
+                        {if condition="$vo['current_channel'] == 6" /}
+                          <a href="{:url('Arctype/single_edit',array('typeid'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>内容</a>
+                        {else /}
+                          <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',array('typeid'=>$vo['id'], 'tab'=>3))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>内容</a>
+                        {/if}
+                      </div>
+                  </td>
+                </tr>
+        {/volist}
+              </tbody>
+            </table>
+          </div>
+      </div>
+      {/empty}
+    </div>
+  </form>
+  <script type="text/javascript" src="__SKIN__/js/masonry-docs.min.js"></script>
+  <script type="text/javascript">
+    function masonry(gutter)
+    {
+      var $container = $('#masonry');
+      $container.imagesLoaded(function() {
+          $container.masonry({
+              itemSelector: '.pubuliu',
+              gutter: gutter,
+              isAnimated: false,
+          });
+       });
+    }
+  </script>
+  <script type="text/javascript">
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        // 默认全部展开
+        treeClicked($('#all_treeclicked'), 'all', '');
+
+    });
+
+     // 点击展开 收缩节点
+    function treeClicked(obj,id,root_id){
+      if (id == 'all') {
+        var status = $(obj).attr('data-status');
+        if (status == 'close') {
+          $('tr[class^=parent_id_]').show().find('img').attr('src', '__SKIN__/images/tv-collapsable-last.gif');
+          $(obj).attr('data-status', 'open').find('span').html('<i class="fa"></i>关闭所有子栏目');
+        } else {
+          $('tr[data-level=0]').find('img.has_children').attr('src', '/public/static/admin/images/tv-collapsable-last.gif').trigger('click');
+          $('tr[class^=parent_id_]').removeClass('trSelected');
+          $(obj).attr('data-status', 'close').find('span').html('<i class="fa"></i>展开所有子栏目');
+        }
+        masonry(10);
+      } else {
+
+         var src = $(obj).attr('src');
+         if(src == '__SKIN__/images/tv-expandable.gif')
+         {
+             // $("#treet1 tr").removeClass('tb_child');
+             // $(".parent_id_"+id).addClass('tb_child');
+             $(".parent_id_"+id).show();
+             $(obj).attr('src','__SKIN__/images/tv-collapsable-last.gif');
+         }else{
+             $(obj).attr('src','__SKIN__/images/tv-expandable.gif');           
+             
+             // 如果是点击减号, 遍历循环他下面的所有都关闭
+             var tbl = document.getElementById("arctype_table_"+root_id);
+             cur_tr = obj.parentNode.parentNode.parentNode;
+             var fnd = false;
+              for (i = 0; i < tbl.rows.length; i++)
+              {
+                  var row = tbl.rows[i];
+                  
+                  if (row == cur_tr)
+                  {
+                      fnd = true;         
+                  }
+                  else
+                  {
+                      if (fnd == true)
+                      {
+                         
+                          var level = parseInt($(row).data('level'));
+                          var cur_level = $(cur_tr).data('level');
+                         
+                          if (level > cur_level)
+                          {
+                              $(row).hide();        
+                              $(row).find('img.has_children').attr('src','__SKIN__/images/tv-expandable.gif');
+                          }
+                          else
+                          {
+                              fnd = false;
+                              break;
+                          }
+                      }
+                  }
+              }          
+         }
+        masonry(10);
+      }
+    }
+  </script>
+</div>
+
+{include file="public/footer" /}

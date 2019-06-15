@@ -1,0 +1,176 @@
+{include file="public/layout" /}
+
+<body style="background-color: #FFF; overflow-x:hidden;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <div class="subject">
+                <h3>自定义变量 - 新增</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    <form class="form-horizontal" id="post_form" action="{:url('System/customvar_add')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="ac_name"><em>*</em>变量名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="attr_name" value="" id="attr_name" class="input-txt">
+                    <span class="err" id="err_attr_name" style="color:#F00; display:none;"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="attr_input_type"><em>*</em>表单类型</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="radio" value="0" name="attr_input_type" checked="checked" />单行文本</label>
+                    <br/>
+                    <label><input type="radio" value="2" name="attr_input_type" />多行文本</label>
+                    <br/>
+                    <label><input type="radio" value="3" name="attr_input_type" />上传图片</label>
+                    <span class="err" id="err_attr_input_type" style="color:#F00; display:none;"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row attr_input_typeall">
+                <dt class="tit">
+                    <label for="attr_values">变量值</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="10" cols="30" name="attr_values" id="attr_values" class="input-txt" style="height:36px;"></textarea>
+                    <span id="err_attr_values" class="err" style="color:#F00; display:none;"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row attr_input_type3 none">
+                <dt class="tit">
+                  <label>上传图片</label>
+                </dt>
+                <dd class="opt">
+                    <div class="input-file-show div_value_local">
+                        <span class="show">
+                            <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="javascript:void(0);" target="_blank">
+                                <i id="img_i" class="fa fa-picture-o"></i>
+                            </a>
+                        </span>
+                        <span class="type-file-box">
+                            <input type="text" id="value_local" name="value_local" value="" class="type-file-text">
+                            <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                            <input class="type-file-file" onClick="GetUploadifyFrame(1,'','allimg','img_call_back','{:url('Uploadify/upload_frame')}')" size="30" hidefocus="true" nc_type="change_site_logo"
+                                 title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                        </span>
+                    </div>
+                    <input type="text" id="value_remote" name="value_remote" value="" placeholder="http://" class="input-txt" style="display: none;">
+                    &nbsp;
+                    <label><input type="checkbox" name="is_remote" id="is_remote" value="1" onClick="clickRemote(this, 'value');">远程图片</label>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+        </div>
+        <!-- 常规信息 -->
+        <div class="ncap-form-default">
+            <div class="bot" style="padding-bottom: 0px;">
+                <input type="hidden" name="inc_type" value="{$inc_type|default=''}" />
+                <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+    $(function(){
+        $('input[name=attr_input_type]').click(function(){
+            var val = $(this).val();
+            if (val == 3) {
+                $('#litpic').val('');
+                $('.attr_input_typeall').hide();
+                $('.attr_input_type3').show();
+            } else {
+                $('.attr_input_type3').hide();
+                $('.attr_input_typeall').show();
+            }
+        });
+    });
+
+    // 判断输入框是否为空
+    function check_submit(){
+        if($.trim($('input[name=attr_name]').val()) == ''){
+            showErrorMsg('变量名称不能为空！');
+            $('input[name=attr_name]').focus();
+            return false;
+        }
+        if ($('input[name=attr_input_type]').is(':checked') == false) {
+            showErrorMsg('请选择表单类型！');
+            $($('input[name=attr_input_type]')[0]).focus();
+            return false;
+        }
+        if ($('input[name=attr_input_type]:checked').val() == 1 && $.trim($('#attr_values').val()) == '') {
+            showErrorMsg('可选值列表不能为空！');
+            $('#attr_values').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+
+        $.ajax({
+            url: "{:url('System/customvar_add')}",
+            type: 'POST',
+            dataType: 'JSON',
+            data: $('#post_form').serialize(),
+            success: function(res){
+                layer.closeAll();
+                if (res.code == 1) {
+                    parent.layer.msg(res.msg, {shade: 0.3, time: 500});
+                    parent.window.location.reload();
+                    parent.layer.close(parentObj);
+                } else {
+                    parent.showErrorMsg(res.msg);
+                }
+                return false;
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.msg('操作失败', {icon:5, time:1500});
+                return false;
+            }
+        });
+
+        return false;
+    }
+
+    function img_call_back(fileurl_tmp)
+    {
+      $("#value_local").val(fileurl_tmp);
+      $("#img_a").attr('href', fileurl_tmp);
+      $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+    }
+
+    /**
+     * 封装的加载层
+     */
+    function layer_loading(msg){
+        var loading = layer.msg(
+        msg+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请勿刷新页面', 
+        {
+            icon: 1,
+            time: 3600000, //1小时后后自动关闭
+            shade: [0.2] //0.1透明度的白色背景
+        });
+        //loading层
+        var index = layer.load(3, {
+            shade: [0.1,'#fff'] //0.1透明度的白色背景
+        });
+
+        return loading;
+    }
+</script>
+
+{include file="public/footer" /}

@@ -1,0 +1,288 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; overflow-y: scroll;">
+<style type="text/css">
+  .tb_child {
+    background:#FFFFDF;
+  }
+</style>
+<div class="page">
+  <form method="post">
+    <div class="flexigrid">
+      <div class="mDiv">
+        <div class="ftitle">
+          <h3>栏目列表</h3>
+          <h5>(共{$arctype_list|count}条记录)</h5>
+        </div>
+        <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+        {eq name='$main_lang' value='$admin_lang'}
+        <div class="fbutton">
+              <a href="{if condition="in_array($Request.action, array('add','edit'))"}javascript:void(0);{else /}{:url("Arctype/add")}{/if}">
+                  <div class="add">
+                      <span><i class="fa fa-plus"></i>增加顶级栏目</span>
+                  </div>
+              </a>
+        </div>
+        {/eq}
+      </div>
+      <div class="hDiv">
+        <div class="hDivBox">
+          <table cellpadding="0" cellspacing="0" style="width: 100%">
+            <thead>
+              <tr>
+                <th axis="col3" class="w60">
+                  <div class="sundefined tc">ID</div>
+                </th>
+                <th axis="col3" class="">
+                  <div class="sundefined" style="padding-left: 15px">
+                    <img src="__SKIN__/images/tv-expandable.gif" id="all_treeclicked" title="展开所有子栏目" style="float: none;" data-status="close" onClick="treeClicked(this,'all',0);">
+                    栏目名称
+                  </div>
+                </th>
+                <th axis="col2" class="w100">
+                  <div class="tc">所属模型</div>
+                </th>
+                <th axis="col2" class="w60">
+                  <div>隐藏</div>
+                </th>
+                <th axis="col1" class="w300">
+                    <div class="tl" style="text-indent: 6px">操作</div>
+                </th>
+                <th axis="col2" class="w60">
+                  <div class="tc">排序</div>
+                </th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+         
+      <div id="flexigrid" class="bDiv" style="height: auto;">
+        {empty name="arctype_list"}
+        <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+            <table>
+                <tbody>
+                    <tr>
+                        <td class="no-data" align="center" axis="col0" colspan="50">
+                            <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="iDiv" style="display: none;"></div>
+        {else /}
+        <table class="flex-table autoht" cellpadding="0" cellspacing="0" border="0" id="arctype_table" style="width: 100%">
+          <tbody id="treet1">
+          {foreach name="arctype_list" item="vo" key="k" }
+            <tr nctype="0" {if condition="$vo['parent_id'] gt 0"} style="display:none;"{/if} class="parent_id_{$vo['parent_id']}" data-level="{$vo['level']}" data-id="{$vo['id']}">
+              <td class="name">
+                <div class="w60 tc">       
+                  {$vo.id}
+                </div>
+              </td>
+              <td class="typename" style="width: 100%">
+                <div>
+                  {gt name='vo.level' value='0'}
+                  {php}
+                  if (1 == $vo['level']) {
+                    echo '<span class="w40x"></span>';
+                  } elseif (2 == $vo['level']) {
+                    echo '<span class="w40x w40xc"></span>';
+                  }
+                  {/php}
+                  {/gt}
+
+                  {gt name="vo.has_children" value="0"}
+                  <img src="__SKIN__/images/tv-expandable.gif" style="float: none;" fieldid="2" status="open" nc_type="flex" onClick="treeClicked(this,{$vo['id']},0);" class="has_children">
+                  {else /}
+                  <img src="__SKIN__/images/tv-collapsable-last.gif" style="float: none;" fieldid="2" status="open" nc_type="flex">
+                  {/gt}
+                  
+                  {if condition="$vo['current_channel'] == 6" /}
+                  <a href="{:url('Arctype/single_edit',array('typeid'=>$vo['id']))}">{$vo.typename}</a>
+                  {else /}
+                  <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',array('typeid'=>$vo['id'], 'tab'=>3))}">{$vo.typename}</a>
+                  <i class="arctotal">（文档：{$vo.id|get_total_arc=###}条）</i>
+                  {/if}
+                </div>
+              </td>
+              <td class="sort">
+                <div class="w100 tc">
+                  {$channeltype_list[$vo['current_channel']]['title']|default=''}
+                </div>
+              </td>
+              
+              <td align="center" class="">
+                  <div class="w60">
+                  {if condition='$vo.is_hidden eq 1'}
+                      <span class="yes" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('arctype','id','{$vo.id}','is_hidden',this);"{/eq} ><i class="fa fa-check-circle"></i>是</span>
+                  {else /}
+                      <span class="no" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('arctype','id','{$vo.id}','is_hidden',this);"{/eq} ><i class="fa fa-ban"></i>否</span>
+                  {/if}
+                  </div>
+              </td>
+              <td>
+                  <div class="w300 tl pb0">
+                      {eq name="'Archives@index'|is_check_access" value="1"}  
+                        {if condition="$vo['current_channel'] == 6" /}
+                        <a href="{:url('Arctype/single_edit',array('typeid'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>内容</a>
+                        {else /}
+                        <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',array('typeid'=>$vo['id'], 'tab'=>3))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>内容</a>
+                        {/if}
+                      {/eq}
+                      <a href="{:url('Arctype/edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                      {eq name="'Arctype@add'|is_check_access" value="1"}
+                      {eq name='$main_lang' value='$admin_lang'}
+                        {if condition="$vo['grade'] < ($arctype_max_level - 1)"}           
+                          <a href="{:url('Arctype/add',array('parent_id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>增加子栏目</a>
+                        {else /}
+                          <a class="btn blue" title="不支持增加四级栏目"><i class="fa fa-pencil-square-o"></i>不支持增加</a>
+                        {/if}
+                      {/eq}
+                      {/eq}
+                      {eq name="'Arctype@pseudo_del'|is_check_access" value="1"}
+                      {eq name='$main_lang' value='$admin_lang'}
+                      <a class="btn red"  href="javascript:void(0);" data-url="{:url('Arctype/pseudo_del')}" data-id="{$vo.id}" data-typename="{$vo.typename}" data-deltype="pseudo" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                      {/eq}
+                      {/eq}
+                      <a href="{$vo|get_typeurl=###}" class="btn blue" target="_blank"><i class="fa fa-pencil-square-o"></i>浏览</a>
+                  </div>
+              </td>
+              <td class="sort">
+                <div class="w60 tc pb0">
+                  {eq name="'Arctype@edit'|is_check_access" value="1"}
+                  <input type="text" onChange="changeTableVal('arctype','id','{$vo.id}','sort_order',this);" size="4" value="{$vo.sort_order}" class="tc" />
+                  {else /}
+                  {$vo.sort_order}
+                  {/eq}
+                </div>
+              </td>
+              
+            </tr>
+            {/foreach}                
+          </tbody>
+        </table>
+        {/empty}
+      </div> 
+    </div>
+  </form>
+  <script type="text/javascript">
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        // treeClicked($('#all_treeclicked'), 'all', 1);
+    });
+
+     // 点击展开 收缩节点
+    function treeClicked(obj,id,reload){
+        if (id == 'all') {
+          if (1 == reload) {
+            var status = getCookie('admin-treeClicked');
+            if (!status) {
+              status = $(obj).attr('data-status');
+            }
+          } else {
+            var status = $(obj).attr('data-status');
+          }
+          if (status == 'close') {
+            $('tr[class^=parent_id_]').show().find('img').attr('src', '__SKIN__/images/tv-collapsable-last.gif');
+            $(obj).attr('data-status', 'open').attr('title','关闭所有子栏目').attr('src','__SKIN__/images/tv-collapsable-last.gif');
+          } else {
+            $('tr[data-level=0]').find('img.has_children').attr('src', '/public/static/admin/images/tv-collapsable-last.gif').trigger('click');
+            $('tr[class^=parent_id_]').removeClass('trSelected');
+            $(obj).attr('data-status', 'close').attr('title','展开所有子栏目').attr('src','__SKIN__/images/tv-expandable.gif');
+          }
+          setCookies('admin-treeClicked', status);
+          return false;
+        }
+
+         var src = $(obj).attr('src');
+         if(src == '__SKIN__/images/tv-expandable.gif')
+         {
+             // $("#treet1 tr").removeClass('tb_child');
+             // $(".parent_id_"+id).addClass('tb_child');
+             $(".parent_id_"+id).show();
+             $(obj).attr('src','__SKIN__/images/tv-collapsable-last.gif');
+             var status = 'close';
+         }else{
+             $(obj).attr('src','__SKIN__/images/tv-expandable.gif');     
+             var status = 'open';      
+             
+             // 如果是点击减号, 遍历循环他下面的所有都关闭
+             var tbl = document.getElementById("arctype_table");
+             cur_tr = obj.parentNode.parentNode.parentNode;
+             var fnd = false;
+              for (i = 0; i < tbl.rows.length; i++)
+              {
+                  var row = tbl.rows[i];
+                  
+                  if (row == cur_tr)
+                  {
+                      fnd = true;         
+                  }
+                  else
+                  {
+                      if (fnd == true)
+                      {
+                         
+                          var level = parseInt($(row).data('level'));
+                          var cur_level = $(cur_tr).data('level');
+                         
+                          if (level > cur_level)
+                          {
+                              $(row).hide();        
+                              $(row).find('img.has_children').attr('src','__SKIN__/images/tv-expandable.gif');
+                          }
+                          else
+                          {
+                              fnd = false;
+                              break;
+                          }
+                      }
+                  }
+              }          
+         }   
+         setCookies('admin-treeClicked', status);    
+    }
+  
+    function delfun(obj){
+        var title = $(obj).attr('data-typename');
+        layer.confirm('<font color="#ff0000">如有子栏目及文档将一起清空</font>，确认删除到回收站？', {
+            title: false,
+            btn: ['确定','取消'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id')},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                        // $('tr[data-id="'+$(obj).attr('data-id')+'"]').remove();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});  //alert(data);
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }  
+  </script>
+</div>
+
+{include file="public/footer" /}

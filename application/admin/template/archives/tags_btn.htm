@@ -1,0 +1,27 @@
+<!-- 扩展 -->
+                    {eq name="'Tags@index'|is_check_access" value="1"}
+                        <div class="fbutton" style="float: none; display: none;">
+                              <a href="javascript:void(0);" onClick="tags_list();">
+                                  <div class="add">
+                                      <span><i class="fa fa-tag"></i>TAG标签管理</span>
+                                  </div>
+                              </a>
+                        </div>
+                        <script type="text/javascript">
+                            function tags_list(obj)
+                            {
+                                var url = "{:url('Tags/index')}";
+                                //iframe窗
+                                layer.open({
+                                    type: 2,
+                                    title: 'TAG标签管理',
+                                    fixed: true, //不固定
+                                    shadeClose: false,
+                                    shade: 0.3,
+                                    maxmin: true, //开启最大化最小化按钮
+                                    area: ['80%', '80%'],
+                                    content: url
+                                });
+                            }
+                        </script>
+                    {/eq}

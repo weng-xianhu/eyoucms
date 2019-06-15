@@ -1,0 +1,146 @@
+{include file="public/layout" /}
+
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="field/arctype_bar" /}
+    <form class="form-horizontal" id="post_form" action="{:url('Field/arctype_add')}" method="post">
+        <!-- 常规选项 -->
+        <div class="ncap-form-default tab_div_1">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>字段标题</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="" name="title" id="title" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="name"><em>*</em>字段名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="" name="name" id="name" placeholder="只允许字母、数字和下划线的任意组合" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9a-zA-Z_]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-zA-Z_]/g,''));">
+                    <p class="notic">保持唯一性，不可与主表、附加表重复</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="dtype"><em>*</em>字段类型</label>
+                </dt>
+                <dd class="opt">
+                    <select name="dtype" id="dtype">
+                    {volist name='$fieldtype_list' id='vo'}
+                    <option value="{$vo.name}" data-ifoption="{$vo.ifoption|default=0}">{$vo.title}</option>
+                    {/volist}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row" id="dl_dfvalue">
+                <dt class="tit">
+                    <label id="label_dfvalue">默认值</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="60" id="dfvalue" name="dfvalue" placeholder="如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。" style="height:60px;"></textarea>
+                    <span class="err"></span>
+                    <p class="notic">如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>提示文字</label>
+                </dt>
+                <dd class="opt">          
+                    <textarea rows="5" cols="60" id="remark" name="remark" placeholder="问号提示文字" style="height:60px;"></textarea>
+                    <span class="err"></span>
+                    <p class="notic">问号提示文字</p>
+                </dd>
+            </dl>
+<!--             <dl class="row">
+                <dt class="tit">
+                    <label for="sort_order">排序</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="100" name="sort_order" id="sort_order" class="input-txt">
+                    <p class="notic">越小越靠前</p>
+                </dd>
+            </dl> -->
+        </div>
+        <!-- 常规选项 -->
+        <div class="ncap-form-default">
+            <div class="bot">
+                <input type="hidden" name="channel_id" id="channel_id" value="{$channel_id|default='-99'}">
+                <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div> 
+    </form>
+</div>
+<script type="text/javascript">
+    $(function(){
+        dtype_change($('#dtype'));
+        $('#dtype').change(function(){
+            dtype_change(this);
+        });
+
+        function dtype_change(obj){
+            var dtype = $(obj).val();
+            var ifoption = $(obj).find('option:selected').data('ifoption');
+            if (0 <= $.inArray(dtype, ['datetime','switch','img','imgs','files'])) {
+                $('#dl_dfvalue').hide();
+            } else {
+                if (1 == ifoption) {
+                    $('#label_dfvalue').html('<em>*</em>默认值');
+                } else {
+                    $('#label_dfvalue').html('默认值');
+                }
+                $('#dl_dfvalue').show();
+            }
+        }
+    });
+
+    function check_submit(){
+        if($('input[name="title"]').val() == ''){
+            showErrorMsg('字段标题不能为空！');
+            $('input[name=title]').focus();
+            return false;
+        }
+        var name = $('input[name="name"]').val();
+        var ret1 = /^[_]+$/;
+        var ret2 = /^[\w]+$/;
+        var ret3 = /^[0-9]+$/;
+        if (ret1.test(name) || !ret2.test(name)) {
+            showErrorMsg('字段名称格式不正确！');
+            $('input[name=name]').focus();
+            return false;
+        } else if (ret3.test(name)) {
+            showErrorMsg('字段名称不能纯数字！');
+            $('input[name=name]').focus();
+            return false;
+        }
+        if($('#dtype').val() == ''){
+            showErrorMsg('请选择字段类型！');
+            $('input[name=dtype]').focus();
+            return false;
+        } else {
+            var ifoption = $('#dtype').find('option:selected').data('ifoption');
+            console.log(ifoption)
+            if (1 == ifoption) {
+                if ($.trim($('#dfvalue').val()) == '') {
+                    showErrorMsg('默认值不能为空！');
+                    $('#dfvalue').focus();
+                    return false;
+                }
+            }
+        }
+        
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+</script>
+
+{include file="public/footer" /}

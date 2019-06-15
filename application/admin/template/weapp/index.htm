@@ -1,0 +1,409 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <div class="subject">
+                <h3>插件应用</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                {eq name="$Think.const.CONTROLLER_NAME.'@index'|is_check_access" value="1"}
+                <li><a href="{:url("Weapp/index")}" class="tab {eq name="$Request.action" value="index"}current{/eq}"><span>插件列表</span></a></li>
+                {/eq}
+            </ul>
+        </div>
+    </div>
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>插件列表</h3>
+                <h5>(共{$pager->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:url('Weapp/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2 fl" style="margin-right: 6px;">
+                        <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <!-- <div class="sDiv2">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Weapp/index')}';">
+                    </div> -->
+                    <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
+                        <input type="button" class="btn current" value="插件开发者" onclick="window.location.href='{:url("Weapp/create")}';">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th abbr="article_title" axis="col3" class="w150">
+                            <div class="tc" style="text-align: left; padding-left: 10px;">名称</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="" style="padding-left: 10px;">描述</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w150">
+                            <div class="tc">标识</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w120">
+                            <div class="tc">作者</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w60">
+                            <div class="tc">版本</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w50">
+                            <div class="tc">启用</div>
+                        </th>
+                        <th axis="col1" class="w130">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="">
+                                <div class="w150 tl" style="padding-left: 10px;">
+                                    {$vo.name}
+                                    {assign name="weapp_upgrade_info" value="$weapp_upgrade[$vo['code']]" /}
+                                    {eq name="$weapp_upgrade_info['code']" value='2'}
+                                    <p class="testing_upgrade">
+                                        <textarea id="{$vo.code}_upgrade" class="none">{$weapp_upgrade_info['msg']['upgrade']|default=''}</textarea> 
+                                        <textarea id="{$vo.code}_intro" class="none">{$weapp_upgrade_info['msg']['intro']|default=''}</textarea>
+                                        <textarea id="{$vo.code}_notice" class="none">{$weapp_upgrade_info['msg']['notice']|default=''}</textarea>
+                                        <a href="javascript:void(0);" class="a_upgrade" data-version="{$vo.version}" data-code="{$vo.code}" data-status="{$vo.status|default='0'}" data-name="{$vo.name}" onclick="weapp_upgrade(this);" style="color:#F00;">{$weapp_upgrade_info['msg']['tips']|default='[新版本更新]'}</a>
+                                    </p>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                    {$vo.config.description}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w150 tc">
+                                    {$vo.code}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w120 tc">
+                                    {$vo.config.author|default='匿名'}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w60 tc">
+                                    {$vo.config.version}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tc w50">
+                                    {if condition="$vo['status'] eq 1"}
+                                        <span class="yes" {eq name="'Weapp@disable'|is_check_access" value="1"}onClick="changeTableVal('weapp','id','{$vo.id}','status',this);"{/eq} data-value="-1"><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                        <span class="no" {eq name="'Weapp@disable'|is_check_access" value="1"}onClick="changeTableVal('weapp','id','{$vo.id}','status',this);"{/eq} data-value="1"><i class="fa fa-ban"></i>否</span>
+                                    {/if}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w130 tc">
+                                {empty name="$vo.status"}
+                                    {eq name="'Weapp@install'|is_check_access" value="1"}
+                                    <a href="javascript:void(0);" onclick="install(this);" data-id="{$vo['id']}" class="btn blue"><i class="fa fa-check"></i>一键安装</a>
+                                    {/eq}
+                                    {eq name="'Weapp@del'|is_check_access" value="1"}
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Weapp/del')}" data-id="{$vo.id}" data-name="{$vo.name}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    {/eq}
+                                {else /}
+                                    {eq name="'Weapp@execute'|is_check_access" value="1"}
+                                        {if condition="!isset($vo['config']['management_index']) || empty($vo['config']['management_index'])"}
+                                        <a href="{:url('Weapp/execute',array('sm'=>$vo['code'],'sc'=>$vo['code'],'sa'=>'index'))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>管理</a>
+                                        {/if}
+                                    {/eq}
+                                    {eq name="'Weapp@uninstall'|is_check_access" value="1"}
+                                    <a href="javascript:void(0);" onclick="uninstall(this);" data-id="{$vo['id']}" data-name="{$vo.name}" class="btn red"><i class="fa fa-trash-o"></i>卸载</a>
+                                    {/eq}
+                                {/empty}
+                                </div>
+                            </td>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {eq name="'Weapp@edit'|is_check_access" value="1"}
+                                    <input style="text-align: left;" type="text" onchange="changeTableVal('weapp','id','{$vo.id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                    {else /}
+                                    {$vo.sort_order}
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                {eq name="'Weapp@upload'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <form class="navbar-form form-inline" action="{:url('Weapp/upload')}" name="change_System" id="change_System" method="post" enctype="multipart/form-data">
+                        <a href="javascript:void(0);" class="a-upload"><input type="file" name="weappfile" id="weappfile" title="请选择…"><i class="fa fa-upload"></i>上传安装插件</a>
+                    </form>
+                </div>
+                {/eq}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$page}
+    </div>
+</div>
+<form name="form2" id="form2" method="post" action="">
+    <input type="hidden" name="id" value="" />
+    <input type="hidden" name="thorough" value="1" />
+</form>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        $('#weappfile').change(function(){
+            upload();
+        });
+
+        function upload()
+        {
+            var weappfile = $('input[name=weappfile]').val();
+            var ext = weappfile.substr(weappfile.lastIndexOf('.')).toLowerCase();
+            if ($.trim(weappfile) == '' || ext != '.zip') {
+                showErrorMsg('请上传zip压缩包！');
+                return false;
+            }
+
+            layer_loading('正在处理');
+            $('#change_System').submit();
+            return false;
+        }
+
+        /*检测更新包*/
+        // $('.testing_upgrade').each(function(index, item){
+        //     var that = $(this);
+        //     var aobj = $(item).find('a.a_upgrade');
+        //     var code = aobj.attr('data-code');
+        //     var version = aobj.attr('data-version');
+        //     var url = "{:url('Weapp/checkVersion')}";
+        //     $.getJSON(url, {code:code, v:version}, function(data){
+        //         if (data != false) {
+        //             $('#'+code+'_upgrade').val(data.upgrade);
+        //             $('#'+code+'_intro').val(data.intro);
+        //             aobj.html(data.tips);
+        //             that.show();
+        //         }
+        //     });
+        // });
+        /*--end*/
+    });
+    
+    function weapp_upgrade(obj)
+    {
+        var name = $(obj).attr('data-name');
+        var status = $(obj).attr('data-status');
+        if (0 == status) {
+            layer.alert('请先安装该插件！', {
+                title:false,//name,
+                icon: 0
+            });
+            return false;
+        }
+
+        var code = $(obj).attr('data-code');
+        var v = $("#"+code+"_upgrade").val();    
+        var intro = $("#"+code+"_intro").val();   
+        intro += '<style type="text/css">.layui-layer-content{height:270px!important}</style>';
+        var notice = $("#"+code+"_notice").val(); 
+        // v = v.replace(/\n/g,"<br/>");
+        v = notice + intro + '<br/>' + v;
+        //询问框
+        layer.confirm(v, {
+            title: false,//'检测插件更新',
+            area: ['580px','400px'],
+            btn: ['升级','取消'] //按钮
+            
+        }, function(){
+            layer.closeAll();
+            setTimeout(function(){
+                upgrade(code); // 请求后台
+            },200);
+            
+        }, function(){  
+            layer.msg('不升级可能有安全隐患', {
+                btnAlign: 'c',
+                time: 20000, //20s后自动关闭
+                btn: ['明白了']
+            });
+            return false;
+        });    
+    }
+
+
+
+    function upgrade(code){
+        layer_loading('升级中');
+        $.ajax({
+            type : "GET",
+            url  : "{:url('Weapp/OneKeyUpgrade')}",
+            timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
+            data : {code:code},
+            error: function(request) {
+                layer.closeAll();
+                layer.alert("升级失败，请第一时间联系技术协助！", {icon: 2, title:false}, function(){
+                    window.location.reload();
+                });
+            },
+            success: function(res) {
+                layer.closeAll();
+                if(1 == res.code){
+                    layer.alert('已升级最新版本!', {icon: 1, title:false}, function(){
+                        window.location.reload();
+                    });
+                }
+                else{
+                    layer.alert(res.msg, {icon: 2, title:false}, function(){
+                        window.location.reload();
+                    });
+                }
+            }
+        });                 
+    }
+
+    function install(obj)
+    {
+        var id = $(obj).attr('data-id');
+        var form2 = $('#form2');
+        form2.find('input[name=id]').val(id);
+        var url = "{:url('Weapp/install')}";
+        form2.attr('action', url);
+        layer_loading('正在处理');
+        form2.submit();
+    }
+
+    function uninstall(obj)
+    {
+        var id = $(obj).attr('data-id');
+        var name = $(obj).attr('data-name');
+        var form2 = $('#form2');
+        form2.find('input[name=id]').val(id);
+        var url = "{:url('Weapp/uninstall')}";
+        form2.attr('action', url);
+
+        //询问框
+        var confirm = layer.confirm('<font color="red">此操作数据不可恢复</font>，是否卸载移除？', {
+                title: false,//name,
+                btn: ['确定', '取消'] //按钮
+
+            }, function(){
+                form2.find('input[name=thorough]').val(0);
+                layer_loading('正在处理');
+                // 确定
+                $.ajax({
+                    type : 'post',
+                    url : url,
+                    data : form2.serialize(),
+                    dataType : 'json',
+                    success : function(res){
+                        layer.closeAll();
+                        if(res.code == 1){
+                            layer.msg(res.msg, {icon: 1, time: 1500}, function(){
+                                window.location.reload();
+                            });
+                        }else{
+                            layer.alert(res.msg, {icon: 2, title:false});
+                        }
+                    },
+                    error: function(e) {
+                        layer.closeAll();
+                        // 处理插件行为app_end影响到的卸载问题
+                        if (e.responseText.indexOf("\\behavior\\admin\\") >= 0 && e.responseText.indexOf("not found") >= 0) {
+                            layer.msg('卸载成功', {icon: 1, time: 1500}, function(){
+                                window.location.reload();
+                            });
+                        } else {
+                            layer.alert(e.responseText, {icon: 2, title:false});
+                        }
+                    }
+                });
+                // layer_loading('正在处理');
+                // form2.submit();
+                
+            }, function(){
+                layer.close(confirm);
+
+            }
+        );
+        
+        return false;
+    }
+
+    function delfun(obj){
+        var name = $(obj).attr('data-name');
+        layer.confirm('<font color="#ff0000">将移除该插件相关文件</font>，确认移除？', {
+            title: false,//name,
+            btn: ['确定','取消'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id')},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});  //alert(data);
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }  
+</script>
+
+{include file="public/footer" /}

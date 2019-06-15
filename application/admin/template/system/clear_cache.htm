@@ -1,0 +1,136 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow-y: scroll;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <div class="subject">
+                <h3>清除缓存</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    <!-- 操作说明 -->
+    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">操作提示</h4>
+            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+        </div>
+        <ul>
+            <li>如果页面做了修改，建议清除对应的页面以及模板缓存</li>
+            <li>清除单个伪静态页面缓存，请在URL后面加上 ?clear=1 </li>
+        </ul>
+    </div>
+    <form class="form-horizontal" id="cleanCache" method="post">
+        <div class="ncap-form-default">
+            {eq name="$Think.const.CONTROLLER_NAME.'@clearHtmlCache'|is_check_access" value="1"}
+            <dl class="row">
+                <dt class="tit">伪静态页面</dt>
+                <dd class="opt">
+                    <ul class="nc-row ncap-waybill-list">
+                        <li>
+                            <label class="label"><input class="check" type="checkbox" name="clearHtml[]" value="index" checked="checked">首页(index)</label>
+                        </li>
+                        <li>
+                            <label class="label"><input class="check" type="checkbox" name="clearHtml[]" value="channel" checked="checked">频道页(channel)</label>
+                        </li>
+                        <li>
+                            <label class="label"><input class="check" type="checkbox" name="clearHtml[]" value="lists" checked="checked">列表页(lists)</label>
+                        </li>
+                        <li>
+                            <label class="label"><input class="check" type="checkbox" name="clearHtml[]" value="view" checked="checked">内容页(view)</label>
+                        </li>
+                    </ul>
+                </dd>
+            </dl>
+            {/eq}
+            {eq name="$Think.const.CONTROLLER_NAME.'@clearSystemCache'|is_check_access" value="1"}
+            <dl class="row">
+                <dt class="tit">系统缓存</dt>
+                <dd class="opt">
+                    <ul class="nc-row ncap-waybill-list">
+                        <li>
+                            <label class="label"><input class="check" type="checkbox" name="clearCache[]" value="cache" checked="checked">数据缓存(cache)</label>
+                        </li>
+                        <li>
+                            <label class="label"><input class="check" type="checkbox" name="clearCache[]" value="data" checked="checked">项目数据(data)</label>
+                        </li>
+                        <li>
+                            <label class="label"><input class="check" type="checkbox" name="clearCache[]" value="log" checked="checked">访问日志(log)</label>
+                        </li>
+                        <li>
+                            <label class="label"><input class="check" type="checkbox" name="clearCache[]" value="temp" checked="checked">临时数据(temp)</label>
+                        </li>
+                    </ul>
+                </dd>
+            </dl>
+            {/eq}
+            {eq name="'System@clear_cache'|is_check_access" value="1"}
+            <dl class="row">
+                <dt class="tit"></dt>
+                <dd class="opt">
+                    <ul class="nc-row ncap-waybill-list">
+                        <li>
+                            <label class="label"><input type="checkbox" class="check" id="clearAll" name="clearAll" value="clearAll" onclick="$('input[name^=\'clear\']').prop('checked', this.checked);" checked="checked">全选</label>
+                        </li>
+                    </ul>
+                </dd>
+            </dl>
+            {/eq}
+            <div class="bot">
+                <input type="hidden" name="seo_inlet" value="0">
+                <a href="JavaScript:void(0);" onclick="chk_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+
+    $(function() {
+        checkInlet(); // 自动检测隐藏index.php
+        // 自动检测隐藏index.php
+        function checkInlet() {
+            layer.open({
+                type: 2,
+                title: false,
+                area: ['0px', '0px'],
+                shade: 0.0,
+                closeBtn: 0,
+                shadeClose: true,
+                content: '//{$Request.host}__ROOT_DIR__/api/Rewrite/setInlet.html',
+                success: function(layero, index){
+                    layer.close(index);
+                    var body = layer.getChildFrame('body', index);
+                    var content = body.html();
+                    if (content.indexOf("Congratulations on passing") == -1)
+                    {
+                        $.ajax({
+                            type : "POST",
+                            url  : "__ROOT_DIR__/index.php?m=api&c=Rewrite&a=setInlet",
+                            data : {seo_inlet:0},
+                            dataType : "JSON",
+                            success: function(res) {
+
+                            }
+                        }); 
+                    }
+                }
+            });
+        }
+    });
+
+    function chk_submit()
+    {
+        if ($('input[name^=clear]:checked').length <= 0) {
+            layer.msg('至少选择一项！', {icon: 2,time: 1000});
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#cleanCache').submit();
+    }
+</script>
+
+{include file="public/footer" /}

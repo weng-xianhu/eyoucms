@@ -1,0 +1,186 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- Apple devices fullscreen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Apple devices fullscreen -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="shortcut icon" type="image/x-icon" href="__ROOT_DIR__/favicon.ico" media="screen"/>
+<title>{$global.web_name|default=''}-{notempty name="$is_eyou_authortoken"}易优CMS企业网站管理系统{/notempty}{$version}</title>
+<script type="text/javascript">
+    var eyou_basefile = "{$Request.baseFile}";
+    var module_name = "{$Think.const.MODULE_NAME}";
+    var SITEURL = window.location.host + eyou_basefile + "/" + module_name;
+    var GetUploadify_url = "{:url('Uploadify/upload')}";
+    var __root_dir__ = "__ROOT_DIR__";
+    var __lang__ = "{$admin_lang}";
+</script>
+
+<link href="__SKIN__/css/main.css?v={$version}" rel="stylesheet" type="text/css">
+<link href="__SKIN__/js/jquery-ui/jquery-ui.min.css" rel="stylesheet" type="text/css">
+<link href="__SKIN__/font/css/font-awesome.min.css" rel="stylesheet" />
+<script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
+<script type="text/javascript" src="__SKIN__/js/common.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/jquery-ui/jquery-ui.min.js"></script>
+<script type="text/javascript" src="__SKIN__/js/jquery.cookie.js"></script>
+<script type="text/javascript" src="__SKIN__/js/jquery.bgColorSelector.js"></script>
+<script type="text/javascript" src="__SKIN__/js/admincp.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/jquery.validation.min.js"></script>
+
+<!-- <script type="text/javascript" src="__PUBLIC__/plugins/layer/layer.js"></script> -->
+<script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
+<script type="text/javascript" src="__SKIN__/js/dialog/dialog.js" id="dialog_js"></script>
+<script src="__SKIN__/js/upgrade.js?v={$version}"></script>
+<script src="__SKIN__/js/global.js?v={$version}"></script>
+</head>
+<body>
+{include file="public/menubox" /}
+<style>
+.scroll-wrapper {   
+  height: 100%;
+  -webkit-overflow-scrolling: touch;   
+  overflow-y: auto;   
+}  
+</style>
+<div class="admincp-container unfold">
+{include file="public/left" /}
+  <div class="admincp-container-right">
+    <div class="admincp-header">
+      <div class="wraper">
+        <div class="bgSelector"></div>
+        <div id="foldSidebar"><i  title="展开/收起侧边导航"></i></div>
+        <div class="admincp-name" id="foldSidebar2">
+        </div>
+        <div class="admincp-header-r">
+          <div class="manager">
+            <dl>
+              <dt class="name">{$admin_info.user_name}</dt>
+              <dd class="group">{$admin_info.role_name}</dd>
+            </dl>
+            <div class="btn-group pull-left ey-tool">
+              <a class="btn btn-default dropdown-toggle" target="_blank" href="{$home_url}">
+                <i class="fa fa-home"></i>
+                <span class="hidden-xs">网站首页</span>
+              </a>
+              {eq name="'Index@switch_map'|is_check_access" value="1"}
+              <a class="btn btn-default dropdown-toggle" href="javascript:void(0);" onclick="switch_map();">
+                <i class="fa fa-toggle-on"></i>
+                <span class="hidden-xs">功能开关</span>
+              </a>
+              {/eq}
+              {notempty name="$is_eyou_authortoken"}
+              <!-- 商业授权 -->   
+              <em class="eyou_tool em_authortoken" data-expanded="close">
+                <a class="btn btn-default dropdown-toggle" title="购买后可去除所有版权提示" href="javascript:void(0);" onclick="valide(this);">
+                  <i class="fa fa-bookmark"></i>
+                  <span class="hidden-xs">购买授权</span>
+                </a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="shouquan">
+                    <li class="ey-tool-list text-center"><a target="_blank" class="liaojie" href="http://www.eyoucms.com/buy/">了解商业授权</a></li>
+                    <li class="ey-tool-list text-center">
+                      <input class="btn btn-primary" type="button" onclick="$('.em_authortoken').toggleClass('open');openItem('Index|authortoken');" value="点击校验授权" />
+                    </li>
+                </ul>
+               </em>
+              <!-- 商业授权 -->   
+              {/notempty}
+
+              <!-- 多语言 -->
+              <em id="Language_index" class="eyou_tool em_lang" data-expanded="close" {if condition='empty($web_language_switch)'}style="display: none;"{/if}>
+                <a class="btn btn-default dropdown-toggle" title="支持多语言切换" href="javascript:void(0);" onclick="valide(this);">
+                  <i class="fa fa-globe"></i>
+                  <span class="hidden-xs">{$languages[$admin_lang]['title']|default='简体中文'}</span>
+                </a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="shouquan">
+                  {volist name='languages' id='vo'}
+                    <li class="ey-tool-list text-center lang"><a class="liaojie" href="?lang={$vo.mark}">{$vo.title}</a></li>
+                  {/volist}
+                    <li class="ey-tool-list text-center" id="addlang">
+                      <button class="btn btn-primary" type="button" onclick="$('.em_lang').toggleClass('open');openItem('Language|index');" /><i class="fa fa-globe"></i>&nbsp;多语言设置</button>
+                    </li>
+                </ul>
+               </em>
+              <!-- 多语言 -->   
+
+              <!-- 服务器升级 -->   
+              <div id="upgrade_filelist" style="display:none;"></div> 
+              <div id="upgrade_intro" style="display:none;"></div> 
+              <div id="upgrade_notice" style="display:none;"></div> 
+              <a class="btn btn-default dropdown-toggle" style="display: none;color:#F00;" title="不升级可能有安全隐患" href="javascript:void(0);" id="a_upgrade" data-version="" data-max_version="" data-iframe="parent" data-tips_url="{:url('Upgrade/setPopupUpgrade')}" data-upgrade_url="{:url('Upgrade/OneKeyUpgrade')}" data-check_authority="{:url('Upgrade/check_authority')}">
+                <i class="fa fa-info-circle"></i>
+                <span class="hidden-xs">系统更新</span>
+              </a>
+              <!-- 服务器升级 end -->
+              
+            </div>
+            <span class="avatar">
+            <img alt="" tptype="admin_avatar" src="__SKIN__/images/admint.png" style="cursor: pointer;"> </span><i class="arrow" id="admin-manager-btn" title="显示快捷管理菜单"></i>
+            <div class="manager-menu">
+              <div class="title">
+                <h4>最后登录</h4>
+                <a href="javascript:void(0);" onClick="CUR_DIALOG = ajax_form('modifypw', '修改密码', '{:url('Admin/admin_pwd',array('admin_id'=>$admin_info['admin_id']))}');" class="edit-password" title="修改密码">修改密码</a> </div>
+              <div class="login-date"> 
+                {php}echo date('Y-m-d H:i:s',session('admin_info.last_login'));{/php} <span>(IP: {php}echo session('admin_info.last_ip');{/php} )</span> 
+              </div>
+              <div class="title">
+                <h4>常用操作</h4>
+                <!-- <a href="javascript:void(0);" onClick="openItem('Admin|modular')" class="add-menu">新增菜单</a> -->
+              </div>
+              <ul class="nc-row" tptype="quick_link">
+                  <li><a href="javascript:void(0);" onClick="openItem('System|web');" title="站点设置">站点设置</a></li>
+                  <li><a href="{:url('Admin/logout')}" title="安全退出">安全退出</a></li>
+                  <li><a href="javascript:void(0);" onClick="GetUploadify(1,'','adminlogo','adminlogo_call_back','{:url('Uploadify/upload_full')}');" title="后台Logo">后台Logo</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="clear"></div>
+      </div>
+    </div>
+    <div class="top-border"></div>
+    <div class="scroll-wrapper">
+      <iframe src="" id="workspace" name="workspace" style="overflow-y: auto;" frameborder="0" width="100%" height="94%" scrolling="yes" onload="window.parent"></iframe>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+
+  function valide(obj)
+  {
+    var cls = $(obj).parent().attr('class');
+    $('.eyou_tool').removeClass('open');
+    if(cls.indexOf("open") > 0) {
+      $(obj).parent().addClass('open');
+    }
+    $(obj).parent().toggleClass('open');
+  }
+
+  function adminlogo_call_back(fileurl_tmp)
+  {
+      layer_loading("正在处理");
+      var url = "{:url('Index/edit_adminlogo')}";
+      $.post(url, {filename:fileurl_tmp},function(res){
+          if (1 == res.code) {
+              layer.msg(res.msg, {icon:6, time:1000}, function(){
+                  top.window.location.reload();
+              });
+          } else {
+              layer.closeAll();
+              layer.alert(res.msg, {icon:5, title:false});
+          }
+      });
+  }
+
+  // 功能地图
+  function switch_map()
+  {
+      var url = "{:url('Index/switch_map')}";
+      workspace.window.location.href = url;
+  }
+</script>
+</body>
+</html>

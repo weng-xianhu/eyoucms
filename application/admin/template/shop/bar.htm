@@ -1,0 +1,30 @@
+
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back" href="{:url("Shop/index")}" title="返回列表">
+                <i class="fa fa-arrow-circle-o-left"></i>
+            </a>
+            <div class="subject">
+                <h3>订单中心</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                {eq name="'Shop@index'|is_check_access" value="1"}
+                    <li>
+                        <a href="{:url('Shop/index')}" {if condition="in_array($Think.const.ACTION_NAME, ['index','order_details','order_send'])"}class="current"{/if}>
+                            <span>订单列表</span>
+                        </a>
+                    </li>
+                {/eq}
+
+                {eq name="'Shop@conf'|is_check_access" value="1"}
+                    <li>
+                        <a href="{:url('Shop/conf')}" {if condition="'conf'==$Think.const.ACTION_NAME"}class="current"{/if}>
+                            <span>功能设置</span>
+                        </a>
+                    </li>
+                {/eq}
+
+            </ul>
+        </div>
+    </div>

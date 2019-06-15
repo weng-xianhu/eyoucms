@@ -1,0 +1,24 @@
+
+    {eq name="'Member@users_index'|is_check_access" value="1"}
+    <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
+        <input type="button" class="btn {if condition="!in_array($Request.action, ['users_index','users_add','users_edit'])"}current{/if}" value="用户列表" onclick="window.location.href='{:url("Member/users_index")}';">
+    </div>
+    {/eq}
+
+    {eq name="'Member@level_index'|is_check_access" value="1"}
+    <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
+        <input type="button" class="btn {if condition="!in_array($Request.action, ['level_index','level_add','level_edit'])"}current{/if}" value="用户级别" onclick="window.location.href='{:url("Member/level_index")}';">
+    </div>
+    {/eq}
+
+    {eq name="'Member@attr_index'|is_check_access" value="1"}
+    <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
+        <input type="button" class="btn {if condition="!in_array($Request.action, ['attr_index','attr_add','attr_edit'])"}current{/if}" value="用户属性" onclick="window.location.href='{:url("Member/attr_index")}';">
+    </div>
+    {/eq}
+
+    {eq name="'Member@users_config'|is_check_access" value="1"}
+    <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
+        <input type="button" class="btn {if condition="!in_array($Request.action, ['users_config'])"}current{/if}" value="功能配置" onclick="window.location.href='{:url("Member/users_config")}';">
+    </div>
+    {/eq}

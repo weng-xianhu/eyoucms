@@ -1,0 +1,113 @@
+{include file="public/layout" /}
+
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit; min-width: auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page ad" style="min-width: auto;">
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>快递列表</h3>
+                <h5>(共{$pageObj->totalRows}条记录)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:url('Shop/order_express')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="名称搜索...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <div class="sDiv2">
+                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Shop/order_express')}';">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                        <tr>
+                            <th axis="col1" class="w10">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="">
+                                <div class="">快递名称</div>
+                            </th>   
+                            <th abbr="article_time" axis="col6" class="w150">
+                                <div class="tc">快递标识</div>
+                            </th>
+                            <th axis="col1" class="w60">
+                                <div class="tc">操作</div>
+                            </th>
+                            <th axis="col1" class="w60">
+                                <div class="tc">排序</div>
+                            </th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%;">
+                    <tbody>
+                    {empty name="ExpressData"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="ExpressData" item="vo" key="k" }
+                        <tr>
+                            <td class="">
+                                <div class="w10 tc"></div>
+                            </td>
+                            <td style="width: 100%;">
+                                <div class="">{$vo.express_name}</div>
+                            </td>
+                            <td class="">
+                                <div class="w150 tc">{$vo.express_code}</div>
+                            </td>
+                            <td>
+                                <div class="w60 tc">
+                                    <input type="hidden" id="express_name_{$vo.express_id}" value="{$vo.express_name}" />
+                                    <input type="hidden" id="express_code_{$vo.express_id}" value="{$vo.express_code}" />
+                                    <a class="btn blue" href="javascript:void(0);" onClick="parent.express(this, {$vo.express_id});"><i class="fa fa-location-arrow"></i>选择</a>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w60 tc">
+                                    <input class="tc" type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')" onchange="changeTableVal('shop_express','express_id','{$vo.express_id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <!--分页位置-->
+        {$pageStr}
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function(){
+
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+
+{include file="public/footer" /}
