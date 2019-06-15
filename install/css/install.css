@@ -1,0 +1,245 @@
+@charset "utf-8";
+/*欢迎使用eyoucms*/
+html {
+  scrollbar-face-color : #F5F5F5;
+  scrollbar-arrow-color :#A0A0A0;
+}
+
+img  {border: 0px;}
+*{
+	margin:0;
+	padding:0;
+}
+
+fieldset, img {border:0;}
+li {list-style:none;}
+img,button,input,select,textarea,checkbox,radio 
+{vertical-align:middle;font-size:12px;}
+address, cite, dfn, em, var { font-style: normal; } 
+code, kbd,samp { font-family: courier new, courier, monospace; }
+ins {text-decoration:none;}
+del {text-decoration:line-through;}
+h1, h2, h3, h4, h5, h6 {}
+h1 {font-size: 2em;}
+h2 {font-size: 1.7em;}
+h3 {font-size: 1.5em;}
+h4 {font-size: 1.38em;}
+h5 {font-size: 1.2em;}
+h6 {font-size: 1.1em;font-style: italic;}
+address,cite,dfn,em,var{font-style:normal;}
+caption,td {font-weight: normal;}
+cite, blackquote, em, i {font-style: italic;}
+strong, b {	font-weight: bold;}
+pre, code {font-family: monospace;font-size: 1.1em;}
+
+input {font-size:12px;}
+textarea {font-size:12px;line-height:22px;padding:0px 10px;}
+
+.floatleft {float:left;}
+.floatright {float:right;}
+
+a {color:#435884;text-decoration:none;}
+a:link {color:#333;text-decoration:none;}
+a:hover{color:#3399FF;text-decoration:none;}
+
+body {
+  font-size:12px;
+  font-family:'微软雅黑';
+  background:#f4f4f4;
+}
+
+
+
+.section {
+  width:818px;
+  margin:0px auto;
+  padding:0px auto;
+
+}
+
+
+
+
+.icons {  margin: 0px auto; padding: 10px 20px 5px 0px; text-align: right; }
+.icons img { border:1px solid #ccc; }
+
+/* 页头 */
+
+#header { padding: 5px 10px 0px; height: 82px; background:#04243a; }
+.logo { float: left; margin: 10px 15px; width:300px;}
+.top_right { position : absolute; top:22px; right:15px;  width: 300px; height: 43px; line-height: 22px;  padding-right: 50px; text-align: right;  color: #A3A3A3; background:url(../images/avatar.gif) right center no-repeat;}
+.top_right span { color: #FFF; }
+.top_right a { color: #FFF; }
+.top_right strong { color: #3882EE; }
+
+/* 导航 */
+
+.header { padding:25px 0px; 
+text-align:center;
+color:white;
+background:#08aaf2;
+font-size:25px;
+}
+
+
+
+.go {
+width:712px;
+height:65px;
+margin:0px auto;
+
+}
+
+
+
+
+.blank5,.blank10,blank20 {
+  clear: both;
+  height: 5px;
+}
+
+.blank10 {
+  height:10px;
+}
+
+.blank20 {
+  height:20px;
+}
+
+.blank30 {
+  height: 30px;
+}
+
+.padding10 {
+  padding: 10px;
+}
+
+
+.main {padding:10px; background:#eee;border:1px solid #CCC;line-height:200%;}
+.main .wraper{padding:0px 0px 0px 15px;background:white; margin-right: -10px;}
+.go {background:url(../images/go_1.gif) center top no-repeat;}
+.go2 {background:url(../images/go_2.gif) center top no-repeat;}
+.go3 {background:url(../images/go_3.gif) center top no-repeat;}
+.go4 {background:url(../images/go_4.gif) center top no-repeat;}
+.pact,.install{height:388px;overflow-y:auto; color:#555; white-space: normal;}
+.pact strong {color:#000;}
+.install ul{ padding-right: 10px; }
+.ccaz .wraper{padding:0px 0px 0px 15px;background:white; margin-right: 0px;}
+
+.pact::-webkit-scrollbar {/*滚动条整体样式*/
+            width: 10px;     /*高宽分别对应横竖滚动条的尺寸*/
+            height: 8px;
+}
+.pact::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+            border-radius: 5px;
+            -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.2);
+}
+.pact::-webkit-scrollbar-track {/*滚动条里面轨道*/
+            border-radius: 0;
+            background: rgba(6,6,6,0.1);
+}
+
+
+/* 页底 */
+
+
+
+.footer {
+  clear:both;
+  width: 158px;
+  height:26px;
+  line-height:26px;
+  margin:0px auto;
+  padding:0px 15px;
+  text-align:center;
+  background:#eee;
+  color:#999;
+  border-radius: 5px 5px 5px 5px;
+}
+
+.footer a {
+  color:#999;
+}
+
+
+
+
+#table { font-size: 12px; border-radius: 3px 3px 3px 3px;}
+#table .left, #table_field .left { width: 150px; text-align: right; padding-right: 10px; }
+#table .td1{ height: 28px; line-height: 28px; color: white; font-weight: normal; background:#ccc; padding: 0px; text-align: center; }
+#table td, #table_field td { padding: 12px 30px; background:white; }
+
+#table input {height:26px; line-height:26px; padding:0px 10px;border:1px solid #ccc;border-radius: 3px 3px 3px 3px; display: inline-block; float: left; margin-right: 5px; vertical-align: middle;}
+
+#table input:hover {
+border:1px solid #A5C7FE;
+-moz-box-shadow:0px 0px 10px #A5C7FE;
+-webkit-box-shadow:0px 0px 10px #A5C7FE;
+box-shadow:0px 0px 10px #A5C7FE;
+}
+.tips_error{ color: red; }
+#table td div{ line-height: 28px; color: gray; }
+/* 综合 */
+
+.J_install_btn{ font-size: 12px !important; }
+
+.result {
+	clear:both;
+	width:640px;
+	height:120px;
+	margin:0px auto;
+	padding:10px 0px 10px 90px;
+	background:url(../images/result_bg.png) 3px center no-repeat;
+	color:white; 
+}
+
+.result h1 {
+    line-height:60px;
+	font-size:26px;
+	font-weight:normal;
+}
+
+
+.result h5 {
+    line-height:20px;
+	font-size:14px;
+	font-weight:normal;
+}
+
+
+
+
+/* 按钮 */
+.btn_a,.btn,#installbutton,.btn-primary {display:inline-block;color: white !important; font-size: 14px; width: 100px; margin: 0px auto; background:#0293d2;height:30px; line-height:30px;padding:0px 20px;border-radius: 3px 3px 3px 3px;color:white;text-align:center; border: 1px solid #6aa7d2; text-align: center; cursor: pointer; vertical-align: middle;}
+.btn_b {  height: 30px; line-height: 30px; padding:0px 20px;color: #fff; background:#c1c1c1; border: 1px solid #999; text-align: center; cursor: pointer;border-radius: 3px 3px 3px 3px; vertical-align: middle;}
+.btn_c { height: 30px; line-height: 30px; padding:0px 20px 0px 40px;color: white; background:#0293d2 url(../images/btn_03.gif) 3px -1px no-repeat; border: 1px solid #6aa7d2; text-align: center; cursor: pointer; font-weight:bold; border-radius: 50px 50px 50px 50px;}
+.btn_d {  height: 29px; line-height: 29px; margin: 0px 2px; padding:0px 20px;background:#0293d2; border: 1px solid #6aa7d2; border-radius: 3px 3px 3px 3px; color: white;  }
+.btn_e {  margin: 0px 2px;padding:0px 20px;line-height:26px;
+border-radius: 3px 3px 3px 3px; color: white;   text-align:center; background:#c1c1c1; border:1px solid #999; }
+a.btn_b,.btn_c,a.btn_d, a.btn_e { display: inline-block; text-align:center;}
+button.btn{ height: 32px; }
+
+.btn_a:hover,
+.btn_b:hover,
+.btn_c:hover,
+.btn_d:hover,
+.btn_e:hover,
+.btn:hover,
+#installbutton,
+.btn-primary
+{
+-moz-box-shadow:0px 0px 10px #A5C7FE;
+-webkit-box-shadow:0px 0px 10px #A5C7FE;
+box-shadow:0px 0px 10px #A5C7FE;
+}
+
+.btn_b:hover{ color: #fff }
+
+
+.tar{ text-align: right; padding-right: 13px !important; width: 25%}
+
+.green{color: green;}
+.red{color: red;}
+
+/*安装有什么问题可以访问eyoucms.com 查看帮助*/

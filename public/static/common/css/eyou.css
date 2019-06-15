@@ -1,0 +1,17 @@
+
+[e-id].uiset {
+    outline: 1px solid #f00 !important;
+    cursor: pointer;
+    position: relative;
+}
+[e-id].uiset b.ui_icon{
+   background: url(../images/ui_icon.jpg) no-repeat #000;
+   height: 22px;
+   width: 35px;
+   display: inline-block;
+   position: absolute;
+   top: 0px;
+   left: 50%;
+   margin-left: -17px;
+   z-index: 999999;
+}

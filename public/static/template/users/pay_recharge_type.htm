@@ -1,0 +1,78 @@
+{eyou:eq name='$data.transaction_type' value='2'}
+<li class="text-xs-center pay-order-zhifubao" data-toggle="modal" data-target="#pay-order-modal">
+    <a class="block cover pay-online" href="JavaScript:void(0);" id="BalancePayment" onclick="BalancePayment();">
+        余额支付
+    </a>
+    拥有余额：{$users.users_money}
+</li>
+{/eyou:eq}
+
+<!-- 
+UpdateMethod 方法
+作用说明：
+点击选择支付方式时，标记订单的支付方式和支付类型并调起支付
+
+参数说明：
+第一个参数(pay_method)      ：标识支付方式及使用的支付类型，所有必传
+第二个参数(url)             ：跳转调用的URL，在支付宝支付和微信H5支付时必传，其余不必穿
+第三个参数(msg)             ：错误信息返回，在微信或支付宝未配置时提示
+第四个参数(unified_id)      ：订单ID，微信扫码或微信内部支付时必传，其余不必传
+第五个参数(unified_number)  ：订单号，微信扫码或微信内部支付时必传，其余不必传
+第六个参数(transaction_type)：订单类型(金额充值或购买支付)，微信扫码或微信内部支付时必传，其余不必传
+-->
+
+{eyou:eq name='$is_wechat' value='2'}
+    {eyou:empty name="$is_open_alipay"}
+    <li class="text-xs-center pay-order-zhifubao" data-toggle="modal" data-target="#pay-order-modal">
+        {eyou:empty name='$isbrowser'}
+            <a class="block cover pay-online" href="JavaScript:void(0);" onclick="UpdateMethod('AliPay','{$alipay_url}');">
+                <img src="{eyou:global name='web_templets_pc' /}/users/skin/images/payOnline_zfb.png" class="img-fluid inline-block">
+            </a>
+        {eyou:else /}
+            <a class="block cover pay-online" href="JavaScript:void(0);" onclick="UpdateMethod('AliPayMsg');">
+                <img src="{eyou:global name='web_templets_pc' /}/users/skin/images/payOnline_zfb.png" class="img-fluid inline-block">
+            </a>
+        {/eyou:empty}
+    </li>
+    {eyou:else/}
+    <!-- <li class="text-xs-center pay-order-zhifubao" data-toggle="modal" data-target="#pay-order-modal">
+        <a class="block cover pay-online" href="JavaScript:void(0);" onclick="UpdateMethod('AliPayMsg','','{$AlipayMsg}');" >
+            <img src="{eyou:global name='web_templets_pc' /}/users/skin/images/payOnline_zfb.png" class="img-fluid inline-block">
+        </a>
+    </li> -->
+    {/eyou:empty}
+{/eyou:eq}
+
+{eyou:empty name="$is_open_wechat"}
+<li>
+    <!-- 微信支付配置已配置 -->
+    {eyou:empty name='$isweixin'}
+        {eyou:empty name='$isbrowser'}
+            <!-- 在PC中支付则调用扫码支付 -->
+            <!-- 微信扫码支付：WeChatScanCode -->
+            <a class="block cover pay-online" href="JavaScript:void(0);" onclick="UpdateMethod('WeChatScanCode','','','{$data.unified_id}','{$data.unified_number}','{$data.transaction_type}');">
+                <img src="{eyou:global name='web_templets_pc' /}/users/skin/images/weixinpay.png" class="img-fluid inline-block">
+            </a>
+        {eyou:else /}
+            <!-- 在微信端中 -->
+            <!-- 微信内部调用支付：WeChatInternal -->
+            <a class="block cover pay-online" href="JavaScript:void(0);" onclick="UpdateMethod('WeChatInternal','','','{$data.unified_id}','{$data.unified_number}','{$data.transaction_type}');">
+                <img src="{eyou:global name='web_templets_pc' /}/users/skin/images/weixinpay.png" class="img-fluid inline-block">
+            </a>
+        {/eyou:empty}
+    {eyou:else /}
+        <!-- 在移动端中，但并不在微信端中，支付则调用H5页面支付 -->
+        <!-- 微信H5页面支付：WeChatH5 -->
+         <a class="block cover pay-online" href="JavaScript:void(0);" onclick="UpdateMethod('WeChatH5','{$weixin_url}');" >
+            <img src="{eyou:global name='web_templets_pc' /}/users/skin/images/weixinpay.png" class="img-fluid inline-block">
+        </a>
+    {/eyou:empty}
+</li>
+{eyou:else/}
+<!-- 没有配置微信支付配置：WeChatMsg -->
+<!-- <li>
+    <a class="block cover pay-online" href="JavaScript:void(0);" onclick="UpdateMethod('WeChatMsg','','{$WechatMsg}');" >
+        <img src="{eyou:global name='web_templets_pc' /}/users/skin/images/weixinpay.png" class="img-fluid inline-block">
+    </a>
+</li> -->
+{/eyou:empty}

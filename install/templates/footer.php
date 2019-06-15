@@ -1,0 +1,1 @@
+<div class="footer"> Powered by  <a href="http://www.eyoucms.com" target="_blank">EyouCms</a></div>

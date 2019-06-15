@@ -1,0 +1,44 @@
+
+                <div class="row">
+                    <div class="col-xs-3">{$vo.title}</div>
+                    <div class="col-xs-9">
+                        {eyou:if condition="1 == $vo.is_required"}
+                            <span class="redx">*</span>
+                        {eyou:else/}
+                            <span class="redx">&nbsp;</span>
+                        {/eyou:if}
+                        <input type="text" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">{$vo.dfvalue_unit|default=''}
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <!-- <div class="form-group">                
+                    <div class="row">
+                        <div class="ey-form-file-title col-md-3">
+                            {$vo.title}
+                            {eyou:if condition="1 == $vo.is_required"}
+                                <font color="red">*</font>
+                            {/eyou:if}
+                        </div>
+                        <div class="col-md-9">
+                            <div class="form-group">                
+                                <input type="text" class="form-control" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="{$vo.fieldArr}_{$vo.name|default=''}_code" name="{$vo.fieldArr}[{$vo.name|default=''}_code]" value="" placeholder="短信验证码">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="button" onclick="get_{$vo.fieldArr}{$vo.name|default=''}_code();" class="btn btn-primary" value="点击发送" style="height: 43px;" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+<!--                 <script type="text/javascript">
+                    function get_{$vo.fieldArr}{$vo.name|default=''}_code(){
+                        
+                    }
+                </script> -->

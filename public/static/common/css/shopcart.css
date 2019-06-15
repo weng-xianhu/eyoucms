@@ -1,0 +1,94 @@
+@charset "utf-8";
+
+.ey-price{ font-size: 30px; color: #d02b18; clear: both; }
+.ey-number {
+    padding: 12px 0px;
+    font-size: 14px;
+    position: relative;
+}
+.ey-number .btn-input {
+    border: 1px solid #CCC;
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    font-size: 0px;
+}
+.ey-number .btn-input button {
+    width: 28px;
+    height: 30px;
+    font-size: 16px;
+    line-height: 30px;
+    padding: 0;
+    border: none;
+     background-color: #fff;
+    color: #333;
+    outline: none;
+}
+.ey-number .btn-input input {
+    font-size: 12px;
+    height: 30px;
+    padding: 0;
+    display: inline-block;
+    vertical-align: top;
+    width: 45px;
+    text-align: center;
+    border: none;
+    border-left: 1px solid #CCC;
+    border-right: 1px solid #CCC;
+    border-radius: 0;
+    outline: none;
+   
+}
+.ey-number label {
+    margin-right: 12px;
+}
+.ey-buyaction{ margin-top: 5px; }
+
+.ey-buyaction a {
+    font-size: 14px;
+    display: inline-block;
+    padding: 8px 18px;
+    cursor: pointer;
+    text-align: center;
+    vertical-align: middle;
+}
+.ey-buyaction a:hover{ text-decoration:none}
+.ey-joinin{margin-right: 8px;color:#fff;background-color:#f96868;-webkit-box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 1px 1px rgba(0,0,0,.075)}
+.ey-joinin:hover,.ey-joinin:focus{color:#fff;background-color:#f73737; }
+
+.ey-joinbuy{color:#fff;background-color:#f2a654;-webkit-box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 1px 1px rgba(0,0,0,.075)}
+.ey-joinbuy:hover,.ey-joinbuy:focus{color:#fff;background-color:#ee8d25}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

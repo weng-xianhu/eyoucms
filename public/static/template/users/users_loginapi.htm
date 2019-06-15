@@ -1,0 +1,19 @@
+
+    {eyou:notempty name="$usersConfig.oauth_open"}
+    <div class="login_type text-xs-center m-t-20">
+        <!-- <p>第三方账号登录</p> -->
+        <ul class="blocks-3 m-0">
+            {eyou:notempty name="$usersConfig.oauth_qq"}
+            <li class="m-b-0"><a title="QQ登录" href="{eyou:url link='user/LoginApi/login' vars='oauth=qq' /}"><i class="fa fa-qq font-size-30"></i></a></li>
+            {/eyou:notempty}
+
+            {eyou:notempty name="$usersConfig.oauth_weixin"}
+            <li class="m-b-0"><a title="微信登录" href="{eyou:url link='user/LoginApi/login' vars='oauth=weixin' /}"><i class="fa fa-weixin light-green-600 font-size-30"></i></a></li>
+            {/eyou:notempty}
+            
+            {eyou:notempty name="$usersConfig.oauth_weibo"}
+            <li class="m-b-0"><a title="微博登录" href="{eyou:url link='user/LoginApi/login' vars='oauth=weibo' /}"><i class="fa fa-weibo red-600 font-size-30"></i></a></li>
+            {/eyou:notempty}
+        </ul>
+    </div>
+    {/eyou:notempty}
