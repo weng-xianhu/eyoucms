@@ -50,29 +50,35 @@ foreach ($channel_list as $key => $val) {
 }
 
 /*PC端可视编辑URl*/
-$uiset_pc_url = '';
+$uiset_pc_arr = [];
 if (file_exists(ROOT_PATH.'template/pc/uiset.txt')) {
-    $uiset_pc_url = url('Uiset/pc', array(), true, $domain);
+    $uiset_pc_arr = array(
+        'url' => url('Uiset/pc', array(), true, $domain),
+        'is_menu' => 1,
+    );
 }
 /*--end*/
 
 /*手机端可视编辑URl*/
-$uiset_mobile_url = '';
+$uiset_mobile_arr = [];
 if (file_exists(ROOT_PATH.'template/mobile/uiset.txt')) {
-    $uiset_mobile_url = url('Uiset/mobile', array(), true, $domain);
+    $uiset_mobile_arr = array(
+        'url' => url('Uiset/mobile', array(), true, $domain),
+        'is_menu' => 1,
+    );
 }
 /*--end*/
 
 /*清理数据URl*/
 $uiset_data_url = '';
-if (!empty($uiset_pc_url) || !empty($uiset_mobile_url)) {
+if (!empty($uiset_pc_arr) || !empty($uiset_mobile_arr)) {
     $uiset_data_url = url('Uiset/ui_index', array(), true, $domain);
 }
 /*--end*/
 
 /*可视编辑URL*/
 $uiset_index_arr = array();
-if (!empty($uiset_pc_url) || !empty($uiset_mobile_url)) {
+if (!empty($uiset_pc_arr) || !empty($uiset_mobile_arr)) {
     $uiset_index_arr = array(
         'url' => url('Uiset/index', array(), true, $domain),
         'is_menu' => 1,
@@ -255,11 +261,11 @@ return  array(
                         'name' => '电脑版',
                         'controller'=>'',
                         'action'=>'',
-                        'url'=>$uiset_pc_url, 
+                        'url'=>isset($uiset_pc_arr['url']) ? $uiset_pc_arr['url'] : '',
                         'target'=>'_blank',
                         'icon'=>'fa fa-desktop',
                         'grade'=>2,
-                        'is_menu'=>1,
+                        'is_menu'=>isset($uiset_pc_arr['is_menu']) ? $uiset_pc_arr['is_menu'] : 0,
                         'is_modules'=>0,
                         'child' => array(),
                     ),
@@ -269,11 +275,11 @@ return  array(
                         'name' => '手机版',
                         'controller'=>'',
                         'action'=>'',
-                        'url'=>$uiset_mobile_url, 
+                        'url'=>isset($uiset_mobile_arr['url']) ? $uiset_mobile_arr['url'] : '',
                         'target'=>'_blank',
                         'icon'=>'fa fa-mobile',
                         'grade'=>2,
-                        'is_menu'=>1,
+                        'is_menu'=>isset($uiset_mobile_arr['is_menu']) ? $uiset_mobile_arr['is_menu'] : 0,
                         'is_modules'=>0,
                         'child' => array(),
                     ),
