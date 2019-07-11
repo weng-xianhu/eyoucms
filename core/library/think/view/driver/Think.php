@@ -8,6 +8,7 @@ use think\Loader;
 use think\Log;
 use think\Request;
 use think\Template;
+use think\Lang;
 
 class Think
 {
@@ -70,7 +71,7 @@ class Think
         }
         // 模板不存在 抛出异常
         if (!is_file($template)) {
-            throw new TemplateNotFoundException('template not exists:' . $template, $template);
+            throw new TemplateNotFoundException(Lang::get('template not exists').':' . $template, $template);
         }
         // 记录视图信息
         App::$debug && Log::record('[ VIEW ] ' . $template . ' [ ' . var_export(array_keys($data), true) . ' ]', 'info');

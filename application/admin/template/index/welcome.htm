@@ -18,6 +18,9 @@
 <script type="text/javascript">
     var eyou_basefile = "{$Request.baseFile}";
     var module_name = "{$Think.const.MODULE_NAME}";
+    var __root_dir__ = "__ROOT_DIR__";
+    var __lang__ = "{$admin_lang}";
+    var __main_lang__ = "{$main_lang}";
 </script>  
 <script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
 <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
@@ -146,7 +149,7 @@
                                     <td class="gray_bg">更新日志：</td>
                                     <td><a href="http://www.eyoucms.com/news/rizhi/" target="_blank">查看</a></td>
                                     <td class="gray_bg">帮助中心:</td>
-                                    <td><a href="http://www.eyoucms.com/bbs/" target="_blank">查看</a></td>
+                                    <td><a href="http://www.eyoucms.com/ask/" target="_blank">查看</a></td>
                                 </tr>
                                 {/notempty}
                             </tbody>
@@ -214,12 +217,23 @@
 <script type="text/javascript">
     $(function () {
         check_upgrade_version();
-        $.get("{:url('Ajax/welcome_handle')}"); // 进入欢迎页面需要异步处理的业务
+        $.get("{:url('Ajax/welcome_handle', ['_ajax'=>1])}"); // 进入欢迎页面需要异步处理的业务
+        check_language_tips();
+
+        // 检测语言版本
+        function check_language_tips()
+        {
+            if (__main_lang__ != __lang__) {
+                var language_title = $('#language_title', window.parent.document).html();
+                layer.msg('已切换多语言【'+language_title+'】后台编辑！', {time:3000});
+            }
+        }
+
         // 版本检测更新弹窗
         function check_upgrade_version(){
             $.ajax({
                 type : "GET",
-                url  : "{:url('Ajax/check_upgrade_version')}",
+                url  : "{:url('Ajax/check_upgrade_version', ['_ajax'=>1])}",
                 data : {},
                 dataType : "JSON",
                 success: function(res) {
@@ -257,7 +271,7 @@
                 $("#explanation_welcome").hide();
             });
             $("#explanationZoom").hide();
-            $.get("{:url('Ajax/explanation_welcome')}");
+            $.get("{:url('Ajax/explanation_welcome', ['_ajax'=>1])}");
         });
 
         checkInlet(); // 自动检测隐藏index.php
@@ -281,7 +295,7 @@
                 {
                     $.ajax({
                         type : "POST",
-                        url  : "__ROOT_DIR__/index.php?m=api&c=Rewrite&a=setInlet",
+                        url  : "__ROOT_DIR__/index.php?m=api&c=Rewrite&a=setInlet&_ajax=1",
                         data : {seo_inlet:0},
                         dataType : "JSON",
                         success: function(res) {

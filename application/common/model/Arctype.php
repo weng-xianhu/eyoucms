@@ -48,9 +48,8 @@ class Arctype extends Model
             ->find();
         /*--end*/
         if (!empty($result)) {
-            $result['typeurl'] = $this->getTypeUrl($result); // 当前栏目的URL
-
             if ($get_parent) {
+                $result['typeurl'] = $this->getTypeUrl($result); // 当前栏目的URL
                 /*获取当前栏目父级栏目信息*/
                 if ($result['parent_id'] > 0) {
                     $parent_row = db('Arctype')->field($field)
@@ -74,40 +73,57 @@ class Arctype extends Model
                 /*--end*/
                 $result = array_merge($result, $parent_row);
             } else {
-                if (!empty($result['parent_id'])) {
-                    // 当前栏目的父级栏目信息
-                    $parent_row = M('arctype')->where('id', $result['parent_id'])
-                        ->cache(true,EYOUCMS_CACHE_TIME,"arctype")
-                        ->find();
-                    $ptypeurl = $this->getTypeUrl($parent_row);
-                    $ptypename = $parent_row['typename'];
-                    $pdirname = $parent_row['dirname'];
-                    // 当前栏目的顶级栏目信息
-                    if (!isset($result['toptypeurl'])) {
-                        $allPid = $this->getAllPid($id);
-                        $toptypeinfo = current($allPid);
-                        $toptypeurl = $this->getTypeUrl($toptypeinfo);
-                        $toptypename = $ptypename;
-                        $topdirname = $pdirname;
-                    }
-                    // end
-                } else {
-                    // 当前栏目的父级栏目信息 或 顶级栏目的信息
-                    $toptypeurl = $ptypeurl = $result['typeurl'];
-                    $toptypename = $ptypename = $result['typename'];
-                    $topdirname = $pdirname = $result['dirname'];
-                }
-                // 当前栏目的父级栏目信息
-                $result['ptypeurl'] = $ptypeurl;
-                $result['ptypename'] = $ptypename;
-                $result['pdirname'] = $pdirname;
-                // 当前栏目的顶级栏目信息
-                !isset($result['toptypeurl']) && $result['toptypeurl'] = $toptypeurl;
-                !isset($result['toptypename']) && $result['toptypename'] = $toptypename;
-                !isset($result['topdirname']) && $result['topdirname'] = $topdirname;
-                // end
+                $result = $this->parentAndTopInfo($id, $result);
             }
         }
+
+        return $result;
+    }
+
+    /**
+     * 获取指定栏目的父级和顶级栏目信息（用于前台与静态生成）
+     * @author wengxianhu by 2017-7-26
+     */
+    public function parentAndTopInfo($id, $result = [])
+    {
+        $result['typeurl'] = $this->getTypeUrl($result); // 当前栏目的URL
+        if (!empty($result['parent_id'])) {
+            // 当前栏目的父级栏目信息
+            $parent_row = M('arctype')->where('id', $result['parent_id'])
+                ->cache(true,EYOUCMS_CACHE_TIME,"arctype")
+                ->find();
+            $ptypeid = $parent_row['id'];
+            $ptypeurl = $this->getTypeUrl($parent_row);
+            $ptypename = $parent_row['typename'];
+            $pdirname = $parent_row['dirname'];
+            // 当前栏目的顶级栏目信息
+            if (!isset($result['toptypeurl'])) {
+                $allPid = $this->getAllPid($id);
+                $toptypeinfo = current($allPid);
+                $toptypeid = $toptypeinfo['id'];
+                $toptypeurl = $this->getTypeUrl($toptypeinfo);
+                $toptypename = $toptypeinfo['typename'];
+                $topdirname = $toptypeinfo['dirname'];
+            }
+            // end
+        } else {
+            // 当前栏目的父级栏目信息 或 顶级栏目的信息
+            $toptypeid = $ptypeid = $result['id'];
+            $toptypeurl = $ptypeurl = $result['typeurl'];
+            $toptypename = $ptypename = $result['typename'];
+            $topdirname = $pdirname = $result['dirname'];
+        }
+        // 当前栏目的父级栏目信息
+        $result['ptypeid'] = $ptypeid;
+        $result['ptypeurl'] = $ptypeurl;
+        $result['ptypename'] = $ptypename;
+        $result['pdirname'] = $pdirname;
+        // 当前栏目的顶级栏目信息
+        !isset($result['toptypeid']) && $result['toptypeid'] = $toptypeid;
+        !isset($result['toptypeurl']) && $result['toptypeurl'] = $toptypeurl;
+        !isset($result['toptypename']) && $result['toptypename'] = $toptypename;
+        !isset($result['topdirname']) && $result['topdirname'] = $topdirname;
+        // end
 
         return $result;
     }
@@ -142,9 +158,14 @@ class Arctype extends Model
      */
     public function hasChildren($id)
     {
-        $count = db('Arctype')->where('parent_id', $id)->count('id');
-
-        return ($count > 0 ? 1 : 0);
+        if (is_array($id)) {
+            $ids = array_unique($id);
+            $row = db('Arctype')->field('parent_id, count(id) AS total')->where(['parent_id'=>['IN', $ids]])->group('parent_id')->getAllWithIndex('parent_id');
+            return $row;
+        } else {
+            $count = db('Arctype')->where('parent_id', $id)->count('id');
+            return ($count > 0 ? 1 : 0);
+        }
     }
 
     /**

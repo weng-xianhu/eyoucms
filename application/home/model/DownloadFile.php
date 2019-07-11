@@ -26,15 +26,17 @@ class DownloadFile extends Model
         // 需要调用`Model`的`initialize`方法
         parent::initialize();
     }
-
+    
     /**
-     * 获取单条下载文章的所有文件
+     * 获取指定下载文章的所有文件
      * @author 小虎哥 by 2018-4-3
      */
-    public function getDownFile($aid, $field = '*')
+    public function getDownFile($aids = [], $field = '*')
     {
+        $where = [];
+        !empty($aids) && $where['aid'] = ['IN', $aids];
         $result = db('DownloadFile')->field($field)
-            ->where('aid', $aid)
+            ->where($where)
             ->order('sort_order asc')
             ->select();
 
@@ -43,6 +45,7 @@ class DownloadFile extends Model
                 $downurl = url('home/View/downfile', array('id'=>$val['file_id'], 'uhash'=>$val['uhash']));
                 $result[$key]['downurl'] = $downurl;
             }
+            $result = group_same_key($result, 'aid');
         }
 
         return $result;

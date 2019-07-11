@@ -74,6 +74,12 @@ class TagPosition extends Base
                     $home_url .= '/?';
                 }
                 $home_url .= http_build_query(['lang'=>$lang]);
+            } else if (2 == $seo_pseudo) { // 生成静态页面代码
+                if ($lang == $this->main_lang) {
+                    $home_url = $this->root_dir.'/';
+                } else {
+                    $home_url = $this->root_dir.'/'.$lang;
+                }
             } else {
                 $home_url = $this->root_dir.$inletStr.'/'.$lang; // 支持子目录
             }

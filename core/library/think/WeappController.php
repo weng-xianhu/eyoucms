@@ -78,6 +78,16 @@ class WeappController
     public $home_lang = 'cn';
 
     /**
+     * 子目录路径
+     */
+    public $root_dir = ROOT_DIR;
+
+    /**
+     * CMS版本号
+     */
+    public $version = null;
+
+    /**
      * 构造方法
      * @access public
      * @param Request $request Request 对象
@@ -104,7 +114,7 @@ class WeappController
 
         // 模板路径
         $template = Config::get('template');
-        $template['view_path'] = '.'.ROOT_DIR.'/'.WEAPP_DIR_NAME.'/'.$this->weapp_module_name.'/template/';
+        $template['view_path'] = './'.WEAPP_DIR_NAME.'/'.$this->weapp_module_name.'/template/';
         Config::set('template', $template);
 
         $this->view    = View::instance($template);
@@ -113,9 +123,11 @@ class WeappController
         $this->home_lang = get_home_lang();
         $this->admin_lang = get_admin_lang();
         $this->main_lang = get_main_lang();
+        null === $this->version && $this->version = getCmsVersion();
         $this->assign('home_lang', $this->home_lang);
         $this->assign('admin_lang', $this->admin_lang);
         $this->assign('main_lang', $this->main_lang);
+        $this->assign('version', $this->version);
         /*--end*/
         
         $this->weapp_path   =   WEAPP_DIR_NAME.DS.$this->weapp_module_name.DS;

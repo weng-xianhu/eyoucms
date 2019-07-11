@@ -64,7 +64,14 @@ class Arctype extends Base
         // 栏目最多级别
         $arctype_max_level = intval(config('global.arctype_max_level'));
         $this->assign('arctype_max_level', $arctype_max_level);
-
+        
+        /* 生成静态页面代码 */
+        $typeid = input('param.typeid/d',0);
+        $is_del = input('param.is_del/d',0);
+        $this->assign('typeid',$typeid);
+        $this->assign('is_del',$is_del);
+        /* end */
+        
         return $this->fetch();
     }
     
@@ -82,17 +89,11 @@ class Arctype extends Base
             $post = input('post.');
             if ($post) {
                 /*目录名称*/
-                $dirname = $this->get_dirpinyin($post['typename'], $post['dirname']);
-                $dirname = preg_replace('/(\s)+/', '_', $dirname);
-                if (2 >= strlen($dirname)) { // 避免与多语言标识冲突
-                    $this->error('目录名称不能少于2个字符');
-                }
-                // 多语言
-                $langMark = Db::name('language')->column('mark');
-                $this->disableDirname = array_merge($this->disableDirname, $langMark);
+                $post['dirname'] = func_preg_replace([' ','　'], '', $post['dirname']);
+                $dirname = $this->get_dirname($post['typename'], $post['dirname']);
                 // 检测
-                if (in_array(strtolower($dirname), $this->disableDirname)) {
-                    $this->error('目录名称与系统内置重名，请更改！');
+                if (!empty($post['dirname']) && !$this->dirname_unique($post['dirname'])) {
+                    $this->error('目录名称与系统内置冲突，请更改！');
                 }
                 /*--end*/
                 $dirpath = rtrim($post['dirpath'],'/');
@@ -149,7 +150,9 @@ class Arctype extends Base
                     /*--end*/
 
                     adminLog('新增栏目：'.$data['typename']);
-                    $this->success("操作成功!", url('Arctype/index'));
+
+                    // 生成静态页面代码
+                    $this->success("操作成功!", url('Arctype/index', ['typeid'=>$insertId]));
                     exit;
                 }
             }
@@ -170,7 +173,7 @@ class Arctype extends Base
         $parent_id = input('param.parent_id/d');
         $grade = 0;
         $current_channel = '';
-        $predirpath = tpCache('seo.seo_arcdir');
+        $predirpath = ''; // 生成静态页面代码
         $ptypename = '';
         if (0 < $parent_id) {
             $info = M('arctype')->where(array('id'=>$parent_id))->find();
@@ -237,17 +240,11 @@ class Arctype extends Base
                 /*--end*/
 
                 /*目录名称*/
-                $dirname = $this->get_dirpinyin($post['typename'], $post['dirname'], $post['id']);
-                $dirname = preg_replace('/(\s)+/', '_', $dirname);
-                if (2 >= strlen($dirname)) { // 避免与多语言标识冲突
-                    $this->error('目录名称不能少于2个字符');
-                }
-                // 多语言
-                $langMark = Db::name('language')->column('mark');
-                $this->disableDirname = array_merge($this->disableDirname, $langMark);
+                $post['dirname'] = func_preg_replace([' ','　'], '', $post['dirname']);
+                $dirname = $this->get_dirname($post['typename'], $post['dirname'], $post['id']);
                 // 检测
-                if (in_array(strtolower($dirname), $this->disableDirname)) {
-                    $this->error('目录名称与系统内置重名，请更改！');
+                if (!empty($post['dirname']) && !$this->dirname_unique($post['dirname'], $post['id'])) {
+                    $this->error('目录名称与系统内置冲突，请更改！');
                 }
                 /*--end*/
                 $dirpath = rtrim($post['dirpath'], '/');
@@ -297,8 +294,28 @@ class Arctype extends Base
                 $data = array_merge($post, $newData, $addonField);
                 $r = model('Arctype')->updateData($data);
                 if($r){
+                    /*当前栏目以及所有子孙栏目的静态HTML保存路径的变动*/
+                    $subSaveData = [];
+                    $hasChildrenRow = model('Arctype')->getHasChildren($post['id'], true);
+                    foreach ($hasChildrenRow as $key => $val) {
+                        $dirpathArr = explode('/', trim($val['dirpath'], '/'));
+                        $dirpathArr[$grade] = $dirname;
+                        $dirpath = '/'.implode('/', $dirpathArr);
+                        $subSaveData[] = [
+                            'id'            => $val['id'],
+                            'dirpath'       => $dirpath,
+                            'update_time'   => getTime(),
+                        ];
+                    }
+                    if (!empty($subSaveData)) {
+                        model('Arctype')->saveAll($subSaveData);
+                    }
+                    /*end*/
+
                     adminLog('编辑栏目：'.$data['typename']);
-                    $this->success("操作成功!", url('Arctype/index'));
+
+                    // 生成静态页面代码
+                    $this->success("操作成功!", url('Arctype/index', ['typeid'=>$post['id']]));
                     exit;
                 }
             }
@@ -331,7 +348,7 @@ class Arctype extends Base
         if (!empty($info['dirpath'])) {
             $predirpath = preg_replace('/\/([^\/]*)$/i', '', $info['dirpath']);
         } else {
-            $predirpath = tpCache('seo.seo_arcdir');
+            $predirpath = ''; // 生成静态页面代码
         }
         $this->assign('predirpath',$predirpath);
 
@@ -343,7 +360,7 @@ class Arctype extends Base
         } else {
             // 所属栏目
             // $channeltype = $info['channeltype'];
-            $select_html = '<option value="0" data-grade="-1" data-dirpath="'.tpCache('seo.seo_arcdir').'">顶级栏目</option>';
+            $select_html = '<option value="0" data-grade="-1" data-dirpath="'.tpCache('seo.seo_html_arcdir').'">顶级栏目</option>';
             $selected = $info['parent_id'];
             $arctype_max_level = intval(config('global.arctype_max_level'));
             $arctypeLogic = new ArctypeLogic();
@@ -461,7 +478,9 @@ class Arctype extends Base
 
                 \think\Cache::clear("arctype");
                 adminLog('编辑栏目：'.$info['typename']);
-                $this->success("操作成功!", $post['gourl']);
+
+                // 生成静态页面代码
+                $this->success("操作成功!", $post['gourl'].'&typeid='.$typeid);
                 exit;
             }
             $this->error("操作失败!");
@@ -508,6 +527,11 @@ class Arctype extends Base
         /*--end*/
 
         $this->assign($assign_data);
+        
+        /* 生成静态页面代码 */
+        $this->assign('typeid',$typeid);
+        /* end */
+        
         return $this->fetch();
     }
     
@@ -570,27 +594,21 @@ class Arctype extends Base
     }
 
     /**
-     * 获取栏目的拼音，确保唯一性
+     * 获取栏目的目录名称，确保唯一性
      */
-    private function get_dirpinyin($typename = '', $dirname = '', $id = 0)
+    private function get_dirname($typename = '', $dirname = '', $id = 0)
     {
-        if (empty($dirname)) {
+        $id = intval($id);
+        if (!trim($dirname) || empty($dirname)) {
             $dirname = get_pinyin($typename);
         }
         if (strval(intval($dirname)) == strval($dirname)) {
-            $dirname .= get_rand_str(3,0,0);
+            $dirname .= get_rand_str(3,0,2);
         }
-        $map = array(
-            'dirname'   => $dirname,
-            'lang'  => $this->admin_lang,
-        );
-        if (intval($id) > 0) {
-            $map['id']  = array('neq', $id);
-        }
-        $result = M('arctype')->field('id')->where($map)->find();
-        if (!empty($result)) {
-            $nowDirname = $dirname.get_rand_str(3,0,0);
-            return $this->get_dirpinyin($typename, $nowDirname, $id);
+        $dirname = preg_replace('/(\s)+/', '_', $dirname);
+        if (!$this->dirname_unique($dirname, $id)) {
+            $nowDirname = $dirname.get_rand_str(3,0,2);
+            return $this->get_dirname($typename, $nowDirname, $id);
         }
 
         return $dirname;
@@ -681,6 +699,7 @@ class Arctype extends Base
             }
             array_push($templateArr, $filename);
         }
+        !empty($templateArr) && asort($templateArr);
         /*--end*/
 
         /*多语言全部标识*/
@@ -884,9 +903,31 @@ class Arctype extends Base
                 $tpldirList[$key] = preg_replace('/^(.*)template\/(pc|mobile)$/i', '$2', $val);
             }
         }
+        !empty($tpldirList) && arsort($tpldirList);
         $this->assign('tpldirList', $tpldirList);
         $this->assign('type', $type);
         $this->assign('nid', $nid);
         return $this->fetch();
+    }
+
+    /**
+     * 判断目录名称的唯一性
+     */
+    private function dirname_unique($dirname = '', $typeid = 0)
+    {
+        $result = Db::name('arctype')->field('id,dirname')
+            ->where(['lang'=>$this->admin_lang])
+            ->getAllWithIndex('id');
+        if (!empty($result)) {
+            if (0 < $typeid) unset($result[$typeid]);
+            !empty($result) && $result = get_arr_column($result, 'dirname');
+        }
+        empty($result) && $result = [];
+        $langMarks = Db::name('language_mark')->column('mark'); // 多语言标识
+        $disableDirname = array_merge($this->disableDirname, $langMarks, $result);
+        if (in_array(strtolower($dirname), $disableDirname)) {
+            return false;
+        }
+        return true;
     }
 }

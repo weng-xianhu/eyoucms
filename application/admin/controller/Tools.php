@@ -256,7 +256,7 @@ class Tools extends Base {
         $list = array();
         $filenum = $total = 0;
         foreach ($glob as $name => $file) {
-            if(preg_match('/^\d{8,8}-\d{6,6}-\d+-v\d+\.\d+\.\d+\.sql(?:\.gz)?$/', $name)){
+            if(preg_match('/^\d{8,8}-\d{6,6}-\d+-v\d+\.\d+\.\d+(.*)\.sql(?:\.gz)?$/', $name)){
                 $name = sscanf($name, '%4s%2s%2s-%2s%2s%2s-%d-%s');
                 $date = "{$name[0]}-{$name[1]}-{$name[2]}";
                 $time = "{$name[3]}:{$name[4]}:{$name[5]}";
@@ -426,7 +426,7 @@ class Tools extends Base {
             foreach($files as $name){
                 $basename = basename($name);
                 $match    = sscanf($basename, '%4s%2s%2s-%2s%2s%2s-%d-%s');
-                $gz       = preg_match('/^\d{8,8}-\d{6,6}-\d+-v\d+\.\d+\.\d+\.sql.gz$/', $basename);
+                $gz       = preg_match('/^\d{8,8}-\d{6,6}-\d+-v\d+\.\d+\.\d+(.*)\.sql.gz$/', $basename);
                 $list[$match[6]] = array($match[6], $name, $gz);
             }
             ksort($list);
@@ -436,7 +436,7 @@ class Tools extends Base {
             $file_path_full = !empty($last[1]) ? $last[1] : '';
             if (file_exists($file_path_full)) {
                 /*校验sql文件是否属于当前CMS版本*/
-                preg_match('/(\d{8,8})-(\d{6,6})-(\d+)-(v\d+\.\d+\.\d+)\.sql/i', $file_path_full, $matches);
+                preg_match('/(\d{8,8})-(\d{6,6})-(\d+)-(v\d+\.\d+\.\d+(.*))\.sql/i', $file_path_full, $matches);
                 $version = getCmsVersion();
                 if ($matches[4] != $version) {
                     $this->error('sql不兼容当前版本：'.$version, url('Tools/restore'));

@@ -122,7 +122,7 @@
         var _parent = parent;
         var value = $(obj).val();
         var lmenuid = $(obj).attr('data-lmenuid');
-        var url = "{:url('Index/switch_map')}";
+        var url = "{:url('Index/switch_map', ['_ajax'=>1])}";
         // 验证
         switch (name)
         {
@@ -245,7 +245,7 @@
     {
         $.ajax({
             type : 'get',
-            url : "{:url('Member/ajax_syn_theme_users')}",
+            url : "{:url('Member/ajax_syn_theme_users', ['_ajax'=>1])}",
             data : {},
             dataType : 'json',
             success : function(res){
@@ -278,10 +278,9 @@
     // 订单模板初始化下载
     function syn_theme_shop(value,lmenuid)
     {
-        var url = "{:url('Index/switch_map')}";
         $.ajax({
             type : 'get',
-            url : "{:url('Shop/ajax_syn_theme_shop')}",
+            url : "{:url('Shop/ajax_syn_theme_shop', ['_ajax'=>1])}",
             data : {},
             dataType : 'json',
             success : function(res){
@@ -340,7 +339,7 @@
     {
         $.ajax({
             type: "POST",
-            url: "{:url('System/ajax_tag_call')}",
+            url: "{:url('System/ajax_tag_call', ['_ajax'=>1])}",
             data: {name:name},
             dataType: 'json',
             success: function (res) {

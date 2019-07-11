@@ -88,9 +88,10 @@ if (!empty($uiset_pc_arr) || !empty($uiset_mobile_arr)) {
 
 /*SEO优化URl*/
 $seo_index_arr = array();
-if ($main_lang == $admin_lang) {
+if ($main_lang != $admin_lang) {
     $seo_index_arr = array(
-        'is_menu' => 1,
+        'controller' => 'Links',
+        'action'     => 'index',
     );
 }
 /*--end*/
@@ -302,9 +303,9 @@ return  array(
             '2003' => array(
                 'id'=>2003,
                 'parent_id'=>2000,
-                'name' => '营销设置',
-                'controller'=>'Other',
-                'action'=>'index',
+                'name' => 'SEO设置',
+                'controller'=>isset($seo_index_arr['controller']) ? $seo_index_arr['controller'] : 'Seo',
+                'action'=>isset($seo_index_arr['action']) ? $seo_index_arr['action'] : 'index',
                 'url'=>'', 
                 'target'=>'workspace',
                 'icon'=>'fa fa-paper-plane',
@@ -312,34 +313,34 @@ return  array(
                 'is_menu'=>1,
                 'is_modules'=>1,
                 'child'=>array(
-                    '2003001' => array(
-                        'id'=>2003001,
-                        'parent_id'=>2003,
-                        'name' => 'SEO优化', 
-                        'controller'=>'Seo',
-                        'action'=>'index',
-                        'url'=>'',
-                        'target'=>'workspace',
-                        'icon'=>'fa fa-newspaper-o',
-                        'grade'=>2,
-                        'is_menu'=>isset($seo_index_arr['is_menu']) ? $seo_index_arr['is_menu'] : 0,
-                        'is_modules'=>0,
-                        'child' => array(),
-                    ),
-                    '2003002' => array(
-                        'id'=>2003002,
-                        'parent_id'=>2003,
-                        'name' => '友情链接', 
-                        'controller'=>'Links',
-                        'action'=>'index', 
-                        'url'=>'', 
-                        'target'=>'workspace',
-                        'icon'=>'fa fa-link',
-                        'grade'=>2,
-                        'is_menu'=>1,
-                        'is_modules'=>0,
-                        'child' => array(),
-                    ),
+                    // '2003001' => array(
+                    //     'id'=>2003001,
+                    //     'parent_id'=>2003,
+                    //     'name' => 'URL配置', 
+                    //     'controller'=>'Seo',
+                    //     'action'=>'index',
+                    //     'url'=>'',
+                    //     'target'=>'workspace',
+                    //     'icon'=>'fa fa-newspaper-o',
+                    //     'grade'=>2,
+                    //     'is_menu'=>0,
+                    //     'is_modules'=>0,
+                    //     'child' => array(),
+                    // ),
+                    // '2003002' => array(
+                    //     'id'=>2003002,
+                    //     'parent_id'=>2003,
+                    //     'name' => '友情链接', 
+                    //     'controller'=>'Links',
+                    //     'action'=>'index', 
+                    //     'url'=>'', 
+                    //     'target'=>'workspace',
+                    //     'icon'=>'fa fa-link',
+                    //     'grade'=>2,
+                    //     'is_menu'=>0,
+                    //     'is_modules'=>0,
+                    //     'child' => array(),
+                    // ),
                 ),
             ),
             '2004' => array(

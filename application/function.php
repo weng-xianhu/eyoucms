@@ -22,6 +22,10 @@ if (!function_exists('convert_arr_key'))
      */
     function convert_arr_key($arr, $key_name)
     {
+        if (function_exists('array_column')) {
+            return array_column($arr, null, $key_name);
+        }
+
         $arr2 = array();
         foreach($arr as $key => $val){
             $arr2[$val[$key_name]] = $val;        
@@ -69,6 +73,10 @@ if (!function_exists('get_arr_column'))
      */
     function get_arr_column($arr, $key_name)
     {
+        if (function_exists('array_column')) {
+            return array_column($arr, $key_name);
+        }
+
         $arr2 = array();
         foreach($arr as $key => $val){
             $arr2[] = $val[$key_name];        
@@ -312,9 +320,11 @@ if (!function_exists('get_rand_str'))
      * @return string
      */
     function get_rand_str($randLength=6,$addtime=1,$includenumber=0){
-        if ($includenumber){
+        if (1 == $includenumber){
             $chars='abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNPQEST123456789';
-        }else {
+        } else if (2 == $includenumber) {
+            $chars='123456789';
+        } else {
             $chars='abcdefghijklmnopqrstuvwxyz';
         }
         $len=strlen($chars);
@@ -569,7 +579,9 @@ if (!function_exists('isMobile'))
      */
     function isMobile()
     {
-        return request()->isMobile();
+        static $is_mobile = null;
+        null === $is_mobile && $is_mobile = request()->isMobile();
+        return $is_mobile;
 
         // 如果有HTTP_X_WAP_PROFILE则一定是移动设备
         if (isset ($_SERVER['HTTP_X_WAP_PROFILE']))
@@ -769,6 +781,20 @@ if (!function_exists('getTime'))
     function getTime()
     {
         return time();
+    }
+}
+
+if (!function_exists('getMsectime')) 
+{
+    /**
+     * 获取当前时间戳（精确到毫秒）
+     *
+     */
+    function getMsectime()
+    {
+        list($msec, $sec) = explode(' ', microtime());
+        $msectime = (float)sprintf('%.0f', (floatval($msec) + floatval($sec)) * 1000);
+        return $msectime;
     }
 }
 
@@ -1846,34 +1872,44 @@ if (!function_exists('get_weapp_class'))
     }
 }
 
-if (!function_exists('view_logic')) 
+if (!function_exists('view_logic'))
 {
     /**
      * 模型对应逻辑
      * @param intval $aid 文档ID
      * @param intval $channel 栏目ID
      * @param intval $result 数组
+     * @param mix $allAttrInfo 附加表数据
      * @return array
      */
-    function view_logic($aid, $channel, $result = array())
+    function view_logic($aid, $channel, $result = array(), $allAttrInfo = array())
     {
+        $allAttrInfo_bool = $allAttrInfo;
         $result['image_list'] = $result['attr_list'] = $result['file_list'] = array();
         switch ($channel) {
             case '2': // 产品模型
             {
                 /*产品相册*/
-                $image_list = model('ProductImg')->getProImg($aid);
+                if (true === $allAttrInfo_bool) {
+                    $allAttrInfo = [];
+                    $allAttrInfo['product_img'] = model('ProductImg')->getProImg([$aid]);
+                }
+                $image_list = !empty($allAttrInfo['product_img'][$aid]) ? $allAttrInfo['product_img'][$aid] : [] ;
 
                 // 支持子目录
                 foreach ($image_list as $k1 => $v1) {
                     $image_list[$k1]['image_url'] = handle_subdir_pic($v1['image_url']);
                 }
-                
+
                 $result['image_list'] = $image_list;
                 /*--end*/
 
                 /*产品参数*/
-                $attr_list = model('ProductAttr')->getProAttr($aid);
+                if (true === $allAttrInfo_bool) {
+                    $allAttrInfo = [];
+                    $allAttrInfo['product_attr'] = model('ProductAttr')->getProAttr([$aid]);
+                }
+                $attr_list = !empty($allAttrInfo['product_attr'][$aid]) ? $allAttrInfo['product_attr'][$aid] : [] ;
                 $attr_list = model('LanguageAttr')->getBindValue($attr_list, 'product_attribute', get_main_lang()); // 获取多语言关联绑定的值
                 $result['attr_list'] = $attr_list;
                 /*--end*/
@@ -1883,8 +1919,12 @@ if (!function_exists('view_logic'))
             case '3': // 图集模型
             {
                 /*图集相册*/
-                $image_list = model('ImagesUpload')->getImgUpload($aid);
-                
+                if (true === $allAttrInfo_bool) {
+                    $allAttrInfo = [];
+                    $allAttrInfo['images_upload'] = model('ImagesUpload')->getImgUpload([$aid]);
+                }
+                $image_list = !empty($allAttrInfo['images_upload'][$aid]) ? $allAttrInfo['images_upload'][$aid] : [] ;
+
                 // 支持子目录
                 foreach ($image_list as $k1 => $v1) {
                     $image_list[$k1]['image_url'] = handle_subdir_pic($v1['image_url']);
@@ -1898,8 +1938,12 @@ if (!function_exists('view_logic'))
             case '4': // 下载模型
             {
                 /*下载资料列表*/
-                $file_list = model('DownloadFile')->getDownFile($aid);
-                
+                if (true === $allAttrInfo_bool) {
+                    $allAttrInfo = [];
+                    $allAttrInfo['download_file'] = model('DownloadFile')->getDownFile([$aid]);
+                }
+                $file_list = !empty($allAttrInfo['download_file'][$aid]) ? $allAttrInfo['download_file'][$aid] : [] ;
+
                 // 支持子目录
                 foreach ($file_list as $k1 => $v1) {
                     $file_list[$k1]['file_url'] = handle_subdir_pic($v1['file_url']);
@@ -2084,6 +2128,28 @@ if (!function_exists('write_bidden_inc'))
     }
 }
 
+if (!function_exists('convert_js_array')) 
+{
+    /**
+     * 将PHP数组转换成JS数组。
+     */
+    function convert_js_array($arr = array())
+    {
+        if (empty($arr)) {
+            return false;
+        }
+
+        $convert_js_array = "['";
+        foreach ($arr as $key => $val) {
+            if ($key > 0) { $convert_js_array .= "','"; }
+            $convert_js_array .= $val;
+        }
+        $convert_js_array = $convert_js_array."']";
+
+        return $convert_js_array;
+    }
+}
+
 // if (!function_exists('get_auth_code')) 
 // {
 //     /**
@@ -2120,7 +2186,7 @@ if (!function_exists('get_urltodomain'))
         $domain_postfix_cn_array = array("com", "net", "org", "gov", "edu", "com.cn", "cn");
         $array_domain = explode(".", $domain);
         $array_num = count($array_domain) - 1;
-        if ($array_domain[$array_num] == 'cn') {
+        if (in_array($array_domain[$array_num], ['cn','tw','hk'])) {
             if (in_array($array_domain[$array_num - 1], $domain_postfix_cn_array)) {
                 $re_domain = $array_domain[$array_num - 2] . "." . $array_domain[$array_num - 1] . "." . $array_domain[$array_num];
             } else {
@@ -2130,5 +2196,26 @@ if (!function_exists('get_urltodomain'))
             $re_domain = $array_domain[$array_num - 1] . "." . $array_domain[$array_num];
         }
         return $re_domain;
+    }
+}
+
+if (!function_exists('check_fix_pathinfo')) 
+{
+    /**
+     * 判断支持pathinfo模式的路由，即是否支持伪静态
+     * @return boolean 布尔值
+     */
+    function check_fix_pathinfo() {
+        static $is_fix_pathinfo = null;
+        if (null === $is_fix_pathinfo) {
+            $fix_pathinfo = ini_get('cgi.fix_pathinfo');
+            if (stristr($_SERVER['HTTP_HOST'], '.mylightsite.com') || ('' != $fix_pathinfo && 0 === $fix_pathinfo)) {
+                $is_fix_pathinfo = false;
+            } else {
+                $is_fix_pathinfo = true;
+            }
+        }
+
+        return $is_fix_pathinfo;
     }
 }

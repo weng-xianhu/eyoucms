@@ -234,12 +234,15 @@ class Archives extends Base
         $assign_data['arctype_html'] = allow_release_arctype($typeid, array());
         /*--end*/
         
-        /*返回上一层链接*/
-        $gourl = url('Archives/index_archives', array('typeid'=>$typeid));
-        $assign_data['gourl'] = $gourl;
-        /*--end*/
-
         $this->assign($assign_data);
+        
+        /* 生成静态页面代码 */
+        $aid = input('param.aid/d',0);
+        $this->assign('aid',$aid);
+        $tid = input('param.tid/d',0);
+        $this->assign('typeid',$tid);
+        /* end */
+        
         return $this->fetch('index_archives');
     }
 
@@ -291,7 +294,7 @@ class Archives extends Base
     /**
      * 编辑文档
      */
-/*    public function edit()
+    public function edit()
     {
         $id = input('param.id/d', 0);
         $typeid = input('param.typeid/d', 0);
@@ -303,14 +306,14 @@ class Archives extends Base
             ->find();
         if (empty($row['channel'])) {
             $channelRow = Db::name('channeltype')->field('id as channel, ctl_name')
-                ->where('id',1)
+                ->where('nid','article')
                 ->find();
             $row = array_merge($row, $channelRow);
         }
-        $gourl = url('Archives/index_archives', array('typeid'=>$typeid));
-        $jumpUrl = url("{$row['ctl_name']}/edit", array('id'=>$id,'gourl'=>$gourl));
+        $arcurl = input('param.arcurl/s');
+        $jumpUrl = url("{$row['ctl_name']}/edit", array('id'=>$id,'arcurl'=>$arcurl));
         $this->redirect($jumpUrl);
-    }*/
+    }
 
     /**
      * 删除文档

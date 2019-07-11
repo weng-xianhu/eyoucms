@@ -70,6 +70,24 @@ function openItem(param) {
     }
     $('#workspace').attr('src', src);
     $.cookie('workspaceParam', data_str[1] + '|' + data_str[0], { expires: 1 ,path:"/"});
+
+    // 循环清空选中的标记的Class
+    var SubMenuA = $('.sub-menu a');
+    SubMenuA.each(function(){
+        // 其他参数处理
+        $('#'+this.id).removeClass('on');
+        // 特殊参数处理
+        $('#'+this.id).parent().siblings().removeClass('on');
+    });
+    // 拼装ID获取到点击的ID
+    var ColorId = param.replace('|','_');
+    if (0 == $('#'+ColorId).attr('data-child')) {
+        // 其他参数选项
+        $('#'+ColorId).addClass('on');
+    }else{
+        // 特殊参数处理
+        $('#'+ColorId).parent().siblings().addClass('on');
+    }
 }
 
 /* 显示Ajax表单 */

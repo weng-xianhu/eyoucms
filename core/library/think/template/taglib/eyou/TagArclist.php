@@ -68,15 +68,29 @@ class TagArclist extends Base
         $pagesize = empty($pagesize) ? intval($row) : intval($pagesize);
         $limit = $row;
 
-        /*多语言*/
         if (!empty($param['typeid'])) {
+            if (!preg_match('/^\d+([\d\,]*)$/i', $param['typeid'])) {
+                echo '标签arclist报错：typeid属性值语法错误，请正确填写栏目ID。';
+                return false;
+            }
+
+            // 过滤typeid中含有空值的栏目ID
+            $typeidArr_tmp = explode(',', $param['typeid']);
+            $typeidArr_tmp = array_unique($typeidArr_tmp);
+            foreach($typeidArr_tmp as $k => $v){   
+                if (empty($v)) unset($typeidArr_tmp[$k]);  
+            }
+            $param['typeid'] = implode(',', $typeidArr_tmp);
+            // end
+            
+            /*多语言*/
             $param['typeid'] = model('LanguageAttr')->getBindValue($param['typeid'], 'arctype');
             if (empty($param['typeid'])) {
                 echo '标签arclist报错：找不到与第一套【'.$this->main_lang.'】语言关联绑定的属性 typeid 值。';
                 return false;
             }
+            /*--end*/
         }
-        /*--end*/
 
         $typeid = $param['typeid'];
 
@@ -94,6 +108,7 @@ class TagArclist extends Base
             if (!empty($typeid)) {
                 $typeidArr = explode(',', $typeid);
                 if (count($typeidArr) == 1) {
+                    $typeid = intval($typeid);
                     $channel_info = M('Arctype')->field('id,current_channel')->where(array('id'=>array('eq', $typeid)))->find();
                     if (empty($channel_info)) {
                         echo '标签arclist报错：指定属性 typeid 的栏目ID不存在。';
@@ -109,7 +124,7 @@ class TagArclist extends Base
                         }
                     }
                     $typeids = get_arr_column($arctype_list, "id");
-                    $typeids[] = $param['typeid'];
+                    $typeids[] = $typeid;
                     $typeid = implode(",", $typeids);
                     /*--end*/
                 } elseif (count($typeidArr) > 1) {

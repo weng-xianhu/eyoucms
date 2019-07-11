@@ -166,6 +166,10 @@ class Admin extends Base {
                         unset($admin_info[$val]);
                     }
                     /*--end*/
+
+                    // 头像
+                    empty($admin_info['head_pic']) && $admin_info['head_pic'] = get_head_pic($admin_info['head_pic']);
+
                     session('admin_info', $admin_info);
                     session('admin_login_expire', getTime()); // 登录有效期
                     adminLog('后台登录');

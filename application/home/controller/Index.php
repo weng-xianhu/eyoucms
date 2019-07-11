@@ -17,6 +17,13 @@ class Index extends Base
 {
     public function _initialize() {
         parent::_initialize();
+
+        /*首页焦点*/
+        $m = input('param.m/s');
+        if (empty($m)) {
+            $this->request->get(['m'=>'Index']);
+        }
+        /*end*/
     }
 
     public function index()
@@ -35,49 +42,41 @@ class Index extends Base
         }
         // end
 
-        if (config('is_https')) {
-            $filename = 'indexs.html';
-        } else {
-            $filename = 'index.html';
-        }
+        $filename = 'index.html';
 
-        if (file_exists($filename)) {
-            @unlink($filename);
-        }
-
-        //自动生成HTML版
-        if(isset($_GET['clear']) || !file_exists($filename))
-        {
-            /*获取当前页面URL*/
-            $result['pageurl'] = request()->url(true);
-            /*--end*/
-            $eyou = array(
-                'field' => $result,
-            );
-            $this->eyou = array_merge($this->eyou, $eyou);
-            $this->assign('eyou', $this->eyou);
-            
-            /*模板文件*/
-            $viewfile = 'index';
-            /*--end*/
-
-            /*多语言内置模板文件名*/
-            if (!empty($this->home_lang)) {
-                $viewfilepath = TEMPLATE_PATH.$this->theme_style.DS.$viewfile."_{$this->home_lang}.".$this->view_suffix;
-                if (file_exists($viewfilepath)) {
-                    $viewfile .= "_{$this->home_lang}";
-                }
+        $seo_pseudo = config('ey_config.seo_pseudo');
+        if (file_exists($filename) && 2 == $seo_pseudo) {
+            if ((isMobile() && !file_exists('./template/mobile')) || !isMobile()) {
+                header('HTTP/1.1 301 Moved Permanently');
+                header('Location:index.html');
+                exit;
             }
-            /*--end*/
+        }
 
-            $html = $this->fetch(":{$viewfile}");
-            // @file_put_contents($filename, $html);
-            return $html;
+        /*获取当前页面URL*/
+        $result['pageurl'] = request()->url(true);
+        /*--end*/
+        $eyou = array(
+            'field' => $result,
+        );
+        $this->eyou = array_merge($this->eyou, $eyou);
+        $this->assign('eyou', $this->eyou);
+        
+        /*模板文件*/
+        $viewfile = 'index';
+        /*--end*/
+
+        /*多语言内置模板文件名*/
+        if (!empty($this->home_lang)) {
+            $viewfilepath = TEMPLATE_PATH.$this->theme_style.DS.$viewfile."_{$this->home_lang}.".$this->view_suffix;
+            if (file_exists($viewfilepath)) {
+                $viewfile .= "_{$this->home_lang}";
+            }
         }
-        else
-        {
-            // header('HTTP/1.1 301 Moved Permanently');
-            // header('Location:'.$filename);
-        }
+        /*--end*/
+
+        $html = $this->fetch(":{$viewfile}");
+        
+        return $html;
     }
 }

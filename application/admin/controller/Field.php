@@ -78,11 +78,7 @@ class Field extends Base
         $assign_data['channeltype_list'] = $channeltype_list;
         /*--end*/
 
-        if (1 == $channeltype_list[$channel_id]['ifsystem']) {
-            $condition['a.ifmain'] = 0;
-        } else {
-            $condition['a.ifcontrol'] = 0;
-        }
+        $condition['a.ifcontrol'] = 0;
 
         $cfieldM =  M('channelfield');
         $count = $cfieldM->alias('a')->where($condition)->count('a.id');// 查询满足要求的总记录数
@@ -149,11 +145,14 @@ class Field extends Base
 
         if (IS_POST) {
             $post = input('post.', '', 'trim');
-
+            // 判断是否存在|杠
+            $IsData = strstr($post['dfvalue'], '|');
+            if (!empty($IsData)) {
+                $this->error("不可输入 | 杠");
+            }
             if (empty($post['dtype']) || empty($post['title']) || empty($post['name'])) {
                 $this->error("缺少必填信息！");
             }
-
             if (1 == preg_match('/^([_]+|[0-9]+)$/', $post['name'])) {
                 $this->error("字段名称格式不正确！");
             } else if (preg_match('/^type/', $post['name'])) {
@@ -174,14 +173,24 @@ class Field extends Base
             $dfvalue = implode(',', $dfvalueArr);
             /*--end*/
 
-            /*默认值必填字段*/
-            $fieldtype_list = model('Field')->getFieldTypeAll('name,title,ifoption', 'name');
-            if (isset($fieldtype_list[$post['dtype']]) && 1 == $fieldtype_list[$post['dtype']]['ifoption']) {
-                if (empty($dfvalue)) {
-                    $this->error("你设定了字段为【".$fieldtype_list[$post['dtype']]['title']."】类型，默认值不能为空！ ");
+            if ('region' == $post['dtype']) {
+                if (!empty($post['region_data'])) {
+                    $post['dfvalue']     = $post['region_data']['region_id'];
+                    $post['region_data'] = serialize($post['region_data']);
+                }else{
+                    $this->error("请选择区域范围！");
                 }
+            } else {
+                /*默认值必填字段*/
+                $fieldtype_list = model('Field')->getFieldTypeAll('name,title,ifoption', 'name');
+                if (isset($fieldtype_list[$post['dtype']]) && 1 == $fieldtype_list[$post['dtype']]['ifoption']) {
+                    if (empty($dfvalue)) {
+                        $this->error("你设定了字段为【".$fieldtype_list[$post['dtype']]['title']."】类型，默认值不能为空！ ");
+                    }
+                }
+                /*--end*/
+                unset($post['region_data']);
             }
-            /*--end*/
 
             /*当前模型对应的数据表*/
             $table = M('channeltype')->where('id',$channel_id)->getField('table');
@@ -205,6 +214,10 @@ class Field extends Base
             $maxlength = $fieldinfos[2];
             $sql = " ALTER TABLE `$table` ADD  $ntabsql ";
             if (false !== Db::execute($sql)) {
+                if (!empty($post['region_data'])) {
+                    $dfvalue = $post['region_data'];
+                    unset($post['region_data']);
+                }
                 /*保存新增字段的记录*/
                 $newData = array(
                     'dfvalue'   => $dfvalue,
@@ -277,10 +290,62 @@ class Field extends Base
         $assign_data['channel_id'] = $channel_id;
         /*--end*/
 
+        $China[] = [
+            'id' => 0,
+            'name' => '全国',
+        ];
+        $Province = get_province_list();
+        $assign_data['Province'] = array_merge($China, $Province);
         $this->assign($assign_data);
         return $this->fetch();
     }
-    
+
+    // 联动地址获取
+    public function get_region_data(){
+        $parent_id  = input('param.parent_id/d');
+        // 获取指定区域ID下的城市并判断是否需要处理特殊市返回值
+        $RegionData = $this->SpecialCityDealWith($parent_id);
+        // 处理数据
+        $region_html = $region_names = $region_ids = '';
+        if($RegionData){
+            // 拼装下拉选项
+            foreach($RegionData as $key => $value){
+                $region_html .= "<option value='{$value['id']}'>{$value['name']}</option>";
+                if ($key > '0') { 
+                    $region_names .= '，'; 
+                    $region_ids   .= ','; 
+                }
+                $region_names .= $value['name'];
+                $region_ids   .= $value['id'];
+            }
+        }
+        $return = [
+            'region_html'  => $region_html,
+            'region_names' => $region_names,
+            'region_ids'   => $region_ids,
+            'parent_array' => config('global.field_region_all_type'),
+        ];
+        echo json_encode($return);
+    }
+
+    // 获取指定区域ID下的城市并判断是否需要处理特殊市返回值
+    // 特殊市：北京市，上海市，天津市，重庆市
+    function SpecialCityDealWith($parent_id = 0)
+    {
+        empty($parent_id) && $parent_id = 0;
+
+        /*parent_id在特殊范围内则执行*/
+        // 处理北京市，上海市，天津市，重庆市逻辑
+        $RegionData   = Db::name('region')->where("parent_id",$parent_id)->select();
+        $parent_array = config('global.field_region_type');
+        if (in_array($parent_id, $parent_array)) {
+            $region_ids = get_arr_column($RegionData, 'id');
+            $RegionData = Db::name('region')->where('parent_id','IN',$region_ids)->select();
+        }
+        /*结束*/
+        return $RegionData;
+    }
+
     /**
      * 编辑-模型字段
      */
@@ -324,14 +389,24 @@ class Field extends Base
             $dfvalue = implode(',', $dfvalueArr);
             /*--end*/
 
-            /*默认值必填字段*/
-            $fieldtype_list = model('Field')->getFieldTypeAll('name,title,ifoption', 'name');
-            if (isset($fieldtype_list[$post['dtype']]) && 1 == $fieldtype_list[$post['dtype']]['ifoption']) {
-                if (empty($dfvalue)) {
-                    $this->error("你设定了字段为【".$fieldtype_list[$post['dtype']]['title']."】类型，默认值不能为空！ ");
+            if ('region' == $post['dtype']) {
+                if (!empty($post['region_data'])) {
+                    $post['dfvalue']     = $post['region_data']['region_id'];
+                    $post['region_data'] = serialize($post['region_data']);
+                }else{
+                    $this->error("请选择区域范围！");
                 }
+            } else {
+                /*默认值必填字段*/
+                $fieldtype_list = model('Field')->getFieldTypeAll('name,title,ifoption', 'name');
+                if (isset($fieldtype_list[$post['dtype']]) && 1 == $fieldtype_list[$post['dtype']]['ifoption']) {
+                    if (empty($dfvalue)) {
+                        $this->error("你设定了字段为【".$fieldtype_list[$post['dtype']]['title']."】类型，默认值不能为空！ ");
+                    }
+                }
+                /*--end*/
+                unset($post['region_data']);
             }
-            /*--end*/
 
             /*当前模型对应的数据表*/
             $table = M('channeltype')->where('id',$post['channel_id'])->getField('table');
@@ -356,6 +431,10 @@ class Field extends Base
             $sql = " ALTER TABLE `$table` CHANGE COLUMN `{$old_name}` $ntabsql ";
             if (false !== Db::execute($sql)) {
                 /*保存更新字段的记录*/
+                if (!empty($post['region_data'])) {
+                    $dfvalue = $post['region_data'];
+                    unset($post['region_data']);
+                }
                 $newData = array(
                     'dfvalue'   => $dfvalue,
                     'maxlength' => $maxlength,
@@ -423,8 +502,6 @@ class Field extends Base
         if (!empty($info['ifsystem'])) {
             $this->error('系统字段不允许更改！');
         }
-        $assign_data['info'] = $info;
-
         /*字段类型列表*/
         $assign_data['fieldtype_list'] = model('Field')->getFieldTypeAll('name,title,ifoption');
         /*--end*/
@@ -440,6 +517,56 @@ class Field extends Base
         $assign_data['channel_id'] = $channel_id;
         /*--end*/
 
+        /*区域字段处理*/
+        // 初始化参数
+        $assign_data['region'] = [
+            'parent_id'    => '-1',
+            'region_id'    => '-1',
+            'region_names' => '',
+            'region_ids'   => '',
+        ];
+        // 定义全国参数
+        $China[] = [
+            'id' => 0,
+            'name' => '全国',
+        ];
+        // 查询省份信息并且拼装上$China数组
+        $Province = get_province_list();
+        $assign_data['Province'] = array_merge($China, $Province);
+        // 区域选择时，指定不出现下级地区列表
+        $assign_data['parent_array'] = "[]";
+        // 如果是区域类型则执行
+        if ('region' == $info['dtype']) {
+            // 反序列化默认值参数
+            $dfvalue = unserialize($info['dfvalue']);
+            if (0 == $dfvalue['region_id']) {
+                $parent_id = $dfvalue['region_id'];
+            }else{
+                // 查询当前选中的区域父级ID
+                $parent_id = Db::name('region')->where("id",$dfvalue['region_id'])->getField('parent_id');
+                if (0 == $parent_id) {
+                    $parent_id = $dfvalue['region_id'];
+                }
+            }
+            
+            // 查询市\区\县信息
+            $assign_data['City'] = Db::name('region')->where("parent_id",$parent_id)->select();
+            // 加载数据到模板
+            $assign_data['region'] = [
+                'parent_id'    => $parent_id,
+                'region_id'    => $dfvalue['region_id'],
+                'region_names' => $dfvalue['region_names'],
+                'region_ids'   => $dfvalue['region_ids'],
+            ];
+
+            // 删除默认值,防止切换其他类型时使用到
+            unset($info['dfvalue']);
+
+            // 区域选择时，指定不出现下级地区列表
+            $assign_data['parent_array'] = convert_js_array(config('global.field_region_all_type'));
+        }
+        /*区域字段处理结束*/
+        $assign_data['info'] = $info;
         $this->assign($assign_data);
         return $this->fetch();
     }

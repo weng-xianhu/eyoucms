@@ -62,6 +62,8 @@ class AjaxLogic extends Model
         Db::name('admin_log')->where([
             'log_time'  => ['lt', $mtime],
             ])->delete();
+        // 临时清理无效图片
+        @unlink('./public/plugins/Ueditor/themes/default/images/worwdpasdte.png');
     }
 
     /**
@@ -126,20 +128,25 @@ class AjaxLogic extends Model
         if (file_exists($filename) && is_file($filename)) {
             // 系统设置的抓取规则
             $validList = [
-                'disallow:/extend/',
                 'disallow:/install/',
-                'disallow:/template/',
                 'disallow:/core/',
-                'disallow:/vendor/',
             ];
             // 系统移除的抓取规则
             $removeList = [
+                'robots.txtforeyoucms',
+                'disallow:',
                 'disallow:/*.php*',
                 'disallow:/*.js*',
                 'disallow:/*.css*',
+                'disallow:/extend/',
+                'disallow:/extend',
                 'disallow:/data/',
-                'disallow:/weapp/',
                 'disallow:/public/',
+                'disallow:/template/',
+                'disallow:/template',
+                'disallow:/vendor/',
+                'disallow:/vendor',
+                'disallow:/weapp/',
                 'disallow:/adm*',
                 'sitemap:/sitemap.xml',
             ];
@@ -149,16 +156,16 @@ class AjaxLogic extends Model
                 $is_unset = false;
                 $val = trim($val);
                 $str = str_replace(' ', '', strtolower($val));
-                if ($str == 'disallow:/appli*') {
-                    $arr[$key] = 'Disallow: /application';
+                if (stristr($str, 'disallow:/appli')) {
+                    $arr[$key] = 'Disallow: /application/';
                     continue;
                 // } else if (stristr(strtolower($val), 'sitemap.xml') && !stristr($val, $this->request->domain().ROOT_DIR.'/sitemap.xml')) {
                 //     $arr[$key] = preg_replace('#Sitemap:(.*)?(/)?sitemap.xml#i', 'Sitemap: '.$this->request->domain().ROOT_DIR.'/sitemap.xml', $val);
                 //     continue;
                 } else if (preg_match('#disallow:/install#i', $str)) {
-                    $arr[$key] = 'Disallow: /install_*';
+                    $arr[$key] = 'Disallow: /install_*/';
                     continue;
-                } else if (in_array($str, $removeList)) {
+                } else if (in_array($str, $removeList) || stristr($str, '#')) {
                     $is_unset = true;
                 }
 
@@ -169,8 +176,11 @@ class AjaxLogic extends Model
                 }
 
                 // 系统之前设置的抓取规则，将移除尾部的斜杆
-                if (in_array($str, $validList)) {
-                    $val = trim($val, '/');
+                foreach ($validList as $k2 => $v2) {
+                    if (stristr($v2, $str)) {
+                        $val = trim($val, '/').'/';
+                        continue;
+                    }
                 }
 
                 $arr[$key] = $val;

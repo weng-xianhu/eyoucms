@@ -405,6 +405,9 @@ class FieldLogic extends Model
         $addData = array(); // 数据存储变量
 
         $controlFields = ['litpic','author'];
+        $channeltype_system_ids = Db::name('channeltype')->where([
+                'ifsystem'  => 1,
+            ])->column('id');
 
         $table = PREFIX.'archives';
         $row = Db::query("SHOW FULL COLUMNS FROM {$table}");
@@ -416,7 +419,7 @@ class FieldLogic extends Model
             if (empty($channelfieldArr[$fieldname])) {
                 $dtype = $this->toDtype($val['Type']);
                 $dfvalue = $this->toDefault($val['Type'], $val['Default']);
-                if (in_array($fieldname, $controlFields)) {
+                if (in_array($fieldname, $controlFields) && !in_array($channel_id, $channeltype_system_ids)) {
                     $ifcontrol = 0;
                 } else {
                     $ifcontrol = 1;

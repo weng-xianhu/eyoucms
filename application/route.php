@@ -55,7 +55,8 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
     $seo_inlet = !empty($globalConfig['seo_inlet']) ? $globalConfig['seo_inlet'] : config('ey_config.seo_inlet');
     config('ey_config.seo_inlet', $seo_inlet);
 
-    if (3 == $seo_pseudo) {
+    $upcache = input('param.upcache/d', 0); // 生成静态页面代码 - PC端带这个参数可以访问非静态页面
+    if (3 == $seo_pseudo || (2 == $seo_pseudo && (isMobile() || !empty($upcache)))) {
         $lang_rewrite = [];
         $lang_rewrite_str = '';
         /*多语言*/
@@ -164,6 +165,11 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
             /*--end*/
         }
         $home_rewrite = array_merge($lang_rewrite, $home_rewrite);
+    }elseif (2 == $seo_pseudo) { // 生成静态页面代码
+        $lang_rewrite_str = '';
+        $home_rewrite = array(
+            $lang_rewrite_str.'downfile/<id>/<uhash>$' => array('home/View/downfile',array('method' => 'get', 'ext' => 'html'),'cache'=>1),
+        );        
     }
 
     /*插件模块路由*/

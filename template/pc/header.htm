@@ -16,7 +16,7 @@
       </button> 
       <div class="collapse navbar-collapse navbar-collapse-toolbar pull-md-right p-0" id="ey-nav-collapse"> 
        <ul class="nav navbar-nav navlist"> 
-        <li class="nav-item"> <a href="{eyou:global name='web_cmsurl' /}" title="{eyou:lang name='yybl1' /}" class="nav-link {eyou:eq name='$Think.const.CONTROLLER_NAME' value='Index'}active{/eyou:eq}">{eyou:lang name='yybl1' /}</a> </li> 
+        <li class="nav-item"> <a href="{eyou:global name='web_cmsurl' /}" title="{eyou:lang name='yybl1' /}" class="nav-link {eyou:eq name='$Request.param.m' value='Index'}active{/eyou:eq}">{eyou:lang name='yybl1' /}</a> </li> 
 
         {eyou:channel type="top" row="60" id="field" currentstyle="active"}
         <li class="nav-item dropdown m-l-10"> <a href="{$field.typeurl}" class="nav-link dropdown-toggle {$field.currentstyle}" {eyou:notempty name="$field.children"}data-toggle="dropdown"{/eyou:notempty} data-hover="dropdown" aria-haspopup="true" aria-expanded="false"> {$field.typename}{eyou:notempty name="$field.children"}<span class="fa fa-angle-down p-l-5"></span>{/eyou:notempty}</a> 
@@ -54,11 +54,6 @@
 
         {eyou:user type='open'}
           <li class="nav-item m-l-10 ey-login">
-            {eyou:user type='cart'}
-              <a href="{$field.url}" id="{$field.id}" class="navlog">购物车</a><span>|</span>
-              {$field.hidden}
-            {/eyou:user}
-            
             {eyou:user type='login'}
               <a href="{$field.url}" id="{$field.id}" class="navlog">登录</a><span>|</span>
               {$field.hidden}

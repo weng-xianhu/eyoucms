@@ -82,7 +82,7 @@ return [
         'id' => 8,
         'menu_id' => 2003,
         'menu_id2' => 2003001,
-        'name'  => 'SEO优化',
+        'name'  => 'URL配置',
         'is_modules'    => 1,
         'auths' => 'Seo@*',
     ],

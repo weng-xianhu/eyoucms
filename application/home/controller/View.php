@@ -36,7 +36,7 @@ class View extends Base
         }
 
         $seo_pseudo = config('ey_config.seo_pseudo');
-
+        $upcache = input('param.upcache/d', 0); // 生成静态页面代码 - PC端带这个参数可以访问非静态页面
         /*URL上参数的校验*/
         if (3 == $seo_pseudo)
         {
@@ -44,7 +44,7 @@ class View extends Base
                 abort(404,'页面不存在');
             }
         }
-        else if (1 == $seo_pseudo)
+        else if (1 == $seo_pseudo || (2 == $seo_pseudo && (isMobile() || !empty($upcache))))
         {
             $seo_dynamic_format = config('ey_config.seo_dynamic_format');
             if (2 == $seo_dynamic_format && stristr($this->request->url(), '&c=View&a=index&')) {
@@ -114,7 +114,8 @@ class View extends Base
             /*给没有type前缀的字段新增一个带前缀的字段，并赋予相同的值*/
             foreach ($arctypeInfo as $key => $val) {
                 if (!preg_match('/^type/i',$key)) {
-                    $arctypeInfo['type'.$key] = $val;
+                    $key_new = 'type'.$key;
+                    !array_key_exists($key_new, $arctypeInfo) && $arctypeInfo[$key_new] = $val;
                 }
             }
             /*--end*/
@@ -124,14 +125,10 @@ class View extends Base
         $result = array_merge($arctypeInfo, $result);
 
         // 文档链接
-        $result['arcurl'] = '';
+        $result['arcurl'] = $result['pageurl'] = '';
         if ($result['is_jump'] != 1) {
-            $result['arcurl'] = arcurl('home/View/index', $result, true, true);
+            $result['arcurl'] = $result['pageurl'] = arcurl('home/View/index', $result, true, true);
         }
-        /*--end*/
-        
-        /*获取当前页面URL*/
-        $result['pageurl'] = request()->url(true);
         /*--end*/
 
         // seo
@@ -142,7 +139,7 @@ class View extends Base
         $result['litpic'] = handle_subdir_pic($result['litpic']);
         /*--end*/
 
-        $result = view_logic($aid, $this->channel, $result); // 模型对应逻辑
+        $result = view_logic($aid, $this->channel, $result, true); // 模型对应逻辑
 
         /*自定义字段的数据格式处理*/
         $result = $this->fieldLogic->getChannelFieldList($result, $this->channel);

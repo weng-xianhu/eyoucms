@@ -120,7 +120,7 @@ class Controller
         $this->home_lang = get_home_lang();
         $this->admin_lang = get_admin_lang();
         $this->main_lang = get_main_lang();
-        $this->version == null && $this->version = getCmsVersion();
+        null === $this->version && $this->version = getCmsVersion();
         $this->assign('home_lang', $this->home_lang);
         $this->assign('admin_lang', $this->admin_lang);
         $this->assign('main_lang', $this->main_lang);

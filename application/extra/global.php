@@ -34,9 +34,9 @@ foreach ($channeltype_row as $key => $val) {
 
 return array(
     // CMS根目录文件夹
-    'wwwroot_dir' => ['application','core','data','extend','html','public','template','uploads','vendor','weapp'],
-    // 禁用的目录名称
-    'disable_dirname' => ['application','core','data','extend','html','install','public','plugins','uploads','template','vendor','weapp','tags','search','user','users','member','reg','centre','login'],
+    'wwwroot_dir' => ['application','core','data','extend','install','public','template','uploads','vendor','weapp'],
+    // 禁用栏目的目录名称
+    'disable_dirname' => ['application','core','data','extend','install','public','plugins','uploads','template','vendor','weapp','tags','search','user','users','member','reg','centre','login','cart'],
     // 发送邮箱默认有效时间，会员中心，邮箱验证时用到
     'email_default_time_out' => 3600,
     // 邮箱发送倒计时 2分钟
@@ -128,6 +128,12 @@ return array(
         3   => '已完成',
         4   => '订单过期',
     ),
+    // 特殊地区(中国四个省直辖市)，目前在自定义字段控制器中使用
+    'field_region_type' => ['1','338','10543','31929'],
+    // 选择指定区域ID处理其他操作，目前在自定义字段控制器中使用
+    'field_region_all_type' => ['-1','0','1','338','10543','31929'],
+    // URL中筛选标识变量
+    'url_screen_var' => 'ZXljbXM',
     // 清理文件时，需要查询的数据表和字段
     'get_tablearray' => array(
         0 => array(
@@ -197,6 +203,10 @@ return array(
         16 => array(
             'table' => 'shop_order_details',
             'field' => 'litpic',
+        ),
+        17 => array(
+            'table' => 'admin',
+            'field' => 'head_pic',
         ),
         // 后续可持续添加数据表和字段，格式参照以上
     ),

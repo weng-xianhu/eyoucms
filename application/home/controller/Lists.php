@@ -31,6 +31,8 @@ class Lists extends Base
      */
     public function index($tid = '')
     {
+        $param = input('param.');
+
         /*获取当前栏目ID以及模型ID*/
         $page_tmp = input('param.page/s', 0);
         if (empty($tid) || !is_numeric($page_tmp)) {
@@ -40,14 +42,16 @@ class Lists extends Base
         $map = [];
         /*URL上参数的校验*/
         $seo_pseudo = config('ey_config.seo_pseudo');
-        if (3 == $seo_pseudo)
+        $url_screen_var = config('global.url_screen_var');
+        $upcache = input('param.upcache/d', 0); // 生成静态页面代码 - PC端带这个参数可以访问非静态页面
+        if (!isset($param[$url_screen_var]) && 3 == $seo_pseudo)
         {
             if (stristr($this->request->url(), '&c=Lists&a=index&')) {
                 abort(404,'页面不存在');
             }
             $map = array('a.dirname'=>$tid);
         }
-        else if (1 == $seo_pseudo)
+        else if (isset($param[$url_screen_var]) || 1 == $seo_pseudo || (2 == $seo_pseudo && (isMobile() || !empty($upcache))))
         {
             $seo_dynamic_format = config('ey_config.seo_dynamic_format');
             if (2 == $seo_dynamic_format && stristr($this->request->url(), '&c=Lists&a=index&')) {
@@ -55,6 +59,10 @@ class Lists extends Base
             } else if (!is_numeric($tid) || strval(intval($tid)) !== strval($tid)) {
                 abort(404,'页面不存在');
             }
+            $map = array('a.id'=>$tid);
+            
+        }else if (2 == $seo_pseudo){ // 生成静态页面代码
+            
             $map = array('a.id'=>$tid);
         }
         /*--end*/
@@ -146,21 +154,25 @@ class Lists extends Base
                 $arctype_info = model('Arctype')->getInfo($tid);
                 if ($arctype_info) {
                     // 读取当前栏目的内容，否则读取每一级第一个子栏目的内容，直到有内容或者最后一级栏目为止。
-                    $result = $this->readContentFirst($tid);
+                    $result_new = $this->readContentFirst($tid);
                     // 阅读权限
-                    if ($result['arcrank'] == -1) {
+                    if ($result_new['arcrank'] == -1) {
                         $this->success('待审核稿件，你没有权限阅读！');
                         exit;
                     }
                     // 外部链接跳转
-                    if ($result['is_part'] == 1) {
-                        header('Location: '.$result['typelink']);
+                    if ($result_new['is_part'] == 1) {
+                        header('Location: '.$result_new['typelink']);
                         exit;
                     }
                     /*自定义字段的数据格式处理*/
-                    $result = $this->fieldLogic->getChannelFieldList($result, $this->channel);
+                    $result_new = $this->fieldLogic->getChannelFieldList($result_new, $this->channel);
                     /*--end*/
-                    $result = array_merge($arctype_info, $result);
+                    $result = array_merge($arctype_info, $result_new);
+
+                    $result['templist'] = !empty($arctype_info['templist']) ? $arctype_info['templist'] : 'lists_'. $arctype_info['nid'];
+                    $result['dirpath'] = $arctype_info['dirpath'];
+                    $result['typeid'] = $arctype_info['typeid'];
                 }
                 break;
             }
@@ -192,7 +204,8 @@ class Lists extends Base
         /*给没有type前缀的字段新增一个带前缀的字段，并赋予相同的值*/
         foreach ($result as $key => $val) {
             if (!preg_match('/^type/i',$key)) {
-                $result['type'.$key] = $val;
+                $key_new = 'type'.$key;
+                !array_key_exists($key_new, $result) && $result[$key_new] = $val;
             }
         }
         /*--end*/

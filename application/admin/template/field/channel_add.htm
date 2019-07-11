@@ -34,13 +34,52 @@
                 <dd class="opt">
                     <select name="dtype" id="dtype">
                     {volist name='$fieldtype_list' id='vo'}
-                    <option value="{$vo.name}" data-ifoption="{$vo.ifoption|default=0}">{$vo.title}</option>
+                        <option value="{$vo.name}" data-ifoption="{$vo.ifoption|default=0}">{$vo.title}</option>
                     {/volist}
                     </select>
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
             </dl>
+
+            <div id='region_div' style="display: none;">
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="region"><em>*</em>区域选择</label>
+                    </dt>
+                    <dd class="opt">
+                        <select id="province" onchange="GetRegionData(this,'province');">
+                            <option value="-1">请选择</option>
+                            {volist name='$Province' id='P_V'}
+                                <option value="{$P_V.id}">{$P_V.name}</option>
+                            {/volist}
+                        </select>
+
+                        <span id='CityId'>
+                            <select id="city" onchange="GetRegionData(this,'city');">
+                                <option value="">请选择</option>
+                            </select>
+                            </span>
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                    <input type="hidden" id="GetRegionDataUrl" value="{:url('Field/get_region_data')}">
+                    <input type="hidden" name="region_data[region_id]" id="RegionId" value="-1">
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label><em>*</em>默认值</label>
+                    </dt>
+                    <dd class="opt">
+                        <textarea rows="5" cols="60" name="region_data[region_names]" id="region_names" readonly='readonly' placeholder="这里会自动区域选择之后的下级区域列表" style="height:110px; background-color: #f5f5f5;">{$region.region_names}</textarea>
+                        <span class="err"></span>
+                        <p class="notic">这里会自动区域选择之后的下级区域列表</p>
+                    </dd>
+                    <input type="hidden" name="region_data[region_ids]" id='region_ids' value='{$region.region_ids}' style="width: 100%;">
+                </dl>
+            </div>
+            
             <dl class="row" id="dl_dfvalue">
                 <dt class="tit">
                     <label id="label_dfvalue">默认值</label>
@@ -60,6 +99,40 @@
                     <p class="notic">比如：元、个、件等等</p>
                 </dd>
             </dl>
+            <dl class="row" id='IsScreening' style="display: none;">
+                <dt class="tit">
+                    <label>应用于筛选</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="IsScreening_1" class="cb-enable">是</label>
+                        <input id="IsScreening_1" name="is_screening" value="1" type="radio">
+
+                        <label for="IsScreening_0" class="cb-disable selected">否</label>
+                        <input id="IsScreening_0" name="is_screening" value="0" type="radio">
+                    </div>
+                    &nbsp;
+                    <span class="err"></span>
+                    <p class="notic">是否应用于列表的条件筛选中</p>
+                    <a id="call_tags_help" href="https://www.eyoucms.com/plus/view.php?aid=7881" target="_blank" class="none">查看标签调用</a>
+                </dd>
+            </dl>
+            <!-- <dl class="row" id='IsSelect' style="display: none;">
+                <dt class="tit">
+                    <label>筛选是否多选</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="IsMultiSelect_1" class="cb-enable">是</label>
+                        <input id="IsMultiSelect_1" name="IsMultiSelect" value="1" type="radio">
+
+                        <label for="IsMultiSelect_0" class="cb-disable selected">否</label>
+                        <input id="IsMultiSelect_0" name="IsMultiSelect" value="0" type="radio">
+                    </div>
+                    <span class="err"></span>
+                    <p class="notic">选择是则在筛选中可多选，否则只能单选</p>
+                </dd>
+            </dl> -->
             <dl class="row">
                 <dt class="tit">
                     <label>提示文字</label>
@@ -72,11 +145,11 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="title">可见栏目</label>
+                    <label for="title" id="select_title">指定栏目</label>
                 </dt>
                 <dd class="opt">
                     <select name="typeids[]" id="typeid" style="width: 300px;" size="15" multiple="true">
-                        <option value="0" selected="true">—所有栏目可见—</option>
+                        <option value="0" selected="false" >—指定所有栏目—</option>
                         {$select_html}
                     </select>
                     <span class="err"></span>
@@ -104,6 +177,13 @@
 </div>
 <script type="text/javascript">
     $(function(){
+        if (0 == $('#RegionId').val() || -1 == $('#RegionId').val()) {
+            $('#CityId').hide();
+        }
+
+        var screening_value = $('input:radio[name="is_screening"]:checked').val();
+        $('#IsScreening_'+screening_value).click();
+
         $('#dtype').change(function(){
             dtype_change(this);
         });
@@ -113,13 +193,23 @@
             var ifoption = $(obj).find('option:selected').data('ifoption');
             if (0 <= $.inArray(dtype, ['datetime','switch','img','imgs','files'])) {
                 $('#dl_dfvalue').hide();
+                ClearAreaData();
+            } else if ('region' == dtype) {
+                $('#region_div').show();
+                $('#dl_dfvalue').hide();
             } else {
-                if (1 == ifoption) {
-                    $('#label_dfvalue').html('<em>*</em>默认值');
-                } else {
-                    $('#label_dfvalue').html('默认值');
-                }
                 $('#dl_dfvalue').show();
+                ClearAreaData();
+            }
+            if (1 == ifoption) {
+                $('#label_dfvalue').html('<em>*</em>默认值');
+            } else {
+                $('#label_dfvalue').html('默认值');
+            }
+            if (0 <= $.inArray(dtype, ['region','checkbox','radio','select'])) {
+                $('#IsScreening').show();
+            } else {
+                $('#IsScreening').hide();
             }
             if (0 <= $.inArray(dtype, ['text','int','float','decimal'])) {
                 $('#dl_dfvalue_unit').show();
@@ -127,6 +217,64 @@
                 $('#dl_dfvalue_unit').hide();
             }
         }
+    });
+
+    // 当切换其他类型时清空所有关于区域选择的数据
+    function ClearAreaData(){
+        $('#region_div').hide();
+        $('#RegionId').val('');
+        $('#region_dfvalue').empty();
+    }
+
+    // 获取联动地址
+    function GetRegionData(t,type){
+        var parent_id = $(t).val();
+        if(!parent_id){
+            return false;
+        }
+        
+        var url = $('#GetRegionDataUrl').val();
+        $.ajax({
+            url: url,
+            data: {parent_id:parent_id},
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                // 判断是否隐藏第二级地区选择栏
+                if (0 <= $.inArray(parent_id, res.parent_array)) {
+                    $('#CityId').hide();
+                }else{
+                    $('#CityId').show();
+                }
+                // 加载城市名称数据到textarea
+                $('#region_names').empty().html(res.region_names);
+                // 加载城市ID数据到input
+                $('#region_ids').val(res.region_ids);
+                // 加载ID到input
+                $('#RegionId').val(parent_id);
+                // 输出下一级栏目选项
+                if ('province' == type) {
+                    res = '<option value='+parent_id+'>请选择</option>'+ res.region_html;
+                    $('#city').empty().html(res);
+                }
+            },
+            error : function() {
+                layer.closeAll();
+                layer.alert('网络失败，请刷新页面后重试', {icon: 5});
+            }
+        });
+    }
+
+    $('#IsScreening_1').click(function(){
+        $('#select_title').html('<em>*</em>指定栏目');
+        $('#typeid').find('option:first').attr('disabled', true).css('display', 'none');
+        $('#call_tags_help').show();
+    });
+
+    $('#IsScreening_0').click(function(){
+        $('#select_title').html('指定栏目');
+        $('#typeid').find('option:first').attr('disabled', false).css('display', '');
+        $('#call_tags_help').hide();
     });
 
     function check_submit(){
@@ -152,6 +300,12 @@
             showErrorMsg('请选择字段类型！');
             $('input[name=dtype]').focus();
             return false;
+        } else if ('region' == $('#dtype').val()){
+            if (-1 == $('#RegionId').val()) {
+                showErrorMsg('请选择区域范围！');
+                $('#province').focus();
+                return false;
+            }
         } else {
             var ifoption = $('#dtype').find('option:selected').data('ifoption');
             console.log(ifoption)
@@ -161,14 +315,31 @@
                     $('#dfvalue').focus();
                     return false;
                 }
+                var tag = '|';
+                if($('#dfvalue').val().indexOf(tag) != -1){
+               　　  showErrorMsg('默认值不能输入 | 符号！');
+                    $('#dfvalue').focus();
+                    return false;
+            　　}
             }
         }
         if (0 >= parseInt($('#typeid').find('option:selected').length)) {
-            showErrorMsg('请选择可见栏目！');
+            showErrorMsg('请选择指定栏目！');
             $('#typeid').focus();
             return false;
         }
 
+        // 字段应用于筛选时，指定栏目必须指定一个或多个栏目
+        if (1 == parseInt($('input:radio[name="is_screening"]:checked').val())) {
+            if (0 == parseInt($('#typeid').find('option:selected').val())) {
+                if (1 >= $('#typeid').val().length) {
+                    showErrorMsg('字段应用于筛选时，栏目必须指定一个或多个！');
+                    $('#typeid').focus();
+                    return false;
+                }
+            }
+        }
+        
         layer_loading('正在处理');
         $('#post_form').submit();
     }

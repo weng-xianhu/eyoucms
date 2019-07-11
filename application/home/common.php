@@ -43,8 +43,10 @@ if (!function_exists('set_arcseotitle'))
     {
         /*针对没有自定义SEO标题的文档*/
         if (empty($seo_title)) {
-            $web_name = tpCache('web.web_name');
-            $seo_viewtitle_format = tpCache('seo.seo_viewtitle_format');
+            static $web_name = null;
+            null === $web_name && $web_name = tpCache('web.web_name');
+            static $seo_viewtitle_format = null;
+            null === $seo_viewtitle_format && $seo_viewtitle_format = tpCache('seo.seo_viewtitle_format');
             switch ($seo_viewtitle_format) {
                 case '1':
                     $seo_title = $title;

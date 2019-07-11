@@ -8,6 +8,24 @@ class File
 {
     protected $cacheFile;
 
+    /*
+     * fwrite 方式写入编译文件 by 许
+     */
+    public function fwrite($cacheFile, $content)
+    {
+        // 检测模板目录
+        $dir = dirname($cacheFile);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        // 生成模板缓存文件
+        $fp = fopen($cacheFile,"w");
+        if (false === fwrite($fp, $content)) {
+            throw new Exception('cache write error:' . $cacheFile, 11602);
+        }
+        fclose($fp);
+    }
+
     /**
      * 写入编译缓存
      * @param string $cacheFile 缓存的文件名

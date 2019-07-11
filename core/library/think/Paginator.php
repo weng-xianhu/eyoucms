@@ -121,16 +121,40 @@ abstract class Paginator implements ArrayAccess, Countable, IteratorAggregate, J
 
         /*-----------------URL模式------------------*/
         // URL模式
-        $seo_pseudo = config('ey_config.seo_pseudo');
+        static $seo_pseudo = null;
+        null === $seo_pseudo && $seo_pseudo = config('ey_config.seo_pseudo');
+        static $url_screen_var = null;
+        null === $url_screen_var && config('global.url_screen_var');
         if (3 == $seo_pseudo) { // 伪静态模式 by 小虎哥
-            $seo_rewrite_format = config('ey_config.seo_rewrite_format');
-            if (1 == intval($seo_rewrite_format)) {
-                if (!stristr($url, '.html')) {
-                    $url .= '/';
+            if (!isset($this->options['query'][$url_screen_var])) {
+                static $seo_rewrite_format = null;
+                null === $seo_rewrite_format && $seo_rewrite_format = config('ey_config.seo_rewrite_format');
+                if (1 == intval($seo_rewrite_format)) {
+                    if (!stristr($url, '.html')) {
+                        $url .= '/';
+                    }
                 }
             }
             /*--end*/
-        } 
+        } else {
+            static $is_mobile = null;
+            null === $is_mobile && $is_mobile = isMobile();
+            static $upcache = null;
+            null === $upcache && $upcache = input('param.upcache/d', 0);
+            // 生成静态模式下的手机端URL模式 by 小虎哥
+            if (2 == $seo_pseudo && ($is_mobile || !empty($upcache))) { 
+                if (!isset($this->options['query'][$url_screen_var])) {
+                    static $is_fix_pathinfo = null;
+                    null === $is_fix_pathinfo && $is_fix_pathinfo = check_fix_pathinfo();
+                    if (true === $is_fix_pathinfo) {
+                        if (!stristr($url, '.html')) {
+                            $url .= '/';
+                        }
+                    }
+                }
+                /*--end*/
+            } 
+        }
         /*------------------------end*/
 
         if (!empty($parameters)) {

@@ -1,9 +1,14 @@
 
+<IfModule dir_module>
+    #生成静态模式下，设置默认首页为 index.html
+    #DirectoryIndex index.html index.php index.htm
+</IfModule>
+
 <IfModule mod_rewrite.c>
     Options +FollowSymlinks -Multiviews
     RewriteEngine On
 
-    #http��ת��https
+    #http跳转到https
     #RewriteCond %{SERVER_PORT} !^443$
     #RewriteRule ^(.*)$ https://www.xxxxx.com/$1 [L,R=301]
 

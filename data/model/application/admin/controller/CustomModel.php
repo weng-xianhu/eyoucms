@@ -156,6 +156,14 @@ class CustomModel extends Base
         /*--end*/
 
         $this->assign($assign_data);
+        
+        /* 生成静态页面代码 */
+        $aid = input('param.aid/d',0);
+        $this->assign('aid',$aid);
+        $tid = input('param.tid/d',0);
+        $this->assign('typeid',$tid);
+        /* end */
+        
         return $this->fetch();
     }
 
@@ -177,9 +185,11 @@ class CustomModel extends Base
 
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
-            // if (empty($seo_keywords)) {
-            //     $seo_keywords = get_split_word($post['title'], $content);
-            // }
+            if (!empty($seo_keywords)) {
+                $seo_keywords = str_replace('，', ',', $seo_keywords);
+            } else {
+                // $seo_keywords = get_split_word($post['title'], $content);
+            }
 
             // 自动获取内容第一张图片作为封面图
             $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
@@ -250,7 +260,13 @@ class CustomModel extends Base
                 model($this->table)->afterSave($aid, $data, 'add');
                 // ---------end
                 adminLog('新增数据：'.$data['title']);
-                $this->success("操作成功!", $post['gourl']);
+
+                // 生成静态页面代码
+                $successData = [
+                    'aid'   => $aid,
+                    'tid'   => $post['typeid'],
+                ];
+                $this->success("操作成功!", null, $successData);
                 exit;
             }
 
@@ -308,14 +324,6 @@ class CustomModel extends Base
         $this->assign('tempview', $tempview);
         /*--end*/
 
-        /*返回上一层*/
-        $gourl = input('param.gourl/s', '');
-        if (empty($gourl)) {
-            $gourl = url('CustomModel/index', array('typeid'=>$typeid));
-        }
-        $assign_data['gourl'] = $gourl;
-        /*--end*/
-
         $this->assign($assign_data);
 
         return $this->fetch();
@@ -340,9 +348,11 @@ class CustomModel extends Base
 
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
-            // if (empty($seo_keywords)) {
-            //     $seo_keywords = get_split_word($post['title'], $content);
-            // }
+            if (!empty($seo_keywords)) {
+                $seo_keywords = str_replace('，', ',', $seo_keywords);
+            } else {
+                // $seo_keywords = get_split_word($post['title'], $content);
+            }
 
             // 自动获取内容第一张图片作为封面图
             $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
@@ -361,7 +371,7 @@ class CustomModel extends Base
             if (empty($post['litpic'])) {
                 $is_litpic = 0; // 无封面图
             } else {
-                $is_litpic = $post['is_litpic']; // 有封面图
+                $is_litpic = !empty($post['is_litpic']) ? $post['is_litpic'] : 0; // 有封面图
             }
 
             // SEO描述
@@ -415,7 +425,13 @@ class CustomModel extends Base
                 model($this->table)->afterSave($data['aid'], $data, 'edit');
                 // ---------end
                 adminLog('编辑文章：'.$data['title']);
-                $this->success("操作成功!", $post['gourl']);
+
+                // 生成静态页面代码
+                $successData = [
+                    'aid'       => $data['aid'],
+                    'tid'       => $typeid,
+                ];
+                $this->success("操作成功!", null, $successData);
                 exit;
             }
 
@@ -502,14 +518,6 @@ class CustomModel extends Base
         $tempview = $info['tempview'];
         empty($tempview) && $tempview = $arctypeInfo['tempview'];
         $this->assign('tempview', $tempview);
-        /*--end*/
-
-        /*返回上一层*/
-        $gourl = input('param.gourl/s', '');
-        if (empty($gourl)) {
-            $gourl = url('CustomModel/index', array('typeid'=>$typeid));
-        }
-        $assign_data['gourl'] = $gourl;
         /*--end*/
 
         $this->assign($assign_data);

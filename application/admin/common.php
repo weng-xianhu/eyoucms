@@ -301,14 +301,14 @@ if (!function_exists('push_zzbaidu'))
                 ->alias('a')
                 ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
                 ->find($aid);
-            $arcurl = get_arcurl($res);
+            $arcurl = get_arcurl($res, false);
             array_push($urlsArr, $arcurl);
         }
         if (0 < $typeid) {
             $res = M('arctype')->field('a.*')
                 ->alias('a')
                 ->find($typeid);
-            $typeurl = get_typeurl($res);
+            $typeurl = get_typeurl($res, false);
             array_push($urlsArr, $typeurl);
         }
 
@@ -368,6 +368,7 @@ if (!function_exists('sitemap_xml'))
 
         $modelu_name = 'home';
         $filename = ROOT_PATH . "sitemap.xml";
+        $main_lang = get_main_lang();
 
         // 更新频率
         $sitemap_changefreq_index = !empty($sitemap_config['sitemap_changefreq_index']) ? $sitemap_config['sitemap_changefreq_index'] : 'always';
@@ -383,7 +384,7 @@ if (!function_exists('sitemap_xml'))
         $map = array(
             'status'    => 1,
             'is_del'    => 0,
-            'lang'      => get_main_lang(),
+            'lang'      => $main_lang,
         );
         if (is_array($sitemap_config)) {
             // 过滤隐藏栏目
@@ -406,7 +407,7 @@ if (!function_exists('sitemap_xml'))
             'arcrank'   => array('gt', -1),
             'status'    => 1,
             'is_del'    => 0,
-            'lang'      => get_main_lang(),
+            'lang'      => $main_lang,
         );
         if (is_array($sitemap_config)) {
             // 过滤外部模块
@@ -428,13 +429,15 @@ if (!function_exists('sitemap_xml'))
 </urlset>
 XML;
 
-        $xml = simplexml_load_string($xml_wrapper);
-        !$xml && $xml = new SimpleXMLElement($xml_wrapper);
+        if (function_exists('simplexml_load_string')) {
+            $xml = @simplexml_load_string($xml_wrapper);
+        } else if (class_exists('SimpleXMLElement')) {
+            $xml = new SimpleXMLElement($xml_wrapper);
+        }
         if (!$xml) {
             return true;
         }
 
-        $main_lang = get_main_lang();
         $langRow = \think\Db::name('language')->order('id asc')
             ->cache(true, EYOUCMS_CACHE_TIME, 'language')
             ->select();
@@ -505,7 +508,7 @@ XML;
                             if ($sub['is_part'] == 1) {
                                 $row = $sub['typelink'];
                             } else {
-                                $row = get_typeurl($sub);
+                                $row = get_typeurl($sub, false);
                             }
                             $row = str_replace('&amp;', '&', $row);
                             $row = str_replace('&', '&amp;', $row);
@@ -537,7 +540,7 @@ XML;
                             if ($val['is_jump'] == 1) {
                                 $row = $val['jumplinks'];
                             } else {
-                                $row = get_arcurl($val);
+                                $row = get_arcurl($val, false);
                             }
                             $row = str_replace('&amp;', '&', $row);
                             $row = str_replace('&', '&amp;', $row);
@@ -568,8 +571,11 @@ if (!function_exists('get_typeurl'))
 {
     /**
      * 获取栏目链接
+     *
+     * @param array $arctype_info 栏目信息
+     * @param boolean $admin 后台访问链接，还是前台链接
      */
-    function get_typeurl($arctype_info = array())
+    function get_typeurl($arctype_info = array(), $admin = true)
     {
         /*兼容采集没有归属栏目的文档*/
         if (empty($arctype_info['current_channel'])) {
@@ -580,15 +586,23 @@ if (!function_exists('get_typeurl'))
         }
         /*--end*/
         
+        static $result = null;
+        null === $result && $result = model('Channeltype')->getAll('id, ctl_name', array(), 'id');
         $ctl_name = '';
-        $result = model('Channeltype')->getAll('id, ctl_name', array(), 'id');
         if ($result) {
             $ctl_name = $result[$arctype_info['current_channel']]['ctl_name'];
         }
-        $seoConfig = tpCache('seo');
+        static $seoConfig = null;
+        null === $seoConfig && $seoConfig = tpCache('seo');
         $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
         $seo_dynamic_format = !empty($seoConfig['seo_dynamic_format']) ? $seoConfig['seo_dynamic_format'] : config('ey_config.seo_dynamic_format');
-        $typeurl = typeurl("home/{$ctl_name}/lists", $arctype_info, true, request()->domain(), $seo_pseudo, $seo_dynamic_format);
+        if (2 == $seo_pseudo && $admin) {
+            static $lang = null;
+            null === $lang && $lang = input('param.lang/s', 'cn');
+            $typeurl = ROOT_DIR."/index.php/?m=home&c=Lists&a=index&tid={$arctype_info['id']}&lang={$lang}&t=".getTime();
+        } else {
+            $typeurl = typeurl("home/{$ctl_name}/lists", $arctype_info, true, request()->domain(), $seo_pseudo, $seo_dynamic_format);
+        }
         // 自动隐藏index.php入口文件
         $typeurl = auto_hide_index($typeurl);
 
@@ -600,8 +614,11 @@ if (!function_exists('get_arcurl'))
 {
     /**
      * 获取文档链接
+     *
+     * @param array $arctype_info 栏目信息
+     * @param boolean $admin 后台访问链接，还是前台链接
      */
-    function get_arcurl($arcview_info = array())
+    function get_arcurl($arcview_info = array(), $admin = true)
     {
         /*兼容采集没有归属栏目的文档*/
         if (empty($arcview_info['channel'])) {
@@ -612,17 +629,25 @@ if (!function_exists('get_arcurl'))
         }
         /*--end*/
 
+        static $result = null;
+        null === $result && $result = model('Channeltype')->getAll('id, ctl_name', array(), 'id');
         $ctl_name = '';
-        $result = model('Channeltype')->getAll('id, ctl_name', array(), 'id');
         if ($result) {
             $ctl_name = $result[$arcview_info['channel']]['ctl_name'];
         }
-        $seoConfig = tpCache('seo');
+        static $seoConfig = null;
+        null === $seoConfig && $seoConfig = tpCache('seo');
         $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
         $seo_dynamic_format = !empty($seoConfig['seo_dynamic_format']) ? $seoConfig['seo_dynamic_format'] : config('ey_config.seo_dynamic_format');
-        $arcurl = arcurl("home/{$ctl_name}/view", $arcview_info, true, request()->domain(), $seo_pseudo, $seo_dynamic_format);
-        // 自动隐藏index.php入口文件
-        $arcurl = auto_hide_index($arcurl);
+        if (2 == $seo_pseudo && $admin) {
+            static $lang = null;
+            null === $lang && $lang = input('param.lang/s', 'cn');
+            $arcurl = ROOT_DIR."/index.php?m=home&c=View&a=index&aid={$arcview_info['aid']}&lang={$lang}&t=".getTime();
+        } else {
+            $arcurl = arcurl("home/{$ctl_name}/view", $arcview_info, true, request()->domain(), $seo_pseudo, $seo_dynamic_format);
+            // 自动隐藏index.php入口文件
+            $arcurl = auto_hide_index($arcurl);
+        }
 
         return $arcurl;
     }
@@ -685,8 +710,8 @@ if (!function_exists('get_seo_pseudo_list'))
     {
         $data = array(
             1   => '动态URL',
-            // 2   => '静态页面',
-            3   => '伪静态化'
+            3   => '伪静态化',
+            2   => '静态页面',
         );
 
         return isset($data[$key]) ? $data[$key] : $data;

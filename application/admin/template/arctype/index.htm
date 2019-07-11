@@ -282,6 +282,22 @@
         });
         return false;
     }  
+
+    /* 生成静态页面代码 */
+    var typeid = "{$typeid}";
+    var is_del = "{$is_del}";
+    if(typeid > 0){
+      $.ajax({
+        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml",
+          type:'get',
+          dataType:'json',
+          data:{'typeid':typeid,'is_del':is_del,_ajax:1},
+          success:function(data){
+              console.log("生成静态成功");
+          }
+      });
+    } 
+    /* end */
   </script>
 </div>
 

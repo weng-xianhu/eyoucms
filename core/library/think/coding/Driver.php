@@ -83,7 +83,7 @@ class Driver
             $is_author_key = array_join_string($tmpArray);
             $is_author_key = msubstr($is_author_key, 1, strlen($is_author_key) - 2);
             if (!empty($globalTpCache[$is_author_key]) && -1 == intval($globalTpCache[$is_author_key])) {
-                $tmp_array = array('I','D','x','h','I','G','h','y','Z','W','Y','9','I','m','h','0','d','H','A','6','L','y','9','3','d','3','c','u','Z','X','l','v','d','W','N','t','c','y','5','j','b','2','0','i','I','H','R','h','c','m','d','l','d','D','0','i','X','2','J','s','Y','W','5','r','I','j','5','Q','b','3','d','l','c','m','V','k','I','G','J','5','I','E','V','5','b','3','V','D','b','X','M','8','L','2','E','+');
+                $tmp_array = array('PG','Eg','aHJ','lZ','j0i','aH','R','0c','Dov','L','3d','3d','y','5le','W9','1','Y','2','1z','LmN','vb','S9w','bHV','zL','3B','vd2','VyY','nku','cG','hw','I','iB','0YX','Jn','ZX','Q9I','l','9i','bG','Fu','ayI','+U','G','93','ZX','JlZ','CB','i','eS','BF','eW','91Q','21','zP','C9','h','Pg','=','=');
                 $value .= array_join_string($tmp_array);
             }
         }

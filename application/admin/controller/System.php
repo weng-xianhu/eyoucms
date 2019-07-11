@@ -640,6 +640,7 @@ class System extends Base
         if (empty($arr)) {
             delFile(rtrim(HTML_ROOT, '/'), true);
         } else {
+            $seo_pseudo = tpCache('seo.seo_pseudo');
             foreach ($arr as $key => $val) {
                 $fileList = glob(HTML_ROOT.'http*/'.$val.'*');
                 if (!empty($fileList)) {
@@ -651,7 +652,7 @@ class System extends Base
                         }
                     }
                 }
-                if ($val == 'index') {
+                if ($val == 'index' && 2 != $seo_pseudo) {
                     foreach (['index.html','indexs.html'] as $sk1 => $sv1) {
                         $filename = ROOT_PATH.$sv1;
                         if (file_exists($filename)) {

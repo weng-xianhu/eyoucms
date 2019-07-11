@@ -153,6 +153,14 @@ class Product extends Base
         /*--end*/
 
         $this->assign($assign_data);
+        
+        /* 生成静态页面代码 */
+        $aid = input('param.aid/d',0);
+        $this->assign('aid',$aid);
+        $tid = input('param.tid/d',0);
+        $this->assign('typeid',$tid);
+        /* end */
+
         return $this->fetch();
     }
 
@@ -167,9 +175,11 @@ class Product extends Base
 
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
-            // if (empty($seo_keywords)) {
-            //     $seo_keywords = get_split_word($post['title'], $content);
-            // }
+            if (!empty($seo_keywords)) {
+                $seo_keywords = str_replace('，', ',', $seo_keywords);
+            } else {
+                // $seo_keywords = get_split_word($post['title'], $content);
+            }
 
             // 自动获取内容第一张图片作为封面图
             $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
@@ -240,7 +250,13 @@ class Product extends Base
                 model('Product')->afterSave($aid, $data, 'add');
                 // ---------end
                 adminLog('新增产品：'.$data['title']);
-                $this->success("操作成功!", $post['gourl']);
+
+                // 生成静态页面代码
+                $successData = [
+                    'aid'   => $aid,
+                    'tid'   => $post['typeid'],
+                ];
+                $this->success("操作成功!", null, $successData);
                 exit;
             }
 
@@ -275,6 +291,15 @@ class Product extends Base
         $assign_data['aid'] = 0;
         /*--end*/
 
+        /*可控制的字段列表*/
+        $assign_data['ifcontrolRow'] = Db::name('channelfield')->field('id,name')->where([
+                'channel_id'    => $this->channeltype,
+                'ifmain'        => 1,
+                'ifeditable'    => 1,
+                'ifcontrol'     => 0,
+                'status'        => 1,
+            ])->getAllWithIndex('name');
+
         // 阅读权限
         $arcrank_list = get_arcrank_list();
         $assign_data['arcrank_list'] = $arcrank_list;
@@ -293,14 +318,6 @@ class Product extends Base
         $tempview = 'view_'.$this->nid.'.'.config('template.view_suffix');
         !empty($arctypeInfo['tempview']) && $tempview = $arctypeInfo['tempview'];
         $this->assign('tempview', $tempview);
-        /*--end*/
-
-        /*返回上一层*/
-        $gourl = input('param.gourl/s', '');
-        if (empty($gourl)) {
-            $gourl = url('Product/index', array('typeid'=>$typeid));
-        }
-        $assign_data['gourl'] = $gourl;
         /*--end*/
 
         // 商城配置
@@ -324,9 +341,11 @@ class Product extends Base
 
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
-            // if (empty($seo_keywords)) {
-            //     $seo_keywords = get_split_word($post['title'], $content);
-            // }
+            if (!empty($seo_keywords)) {
+                $seo_keywords = str_replace('，', ',', $seo_keywords);
+            } else {
+                // $seo_keywords = get_split_word($post['title'], $content);
+            }
 
             // 自动获取内容第一张图片作为封面图
             $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
@@ -345,7 +364,7 @@ class Product extends Base
             if (empty($post['litpic'])) {
                 $is_litpic = 0; // 无封面图
             } else {
-                $is_litpic = $post['is_litpic']; // 有封面图
+                $is_litpic = !empty($post['is_litpic']) ? $post['is_litpic'] : 0; // 有封面图
             }
 
             // SEO描述
@@ -399,7 +418,13 @@ class Product extends Base
                 model('Product')->afterSave($data['aid'], $data, 'edit');
                 // ---------end
                 adminLog('编辑产品：'.$data['title']);
-                $this->success("操作成功!", $post['gourl']);
+
+                // 生成静态页面代码
+                $successData = [
+                    'aid'       => $data['aid'],
+                    'tid'       => $typeid,
+                ];
+                $this->success("操作成功!", null, $successData);
                 exit;
             }
 
@@ -472,6 +497,15 @@ class Product extends Base
         $assign_data['aid'] = $id;
         /*--end*/
 
+        /*可控制的主表字段列表*/
+        $assign_data['ifcontrolRow'] = Db::name('channelfield')->field('id,name')->where([
+                'channel_id'    => $this->channeltype,
+                'ifmain'        => 1,
+                'ifeditable'    => 1,
+                'ifcontrol'     => 0,
+                'status'        => 1,
+            ])->getAllWithIndex('name');
+
         // 阅读权限
         $arcrank_list = get_arcrank_list();
         $assign_data['arcrank_list'] = $arcrank_list;
@@ -490,14 +524,6 @@ class Product extends Base
         $tempview = $info['tempview'];
         empty($tempview) && $tempview = $arctypeInfo['tempview'];
         $this->assign('tempview', $tempview);
-        /*--end*/
-
-        /*返回上一层*/
-        $gourl = input('param.gourl/s', '');
-        if (empty($gourl)) {
-            $gourl = url('Product/index', array('typeid'=>$typeid));
-        }
-        $assign_data['gourl'] = $gourl;
         /*--end*/
 
         // 商城配置

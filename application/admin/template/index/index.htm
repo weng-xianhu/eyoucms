@@ -93,7 +93,7 @@
               <em id="Language_index" class="eyou_tool em_lang" data-expanded="close" {if condition='empty($web_language_switch)'}style="display: none;"{/if}>
                 <a class="btn btn-default dropdown-toggle" title="支持多语言切换" href="javascript:void(0);" onclick="valide(this);">
                   <i class="fa fa-globe"></i>
-                  <span class="hidden-xs">{$languages[$admin_lang]['title']|default='简体中文'}</span>
+                  <span class="hidden-xs" id="language_title">{$languages[$admin_lang]['title']|default='简体中文'}</span>
                 </a>
                 <ul class="dropdown-menu" role="menu" aria-labelledby="shouquan">
                   {volist name='languages' id='vo'}
@@ -118,11 +118,11 @@
               
             </div>
             <span class="avatar">
-            <img alt="" tptype="admin_avatar" src="__SKIN__/images/admint.png" style="cursor: pointer;"> </span><i class="arrow" id="admin-manager-btn" title="显示快捷管理菜单"></i>
+            <img id="admin_head_pic" tptype="admin_avatar" src="{$admin_info.head_pic|get_head_pic=###}" style="cursor: pointer;"> </span><i class="arrow" id="admin-manager-btn" title="显示快捷管理菜单"></i>
             <div class="manager-menu">
               <div class="title">
                 <h4>最后登录</h4>
-                <a href="javascript:void(0);" onClick="CUR_DIALOG = ajax_form('modifypw', '修改密码', '{:url('Admin/admin_pwd',array('admin_id'=>$admin_info['admin_id']))}');" class="edit-password" title="修改密码">修改密码</a> </div>
+                <a href="javascript:void(0);" onClick="CUR_DIALOG = ajax_form('modifypw', '修改密码', '{:url('Admin/admin_pwd',array('admin_id'=>$admin_info['admin_id'], '_ajax'=>1))}');" class="edit-password" title="修改密码">修改密码</a> </div>
               <div class="login-date"> 
                 {php}echo date('Y-m-d H:i:s',session('admin_info.last_login'));{/php} <span>(IP: {php}echo session('admin_info.last_ip');{/php} )</span> 
               </div>
@@ -162,7 +162,7 @@
   function adminlogo_call_back(fileurl_tmp)
   {
       layer_loading("正在处理");
-      var url = "{:url('Index/edit_adminlogo')}";
+      var url = "{:url('Index/edit_adminlogo', ['_ajax'=>1])}";
       $.post(url, {filename:fileurl_tmp},function(res){
           if (1 == res.code) {
               layer.msg(res.msg, {icon:6, time:1000}, function(){

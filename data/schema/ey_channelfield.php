@@ -90,6 +90,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'is_screening' => 
+  array (
+    'name' => 'is_screening',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'ifeditable' => 
   array (
     'name' => 'ifeditable',

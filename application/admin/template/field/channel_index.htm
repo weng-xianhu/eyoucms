@@ -137,7 +137,7 @@
                                     <a class="btn red"  href="javascript:void(0);" data-url="{:url('Field/channel_del', array('channel_id'=>$channel_id))}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
                                     {/eq}
                                 {/if}
-                                <a class="btn blue" href="javascript:void(0);" data-name="{$vo.name}" data-channel_id="{$channel_id|default='0'}" data-dtype="{$vo.dtype}" onclick="copyToClipBoard(this)">标签调用</a>
+                                <a class="btn blue" href="javascript:void(0);" data-name="{$vo.name}" data-channel_id="{$channel_id|default='0'}" data-dtype="{$vo.dtype}" data-ifmain="{$vo.ifmain}" data-is_screening="{$vo.is_screening}" onclick="copyToClipBoard(this)">标签调用</a>
                                 </div>
                             </td>
                             <td class="sort">
@@ -148,6 +148,8 @@
                                     {else /}
                                     {$vo.sort_order}
                                     {/eq}
+                                {else /}
+                                    ———
                                 {/if}
                                 </div>
                             </td>
@@ -247,9 +249,10 @@
         var fieldname = $(obj).attr('data-name');
         var channel_id = $(obj).attr('data-channel_id');
         var dtype = $(obj).attr('data-dtype');
+        var ifmain = $(obj).attr('data-ifmain');
+        var is_screening = $(obj).attr('data-is_screening');
         var height = '280px';
         var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;">';
-
         if (6 == channel_id) {
             switch(dtype)
             {
@@ -305,13 +308,16 @@
 
                 case 'checkbox':
                     {
-                        height = '400px';
+                        height = '430px';
                         var viewstr = "{eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyou.field."+fieldname+"'}\r\n    {$"+fieldname+".value}\r\n{/eyou:diyfield";
                         contentdiv += '<dd>内容页：</dd>';
                         contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:60px;">' + viewstr + '}</textarea></dd>';
                         var liststr = "{eyou:arcview aid='$"+"field.aid' id='eyoav' addfields='"+fieldname+"'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        {$"+fieldname+".value}\r\n    {/eyou:diyfield"+"}\r\n{/eyou:arcview";
                         contentdiv += '<dd>标签 arclist / list 内调用 <font color="red">(更多简洁调法请参考标签 arclist /list)</font>：</dd>';
                         contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:120px;">' + liststr + '}</textarea></dd>';
+                        if (1 == is_screening) {
+                            contentdiv += '<dd style="color: red;">自定义字段应用于条件筛选，请参考标签用法：<a id="call_tags_help" href="https://www.eyoucms.com/plus/view.php?aid=7881" target="_blank">查看标签调用</a></dd>';
+                        }
                     }
                     break;
 
@@ -319,12 +325,17 @@
                     {
                         contentdiv += '<dd>内容页：</dd>';
                         contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{$'+'eyou.field.'+fieldname+'}"></dd>';
-                        var liststr = "eyou:field aid='$"+"field.aid' addfields='"+fieldname+"' /";
-                        contentdiv += '<dd>标签 arclist / list 内调用：</dd>';
-                        contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{'+liststr+'}"></dd>';
-                        // var liststr = "{eyou:arcview aid='$"+"field.aid' id='eyoav' addfields='"+fieldname+"'}\r\n    {$"+"eyoav."+fieldname+"}\r\n{/eyou:arcview";
-                        // contentdiv += '<dd>标签 arclist / list 内调用：</dd>';
-                        // contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:60px;">' + liststr + '}</textarea></dd>';
+                        if (1 == ifmain) {
+                            contentdiv += '<dd>标签 arclist / list 内调用：</dd>';
+                            contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{$'+'field.'+fieldname+'}"></dd>';
+                        } else {
+                            var liststr = "eyou:field aid='$"+"field.aid' addfields='"+fieldname+"' /";
+                            contentdiv += '<dd>标签 arclist / list 内调用：</dd>';
+                            contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{'+liststr+'}"></dd>';
+                        }
+                        if (1 == is_screening) {
+                            contentdiv += '<dd style="color: red;">自定义字段应用于条件筛选，请参考标签用法：<a id="call_tags_help" href="https://www.eyoucms.com/plus/view.php?aid=7881" target="_blank">查看标签调用</a></dd>';
+                        }
                     }
                     break;
             }

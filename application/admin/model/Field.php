@@ -64,6 +64,7 @@ class Field extends Model
             'channel_id'    => array('eq', $channel_id),
             'name'          => array('notin', $hideField),
             'ifmain'        => 0,
+            'ifeditable'    => 1,
         );
         if (false !== $ifmain) {
             $map['ifmain'] = $ifmain;
@@ -132,7 +133,7 @@ class Field extends Model
                 switch ($val['dtype']) {
                     case 'int':
                     {
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['dfvalue'] = $addonRow[$val['name']];
                         } else {
                             if(preg_match("#[^0-9]#", $val['dfvalue']))
@@ -146,7 +147,7 @@ class Field extends Model
                     case 'float':
                     case 'decimal':
                     {
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['dfvalue'] = $addonRow[$val['name']];
                         } else {
                             if(preg_match("#[^0-9\.]#", $val['dfvalue']))
@@ -163,10 +164,33 @@ class Field extends Model
                         $dfvalue = $val['dfvalue'];
                         $dfvalueArr = explode(',', $dfvalue);
                         $val['dfvalue'] = $dfvalueArr;
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['trueValue'] = explode(',', $addonRow[$val['name']]);
                         } else {
                             $dfTrueValue = !empty($dfvalueArr[0]) ? $dfvalueArr[0] : '';
+                            $val['trueValue'] = array($dfTrueValue);
+                        }
+                        break;
+                    }
+
+                    case 'region':
+                    {
+                        $dfvalue    = unserialize($val['dfvalue']);
+                        $RegionData = [];
+                        $region_ids = explode(',', $dfvalue['region_ids']);
+                        foreach ($region_ids as $id_key => $id_value) {
+                            $RegionData[$id_key]['id'] = $id_value;
+                        }
+                        $region_names = explode('，', $dfvalue['region_names']);
+                        foreach ($region_names as $name_key => $name_value) {
+                            $RegionData[$name_key]['name'] = $name_value;
+                        }
+
+                        $val['dfvalue'] = $RegionData;
+                        if (array_key_exists($val['name'], $addonRow)) {
+                            $val['trueValue'] = explode(',', $addonRow[$val['name']]);
+                        } else {
+                            $dfTrueValue = !empty($RegionData[0]) ? $RegionData[0]['id'] : '';
                             $val['trueValue'] = array($dfTrueValue);
                         }
                         break;
@@ -177,7 +201,7 @@ class Field extends Model
                         $dfvalue = $val['dfvalue'];
                         $dfvalueArr = explode(',', $dfvalue);
                         $val['dfvalue'] = $dfvalueArr;
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['trueValue'] = explode(',', $addonRow[$val['name']]);
                         } else {
                             $val['trueValue'] = array();
@@ -190,7 +214,7 @@ class Field extends Model
                         $val[$val['name'].'_eyou_is_remote'] = 0;
                         $val[$val['name'].'_eyou_remote'] = '';
                         $val[$val['name'].'_eyou_local'] = '';
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             if (is_http_url($addonRow[$val['name']])) {
                                 $val[$val['name'].'_eyou_is_remote'] = 1;
                                 $val[$val['name'].'_eyou_remote'] = handle_subdir_pic($addonRow[$val['name']]);
@@ -205,7 +229,7 @@ class Field extends Model
                     case 'imgs':
                     {
                         $val[$val['name'].'_eyou_imgupload_list'] = array();
-                        if (isset($addonRow[$val['name']]) && !empty($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow) && !empty($addonRow[$val['name']])) {
                             $eyou_imgupload_list = explode(',', $addonRow[$val['name']]);
                             /*支持子目录*/
                             foreach ($eyou_imgupload_list as $k1 => $v1) {
@@ -246,7 +270,7 @@ class Field extends Model
                     
                     default:
                     {
-                        $val['dfvalue'] = isset($addonRow[$val['name']]) ? $addonRow[$val['name']] : $val['dfvalue'];
+                        $val['dfvalue'] = array_key_exists($val['name'], $addonRow) ? $addonRow[$val['name']] : $val['dfvalue'];
                         /*支持子目录*/
                         if (is_string($val['dfvalue'])) {
                             $val['dfvalue'] = handle_subdir_pic($val['dfvalue'], 'html');

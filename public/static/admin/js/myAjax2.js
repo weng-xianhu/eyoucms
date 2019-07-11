@@ -87,7 +87,7 @@ function changeTableVal(table,id_name,id_value,field,obj)
         var value = $(obj).val();            
     }
 
-    var url = eyou_basefile + "?m="+module_name+"&c=Index&a=changeTableVal";
+    var url = eyou_basefile + "?m="+module_name+"&c=Index&a=changeTableVal&_ajax=1";
     var lang = $.cookie('admin_lang');
     if (!lang) lang = __lang__;
     if ($.trim(lang) != '') {

@@ -73,6 +73,25 @@ class Base extends Controller {
                 $this->redirect($url);
             }
         }
+
+        /* 增、改的跳转提示页，只限制于发布文档的模型和自定义模型 */
+        $channeltype_list = config('global.channeltype_list');
+        $controller_name = $this->request->controller();
+        if (isset($channeltype_list[strtolower($controller_name)])) {
+            if (in_array($this->request->action(), ['add','edit'])) {
+                \think\Config::set('dispatch_success_tmpl', 'public/dispatch_jump');
+                $id = input('param.id/d', input('param.aid/d'));
+                ('GET' == $this->request->method()) && cookie('ENV_IS_UPHTML', 0);
+            } else if (in_array($this->request->action(), ['index'])) {
+                cookie('ENV_GOBACK_URL', $this->request->url());
+                cookie('ENV_LIST_URL', request()->baseFile()."?m=admin&c={$controller_name}&a=index&tab=3&lang=".$this->admin_lang);
+            }
+        }
+        if ('Archives' == $controller_name && in_array($this->request->action(), ['index_archives'])) {
+            cookie('ENV_GOBACK_URL', $this->request->url());
+            cookie('ENV_LIST_URL', request()->baseFile()."?m=admin&c=Archives&a=index_archives&lang=".$this->admin_lang);
+        }
+        /* end */
     }
     
     public function check_priv()

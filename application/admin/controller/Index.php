@@ -166,7 +166,7 @@ class Index extends Base
         $response = @file_get_contents($url,false,$context);
         $params = json_decode($response,true);
         if (false === $response || (is_array($params) && 1 == $params['code'])) {
-            $web_authortoken == $params['msg'];
+            $web_authortoken = $params['msg'];
             /*多语言*/
             if (is_language()) {
                 $langRow = Db::name('language')->cache(true, EYOUCMS_CACHE_TIME, 'language')
@@ -324,9 +324,9 @@ class Index extends Base
                 {
                     getUsersConfigData($inc_type, [$name => $value]);
 
-                    // 同时开启会员中心
+                    // 开启商城
                     if (1 == $value) {
-                        /*多语言*/
+                        /*多语言 - 同时开启会员中心*/
                         if (is_language()) {
                             $langRow = \think\Db::name('language')->order('id asc')
                                 ->cache(true, EYOUCMS_CACHE_TIME, 'language')
@@ -338,6 +338,24 @@ class Index extends Base
                             tpCache('web', ['web_users_switch' => 1]);
                         }
                         /*--end*/
+
+                        // 同时显示发布文档时的价格文本框
+                        Db::name('channelfield')->where([
+                                'name'   => 'users_price',
+                                'channel_id'  => 2,
+                            ])->update([
+                                'ifeditable'    => 1,
+                                'update_time'   => getTime(),
+                            ]);
+                    } else {
+                        // 同时隐藏发布文档时的价格文本框
+                        Db::name('channelfield')->where([
+                                'name'   => 'users_price',
+                                'channel_id'  => 2,
+                            ])->update([
+                                'ifeditable'    => 0,
+                                'update_time'   => getTime(),
+                            ]);
                     }
 
                     if (in_array($name, ['shop_open'])) {

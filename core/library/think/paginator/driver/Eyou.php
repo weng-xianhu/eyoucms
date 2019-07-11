@@ -198,7 +198,7 @@ class Eyou extends Paginator
      */
     protected function getAvailablePageWrapper2($url, $page)
     {
-        return '<li><a href="' . htmlentities($url) . '" class="tcdNumber">' . $page . '</a></li>';
+        return '<li><a href="' . htmlentities($url) . '" data-ey_fc35fdc="html" data-tmp="1' . '" class="tcdNumber">' . $page . '</a></li>';
     }
 
     /**
@@ -210,7 +210,7 @@ class Eyou extends Paginator
      */
     protected function getAvailablePageWrapper($url, $page)
     {
-        return '<li><a href="' . htmlentities($url) . '" class="tcdNumber">' . $page . '</a></li>';
+        return '<li><a href="' . htmlentities($url) . '" data-ey_fc35fdc="html" data-tmp="1' . '" class="tcdNumber">' . $page . '</a></li>';
     }
 
     /**

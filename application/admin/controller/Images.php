@@ -148,6 +148,14 @@ class Images extends Base
         /*--end*/
 
         $this->assign($assign_data);
+        
+        /* 生成静态页面代码 */
+        $aid = input('param.aid/d',0);
+        $this->assign('aid',$aid);
+        $tid = input('param.tid/d',0);
+        $this->assign('typeid',$tid);
+        /* end */
+        
         return $this->fetch();
     }
 
@@ -162,9 +170,11 @@ class Images extends Base
 
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
-            // if (empty($seo_keywords)) {
-            //     $seo_keywords = get_split_word($post['title'], $content);
-            // }
+            if (!empty($seo_keywords)) {
+                $seo_keywords = str_replace('，', ',', $seo_keywords);
+            } else {
+                // $seo_keywords = get_split_word($post['title'], $content);
+            }
 
             // 自动获取内容第一张图片作为封面图
             $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
@@ -231,11 +241,17 @@ class Images extends Base
             $aid = M('archives')->insertGetId($data);
             $_POST['aid'] = $aid;
             if ($aid) {
-            	// ---------后置操作
-            	model('Images')->afterSave($aid, $data, 'add');
-            	// ---------end
+                // ---------后置操作
+                model('Images')->afterSave($aid, $data, 'add');
+                // ---------end
                 adminLog('新增图集：'.$data['title']);
-                $this->success("操作成功!", $post['gourl']);
+
+                // 生成静态页面代码
+                $successData = [
+                    'aid'   => $aid,
+                    'tid'   => $post['typeid'],
+                ];
+                $this->success("操作成功!", null, $successData);
                 exit;
             }
 
@@ -286,14 +302,6 @@ class Images extends Base
         $this->assign('tempview', $tempview);
         /*--end*/
 
-        /*返回上一层*/
-        $gourl = input('param.gourl/s', '');
-        if (empty($gourl)) {
-            $gourl = url('Images/index', array('typeid'=>$typeid));
-        }
-        $assign_data['gourl'] = $gourl;
-        /*--end*/
-
         $this->assign($assign_data);
 
         return $this->fetch();
@@ -311,9 +319,11 @@ class Images extends Base
 
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
-            // if (empty($seo_keywords)) {
-            //     $seo_keywords = get_split_word($post['title'], $content);
-            // }
+            if (!empty($seo_keywords)) {
+                $seo_keywords = str_replace('，', ',', $seo_keywords);
+            } else {
+                // $seo_keywords = get_split_word($post['title'], $content);
+            }
 
             // 自动获取内容第一张图片作为封面图
             $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
@@ -332,7 +342,7 @@ class Images extends Base
             if (empty($post['litpic'])) {
                 $is_litpic = 0; // 无封面图
             } else {
-                $is_litpic = $post['is_litpic']; // 有封面图
+                $is_litpic = !empty($post['is_litpic']) ? $post['is_litpic'] : 0; // 有封面图
             }
 
             // SEO描述
@@ -382,11 +392,17 @@ class Images extends Base
                 ])->update($data);
             
             if ($r) {
-            	// ---------后置操作
-            	model('Images')->afterSave($data['aid'], $data, 'edit');
-            	// ---------end
+                // ---------后置操作
+                model('Images')->afterSave($data['aid'], $data, 'edit');
+                // ---------end
                 adminLog('编辑图集：'.$data['title']);
-                $this->success("操作成功!", $post['gourl']);
+                
+                // 生成静态页面代码
+                $successData = [
+                    'aid'       => $data['aid'],
+                    'tid'       => $typeid,
+                ];
+                $this->success("操作成功!", null, $successData);
                 exit;
             }
 
@@ -473,14 +489,6 @@ class Images extends Base
         $tempview = $info['tempview'];
         empty($tempview) && $tempview = $arctypeInfo['tempview'];
         $this->assign('tempview', $tempview);
-        /*--end*/
-
-        /*返回上一层*/
-        $gourl = input('param.gourl/s', '');
-        if (empty($gourl)) {
-            $gourl = url('Images/index', array('typeid'=>$typeid));
-        }
-        $assign_data['gourl'] = $gourl;
         /*--end*/
 
         $this->assign($assign_data);

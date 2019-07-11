@@ -17,6 +17,25 @@
                 <!-- 隐藏域 start -->
             {/case}
 
+            {case value="region"}
+                <!-- 区域选项 start -->
+                <dl class="row">
+                    <dt class="tit">
+                        <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </dt>
+                    <dd class="opt">
+                        {volist name="$vo.dfvalue" id="v2"}
+                            <label>
+                                <input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2['id']}" {if condition="isset($vo['trueValue']) AND in_array($v2['id'], $vo['trueValue'])"}checked="checked"{/if}>{$v2['name']}
+                            </label>&nbsp;
+                        {/volist}
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </dd>
+                </dl>
+                <!-- 区域选项 end -->
+            {/case}
+
             {case value="text"}
                 <!-- 单行文本框 start -->
                 <dl class="row">

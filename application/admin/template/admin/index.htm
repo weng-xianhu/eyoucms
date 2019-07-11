@@ -170,6 +170,7 @@
         <!--分页位置-->
         {$page} </div>
 </div>
+<input type="hidden" name="head_pic" id="head_pic" value="{$Think.session.admin_info.head_pic|get_head_pic=###}">
 <script>
     $(document).ready(function(){
         // 表格行点击选中切换
@@ -181,6 +182,9 @@
         $('.fa-refresh').click(function(){
             location.href = location.href;
         });
+
+        // 上传头像及时显示
+        $('#admin_head_pic', window.parent.document).attr('src', $('#head_pic').val());
     });
 </script>
 

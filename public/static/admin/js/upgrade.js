@@ -57,7 +57,7 @@ function btn_upgrade(obj, type)
             ,btn: btn //按钮
             ,btn3: function(index){
                 var url = $(obj).data('tips_url');
-                $.getJSON(url, {show_popup_upgrade:-1}, function(){});
+                $.getJSON(url, {show_popup_upgrade:-1,_ajax:1}, function(){});
                 parent.layer.msg('【核心设置】里可以开启该提醒', {
                     btnAlign: 'c',
                     time: 20000, //20s后自动关闭
@@ -92,7 +92,7 @@ function checkdir(obj) {
         type : "POST",
         url  : $(obj).data('check_authority'),
         timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
-        data : {filelist:0},
+        data : {filelist:0,_ajax:1},
         error: function(request) {
             parent.layer.closeAll();
             parent.layer.alert("检测不通过，可能被服务器防火墙拦截，请添加白名单，或者联系技术协助！", {icon: 2, title:false}, function(){
@@ -137,7 +137,7 @@ function upgrade(obj){
         type : "GET",
         url  :  $(obj).data('upgrade_url'),
         timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
-        data : {},
+        data : {_ajax:1},
         beforeSend:function(){
             timer = setInterval(function(){
                 random = Math.floor(Math.random()*89+10);
@@ -240,7 +240,7 @@ function export_data(){
         shade: [0.2] //0.1透明度的白色背景
     });
     setTimeout(function(){
-        var url = eyou_basefile + "?m="+module_name+"&c=Tools&a=export";
+        var url = eyou_basefile + "?m="+module_name+"&c=Tools&a=export&_ajax=1";
         $.ajax({
             url: url,
             data: {tables:'all'},
@@ -279,7 +279,7 @@ function export_data(){
 }
 
 function backup_data(tab){
-    var url = eyou_basefile + "?m="+module_name+"&c=Tools&a=export";
+    var url = eyou_basefile + "?m="+module_name+"&c=Tools&a=export&_ajax=1";
     $.ajax({
         url: url,
         data: tab,

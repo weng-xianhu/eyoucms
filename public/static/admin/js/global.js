@@ -63,13 +63,35 @@ function batch_del(obj, name) {
         $.ajax({
             type: "POST",
             url: $(obj).attr('data-url'),
-            data: {del_id:a},
+            data: {del_id:a, _ajax:1},
             dataType: 'json',
             success: function (data) {
                 layer.closeAll();
                 if(data.code == 1){
                     layer.msg(data.msg, {icon: 1});
-                    window.location.reload();
+                    //window.location.reload();
+            
+                    /* 生成静态页面代码 */
+                    $.ajax({
+                        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml",
+                        type:'get',
+                        dataType:'json',
+                        data: {del_ids:a,_ajax:1},
+                        success:function(data){
+                            window.location.reload();
+                        },
+                        error: function(){
+                            window.location.reload();
+                        }
+                    });
+                    /* end */
+                            
+                    // layer.alert(data.msg, {
+                    //     icon: 1,
+                    //     closeBtn: 0
+                    // }, function(){
+                    //     window.location.reload();
+                    // });
                 }else{
                     layer.alert(data.msg, {icon: 2, title:false});
                 }
@@ -103,14 +125,28 @@ function delfun(obj) {
             $.ajax({
                 type : 'post',
                 url : $(obj).attr('data-url'),
-                data : {del_id:$(obj).attr('data-id')},
+                data : {del_id:$(obj).attr('data-id'), _ajax:1},
                 dataType : 'json',
                 success : function(data){
                     layer.closeAll();
                     if(data.code == 1){
                         layer.msg(data.msg, {icon: 1});
-                        window.location.reload();
-                        // $(obj).parent().parent().parent().remove();
+                        //window.location.reload();
+
+                        /* 生成静态页面代码 */
+                        $.ajax({
+                            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml",
+                            type:'get',
+                            dataType:'json',
+                            data: {del_ids:$(obj).attr('data-id'),_ajax:1},
+                            success:function(data){
+                                 window.location.reload();
+                            },
+                            error: function(){
+                                window.location.reload();
+                            }
+                        });
+                        /* end */
                     }else{
                         layer.alert(data.msg, {icon: 2, title:false});
                     }
@@ -171,7 +207,7 @@ function batch_move(obj, name) {
         $.ajax({
             type: "POST",
             url: $(obj).attr('data-url'),
-            data: {move_id:a},
+            data: {move_id:a, _ajax:1},
             dataType: 'json',
             success: function (data) {
                 layer.closeAll();
@@ -342,13 +378,13 @@ function GetUploadifyProduct(id,num,elementid,path,callback)
         content: upurl
      });
 }
-	
+    
 // 获取活动剩余天数 小时 分钟
 //倒计时js代码精确到时分秒，使用方法：注意 var EndTime= new Date('2013/05/1 10:00:00'); //截止时间 这一句，特别是 '2013/05/1 10:00:00' 这个js日期格式一定要注意，否则在IE6、7下工作计算不正确哦。
 //js代码如下：
 function GetRTime(end_time){
       // var EndTime= new Date('2016/05/1 10:00:00'); //截止时间 前端路上 http://www.51xuediannao.com/qd63/
-	   var EndTime= new Date(end_time); //截止时间 前端路上 http://www.51xuediannao.com/qd63/
+       var EndTime= new Date(end_time); //截止时间 前端路上 http://www.51xuediannao.com/qd63/
        var NowTime = new Date();
        var t =EndTime.getTime() - NowTime.getTime();
        /*var d=Math.floor(t/1000/60/60/24);
@@ -363,8 +399,8 @@ function GetRTime(end_time){
        var h=Math.floor(t/1000/60/60%24);
        var m=Math.floor(t/1000/60%60);
        var s=Math.floor(t/1000%60);
-	   if(s >= 0)	
-	   return d + '天' + h + '小时' + m + '分' +s+'秒';
+       if(s >= 0)   
+       return d + '天' + h + '小时' + m + '分' +s+'秒';
    }
    
 /**
@@ -380,6 +416,7 @@ function get_select_options(t,next){
     $.ajax({
         type : "GET",
         url  : url,
+        data : {_ajax:1},
         error: function(request) {
             alert("网络失败，请刷新页面后重试");
             return;
@@ -393,29 +430,29 @@ function get_select_options(t,next){
 // 读取 cookie
 function getCookie(c_name)
 {
-	if (document.cookie.length>0)
-	{
-	  c_start = document.cookie.indexOf(c_name + "=")
-	  if (c_start!=-1)
-	  { 
-	    c_start=c_start + c_name.length+1 
-	    c_end=document.cookie.indexOf(";",c_start)
-	    if (c_end==-1) c_end=document.cookie.length
-	    	return unescape(document.cookie.substring(c_start,c_end))
-	  } 
-	}
-	return "";
+    if (document.cookie.length>0)
+    {
+      c_start = document.cookie.indexOf(c_name + "=")
+      if (c_start!=-1)
+      { 
+        c_start=c_start + c_name.length+1 
+        c_end=document.cookie.indexOf(";",c_start)
+        if (c_end==-1) c_end=document.cookie.length
+            return unescape(document.cookie.substring(c_start,c_end))
+      } 
+    }
+    return "";
 }
 
 function setCookies(name, value, time)
 {
-	var cookieString = name + "=" + escape(value) + ";";
-	if (time != 0) {
-		var Times = new Date();
-		Times.setTime(Times.getTime() + time);
-		cookieString += "expires="+Times.toGMTString()+";"
-	}
-	document.cookie = cookieString+"path=/";
+    var cookieString = name + "=" + escape(value) + ";";
+    if (time != 0) {
+        var Times = new Date();
+        Times.setTime(Times.getTime() + time);
+        cookieString += "expires="+Times.toGMTString()+";"
+    }
+    document.cookie = cookieString+"path=/";
 }
 function delCookie(name){
     var exp=new Date();
@@ -427,20 +464,20 @@ function delCookie(name){
 }
 
 function layConfirm(msg , callback){
-	layer.confirm(msg, {
-		  btn: ['确定','取消'] //按钮
-		}, function(){
-			callback();
-			layer.closeAll();
-		}, function(index){
-			layer.close(index);
-			return false;// 取消
-		}
-	);
+    layer.confirm(msg, {
+          btn: ['确定','取消'] //按钮
+        }, function(){
+            callback();
+            layer.closeAll();
+        }, function(index){
+            layer.close(index);
+            return false;// 取消
+        }
+    );
 }
 
 function isMobile(){
-	return "yes";
+    return "yes";
 }
 
 // 判断是否手机浏览器
@@ -458,7 +495,7 @@ function isMobileBrowser()
     if (bIsIpad || bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM ){    
         return true;
     }else 
-	    return false;
+        return false;
 }
 
 function getCookieByName(name) {

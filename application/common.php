@@ -235,7 +235,7 @@ if (!function_exists('write_html_cache'))
                 return false;
             }
             $seo_pseudo = config('ey_config.seo_pseudo');
-            if (!in_array($seo_pseudo, array(1,3))) { // 排除普通动态模式
+            if (!in_array($seo_pseudo, array(1,3)) && (2 == $seo_pseudo && !isMobile())) { // 排除普通动态模式
                 return false;
             }
             /*--end*/
@@ -494,9 +494,13 @@ if (!function_exists('get_head_pic'))
     /**
      * 默认头像
      */
-    function get_head_pic($pic_url = '')
+    function get_head_pic($pic_url = '', $is_admin = false)
     {
-        $default_pic = ROOT_DIR . '/public/static/common/images/bag-imgB.jpg';
+        if ($is_admin) {
+            $default_pic = ROOT_DIR . '/public/static/admin/images/admint.png';
+        } else {
+            $default_pic = ROOT_DIR . '/public/static/common/images/bag-imgB.jpg';
+        }
         return empty($pic_url) ? $default_pic : $pic_url;
     }
 }
@@ -603,6 +607,12 @@ if (!function_exists('handle_subdir_pic'))
                     // $str = preg_replace('#(.*)(\#39;|&quot;|"|\')(/[/\w]+)?(/public/upload/|/public/plugins/|/uploads/)(.*)#iU', '$1$2'.$root_dir.'$4$5', $str);
                 // }
                 break;
+
+            case 'soft':
+                if (!is_http_url($str) && !empty($str)) {
+                    $str = preg_replace('#^(/[/\w]+)?(/public/upload/soft/|/uploads/soft/)#i', '$2', $str);
+                }
+                break;
             
             default:
                 # code...
@@ -643,7 +653,8 @@ if (!function_exists('thumb_img'))
     function thumb_img($original_img = '', $width = '', $height = '', $thumb_mode = '')
     {
         // 缩略图配置
-        $thumbConfig = tpCache('thumb');
+        static $thumbConfig = null;
+        null === $thumbConfig && $thumbConfig = tpCache('thumb');
         $thumbextra = config('global.thumb');
 
         if (!empty($width) || !empty($height) || !empty($thumb_mode)) { // 单独在模板里调用，不受缩略图全局开关影响
@@ -801,89 +812,6 @@ if (!function_exists('thumb_img'))
 
             return $img_url;
 
-        } catch (think\Exception $e) {
-
-            return $original_img;
-        }
-    }
-}
-
-if (!function_exists('get_product_sub_images')) 
-{
-    /**
-     * 产品相册缩略图
-     */
-    function get_product_sub_images($sub_img, $aid, $width, $height)
-    {
-        //判断缩略图是否存在
-        $path = "public/upload/product/thumb/$aid/";
-        $product_thumb_name = "product_sub_thumb_{$sub_img['img_id']}_{$width}_{$height}";
-        
-        //这个缩略图 已经生成过这个比例的图片就直接返回了
-        if (is_file($path . $product_thumb_name . '.jpg')) return '/' . $path . $product_thumb_name . '.jpg';
-        if (is_file($path . $product_thumb_name . '.jpeg')) return '/' . $path . $product_thumb_name . '.jpeg';
-        if (is_file($path . $product_thumb_name . '.gif')) return '/' . $path . $product_thumb_name . '.gif';
-        if (is_file($path . $product_thumb_name . '.png')) return '/' . $path . $product_thumb_name . '.png';
-
-        $ossClient = new \app\common\logic\OssLogic;
-        if (($ossUrl = $ossClient->getProductAlbumThumbUrl($sub_img['image_url'], $width, $height))) {
-            return $ossUrl;
-        }
-        
-        $original_img = '.' . $sub_img['image_url']; //相对路径
-        if (!is_file($original_img)) {
-            return '/public/static/common/images/not_adv.jpg';
-        }
-
-        try {
-            vendor('topthink.think-image.src.Image');
-            if(strstr(strtolower($original_img),'.gif'))
-            {
-                vendor('topthink.think-image.src.image.gif.Encoder');
-                vendor('topthink.think-image.src.image.gif.Decoder');
-                vendor('topthink.think-image.src.image.gif.Gif');
-            }
-            $image = \think\Image::open($original_img);
-
-            $product_thumb_name = $product_thumb_name . '.' . $image->type();
-            // 生成缩略图
-            !is_dir($path) && mkdir($path, 0777, true);
-            // 参考文章 http://www.mb5u.com/biancheng/php/php_84533.html  改动参考 http://www.thinkphp.cn/topic/13542.html
-            $image->thumb($width, $height, 2)->save($path . $product_thumb_name, NULL, 100); //按照原图的比例生成一个最大为$width*$height的缩略图并保存
-            //图片水印处理
-            $water = tpCache('water');
-            if ($water['is_mark'] == 1) {
-                $imgresource = './' . $path . $product_thumb_name;
-                if ($width > $water['mark_width'] && $height > $water['mark_height']) {
-                    if ($water['mark_type'] == 'img') {
-                        //检查水印图片是否存在
-                        $waterPath = "." . $water['mark_img'];
-                        if (is_file($waterPath)) {
-                            $quality = $water['mark_quality'] ?: 80;
-                            $waterTempPath = dirname($waterPath).'/temp_'.basename($waterPath);
-                            $image->open($waterPath)->save($waterTempPath, null, $quality);
-                            $image->open($imgresource)->water($waterTempPath, $water['mark_sel'], $water['mark_degree'])->save($imgresource);
-                            @unlink($waterTempPath);
-                        }
-                    } else {
-                        //检查字体文件是否存在,注意是否有字体文件
-                        $ttf = ROOT_PATH.'public/static/common/font/hgzb.ttf';
-                        if (file_exists($ttf)) {
-                            $size = $water['mark_txt_size'] ?: 30;
-                            $color = $water['mark_txt_color'] ?: '#000000';
-                            if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
-                                $color = '#000000';
-                            }
-                            $transparency = intval((100 - $water['mark_degree']) * (127/100));
-                            $color .= dechex($transparency);
-                            $image->open($imgresource)->text($water['mark_txt'], $ttf, $size, $color, $water['mark_sel'])->save($imgresource);
-                        }
-                    }
-                }
-            }
-            $img_url = '/' . $path . $product_thumb_name;
-
-            return $img_url;
         } catch (think\Exception $e) {
 
             return $original_img;
@@ -1744,7 +1672,7 @@ if (!function_exists('download_file'))
     function download_file($down_path = '', $file_mime = '')
     {
         /*支持子目录*/
-        $down_path = handle_subdir_pic($down_path);
+        $down_path = handle_subdir_pic($down_path, 'soft');
         /*--end*/
 
         //文件名
@@ -1955,5 +1883,448 @@ if (!function_exists('SynchronizeQiniu'))
             return $tcp.$domain.'/'.$images;
         }
         return $images;
+    }
+}
+
+if (!function_exists('getAllChild')) 
+{   
+    /**
+     * 递归查询所有的子类
+     * @param array $arctype_child_all 存放所有的子栏目
+     * @param int $id 栏目ID 或 父栏目ID
+     * @param int $type 1=栏目，2=文章
+     */ 
+    function getAllChild(&$arctype_child_all,$id,$type = 1){
+        if($type == 1){
+            $arctype_child = db('arctype')->where(['is_del'=>0,'status'=>1,'parent_id'=>$id])->getfield('id',true);
+        }else{
+            $where['is_del'] = 0;
+            $where['status'] = 1;
+            $where['parent_id'] = $id;
+            $where['current_channel'] = array(array('neq',6),array('neq',8));
+            $arctype_child = db('arctype')->where($where)->getfield('id',true); 
+        }
+        
+        if(!empty($arctype_child)){
+            $arctype_child_all = array_merge($arctype_child_all,$arctype_child);
+            for($i=0;$i<count($arctype_child);$i++){
+                getAllChild($arctype_child_all,$arctype_child[$i],$type);
+            }
+        }
+    }
+}
+    
+if (!function_exists('getAllChildByList')) 
+{   
+    /**
+     * 生成栏目页面时获取同模型下级
+     * @param array $arctype_child_all 存放所有的子栏目
+     * @param int $id 栏目ID 或 父栏目ID
+     * @param int $current_channel 当前栏目的模型ID
+     */ 
+    function getAllChildByList(&$arctype_child_all,$id,$current_channel){
+        $arctype_child = db('arctype')->where(['is_del'=>0,'status'=>1,'parent_id'=>$id,'current_channel'=>$current_channel])->getfield('id',true);
+        if(!empty($arctype_child)){
+            $arctype_child_all = array_merge($arctype_child_all,$arctype_child);
+            for($i=0;$i<count($arctype_child);$i++){
+                getAllChild($arctype_child_all,$arctype_child[$i]);
+            }
+        }
+    }
+}
+
+if (!function_exists('getAllChildArctype'))
+{
+    //递归查询所有的子类
+    function getAllChildArctype(&$arctype_child_all,$id){
+        $where['a.is_del'] = 0;
+        $where['a.status'] = 1;
+        $where['a.parent_id'] = $id;
+        $arctype_child = db('arctype')->field('c.*, a.*, a.id as typeid')
+            ->alias('a')
+            ->join('__CHANNELTYPE__ c', 'c.id = a.current_channel', 'LEFT')
+            ->where($where)
+            ->select();
+        if(!empty($arctype_child)){
+            $arctype_child_all = array_merge($arctype_child,$arctype_child_all);
+            for($i=0;$i<count($arctype_child);$i++){
+                getAllChildArctype($arctype_child_all,$arctype_child[$i]['typeid']);
+            }
+        }
+    }
+}
+
+if (!function_exists('getAllArctype'))
+{
+    /*
+     * 递归查询所有栏目
+     * $home_lang   语言
+     * $id          栏目id    存在则获取指定的栏目，不存在获取全部
+     * $parent      是否获取下级栏目    true：获取，false：不获取
+     * $aid
+     */
+    function getAllArctype($home_lang,$id,$view_suffix,$parent = true,$aid = 0){
+        $map = [];
+        if (!empty($id)){
+            $map['a.id'] = $id;
+        }
+        $map['a.lang'] = $home_lang;
+        $map['a.is_del'] = 0;
+        $map['a.status'] = 1;
+        $info = db('arctype')->field('c.*, a.*, a.id as typeid')
+            ->alias('a')
+            ->join('__CHANNELTYPE__ c', 'c.id = a.current_channel', 'LEFT')
+            ->where($map)
+            ->order("a.id desc")
+            ->cache(true,EYOUCMS_CACHE_TIME,"arctype")
+            ->select();
+        if (!empty($id) && $parent && $aid == 0){ // $aid > 0 表示栏目生成不生成子栏目
+            getAllChildArctype($info,$id);
+        }
+        $info = getAllArctypeCount($home_lang,$info,$id,$view_suffix,$aid);
+        return $info;
+    }
+}
+
+if (!function_exists('getAllArctypeCount'))
+{
+    /*
+     * 获取所有栏目数据条数
+     * 获取需要生成的栏目页的静态文件的个数   缓存到channel_page_total
+     */
+    function getAllArctypeCount($home_lang,$info,$id = 0,$view_suffix = ".htm",$aid = 0){
+        $pagetotal = 0;
+        if ($id){
+            $map_arc['typeid'] = array('in',get_arr_column($info,'typeid'));
+        }
+        $map_arc['is_del'] = 0;
+        $map_arc['status'] = 1;
+        $map_arc['lang'] = $home_lang;
+        $info = convert_arr_key($info,'typeid');
+        $count_type = db('archives')->field("count(*) as count,typeid")->where($map_arc)->group("typeid")->select();
+        $count_type = convert_arr_key($count_type,'typeid');
+        foreach($info as $k=>$v){
+            if (!isset($info[$k]['count'])){    //判断当前栏目的count是否已经存在
+                $info[$k]['count'] = 0;
+            }
+            if (isset($count_type[$v['typeid']])){    //存在当前栏目个数
+                $info[$k]['count'] += $count_type[$v['typeid']]['count'];
+            }
+            if ($v['parent_id'] && $v['current_channel'] != 6 && $v['current_channel'] != 8 && isset($info[$v['parent_id']]) && $v['current_channel'] == $info[$v['parent_id']]['current_channel']){     //判断是否存在上级目录
+                if (isset($info[$v['parent_id']]['count'])){
+                    $info[$v['parent_id']]['count'] += $info[$k]['count'];
+                }else{
+                    $info[$v['parent_id']]['count'] = $info[$k]['count'];
+                }
+            }
+            if ($v['current_channel'] == 6 || $v['current_channel'] == 8){
+                $info[$k]['pagesize'] = 1;
+                $pagetotal += $info[$k]['pagetotal'] = 1;
+            }else{
+                $tpl = !empty($v['templist']) ? str_replace('.'.$view_suffix, '',$v['templist']) : 'lists_'. $v['nid'];
+                $template_html = "./template/pc/".$tpl.".htm";
+                $content = file_get_contents($template_html);
+                if($content){
+                    preg_match_all('/\{eyou:list(.*)pagesize=[\'\"](\d+)[\'\"](.*)\}/',$content,$rese);
+                    $pagesize =  !empty($rese[2][0]) ? $rese[2][0] : 10;
+                    if ($aid){
+                        preg_match_all('/\{eyou:list(.*)orderby=[\'\"](.*)[\'\"](.*)\}/',$content,$reseby);
+                        $orderby =  !empty($reseby[2][0]) ? $reseby[2][0] : "";
+                        preg_match_all('/\{eyou:list(.*)orderWay=[\'\"](.*)[\'\"](.*)\}/',$content,$reseway);
+                        $orderway =  !empty($reseway[2][0]) ? $reseway[2][0] : "desc";
+                    }
+                }
+                $info[$k]['pagesize'] = $pagesize = !empty($pagesize)?$pagesize:10;
+                $pagetotal += $info[$k]['pagetotal'] = !empty($info[$k]['count']) ? ceil($info[$k]['count']/$pagesize):1;
+            }
+            $info[$k]['orderby'] = !empty($orderby)?$orderby:"";
+            $info[$k]['orderway'] = !empty($orderway)?$orderway:"desc";
+        }
+        $info = array_merge($info);
+
+
+        return ["info"=>$info,"pagetotal"=>$pagetotal];
+    }
+}
+
+
+if (!function_exists('getAllArchives'))
+{
+    //递归查询所有栏目
+    function getAllArchives($home_lang,$id,$aid = 0){
+        $map = [];
+        if(!empty($aid)){
+            $map['a.aid'] = $aid;
+        }else if (!empty($id)){
+            $id_arr = [$id];
+            getAllChild($id_arr,$id,2);
+            $map['a.typeid'] = ['in',$id_arr];
+        }
+        $allow_release_channel = config('global.allow_release_channel');
+        $map['a.channel']  = ['IN', $allow_release_channel];
+        $map['a.lang'] = $home_lang;
+        $map['a.is_del'] = 0;
+        $map['a.status'] = 1;
+        $info = db('archives')->field('a.*')
+            ->alias('a')
+            ->where($map)
+            ->select();
+        $typeids = get_arr_column($info, 'typeid');
+        $info = getAllContent($info);
+
+        /*栏目信息*/
+        $arctypeRow = db('arctype')->field('c.*, a.*, a.id as typeid')
+            ->alias('a')
+            ->where(['a.lang'=>$home_lang])
+            ->join('__CHANNELTYPE__ c', 'c.id = a.current_channel', 'LEFT')
+            ->cache(true,EYOUCMS_CACHE_TIME,"arctype")
+            ->getAllWithIndex('typeid');
+
+        return [
+            'info'          => $info,
+            'arctypeRow'   => $arctypeRow,
+        ];
+    }
+}
+if (!function_exists('getPreviousArchives'))
+{
+    //获取上一条文章数据
+    function getPreviousArchives($home_lang,$id,$aid = 0){
+        $map = [];
+        if(!empty($aid)){
+            $map['a.aid'] = ['lt',$aid];
+        }
+        if (!empty($id)){
+            $id_arr = [$id];
+            getAllChild($id_arr,$id,2);
+            $map['a.typeid'] = ['in',$id_arr];
+        }
+        $allow_release_channel = config('global.allow_release_channel');
+        $map['a.channel']  = ['IN', $allow_release_channel];
+        $map['a.lang'] = $home_lang;
+        $map['a.is_del'] = 0;
+        $map['a.status'] = 1;
+        $info = db('archives')->field('a.*')
+            ->alias('a')
+            ->where($map)
+            ->order("a.aid desc")
+            ->limit(1)
+            ->select();
+        $typeids = get_arr_column($info, 'typeid');
+        $info = getAllContent($info);
+
+        /*栏目信息*/
+        $arctypeRow = db('arctype')->field('c.*, a.*, a.id as typeid')
+            ->alias('a')
+            ->where(['a.lang'=>$home_lang])
+            ->join('__CHANNELTYPE__ c', 'c.id = a.current_channel', 'LEFT')
+            ->cache(true,EYOUCMS_CACHE_TIME,"arctype")
+            ->getAllWithIndex('typeid');
+
+        return [
+            'info'          => $info,
+            'arctypeRow'   => $arctypeRow,
+        ];
+    }
+}
+if (!function_exists('getNextArchives'))
+{
+    //获取下一条文章数据
+    function getNextArchives($home_lang,$id,$aid = 0){
+        $map = [];
+        if(!empty($aid)){
+            $map['a.aid'] = ['gt',$aid];
+        }
+        if (!empty($id)){
+            $id_arr = [$id];
+            getAllChild($id_arr,$id,2);
+            $map['a.typeid'] = ['in',$id_arr];
+        }
+        $allow_release_channel = config('global.allow_release_channel');
+        $map['a.channel']  = ['IN', $allow_release_channel];
+        $map['a.lang'] = $home_lang;
+        $map['a.is_del'] = 0;
+        $map['a.status'] = 1;
+        $info = db('archives')->field('a.*')
+            ->alias('a')
+            ->where($map)
+            ->order("a.aid asc")
+            ->limit(1)
+            ->select();
+        $typeids = get_arr_column($info, 'typeid');
+        $info = getAllContent($info);
+
+        /*栏目信息*/
+        $arctypeRow = db('arctype')->field('c.*, a.*, a.id as typeid')
+            ->alias('a')
+            ->where(['a.lang'=>$home_lang])
+            ->join('__CHANNELTYPE__ c', 'c.id = a.current_channel', 'LEFT')
+            ->cache(true,EYOUCMS_CACHE_TIME,"arctype")
+            ->getAllWithIndex('typeid');
+
+        return [
+            'info'          => $info,
+            'arctypeRow'   => $arctypeRow,
+        ];
+    }
+}
+
+if (!function_exists('getAllContent'))
+{
+    //获取指定文档列表的内容附加表字段值
+    function getAllContent($archivesList = []){
+        $contentList = [];
+        $db = new \think\Db;
+        $channeltype_list = config('global.channeltype_list');
+        $arr = group_same_key($archivesList, 'channel');
+        foreach ($arr as $nid => $list) {
+            $table = array_search($nid, $channeltype_list);
+            if (!empty($table)) {
+                $aids = get_arr_column($list, 'aid');
+                $row = $db::name($table.'_content')->field('id,add_time,update_time', true)
+                    ->where(['aid'=>['IN', $aids]])
+                    ->getAllWithIndex('aid');
+                $contentList += $row;
+            }
+        }
+
+        $firstFieldData = current($contentList);
+        foreach ($archivesList as $key => $val) {
+
+            /*文档所属模型是不存在，或已被禁用*/
+            $table = array_search($val['channel'], $channeltype_list);
+            if (empty($table)) {
+                unset($archivesList[$key]);
+                continue;
+            }
+            /*end*/
+
+            /*文档内容表没有记录的特殊情况*/
+            if (!isset($contentList[$val['aid']])) {
+                $contentList[$val['aid']] = [];
+                foreach ($firstFieldData as $k2 => $v2) {
+                    if (in_array($k2, ['aid'])) {
+                        $contentList[$val['aid']][$k2] = $val[$k2];
+                    } else {
+                        $contentList[$val['aid']][$k2] = '';
+                    }
+                }
+            }
+            /*end*/
+            $val = array_merge($val, $contentList[$val['aid']]);
+            $archivesList[$key] = $val;
+        }
+
+        return $archivesList;
+    }
+}
+
+if (!function_exists('getAllTags'))
+{
+    //递归查询所有栏目内容
+    function getAllTags($aid_arr){
+        $map = [];
+        $info = [];
+        $map['aid'] = ['in',$aid_arr];
+        $result = db('taglist')->field("aid,tag")->where($map)->select();
+        if ($result) {
+            foreach ($result as $key => $val) {
+                if (!isset($info[$val['aid']])) $info[$val['aid']] = array();
+                array_push($info[$val['aid']], $val['tag']);
+            }
+        }
+
+        return $info;
+    }
+}
+
+if (!function_exists('getAllAttrInfo'))
+{
+    //递归查询所有栏目内容
+    function getAllAttrInfo($aid_arr){
+        $info = [];
+        $info['product_img'] = model('ProductImg')->getProImg($aid_arr);
+        $info['product_attr'] = model('ProductAttr')->getProAttr($aid_arr);
+        $info['images_upload'] = model('ImagesUpload')->getImgUpload($aid_arr);
+        $info['download_file'] = model('DownloadFile')->getDownFile($aid_arr);
+
+        return $info;
+    }
+}
+if (!function_exists('getOrderBy'))
+{
+    //根据tags-list规则，获取查询排序
+    function getOrderBy($orderby,$orderWay){
+        switch ($orderby) {
+            case 'hot':
+            case 'click':
+                $orderby = "a.click {$orderWay}";
+                break;
+
+            case 'id': // 兼容织梦的写法
+            case 'aid':
+                $orderby = "a.aid {$orderWay}";
+                break;
+
+            case 'now':
+            case 'new': // 兼容织梦的写法
+            case 'pubdate': // 兼容织梦的写法
+            case 'add_time':
+                $orderby = "a.add_time {$orderWay}";
+                break;
+
+            case 'sortrank': // 兼容织梦的写法
+            case 'sort_order':
+                $orderby = "a.sort_order {$orderWay}";
+                break;
+
+            case 'rand':
+                $orderby = "a.aid {$orderWay}";  //"rand()";
+                break;
+
+            default:
+            {
+                if (empty($orderby)) {
+                    $orderby = 'a.sort_order asc, a.aid desc';
+                } elseif (trim($orderby) != 'rand()') {
+                    $orderbyArr = explode(',', $orderby);
+                    foreach ($orderbyArr as $key => $val) {
+                        $val = trim($val);
+                        if (preg_match('/^([a-z]+)\./i', $val) == 0) {
+                            $val = 'a.'.$val;
+                            $orderbyArr[$key] = $val;
+                        }
+                    }
+                    $orderby = implode(',', $orderbyArr);
+                }
+                break;
+            }
+        }
+
+        return $orderby;
+    }
+}
+if (!function_exists('getLocationPages'))
+{
+    /*
+     * 获取当前文章属于栏目第几条
+     */
+    function getLocationPages($tid,$aid,$order){
+        $map_arc = [];
+        if (!empty($tid)){
+            $id_arr = [$tid];
+            getAllChild($id_arr,$tid,2);
+            $map_arc['typeid'] = ['in',$id_arr];
+        }
+        $map_arc['is_del'] = 0;
+        $map_arc['status'] = 1;
+        $result = db('archives')->alias('a')->field("a.aid")->where($map_arc)->orderRaw($order)->select();
+
+        foreach ($result as $key=>$val){
+            if ($aid == $val['aid']){
+                return $key + 1;
+            }
+        }
+        return false;
     }
 }

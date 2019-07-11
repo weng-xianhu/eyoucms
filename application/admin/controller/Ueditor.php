@@ -67,6 +67,17 @@ class Ueditor extends Base
             case 'uploadimage':
                 $fieldName = $CONFIG2['imageFieldName'];
                 $result = $this->upFile($fieldName);
+
+                /*编辑器七牛云同步*/
+                $result = json_decode($result, true);
+                $data = Db::name('weapp')->where('code','Qiniuyun')->field('status')->find();
+                if (!empty($data) && 1 == $data['status']) {
+                    // 同步图片到七牛云
+                    $result['url'] = SynchronizeQiniu($result['url']);
+                }
+                $result = json_encode($result);
+                /* END */
+
                 break;
             /* 上传涂鸦 */
             case 'uploadscrawl':

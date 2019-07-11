@@ -38,6 +38,19 @@
         layer_loading('正在处理');
         $('#post_form').submit();
     }
+
+    /* 生成静态页面代码 */
+    var typeid = "{$typeid}";
+    if(typeid > 0){
+        $.ajax({
+            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml",
+            type:'get',
+            dataType:'json',
+            data:{'typeid':typeid,_ajax:1},
+            success:function(data){}        
+        });
+    }
+    /* end */
 </script>
 
 {include file="public/footer" /}

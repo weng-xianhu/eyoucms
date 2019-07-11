@@ -54,7 +54,7 @@ function checkdir(obj,filelist) {
         type : "POST",
         url  : $(obj).data('check_authority'),
         timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
-        data : {filelist:filelist},
+        data : {filelist:filelist,_ajax:1},
         error: function(request) {
             layer.closeAll();
             layer.alert("检测不通过，可能被服务器防火墙拦截，请添加白名单，或者联系技术协助！", {icon: 2, title:false}, function(){
@@ -97,7 +97,7 @@ function upgrade(obj){
         type : "GET",
         url  :  $(obj).data('upgrade_url'),
         timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
-        data : {},
+        data : {_ajax:1},
         error: function(request) {
             layer.closeAll();
             layer.alert("模板升级失败，请第一时间联系技术协助！", {icon: 2, title:false}, function(){

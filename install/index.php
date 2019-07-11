@@ -325,11 +325,11 @@ switch ($step) {
         //创建写入sql数据库文件到库中 结束
 
         /*检测对比数据库文件版本与CMS版本*/
-        preg_match_all('/--\s*Version\s*:\s*#(v\d+\.\d+\.\d+)/', $sqldata, $matches1);
+        preg_match_all('/--\s*Version\s*:\s*#(v\d+\.\d+\.\d+([0-9\.]*))/', $sqldata, $matches1);
         $database_version = !empty($matches1[1][0]) ? $matches1[1][0] : ''; // 当前数据库版本
         if (!empty($cms_version) && $database_version != $cms_version) {
             $is_bool = true;
-            if (preg_match('/^v\d+\.\d+\.\d+$/i', $database_version)) {
+            if (preg_match('/^v\d+\.\d+\.\d+([0-9\.]*)$/i', $database_version)) {
                 $is_bool = false;
             } else {
                 // CMS版本对应的官方远程数据库的所有表名

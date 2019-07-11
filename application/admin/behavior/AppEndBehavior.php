@@ -97,7 +97,7 @@ class AppEndBehavior {
     }
 
     /**
-     * 发布或编辑时，截取SEO描述长度
+     * 发布或编辑时，对自定义模型的文档进行二次处理
      * @access private
      */
     private function seodescriptionHandle()
@@ -117,13 +117,20 @@ class AppEndBehavior {
                 if (empty($_POST['seo_description']) && !empty($_POST['addonFieldExt'][$contentField])) {
                     $content = $_POST['addonFieldExt'][$contentField];
                     $seo_description = @msubstr(checkStrHtml($content), 0, \think\Config::get('global.arc_seo_description_length'), false);
-                    $saveData = [
-                        'seo_description'   => $seo_description,
-                        'update_time'       => getTime(),
-                    ];
-                    \think\Db::name('archives')->where('aid', $_POST['aid'])->update($saveData);
+                    $saveData['seo_description'] = $seo_description;
                 }
                 /*--end*/
+
+                /*SEO关键字替换中文逗号*/
+                if (!empty($_POST['seo_keywords'])) {
+                    $saveData['seo_keywords'] = str_replace('，', ',', $_POST['seo_keywords']);
+                }
+                /*end*/
+
+                if (!empty($saveData)) {
+                    $saveData['update_time'] = getTime();
+                    \think\Db::name('archives')->where('aid', $_POST['aid'])->update($saveData);
+                }
             }
             /*--end*/
         }

@@ -288,19 +288,19 @@
             data : {code:code},
             error: function(request) {
                 layer.closeAll();
-                layer.alert("升级失败，请第一时间联系技术协助！", {icon: 2, title:false}, function(){
+                layer.alert("升级失败，请第一时间联系技术协助！", {icon: 2, closeBtn: false, title:false}, function(){
                     window.location.reload();
                 });
             },
             success: function(res) {
                 layer.closeAll();
                 if(1 == res.code){
-                    layer.alert('已升级最新版本!', {icon: 1, title:false}, function(){
+                    layer.alert('已升级最新版本!', {icon: 1, closeBtn: false, title:false}, function(){
                         window.location.reload();
                     });
                 }
                 else{
-                    layer.alert(res.msg, {icon: 2, title:false}, function(){
+                    layer.alert(res.msg, {icon: 2, closeBtn: false, title:false}, function(){
                         window.location.reload();
                     });
                 }

@@ -10,7 +10,19 @@
         <div class="ncap-form-default">
             <dl class="row">
                 <dt class="tit">
-                    <label for="user_name">用户名</label>
+                    <label for="head_pic">用户头像</label>
+                </dt>
+                <dd class="opt">
+                    <div class="txpic" onClick="GetUploadify(1,'','allimg','head_pic_call_back');">
+                        <input type="hidden" name="head_pic" id="head_pic" value="{$info.head_pic}" />
+                        <img id="img_head_pic" src="{$info.head_pic|get_head_pic=###}" />
+                        <em>更换头像</em>
+                    </div>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="username">用&nbsp;&nbsp;户&nbsp;&nbsp;名</label>
                 </dt>
                 <dd class="opt">
                     {$info.user_name}
@@ -22,7 +34,7 @@
                     <label for="password">登录密码</label>
                 </dt>
                 <dd class="opt">
-                    <input type="password" name="password" value="" id="password" class="input-txt">
+                    <input type="password" name="password" value="" id="password" autocomplete="off" class="input-txt">
                     <p class="notic"></p>
                 </dd>
             </dl>
@@ -31,7 +43,7 @@
                     <label for="password">确认密码</label>
                 </dt>
                 <dd class="opt">
-                    <input type="password" name="password2" value="" id="password2" class="input-txt">
+                    <input type="password" name="password2" value="" id="password2" autocomplete="off" class="input-txt">
                     <p class="notic"></p>
                 </dd>
             </dl>
@@ -347,7 +359,6 @@
         for(var i in admin_role_list){
             var item = admin_role_list[i];
             if(item.id == value){
-                console.log(item);
                 if(item.language){
                     item.language.map(function(row){
                         $('#postForm input[name^="language"][value="'+row+'"]').attr('checked', 'checked');
@@ -425,6 +436,12 @@
         $('#custom_role').before(str);
         $('#admin_role_list').val(auth_role_list);
         changeRole(new_role_id);
+    }
+
+    function head_pic_call_back(fileurl_tmp)
+    {
+      $("#head_pic").val(fileurl_tmp);
+      $("#img_head_pic").attr('src', fileurl_tmp);
     }
 
     // 判断输入框是否为空

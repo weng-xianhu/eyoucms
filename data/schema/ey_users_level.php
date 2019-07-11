@@ -21,9 +21,9 @@ return array (
   'level_value' => 
   array (
     'name' => 'level_value',
-    'type' => 'varchar(20)',
+    'type' => 'int(10)',
     'notnull' => false,
-    'default' => '',
+    'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),

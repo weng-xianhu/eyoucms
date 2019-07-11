@@ -7,113 +7,106 @@
     <form method="get" id="handlepost" name="form1">
         <div class="ncap-form-default">
             <dl class="row">
-                <dt class="tit">请选择栏目</dt>
-                <dd class="opt">
-                    <select name="html_typeid" id="html_typeid">
-                        <option value="0">更新所有文档…</option>
-                        {$select_html}
-                    </select>
-                    <p class="notic">开启静态页面模式才有效</p>
-                </dd>
-            </dl>
-            <dl class="row">
                 <dt class="tit">
-                    <label>文档起始ID</label>
+                    <label>整站页面</label>
                 </dt>
                 <dd class="opt">       
-                    <input id="html_startid" name="html_startid" value="" type="text" style="width: 80px;"/>
+                    <a href="javascript:void(0);" id="up_site" class="ncap-btn ncap-btn-green">一键生成</a>
                     <span class="err"></span>
-                    <p class="notic">（空或0表示从头开始）</p>
+                    <p class="notic"></p>
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label>文档结束ID</label>
+                    <label>首页</label>
                 </dt>
-                <dd class="opt">
-                    <input id="html_endid" name="html_endid" value="" type="text" style="width: 80px;"/>
+                <dd class="opt">       
+                    <a href="javascript:void(0);" id="up_index" class="ncap-btn ncap-btn-green">一键生成</a>
                     <span class="err"></span>
-                    <p class="notic">（空或0表示直到结束ID）</p>
+                    <p class="notic"></p>
                 </dd>
             </dl>
-            <div class="bot">
-                <input type="hidden" name="inc_type" value="{$inc_type}">
-                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green a_btn" data-type="archives" data-disabled=0 onclick="
-        return adsubmit(this);">更新文档HTML</a>
-                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green a_btn" data-type="arctype" data-disabled=0 onclick="
-        return adsubmit(this);">更新栏目HTML</a>
-                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green a_btn" data-type="index" data-disabled=0 onclick="
-        return adsubmit(this);">更新首页HTML</a>
-                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green a_btn" data-type="all" data-disabled=0 onclick="
-        return adsubmit(this);">一键更新</a>
-            </div>
-            <div class="bot">
-                <div id='mdv' style='width:100%;height:200px;'> 
-                    <iframe name="stafrm" frameborder="0" id="stafrm" width="100%" height="100%"></iframe>
-              </div>
-            </div>
+            <dl class="row">
+                <dt class="tit">栏目页</dt>
+                <dd class="opt">
+                    <select name="html_typeid" id="html_typeid">
+                        <option value="0">所有栏目…</option>
+                        {$select_html}
+                    </select>
+                    &nbsp;<a href="javascript:void(0);" id="up_channel" class="ncap-btn ncap-btn-green">一键生成</a>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">文档页</dt>
+                <dd class="opt">
+                    <select name="html_arc_typeid" id="html_arc_typeid">
+                        <option value="0">所有文档…</option>
+                        {$arc_select_html}
+                    </select>
+                    &nbsp;<a href="javascript:void(0);" id="up_article" class="ncap-btn ncap-btn-green">一键生成</a>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
         </div>
     </form>
 </div>
 <script type="text/javascript">
+    $(function(){
+        
+        //生成首页
+        $("#up_index").click(function(){
+            // $(".listbox").html('');
+            var timestamp1 = Date.parse(new Date());
+            $.ajax({
+                url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildIndex",
+                type:'POST',
+                dataType:'json',
+                data: {_ajax:1},
+                beforeSend:function(){
+                    layer_loading('正在处理');
+                    // var index = layer.load(0, {shade: false}); 
+                },
+                success:function(data){
+                    if(data.msg !== ""){
+                        layer.alert(data.msg, {icon: 5, title:false,closeBtn: 0 },function () {
+                            layer.closeAll();
+                        } );
+//                        layer.closeAll();
+                    }else{
+                        // $(".listbox").prepend(data.msg);
+                        layer.closeAll();
+                        var timestamp2 = Date.parse(new Date());
+                        var timestamp3 = (timestamp2 - timestamp1) / 1000;
+                        if (timestamp3 < 1) timestamp3 = 1; 
+                        layer.msg("生成完毕，共耗时：<font color='red'>"+timestamp3+"</font> 秒",{icon:1,time:2000}); 
+                    }
+                },
+                complete:function(){
+                    // layer.alert(1, {icon: 5, title:false});
+                }
+            });
+        })
+        
+        //生成栏目页
+        $("#up_channel").click(function(){
+            var typeid = $("#html_typeid").val();     //栏目id
+            var url = eyou_basefile+"?m=admin&c=Seo&a=channel&action=buildChannel&id="+typeid+"&lang="+__lang__;
+            var index = layer.open({type: 2,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
+        })
 
-    function adsubmit(obj){
-        var typeid = $('#html_typeid').val();
-        var startid = $('#html_startid').val();
-        var endid = $('#html_endid').val();
-        var updatetype = $(obj).attr('data-type');
+        //生成文章页
+        $("#up_article").click(function(){
+            var typeid = $("#html_arc_typeid").val();     //栏目id
+            var url = eyou_basefile+"?m=admin&c=Seo&a=channel&action=buildArticle&id="+typeid+"&lang="+__lang__;
+            var index = layer.open({type: 2,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
+        })
 
-        if ($('.a_btn').attr('data-disabled') == 1) {
-            return false;
-        }
-
-        $('.a_btn').attr('data-disabled', 1);
-        $(obj).html('正在更新中……');
-        $($("#stafrm")[0].contentWindow.document.body).html('准备进入更新，请勿刷新页面！');
-        layer_loading('正在处理');
-        $.ajax({
-            url: "{:url('Seo/bindHtml')}",
-            type: "POST",
-            dataType: "JSON",
-            data: {typeid: typeid, startid: startid, endid: endid, updatetype: updatetype},
-            // async: false,
-            success: function(res){
-                $('.a_btn').attr('data-disabled', 0);
-                $(obj).html('更新生成HTML');
-                layer.closeAll();
-                setCookies('binghtml_i', 0);
-                $.each(res.urls, function(index, item){
-                    $.ajax({
-                        url: item,
-                        type: "GET",
-                        dataType: "JSON",
-                        data: {},
-                        // async: false,
-                        success: function(res2){
-                            var body = '<a href="'+res.nowurls[index]+'" target="_blank">'+res.nowurls[index]+'</a><br/>';
-                            $($("#stafrm")[0].contentWindow.document.body).prepend(body);
-                            var i = getCookie('binghtml_i');
-                            i = parseInt(i) + 1;
-                            setCookies('binghtml_i', i);
-                            if (i >= parseInt(res.total)) {
-                                layer.alert('更新完成！', {icon: 1, title:false});
-                            }
-                        },
-                        error: function(e){
-                            var i = getCookie('binghtml_i');
-                            i = parseInt(i) + 1;
-                            setCookies('binghtml_i', i);
-                        }
-                    });
-                });
-            },
-            error: function(e){
-                $('.a_btn').attr('data-disabled', 0);
-                layer.closeAll();
-                layer.alert('网络超时！', {icon: 2, title:false});
-            }
-        });
-    }
+        //生成整站
+        $("#up_site").click(function(){
+            var url = eyou_basefile+"?m=admin&c=Seo&a=site&lang="+__lang__;
+            var index = layer.open({type: 2,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
+        })
+    })
 </script>
-
 {include file="public/footer" /}

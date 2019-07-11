@@ -93,7 +93,7 @@ class TagArcview extends Base
         $result = $this->fieldLogic->getChannelFieldList($result, $result['channel']); // 自定义字段的数据格式处理
         /*--end*/
 
-        $result = view_logic($aid, $result['channel'], $result);
+        $result = view_logic($aid, $result['channel'], $result, true);
 
         return $result;
     }

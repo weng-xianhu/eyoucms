@@ -63,6 +63,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'head_pic' => 
+  array (
+    'name' => 'head_pic',
+    'type' => 'varchar(255)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'last_login' => 
   array (
     'name' => 'last_login',

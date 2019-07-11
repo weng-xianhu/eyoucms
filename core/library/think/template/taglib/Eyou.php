@@ -109,6 +109,9 @@ class Eyou extends Taglib
         'sppageorder'  => ['attr' => 'listitem,listsize', 'close' => 0],
         // 订单管理页搜索标签
         'spsearch' => ['attr' => 'empty,id,mod,key'],
+
+        // 筛选搜索
+        'screening' => ['attr' => 'empty,id,mod,key,currentstyle,addfields,addfieldids,alltxt'],
     ];
 
     /**
@@ -2926,6 +2929,77 @@ class Eyou extends Taglib
         $parseStr .= '<?php endforeach;';
         $parseStr .= 'endif; else: echo htmlspecialchars_decode("' . $empty . '");endif; ?>';
         $parseStr .= '<?php $'.$id.' = []; ?>'; // 清除变量值，只限于在标签内部使用
+
+        if (!empty($parseStr)) {
+            return $parseStr;
+        }
+        return;
+    }
+
+    /**
+     * screening 筛选搜索标签解析 TAG调用
+     * {eyou:screening id='field'}
+        {$field.searchurl}
+     * {/eyou:screening}
+     * @access public
+     * @param array $tag 标签属性
+     * @param string $content 标签内容
+     * @return string|void
+     */
+    public function tagScreening($tag, $content)
+    {
+        $id     = isset($tag['id']) ? $tag['id'] : 'field';
+        $key    = !empty($tag['key']) ? $tag['key'] : 'i';
+        $mod    = isset($tag['mod']) ? $tag['mod'] : '2';
+        $empty  = isset($tag['empty']) ? $tag['empty'] : '';
+        $empty  = htmlspecialchars($empty);
+
+        // 自定义class
+        $currentstyle = !empty($tag['currentstyle']) ? $tag['currentstyle'] : '';
+
+        // 自定义字段名
+        $addfields = isset($tag['addfields']) ? $tag['addfields'] : '';
+        $addfields = $this->varOrvalue($addfields);
+
+        // 自定义字段ID
+        $addfieldids = isset($tag['addfieldids']) ? $tag['addfieldids'] : '';
+        $addfieldids = $this->varOrvalue($addfieldids);
+
+        // 全部字样
+        $alltxt = isset($tag['alltxt']) ? $tag['alltxt'] : '';
+        $alltxt = $this->varOrvalue($alltxt);
+
+        $parseStr = '<?php ';
+
+        // 查询数据库获取的数据集
+        $parseStr .= ' $tagScreening = new \think\template\taglib\eyou\TagScreening;';
+        $parseStr .= ' $_result = $tagScreening->getScreening("'.$currentstyle.'", '.$addfields.', '.$addfieldids.', '.$alltxt.');';
+        $parseStr .= '?>';
+
+        $parseStr .= '<?php if(!empty($_result["list"]) || (($_result["list"] instanceof \think\Collection || $_result["list"] instanceof \think\Paginator ) && $_result["list"]->isEmpty())): ?>';
+        $parseStr .= '<?php $'.$id.' = $_result; ?>';
+        $parseStr .= $content;
+        $parseStr .= '<?php endif; ?>';
+        $parseStr .= '<?php $'.$id.' = []; ?>'; // 清除变量值，只限于在标签内部使用
+
+        
+/*        $parseStr = '<?php ';
+
+        // 查询数据库获取的数据集
+        $parseStr .= ' $tagScreening = new \think\template\taglib\eyou\TagScreening;';
+        $parseStr .= ' $_result = $tagScreening->getScreening("'.$currentstyle.'", '.$addfields.', '.$addfieldids.', '.$alltxt.');';
+        $parseStr .= ' if(is_array($_result) || $_result instanceof \think\Collection || $_result instanceof \think\Paginator): $' . $key . ' = 0; $e = 1;';
+        $parseStr .= ' $__LIST__ = $_result;';
+
+        $parseStr .= 'if( count($__LIST__[0]["row"])==0 ) : echo htmlspecialchars_decode("' . $empty . '");';
+        $parseStr .= 'else: ';
+        $parseStr .= 'foreach($__LIST__ as $key=>$' . $id . '): ';
+        $parseStr .= '$mod = ($e % ' . $mod . ' );';
+        $parseStr .= '$' . $key . '= intval($key) + 1;?>';
+        $parseStr .= $content;
+        $parseStr .= '<?php ++$e; ?>';
+        $parseStr .= '<?php endforeach;';
+        $parseStr .= 'endif; else: echo htmlspecialchars_decode("' . $empty . '");endif; ?>';*/
 
         if (!empty($parseStr)) {
             return $parseStr;
