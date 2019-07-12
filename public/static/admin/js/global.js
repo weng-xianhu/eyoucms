@@ -37,6 +37,9 @@ $(function(){
  * 批量删除提交
  */
 function batch_del(obj, name) {
+
+    var url = $(obj).attr('data-url');
+
     var a = [];
     $('input[name^='+name+']').each(function(i,o){
         if($(o).is(':checked')){
@@ -62,7 +65,7 @@ function batch_del(obj, name) {
         layer_loading('正在处理');
         $.ajax({
             type: "POST",
-            url: $(obj).attr('data-url'),
+            url: url,
             data: {del_id:a, _ajax:1},
             dataType: 'json',
             success: function (data) {
@@ -72,11 +75,15 @@ function batch_del(obj, name) {
                     //window.location.reload();
             
                     /* 生成静态页面代码 */
+                    var slice_start = url.indexOf('m=admin&c=');
+                    slice_start = parseInt(slice_start) + 10;
+                    var slice_end = url.indexOf('&a=');
+                    var ctl_name = url.slice(slice_start,slice_end);
                     $.ajax({
-                        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml",
-                        type:'get',
+                        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
+                        type:'POST',
                         dataType:'json',
-                        data: {del_ids:a,_ajax:1},
+                        data: {del_ids:a,ctl_name:ctl_name,_ajax:1},
                         success:function(data){
                             window.location.reload();
                         },
@@ -110,6 +117,9 @@ function batch_del(obj, name) {
  * 单个删除
  */
 function delfun(obj) {
+
+    var url = $(obj).attr('data-url');
+    
     var deltype = $(obj).attr('data-deltype');
     if ('pseudo' == deltype) {
         title = '删除到回收站，确认删除？';
@@ -123,8 +133,8 @@ function delfun(obj) {
             // 确定
             layer_loading('正在处理');
             $.ajax({
-                type : 'post',
-                url : $(obj).attr('data-url'),
+                type : 'POST',
+                url : url,
                 data : {del_id:$(obj).attr('data-id'), _ajax:1},
                 dataType : 'json',
                 success : function(data){
@@ -134,11 +144,15 @@ function delfun(obj) {
                         //window.location.reload();
 
                         /* 生成静态页面代码 */
+                        var slice_start = url.indexOf('m=admin&c=');
+                        slice_start = parseInt(slice_start) + 10;
+                        var slice_end = url.indexOf('&a=');
+                        var ctl_name = url.slice(slice_start,slice_end);
                         $.ajax({
-                            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml",
-                            type:'get',
+                            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
+                            type:'POST',
                             dataType:'json',
-                            data: {del_ids:$(obj).attr('data-id'),_ajax:1},
+                            data: {del_ids:$(obj).attr('data-id'),ctl_name:ctl_name,_ajax:1},
                             success:function(data){
                                  window.location.reload();
                             },
@@ -189,6 +203,9 @@ function clickRemote(obj, id)
  * 批量移动操作
  */
 function batch_move(obj, name) {
+
+    var url = $(obj).attr('data-url');
+
     var a = [];
     $('input[name^='+name+']').each(function(i,o){
         if($(o).is(':checked')){
@@ -206,7 +223,7 @@ function batch_move(obj, name) {
         layer_loading('正在处理');
         $.ajax({
             type: "POST",
-            url: $(obj).attr('data-url'),
+            url: url,
             data: {move_id:a, _ajax:1},
             dataType: 'json',
             success: function (data) {

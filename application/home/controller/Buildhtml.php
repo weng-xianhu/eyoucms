@@ -516,9 +516,21 @@ class Buildhtml extends Base
     public function upHtml(){
         $aid =  input("param.aid/d");
         $typeid =  input("param.typeid/d");
-        $del_ids = input('del_ids/a');
-        $type = input('type/s');
+        $del_ids = input('param.del_ids/a');
+        $type = input('param.type/s');
         $lang =  input("param.lang/s", 'cn');
+
+        /*由于全站共用删除JS代码，这里排除不能发布文档的模型的控制器*/
+        $ctl_name =  input("param.ctl_name/s");
+        $channeltypeRow = Db::name('channeltype')
+            ->where('nid','NOT IN', ['guestbook','single'])
+            ->column('ctl_name');
+        array_push($channeltypeRow, 'Archives', 'Arctype');
+        if (!in_array($ctl_name, $channeltypeRow)) {
+            $this->error("排除非发布文档的模型");
+        }
+        /*end*/
+
         $seo_pseudo = $this->eyou['global']['seo_pseudo'];
         $this->clearCache();
         if ($seo_pseudo != 2){

@@ -65,7 +65,7 @@ class ActionBeginBehavior {
     {
         /*只有相应的控制器和操作名才执行，以便提高性能*/
         $ctlArr = \think\Db::name('channeltype')->field('id,ctl_name,is_repeat_title')
-            ->where('nid','NOTIN', ['guestbook','single'])
+            ->where('nid','NOT IN', ['guestbook','single'])
             ->getAllWithIndex('ctl_name');
         $actArr = ['add','edit'];
         if (!empty($ctlArr[self::$controllerName]) && in_array(self::$actionName, $actArr)) {

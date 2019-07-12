@@ -288,12 +288,12 @@
     var is_del = "{$is_del}";
     if(typeid > 0){
       $.ajax({
-        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml",
-          type:'get',
+        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
+          type:'POST',
           dataType:'json',
-          data:{'typeid':typeid,'is_del':is_del,_ajax:1},
+          data:{'typeid':typeid,'is_del':is_del,ctl_name:'Arctype',_ajax:1},
           success:function(data){
-              console.log("生成静态成功");
+
           }
       });
     } 
