@@ -1,5 +1,5 @@
 {include file="header.htm" /}
-<body style="background-color: #FFF; overflow: auto;">
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
@@ -39,7 +39,7 @@
                             </a>
                         </span>
                         <span class="type-file-box">
-                            <input type="text" id="logo_local" name="logo_local" value="" class="type-file-text">
+                            <input type="text" id="logo_local" name="logo_local" value="" class="type-file-text" autocomplete="off">
                             <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
                             <input class="type-file-file" onClick="GetUploadify(1,'','system','img_call_back','{:U('Uploadify/upload')}')" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
                         </span>

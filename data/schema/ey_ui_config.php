@@ -21,7 +21,7 @@ return array (
   'theme_style' => 
   array (
     'name' => 'theme_style',
-    'type' => 'varchar(20)',
+    'type' => 'varchar(200)',
     'notnull' => false,
     'default' => 'pc',
     'primary' => false,
@@ -60,6 +60,15 @@ return array (
     'type' => 'text',
     'notnull' => false,
     'default' => NULL,
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'idcode' => 
+  array (
+    'name' => 'idcode',
+    'type' => 'varchar(50)',
+    'notnull' => false,
+    'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),

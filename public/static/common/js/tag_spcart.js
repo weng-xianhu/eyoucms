@@ -5,15 +5,33 @@ $(function(){
 });
 
 // 数量加减
-function CartUnifiedAlgorithm(aid,symbol,selected){
-    var JsonData = b82ac06cf24687eba9bc5a7ba92be4c8;
-    var url = JsonData.cart_unified_algorithm_url;
+function CartUnifiedAlgorithm(is_sold_out = null ,aid = null, symbol = null, selected = null, spec_value_id = null, cart_id = null){
+    if ('IsSoldOut' == is_sold_out) {
+        layer.msg('商品已售罄！', {time: 1500});
+        return false;
+    }
+    if ('IsDel' == is_sold_out) {
+        layer.msg('无效商品！', {time: 1500});
+        return false;
+    }
+    
+    var NumV = $('#'+cart_id+'_num'); //数量
+    var CartNum = NumV.val();
+    if ('+' == symbol) {
+        CartNum = Number(NumV.val()) + 1;
+    } else if ('-' == symbol) {
+        CartNum = Number(NumV.val()) - 1;
+    }
+    if (Number(is_sold_out) < Number(CartNum)) {
+        layer.msg('商品库存仅！'+is_sold_out+'件', {time: 1500});
+        NumV.val(is_sold_out);
+        return false;
+    }
 
-    var NumV         = $('#'+aid+'_num');       //数量
-    var PriceV       = $('#'+aid+'_price');     //单价
-    var SubTotalV    = $('#'+aid+'_subtotal');  //小计
-    var TotalNumberV = $('#TotalNumber');       //总数
-    var TotalAmountV = $('#TotalAmount');       //总价
+    var PriceV       = $('#'+cart_id+'_price');     //单价
+    var SubTotalV    = $('#'+cart_id+'_subtotal');  //小计
+    var TotalNumberV = $('#TotalNumber');           //总数
+    var TotalAmountV = $('#TotalAmount');           //总价
 
     // 数量处理逻辑
     if ('change' == symbol) {
@@ -26,29 +44,31 @@ function CartUnifiedAlgorithm(aid,symbol,selected){
         var SubTotalNums = Number(PriceV.html()) * Number(NumV.val());
         SubTotalV.html(SubTotalNums.toFixed(2));
         
-    }else if ('+' == symbol) {
+    } else if ('+' == symbol) {
         // 计算单品数量
         NumV.val(Number(NumV.val()) + 1);
         // 计算单品小计
         var SubTotalNums = Number(PriceV.html()) * Number(NumV.val());
         SubTotalV.html(SubTotalNums.toFixed(2));
 
-    }else if ('-' == symbol && NumV.val() > '1') {
+    } else if ('-' == symbol && NumV.val() > '1') {
         // 计算单品数量
         NumV.val(Number(NumV.val()) - 1);
         // 计算单品小计
         var SubTotalNums = Number(PriceV.html()) * Number(NumV.val());
         SubTotalV.html(SubTotalNums.toFixed(2));
 
-    }else{
+    } else {
         // 数量减少，为1时不可减。
         layer.msg('商品数量最少为1', {time: 1500});
         return false;
     }
 
+    var JsonData = b82ac06cf24687eba9bc5a7ba92be4c8;
+    var url = JsonData.cart_unified_algorithm_url;
     $.ajax({
         url: url,
-        data: {aid:aid,symbol:symbol,num:Number(NumV.val())},
+        data: {aid:aid,symbol:symbol,num:Number(NumV.val()),spec_value_id:spec_value_id,_ajax:1},
         type:'post',
         dataType:'json',
         success:function(res){
@@ -60,7 +80,7 @@ function CartUnifiedAlgorithm(aid,symbol,selected){
                         window.location.reload();
                     }
                 });
-            }else{
+            } else {
                 TotalNumberV.html(res.data.NumberVal);
                 TotalAmountV.html(res.data.AmountVal);
             }
@@ -93,9 +113,9 @@ function Checked(cart_id,selected){
                 $('#'+NewCartId+'_Selected').val(1);
 
                 // 计算总数总额
-                var product_id = $('#'+this.id).attr('product-id');
-                NumberVal +=  + Number($('#'+product_id+'_num').val());
-                AmountVal +=  + Number($('#'+product_id+'_subtotal').html());
+                // var product_id = $('#'+this.id).attr('product-id');
+                NumberVal +=  + Number($('#'+NewCartId+'_num').val());
+                AmountVal +=  + Number($('#'+NewCartId+'_subtotal').html());
             });
 
             // 赋值主选框
@@ -131,9 +151,8 @@ function Checked(cart_id,selected){
                 CheckedNum++;
 
                 // 计算总数总额
-                var product_id = $('#'+this.id).attr('product-id');
-                NumberVal +=  + Number($('#'+product_id+'_num').val());
-                AmountVal +=  + Number($('#'+product_id+'_subtotal').html());
+                NumberVal +=  + Number($('#'+$('#'+this.id).attr('cart-id')+'_num').val());
+                AmountVal +=  + Number($('#'+$('#'+this.id).attr('cart-id')+'_subtotal').html());
             }
         });
 
@@ -163,7 +182,7 @@ function Checked(cart_id,selected){
     // 修改购物车选中数据
     $.ajax({
         url: url,
-        data: {cart_id:cart_id,selected:selected},
+        data: {cart_id:cart_id,selected:selected,_ajax:1},
         type:'post',
         dataType:'json',
         success:function(res){
@@ -183,18 +202,79 @@ function CartDel(cart_id,title){
     }, function () {
         $.ajax({
             url: url,
-            data: {cart_id:cart_id},
+            data: {cart_id:cart_id,_ajax:1},
             type:'post',
             dataType:'json',
             success:function(res){
-                if ('1' == res.code) {
-                    layer.msg(res.msg, {time: 1500});
-                    $('#'+cart_id+'_product').remove();
-                    layer.closeAll();
-                }else{
+                if (1 == res.code) {
+                    layer.msg(res.msg, {time: 1000});
+                    $('#' + cart_id + '_product').remove();
+                    $('#' + cart_id + '_product_spec').remove();
+                    $('#TotalNumber').html(res.data.NumberVal);
+                    $('#TotalAmount').html(res.data.AmountVal);
+                    if (0 == res.data.CartCount) {
+                        window.location.reload();
+                    }
+                } else {
                     layer.msg(res.msg, {time: 2000});
                 }
             }
         });
+    });
+}
+
+// 移入收藏
+function MoveToCollection(cart_id,title){
+    var JsonData = b82ac06cf24687eba9bc5a7ba92be4c8;
+    var url = JsonData.move_to_collection_url;
+    layer.confirm('确定要移入收藏？', {
+        btn: ['确认', '取消'] //按钮
+    }, function () {
+        $.ajax({
+            url: url,
+            data: {cart_id:cart_id,_ajax:1},
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                if (1 == res.code) {
+                    layer.msg(res.msg, {time: 1000});
+                    $('#' + cart_id + '_product').remove();
+                    $('#' + cart_id + '_product_spec').remove();
+                    $('#TotalNumber').html(res.data.NumberVal);
+                    $('#TotalAmount').html(res.data.AmountVal);
+                } else {
+                    layer.msg(res.msg, {time: 2000});
+                }
+            }
+        });
+    });
+}
+
+// 检查购物车商品是否库存都充足，不足时提示
+function SubmitOrder(GetUrl) {
+    var JsonData = b82ac06cf24687eba9bc5a7ba92be4c8;
+    var PostUrl  = JsonData.cart_stock_detection;
+    $.ajax({
+        url: PostUrl,
+        data: {_ajax:1},
+        type:'post',
+        dataType:'json',
+        success:function(res){
+            if (1 == res.code) {
+                if (1 == res.data) {
+                    layer.confirm('部分商品库存数量不足，是否确认提交？', {
+                        btn: ['确认', '取消'],
+                        title:false,
+                        closeBtn: 0
+                    }, function () {
+                        window.location.href = GetUrl;
+                    });
+                } else {
+                    window.location.href = GetUrl;
+                }
+            } else {
+                layer.msg(res.msg, {time: 2000});
+            }
+        }
     });
 }

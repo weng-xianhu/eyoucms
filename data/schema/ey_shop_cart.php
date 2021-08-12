@@ -36,6 +36,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'spec_value_id' => 
+  array (
+    'name' => 'spec_value_id',
+    'type' => 'varchar(100)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'selected' => 
   array (
     'name' => 'selected',

@@ -8,7 +8,7 @@ function GetRegionData(t,type){
     var url = $('#GetRegionDataS').val();
     $.ajax({
         url: url,
-        data: {parent_id:parent_id},
+        data: {parent_id:parent_id,_ajax:1},
         type:'post',
         dataType:'json',
         success:function(res){
@@ -21,9 +21,9 @@ function GetRegionData(t,type){
                 $('#district').empty().html(res);
             }
         },
-        error : function() {
+        error : function(e) {
             layer.closeAll();
-            layer.alert('网络失败，请刷新页面后重试', {icon: 5});
+            layer.alert(e.responseText, {icon: 5});
         }
     });
 }
@@ -33,6 +33,13 @@ function EditAddress(){
     var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     
     var url   = $('#ShopEditAddress').val();
+    if (url.indexOf('?') > -1) {
+        url += '&';
+    } else {
+        url += '?';
+    }
+    url += '_ajax=1';
+    
     $.ajax({
         url: url,
         data: $('#theForm').serialize(),
@@ -45,15 +52,53 @@ function EditAddress(){
                 parent.layer.msg(res.msg, {time: 1000});
             }else{
                 layer.closeAll();
-                layer.msg(res.msg, {icon: 2});
+                layer.msg(res.msg, {icon: 5});
             }
         },
-        error : function() {
+        error : function(e) {
             layer.closeAll();
-            layer.alert('网络失败，请刷新页面后重试', {icon: 5});
+            layer.alert(e.responseText, {icon: 5});
         }
     });
 };
+
+// 删除收货地址
+function DelAddress(addr_id, obj){
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+    layer.confirm('是否删除收货地址？', {
+        title:false,
+        closeBtn: false,
+        btn: ['是', '否'] //按钮
+    }, function () {
+        // 是
+        layer_loading('正在处理');
+        $.ajax({
+            url: $('#DelAddress').val(),
+            data: {addr_id:addr_id,_ajax:1},
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                layer.closeAll();
+                if (1 == res.code) {
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.$('#UlHtml').find("#"+addr_id+'_ul_li').remove();
+                    _parent.layer.msg(res.msg, {time: 1000});
+                }else{
+                    layer.msg(res.msg, {time: 2000});
+                }
+            },
+            error: function (e) {
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
+    }, function (index) {
+        // 否
+        layer.closeAll(index);
+    });
+}
 
 // 更新收货地址html
 function EditHtml(data)

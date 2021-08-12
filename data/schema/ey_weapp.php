@@ -81,6 +81,24 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'is_buy' => 
+  array (
+    'name' => 'is_buy',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'is_upgrade' => 
+  array (
+    'name' => 'is_upgrade',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'sort_order' => 
   array (
     'name' => 'sort_order',

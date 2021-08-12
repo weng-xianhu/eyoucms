@@ -85,7 +85,7 @@ table {
 }
 .container{
 	margin:5px;
-	border:3px dashed #E6E6E6;
+	/* border:3px dashed #E6E6E6; */
 }
 .container .area{
 	position:relative;
@@ -728,3 +728,80 @@ table {
 .area li .file-accdb{
 	background:url(../images/accdb.png) no-repeat center center;
 }
+
+
+/*上传图片弹出框*/
+.upload-main{
+	position: relative;
+}
+
+.upload-main-left{
+	width: 142px;
+	height: 100%;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #e3e2e8;
+	position: relative;
+
+}
+.upload-nav{
+	margin-right:-1px;
+}
+.upload-nav li a{
+	display: block;
+	height: 65px;
+	line-height: 65px;
+	cursor: pointer;
+	border: 1px solid transparent;
+	border-left: 0;
+	border-right-color: #e3e2e8;
+	transition: border-bottom .2s ease,border-top .2s ease;
+	margin-top: -1px;
+	font-size: 14px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-decoration:none;
+	color: #333;
+}
+.upload-nav .upload-nav-active {
+	color: #00b7ee;
+	border-right-color: #fff;
+	border-top-color: #e3e2e8;
+	border-bottom-color: #e3e2e8;
+	border-left:5px solid #00b7ee;
+}
+.upload-content{
+	position: relative;
+	height: 100%;
+	overflow: hidden;
+}
+.upload-btn {
+	position: absolute;
+	margin-top: 10px;
+	left:50%;
+    display: inline-block;
+    padding: 0 18px;
+    height: 32px;
+    line-height: 32px;
+    cursor: pointer;
+    text-align: center;
+    background: #00b7ee;
+    border: 1px solid #00b7ee;
+    border-radius: 3px;
+    color: #fff;
+    font-size: 14px;
+}
+ .upload-button{
+	 position: absolute;
+	 height: 36px;
+	 width: 100%;
+	 bottom: 20px;
+	 right: 0;
+	 border-top:1px solid #eee ;
+	 background-color: #fff;
+ }
+ .ztreeContent{
+ 	height:100%;
+ 	overflow-y: scroll;
+ }

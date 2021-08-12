@@ -1,0 +1,20 @@
+
+{eyou:if condition="!empty($weapp_wxlogin) || !empty($weapp_qqlogin) || !empty($weapp_wblogin)"}
+<p class="qrcode-title" ><span class="cross-line"></span>其它登录方式 <span class="cross-line"></span></p>
+    <div class="login_type text-xs-center m-t-20">
+        <!-- <p>第三方账号登录</p> -->
+        <ul class="blocks-3 m-0">
+            {eyou:notempty name="$weapp_qqlogin"}
+            <li class="m-b-0"><a title="QQ登录" href="{eyou:url link='plugins/QqLogin/login' seo_pseudo='1' seo_inlet='0' /}"><img title="QQ" src="{eyou:static file='users/skin/images/login_qq.png' /}"><span>QQ登录</span></a></li>
+            {/eyou:notempty}
+
+            {eyou:notempty name="$weapp_wxlogin"}
+            <li class="m-b-0"><a title="微信登录" href="{eyou:url link='plugins/WxLogin/login' seo_pseudo='1' seo_inlet='0' /}"><img title="微信" src="{eyou:static file='users/skin/images/login_wx.png' /}"><span>微信登录</span></a></li>
+            {/eyou:notempty}
+
+            {eyou:notempty name="$weapp_wblogin"}
+            <li class="m-b-0"><a title="微博登录" href="{eyou:url link='plugins/Wblogin/login' seo_pseudo='1' seo_inlet='0' /}"><img title="微信" src="{eyou:static file='users/skin/images/login_wb.png' /}"><span>微博登录</span></a></li>
+            {/eyou:notempty}
+        </ul>
+    </div>
+{/eyou:if}

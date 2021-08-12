@@ -38,7 +38,7 @@
     "snapscreenInsertAlign": "none", /* 插入的图片浮动方式 */
 
     /* 抓取远程图片配置 */
-    "catcherLocalDomain": ["127.0.0.1", "localhost", ".eyoucms.com"],
+    "catcherLocalDomain": ["127.0.0.1", "localhost"],
     "catcherActionName": "catchimage", /* 执行抓取远程图片的action名称 */
     "catcherFieldName": "source", /* 提交的图片列表表单名称 */
     "catcherPathFormat": "/ueditor/php/upload/image/{yyyy}{mm}{dd}/{time}{rand:6}", /* 上传保存路径,可以自定义保存路径和文件名格式 */
@@ -66,7 +66,7 @@
         ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".webp",
         ".flv", ".swf", ".mkv", ".avi", ".rm", ".rmvb", ".mpeg", ".mpg",
         ".ogg", ".ogv", ".mov", ".wmv", ".mp4", ".webm", ".mp3", ".wav", ".mid",
-        ".rar", ".zip", ".tar", ".gz", ".7z", ".bz2", ".cab", ".iso",
+        ".rar", ".zip", ".tar", ".gz", ".7z", ".bz2", ".cab", ".iso", ".svg",
         ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".pdf", ".txt", ".md", ".xml"
     ], /* 上传文件格式显示 */
 
@@ -87,7 +87,7 @@
         ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".webp",
         ".flv", ".swf", ".mkv", ".avi", ".rm", ".rmvb", ".mpeg", ".mpg",
         ".ogg", ".ogv", ".mov", ".wmv", ".mp4", ".webm", ".mp3", ".wav", ".mid",
-        ".rar", ".zip", ".tar", ".gz", ".7z", ".bz2", ".cab", ".iso",
+        ".rar", ".zip", ".tar", ".gz", ".7z", ".bz2", ".cab", ".iso", ".svg",
         ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".pdf", ".txt", ".md", ".xml"
     ] /* 列出的文件类型 */
 

@@ -272,6 +272,7 @@
 
         conUrl = utils.unhtmlForUrl(conUrl);
 
+        // 对flash和其他格式处理 by 小虎哥
         if(conUrl.indexOf(".swf") >= 0 ) {
             $G("preview").innerHTML = '<div class="previewMsg"><span>'+lang.urlError+'</span></div>'+
             '<embed class="previewVideo" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer"' +

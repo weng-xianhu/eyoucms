@@ -72,6 +72,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'check_oneself' => 
+  array (
+    'name' => 'check_oneself',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'cud' => 
   array (
     'name' => 'cud',

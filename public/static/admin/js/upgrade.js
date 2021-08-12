@@ -28,17 +28,22 @@ function btn_upgrade(obj, type)
     
     var intro = $("#upgrade_intro").html();
     var notice = $("#upgrade_notice").html();
-    intro += '<style type="text/css">.layui-layer-content{height:270px!important}</style>';
+    intro += '<style type="text/css">.layui-layer-content{height:270px!important;text-align:left!important;}</style>';
     // filelist = filelist.replace(/\n/g,"<br/>");
     v = notice + intro + '<br/>' + filelist;
-    var version = $(obj).data('version');
     var max_version = $(obj).data('max_version');
+    var version = $(obj).data('version');
     var title = '检测系统最新版本：'+version;
-
+    var btn = [];
     if (0 == type) {
-        var btn = ['升级','忽略'];
+        btn = ['升级','忽略'];
     } else if (1 == type) {
-        var btn = ['升级','忽略','不再提醒'];
+        btn = ['升级','忽略','不再提醒'];
+    }
+    
+    if (1 == VarSecurityPatch) {
+        btn = ['升级','忽略'];
+        title = '检测系统安全补丁最新版本：'+version;
     }
 
     /*显示顶部导航更新提示*/
@@ -87,7 +92,7 @@ function btn_upgrade(obj, type)
  * 检测升级文件的目录权限
  */
 function checkdir(obj) {
-    layer_loading('检测系统');
+    layer_loading2('检测系统');
     $.ajax({
         type : "POST",
         url  : $(obj).data('check_authority'),
@@ -105,8 +110,10 @@ function checkdir(obj) {
                 upgrade($(obj));
             } else {
                 //提示框
-                if (2 == res.data.code) {
-                    var alert = parent.layer.alert(res.msg, {icon: 2, title:false});
+                if (2 == res.data.code) { 
+                    var alert = parent.layer.alert(res.msg, {icon: 2, title:false, btn: ['立即查看']}, function(){
+                        window.parent.open('http://www.eyoucms.com/plus/view.php?aid=9105');
+                    });
                 } else {
                     var confirm = parent.layer.confirm(res.msg, {
                             title: '检测系统结果'
@@ -128,7 +135,7 @@ function checkdir(obj) {
  * 升级系统
  */
 function upgrade(obj){
-    layer_loading('升级<font id="upgrade_speed">中</font>');
+    layer_loading2('升级<font id="upgrade_speed">中</font>');
     var version = $(obj).data('version');
     var max_version = $(obj).data('max_version');
     var timer = '';
@@ -153,7 +160,7 @@ function upgrade(obj){
         },
         error: function(request) {
             parent.layer.closeAll();
-            parent.layer.alert("升级失败，请第一时间联系技术协助！", {icon: 2, title:false}, function(){
+            parent.layer.alert("空间超时请稍后再试，或手工升级！", {icon: 2, title:false}, function(){
                 top.location.reload();
             });
         },
@@ -206,6 +213,12 @@ function upgrade(obj){
                     },500);
                 // },40000); // 睡眠1分钟，让复制文件执行完
             }
+            else if (-2 == res.data.code) {
+                parent.layer.closeAll();
+                parent.layer.alert(res.msg, {icon: 2, title:false, btn: ['立即查看']}, function(){
+                    window.parent.open('http://www.eyoucms.com/plus/view.php?aid=9105');
+                });
+            }
             else{
                 parent.layer.closeAll();
                 parent.layer.alert(res.msg, {icon: 2, title:false}, function(){
@@ -216,7 +229,7 @@ function upgrade(obj){
     });                 
 }
 
-function layer_loading(msg){
+function layer_loading2(msg){
     var loading = parent.layer.msg(
     msg+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请勿刷新页面', 
     {
@@ -248,7 +261,7 @@ function export_data(){
             dataType:'json',
             success:function(res){
                 parent.layer.closeAll();
-                if(res.status){
+                if(res.code){
                     tables = res.tables;
                     var loading = parent.layer.msg('正在备份表(<font id="upgrade_backup_table">'+res.tab.table+'</font>)……<font id="upgrade_backup_speed">0.01</font>%', 
                     {
@@ -286,7 +299,7 @@ function backup_data(tab){
         type:'post',
         dataType:'json',
         success:function(res){
-            if(res.status){
+            if(res.code){
                 if (tab.table) {
                     $('#upgrade_backup_table', window.parent.document).html(tab.table);
                     $('#upgrade_backup_speed', window.parent.document).html(tab.speed);
@@ -298,6 +311,20 @@ function backup_data(tab){
                         time: 2000, //1小时后后自动关闭
                         shade: [0.2] //0.1透明度的白色背景
                     });
+                    setTimeout(function(){
+                        parent.layer.closeAll();
+                        var full = parent.layer.alert('已升级最新版本！', {
+                                title: false,
+                                icon: 1,
+                                closeBtn: 0,
+                                btn: ['关闭'] //按钮
+                            }, function(){
+                                parent.layer.close(full);
+                                top.location.href = eyou_basefile;
+                            }
+                        );
+                    }, 1000);
+                    return;
                 }
                 backup_data(res.tab);
             } else {

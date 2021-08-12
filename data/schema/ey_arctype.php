@@ -36,6 +36,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'topid' => 
+  array (
+    'name' => 'topid',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'typename' => 
   array (
     'name' => 'typename',
@@ -204,6 +213,24 @@ return array (
     'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'is_release' => 
+  array (
+    'name' => 'is_release',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'weapp_code' => 
+  array (
+    'name' => 'weapp_code',
+    'type' => 'varchar(50)',
+    'notnull' => false,
+    'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),

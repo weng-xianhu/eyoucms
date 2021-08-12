@@ -1,0 +1,104 @@
+{eyou:if condition="1 != $data.transaction_type && 1 == $data.pay_balance_open"}
+    <div class="pay-item" data-toggle="modal" data-target="#pay-order-modal">
+        <a  href="JavaScript:void(0);" id="PayBalancePayment" onclick="PayBalancePayment();">
+            <span><img src="{eyou:static file='users/skin/images/pay_yiyou.png' /}" > 
+            余额支付</span>
+        </a>
+        <span class="pay-yue">拥有余额：￥{$users.users_money}</span>
+    </div>
+    <script type="text/javascript">
+        // 余额支付，购买商品+视频支付使用
+        function PayBalancePayment() {
+            var unified_id = '{$data.unified_id}';
+            var unified_number = '{$data.unified_number}';
+            var transaction_type = '{$data.transaction_type}';
+            if (!unified_number || !unified_id) layer.msg('订单号异常，请刷新重试', {time: 1500});
+
+            // 禁止再次点击余额支付
+            $('#PayBalancePayment').prop("disabled", true).css("pointer-events", "none");
+
+            // 发送请求
+            layer_loading('订单处理中');
+            $.ajax({
+                url: '{$RootDir}/index.php?m=user&c=PayApi&a=balance_payment&_ajax=1',
+                data: {unified_id: unified_id, unified_number: unified_number, transaction_type: transaction_type},
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        if (!res.data.mobile && !res.data.email) {
+                            layer.msg(res.msg, {time: 1500}, function() {
+                                window.location.href = res.url;
+                            });
+                        } else {
+                            if (res.data.mobile) SendMobile(res.data.mobile);
+                            if (res.data.email) SendEmail(res.data.email);
+                            layer.msg(res.msg, {time: 1500}, function() {
+                                window.location.href = res.url;
+                            });
+                        }
+                    } else {
+                        PayIsRecharge(res.msg, res.url);
+                    }
+                }
+            });
+        }
+
+        // 是否要去充值
+        function PayIsRecharge(msg ,url) {
+            layer.confirm(msg, {
+                title: false,
+                closeBtn: 0,
+                btn: ['去充值','其他方式支付'],
+                cancel: function(index, layero){ 
+                    $('#PayBalancePayment').prop("disabled", false).css("pointer-events", "");
+                }
+            }, function() {
+                // 去充值
+                window.open(url); 
+                
+                layer.confirm('充值成功？ 是否立即支付？', {
+                    title: false,
+                    closeBtn: 0,
+                    btn: ['立即支付','其他方式支付'],
+                    cancel: function(index, layero){ 
+                        $('#PayBalancePayment').prop("disabled", false).css("pointer-events", "");
+                    }
+                }, function() {
+                    // 立即支付
+                    PayBalancePayment();
+
+                }, function(index) {
+                    // 选择其他方式支付时，恢复禁用的余额支付按钮
+                    $('#PayBalancePayment').prop("disabled", false).css("pointer-events", "");
+                    layer.closeAll(index);
+                });
+            }, function(index) {
+                // 选择其他方式支付时，恢复禁用的余额支付按钮
+                $('#PayBalancePayment').prop("disabled", false).css("pointer-events", "");
+                layer.closeAll(index);
+            });
+        }
+    </script>
+{/eyou:if}
+
+<!-- 支付API列表，套板请务必将整块代码一起复制，包含隐藏域 -->
+<script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
+{eyou:sppayapilist id='vo'}
+    {eyou:notempty name="$vo.pay_id"}
+        {neq name="$vo.pay_mark" value="Hupijiaopay"}
+            {eyou:php}$pay_mark_vars = "users/skin/images/".$vo['pay_mark'].".png";{/eyou:php}
+            <div class="pay-item">
+                <a href="JavaScript:void(0);" onclick="SelectPayMethod('{$vo.pay_id}', '{$vo.pay_mark}');">
+                    <span><img src="{eyou:empty name='$vo.pay_img'}{eyou:static file='$pay_mark_vars' /}{eyou:else/}{$vo.pay_img}{/eyou:empty}">
+                    {$vo.pay_name} </span>
+                </a>
+            </div>
+        {/neq}
+    {/eyou:notempty}
+    {$vo.hidden}
+{/eyou:sppayapilist}
+<input type="hidden" id="PayID">
+<input type="hidden" id="PayMark">
+<!-- END -->

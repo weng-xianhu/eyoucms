@@ -13,6 +13,7 @@
 
 namespace app\plugins\logic;
 
+use think\Db;
 use app\plugins\model\SampleModel;
 
 /**

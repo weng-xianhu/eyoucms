@@ -1,10 +1,7 @@
 
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="{if condition="'Sample' == $Request.param.sc && 'index' == $Request.param.sa"}{:url("Weapp/index")}{else /}{:weapp_url("Sample/Sample/index")}{/if}" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
-            <div class="subject">
-                <h3>{$weappInfo['name']}</h3>
-                <h5></h5>
-            </div>
+        <div class="item-title"><a class="back" href="{if condition="'Sample' == $Request.param.sc && 'index' == $Request.param.sa"}{:url("Weapp/index")}{else /}{:weapp_url("Sample/Sample/index")}{/if}" title="返回列表"><i class="fa fa-chevron-left"></i></a>
+            
             <ul class="tab-base nc-row">
                 <li>
                 {eq name="$Request.param.sa" value="index"}

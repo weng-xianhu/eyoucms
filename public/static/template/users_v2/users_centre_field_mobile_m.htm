@@ -1,0 +1,202 @@
+<div class="ey-con ey-row mt10">
+    <div class="item-from-flex">
+        <div class="item-flex wb25">
+            <div class="item-tit fs16">
+                <!-- {eyou:if condition="1 == $vo.is_required"}
+                    <span class="red">*</span>
+                {eyou:else/}
+                    <span class="red"></span>
+                {/eyou:if} -->
+                {$vo.title}
+            </div>
+        </div>
+        <div class="item-flex-r flex wb75">
+            <div class="item-con wb100 tar_z">
+                <span class="tit fs16">{$vo.dfvalue|default=''}</span>
+                {eyou:eq name='$users.is_mobile' value='1'}
+                    <span class="link"><a href="JavaScript:void(0);" onclick="BindUpdateMobile('更改手机');" class="iphone_z">更改手机</a></span>
+                {eyou:else/}
+                    <span class="link"><a href="JavaScript:void(0);" onclick="BindUpdateMobile('绑定手机');" class="iphone_z">绑定手机</a></span>
+                {/eyou:eq}
+                <div id="users_bind_mobile_html" style="display: none;">
+                    <div class="el-row">
+                        <eyoucms_form_2020 name='theForm_mobile_form' id="theForm_mobile_form" method="post">
+                            <div class="ey-popup">
+                                 <div class="el-form-item">
+                                     <div class="el-input">
+                                         <input type="text" id="bind_mobile_old" name="mobile" {eq name='$users.is_mobile' value='0'} value="{$users.mobile}" {/eq} required class="el-input__inner" placeholder="新的手机号码">
+                                     </div>
+                                 </div>
+                                 <div class="el-form-item">
+                                     <div class="el-input el-input-group el-input-group--append el-input-group--prepend">
+                                          <input type="text" class="el-input__inner" id="bind_mobile_code" name="mobile_code" placeholder="手机验证码">
+                                          <div class="el-input-group__append">
+                                             <input type="button" id="bind_mobile_button" onclick="GetMobileCodeMobile();" class="el-button el-button--default" value="获取验证码" />
+                                          </div>  
+                                     </div>
+                                 </div>
+                                 <div class="el-form-item">
+                                      <div class="el-input">
+                                           <button type="button" class="el-button el-button--primary" onclick="SubmitUpdateMobile();" style="width:86%;">确定</button>
+                                      </div>
+                                 </div>
+                                 
+                             </div>
+                            
+                           <!-- <div class="modal-body">
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <input type="text" id="bind_mobile_old" name="mobile" {eq name='$users.is_mobile' value='0'} value="{$users.mobile}" {/eq} required class="form-control fs16" placeholder="新的手机号码">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="input-group" style="position: relative;">
+                                        <input type="text" class="form-control" id="bind_mobile_code" name="mobile_code" placeholder="手机验证码">
+                                        <input type="button" id="bind_mobile_button" onclick="GetMobileCodeMobile();" class="btn btn-primary" value="获取验证码" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary btn_zb" onclick="SubmitUpdateMobile();">确定</button>
+                            </div> -->
+                        </eyoucms_form_2020>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    // 绑定、更换手机号码
+                    function BindUpdateMobile(title) {
+                        var content = $('#users_bind_mobile_html').html();
+                        content = content.replace(/eyoucms_form_2020/g, 'form');
+                        content = content.replace(/theForm_mobile_form/g, 'bind_mobile_form_2020');
+                        content = content.replace(/bind_mobile_old/, 'bind_mobile_new_2020');
+                        content = content.replace(/bind_mobile_code/, 'bind_mobile_code_2020');
+                        content = content.replace(/bind_mobile_button/, 'bind_mobile_button_2020');
+                        layer.open({
+                            type: 1,
+                            title: title,
+                            style:'position:fixed; bottom:0; left:0; width: 100%; padding:10px 0; border:none;max-width: 100%;',
+                            anim:'up',
+                            content: content,
+                        });
+                    }
+
+                    // 获取手机验证码
+                    function GetMobileCodeMobile() {
+                        // 正在处理提示动画
+                        var loading = loa_ding();
+                        // 标题
+                        var title = $('h3').html();
+                        // 手机号码
+                        var mobile = $("#bind_mobile_new_2020").val();
+                        // 手机号是否为空
+                        if (!mobile) {
+                            layer.close(loading);
+                            $("#bind_mobile_new_2020").focus();
+                            msg_open('请输入新的手机号码！');
+                            return false;
+                        }
+                        
+                        // 手机格式不正确
+                        var mobile_format = /^1[0-9]{10}$/i;
+                        if (!mobile_format.test(mobile)) {
+                            layer.close(loading);
+                            $("#bind_mobile_new_2020").focus();
+                            msg_open('请输入正确的新的手机号码！');
+                            return false;
+                        }
+
+                        // 发送验证码
+                        $("#bind_mobile_button_2020").val('发送中…');
+                        $.ajax({
+                            url: '{$RootDir}/index.php?m=api&c=Ajax&a=SendMobileCode&_ajax=1',
+                            data: {mobile: mobile, is_mobile: true, source: 1},
+                            type:'post',
+                            dataType:'json',
+                            success:function(res) {
+                                layer.close(loading);
+                                if (res.code == 1) {
+                                    MobileCountDown();
+                                    msg_open(res.msg);
+                                } else {
+                                    $("#bind_mobile_button_2020").val('获取验证码').removeAttr("disabled");
+                                    msg_open(res.msg);
+                                }
+                            },
+                            error : function() {
+                                $("#bind_mobile_button_2020").val('获取验证码').removeAttr("disabled");
+                                layer.close('发送失败，请尝试重新发送！');
+                                msg_open(res.msg);
+                            }
+                        });
+                    }
+
+                    // 倒计时
+                    function MobileCountDown() {
+                        var setTime;
+                        var time = 120;
+                        setTime = setInterval(function(){
+                            if(0 >= time){
+                                clearInterval(setTime);
+                                return;
+                            }
+                            time--;
+                            $("#bind_mobile_button_2020").val(time+'秒');
+                            $("#bind_mobile_button_2020").attr('disabled', 'disabled');
+
+                            if(time == 0){
+                                $("#bind_mobile_button_2020").val('获取验证码');
+                                $("#bind_mobile_button_2020").removeAttr("disabled");
+                            }
+                        }, 1000);
+                    }
+
+                    // 提交手机及验证码进行绑定
+                    function SubmitUpdateMobile() {   
+                        var loading = loa_ding();// 正在处理提示动画
+
+                        var mobile = $("#bind_mobile_new_2020").val();
+                        var reg = /^1[0-9]{10}$/i;
+                        // 邮箱格式不正确
+                        if(!reg.test(mobile)) {
+                            layer.close(loading);
+                            $("#bind_mobile_new_2020").focus();
+                            msg_open('请正确输入手机号码');
+                            return false;
+                        }
+
+                        var mobile_code = $("#bind_mobile_code_2020").val();
+                        if(!mobile_code) {
+                            layer.close(loading);
+                            $("#bind_mobile_code_2020").focus();
+                            msg_open('请输入手机验证码');
+                            return false;
+                        }
+
+                        $.ajax({
+                            url: '{$RootDir}/index.php?m=user&c=Users&a=bind_mobile&_ajax=1',
+                            data: $('#bind_mobile_form_2020').serialize(),
+                            type:'post',
+                            dataType:'json',
+                            success:function(res){
+                                if (res.code == 1) {
+                                    layer.closeAll();
+                                    msg_open(res.msg);
+                                    location.reload();
+                                } else {
+                                    layer.close(loading);
+                                    msg_open(res.msg);
+                                }
+                            },
+                            error : function() {
+                                layer.close(loading);
+                                footer_open('未知错误，请刷新重试');
+                            }
+                        });
+                    };
+                </script>
+                <p class="notic">{$vo.remark|default=''}</p>
+            </div>
+        </div>
+    </div>
+</div>    

@@ -45,10 +45,46 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'down_count' => 
+  array (
+    'name' => 'down_count',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'discount' => 
   array (
     'name' => 'discount',
+    'type' => 'float(10,2)',
+    'notnull' => false,
+    'default' => '100.00',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'posts_count' => 
+  array (
+    'name' => 'posts_count',
     'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '5',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'ask_is_release' => 
+  array (
+    'name' => 'ask_is_release',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'ask_is_review' => 
+  array (
+    'name' => 'ask_is_review',
+    'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

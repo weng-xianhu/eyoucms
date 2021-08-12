@@ -90,6 +90,24 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'apply_service' => 
+  array (
+    'name' => 'apply_service',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'is_comment' => 
+  array (
+    'name' => 'is_comment',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'lang' => 
   array (
     'name' => 'lang',

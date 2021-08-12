@@ -1,8 +1,10 @@
-    function tag_arcpagelist_multi(obj, tagid, pagesize)
+    function tag_arcpagelist_multi(obj, tagid, pagesize, callback_1565841361)
     {
         //步骤一:创建异步对象
         var ajax = new XMLHttpRequest();
+        var lang = obj.attributes['data-lang'].value; // 多语言
         var root_dir = obj.attributes['data-root_dir'].value; // 子目录路径
+        var tagidmd5 = obj.attributes['data-tagidmd5'].value; // tagid加密后唯一的标识
         var page = obj.attributes['data-page'].value; // 当前页码
         page = parseInt(page) + 1;
         var tips = obj.attributes['data-tips'].value; // 加载按钮的文本
@@ -14,9 +16,13 @@
         obj.attributes['href'].value = 'javascript:void(0);'; // 禁止a标签跳转
         //步骤二:设置请求的url参数,参数一是请求的类型,参数二是请求的url,可以带参数,动态的传递参数starName到服务端
         obj.innerHTML = loading;
-        ajax.open("get", root_dir+"/index.php?m=api&c=Ajax&a=arcpagelist&_ajax=1&page="+page+"&pagesize="+pagesize+"&tagid="+tagid, true);
+        ajax.open("post", root_dir+"/index.php?m=api&c=Ajax&a=arcpagelist&lang="+lang+"&page="+page+"&pagesize="+pagesize+"&tagid="+tagid+"&tagidmd5="+tagidmd5, true);
+        // 给头部添加ajax信息
+        ajax.setRequestHeader("X-Requested-With","XMLHttpRequest");
+        // 如果需要像 HTML 表单那样 POST 数据，请使用 setRequestHeader() 来添加 HTTP 头。然后在 send() 方法中规定您希望发送的数据：
+        ajax.setRequestHeader("Content-type","application/x-www-form-urlencoded");
         //步骤三:发送请求
-        ajax.send();
+        ajax.send('_ajax=1');
         //步骤四:注册事件 onreadystatechange 状态改变就会调用
         ajax.onreadystatechange = function () {
             //步骤五 如果能够进到这个判断 说明 数据 完美的回来了,并且请求的页面是存在的
@@ -28,6 +34,11 @@
                     var html = document.getElementById(tagid).innerHTML;
             　　　　document.getElementById(tagid).innerHTML = html + res.data.msg;
                     obj.attributes['data-page'].value = page;
+                    if (callback_1565841361 != '') {
+                        try{
+                            eval(callback_1565841361 + "();");
+                        }catch(e){}
+                    }
                     // 加载更多文本
                     if (1 == res.data.lastpage) {
                         obj.innerHTML = tips;

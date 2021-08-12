@@ -1,0 +1,594 @@
+{volist name="$addonFieldExtList" id="vo"}
+    {if !isset($vo.ifeditable) || $vo.ifeditable}
+        {switch name="vo.dtype"}
+            {case value="hidden"}
+                <!-- 隐藏域 start -->
+                <dl class="row" style="display: none;">
+                    <dt class="tit">
+                        <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="hidden" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </dd>
+                </dl>
+                <!-- 隐藏域 start -->
+            {/case}
+
+            {case value="region"}
+                <!-- 区域选项 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        {volist name="$vo.dfvalue" id="v2"}
+                            <label>
+                                <input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2['id']}" {if condition="isset($vo['trueValue']) AND in_array($v2['id'], $vo['trueValue'])"}checked="checked"{/if}>{$v2['name']}
+                            </label>&nbsp;
+                        {/volist}
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <!-- 区域选项 end -->
+            {/case}
+
+            {case value="text"}
+                <!-- 单行文本框 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        <input type="text" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">&nbsp;{$vo.dfvalue_unit|default=''}
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <!-- 单行文本框 end -->
+            {/case}
+
+            {case value="multitext"}
+                <!-- 多行文本框 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        <textarea rows="5" cols="60" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" style="height:60px;">{$vo.dfvalue|default=''}</textarea>
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <!-- 多行文本框 end -->
+            {/case}
+
+            {case value="checkbox"}
+                <!-- 复选框 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        {volist name="$vo.dfvalue" id="v2"}
+                        <label><input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>{$v2}</label>&nbsp;
+                        {/volist}
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <!-- 复选框 end -->
+            {/case}
+
+            {case value="radio"}
+                <!-- 单选项 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        {volist name="$vo.dfvalue" id="v2"}
+                        <label><input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>{$v2}</label>&nbsp;
+                        {/volist}
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <!-- 单选项 end -->
+            {/case}
+
+            {case value="switch"}
+                <!-- 开关 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        <div class="onoff">
+                            <label for="{$vo.fieldArr}_{$vo.name|default=''}1" class="cb-enable {if condition="0 != $vo['dfvalue']"}selected{/if}">是</label>
+                            <label for="{$vo.fieldArr}_{$vo.name|default=''}0" class="cb-disable {if condition="0 == $vo['dfvalue']"}selected{/if}">否</label>
+                            <input id="{$vo.fieldArr}_{$vo.name|default=''}1" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="1" type="radio" {if condition="0 != $vo['dfvalue']"}checked="checked"{/if}>
+                            <input id="{$vo.fieldArr}_{$vo.name|default=''}0" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="0" type="radio" {if condition="0 == $vo['dfvalue']"}checked="checked"{/if}>
+                        </div>
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    $(function(){
+                        //自定义radio样式
+                        $(".cb-enable").on('click', function(){
+                            var parent = $(this).parents('.onoff');
+                            $('.cb-disable',parent).removeClass('selected');
+                            $(this).addClass('selected');
+                            $('.checkbox',parent).attr('checked', true);
+                        });
+                        $(".cb-disable").on('click', function(){
+                            var parent = $(this).parents('.onoff');
+                            $('.cb-enable',parent).removeClass('selected');
+                            $(this).addClass('selected');
+                            $('.checkbox',parent).attr('checked', false);
+                        });
+                    });
+                </script>
+                <!-- 开关 end -->
+            {/case}
+
+            {case value="select"}
+                <!-- 下拉框 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        <select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}">
+                            {volist name="$vo.dfvalue" id="v2"}
+                            <option value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}selected{/if}>{$v2}</option>
+                            {/volist}
+                        </select>
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <!-- 下拉框 end -->
+            {/case}
+
+            {case value="img"}
+                <style type="text/css">
+                    .input-file-show{
+                        position: relative;
+                        width: 120px;
+                        height: 120px;
+                        overflow: hidden;
+                    }
+                    .input-file-show img {
+                        position: absolute;
+                        width: 120px;
+                        height: 120px;
+                    }
+                    .input-file-show span {
+                        position: absolute;
+                        bottom: 0;
+                        width: 120px;
+                        height: 26px;
+                        line-height: 26px;
+                        text-align: center;
+                        background-color: rgba(0,0,0,0.6);
+                        color: #fff;
+                        z-index: 2;
+                    }
+                </style>
+                <div class="row">
+                    <div class="col-xs-2">
+                        {$vo.title}
+                    </div>
+                    <div class="col-xs-9">
+                        <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" class="type-file-text" style="display: none;">
+                        <div class="input-file-show" {eyou:eq name='is_mobile' value='1'} onClick="Get_mobile_{$vo.fieldArr}_{$vo.name|default=''}(1,'','{$vo.title}')" {eyou:else/} onClick="GetUploadify(1,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back')" {/eyou:eq}>
+                        <a id="a_{$vo.fieldArr}_{$vo.name|default=''}" href="javascript:void(0);">
+                            <img class="img_{$vo.fieldArr}_{$vo.name|default=''}" src="{$vo['dfvalue']|default='__PUBLIC__/static/common/images/not_adv.jpg'}"/>
+                        </a>
+                        <span style="cursor: pointer;">上传图片</span>
+                    </div>
+                </div>
+                </div>
+
+                <script type="text/javascript">
+
+                    // 手机端上传单张图
+                    function Get_mobile_{$vo.fieldArr}_{$vo.name|default=''}(num, url, title)
+                    {
+                        var scriptUrl = '/public/plugins/layer_mobile/layer.js';
+                        // 支持子目录
+                        if (typeof __root_dir__ != "undefined") {
+                            scriptUrl = __root_dir__ + scriptUrl;
+                        }
+                        if (typeof __version__ != "undefined") {
+                            scriptUrl = scriptUrl + '?v=' + __version__;
+                        }
+                        // end
+                        $.getScript(scriptUrl, function(){
+
+                            if (num > 0) {
+                                if (!url) {
+                                    url = GetUploadify_url;
+                                }
+
+                                if (url.indexOf('?') > -1) {
+                                    url += '&';
+                                } else {
+                                    url += '?';
+                                }
+                                console.log({$vo.fieldArr}_{$vo.name|default=''});
+
+                                var content = $('#update_mobile_file').html();
+                                content = content.replace(/up_f/g, 'upfile');
+                                content = content.replace(/form1/g,'theForm{$vo.fieldArr}_{$vo.name|default=\'\'}');
+                                content = content.replace(/MobileHeadPic/g,"changeImgMobileUpload_{$vo.fieldArr}_{$vo.name|default=''}");
+
+                                if (!title) {
+                                    title = '上传';
+                                }
+                                layer_GetUploadify = layer.open({
+                                    type:1,
+                                    title:title,
+                                    anim:'up',
+                                    style:'position:fixed; bottom:0; left:0; width: 100%; padding:10px 0; border:none;max-width: 100%;',
+                                    content:content,
+                                });
+                            } else {
+                                layer.open({
+                                    content: '允许上传0张图片',
+                                    skin: 'footer',
+                                });
+                                return false;
+                            }
+                        });
+                    }
+
+                    function changeImgMobileUpload_{$vo.fieldArr}_{$vo.name|default=''}(){
+
+                        $.getScript('__ROOT_DIR__/public/plugins/layer_mobile/layer.js?v={$version}', function(){
+                            // 提示信息，2秒自动关闭
+                            function MsgOpen(msgs){
+                                layer.open({
+                                    content: msgs,
+                                    skin: 'msg',
+                                    time: 2,
+                                });
+                            }
+
+                            // 提示信息，估计在底部提示，点击空白处关闭
+                            function FooterOpen(msgs){
+                                layer.open({
+                                    content: msgs,
+                                    skin: 'footer',
+                                });
+                            }
+
+                            // 提示动画
+                            function LoaDing(){
+                                var loading = layer.open({
+                                    type:2,
+                                    content: '正在处理',
+                                });
+                                return loading;
+                            }
+
+                            UpdateImgMobileHeadPic_{$vo.fieldArr}_{$vo.name|default=''}();
+
+                            // 移动端更换头像
+                            function UpdateImgMobileHeadPic_{$vo.fieldArr}_{$vo.name|default=''}()
+                            {
+                                // 正在处理提示动画
+                                var loading = LoaDing();
+                                // 获取表单对象
+
+                                var data = new FormData($('#theForm{$vo.fieldArr}_{$vo.name|default=\'\'}')[0]);
+
+                                $.ajax({
+                                    url: "{eyou:url link='user/Uploadify/imageUp' vars='savepath=allimg&pictitle=head_pic&dir=images'/}",
+                                    type: 'post',
+                                    data: data,
+                                    dataType: 'json',
+                                    cache: false,
+                                    processData: false,
+                                    contentType: false,
+                                    success:function(res){
+                                        if (res.state == 'SUCCESS') {
+                                            layer.closeAll();
+                                            MsgOpen('上传成功！');
+                                            console.log({$vo.fieldArr}_{$vo.name|default=''});
+                                            {$vo.fieldArr}_{$vo.name|default=''}_call_back(res.url);
+                                        }else{
+                                            layer.close(loading);
+                                            MsgOpen(res.state);
+                                        }
+                                    },
+                                    error : function(e) {
+                                        layer.close(loading);
+                                        FooterOpen(e.responseText);
+                                    }
+                                });
+                            };
+                        })
+                    }
+
+                    function {$vo.fieldArr}_{$vo.name|default=''}_call_back(fileurl_tmp)
+                    {
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}").val(fileurl_tmp);
+                        // $("#a_{$vo.fieldArr}_{$vo.name|default=''}").attr('href', fileurl_tmp);
+                        $(".img_{$vo.fieldArr}_{$vo.name|default=''}").attr('src', fileurl_tmp);
+                    }
+                </script>
+                <!-- 单张图 end -->
+            {/case}
+
+            {case value="file"}
+                {eyou:static file="/public/plugins/layui/css/layui.css" /}
+                {eyou:static file="/public/plugins/layui/layui.js" /}
+                <!-- 单个文件 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        {$vo.title}
+                    </div>
+                    <div class="col-xs-9" >
+                        <a id="download_file_{$vo.fieldArr}_{$vo.name|default=''}" style="margin-right: 30px;text-decoration: underline;{eyou:notempty name='$vo.dfvalue' /}display: '';{eyou:else /}display: none;{/eyou:notempty}"
+                           {eyou:notempty name='$vo.dfvalue' /} href="{$vo.dfvalue|default=''}"  download="{$vo.dfvalue|get_filename=###}" {/eyou:notempty}>
+                        <img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件</a>
+                        <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" style="display: none;">
+                        <button type="button" class="btn btn-primary" id="upload_{$vo.fieldArr}_{$vo.name|default=''}" style="height: 30px;line-height: 30px;padding: 0 5px;">上传文件</button>
+                    </div>
+                </div>
+                <script>
+                    $(function(){
+                        layui.use('upload', function(){
+                            var upload = layui.upload;
+
+                            //执行实例
+                            upload.render({
+                                elem: "#upload_{$vo.fieldArr}_{$vo.name|default=''}" //绑定元素
+                                ,url: "{:url('user/Uploadify/DownloadUploadFileAjax')}"
+                                ,accept: 'file' //普通文件
+                                ,done: function(res){
+                                    //上传完毕回调
+                                    if (res.state=="SUCCESS"){
+                                        layer.msg('上传成功!')
+                                        $("#{$vo.fieldArr}_{$vo.name|default=''}").val(res.url);
+                                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+                                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").attr('href',res.url);
+                                        var arr = res.url.split("/");
+                                        var download = arr[arr.length-1];
+                                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").attr('download',download);
+                                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('color','#000');
+                                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").html('<img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件');
+                                    }else {
+                                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+                                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('color','red');
+                                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").text(res.state);
+                                    }
+                                }
+                                ,error: function(){
+                                    //请求异常回调
+                                }
+                            });
+                        });
+                    })
+                </script>
+                <!-- 单个文件 end -->
+            {/case}
+
+            {case value="imgs"}
+                <script type="text/javascript" src="__STATIC__/admin/js/jquery-ui/jquery-ui.min.js"></script>
+                <!-- 多张图 start -->
+                <div class="row" id="dl_{$vo.fieldArr}_{$vo.name|default=''}">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        <div class="tab-pane" id="tab_{$vo.fieldArr}_{$vo.name|default=''}">
+							<a href="javascript:void(0);" onClick="GetUploadify(100,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back', '', '{$vo.title}');" class="imgupload">
+							   <i class="fa fa fa-photo"></i>上传图片 
+							</a>
+                            <table class="table table-bordered">
+                                <tbody>
+                                <tr>
+                                    <td class="sort-list">
+                                       {volist name="$vo[$vo['name'].'_eyou_imgupload_list']" id="v2" key="k2"}
+										<div class="fieldext_upload" style="display:inline-block;">
+											<input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}">
+											<a href="{$v2}" onclick="" class="upimg" target="_blank">
+												<img src="{$v2}" width="137" height="137">
+											</a>
+											<br>
+											<a class="delect" href="javascript:void(0)" onclick="{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'{$v2}')">删除</a>
+										</div>
+                                        {/volist}
+                                       <div class="fieldext_upload" style="display:none;"></div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- 上传图片显示的样板 start -->
+                        <div class="{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl none" style="display: none;">
+                            <div class="fieldext_upload" style="display:inline-block;">
+                                <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="" />
+                                <a href="javascript:void(0);" onClick="" class="upimg">
+                                    <img src="__STATIC__/admin/images/add-button.jpg" width="100" height="100" />
+                                </a>
+                                <br/>
+                                <a class="delect" href="javascript:void(0)">&nbsp;&nbsp;</a>
+                            </div>
+                        </div>
+                        <!-- 上传图片显示的样板 end -->
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    // 上传多图回调函数
+                    function {$vo.fieldArr}_{$vo.name|default=''}_call_back(paths){
+                        
+                        var  last_div = $(".{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl").html();
+                        for (var i=0;i<paths.length ;i++ )
+                        {
+                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").before(last_div);  // 插入一个 新图片
+                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").find('img').attr('src',paths[i]);// 修改他的图片路径
+                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('删除');
+                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+                        }             
+                    }
+                    /*
+                     * 上传之后删除组图input     
+                     * @access   public
+                     * @val      string  删除的图片input
+                     */
+                    function {$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(obj,path)
+                    {
+                        // 删除数据库记录
+                        $.ajax({
+                            type:'POST',
+                            url:"{:url('user/UsersRelease/del_channelimgs', ['_ajax'=>1])}",
+                            data:{filename:path,channel:"{$channel_id|default='0'}",fieldname:"{$vo.name}",aid:"{$aid|default='0'}"},
+                            success:function(){
+                                $(obj).parent().remove(); // 删除完服务器的, 再删除 html上的图片
+                                $.ajax({
+                                    type:'POST',
+                                    url:"{:url('user/Uploadify/delupload', ['_ajax'=>1])}",
+                                    data:{action:"del", filename:path},
+                                    success:function(){}
+                                });
+                            }
+                        });    
+                    }
+
+                    /** 以下 图集相册的拖动排序相关 js*/
+
+                    $( ".sort-list" ).sortable({
+                        start: function( event, ui) {
+                        
+                        }
+                        ,stop: function( event, ui ) {
+                        }
+                    });
+                    //因为他们要拖动，所以尽量设置他们的文字不能选择。 
+                    $( ".sort-list" ).disableSelection();
+                </script>
+                <!-- 多张图 end -->
+            {/case}
+
+            {case value="int"}
+                <!-- 整数类型 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        <input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="只允许纯数字" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9]/g,''));">&nbsp;{$vo.dfvalue_unit|default=''}
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <!-- 整数类型 end -->
+            {/case}
+
+            {case value="float"}
+                <!-- 小数类型 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        <input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="允许带有小数点的数值" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9\.]/g,''));">&nbsp;{$vo.dfvalue_unit|default=''}
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <!-- 小数类型 end -->
+            {/case}
+
+            {case value="decimal"}
+                <!-- 金额类型 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        <input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="允许带有小数点的金额" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9\.]/g,''));">&nbsp;{$vo.dfvalue_unit|default=''}
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <!-- 金额类型 end -->
+            {/case}
+
+            {case value="datetime"}
+                <!-- 日期和时间 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        <input type="text" class="input-txt" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" value="{$vo['dfvalue']}">        
+                        <span class="add-on input-group-addon">
+                            <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                        </span> 
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    $(function () {
+                        $('#{$vo.fieldArr}_{$vo.name|default=''}').layDate();   
+                    });
+                </script>
+                <!-- 日期和时间 end -->
+            {/case}
+
+            {case value="htmltext"}
+                <!-- HTML文本 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        <textarea class="span12 ckeditor" id="{$vo.fieldArr}_{$vo.name|default=''}" data-func="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" title="">{$vo.dfvalue|default=''}</textarea>
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    var ue_{$vo.fieldArr}_{$vo.name|default=''} = UE.getEditor('{$vo.fieldArr}_{$vo.name|default=''}',{
+                        serverUrl :"{:url('Uploadify/index',array('savepath'=>'ueditor'))}",
+                        zIndex: 999,
+                        initialFrameWidth: "100%", //初化宽度
+                        initialFrameHeight: 450, //初化高度            
+                        focus: false, //初始化时，是否让编辑器获得焦点true或false
+                        maximumWords: 99999,
+                        removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
+                        pasteplain:false, //是否默认为纯文本粘贴。false为不使用纯文本粘贴，true为使用纯文本粘贴
+                        autoHeightEnabled: false,
+                        toolbars: [['fullscreen', 'forecolor', 'backcolor', 'removeformat', '|', 'simpleupload', 'unlink', '|', 'paragraph', 'fontfamily', 'fontsize']],
+                        // xss 过滤是否开启,inserthtml等操作
+                        xssFilterRules: true,
+                        //input xss过滤
+                        inputXssFilter: true,
+                        //output xss过滤
+                        outputXssFilter: true
+                    });
+
+                    //必须在提交前渲染编辑器；
+                    function {$vo.fieldArr}_{$vo.name|default=''}() {
+                        //判断编辑模式状态:0表示【源代码】HTML视图；1是【设计】视图,即可见即所得；-1表示不可用
+                        if(UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").queryCommandState('source') != 0) {
+                            UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").execCommand('source'); //切换到【设计】视图
+                        }
+                    }
+                </script>
+                <!-- HTML文本 end -->
+            {/case}
+        {/switch}
+    {/if}
+{/volist}

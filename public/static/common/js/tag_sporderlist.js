@@ -9,7 +9,7 @@ function Confirm(order_id,order_code) {
         var url = JsonData.shop_member_confirm;
         $.ajax({
             url: url,
-            data: {order_id:order_id,order_code:order_code},
+            data: {order_id:order_id,order_code:order_code,_ajax:1},
             type:'post',
             dataType:'json',
             success:function(res){
@@ -38,7 +38,7 @@ function OrderRemind(order_id,order_code) {
         var url = JsonData.shop_order_remind;
         $.ajax({
             url: url,
-            data: {order_id:order_id,order_code:order_code},
+            data: {order_id:order_id,order_code:order_code,_ajax:1},
             type:'post',
             dataType:'json',
             success:function(res){

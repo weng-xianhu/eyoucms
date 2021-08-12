@@ -13,6 +13,8 @@
 
 namespace app\plugins\controller;
 
+use think\Db;
+
 class Sample extends Base
 {
     /**

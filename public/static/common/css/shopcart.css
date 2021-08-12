@@ -1,94 +1,122 @@
 @charset "utf-8";
-
-.ey-price{ font-size: 30px; color: #d02b18; clear: both; }
+.ey-price {
+	font-size: 30px;
+	color: #d02b18;
+}
 .ey-number {
-    padding: 12px 0px;
-    font-size: 14px;
-    position: relative;
+	padding: 12px 0px;
+	font-size: 14px;
+	position: relative;
 }
 .ey-number .btn-input {
-    border: 1px solid #CCC;
-    display: inline-block;
-    vertical-align: middle;
-    position: relative;
-    font-size: 0px;
+	border: 1px solid #CCC;
+	display: inline-block;
+	vertical-align: middle;
+	position: relative;
+	font-size: 0px;
 }
 .ey-number .btn-input button {
-    width: 28px;
-    height: 30px;
-    font-size: 16px;
-    line-height: 30px;
-    padding: 0;
-    border: none;
-     background-color: #fff;
-    color: #333;
-    outline: none;
+	width: 28px;
+	height: 30px;
+	font-size: 16px;
+	line-height: 30px;
+	padding: 0;
+	border: none;
+	background-color: #fff;
+	color: #333;
+	outline: none;
 }
 .ey-number .btn-input input {
-    font-size: 12px;
-    height: 30px;
-    padding: 0;
-    display: inline-block;
-    vertical-align: top;
-    width: 45px;
-    text-align: center;
-    border: none;
-    border-left: 1px solid #CCC;
-    border-right: 1px solid #CCC;
-    border-radius: 0;
-    outline: none;
-   
+	font-size: 12px;
+	height: 30px;
+	padding: 0;
+	display: inline-block;
+	vertical-align: top;
+	width: 45px;
+	text-align: center;
+	border: none;
+	border-left: 1px solid #CCC;
+	border-right: 1px solid #CCC;
+	border-radius: 0;
+	outline: none;
 }
 .ey-number label {
-    margin-right: 12px;
+	margin-right: 12px;
 }
-.ey-buyaction{ margin-top: 5px; }
-
+.ey-buyaction {
+	margin-top: 5px;
+}
 .ey-buyaction a {
-    font-size: 14px;
-    display: inline-block;
-    padding: 8px 18px;
-    cursor: pointer;
-    text-align: center;
-    vertical-align: middle;
+	font-size: 14px;
+	display: inline-block;
+	padding: 8px 18px;
+	cursor: pointer;
+	text-align: center;
+	vertical-align: middle;
 }
-.ey-buyaction a:hover{ text-decoration:none}
-.ey-joinin{margin-right: 8px;color:#fff;background-color:#f96868;-webkit-box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 1px 1px rgba(0,0,0,.075)}
-.ey-joinin:hover,.ey-joinin:focus{color:#fff;background-color:#f73737; }
-
-.ey-joinbuy{color:#fff;background-color:#f2a654;-webkit-box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 1px 1px rgba(0,0,0,.075)}
-.ey-joinbuy:hover,.ey-joinbuy:focus{color:#fff;background-color:#ee8d25}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.ey-buyaction a:hover {
+	text-decoration: none
+}
+.ey-joinin {
+	margin-right: 8px;
+	color: #fff;
+	background-color: #f96868;
+	-webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 1px rgba(0,0,0,.075);
+	box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 1px rgba(0,0,0,.075)
+}
+.ey-joinin:hover, .ey-joinin:focus {
+	color: #fff;
+	background-color: #f73737;
+}
+.ey-joinbuy {
+	color: #fff;
+	background-color: #f2a654;
+	-webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 1px rgba(0,0,0,.075);
+	box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 1px rgba(0,0,0,.075)
+}
+.ey-joinbuy:hover, .ey-joinbuy:focus {
+	color: #fff;
+	background-color: #ee8d25
+}
+.btn {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.42857143;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background-image: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+/*首页产品规格选项样式覆盖*/
+.btn-selected {
+	background-color: transparent;
+	color: #76838f;
+	border-color: #e4eaec;
+}
+.btn-selected.btn-danger {
+	color: #f96868;
+	background-color: transparent;
+	border-color: #f96868;
+}
+.btn-selected.btn-danger:hover {
+	color: #f96868;
+	background-color: transparent;
+	border-color: #f96868;
+}
+.btn-selected:hover, .btn-selected:focus {
+	color: #f96868;
+	background-color: transparent;
+	border-color: #f96868;
+}

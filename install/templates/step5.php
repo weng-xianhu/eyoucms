@@ -28,7 +28,7 @@ $admin = $root."../login.php";
     <div class="">
       <div class="result cc"> 
         <h1>恭喜您，EyouCms已经成功安装完成！</h1>
-        <h5>基于安全考虑，安装完成后即可将网站根目录下的“install”文件夹删除！</h5>
+        <h5>基于安全考虑，安装完成后正式运营时请将后台密码设置复杂一些！</h5>
       </div>
 	        <div class="bottom tac"> 
           <center>

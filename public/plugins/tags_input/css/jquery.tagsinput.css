@@ -1,0 +1,13 @@
+div.tagsinput { border:1px solid #eee; background: #FFF; padding:5px;  width:300px; height:100px; overflow:hidden;display: inline-block;}
+div.tagsinput span.tag { border: 1px solid #eee; display: block; float: left; padding:0 5px; text-decoration:none; background: #f9feff; color: #12ace2; margin-right: 5px; font-family: helvetica;  font-size:12px; line-height: 20px;}
+div.tagsinput span.tag a { font-weight: bold; color:#4fc0e8; text-decoration:none; font-size: 11px;  } 
+div.tagsinput input { width:80px; margin:0px; font-family: helvetica; font-size: 12px; border:1px solid transparent; padding:0 5px; background: transparent; color: #000; outline:0px;  margin-right:5px;line-height: 20px;}
+div.tagsinput div { display:block; float: left; line-height: 20px; } 
+.tags_clear { clear: both; width: 100%; height: 0px; }
+.not_valid {background: #FBD8DB !important; color: #90111A !important;line-height:24px;}
+
+div.tagsinput span.tag_new { border: 1px solid #eee; display: block; float: left; padding:0 5px; text-decoration:none; background: #f9feff; color: #12ace2; margin-right: 5px; margin-bottom:5px;font-family: helvetica;  font-size:13px;}
+div.tagsinput span.tag_new a { font-weight: bold; color: #4fc0e8; text-decoration:none; font-size: 11px;  } 
+
+.opt1591870121 .ui_tips{ margin-bottom: 16px; }
+.opt1591870121 .ncap-btn{ margin-bottom: 20px; } 

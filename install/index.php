@@ -166,8 +166,8 @@ switch ($step) {
     case '3':
         $dbName = trim(addslashes($_POST['dbName']));
         $dbUser = trim(addslashes($_POST['dbUser']));
-        $dbport = !empty($_POST['dbport']) ? addslashes($_POST['dbport']) : '3306';
-        $dbPwd = $_POST['dbPwd'];
+        $dbport = !empty($_POST['dbport']) ? trim(addslashes($_POST['dbport'])) : '3306';
+        $dbPwd = trim($_POST['dbPwd']);
         $dbHost = addslashes($_POST['dbHost']);
         if ($_GET['testdbpwd']) {
             $conn = @mysqli_connect($dbHost, $dbUser, $dbPwd,NULL,$dbport);     
@@ -272,7 +272,7 @@ switch ($step) {
         $arr = array();
 
         $dbHost = trim(addslashes($_POST['dbhost']));
-        $dbport = !empty($_POST['dbport']) ? addslashes($_POST['dbport']) : '3306';
+        $dbport = !empty($_POST['dbport']) ? trim(addslashes($_POST['dbport'])) : '3306';
         $dbName = trim(addslashes($_POST['dbname']));
         $dbUser = trim(addslashes($_POST['dbuser']));
         $dbPwd = trim($_POST['dbpw']);
@@ -280,7 +280,14 @@ switch ($step) {
 
         $username = trim(addslashes($_POST['manager']));
         $password = trim($_POST['manager_pwd']);
-        
+        $manager_ckpwd = trim($_POST['manager_ckpwd']);
+        if ($password != $manager_ckpwd) {
+            $arr['code'] = 0;
+            $arr['msg'] = "管理员密码与确认密码不一致！";
+            echo json_encode($arr);
+            exit;
+        }
+
         if (!function_exists('mysqli_connect')) {
             $arr['code'] = 0;
             $arr['msg'] = "请安装 mysqli 扩展!";
@@ -393,7 +400,7 @@ switch ($step) {
         {               
             $result = mysqli_query($conn,"show tables");      
             $tables=$result->fetch_all(MYSQLI_NUM);//参数MYSQL_ASSOC、MYSQLI_NUM、MYSQLI_BOTH规定产生数组类型
-            $bl_table = array('ey_admin','ey_arcrank','ey_auth_access','ey_auth_modular','ey_auth_role','ey_auth_role_admin','ey_auth_rule','ey_channeltype','ey_config','ey_smtp_tpl','ey_users_level','ey_users_parameter');
+            $bl_table = array('ey_admin','ey_arcrank','ey_auth_role','ey_channelfield','ey_channeltype','ey_config','ey_download_attr_field','ey_field_type','ey_language','ey_language_mark','ey_language_pack','ey_product_spec_preset','ey_region','ey_shop_express','ey_shop_shipping_template','ey_smtp_tpl','ey_users_config','ey_users_level','ey_users_menu','ey_users_parameter');
             foreach($bl_table as $k => $v)
             {
                 $bl_table[$k] = preg_replace('/^ey_/i', $dbPrefix, $v); 

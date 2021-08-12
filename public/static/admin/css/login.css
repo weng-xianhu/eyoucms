@@ -1,5 +1,5 @@
 body {
-  background:#6f8489 url(../images/login-bg.jpg) left top no-repeat;background-attachment: fixed; background-size: cover;
+  background:#6f8489 url(../images/login-bg.png) left top no-repeat;background-attachment: fixed; background-size: cover;
   min-height: 100%;
 }
 @media(max-width:768px) {

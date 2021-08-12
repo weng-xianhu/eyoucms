@@ -45,6 +45,33 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'is_showlist' => 
+  array (
+    'name' => 'is_showlist',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'required' => 
+  array (
+    'name' => 'required',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'validate_type' => 
+  array (
+    'name' => 'validate_type',
+    'type' => 'smallint(5)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'sort_order' => 
   array (
     'name' => 'sort_order',

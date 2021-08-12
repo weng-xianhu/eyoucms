@@ -90,7 +90,7 @@ class Sample extends Weapp
         $pageStr = $pageObj->show(); // 分页显示输出
         $this->assign('list', $list); // 赋值数据集
         $this->assign('pageStr', $pageStr); // 赋值分页输出
-        $this->assign('pageObj', $pageObj); // 赋值分页对象
+        $this->assign('pager', $pageObj); // 赋值分页对象
 
         return $this->fetch('index');
     }
@@ -210,7 +210,7 @@ class Sample extends Weapp
     {
         $id_arr = input('del_id/a');
         $id_arr = eyIntval($id_arr);
-        if(!empty($id_arr)){
+        if(!empty($id_arr) && IS_POST){
             $result = $this->db->where("id",'IN',$id_arr)->select();
             $title_list = get_arr_column($result, 'title');
 

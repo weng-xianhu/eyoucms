@@ -7,7 +7,7 @@ function GetRegionData(t,type){
     var url = $('#GetRegionDataS').val();
     $.ajax({
         url: url,
-        data: {parent_id:parent_id},
+        data: {parent_id:parent_id,_ajax:1},
         type:'post',
         dataType:'json',
         success:function(res){
@@ -20,9 +20,9 @@ function GetRegionData(t,type){
                 $('#district').empty().html(res);
             }
         },
-        error : function() {
+        error : function(e) {
             layer.closeAll();
-            layer.alert('网络失败，请刷新页面后重试', {icon: 5});
+            layer.alert(e.responseText, {icon: 5});
         }
     });
 }
@@ -32,7 +32,15 @@ function AddAddress(){
     var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     var types = $('#types').val();
     var url   = $('#ShopAddAddress').val();
+    if (url.indexOf('?') > -1) {
+        url += '&';
+    } else {
+        url += '?';
+    }
+    url += '_ajax=1';
+
     var _parent = parent;
+    
     $.ajax({
         url: url,
         data: $('#theForm').serialize(),
@@ -40,24 +48,24 @@ function AddAddress(){
         dataType:'json',
         success:function(res){
             if(res.code == 1){
-                if (res.url) {
+                if (res.data.url) {
                     parent.layer.close(parentObj);
                     parent.layer.msg(res.msg, {time: 1000}, function(){
-                        _parent.ReturnUrl(res.url);
+                        _parent.ReturnUrl(res.data.url);
                     });
-                }else{
+                } else {
                     parent.layer.close(parentObj);
                     AddHtml(res.data,types);
                     parent.layer.msg(res.msg, {time: 1000});    
                 }
             }else{
                 layer.closeAll();
-                layer.msg(res.msg, {icon: 2});
+                layer.msg(res.msg, {icon: 5});
             }
         },
-        error : function() {
+        error : function(e) {
             layer.closeAll();
-            layer.alert('网络失败，请刷新页面后重试', {icon: 5});
+            layer.alert(e.responseText, {icon: 5});
         }
     });
 };
@@ -80,7 +88,7 @@ function AddHtml(data,types)
     strings = strings.replace('#address#',   data.address);
     // 替换JS方法
     strings = strings.replace('#selected#',     "SelectEd('addr_id','" + data.addr_id + "');");
-    strings = strings.replace('#setdefault#',   "SetDefault(this, '" + data.addr_id + "');\" data-is_default=\"0\" id=\"" + data.addr_id + "_color");
+    strings = strings.replace('#setdefault#',   "SetDefault(this, '" + data.addr_id + "');\" data-is_default=\"0\" id=\"" + data.addr_id + "_color\" data-setbtn=\"1\" data-attr_id=\"" + data.addr_id + "\"");
     strings = strings.replace('#shopeditaddr#', "ShopEditAddress('" + data.addr_id + "');");
     strings = strings.replace('#shopdeladdr#',  "ShopDelAddress('" + data.addr_id + "');");
     // 隐藏域，下单页第一次添加收货地址则出现一次，存在则替换数据

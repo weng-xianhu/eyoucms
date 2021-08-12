@@ -1,0 +1,903 @@
+{volist name="$addonFieldExtList" id="vo"}
+{if !isset($vo.ifeditable) || $vo.ifeditable}
+{switch name="vo.dtype"}
+{case value="hidden"}
+<!-- 隐藏域 start -->
+<div class="item-from-row" style="display: none;">
+	<div class="from-row-l">
+		<label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}：</label>
+	</div>
+	<div class="from-row-r">
+		<input type="hidden" class="el-input__inner wb84" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">
+		<span class="err"></span>
+		<p class="notic">{$vo.remark|default=''}</p>
+	</div>
+</div>
+<!-- 隐藏域 start -->
+{/case}
+
+{case value="region"}
+<!-- 区域选项 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex-l">
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+			<div class="item-con">
+				{volist name="$vo.dfvalue" id="v2"}
+				<label class="radio-label">
+					<input type="radio" class="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2['id']}" {if condition="isset($vo['trueValue']) AND in_array($v2['id'], $vo['trueValue'])"}checked="checked"{/if}>
+					<span class="check-mark"></span>
+					<span class="text">{$v2['name']}</span>
+				</label>
+				{/volist}
+				<span class="err"></span>
+				<p class="notic">{$vo.remark|default=''}</p>
+			</div>
+
+		</div>
+	</div>
+</div>
+<!-- 区域选项 end -->
+{/case}
+
+{case value="text"}
+<!-- 单行文本框 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex-l">
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+			<div class="item-con">
+				<input type="text" class="input-text fs16" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" placeholder="请输入">
+				<span class="err"></span>
+				<p class="notic">{$vo.remark|default=''}</p>
+				<span class="unit">{$vo.dfvalue_unit|default=''}</span>
+			</div>
+
+		</div>
+	</div>
+</div>
+<!-- 单行文本框 end -->
+{/case}
+
+{case value="multitext"}
+<!-- 多行文本框 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex-l">
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+			<div class="item-con">
+				<textarea rows="5" cols="60" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" class="fs16" style="height:60px;width:100%;font-size: 16px;">{$vo.dfvalue|default=''}</textarea>
+				<span class="err"></span>
+				<p class="notic">{$vo.remark|default=''}</p>
+			</div>
+
+		</div>
+	</div>
+</div>
+<!-- 多行文本框 end -->
+{/case}
+
+{case value="checkbox"}
+<!-- 复选框 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex-l">
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+			<div class="item-con">
+				{volist name="$vo.dfvalue" id="v2"}
+				<label class="checkbox-label">
+					<input type="checkbox"  class="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>
+					<span class="check-mark"></span>
+					<span class="text">{$v2}</span>
+				</label>
+				{/volist}
+				<span class="err"></span>
+				<p class="notic">{$vo.remark|default=''}</p>
+			</div>
+
+		</div>
+	</div>
+</div>
+<!-- 复选框 end -->
+{/case}
+
+{case value="radio"}
+<!-- 单选项 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex-l">
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+			<div class="item-con">
+				{volist name="$vo.dfvalue" id="v2"}
+				<label class="radio-label">
+					<input type="radio" class="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>                						<span class="check-mark"></span>
+					<span class="text">{$v2}</span>
+				</label>
+				{/volist}
+				<span class="err"></span>
+				<p class="notic">{$vo.remark|default=''}</p>
+			</div>
+
+		</div>
+	</div>
+</div>
+<!-- 单选项 end -->
+{/case}
+
+{case value="switch"}
+<!-- 开关 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex wb25">
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+		</div>
+		<div class="item-flex-r flex wb75">
+			<div class="on-off">
+				<label for="{$vo.fieldArr}_{$vo.name|default=''}1" class="cb-enable {if condition="0 != $vo['dfvalue']"}selected{/if}">是</label>
+				<label for="{$vo.fieldArr}_{$vo.name|default=''}0" class="cb-disable {if condition="0 == $vo['dfvalue']"}selected{/if}">否</label>
+				<input id="{$vo.fieldArr}_{$vo.name|default=''}1" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="1" type="radio" {if condition="0 != $vo['dfvalue']"}checked="checked"{/if}>
+				<input id="{$vo.fieldArr}_{$vo.name|default=''}0" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="0" type="radio" {if condition="0 == $vo['dfvalue']"}checked="checked"{/if}>
+			</div>
+			<span class="err"></span>
+			<p class="notic">{$vo.remark|default=''}</p>
+		</div>
+		<div class="item-flex-r">
+			<i class="el-icon-arrow-right"></i>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+    $(function(){
+        //自定义radio样式
+        $(".cb-enable").on('click', function(){
+            var parent = $(this).parents('.on-off');
+            $('.cb-disable',parent).removeClass('selected');
+            $(this).addClass('selected');
+            $('.checkbox',parent).attr('checked', true);
+        });
+        $(".cb-disable").on('click', function(){
+            var parent = $(this).parents('.on-off');
+            $('.cb-enable',parent).removeClass('selected');
+            $(this).addClass('selected');
+            $('.checkbox',parent).attr('checked', false);
+        });
+    });
+</script>
+<!-- 开关 end -->
+{/case}
+
+{case value="select"}
+<!-- 下拉框 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex wb25">
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+		</div>
+		<div class="item-flex-r wb75">
+			<div class="select">
+				<select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}">
+					{volist name="$vo.dfvalue" id="v2"}
+					<option value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}selected{/if}>{$v2}</option>
+					{/volist}
+				</select>
+			</div>
+			<span class="err"></span>
+			<p class="notic">{$vo.remark|default=''}</p>
+		</div>
+	</div>
+</div>
+
+<!-- 下拉框 end -->
+{/case}
+
+{case value="img"}
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+
+		<div class="item-flex wb25">
+			<div class="item-tit">
+				{$vo.title}：
+			</div>
+		</div>
+
+		<div class="item-flex-r wb75">
+			<div class="item-flex-img">
+				<img id="img_{$vo.fieldArr}_{$vo.name|default=''}" class="img-fluid"  src="{$vo['dfvalue']|default='__PUBLIC__/static/common/images/not_upload_pic.png'}" onclick="$('#file_{$vo.fieldArr}_{$vo.name|default=''}').trigger('click');" style="cursor: pointer;"/>
+				<input type="file" id="file_{$vo.fieldArr}_{$vo.name|default=''}" onchange="upload_{$vo.fieldArr}_{$vo.name|default=''}(this)" style="display: none;">
+				<input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" value="{$vo.dfvalue|default=''}">
+				<span id="txt_{$vo.fieldArr}_{$vo.name|default=''}" style="cursor: pointer; display: none;" onclick="$('#file_{$vo.fieldArr}_{$vo.name|default=''}').trigger('click');">点击修改</span>
+			</div>
+		</div>
+		<div class="item-flex-r">
+			<i class="el-icon-arrow-right"></i>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+    // 单图上传  2021.01.05
+    function upload_{$vo.fieldArr}_{$vo.name|default=''}(e){
+        var file = $(e)[0].files[0];
+        if (!file) {
+            return false;
+        }
+        var formData = new FormData();
+        formData.append('file',file);
+        formData.append('_ajax',1);
+        layer_loading('正在处理');
+        $.ajax({
+            type: 'post',
+            url: eyou_basefile + "?m=user&c=Uploadify&a=imageUp",
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: function (res) {
+                if (res.state == 'SUCCESS') {
+                    $("#{$vo.fieldArr}_{$vo.name|default=''}").val(res.url)
+                    $("#img_{$vo.fieldArr}_{$vo.name|default=''}").attr('src',res.url);
+                    $('#txt_{$vo.fieldArr}_{$vo.name|default=''}').show();
+                    layer.closeAll();
+                } else {
+                    layer.closeAll();
+                    showErrorAlert(res.state);
+                }
+            },
+            error : function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        })
+    }
+</script>
+<!-- 单张图 end -->
+{/case}
+
+{case value="file"}
+{eyou:static file="/public/plugins/layui/css/layui.css" /}
+<!--   {eyou:static file="/public/plugins/layui/layui.js" /} -->
+<!-- 单个文件 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex wb25">
+			<div class="item-tit">
+				{$vo.title}
+			</div>
+		</div>
+		<div class="item-flex-r wb75">
+			<a id="download_file_{$vo.fieldArr}_{$vo.name|default=''}" style="margin-right: 30px;text-decoration: underline;{eyou:notempty name='$vo.dfvalue' /}display: '';{eyou:else /}display: none;{/eyou:notempty}"
+			   {eyou:notempty name='$vo.dfvalue' /} href="{$vo.dfvalue|default=''}" download="{$vo.dfvalue|get_filename=###}" {/eyou:notempty}>
+			<img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件</a>
+			<input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" style="display: none;">
+			<button type="button" class="el-button el-button--primary is-plain el-button--small" id="upload_{$vo.fieldArr}_{$vo.name|default=''}" ><i class="el-icon-paperclip"></i>上传文件</button>
+		</div>
+		<div class="item-flex-r">
+			<i class="el-icon-arrow-right"></i>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+    $(function(){
+        layui.use('upload', function(){
+            var upload = layui.upload,
+                layer = layui.layer;
+
+            //执行实例
+            var uploadInst = upload.render({
+                    elem: "#upload_{$vo.fieldArr}_{$vo.name|default=''}" //绑定元素
+                    ,url: "{:url('user/Uploadify/DownloadUploadFileAjax')}"
+                    ,accept: 'file' //普通文件
+                    ,exts: '{$vo.ext}'
+                    ,size: {$vo.filesize} //限制文件大小，单位 KB
+                ,done: function(res){
+                //上传完毕回调
+                if (res.state=="SUCCESS"){
+                    layer.msg('上传成功!')
+                    $("#{$vo.fieldArr}_{$vo.name|default=''}").val(res.url);
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").attr('href',res.url);
+                    var arr = res.url.split("/");
+                    var download = arr[arr.length-1];
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").attr('download',download);
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('color','#000');
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").html(' <img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件');
+                }else {
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('color','red');
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").text(res.state);
+                }
+            }
+        ,error: function(){
+                //请求异常回调
+            }
+        });
+        });
+    })
+</script>
+<!-- 单个文件 end -->
+{/case}
+
+{case value="media"}
+{eyou:static file="/public/plugins/layui/css/layui.css" /}
+<!-- 多媒体上传 -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex wb25">
+			<div class="item-tit">
+				{$vo.title}
+			</div>
+		</div>
+		<div class="item-flex-r wb75">
+			<a id="media_a_{$vo.fieldArr}_{$vo.name|default=''}" style="margin-right: 30px;text-decoration: underline;{eyou:notempty name='$vo.dfvalue' /}display: '';{eyou:else /}display: none;{/eyou:notempty}" target="_blank"
+			   {eyou:notempty name='$vo.dfvalue' /} href="{$vo.dfvalue|default=''}" {/eyou:notempty}>
+			<img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">点击查看</a>
+			<input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" style="display: none;">
+			<input type="file" id="{$vo.fieldArr}_{$vo.name|default=''}_upload_media" onchange="{$vo.fieldArr}_{$vo.name|default=''}_upload_media_20210506(this)" style="display: none;">
+			<button type="button" class="el-button el-button--primary is-plain el-button--small" id="{$vo.fieldArr}_{$vo.name|default=''}_title_upload_media" onclick="$('#{$vo.fieldArr}_{$vo.name|default=\'\'}_upload_media').attr('data-type', '{$vo.upload_flag}').trigger('click');">上传文件</button>
+		</div>
+		<div class="item-flex-r">
+			<i class="el-icon-arrow-right"></i>
+		</div>
+	</div>
+</div>
+<script>
+    function {$vo.fieldArr}_{$vo.name|default=''}_upload_media_20210506(e){
+        var data_type = $(e).attr('data-type');
+        if ('qny' == data_type) {
+            {$vo.fieldArr}_{$vo.name|default=''}_qny_upload_media(e);
+        } else if ('oss' == data_type) {
+            {$vo.fieldArr}_{$vo.name|default=''}_oss_upload_media(e);
+        } else if ('cos' == data_type) {
+            {$vo.fieldArr}_{$vo.name|default=''}_cos_upload_media(e);
+        } else {
+            {$vo.fieldArr}_{$vo.name|default=''}_local_upload_media(e);
+        }
+    }
+    function beforeUploadMedia(ext,file){
+        var type = '{$vo.ext}';
+        var extArr = [];
+        extArr = type.split("|");
+        var exts = ext.replace(".","");
+        if (extArr.indexOf(exts) == -1) {
+            showErrorMsg('仅支持{$vo.ext}格式');
+            return false;
+        }
+        size = parseInt("{$vo.filesize}");
+        if (file.size > size) {
+            if (size >= 1048576) {
+                limit = size/1024/1024;
+                limit = limit + 'MB';
+            }else {
+                limit = size/1024 ;
+                limit = limit + 'KB';
+            }
+            showErrorMsg('仅支持'+limit+'以内的文件');
+            return false;
+        }
+        return true;
+    }
+    function {$vo.fieldArr}_{$vo.name|default=''}_qny_upload_media(e) {
+        var file = $(e)[0].files[0];
+        var fileName = file.name;
+        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
+        ret = beforeUploadMedia(fileExt,file);
+        if (ret){
+            $.ajax({
+                type: 'POST',
+                url: '__ROOT_DIR__/index.php?m=plugins&c=Qiniuyun&a=qiniu_upload',
+                data: {_ajax: 1},
+                dataType: "JSON",
+                success: function(res1) {
+                    if (1 == res1.code) {
+                        var token  = res1.data.token;
+                        var formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('token', token);
+
+                        fileName = res1.data.filePath + fileExt;
+                        formData.append('key', fileName);
+                        $.ajax({
+                            url: res1.data.uphost,
+                            type: 'POST',
+                            dataType: 'JSON',
+                            data: formData,
+                            timeout: 1200000,
+                            cache: false,
+                            processData: false,
+                            contentType: false,
+                            xhr: function () {
+                                myXhr = $.ajaxSettings.xhr();
+                                if (myXhr.upload) {
+                                    myXhr.upload.addEventListener('progress', function(e){
+                                        var curr = e.loaded;
+                                        var total = e.total;
+                                        process = parseInt(curr / total * 100);
+                                        $("#{$vo.fieldArr}_{$vo.name|default=''}_title_upload_media").text('上传中...'+process+"%");
+                                    });
+                                }
+                                return myXhr;
+                            },
+                            success: function(res2) {
+                                $("#{$vo.fieldArr}_{$vo.name|default=''}_title_upload_media").text('上传成功');
+                                setTimeout(function() {
+                                    $('#{$vo.fieldArr}_{$vo.name|default=\'\'}_title_upload_media').text('上传文件');
+                                }, 2000);
+                                var video_url = res1.data.domain + "/" + res2.key;
+                                $("#{$vo.fieldArr}_{$vo.name|default=''}").val(video_url);
+                                $("#media_a_{$vo.fieldArr}_{$vo.name|default=''}").show();
+                                $("#media_a_{$vo.fieldArr}_{$vo.name|default=''}").attr('href',video_url);
+                            },
+                            error: function(e) {
+                                layer.closeAll();
+                                showErrorMsg(e.responseText);
+                                return false;
+                            }
+                        });
+                    } else {
+                        layer.closeAll();
+                        showErrorMsg(res1.msg);
+                    }
+                },
+                error: function(e) {
+                    layer.closeAll();
+                    showErrorMsg(e.responseText);
+                }
+            });
+        }
+    }
+
+    function {$vo.fieldArr}_{$vo.name|default=''}_oss_upload_media(e) {
+        var file = $(e)[0].files[0];
+        var fileName = file.name;
+        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
+        ret = beforeUploadMedia(fileExt,file);
+        if (ret) {
+            $.ajax({
+                type: 'POST',
+                url: '__ROOT_DIR__/index.php?m=plugins&c=AliyunOss&a=oss_upload',
+                data: {_ajax: 1},
+                dataType: "JSON",
+                success: function (res1) {
+                    if (1 == res1.code) {
+                        fileName = res1.data.filePath + fileExt;
+                        //组装发送数据
+                        var request = new FormData();
+                        request.append("OSSAccessKeyId", res1.data.accessid);
+                        request.append("policy", res1.data.policy);
+                        request.append("Signature", res1.data.signature);
+                        request.append("key", fileName);
+                        request.append("success_action_status", 201);
+                        request.append('file', file);
+                        $.ajax({
+                            url: res1.data.host,
+                            data: request,
+                            processData: false,
+                            cache: false,
+                            contentType: false,
+                            dataType: 'xml',
+                            type: 'post',
+                            xhr: function () {
+                                myXhr = $.ajaxSettings.xhr();
+                                if (myXhr.upload) {
+                                    myXhr.upload.addEventListener('progress', function (e) {
+                                        var curr = e.loaded;
+                                        var total = e.total;
+                                        var process = parseInt(curr / total * 100);
+                                        $("#{$vo.fieldArr}_{$vo.name|default=''}_title_upload_media").text('上传中...' + process + "%");
+                                    });
+                                }
+                                return myXhr;
+                            },
+                            success: function (data) {
+                                var res = $(data).find('PostResponse');
+                                if (res) {
+                                    var key = res.find('Key').text();
+                                    $("#{$vo.fieldArr}_{$vo.name|default=''}_title_upload_media").text('上传成功');
+                                    setTimeout(function () {
+                                        $('#{$vo.fieldArr}_{$vo.name|default=\'\'}_title_upload_media').text('上传文件');
+                                    }, 2000);
+                                    var video_url = res1.data.domain + "/" + key;
+                                    $("#{$vo.fieldArr}_{$vo.name|default=''}").val(video_url);
+                                    $("#media_a_{$vo.fieldArr}_{$vo.name|default=''}").show();
+                                    $("#media_a_{$vo.fieldArr}_{$vo.name|default=''}").attr('href', video_url);
+                                } else {
+                                    $("#{$vo.fieldArr}_{$vo.name|default=''}_title_upload_media").text('上传失败');
+                                    setTimeout(function () {
+                                        $('#{$vo.fieldArr}_{$vo.name|default=\'\'}_title_upload_media').text('上传文件');
+                                    }, 2000);
+                                }
+                            },
+                            error: function (e) {
+                                layer.closeAll();
+                                console.log(e.responseText);
+                            }
+                        });
+                    } else {
+                        layer.closeAll();
+                        showErrorMsg(res1.msg);
+                    }
+                },
+                error: function (e) {
+                    layer.closeAll();
+                    showErrorMsg(e.responseText);
+                }
+            });
+        }
+    }
+    function {$vo.fieldArr}_{$vo.name|default=''}_cos_upload_media(e) {
+        var file = $(e)[0].files[0];
+        var fileName = file.name;
+        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
+        ret = beforeUploadMedia(fileExt,file);
+        if (ret) {
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('file_ext', fileExt);
+            $.ajax({
+                type: 'post',
+                url: '__ROOT_DIR__/index.php?m=plugins&c=Cos&a=cos_upload&_ajax=1',
+                data: formData,
+                contentType: false,
+                processData: false,
+                dataType: 'json',
+                xhr: function () {
+                    myXhr = $.ajaxSettings.xhr();
+                    if (myXhr.upload) {
+                        myXhr.upload.addEventListener('progress', function (e) {
+                            var curr = e.loaded;
+                            var total = e.total;
+                            process = parseInt(curr / total * 100);
+                            if (100 == process) {
+                                process = 99;
+                            }
+                            $("#{$vo.fieldArr}_{$vo.name|default=''}_title_upload_media").text('上传中...' + process + "%");
+                        });
+                    }
+                    return myXhr;
+                },
+                success: function (res) {
+                    if (1 == res.code) {
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}_title_upload_media").text('上传成功');
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}").val(res.data.url);
+                        $("#media_a_{$vo.fieldArr}_{$vo.name|default=''}").show();
+                        $("#media_a_{$vo.fieldArr}_{$vo.name|default=''}").attr('href', res.data.url);
+                    } else {
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}_title_upload_media").text('上传失败');
+                    }
+                    setTimeout(function () {
+                        $('#{$vo.fieldArr}_{$vo.name|default=\'\'}_title_upload_media').text('上传文件');
+                    }, 2000);
+                },
+                error: function (e) {
+                    layer.closeAll();
+                    showErrorMsg(e.responseText);
+                }
+            });
+        }
+    }
+    function {$vo.fieldArr}_{$vo.name|default=''}_local_upload_media(e){
+        var file = $(e)[0].files[0];
+        var fileName = file.name;
+        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
+        ret = beforeUploadMedia(fileExt,file);
+        if (ret) {
+            var formData = new FormData();
+            formData.append('file', file);
+            $.ajax({
+                type: 'post',
+                url: "{:url('user/Uploadify/AjaxUploadMedia', ['savepath'=>'media'])}",
+                data: formData,
+                contentType: false,
+                processData: false,
+                dataType: 'json',
+                xhr: function () {
+                    myXhr = $.ajaxSettings.xhr();
+                    if (myXhr.upload) {
+                        myXhr.upload.addEventListener('progress', function (e) {
+                            var curr = e.loaded;
+                            var total = e.total;
+                            process = parseInt(curr / total * 100);
+                            $("#upload_video_litpic_local").html('上传中...' + process + "%");
+                        });
+                    }
+                    return myXhr;
+                },
+                success: function (res) {
+                    if ("SUCCESS" == res.state) {
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}_title_upload_media").html('上传成功');
+                        setTimeout(function () {
+                            $('#{$vo.fieldArr}_{$vo.name|default=\'\'}_title_upload_media').html('上传文件');
+                        }, 2000);
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}").val(res.url);
+                        $("#media_a_{$vo.fieldArr}_{$vo.name|default=''}").show();
+                        $("#media_a_{$vo.fieldArr}_{$vo.name|default=''}").attr('href', res.url);
+                    } else {
+                        showErrorMsg(res.msg);
+                    }
+                }
+            });
+        }
+    }
+</script>
+{/case}
+{case value="imgs"}
+<script type="text/javascript" src="__STATIC__/admin/js/jquery-ui/jquery-ui.min.js"></script>
+<!-- 多张图 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex wb25">
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+		</div>
+		<div class="item-flex-r wb75 ">
+			<div class="images_upload_main" id="tab_{$vo.fieldArr}_{$vo.name|default=''}">
+				<a href="javascript:void(0);" onClick="GetUploadify(100,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back', '', '{$vo.title}',1);" class="el-button el-button--primary is-plain el-button--small">
+					<i class="el-icon-picture"></i>上传图片
+				</a>
+
+			</div>
+			<!-- 上传图片显示的样板 start -->
+
+			<!-- 上传图片显示的样板 end -->
+		</div>
+		<div class="item-flex-r">
+			<i class="el-icon-arrow-right"></i>
+		</div>
+	</div>
+	<div class="item-from-flex" id="dl_{$vo.fieldArr}_{$vo.name|default=''}">
+		<div class="item-flex wb25">
+		</div>
+		<div class="item-flex-r wb75 " style="margin-left: 1px;">
+			<div class="images_upload_main" id="tab_{$vo.fieldArr}_{$vo.name|default=''}">
+
+				<div class="sort-list">
+					{volist name="$vo[$vo['name'].'_eyou_imgupload_list']" id="v2" key="k2"}
+					<div class="fieldext_upload" >
+						<div class="images_upload_item">
+							<input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}">
+							<a href="{$v2}" onclick="" target="_blank">
+								<img src="{$v2}" width="70" height="70">
+							</a>
+							<a class="delete" href="javascript:void(0)" onclick="{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'{$v2}')">删除</a>
+						</div>
+					</div>
+					{/volist}
+					<div class="fieldext_upload" style="display:none;"></div>
+				</div>
+			</div>
+			<!-- 上传图片显示的样板 start -->
+			<div class="{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl" style="display: none;">
+				<div class="fieldext_upload">
+					<div class="images_upload_item">
+						<input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="" />
+						<a href="javascript:void(0);" onClick="" >
+							<img src="__STATIC__/admin/images/add-button.jpg" width="70" height="70" />
+						</a>
+						<a class="delete" href="javascript:void(0)">&nbsp;&nbsp;</a>
+					</div>
+				</div>
+			</div>
+			<!-- 上传图片显示的样板 end -->
+		</div>
+
+	</div>
+</div>
+<script type="text/javascript">
+    // 上传多图回调函数
+    function {$vo.fieldArr}_{$vo.name|default=''}_call_back(paths){
+
+        var  last_div = $(".{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl").html();
+        for (var i=0;i<paths.length ;i++ )
+        {
+            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").before(last_div);  // 插入一个 新图片
+            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").find('img').attr('src',paths[i]);// 修改他的图片路径
+            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('删除');
+            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+        }
+    }
+    /*
+     * 上传之后删除组图input
+     * @access   public
+     * @val      string  删除的图片input
+     */
+    function {$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(obj,path)
+    {
+        // 删除数据库记录
+        $.ajax({
+            type:'POST',
+            url:"{:url('user/UsersRelease/del_channelimgs', ['_ajax'=>1])}",
+            data:{filename:path,channel:"{$channel_id|default='0'}",fieldname:"{$vo.name}",aid:"{$aid|default='0'}"},
+            success:function(){
+                $(obj).parent().remove(); // 删除完服务器的, 再删除 html上的图片
+                $.ajax({
+                    type:'POST',
+                    url:"{:url('user/Uploadify/delupload', ['_ajax'=>1])}",
+                    data:{action:"del", filename:path},
+                    success:function(){}
+                });
+            }
+        });
+    }
+
+    /** 以下 产品相册的拖动排序相关 js*/
+
+    $( ".sort-list" ).sortable({
+        start: function( event, ui) {
+
+        }
+        ,stop: function( event, ui ) {
+
+        }
+    });
+    $( ".sort-list" ).disableSelection();
+</script>
+<!-- 多张图 end -->
+{/case}
+
+{case value="int"}
+<!-- 整数类型 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex wb25">
+
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+		</div>
+		<div class="item-flex-r flex wb75">
+			<div class="item-con">
+				<input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="只允许纯数字" class="input-text" onkeyup="this.value=this.value.replace(/[^0-9]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9]/g,''));">
+
+			</div>
+		</div>
+		<div class="item-flex-r tar_z w80">
+			<p class="notic">{$vo.remark|default=''}</p>
+			<span class="unit">{$vo.dfvalue_unit|default=''}</span>
+		</div>
+	</div>
+</div>
+</div>
+<!-- 整数类型 end -->
+{/case}
+
+{case value="float"}
+<!-- 小数类型 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex-l">
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+			<div class="item-con">
+				<input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="允许带有小数点的数值" class="input-text" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9\.]/g,''));">
+				<p class="notic">{$vo.remark|default=''}</p>
+				<span class="unit">{$vo.dfvalue_unit|default=''}</span>
+			</div>
+
+		</div>
+	</div>
+</div>
+<!-- 小数类型 end -->
+{/case}
+
+{case value="decimal"}
+<!-- 金额类型 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex wb25">
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+		</div>
+		<div class="item-flex-r flex wb75">
+			<div class="item-con">
+				<input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="允许带有小数点的金额" class="input-text" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9\.]/g,''));">
+
+			</div>
+		</div>
+		<div class="item-flex-r tar_z w80">
+			<p class="notic">{$vo.remark|default=''}</p>
+			<span class="unit">{$vo.dfvalue_unit|default=''}</span>
+		</div>
+	</div>
+</div>
+</div>
+<!-- 金额类型 end -->
+{/case}
+
+{case value="datetime"}
+<!-- 日期和时间 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex wb25">
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+		</div>
+		<div class="item-flex-r flex wb75">
+			<div class="item-con">
+				<input type="text" class="input-text" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" value="{$vo['dfvalue']}">
+				<p class="notic">{$vo.remark|default=''}</p>
+			</div>
+		</div>
+		<div class="item-flex-r">
+			<i class="el-icon-arrow-right"></i>
+		</div>
+	</div>
+
+</div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        $('#{$vo.fieldArr}_{$vo.name|default=''}').layDate();
+    });
+</script>
+<!-- 日期和时间 end -->
+{/case}
+
+{case value="htmltext"}
+<!-- HTML文本 start -->
+<div class="ey-con ey-row mt10">
+	<div class="item-from-flex">
+		<div class="item-flex-l">
+			<div class="item-tit">
+				{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}
+			</div>
+			<div class="item-con">
+				<textarea class="wb100" id="{$vo.fieldArr}_{$vo.name|default=''}" data-func="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" title="">{$vo.dfvalue|default=''}</textarea>
+				<span class="err"></span>
+				<p class="notic">{$vo.remark|default=''}</p>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+    var ue_{$vo.fieldArr}_{$vo.name|default=''} = UE.getEditor('{$vo.fieldArr}_{$vo.name|default=''}',{
+        serverUrl :"{:url('Uploadify/index',array('savepath'=>'ueditor'))}",
+        zIndex: 999,
+        initialFrameWidth: "100%", //初化宽度
+        initialFrameHeight: 350, //初化高度
+        focus: false, //初始化时，是否让编辑器获得焦点true或false
+        maximumWords: 99999,
+        removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
+        pasteplain:false, //是否默认为纯文本粘贴。false为不使用纯文本粘贴，true为使用纯文本粘贴
+        autoHeightEnabled: false,
+        toolbars: [['forecolor', 'simpleupload', 'unlink', 'fontsize']],
+        // xss 过滤是否开启,inserthtml等操作
+        xssFilterRules: true,
+        //input xss过滤
+        inputXssFilter: true,
+        //output xss过滤
+        outputXssFilter: true
+    });
+
+    //必须在提交前渲染编辑器；
+    function {$vo.fieldArr}_{$vo.name|default=''}() {
+        //判断编辑模式状态:0表示【源代码】HTML视图；1是【设计】视图,即可见即所得；-1表示不可用
+        if(UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").queryCommandState('source') != 0) {
+            UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").execCommand('source'); //切换到【设计】视图
+        }
+    }
+</script>
+<!-- HTML文本 end -->
+{/case}
+{/switch}
+{/if}
+{/volist}

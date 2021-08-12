@@ -12,7 +12,7 @@ return array (
   'order_code' => 
   array (
     'name' => 'order_code',
-    'type' => 'varchar(20)',
+    'type' => 'varchar(30)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -84,7 +84,7 @@ return array (
   'express_order' => 
   array (
     'name' => 'express_order',
-    'type' => 'varchar(32)',
+    'type' => 'varchar(50)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -252,12 +252,57 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'is_comment' => 
+  array (
+    'name' => 'is_comment',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'user_note' => 
   array (
     'name' => 'user_note',
     'type' => 'text',
     'notnull' => false,
     'default' => NULL,
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'group' => 
+  array (
+    'name' => 'group',
+    'type' => 'varchar(50)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'order_md5' => 
+  array (
+    'name' => 'order_md5',
+    'type' => 'varchar(50)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'order_source' => 
+  array (
+    'name' => 'order_source',
+    'type' => 'tinyint(3)',
+    'notnull' => false,
+    'default' => '10',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'order_source_id' => 
+  array (
+    'name' => 'order_source_id',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),
@@ -285,6 +330,33 @@ return array (
     'type' => 'int(11) unsigned',
     'notnull' => false,
     'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'coupon_id' => 
+  array (
+    'name' => 'coupon_id',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'use_id' => 
+  array (
+    'name' => 'use_id',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'coupon_price' => 
+  array (
+    'name' => 'coupon_price',
+    'type' => 'decimal(10,2)',
+    'notnull' => false,
+    'default' => '0.00',
     'primary' => false,
     'autoinc' => false,
   ),

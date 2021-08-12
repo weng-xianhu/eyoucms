@@ -1,0 +1,8 @@
+@charset "utf-8";
+.ui-layout-west i{
+	color: 333;
+	margin: 0 4px;
+}
+.ui-layout-west .ztree li{
+	line-height: 28px;
+}

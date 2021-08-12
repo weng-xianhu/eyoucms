@@ -1,5 +1,5 @@
 {include file="header.htm" /}
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
@@ -7,19 +7,21 @@
     <div class="flexigrid">
         <div class="mDiv">
             <div class="ftitle">
-                <h3>文档列表</h3>
-                <h5>(共{$pageObj->totalRows}条记录)</h5>
+				<div class="fbutton">
+				    <a href="{:weapp_url('Sample/Sample/add')}">
+				        <div class="add" title="新增">
+				            <span class="red"><i class="fa fa-plus"></i>新增</span>
+				        </div>
+				    </a>
+				</div>
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" action="{:weapp_url('Sample/Sample/index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
                         <input type="submit" class="btn" value="搜索">
-                    </div>
-                    <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:weapp_url('Sample/Sample/index')}';">
+                        <i class="fa fa-search"></i>
                     </div>
                 </div>
             </form>
@@ -30,7 +32,7 @@
                     <thead>
                     <tr>
                         <th class="sign w40" axis="col0">
-                            <div class="tc">选择</div>
+                            <div class="tc"><input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);"></div>
                         </th>
                         <th abbr="article_show" axis="col5" class="w40">
                             <div class="tc">ID</div>
@@ -134,12 +136,24 @@
                         </div>
                     </a>
                 </div>
-                <div class="fbutton">
-                    <a href="{:weapp_url('Sample/Sample/add')}">
-                        <div class="add" title="新增">
-                            <span class="red"><i class="fa fa-plus"></i>新增</span>
-                        </div>
-                    </a>
+                <div class="fbuttonr">
+                    <div class="pages">
+                       {$pageStr}
+                    </div>
+                </div>
+                <div class="fbuttonr">
+                    <div class="total">
+                       <h5>共有{$pager->totalRows}条,每页显示
+                            <select name="pagesize" style="width: 60px;" onchange="ey_selectPagesize(this);">
+                                <option {if condition="$pager->listRows == 15"} selected {/if} value="15">15</option>
+                                <option {if condition="$pager->listRows == 30"} selected {/if} value="30">30</option>
+                                <option {if condition="$pager->listRows == 50"} selected {/if} value="50">50</option>
+                                <option {if condition="$pager->listRows == 100"} selected {/if} value="100">100</option>
+                                <option {if condition="$pager->listRows == 200"} selected {/if} value="200">200</option>
+                                <!-- <option {if condition="$pager->listRows == 500"} selected {/if} value="500">500</option> -->
+                            </select>
+                       </h5>
+                    </div>
                 </div>
             </div>
             <div style="clear:both"></div>

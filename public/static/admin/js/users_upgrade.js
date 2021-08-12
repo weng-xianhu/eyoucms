@@ -13,7 +13,7 @@ function btn_upgrade(obj, type)
     var filelist = $("#upgrade_filelist").html();
     var intro = $("#upgrade_intro").html();
     var notice = $("#upgrade_notice").html();
-    intro += '<style type="text/css">.layui-layer-content{height:270px!important}</style>';
+    intro += '<style type="text/css">.layui-layer-content{height:270px!important;text-align:left!important;}</style>';
     // filelist = filelist.replace(/\n/g,"<br/>");
     v = notice + intro + '<br/>' + filelist;
     var version = $(obj).data('version');

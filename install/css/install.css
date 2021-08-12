@@ -4,11 +4,13 @@ html {
   scrollbar-face-color : #F5F5F5;
   scrollbar-arrow-color :#A0A0A0;
 }
-
+:focus {
+    outline: -webkit-focus-ring-color auto 0;
+}
 img  {border: 0px;}
 *{
-	margin:0;
-	padding:0;
+  margin:0;
+  padding:0;
 }
 
 fieldset, img {border:0;}
@@ -29,7 +31,7 @@ h6 {font-size: 1.1em;font-style: italic;}
 address,cite,dfn,em,var{font-style:normal;}
 caption,td {font-weight: normal;}
 cite, blackquote, em, i {font-style: italic;}
-strong, b {	font-weight: bold;}
+strong, b { font-weight: bold;}
 pre, code {font-family: monospace;font-size: 1.1em;}
 
 input {font-size:12px;}
@@ -77,7 +79,7 @@ body {
 .header { padding:25px 0px; 
 text-align:center;
 color:white;
-background:#08aaf2;
+background:#ff7600;
 font-size:25px;
 }
 
@@ -170,7 +172,7 @@ margin:0px auto;
 #table .td1{ height: 28px; line-height: 28px; color: white; font-weight: normal; background:#ccc; padding: 0px; text-align: center; }
 #table td, #table_field td { padding: 12px 30px; background:white; }
 
-#table input {height:26px; line-height:26px; padding:0px 10px;border:1px solid #ccc;border-radius: 3px 3px 3px 3px; display: inline-block; float: left; margin-right: 5px; vertical-align: middle;}
+#table input {height:26px; line-height:26px; padding:0px 10px;border:1px solid #ccc;border-radius: 3px 3px 3px 3px; display: inline-block; float: left; margin-right: 5px; vertical-align: middle;width: 150px;}
 
 #table input:hover {
 border:1px solid #A5C7FE;
@@ -185,36 +187,36 @@ box-shadow:0px 0px 10px #A5C7FE;
 .J_install_btn{ font-size: 12px !important; }
 
 .result {
-	clear:both;
-	width:640px;
-	height:120px;
-	margin:0px auto;
-	padding:10px 0px 10px 90px;
-	background:url(../images/result_bg.png) 3px center no-repeat;
-	color:white; 
+  clear:both;
+  width:640px;
+  height:120px;
+  margin:0px auto;
+  padding:10px 0px 10px 90px;
+  background:url(../images/result_bg.png) 3px center no-repeat;
+  color:white; 
 }
 
 .result h1 {
     line-height:60px;
-	font-size:26px;
-	font-weight:normal;
+  font-size:26px;
+  font-weight:normal;
 }
 
 
 .result h5 {
     line-height:20px;
-	font-size:14px;
-	font-weight:normal;
+  font-size:14px;
+  font-weight:normal;
 }
 
 
 
 
 /* 按钮 */
-.btn_a,.btn,#installbutton,.btn-primary {display:inline-block;color: white !important; font-size: 14px; width: 100px; margin: 0px auto; background:#0293d2;height:30px; line-height:30px;padding:0px 20px;border-radius: 3px 3px 3px 3px;color:white;text-align:center; border: 1px solid #6aa7d2; text-align: center; cursor: pointer; vertical-align: middle;}
+.btn_a,.btn,#installbutton,.btn-primary {display:inline-block;color: white !important; font-size: 14px; width: 100px; margin: 0px auto; background:#ff7600;height:30px; line-height:30px;padding:0px 20px;border-radius: 3px 3px 3px 3px;color:white;text-align:center; border: 1px solid #ff7600; text-align: center; cursor: pointer; vertical-align: middle;}
 .btn_b {  height: 30px; line-height: 30px; padding:0px 20px;color: #fff; background:#c1c1c1; border: 1px solid #999; text-align: center; cursor: pointer;border-radius: 3px 3px 3px 3px; vertical-align: middle;}
-.btn_c { height: 30px; line-height: 30px; padding:0px 20px 0px 40px;color: white; background:#0293d2 url(../images/btn_03.gif) 3px -1px no-repeat; border: 1px solid #6aa7d2; text-align: center; cursor: pointer; font-weight:bold; border-radius: 50px 50px 50px 50px;}
-.btn_d {  height: 29px; line-height: 29px; margin: 0px 2px; padding:0px 20px;background:#0293d2; border: 1px solid #6aa7d2; border-radius: 3px 3px 3px 3px; color: white;  }
+.btn_c { height: 30px; line-height: 30px; padding:0px 20px 0px 40px;color: white; background:#ff7600 url(../images/btn_03.gif) 3px -1px no-repeat; border: 1px solid #ff7600; text-align: center; cursor: pointer; font-weight:bold; border-radius: 50px 50px 50px 50px;}
+.btn_d {  height: 29px; line-height: 29px; margin: 0px 2px; padding:0px 20px;background:#ff7600; border: 1px solid #6aa7d2; border-radius: 3px 3px 3px 3px; color: white;  }
 .btn_e {  margin: 0px 2px;padding:0px 20px;line-height:26px;
 border-radius: 3px 3px 3px 3px; color: white;   text-align:center; background:#c1c1c1; border:1px solid #999; }
 a.btn_b,.btn_c,a.btn_d, a.btn_e { display: inline-block; text-align:center;}
@@ -229,9 +231,9 @@ button.btn{ height: 32px; }
 #installbutton,
 .btn-primary
 {
--moz-box-shadow:0px 0px 10px #A5C7FE;
--webkit-box-shadow:0px 0px 10px #A5C7FE;
-box-shadow:0px 0px 10px #A5C7FE;
+-moz-box-shadow:0px 0px 10px #feb0a5;
+-webkit-box-shadow:0px 0px 10px #feb0a5;
+box-shadow:0px 0px 10px #feb0a5;
 }
 
 .btn_b:hover{ color: #fff }
@@ -242,4 +244,23 @@ box-shadow:0px 0px 10px #A5C7FE;
 .green{color: green;}
 .red{color: red;}
 
-/*安装有什么问题可以访问eyoucms.com 查看帮助*/
+.data-password{
+  position: relative;
+}
+.data-password .password-icon{
+  position: absolute;
+  top: 17px;
+  left: 176px;
+  width: 18px;
+  height: 18px;
+  background-color: #ccc;
+  z-index: 10;
+  cursor: pointer;
+}
+.data-password .password-icon.show{
+  background: url(../images/password_show.png) no-repeat center center;
+}
+.data-password .password-icon.hide{
+  background: url(../images/password_hide.png) no-repeat center center;
+}
+/*安装有什么问题可以访问 http://www.eyoucms.com 查看帮助*/

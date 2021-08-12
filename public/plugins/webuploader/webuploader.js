@@ -2165,8 +2165,8 @@
              * ```
              */
             compress: {
-                width: 3800, // by 小虎哥
-                height: 3800, // by 小虎哥
+                width: 380000, // by 小虎哥
+                height: 380000, // by 小虎哥
                 quality: 90,
                 allowMagnify: false,
                 crop: false,

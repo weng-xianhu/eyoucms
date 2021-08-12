@@ -125,14 +125,14 @@ function eyou_lang(key, str) {
     langArr['Upgradeing']='升级中';
     langArr['No upgrades may have security risks']='不升级可能有安全隐患';
     langArr['Being dealt with']='正在处理';
-    langArr['This operation is irreversible. Confirm the complete unloading?']='此操作不可逆，确认彻底卸载？';
+    langArr['This operation is irreversible. Confirm the complete unloading?']='此操作不可恢复，确认彻底卸载？';
     langArr['Complete unload']='彻底卸载';
-    langArr['Network request failed']='网络失败，请刷新页面后重试';
+    langArr['Network request failed']='未知错误，无法继续！';
     langArr['Successful operation']='操作成功';
     langArr['Operation failed']='操作失败';
     langArr['There is no list of documents in this column']='该栏目没有文档列表';
     langArr['Batch deleting']='批量删除';
-    langArr['This operation is irreversible. Confirm deletion?']='此操作不可逆，确认删除？';
+    langArr['This operation is irreversible. Confirm deletion?']='此操作不可恢复，确认删除？';
     langArr['Code call']='代码调用';
     langArr['Do not refresh the page']=str+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请勿刷新页面';
     langArr['Please choose the column of the corresponding model']='请选择对应模型的栏目';
@@ -148,7 +148,7 @@ function eyou_lang(key, str) {
     langArr['Update success']='更新成功';
     langArr['Confirm']='确定';
     langArr['Cancel']='取消';
-    langArr['This operation is irreversible. Confirm batch deletion?']='此操作不可逆，确认批量删除？';
+    langArr['This operation is irreversible. Confirm batch deletion?']='此操作不可恢复，确定批量删除？';
     langArr['Upload a picture']='上传图片';
     langArr['Error of parameters']='参数有误';
     langArr['Yes']='是';

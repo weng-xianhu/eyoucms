@@ -394,7 +394,7 @@ UE.I18N['zh-cn'] = {
         'unknownError':'未知错误！',
         'fileUploading':'上传中，请等待……',
         'cancelUpload':'取消上传',
-        'netError':'网络错误',
+        'netError':'未知错误',
         'failUpload':'上传失败!',
         'serverIOError':'服务器IO错误！',
         'noAuthority':'无权限！',

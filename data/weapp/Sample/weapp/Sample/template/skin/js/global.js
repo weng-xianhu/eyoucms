@@ -8,13 +8,14 @@ var ueditor_toolbars = [[
     'directionalityltr', 'directionalityrtl', 'indent', '|',
     'justifyleft', 'justifycenter', 'justifyright', 'justifyjustify', '|', 'touppercase', 'tolowercase', '|',
     'link', 'unlink', '|', 'imagenone', 'imageleft', 'imageright', 'imagecenter', '|',
-    'simpleupload', 'insertimage', 'emotion', 'scrawl', 'insertvideo', 'music', 'attachment', 'map', 'insertframe', 'insertcode', 'pagebreak', 'background', '|',
+    'simpleupload', 'insertimage', 'emotion', 'insertvideo', 'attachment', 'map', 'insertframe', 'insertcode', '|',
     'horizontal', 'spechars', '|',
     'inserttable', 'deletetable', 'insertparagraphbeforetable', 'insertrow', 'deleterow', 'insertcol', 'deletecol', 'mergecells', 'mergeright', 'mergedown', 'splittocells', 'splittorows', 'splittocols', 'charts', '|',
     'preview', 'searchreplace', 'drafts'
 ]];
 
 var layer_tips; // 全局提示框的对象
+var ey_unknown_error = '未知错误，无法继续！';
 
 $(function(){
     auto_notic_tips();
@@ -33,9 +34,49 @@ $(function(){
 });
 
 /**
+ * 批量复制
+ */
+function func_batch_copy(obj, name)
+{
+    var a = [];
+    var k = 0;
+    aids = '';
+    $('input[name^='+name+']').each(function(i,o){
+        if($(o).is(':checked')){
+            a.push($(o).val());
+            if (k > 0) {
+                aids += ',';
+            }
+            aids += $(o).val();
+            k++;
+        }
+    })
+    if(a.length == 0){
+        layer.alert('请至少选择一项', {icon: 5, title:false});
+        return;
+    }
+
+    var url = $(obj).attr('data-url');
+    //iframe窗
+    layer.open({
+        type: 2,
+        title: '批量复制',
+        fixed: true, //不固定
+        shadeClose: false,
+        shade: 0.3,
+        maxmin: false, //开启最大化最小化按钮
+        area: ['450px', '300px'],
+        content: url
+    });
+}
+
+/**
  * 批量删除提交
  */
 function batch_del(obj, name) {
+
+    var url = $(obj).attr('data-url');
+
     var a = [];
     $('input[name^='+name+']').each(function(i,o){
         if($(o).is(':checked')){
@@ -43,18 +84,19 @@ function batch_del(obj, name) {
         }
     })
     if(a.length == 0){
-        layer.alert('请至少选择一项', {icon: 2});
+        layer.alert('请至少选择一项', {icon: 5, title:false});
         return;
     }
     // 删除按钮
-    layer.confirm('此操作不可逆，确认批量删除？', {
+    layer.confirm('此操作不可恢复，确定批量删除？', {
+        title: false,
         btn: ['确定', '取消'] //按钮
     }, function () {
         layer_loading('正在处理');
         $.ajax({
             type: "POST",
-            url: $(obj).attr('data-url'),
-            data: {del_id:a},
+            url: url,
+            data: {del_id:a, _ajax:1},
             dataType: 'json',
             success: function (data) {
                 layer.closeAll();
@@ -62,12 +104,12 @@ function batch_del(obj, name) {
                     layer.msg(data.msg, {icon: 1});
                     window.location.reload();
                 }else{
-                    layer.alert(data.msg, {icon: 2});
+                    layer.alert(data.msg, {icon: 5, title:false});
                 }
             },
             error:function(){
                 layer.closeAll();
-                layer.alert('网络失败，请刷新页面后重试', {icon: 2});
+                layer.alert(ey_unknown_error, {icon: 5, title:false});
             }
         });
     }, function (index) {
@@ -79,15 +121,16 @@ function batch_del(obj, name) {
  * 单个删除
  */
 function delfun(obj) {
-    layer.confirm('此操作不可逆，确认删除？', {
-          btn: ['确定','取消'] //按钮
+    layer.confirm('此操作不可恢复，确认删除？', {
+            title: false,
+            btn: ['确定','取消'] //按钮
         }, function(){
             // 确定
             layer_loading('正在处理');
             $.ajax({
                 type : 'post',
                 url : $(obj).attr('data-url'),
-                data : {del_id:$(obj).attr('data-id')},
+                data : {del_id:$(obj).attr('data-id'), _ajax:1},
                 dataType : 'json',
                 success : function(data){
                     layer.closeAll();
@@ -95,7 +138,7 @@ function delfun(obj) {
                         layer.msg(data.msg, {icon: 1});
                         window.location.reload();
                     }else{
-                        layer.alert(data.msg, {icon: 2});
+                        layer.alert(data.msg, {icon: 5, title:false});
                     }
                 }
             })
@@ -119,19 +162,49 @@ function selectAll(name,obj){
  */
 function clickRemote(obj, id)
 {
-    if ($(obj).is(':checked')) {
-        $('#'+id+'_remote').show();
-        $('.div_'+id+'_local').hide();
-    } else {
-        $('.div_'+id+'_local').show();
-        $('#'+id+'_remote').hide();
-    }
+    try {
+        if ($(obj).is(':checked')) {
+            $('#'+id+'_remote').show();
+            $('.div_'+id+'_local').hide();
+            if ($("input[name="+id+"_remote]").val().length > 0) {
+                $("input[name=is_litpic]").attr('checked', true); // 自动勾选属性[图片]
+            } else {
+                $("input[name=is_litpic]").attr('checked', false); // 自动取消属性[图片]
+            }
+        } else {
+            $('.div_'+id+'_local').show();
+            $('#'+id+'_remote').hide();
+            if ($("input[name="+id+"_local]").val().length > 0) {
+                $("input[name=is_litpic]").attr('checked', true); // 自动勾选属性[图片]
+            } else {
+                $("input[name=is_litpic]").attr('checked', false); // 自动取消属性[图片]
+            }
+        }
+    }catch(e){}
+}
+
+/**
+ * 监听远程图片文本框的按键输入事件
+ */
+function keyupRemote(obj, id)
+{
+    try {
+        var value = $(obj).val();
+        if (value != '') {
+            $("input[name=is_litpic]").attr('checked', true); // 自动勾选属性[图片]
+        } else {
+            $("input[name=is_litpic]").attr('checked', false); // 自动取消属性[图片]
+        }
+    }catch(e){}
 }
 
 /**
  * 批量移动操作
  */
 function batch_move(obj, name) {
+
+    var url = $(obj).attr('data-url');
+
     var a = [];
     $('input[name^='+name+']').each(function(i,o){
         if($(o).is(':checked')){
@@ -139,7 +212,7 @@ function batch_move(obj, name) {
         }
     })
     if(a.length == 0){
-        layer.alert('请至少选择一项', {icon: 2});
+        layer.alert('请至少选择一项', {icon: 5, title:false});
         return;
     }
     // 删除按钮
@@ -149,8 +222,8 @@ function batch_move(obj, name) {
         layer_loading('正在处理');
         $.ajax({
             type: "POST",
-            url: $(obj).attr('data-url'),
-            data: {move_id:a},
+            url: url,
+            data: {move_id:a, _ajax:1},
             dataType: 'json',
             success: function (data) {
                 layer.closeAll();
@@ -158,12 +231,12 @@ function batch_move(obj, name) {
                     layer.msg(data.msg, {icon: 1});
                     window.location.reload();
                 }else{
-                    layer.alert(data.msg, {icon: 2});
+                    layer.alert(data.msg, {icon: 5, title:false});
                 }
             },
             error:function(){
                 layer.closeAll();
-                layer.alert('网络失败，请刷新页面后重试', {icon: 2});
+                layer.alert(ey_unknown_error, {icon: 5, title:false});
             }
         });
     }, function (index) {
@@ -175,51 +248,57 @@ function batch_move(obj, name) {
 // 修改指定表的指定字段值 包括有按钮点击切换是否 或者 排序 或者输入框文字
 function changeTableVal(table,id_name,id_value,field,obj)
 {   
-        var src = "";
-         if($(obj).hasClass('no')) // 图片点击是否操作
-         {          
-            //src = '/public/images/yes.png';
-            $(obj).removeClass('no').addClass('yes');
-            $(obj).html("<i class='fa fa-check-circle'></i>是");
-            var value = 1;
-            try {  
-                if ($(obj).attr('data-value')) {
-                    value = $(obj).attr('data-value');
-                }
-            } catch(e) {  
-                // 出现异常以后执行的代码  
-                // e:exception，用来捕获异常的信息  
-            } 
-                
-         }else if($(obj).hasClass('yes')){ // 图片点击是否操作                     
-            $(obj).removeClass('yes').addClass('no');
-            $(obj).html("<i class='fa fa-ban'></i>否");
-            var value = 0;
-            try {  
-                if ($(obj).attr('data-value')) {
-                    value = $(obj).attr('data-value');
-                }
-            } catch(e) {  
-                // 出现异常以后执行的代码  
-                // e:exception，用来捕获异常的信息  
-            } 
-         }else{ // 其他输入框操作
-            var value = $(obj).val();            
-         }      
-                                                   
-        $.ajax({
-            type:'POST',
-            url: eyou_basefile + "?m="+module_name+"&c=Index&a=changeTableVal&table="+table+"&id_name="+id_name+"&id_value="+id_value+"&field="+field+'&value='+value,         
-            success: function(data){
-                 if(!$(obj).hasClass('no') && !$(obj).hasClass('yes')){
-                    layer.msg('更新成功', {icon: 1});  
-                 } else {
-                    if (0 == data.code) {
-                        layer.msg(data.msg, {icon: 2});  
-                    }
-                 }
+    var src = "";
+    if($(obj).hasClass('no')) // 图片点击是否操作
+    {          
+        //src = '/public/images/yes.png';
+        $(obj).removeClass('no').addClass('yes');
+        $(obj).html("<i class='fa fa-check-circle'></i>是");
+        var value = 1;
+        try {  
+            if ($(obj).attr('data-value')) {
+                value = $(obj).attr('data-value');
             }
-        }); 
+        } catch(e) {  
+            // 出现异常以后执行的代码  
+            // e:exception，用来捕获异常的信息  
+        } 
+            
+    }else if($(obj).hasClass('yes')){ // 图片点击是否操作                     
+        $(obj).removeClass('yes').addClass('no');
+        $(obj).html("<i class='fa fa-ban'></i>否");
+        var value = 0;
+        try {  
+            if ($(obj).attr('data-value')) {
+                value = $(obj).attr('data-value');
+            }
+        } catch(e) {  
+            // 出现异常以后执行的代码  
+            // e:exception，用来捕获异常的信息  
+        } 
+    }else{ // 其他输入框操作
+        var value = $(obj).val();            
+    }      
+
+    var url = eyou_basefile + "?m="+module_name+"&c=Index&a=changeTableVal&_ajax=1";
+    $.ajax({
+        type:'POST',
+        url: url,
+        data: {table:table,id_name:id_name,id_value:id_value,field:field,value:value},
+        dataType: 'json',
+        success: function(res){
+            if (res.code == 1) {
+                if(!$(obj).hasClass('no') && !$(obj).hasClass('yes')){
+                    layer.msg(res.msg, {icon: 1});
+                }
+                window.location.reload();
+            } else {
+                layer.msg(res.msg, {icon: 5, time: 2000}, function(){
+                    window.location.reload();
+                }); 
+            }
+        }
+    }); 
 }
 
 /**
@@ -258,7 +337,7 @@ function checkEmail(str){
  * @returns {boolean}
  */
 function checkMobile(tel) {
-    var reg = /(^1{10}$)/;
+    var reg = /(^1[0-9]{10}$)/;
     if (reg.test(tel)) {
         return true;
     }else{
@@ -291,6 +370,13 @@ function GetUploadify(num,elementid,path,callback,url)
             url += '?';
         }
 
+        var width = '85%';
+        var height = '85%';
+        if ('adminlogo' == path) { // 上传后台logo
+            width = '50%';
+            height = '66%';
+        }
+
         var upurl = url+'num='+num+'&input='+elementid+'&path='+path+'&func='+callback;
         layer_GetUploadify = layer.open({
             type: 2,
@@ -298,13 +384,120 @@ function GetUploadify(num,elementid,path,callback,url)
             shadeClose: false,
             shade: 0.3,
             maxmin: true, //开启最大化最小化按钮
-            area: ['50%', '60%'],
+            area: [width, height],
             content: upurl
          });
     } else {
-        layer.alert('允许上传0张图片', {icon:2});
+        layer.alert('允许上传0张图片', {icon:5, title:false});
         return false;
     }
+}
+
+/*
+ * 上传图片 在弹出窗里的上传图片
+ * @access  public
+ * @null int 一次上传图片张图
+ * @elementid string 上传成功后返回路径插入指定ID元素内
+ * @path  string 指定上传保存文件夹,默认存在public/upload/temp/目录
+ * @callback string  回调函数(单张图片返回保存路径字符串，多张则为路径数组 )
+ */
+var layer_GetUploadifyFrame;
+function GetUploadifyFrame(num,elementid,path,callback,url)
+{
+    if (layer_GetUploadifyFrame){
+        layer.close(layer_GetUploadifyFrame);
+    } 
+    if (num > 0) {
+        if (url.indexOf('?') > -1) {
+            url += '&';
+        } else {
+            url += '?';
+        }
+
+        var upurl = url + 'num='+num+'&input='+elementid+'&path='+path+'&func='+callback;
+        layer_GetUploadifyFrame = layer.open({
+            type: 2,
+            title: '上传图片',
+            shadeClose: false,
+            shade: 0.3,
+            maxmin: true, //开启最大化最小化按钮
+            area: ['85%', '85%'],
+            content: upurl
+         });
+    } else {
+        layer.alert('允许上传0张图片', {icon:5, title:false});
+        return false;
+    }
+}
+
+/*
+ * 上传图片 后台（图片新闻）专用
+ * @access  public
+ * @null int 一次上传图片张图
+ * @elementid string 上传成功后返回路径插入指定ID元素内
+ * @path  string 指定上传保存文件夹,默认存在public/upload/temp/目录
+ * @callback string  回调函数(单张图片返回保存路径字符串，多张则为路径数组 )
+ */
+function GetUploadifyProduct(id,num,elementid,path,callback)
+{       
+    var upurl = eyou_basefile + '?m='+module_name+'&c=Uploadify&a=upload_product&aid='+id+'&num='+num+'&input='+elementid+'&path='+path+'&func='+callback;
+    layer.open({
+        type: 2,
+        title: '上传图片',
+        shadeClose: true,
+        shade: false,
+        maxmin: true, //开启最大化最小化按钮
+        area: ['50%', '60%'],
+        content: upurl
+     });
+}
+    
+// 获取活动剩余天数 小时 分钟
+//倒计时js代码精确到时分秒，使用方法：注意 var EndTime= new Date('2013/05/1 10:00:00'); //截止时间 这一句，特别是 '2013/05/1 10:00:00' 这个js日期格式一定要注意，否则在IE6、7下工作计算不正确哦。
+//js代码如下：
+function GetRTime(end_time){
+      // var EndTime= new Date('2016/05/1 10:00:00'); //截止时间 前端路上 http://www.51xuediannao.com/qd63/
+       var EndTime= new Date(end_time); //截止时间 前端路上 http://www.51xuediannao.com/qd63/
+       var NowTime = new Date();
+       var t =EndTime.getTime() - NowTime.getTime();
+       /*var d=Math.floor(t/1000/60/60/24);
+       t-=d*(1000*60*60*24);
+       var h=Math.floor(t/1000/60/60);
+       t-=h*60*60*1000;
+       var m=Math.floor(t/1000/60);
+       t-=m*60*1000;
+       var s=Math.floor(t/1000);*/
+
+       var d=Math.floor(t/1000/60/60/24);
+       var h=Math.floor(t/1000/60/60%24);
+       var m=Math.floor(t/1000/60%60);
+       var s=Math.floor(t/1000%60);
+       if(s >= 0)   
+       return d + '天' + h + '小时' + m + '分' +s+'秒';
+   }
+   
+/**
+ * 获取多级联动
+ */
+function get_select_options(t,next){
+    var parent_id = $(t).val();
+    var url = $(t).attr('data-url');
+    if(!parent_id > 0 || url == ''){
+        return;
+    }
+    url = url + '?pid='+ parent_id;
+    $.ajax({
+        type : "GET",
+        url  : url,
+        data : {_ajax:1},
+        error: function(request) {
+            alert(ey_unknown_error);
+            return;
+        },
+        success: function(v) {
+            $('#'+next).html(v);
+        }
+    });
 }
 
 // 读取 cookie
@@ -324,7 +517,7 @@ function getCookie(c_name)
     return "";
 }
 
-function setCookie(name, value, time)
+function setCookies(name, value, time)
 {
     var cookieString = name + "=" + escape(value) + ";";
     if (time != 0) {
@@ -343,15 +536,112 @@ function delCookie(name){
     }
 }
 
+function layConfirm(msg , callback){
+    layer.confirm(msg, {
+          btn: ['确定','取消'] //按钮
+        }, function(){
+            callback();
+            layer.closeAll();
+        }, function(index){
+            layer.close(index);
+            return false;// 取消
+        }
+    );
+}
+
+function isMobile(){
+    return "yes";
+}
+
+// 判断是否手机浏览器
+function isMobileBrowser()
+{
+    var sUserAgent = navigator.userAgent.toLowerCase();    
+    var bIsIpad = sUserAgent.match(/ipad/i) == "ipad";    
+    var bIsIphoneOs = sUserAgent.match(/iphone os/i) == "iphone os";    
+    var bIsMidp = sUserAgent.match(/midp/i) == "midp";    
+    var bIsUc7 = sUserAgent.match(/rv:1.2.3.4/i) == "rv:1.2.3.4";    
+    var bIsUc = sUserAgent.match(/ucweb/i) == "ucweb";    
+    var bIsAndroid = sUserAgent.match(/android/i) == "android";    
+    var bIsCE = sUserAgent.match(/windows ce/i) == "windows ce";    
+    var bIsWM = sUserAgent.match(/windows mobile/i) == "windows mobile";    
+    if (bIsIpad || bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM ){    
+        return true;
+    }else 
+        return false;
+}
+
+function getCookieByName(name) {
+    var start = document.cookie.indexOf(name + "=");
+    var len = start + name.length + 1;
+    if ((!start) && (name != document.cookie.substring(0, name.length))) {
+        return null;
+    }
+    if (start == -1)
+        return null;
+    var end = document.cookie.indexOf(';', len);
+    if (end == -1)
+        end = document.cookie.length;
+    return unescape(document.cookie.substring(len, end));
+}
 function showErrorMsg(msg){
     // layer.open({content:msg,time:2000});
-    layer.msg(msg, {icon: 2,time: 2000});
+    layer.msg(msg, {icon: 5,time: 2000});
+}
+function showErrorAlert(msg, icon){
+    if (!icon && icon != 0) {
+        icon = 5;
+    }
+    layer.alert(msg, {icon: icon, title: false, closeBtn: false});
+}
+//关闭页面
+function CloseWebPage(){
+    if (navigator.userAgent.indexOf("MSIE") > 0) {
+        if (navigator.userAgent.indexOf("MSIE 6.0") > 0) {
+            window.opener = null;
+            window.close();
+        } else {
+            window.open('', '_top');
+            window.top.close();
+        }
+    }
+    else if (navigator.userAgent.indexOf("Firefox") > -1 || navigator.userAgent.indexOf("Chrome") > -1) {
+        window.location.href = 'about:blank';
+    } else {
+        window.opener = null;
+        window.open('', '_self', '');
+        window.close();
+    }
+}
+function getHsonLength(json){
+    var jsonLength=0;
+    for (var i in json) {
+        jsonLength++;
+    }
+    return jsonLength;
+}
+
+// post提交之前，切换编辑器从【源代码】到【设计】视图
+function ueditorHandle()
+{
+    try {
+        var funcStr = "";
+        $('textarea[class*="ckeditor"]').each(function(index, item){
+            var func = $(item).data('func');
+            if (undefined != func && func) {
+                funcStr += func+"();";
+            }
+        });
+        eval(funcStr);
+    }catch(e){}
 }
 
 /**
  * 封装的加载层
  */
 function layer_loading(msg){
+    ueditorHandle(); // post提交之前，切换编辑器从【源代码】到【设计】视图
+
     var loading = layer.msg(
     msg+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请勿刷新页面', 
     {
@@ -367,6 +657,25 @@ function layer_loading(msg){
     return loading;
 }
 
+/**
+ * 父窗口 - 封装的加载层
+ */
+function parent_layer_loading(msg){
+    var loading = parent.layer.msg(
+    msg+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请勿刷新页面', 
+    {
+        icon: 1,
+        time: 3600000, //1小时后后自动关闭
+        shade: [0.2] //0.1透明度的白色背景
+    });
+    //loading层
+    var index = parent.layer.load(3, {
+        shade: [0.1,'#fff'] //0.1透明度的白色背景
+    });
+
+    return loading;
+}
+
 function tipsText(){  
     $('.ui-text').each(function(){  
         var _this = $(this);  
@@ -374,17 +683,17 @@ function tipsText(){
         var txtElm = _this.find('.ui-textTips');  
         var maxNum = _this.find('.ui-input').attr('data-num') || 500;  
         // console.log($.support.leadingWhitespace);
-        changeNum(elm,txtElm,maxNum);
+        changeNum(elm,txtElm,maxNum,_this);
         if(!$.support.leadingWhitespace){  
             _this.find('textarea').on('propertychange',function(){  
-                changeNum(elm,txtElm,maxNum);  
+                changeNum(elm,txtElm,maxNum,_this);  
             });  
             _this.find('input').on('propertychange',function(){  
-                changeNum(elm,txtElm,maxNum);  
+                changeNum(elm,txtElm,maxNum,_this);  
             });  
         } else {
             _this.on('input',function(){  
-                changeNum(elm,txtElm,maxNum);  
+                changeNum(elm,txtElm,maxNum,_this);  
             });  
         }  
     });  
@@ -392,18 +701,81 @@ function tipsText(){
   
 //获取文字输出字数，可以遍历使用  
 //txtElm动态改变的dom，maxNum获取data-num值默认为120个字，ps数字为最大字数*2  
-function changeNum(elm,txtElm,maxNum) {  
+function changeNum(elm,txtElm,maxNum,_this) {  
     //汉字的个数  
     //var str = (elm.val().replace(/\w/g, "")).length;  
     //非汉字的个数  
     //var abcnum = elm.val().length - str;  
+    var bigtxtElm = _this.find('.ui-big-text');
     total = elm.val().length;  
     if(total <= maxNum ){  
         texts = maxNum - total;  
-        txtElm.html('还可以输入<em>'+texts+'</em>个字');  
+        txtElm.html('还可以输入<em>'+texts+'</em>个字符');  
+        if (bigtxtElm) {
+            bigtxtElm.hide();
+        }
     }else{  
         texts = total - maxNum ;  
-        txtElm.html('已超出<em class="error">'+texts+'</em>个字');  
+        txtElm.html('已超出<em class="error">'+texts+'</em>个字符');
+        if (bigtxtElm) {
+            bigtxtElm.show();
+        }
     }  
     return ;  
 } 
+
+// 查看大图
+function Images(links, max_width, max_height){
+    var img = "<img src='"+links+"'/>";
+    $(img).load(function() {
+        width  = this.width;
+        height = this.height;
+        if (width > height) {
+            if (width > max_width) {
+                width = max_width;
+            }
+            width += 'px';
+        } else {
+            width = 'auto';
+        }
+        if (width < height) {
+            if (height > max_height) {
+                height = max_height;
+            }
+            height += 'px';
+        } else {
+            height = 'auto';
+        }
+
+        var links_img = "<img style='width:"+width+";height:"+height+";' src="+links+">";
+        
+        layer.open({
+            type: 1,
+            title: false,
+            closeBtn: true,
+            area: [width, height],
+            skin: 'layui-layer-nobg', //没有背景色
+            content: links_img
+        });
+    });
+}
+
+function gourl(url)
+{
+    window.location.href = url;
+}
+
+//在iframe内打开易优官网的页面
+function click_to_eyou_1575506523(url,title) {
+    //iframe窗
+    layer.open({
+        type: 2,
+        title: title,
+        fixed: true, //不固定
+        shadeClose: false,
+        shade: 0.3,
+        maxmin: true, //开启最大化最小化按钮
+        area: ['80%', '80%'],
+        content: url
+    });
+}

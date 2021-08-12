@@ -99,6 +99,24 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'scores' => 
+  array (
+    'name' => 'scores',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'devote' => 
+  array (
+    'name' => 'devote',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'reg_time' => 
   array (
     'name' => 'reg_time',
@@ -140,7 +158,7 @@ return array (
     'name' => 'head_pic',
     'type' => 'varchar(255)',
     'notnull' => false,
-    'default' => NULL,
+    'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),
@@ -177,6 +195,24 @@ return array (
     'type' => 'smallint(5)',
     'notnull' => false,
     'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'open_level_time' => 
+  array (
+    'name' => 'open_level_time',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'level_maturity_days' => 
+  array (
+    'name' => 'level_maturity_days',
+    'type' => 'varchar(20)',
+    'notnull' => false,
+    'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),
@@ -219,9 +255,18 @@ return array (
   'open_id' => 
   array (
     'name' => 'open_id',
-    'type' => 'varchar(30)',
+    'type' => 'varchar(50)',
     'notnull' => false,
     'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'thirdparty' => 
+  array (
+    'name' => 'thirdparty',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),
@@ -229,6 +274,15 @@ return array (
   array (
     'name' => 'is_lock',
     'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'admin_id' => 
+  array (
+    'name' => 'admin_id',
+    'type' => 'int(10)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,
@@ -252,9 +306,27 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'unread_notice_num' => 
+  array (
+    'name' => 'unread_notice_num',
+    'type' => 'int(10) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'update_time' => 
   array (
     'name' => 'update_time',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'coin' => 
+  array (
+    'name' => 'coin',
     'type' => 'int(11) unsigned',
     'notnull' => false,
     'default' => '0',

@@ -27,6 +27,42 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'litpic' => 
+  array (
+    'name' => 'litpic',
+    'type' => 'varchar(250)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'seo_title' => 
+  array (
+    'name' => 'seo_title',
+    'type' => 'varchar(200)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'seo_keywords' => 
+  array (
+    'name' => 'seo_keywords',
+    'type' => 'varchar(200)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'seo_description' => 
+  array (
+    'name' => 'seo_description',
+    'type' => 'text',
+    'notnull' => false,
+    'default' => NULL,
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'count' => 
   array (
     'name' => 'count',
@@ -81,6 +117,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'is_common' => 
+  array (
+    'name' => 'is_common',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'lang' => 
   array (
     'name' => 'lang',
@@ -94,6 +139,15 @@ return array (
   array (
     'name' => 'add_time',
     'type' => 'int(10) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'update_time' => 
+  array (
+    'name' => 'update_time',
+    'type' => 'int(10)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

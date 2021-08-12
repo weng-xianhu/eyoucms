@@ -39,9 +39,9 @@ return array (
   'cause' => 
   array (
     'name' => 'cause',
-    'type' => 'varchar(60)',
+    'type' => 'text',
     'notnull' => false,
-    'default' => '',
+    'default' => NULL,
     'primary' => false,
     'autoinc' => false,
   ),
@@ -66,7 +66,7 @@ return array (
   'pay_method' => 
   array (
     'name' => 'pay_method',
-    'type' => 'varchar(10)',
+    'type' => 'varchar(50)',
     'notnull' => false,
     'default' => '',
     'primary' => false,

@@ -144,6 +144,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'syn_users_id' => 
+  array (
+    'name' => 'syn_users_id',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'add_time' => 
   array (
     'name' => 'add_time',

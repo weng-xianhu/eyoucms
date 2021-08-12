@@ -1,0 +1,79 @@
+@font-face {
+  font-family: "iconfont"; /* Project id 2552404 */
+  src: url('../fonts/iconfont.woff2?t=1621320660472') format('woff2'),
+       url('../fonts/iconfont.woff?t=1621320660472') format('woff'),
+       url('../fonts/iconfont.ttf?t=1621320660472') format('truetype');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.e-yanzhengma:before {
+  content: "\e623";
+}
+
+.e-mima:before {
+  content: "\e630";
+}
+
+.e-yonghu:before {
+  content: "\e603";
+}
+
+.e-shangcheng:before {
+  content: "\e61f";
+}
+
+.e-seo:before {
+  content: "\e659";
+}
+
+.e-qingli:before {
+  content: "\e786";
+}
+
+.e-pc:before {
+  content: "\e61b";
+}
+
+.e-tougao:before {
+  content: "\e632";
+}
+
+.e-keshihuabianji:before {
+  content: "\e69d";
+}
+
+.e-neirongwendang:before {
+  content: "\e61a";
+}
+
+.e-chajian:before {
+  content: "\e619";
+}
+
+.e-gerenzhongxin:before {
+  content: "\e797";
+}
+
+.e-shezhi:before {
+  content: "\e639";
+}
+
+.e-guanggao:before {
+  content: "\e674";
+}
+
+.e-lanmuguanli:before {
+  content: "\e683";
+}
+
+.e-caidangongneng:before {
+  content: "\e785";
+}
+

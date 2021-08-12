@@ -30,7 +30,7 @@ return array (
   'title' => 
   array (
     'name' => 'title',
-    'type' => 'varchar(32)',
+    'type' => 'varchar(250)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -66,9 +66,9 @@ return array (
   'dfvalue' => 
   array (
     'name' => 'dfvalue',
-    'type' => 'varchar(1000)',
+    'type' => 'text',
     'notnull' => false,
-    'default' => '',
+    'default' => NULL,
     'primary' => false,
     'autoinc' => false,
   ),
@@ -93,6 +93,15 @@ return array (
   'is_screening' => 
   array (
     'name' => 'is_screening',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'is_release' => 
+  array (
+    'name' => 'is_release',
     'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '0',

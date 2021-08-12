@@ -18,10 +18,28 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'version' => 
+  array (
+    'name' => 'version',
+    'type' => 'varchar(10)',
+    'notnull' => false,
+    'default' => 'weapp',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'mca' => 
   array (
     'name' => 'mca',
     'type' => 'varchar(50)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'active_url' => 
+  array (
+    'name' => 'active_url',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,

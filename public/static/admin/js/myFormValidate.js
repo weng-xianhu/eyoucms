@@ -8,14 +8,21 @@ function ajax_submit_form(form_id,submit_url){
 
          if(before_request == 0)
             return false;
-              
+
+            if (submit_url.indexOf('?') > -1) {
+                submit_url += '&';
+            } else {
+                submit_url += '?';
+            }
+            submit_url += '_ajax=1';
+
 	       $("[id^='err_']").hide();  // 隐藏提示
             $.ajax({
                 type : "POST",
                 url  : submit_url,
                 data : $('#'+form_id).serialize(),// 你的formid                
-                error: function(request) {
-                    layer.alert("网络失败，请刷新页面后重试", {icon: 2, title:false});
+                error: function(e) {
+                    layer.alert(e.responseText, {icon: 5, title:false});
                     return false;
                 },
                 success: function(v) {

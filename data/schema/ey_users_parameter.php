@@ -72,6 +72,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'is_reg' => 
+  array (
+    'name' => 'is_reg',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'sort_order' => 
   array (
     'name' => 'sort_order',

@@ -18,6 +18,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'type' => 
+  array (
+    'name' => 'type',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'width' => 
   array (
     'name' => 'width',

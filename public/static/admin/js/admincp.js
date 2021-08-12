@@ -80,7 +80,7 @@ function openItem(param) {
         $('#'+this.id).parent().siblings().removeClass('on');
     });
     // 拼装ID获取到点击的ID
-    var ColorId = param.replace('|','_');
+    var ColorId = data_str.join('_');
     if (0 == $('#'+ColorId).attr('data-child')) {
         // 其他参数选项
         $('#'+ColorId).addClass('on');

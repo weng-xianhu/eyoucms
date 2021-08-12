@@ -1,0 +1,78 @@
+<!-- 手机文本框 start -->
+<div class="form-group group_z">
+    <div class="input-group">
+        <span class="input-group-addon">
+            <i class="fa fa-mobile"></i>
+        </span>
+        {eyou:eq name="$vo.is_required" value="1"}<em class="tis">(必填)</em>{/eyou:eq}
+        <input type="text" class="form-control" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" maxlength="11" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}">
+    </div>
+</div>
+{eyou:if condition="isset($usersConfig['users_verification']) && 3 == $usersConfig['users_verification']"}
+<div class="form-group group_z">
+    <div class="input-group btn-direction">
+        <span class="input-group-addon"><i class="fa fa-shield"></i></span>
+        <input type="text" class="form-control" id="{$vo.fieldArr}_{$vo.name|default=''}_code" name="{$vo.fieldArr}[{$vo.name|default=''}_code]" placeholder="手机验证码">
+        <input type="button" id="{$vo.fieldArr}_{$vo.name|default=''}_button" onclick="get_{$vo.fieldArr}{$vo.name|default=''}_code();" class="btn btn-primary sento" value="获取验证码"/>
+    </div>
+</div>
+<script type="text/javascript">
+    function get_{$vo.fieldArr}{$vo.name|default=''}_code() {
+        var mobile = $("#{$vo.fieldArr}_{$vo.name|default=''}").val();
+        // 手机号是否为空
+        if (!mobile) {
+            $("#{$vo.fieldArr}_{$vo.name|default=''}").focus();
+            layer.msg('请输入{$vo.title}！', {time: 1500});
+            return false;
+        }
+        
+        // 手机格式不正确
+        var reg = /^1[0-9]{10}$/i;
+        if (!reg.test(mobile)) {
+            $("#{$vo.fieldArr}_{$vo.name|default=''}").focus();
+            layer.msg('请输入正确的{$vo.title}！', {time: 1500});
+            return false;
+        }
+
+        // 设置为不可点击
+        $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('获取中…').attr('disabled', 'disabled');
+
+        $.ajax({
+            url: "{eyou:url link='api/Ajax/SendMobileCode' /}",
+            data: {type:'reg', mobile:mobile, is_mobile:true, title:'账号注册', source:0},
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                if (res.code == 1) {
+                    {$vo.fieldArr}{$vo.name|default=''}_countdown();
+                    layer.msg(res.msg, {time: 1500});
+                } else {
+                    $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('获取验证码').removeAttr("disabled");
+                    layer.alert(res.msg, {icon: 2, title: false, closeBtn: 0});
+                }
+            },
+            error : function() {
+                $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('获取验证码').removeAttr("disabled");
+                layer.alert('发送失败，请尝试重新发送！', {icon: 5, title: false, closeBtn: 0});
+            }
+        });
+    }
+
+    function {$vo.fieldArr}{$vo.name|default=''}_countdown(){
+        // 倒计时
+        var setTime;
+        var time = 120;
+        setTime = setInterval(function() {
+            if(0 >= time) {
+                clearInterval(setTime);
+                return false;
+            }
+
+            time--;
+            $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val(time + '秒').attr('disabled', 'disabled');
+            if(time == 0) $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('获取验证码').removeAttr("disabled");
+        }, 1000);
+    }
+</script>
+{/eyou:if}
+<!-- 手机文本框 end --> 

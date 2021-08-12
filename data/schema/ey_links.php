@@ -18,6 +18,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'groupid' => 
+  array (
+    'name' => 'groupid',
+    'type' => 'tinyint(2) unsigned',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'title' => 
   array (
     'name' => 'title',
@@ -57,6 +66,15 @@ return array (
   'target' => 
   array (
     'name' => 'target',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'nofollow' => 
+  array (
+    'name' => 'nofollow',
     'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '0',

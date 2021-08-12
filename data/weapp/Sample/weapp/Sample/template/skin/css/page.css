@@ -1,7 +1,6 @@
 .pagination {
     border-radius: 4px;
     display: inline-block;
-    margin: 20px 0;
     padding-left: 0px;
 }
 .pagination > li {
@@ -10,6 +9,7 @@
 .pagination > li > a, .pagination > li > span {
     background-color: #fff;
     border: 1px solid #ddd;
+    font-size: 14px;
     color:#666;
     float: left;
     line-height: 1.42857;
@@ -17,6 +17,11 @@
     padding: 6px 12px;
     position: relative;
     text-decoration: none;
+}
+.pagination li .prev_i, .pagination li .next_e{
+    border-color: #f0f0f0;
+    color: #bfbfbf;
+    pointer-events: none;
 }
 .pagination > li:first-child > a, .pagination > li:first-child > span {
     border-bottom-left-radius: 4px;
@@ -31,11 +36,12 @@
     background-color: #eee;
     border-color: #ddd;
     color: #23527c;
+    
 }
 .pagination > .active > a, .pagination > .active > a:focus, .pagination > .active > a:hover, .pagination > .active > span, .pagination > .active > span:focus, .pagination > .active > span:hover {
-    background-color:#41BEDD;
+    background-color:#ffffff;
     border-color: #41BEDD;
-    color: #fff;
+    color:#41BEDD;
     cursor: default;
     z-index: 2;
 }
