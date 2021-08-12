@@ -82,11 +82,15 @@ class Image
                 ini_set("gd.jpeg_ignore_warning", 1); // by 小虎哥
             }
             $fun      = "imagecreatefrom{$this->info['type']}";
-            $this->im = @$fun($file->getPathname());
+            if (function_exists($fun)) {
+                $this->im = @$fun($file->getPathname());
+            } else {
+                $this->im = '';
+            }
         }
 
         if (empty($this->im)) {
-            throw new ImageException('Failed to create image resources!');
+            // throw new ImageException('Failed to create image resources!');
         }
 
     }
@@ -137,7 +141,9 @@ class Image
             imagepng($this->im, $pathname, min((int) ($quality / 10), 9));
         } else {
             $fun = 'image' . $type;
-            $fun($this->im, $pathname);
+            if (function_exists($fun)) {
+                $fun($this->im, $pathname);
+            }
         }
 
         return $this;
@@ -266,7 +272,11 @@ class Image
             //创建新图像
             $img = imagecreatetruecolor($width, $height);
             // 调整默认颜色
-            $color = imagecolorallocate($img, 255, 255, 255);
+            if ('png' == $this->info['type'] && function_exists('imagecolorallocatealpha')) {
+                $color = imagecolorallocatealpha($img, 255, 255, 255, 127); // png透明 by 小虎哥
+            } else {
+                $color = imagecolorallocate($img, 255, 255, 255);
+            }
             imagefill($img, 0, 0, $color);
             //裁剪
             imagecopyresampled($img, $this->im, 0, 0, $x, $y, $width, $height, $w, $h);

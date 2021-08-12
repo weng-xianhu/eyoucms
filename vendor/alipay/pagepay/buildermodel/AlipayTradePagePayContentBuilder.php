@@ -41,9 +41,15 @@ class AlipayTradePagePayContentBuilder
         return $this->bizContent;
     }
 
-    public function __construct()
+    public function __construct($PayTerminal, $isMobile)
     {
-        $this->bizContentarr['product_code'] = "FAST_INSTANT_TRADE_PAY";
+        if (!empty($isMobile) && !empty($PayTerminal['mobile'])) {
+            // 支付宝手机端支付调用
+            $this->bizContentarr['product_code'] = "QUICK_WAP_WAY";
+        } else if (!empty($PayTerminal['computer']) || !empty($PayTerminal[0])) {
+            // 支付宝电脑端支付调用
+            $this->bizContentarr['product_code'] = "FAST_INSTANT_TRADE_PAY";
+        }
     }
 
     public function AlipayTradeWapPayContentBuilder()
