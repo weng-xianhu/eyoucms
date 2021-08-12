@@ -37,9 +37,14 @@ class UpgradeLogic extends Model
         $this->version_txt_path = $this->data_path.'conf'.DS.'version.txt'; // 版本文件路径
         $this->curent_version = getCmsVersion();
         // api_Service_checkVersion
+        $upgrade_dev = config('global.upgrade_dev');
+        /*安全补丁*/
+        $security_patch = tpSetting('upgrade.upgrade_security_patch'); // 是否开启
+        $version_security = getVersion('version_security'); // 补丁版本号
+        /* END */
         $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVNlcnZpY2UmYT1jaGVja1ZlcnNpb24=';
         $this->service_url = base64_decode($this->service_ey).base64_decode($tmp_str);
-        $this->upgrade_url = $this->service_url . '&domain='.request()->host(true).'&v=' . $this->curent_version;
+        $this->upgrade_url = $this->service_url . '&domain='.request()->host(true).'&v=' . $this->curent_version . '&dev=' . $upgrade_dev . '&security_patch=' . $security_patch . '&version_security=' . $version_security;
     }
 
     /**
@@ -55,7 +60,10 @@ class UpgradeLogic extends Model
 
         $url = $this->upgrade_url; 
         $context = stream_context_set_default(array('http' => array('timeout' => 5,'method'=>'GET')));
-        $serviceVersionList = @file_get_contents($url,false,$context);    
+        $serviceVersionList = @file_get_contents($url,false,$context);
+        if (false === $serviceVersionList) {
+            $serviceVersionList = httpRequest($url);
+        }
         $serviceVersionList = json_decode($serviceVersionList,true);
         if(!empty($serviceVersionList))
         {
@@ -98,6 +106,85 @@ class UpgradeLogic extends Model
     }
 
     /**
+     * 检查是否有安全补丁包
+     * @return type 提示语
+     */
+    public  function checkSecurityVersion() {
+        // error_reporting(0);//关闭所有错误报告
+        $allow_url_fopen = ini_get('allow_url_fopen');
+        if (empty($allow_url_fopen)) {
+            return ['code' => 1, 'msg' => "<font color='red'>请联系空间商（设置 php.ini 中参数 allow_url_fopen = 1）</font>"];
+        }
+        
+        $context = stream_context_set_default(array('http' => array('timeout' => 5, 'method' => 'GET')));
+        $serviceVersionList = @file_get_contents($this->upgrade_url, false, $context);
+        if (false === $serviceVersionList) {
+            $serviceVersionList = httpRequest($this->upgrade_url);
+        }
+        $serviceVersionList = json_decode($serviceVersionList, true);
+        if(!empty($serviceVersionList)) {
+            /* 插件过期则执行 */
+            if (isset($serviceVersionList['maturity']) && 1 == $serviceVersionList['maturity']) {
+                $WeappUrl = weapp_url('Security/Security/index');
+                $msg = '<a href="'. $WeappUrl .'"> [安全补丁升级] </a>';
+                $remind = str_replace("[安全补丁升级]", $msg, $serviceVersionList['remind']);
+                return ['code' => 0, 'msg' => $remind];
+            }
+            /* END */
+
+            $upgradeArr = array();
+            $introStr = $upgradeStr = '';
+            foreach ($serviceVersionList as $key => $val) {
+                $upgrade = !empty($val['upgrade']) ? $val['upgrade'] : array();
+                $upgradeArr = array_merge($upgradeArr, $upgrade);
+                $introStr .= '<br>' . filter_line_return($val['intro'], '<br>');
+            }
+            $upgradeArr = array_unique($upgradeArr);
+            $upgradeStr = implode('<br>', $upgradeArr); // 升级提示需要覆盖哪些文件
+
+            $introArr = explode('<br>', $introStr);
+            $introStr = '更新日志：';
+            foreach ($introArr as $key => $val) {
+                if (empty($val)) {
+                    continue;
+                }
+                $introStr .= "<br>{$key}、".$val;
+            }
+
+            $lastupgrade = $serviceVersionList[count($serviceVersionList) - 1];
+            if (!empty($lastupgrade['upgrade_title'])) {
+                $introStr .= '<br>'.$lastupgrade['upgrade_title'];
+            }
+            
+            $lastupgrade['intro'] = htmlspecialchars_decode($introStr);
+            $lastupgrade['upgrade'] = htmlspecialchars_decode($upgradeStr); // 升级提示需要覆盖哪些文件
+            tpCache('system', ['system_upgrade_filelist' => base64_encode($lastupgrade['upgrade'])]);
+
+            /*升级公告*/
+            if (!empty($lastupgrade['notice'])) {
+                $lastupgrade['notice'] = htmlspecialchars_decode($lastupgrade['notice']) . '<br>';
+            }
+            /*--end*/
+            
+            return ['code' => 2, 'msg' => $lastupgrade];
+        }
+        return ['code' => 1, 'msg' => '已是最新补丁版'];
+    }
+
+    /**
+     * 查询安全补丁升级插件订单
+     */
+    public  function checkSecurityOrder() {
+        $context = stream_context_set_default(array('http' => array('timeout' => 5, 'method' => 'GET')));
+        $SecurityOrder = @file_get_contents($this->upgrade_url . '&get_order=1', false, $context);
+        if (false === $SecurityOrder) {
+            $SecurityOrder = httpRequest($this->upgrade_url);
+        }
+        $SecurityOrder = json_decode($SecurityOrder, true);
+        if (!empty($SecurityOrder)) return $SecurityOrder;
+    }
+
+    /**
      * 一键更新
      */
     public function OneKeyUpgrade(){
@@ -111,10 +198,17 @@ class UpgradeLogic extends Model
             return ['code' => 0, 'msg' => "请联系空间商，开启 php.ini 中的php-zip扩展"];
         }
 
-        $serviceVersionList = file_get_contents($this->upgrade_url);
-        $serviceVersionList = json_decode($serviceVersionList,true);
-        if (empty($serviceVersionList)) {
-            return ['code' => 0, 'msg' => "没找到升级信息"];
+        $serviceVersionList = @file_get_contents($this->upgrade_url);
+        if (false === $serviceVersionList) {
+            $serviceVersionList = httpRequest($this->upgrade_url);
+        }
+        if (false === $serviceVersionList) {
+            return ['code' => 0, 'msg' => "无法连接远程升级服务器！"];
+        } else {
+            $serviceVersionList = json_decode($serviceVersionList,true);
+            if (empty($serviceVersionList)) {
+                return ['code' => 0, 'msg' => "当前没有可升级的版本！"];
+            }
         }
         
         clearstatcache(); // 清除文件夹权限缓存
@@ -236,7 +330,7 @@ class UpgradeLogic extends Model
                         }
                     }
                 } catch (\Exception $e) {
-                    return ['code' => 0, 'msg' => "数据库执行中途失败，请第一时间请求技术支持，否则将影响后续的版本升级！"];
+                    return ['code' => -2, 'msg' => "数据库执行中途失败，请查看官方解决教程，否则将影响后续的版本升级！"];
                 }
             }
         }
@@ -274,6 +368,11 @@ class UpgradeLogic extends Model
         // 清空缓存
         delFile(rtrim(RUNTIME_PATH, '/'));
         tpCache('global');
+
+        // 清空检测标记
+        $s_key = 'aXNzZXRfYXV0aG9y';
+        $s_key = base64_decode($s_key);
+        session($s_key, null);
 
         /*删除下载的升级包*/
         $ziplist = glob($this->data_path.'backup'.DS.'*.zip');
@@ -394,14 +493,33 @@ class UpgradeLogic extends Model
         $downFileName = end($downFileName);
         $saveDir = $this->data_path.'backup'.DS.$downFileName; // 保存目录
         tp_mkdir(dirname($saveDir));
-        if(!file_get_contents($fileUrl, 0, null, 0, 1)){
+        $content = @file_get_contents($fileUrl, 0, null, 0, 1);
+        if (false === $content) {
+            $fileUrl = str_replace('http://service', 'https://service', $fileUrl);
+            $content = @file_get_contents($fileUrl, 0, null, 0, 1);
+            if (false === $content) {
+                $content = httpRequest($fileUrl);
+            }
+        }
+
+        if(!$content){
             return ['code' => 0, 'msg' => '官方升级包不存在']; // 文件存在直接退出
         }
-        $ch = curl_init($fileUrl);            
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
-        $file = curl_exec ($ch);
-        curl_close ($ch);                                                            
+
+        if (!stristr($fileUrl, 'https://service')) {
+            $ch = curl_init($fileUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
+            $file = curl_exec ($ch);
+            curl_close ($ch);  
+        } else {
+            $file = httpRequest($fileUrl);
+        }
+
+        if (preg_match('#__HALT_COMPILER()#i', $file)) {
+            return ['code' => 0, 'msg' => '下载包损坏，请联系官方客服！'];
+        }
+                                                          
         $fp = fopen($saveDir,'w');
         fwrite($fp, $file);
         fclose($fp);
@@ -437,7 +555,7 @@ class UpgradeLogic extends Model
         // api_Service_upgradeLog
         $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVNlcnZpY2UmYT11cGdyYWRlTG9nJg==';
         $url = base64_decode($this->service_ey).base64_decode($tmp_str).http_build_query($vaules);
-        @file_get_contents($url);
+        httpRequest($url);
     }
 } 
 ?>

@@ -1,6 +1,6 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
@@ -8,21 +8,17 @@
     <div class="flexigrid">
         <div class="mDiv">
             <div class="ftitle">
-                <h3>用户列表</h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
+                {include file="member/users_bar" /}
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
-            <form class="navbar-form form-inline" action="{:url('Member/users_index')}" method="get" onsubmit="layer_loading('正在处理');">
+            
+            <form class="navbar-form form-inline" id="searchForm" action="{:url('Member/users_index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
                     <div class="sDiv2 fl" style="margin-right: 6px;">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索用户名...">
                         <input type="submit" class="btn" value="搜索">
+						<i class="fa fa-search"></i>
                     </div>
-                    <!-- <div class="sDiv2 fl" style="margin-right: 6px;">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Member/users_index')}';">
-                    </div> -->
-                    {include file="member/users_bar" /}
                 </div>
             </form>
         </div>
@@ -32,19 +28,25 @@
                     <thead>
                     <tr>
                         <th class="sign w40" axis="col0">
-                            <div class="tc">选择</div>
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                         </th>
                         <th abbr="article_title" axis="col3" class="w40">
                             <div class="tc">ID</div>
                         </th>
+                        <th abbr="article_title" axis="col3" class="w50">
+                            <div class="tc">头像</div>
+                        </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="">用户名</div>
+                            <div class="tl text-l10">昵称/用户名</div>
                         </th>
                         <th abbr="ac_id" axis="col4" class="w100">
-                            <div class="tc">用户级别</div>
+                            <div class="tc">级别</div>
                         </th>
                         <th abbr="ac_id" axis="col4" class="w60">
-                            <div class="tc">是否激活</div>
+                            <div class="tc">激活</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w150">
+                            <div class="tc">注册日期</div>
                         </th>
                         <th axis="col1" class="w120">
                             <div class="tc">操作</div>
@@ -69,19 +71,27 @@
                         <tr>
                             <td class="sign">
                                 <div class="w40 tc">
-                                    <input type="checkbox" name="ids[]" value="{$vo.users_id}">
+                                    <input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.users_id}">
                                 </div>
                             </td>
                             <td class="sort">
                                 <div class="w40 tc">{$vo.users_id}</div>
                             </td>
+                            <td class="sign">
+                                <div class="w50 tc">
+                                    <img id="img_head_pic" style="height: 40px;margin-right: 5px;float: unset;margin: auto;" src="{$vo.head_pic|get_head_pic=###}" />
+                                </div>
+                            </td>
                             <td style="width: 100%">
-                                <div style="">
+                                <div class="text-l10">
+                                    <p style="margin-top: -5px;">
                                     {eq name="'Member@users_edit'|is_check_access" value="1"}
-                                        <a href="{:url('Member/users_edit',array('id'=>$vo['users_id']))}">{$vo.username}</a>
+                                        <a href="{:url('Member/users_edit',array('id'=>$vo['users_id']))}">{$vo.nickname|default=$vo.username}</a>
                                     {else /}
-                                        {$vo.username}
+                                        {$vo.nickname|default=$vo.username}
                                     {/eq}
+                                    </p>
+                                    <p style="margin-top: -10px; color: #cccccc; font-size: 12px;">{$vo.username}</p>
                                 </div>
                             </td>
                             <td>
@@ -98,13 +108,19 @@
                                     {/eq}
                                 </div>
                             </td>
-                            <td class="">
+                            <td>
+                                <div class="w150 tc">
+                                    {$vo.reg_time|MyDate='Y-m-d H:i:s',###}
+                                </div>
+                            </td>
+                            <td class="operation">
                                 <div class="w120 tc">
                                     {eq name="'Member@users_edit'|is_check_access" value="1"}
-                                        <a href="{:url('Member/users_edit',array('id'=>$vo['users_id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    <a href="{:url('Member/users_edit',array('id'=>$vo['users_id']))}" class="btn blue">编辑</a>
                                     {/eq}
                                     {eq name="'Member@users_del'|is_check_access" value="1"}
-                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Member/users_del')}" data-id="{$vo.users_id}" data-username="{$vo.username}" onClick="usersdel(this);"><i class="fa fa-trash-o"></i>删除</a>
+										<i></i>
+                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Member/users_del')}" data-id="{$vo.users_id}" data-admin_id="{$vo.admin_id}" data-username="{$vo.username}" onClick="usersdel(this);">删除</a>
                                     {/eq}
                                 </div>
                             </td>
@@ -116,36 +132,44 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
-        <div class="tDiv">
-            <div class="tDiv2">
-                {eq name="'Member@users_del'|is_check_access" value="1"}
-                <div class="fbutton checkboxall">
-                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
-                </div>
-                <div class="fbutton">
-                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Member/users_del')}">
-                        <div class="add" title="批量删除">
-                            <span><i class="fa fa-close"></i>批量删除</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
-                {eq name="'Member@users_batch_add'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a href="{:url('Member/users_batch_add')}">
-                        <div class="add" title="批量新增">
-                            <span class="red"><i class="fa fa-plus"></i>批量新增</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
+        <div class="footer-oper">
+            {eq name="'Member@users_del'|is_check_access" value="1"}
+            <span class="ml15">
+                <input type="checkbox" autocomplete="off" class="checkAll">
+            </span>
+            <div class="nav-dropup">
+                <a onclick="batch_del(this, 'ids');" data-url="{:url('Member/users_del')}" class="layui-btn layui-btn-primary">
+                    <div class="add" title="批量删除">
+                        <span>批量删除</span>
+                    </div>
+                </a>
             </div>
+            {/eq}
+            {eq name="'Member@users_batch_add'|is_check_access" value="1"}
+                <a href="javascript:void(0);" data-href="{:url('Member/users_batch_add')}" class="layui-btn layui-btn-primary" onclick="openFullframe(this, '会员中心 - 批量新增会员','60%','80%');">
+                    <div class="add" title="批量新增">
+                        <span class="red">批量新增</span>
+                    </div>
+                </a>
+            {/eq}
+			{include file="public/page" /}
             <div style="clear:both"></div>
         </div>
-        <!--分页位置-->
-        {$page} </div>
+	</div>
 </div>
 <script>
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
     $(document).ready(function(){
         // 表格行点击选中切换
         $('#flexigrid > table>tbody >tr').click(function(){
@@ -167,7 +191,7 @@
             $.ajax({
                 type : 'get',
                 url : "{:url('Member/ajax_syn_theme_users')}",
-                data : {},
+                data : {_ajax:1},
                 dataType : 'json',
                 success : function(res){
                     layer.closeAll();
@@ -183,7 +207,7 @@
                 },
                 error: function(e){
                     layer.closeAll();
-                    layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false}, function(){
+                    layer.alert(ey_unknown_error, {icon: 2, title:false}, function(){
                         window.location.reload();
                     });
                 }
@@ -193,7 +217,13 @@
 
     // 删除
     function usersdel(obj){
-        layer.confirm('此操作不可逆，确认彻底删除？', {
+        var admin_id = $(obj).data('admin_id');
+        if (0 < admin_id) {
+            var title = "系统管理员前台ID，删除不可恢复？";
+        } else {
+            var title = "此操作不可恢复，确认彻底删除？";
+        }
+        layer.confirm(title, {
             title: false,//$(obj).attr('data-username'),
             btn: ['确定','取消'] //按钮
         }, function(){
@@ -202,7 +232,7 @@
             $.ajax({
                 type : 'post',
                 url : $(obj).attr('data-url'),
-                data : {del_id:$(obj).attr('data-id')},
+                data : {del_id:$(obj).attr('data-id'), _ajax:1},
                 dataType : 'json',
                 success : function(data){
                     layer.closeAll();
@@ -235,7 +265,7 @@
             return;
         }
         // 删除按钮
-        layer.confirm('此操作不可逆，确认批量彻底删除？', {
+        layer.confirm('此操作不可恢复，确认批量彻底删除？', {
             title: false,
             btn: ['确定', '取消'] //按钮
         }, function () {
@@ -243,7 +273,7 @@
             $.ajax({
                 type: "POST",
                 url: $(obj).attr('data-url'),
-                data: {del_id:a},
+                data: {del_id:a, _ajax:1},
                 dataType: 'json',
                 success: function (data) {
                     layer.closeAll();
@@ -256,14 +286,13 @@
                 },
                 error:function(){
                     layer.closeAll();
-                    layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+                    layer.alert(ey_unknown_error, {icon: 2, title:false});
                 }
             });
         }, function (index) {
             layer.closeAll(index);
         });
     }
-    
 </script>
 
 {include file="public/footer" /}

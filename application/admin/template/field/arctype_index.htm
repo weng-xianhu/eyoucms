@@ -1,17 +1,31 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
-    {include file="field/arctype_bar" /}
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back" href="{:url('Index/switch_map')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            <ul class="tab-base nc-row">
+                <li><a href="{:url('Field/arctype_index')}" class="tab current"><span>栏目字段</span></a></li>
+            </ul>
+        </div>
+    </div>
     <div class="flexigrid">
         <div class="mDiv">
             <div class="ftitle">
-                <h3>栏目字段列表</h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
+                {eq name="$Think.const.CONTROLLER_NAME.'@arctype_add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-href="{:url('Field/arctype_add')}" onclick="openFullframe(this, '新增字段');">
+                        <div class="add" title="新增字段">
+                            <span><i class="layui-icon layui-icon-addition"></i>新增字段</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            
             <form class="navbar-form form-inline" action="{:url('Field/arctype_index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
@@ -19,10 +33,8 @@
                         <input type="hidden" name="searchopt" value="1">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="字段搜索...">
                         <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
                     </div>
-                    <!-- <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Field/arctype_index')}';">
-                    </div> -->
                 </div>
             </form>
         </div>
@@ -35,7 +47,7 @@
                             <div class="tc">ID</div>
                         </th>
                         <th abbr="article_title" axis="col3" class="">
-                            <div class="">字段标题</div>
+                            <div class="text-l10">字段标题</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w160">
                             <div class="tc">字段名称</div>
@@ -79,10 +91,10 @@
                                 </div>
                             </td>
                             <td style="width: 100%">
-                                <div style="">
+                                <div class="text-l10">
                                 {if condition="empty($vo['ifsystem'])"}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@arctype_edit'|is_check_access" value="1"}
-                                    <a href="{:url('Field/arctype_edit',array('id'=>$vo['id']))}">{$vo.title}</a>
+                                    <a href="javascript:void(0);" data-href="{:url('Field/arctype_edit',array('id'=>$vo['id']))}" onclick="openFullframe(this, '栏目字段编辑');">{$vo.title}</a>
                                     {else /}
                                     {$vo.title}
                                     {/eq}
@@ -115,17 +127,17 @@
                                     {$vo.update_time|date='Y-m-d',###}
                                 </div>
                             </td>
-                            <td class="">
+                            <td class="operation">
                                 <div class="w180 tc">
                                 {if condition="empty($vo['ifsystem'])"}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@arctype_edit'|is_check_access" value="1"}
-                                    <a href="{:url('Field/arctype_edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    <a href="javascript:void(0);" data-href="{:url('Field/arctype_edit',array('id'=>$vo['id']))}" class="btn blue" onclick="openFullframe(this, '栏目字段编辑');">编辑</a>
+									<i></i>
                                     {/eq}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@arctype_del'|is_check_access" value="1"}
-                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Field/arctype_del')}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Field/arctype_del')}" data-id="{$vo.id}" onClick="delfun(this);">删除</a>
+									<i></i>
                                     {/eq}
-                                {else /}
-                                    ——————
                                 {/if}
                                 <a class="btn blue" href="javascript:void(0);" data-name="{$vo.name}" data-dtype="{$vo.dtype}" onclick="copyToClipBoard(this)">标签调用</a>
                                 </div>
@@ -154,20 +166,10 @@
         </div>
         <div class="tDiv">
             <div class="tDiv2">
-                {eq name="$Think.const.CONTROLLER_NAME.'@arctype_add'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a href="{:url('Field/arctype_add')}">
-                        <div class="add" title="新增字段">
-                            <span class="red"><i class="fa fa-plus"></i>新增字段</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
+                {include file="public/page" /}
             </div>
             <div style="clear:both"></div>
         </div>
-        <!--分页位置-->
-        {$page}
     </div>
 </div>
 <script type="text/javascript">
@@ -195,7 +197,7 @@
           $.ajax({
             type : 'post',
             url : $(obj).attr('data-url'),
-            data : {del_id:$(obj).attr('data-id')},
+            data : {del_id:$(obj).attr('data-id'), _ajax:1},
             dataType : 'json',
             success : function(data){
               layer.closeAll();
@@ -231,12 +233,12 @@
             case 'imgs':
                 {
                     height = '400px';
-                    var viewstr = "{eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyou.field."+fieldname+"'}\r\n    <img src='{$"+fieldname+".image_url}' />\r\n{/eyou:diyfield";
+                    var viewstr = "{eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyou.field."+fieldname+"'}\r\n    <img src='{$"+fieldname+".image_url}' />\r\n    注释：{$"+fieldname+".intro}\r\n{/eyou:diyfield";
                     contentdiv += '<dd>列表/内容页：</dd>';
-                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:60px;">' + viewstr + '}</textarea></dd>';
-                    var liststr = "{eyou:type typeid='$"+"field.typeid' id='eyoav'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        <img src='{$"+fieldname+".image_url}' />\r\n    {/eyou:diyfield"+"}\r\n{/eyou:type";
+                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:80px;">' + viewstr + '}</textarea></dd>';
+                    var liststr = "{eyou:type typeid='$"+"field.typeid' id='eyoav'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        <img src='{$"+fieldname+".image_url}' />\r\n        注释：{$"+fieldname+".intro}\r\n    {/eyou:diyfield"+"}\r\n{/eyou:type";
                     contentdiv += '<dd>标签 arclist / list 内调用 <font color="red">(更多简洁调法请参考标签 arclist /list)</font>：</dd>';
-                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:100px;">' + liststr + '}</textarea></dd>';
+                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:120px;">' + liststr + '}</textarea></dd>';
                 }
                 break;
 
@@ -252,12 +254,21 @@
                 }
                 break;
 
+            case 'datetime':
+                {
+                    contentdiv += '<dd>列表/内容页：</dd>';
+                    contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{$'+'eyou.field.'+fieldname+'|MyDate=\'Y-m-d H:i:s\',###}"></dd>'
+                    contentdiv += '<dd>标签 type / arclist / list 内调用：</dd>'
+                    contentdiv += '<dd><input type="text" style=" width:470px;" value="{$'+'field.'+fieldname+'|MyDate=\'Y-m-d H:i:s\',###}"></dd>';
+                }
+                break;
+
             default:
                 {
                     contentdiv += '<dd>列表/内容页：</dd>';
                     contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{$'+'eyou.field.'+fieldname+'}"></dd>'
                     contentdiv += '<dd>标签 type / arclist / list 内调用：</dd>'
-                    contentdiv += '<dd><input type="text" style=" width:470px;" value="{$'+'field.'+fieldname+'}"></dd>'
+                    contentdiv += '<dd><input type="text" style=" width:470px;" value="{$'+'field.'+fieldname+'}"></dd>';
                 }
                 break;
         }

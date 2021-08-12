@@ -27,135 +27,152 @@ class Images extends Base
         parent::_initialize();
         $channeltype_list = config('global.channeltype_list');
         $this->channeltype = $channeltype_list[$this->nid];
+        empty($this->channeltype) && $this->channeltype = 3;
         $this->assign('nid', $this->nid);
         $this->assign('channeltype', $this->channeltype);
     }
 
-    /**
-     * 列表
-     */
+    //列表
     public function index()
     {
-        $assign_data = array();
-        $condition = array();
+        $assign_data = $condition = [];
+
         // 获取到所有GET参数
         $param = input('param.');
-        $flag = input('flag/s');
         $typeid = input('typeid/d', 0);
-        $begin = strtotime(input('add_time_begin'));
-        $end = strtotime(input('add_time_end'));
 
-        // 应用搜索条件
-        foreach (['keywords','typeid','flag'] as $key) {
+        // 搜索、筛选查询条件处理
+        foreach (['keywords', 'typeid', 'flag', 'is_release'] as $key) {
+            if ($key == 'typeid' && empty($param['typeid'])) {
+                $typeids = Db::name('arctype')->where('current_channel', $this->channeltype)->column('id');
+                $condition['a.typeid'] = array('IN', $typeids);
+            }
             if (isset($param[$key]) && $param[$key] !== '') {
                 if ($key == 'keywords') {
+                    $keywords = $param[$key];
                     $condition['a.title'] = array('LIKE', "%{$param[$key]}%");
                 } else if ($key == 'typeid') {
                     $typeid = $param[$key];
                     $hasRow = model('Arctype')->getHasChildren($typeid);
                     $typeids = get_arr_column($hasRow, 'id');
-                    /*权限控制 by 小虎哥*/
+                    // 权限控制 by 小虎哥
                     $admin_info = session('admin_info');
                     if (0 < intval($admin_info['role_id'])) {
                         $auth_role_info = $admin_info['auth_role_info'];
-                        if(! empty($auth_role_info)){
-                            if(isset($auth_role_info['only_oneself']) && 1 == $auth_role_info['only_oneself']){
-                                $condition['a.admin_id'] = $admin_info['admin_id'];
-                            }
-                            if(! empty($auth_role_info['permission']['arctype'])){
-                                if (!empty($typeid)) {
-                                    $typeids = array_intersect($typeids, $auth_role_info['permission']['arctype']);
-                                }
-                            }
+                        if (!empty($typeid) && !empty($auth_role_info) && !empty($auth_role_info['permission']['arctype'])) {
+                            $typeids = array_intersect($typeids, $auth_role_info['permission']['arctype']);
                         }
                     }
-                    /*--end*/
                     $condition['a.typeid'] = array('IN', $typeids);
                 } else if ($key == 'flag') {
-                    $condition['a.'.$param[$key]] = array('eq', 1);
+                    if ('is_release' == $param[$key]) {
+                        $condition['a.users_id'] = array('gt', 0);
+                    } else {
+                        $FlagNew = $param[$key];
+                        $condition['a.'.$param[$key]] = array('eq', 1);
+                    }
                 } else {
                     $condition['a.'.$key] = array('eq', $param[$key]);
                 }
             }
         }
 
-        // 时间检索
+        // 权限控制 by 小虎哥
+        $admin_info = session('admin_info');
+        if (0 < intval($admin_info['role_id'])) {
+            $auth_role_info = $admin_info['auth_role_info'];
+            if (!empty($auth_role_info) && isset($auth_role_info['only_oneself']) && 1 == $auth_role_info['only_oneself']) {
+                $condition['a.admin_id'] = $admin_info['admin_id'];
+            }
+        }
+
+        // 时间检索条件
+        $begin = strtotime(input('add_time_begin'));
+        $end = strtotime(input('add_time_end'));
         if ($begin > 0 && $end > 0) {
-            $condition['a.add_time'] = array('between',"$begin,$end");
+            $condition['a.add_time'] = array('between', "$begin, $end");
         } else if ($begin > 0) {
             $condition['a.add_time'] = array('egt', $begin);
         } else if ($end > 0) {
             $condition['a.add_time'] = array('elt', $end);
         }
 
-        // 模型ID
+        // 必要条件
         $condition['a.channel'] = array('eq', $this->channeltype);
-        // 多语言
         $condition['a.lang'] = array('eq', $this->admin_lang);
-        // 回收站
         $condition['a.is_del'] = array('eq', 0);
+        $conditionNew = "(a.users_id = 0 OR (a.users_id > 0 AND a.arcrank >= 0))";
 
-        /**
-         * 数据查询，搜索出主键ID的值
-         */
-        $count = DB::name('archives')->alias('a')->where($condition)->count('aid');// 查询满足要求的总记录数
-        $Page = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
-        $list = DB::name('archives')
-            ->field("a.aid")
-            ->alias('a')
-            ->where($condition)
-            ->order('a.aid desc')
-            ->limit($Page->firstRow.','.$Page->listRows)
-            ->getAllWithIndex('aid');
+        // 自定义排序
+        $orderby = input('param.orderby/s');
+        $orderway = input('param.orderway/s');
+        if (!empty($orderby) && !empty($orderway)) {
+            $orderby = "a.{$orderby} {$orderway}, a.aid desc";
+        } else {
+            $orderby = "a.aid desc";
+        }
 
-        /**
-         * 完善数据集信息
-         * 在数据量大的情况下，经过优化的搜索逻辑，先搜索出主键ID，再通过ID将其他信息补充完整；
-         */
-        if ($list) {
-            $aids = array_keys($list);
-            $fields = "b.*, a.*, a.aid as aid";
-            $row = DB::name('archives')
-                ->field($fields)
+        // 数据查询，搜索出主键ID的值
+        $SqlQuery = Db::name('archives')->alias('a')->where($condition)->where($conditionNew)->fetchSql()->count('aid');
+        $count = Db::name('sql_cache_table')->where(['sql_md5'=>md5($SqlQuery)])->getField('sql_result');
+        if (!isset($count)) {
+            $count = Db::name('archives')->alias('a')->where($condition)->where($conditionNew)->count('aid');
+            /*添加查询执行语句到mysql缓存表*/
+            $SqlCacheTable = [
+                'sql_name' => '|images|' . $this->channeltype . '|',
+                'sql_result' => $count,
+                'sql_md5' => md5($SqlQuery),
+                'sql_query' => $SqlQuery,
+                'add_time' => getTime(),
+                'update_time' => getTime(),
+            ];
+            if (!empty($FlagNew)) $SqlCacheTable['sql_name'] = $SqlCacheTable['sql_name'] . $FlagNew . '|';
+            if (!empty($typeid)) $SqlCacheTable['sql_name'] = $SqlCacheTable['sql_name'] . $typeid . '|';
+            if (!empty($keywords)) $SqlCacheTable['sql_name'] = '|images|keywords|';
+            Db::name('sql_cache_table')->insertGetId($SqlCacheTable);
+            /*END*/
+        }
+
+        $Page = new Page($count, config('paginate.list_rows'));
+        $list = [];
+        if (!empty($count)) {
+            $limit = $count > config('paginate.list_rows') ? $Page->firstRow.','.$Page->listRows : $count;
+            $list = Db::name('archives')
+                ->field("a.aid")
                 ->alias('a')
-                ->join('__ARCTYPE__ b', 'a.typeid = b.id', 'LEFT')
-                ->where('a.aid', 'in', $aids)
+                ->where($condition)
+            	->where($conditionNew)
+                ->order($orderby)
+                ->limit($limit)
                 ->getAllWithIndex('aid');
-            foreach ($list as $key => $val) {
-                $row[$val['aid']]['arcurl'] = get_arcurl($row[$val['aid']]);
-                $row[$val['aid']]['litpic'] = handle_subdir_pic($row[$val['aid']]['litpic']); // 支持子目录
-                $list[$key] = $row[$val['aid']];
+            if (!empty($list)) {
+                $aids = array_keys($list);
+                $fields = "b.*, a.*, a.aid as aid";
+                $row = Db::name('archives')
+                    ->field($fields)
+                    ->alias('a')
+                    ->join('__ARCTYPE__ b', 'a.typeid = b.id', 'LEFT')
+                    ->where('a.aid', 'in', $aids)
+                    ->getAllWithIndex('aid');
+                foreach ($list as $key => $val) {
+                    $row[$val['aid']]['arcurl'] = get_arcurl($row[$val['aid']]);
+                    $row[$val['aid']]['litpic'] = handle_subdir_pic($row[$val['aid']]['litpic']);
+                    $list[$key] = $row[$val['aid']];
+                }
             }
         }
-        $show = $Page->show(); // 分页显示输出
-        $assign_data['page'] = $show; // 赋值分页输出
-        $assign_data['list'] = $list; // 赋值数据集
-        $assign_data['pager'] = $Page; // 赋值分页对象
 
-        // 栏目ID
-        $assign_data['typeid'] = $typeid; // 栏目ID
-        /*当前栏目信息*/
-        $arctype_info = array();
-        if ($typeid > 0) {
-            $arctype_info = M('arctype')->field('typename')->find($typeid);
-        }
-        $assign_data['arctype_info'] = $arctype_info;
-        /*--end*/
-
-        /*选项卡*/
-        $tab = input('param.tab/d', 3);
-        $assign_data['tab'] = $tab;
-        /*--end*/
-
+        $show = $Page->show();
+        $assign_data['page'] = $show;
+        $assign_data['list'] = $list;
+        $assign_data['pager'] = $Page;
+        $assign_data['typeid'] = $typeid;
+        $assign_data['tab'] = input('param.tab/d', 3);// 选项卡
+        $assign_data['archives_flags'] = model('ArchivesFlag')->getList();// 文档属性
+        $assign_data['arctype_info'] = $typeid > 0 ? Db::name('arctype')->field('typename')->find($typeid) : [];// 当前栏目信息
         $this->assign($assign_data);
-        
-        /* 生成静态页面代码 */
-        $aid = input('param.aid/d',0);
-        $this->assign('aid',$aid);
-        $tid = input('param.tid/d',0);
-        $this->assign('typeid',$tid);
-        /* end */
-        
+        $recycle_switch = tpSetting('recycle.recycle_switch');//回收站开关
+        $this->assign('recycle_switch', $recycle_switch);
         return $this->fetch();
     }
 
@@ -164,8 +181,24 @@ class Images extends Base
      */
     public function add()
     {
+        $admin_info = session('admin_info');
+        $auth_role_info = $admin_info['auth_role_info'];
+        $this->assign('auth_role_info', $auth_role_info);
+        $this->assign('admin_info', $admin_info);
+
         if (IS_POST) {
             $post = input('post.');
+
+            /* 处理TAG标签 */
+            if (!empty($post['tags_new'])) {
+                $post['tags'] = !empty($post['tags']) ? $post['tags'] . ',' . $post['tags_new'] : $post['tags_new'];
+                unset($post['tags_new']);
+            }
+            $post['tags'] = explode(',', $post['tags']);
+            $post['tags'] = array_unique($post['tags']);
+            $post['tags'] = implode(',', $post['tags']);
+            /* END */
+
             $content = input('post.addonFieldExt.content', '', null);
 
             // 根据标题自动提取相关的关键字
@@ -217,6 +250,27 @@ class Images extends Base
                 unset($post['tempview']);
             }
 
+            //处理自定义文件名,仅由字母数字下划线和短横杆组成,大写强制转换为小写
+            $htmlfilename = trim($post['htmlfilename']);
+            if (!empty($htmlfilename)) {
+                $htmlfilename = preg_replace("/[^a-zA-Z0-9_-]+/", "-", $htmlfilename);
+                $htmlfilename = strtolower($htmlfilename);
+                //判断是否存在相同的自定义文件名
+                $filenameCount = Db::name('archives')->where([
+                        'htmlfilename'  => $htmlfilename,
+                        'lang'  => $this->admin_lang,
+                    ])->count();
+                if (!empty($filenameCount)) {
+                    $this->error("自定义文件名已存在，请重新设置！");
+                }
+            }
+            $post['htmlfilename'] = $htmlfilename;
+
+            //做自动通过审核判断
+            if ($admin_info['role_id'] > 0 && $auth_role_info['check_oneself'] < 1) {
+                $post['arcrank'] = -1;
+            }
+
             // --存储数据
             $newData = array(
                 'typeid'=> empty($post['typeid']) ? 0 : $post['typeid'],
@@ -225,6 +279,9 @@ class Images extends Base
                 'is_head'      => empty($post['is_head']) ? 0 : $post['is_head'],
                 'is_special'      => empty($post['is_special']) ? 0 : $post['is_special'],
                 'is_recom'      => empty($post['is_recom']) ? 0 : $post['is_recom'],
+                'is_roll'      => empty($post['is_roll']) ? 0 : $post['is_roll'],
+                'is_slide'      => empty($post['is_slide']) ? 0 : $post['is_slide'],
+                'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
                 'is_jump'     => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
@@ -238,11 +295,13 @@ class Images extends Base
             );
             $data = array_merge($post, $newData);
 
-            $aid = M('archives')->insertGetId($data);
+            $aid = Db::name('archives')->insertGetId($data);
             $_POST['aid'] = $aid;
             if ($aid) {
                 // ---------后置操作
                 model('Images')->afterSave($aid, $data, 'add');
+                // 添加查询执行语句到mysql缓存表
+                model('SqlCacheTable')->InsertSqlCacheTable();
                 // ---------end
                 adminLog('新增图集：'.$data['title']);
 
@@ -271,19 +330,19 @@ class Images extends Base
         /*--end*/
 
         /*自定义字段*/
-        $addonFieldExtList = model('Field')->getChannelFieldList($this->channeltype);
-        $channelfieldBindRow = Db::name('channelfield_bind')->where([
-                'typeid'    => ['IN', [0,$typeid]],
-            ])->column('field_id');
-        if (!empty($channelfieldBindRow)) {
-            foreach ($addonFieldExtList as $key => $val) {
-                if (!in_array($val['id'], $channelfieldBindRow)) {
-                    unset($addonFieldExtList[$key]);
-                }
-            }
-        }
-        $assign_data['addonFieldExtList'] = $addonFieldExtList;
-        $assign_data['aid'] = 0;
+        // $addonFieldExtList = model('Field')->getChannelFieldList($this->channeltype);
+        // $channelfieldBindRow = Db::name('channelfield_bind')->where([
+        //         'typeid'    => ['IN', [0,$typeid]],
+        //     ])->column('field_id');
+        // if (!empty($channelfieldBindRow)) {
+        //     foreach ($addonFieldExtList as $key => $val) {
+        //         if (!in_array($val['id'], $channelfieldBindRow)) {
+        //             unset($addonFieldExtList[$key]);
+        //         }
+        //     }
+        // }
+        // $assign_data['addonFieldExtList'] = $addonFieldExtList;
+        // $assign_data['aid'] = 0;
         /*--end*/
 
         // 阅读权限
@@ -302,6 +361,31 @@ class Images extends Base
         $this->assign('tempview', $tempview);
         /*--end*/
 
+        // 文档默认浏览量
+        $other_config = tpCache('other');
+        if (isset($other_config['other_arcclick']) && 0 <= $other_config['other_arcclick']) {
+            $arcclick_arr = explode("|", $other_config['other_arcclick']);
+            if (count($arcclick_arr) > 1) {
+                $assign_data['rand_arcclick'] = mt_rand($arcclick_arr[0], $arcclick_arr[1]);
+            } else {
+                $assign_data['rand_arcclick'] = intval($arcclick_arr[0]);
+            }
+        }else{
+            $arcclick_config['other_arcclick'] = '500|1000';
+            tpCache('other', $arcclick_config);
+            $assign_data['rand_arcclick'] = mt_rand(500, 1000);
+        }
+
+        // URL模式
+        $tpcache = config('tpcache');
+        $assign_data['seo_pseudo'] = !empty($tpcache['seo_pseudo']) ? $tpcache['seo_pseudo'] : 1;
+
+        /*文档属性*/
+        $assign_data['archives_flags'] = model('ArchivesFlag')->getList();
+
+        $channelRow = Db::name('channeltype')->where('id', $this->channeltype)->find();
+        $assign_data['channelRow'] = $channelRow;
+
         $this->assign($assign_data);
 
         return $this->fetch();
@@ -312,8 +396,24 @@ class Images extends Base
      */
     public function edit()
     {
+        $admin_info = session('admin_info');
+        $auth_role_info = $admin_info['auth_role_info'];
+        $this->assign('auth_role_info', $auth_role_info);
+        $this->assign('admin_info', $admin_info);
+
         if (IS_POST) {
             $post = input('post.');
+
+            /* 处理TAG标签 */
+            if (!empty($post['tags_new'])) {
+                $post['tags'] = !empty($post['tags']) ? $post['tags'] . ',' . $post['tags_new'] : $post['tags_new'];
+                unset($post['tags_new']);
+            }
+            $post['tags'] = explode(',', $post['tags']);
+            $post['tags'] = array_unique($post['tags']);
+            $post['tags'] = implode(',', $post['tags']);
+            /* END */
+
             $typeid = input('post.typeid/d', 0);
             $content = input('post.addonFieldExt.content', '', null);
 
@@ -365,9 +465,35 @@ class Images extends Base
                 unset($post['type_tempview']);
                 unset($post['tempview']);
             }
+            
+            //处理自定义文件名,仅由字母数字下划线和短横杆组成,大写强制转换为小写
+            $htmlfilename = trim($post['htmlfilename']);
+            if (!empty($htmlfilename)) {
+                $htmlfilename = preg_replace("/[^a-zA-Z0-9_-]+/", "-", $htmlfilename);
+                $htmlfilename = strtolower($htmlfilename);
+                //判断是否存在相同的自定义文件名
+                $filenameCount = Db::name('archives')->where([
+                        'aid'   => ['NEQ', $post['aid']],
+                        'htmlfilename'  => $htmlfilename,
+                        'lang'  => $this->admin_lang,
+                    ])->count();
+                if (!empty($filenameCount)) {
+                    $this->error("自定义文件名已存在，请重新设置！");
+                }
+            }
+            $post['htmlfilename'] = $htmlfilename;
 
             // 同步栏目切换模型之后的文档模型
             $channel = Db::name('arctype')->where(['id'=>$typeid])->getField('current_channel');
+
+            //做未通过审核文档不允许修改文档状态操作
+            if ($admin_info['role_id'] > 0 && $auth_role_info['check_oneself'] < 1) {
+                $old_archives_arcrank = Db::name('archives')->where(['aid' => $post['aid']])->getField("arcrank");
+                if ($old_archives_arcrank < 0) {
+                    unset($post['arcrank']);
+                }
+            }
+
             // --存储数据
             $newData = array(
                 'typeid'=> $typeid,
@@ -376,6 +502,9 @@ class Images extends Base
                 'is_head'      => empty($post['is_head']) ? 0 : $post['is_head'],
                 'is_special'      => empty($post['is_special']) ? 0 : $post['is_special'],
                 'is_recom'      => empty($post['is_recom']) ? 0 : $post['is_recom'],
+                'is_roll'      => empty($post['is_roll']) ? 0 : $post['is_roll'],
+                'is_slide'      => empty($post['is_slide']) ? 0 : $post['is_slide'],
+                'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
                 'is_jump'   => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
@@ -386,7 +515,7 @@ class Images extends Base
             );
             $data = array_merge($post, $newData);
 
-            $r = M('archives')->where([
+            $r = Db::name('archives')->where([
                     'aid'   => $data['aid'],
                     'lang'  => $this->admin_lang,
                 ])->update($data);
@@ -427,6 +556,7 @@ class Images extends Base
         }
         /*--end*/
         $typeid = $info['typeid'];
+        $assign_data['typeid'] = $typeid;
 
         // 栏目信息
         $arctypeInfo = Db::name('arctype')->find($typeid);
@@ -460,19 +590,19 @@ class Images extends Base
         /*--end*/
         
         /*自定义字段*/
-        $addonFieldExtList = model('Field')->getChannelFieldList($info['channel'], 0, $id, $info);
-        $channelfieldBindRow = Db::name('channelfield_bind')->where([
-                'typeid'    => ['IN', [0,$typeid]],
-            ])->column('field_id');
-        if (!empty($channelfieldBindRow)) {
-            foreach ($addonFieldExtList as $key => $val) {
-                if (!in_array($val['id'], $channelfieldBindRow)) {
-                    unset($addonFieldExtList[$key]);
-                }
-            }
-        }
-        $assign_data['addonFieldExtList'] = $addonFieldExtList;
-        $assign_data['aid'] = $id;
+        // $addonFieldExtList = model('Field')->getChannelFieldList($info['channel'], 0, $id, $info);
+        // $channelfieldBindRow = Db::name('channelfield_bind')->where([
+        //         'typeid'    => ['IN', [0,$typeid]],
+        //     ])->column('field_id');
+        // if (!empty($channelfieldBindRow)) {
+        //     foreach ($addonFieldExtList as $key => $val) {
+        //         if (!in_array($val['id'], $channelfieldBindRow)) {
+        //             unset($addonFieldExtList[$key]);
+        //         }
+        //     }
+        // }
+        // $assign_data['addonFieldExtList'] = $addonFieldExtList;
+        // $assign_data['aid'] = $id;
         /*--end*/
 
         // 阅读权限
@@ -491,6 +621,16 @@ class Images extends Base
         $this->assign('tempview', $tempview);
         /*--end*/
 
+        // URL模式
+        $tpcache = config('tpcache');
+        $assign_data['seo_pseudo'] = !empty($tpcache['seo_pseudo']) ? $tpcache['seo_pseudo'] : 1;
+
+        /*文档属性*/
+        $assign_data['archives_flags'] = model('ArchivesFlag')->getList();
+
+        $channelRow = Db::name('channeltype')->where('id', $this->channeltype)->find();
+        $assign_data['channelRow'] = $channelRow;
+
         $this->assign($assign_data);
         return $this->fetch();
     }
@@ -502,7 +642,7 @@ class Images extends Base
     {
         if (IS_POST) {
             $archivesLogic = new \app\admin\logic\ArchivesLogic;
-            $archivesLogic->del();
+            $archivesLogic->del([], 0, 'images');
         }
     }
 
@@ -513,20 +653,10 @@ class Images extends Base
     {
         if (IS_POST) {
             $filename= input('filename/s');
-            $filename= str_replace('../','',$filename);
-            $filename= trim($filename,'.');
-            if(eyPreventShell($filename) && !empty($filename)){
-                $filename_new = trim($filename,'/');
-                $filetype = preg_replace('/^(.*)\.(\w+)$/i', '$2', $filename);
-                $phpfile = strtolower(strstr($filename,'.php'));  //排除PHP文件
-                $size = getimagesize($filename_new);
-                $fileInfo = explode('/',$size['mime']);
-                if((file_exists($filename_new) && $fileInfo[0] != 'image') || $phpfile || !in_array($filetype, explode(',', config('global.image_ext')))){
-                    exit;
-                }
-                if (!empty($filename)) {
-                    M('images_upload')->where("image_url = '$filename'")->delete();
-                }
+            $aid = input('aid/d');
+            if (!empty($filename) && !empty($aid)) {
+                Db::name('images_upload')->where('image_url','like','%'.$filename)->where('aid',$aid)->delete();
+
             }
         }
     }

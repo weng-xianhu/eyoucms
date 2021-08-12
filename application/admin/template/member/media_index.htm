@@ -1,0 +1,237 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="member/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                {include file="member/order_bar" /}
+            </div>
+            <form class="navbar-form form-inline" id="postForm" action="{:url('Member/media_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="fl">
+                        <!-- #weapp_ExportOrder_btn# -->
+                    </div>
+                    <div class="sDiv2">
+                        <select name="order_status" class="select" style="margin:0px 5px;">
+                            <option value="">--订单状态--</option>
+                            <option value="1" {eq name="$Request.param.order_status" value="1"} selected {/eq}>已付款</option>
+                            <option value="-1" {eq name="Request.param.order_status" value="-1"} selected {/eq}>未付款</option>
+                        </select>
+                    </div>
+                    <div class="sDiv2">
+                        <input type="text" name="add_time_begin" id="add_time_begin" value="{$Request.param.add_time_begin}" class="qsbox" autocomplete="off" placeholder="起始日期">
+                    </div>
+                    &nbsp;至&nbsp;
+                    <div class="sDiv2">
+                        <input type="text" name="add_time_end" id="add_time_end" value="{$Request.param.add_time_end}" class="qsbox" autocomplete="off" placeholder="结束日期">
+                    </div>
+                    <!-- 订单号查询 -->
+                    <div class="sDiv2" style="margin-right: 6px;">
+                        <input type="text" size="50"  name="order_code" class="qsbox" style="width: 200px;" value="{$Request.param.order_code}" placeholder="搜索订单号...">
+                        <input type="submit" class="btn" value="搜索">
+						<i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                       <th class="sign w40" axis="col0">
+                           <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                       </th>
+                        <th abbr="article_title" axis="col3" class="">
+                            <div class="pdl10">订单号</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">用户名</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">订单金额<span class="hint" data-hint="当前列表订单总金额：￥{$total_money|default='0.00'}"><i class="fa fa-jpy ml5"></i></span></div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">订单状态</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w160">
+                            <div class="tc">下单时间</div>
+                        </th>
+                        <th axis="col1" class="w160">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {volist name="list" id="vo"}
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.order_id}"></div>
+                            </td>
+
+                            <td class="" style="width: 100%;">
+                                <div class="tl pdl10">
+                                    <a href="JavaScript:void(0);" data-url="{:url('Member/media_order_details',array('order_id'=>$vo['order_id']))}" onclick="OpenOrderDetails(this);">{$vo.order_code}</a>
+                                </div>
+                            </td>
+
+                            <td class="">
+                                <div class="w100 tc">
+                                    <a href="javascript:void(0);" data-href="{:url('Member/users_edit',array('id'=>$vo['users_id']))}" onclick="openFullframe(this, '会员资料','100%','100%');">{$vo.username}</a>
+                                </div>
+                            </td>
+
+                            <td class="">
+                                <div class="w100 tc">
+                                    ￥{$vo.order_amount}
+                                </div>
+                            </td>
+
+                            <td class="">
+                                <div class="w100 tc">
+                                    {eq name="$vo.order_status" value="0"}未付款{else/}已付款{/eq}
+                                </div>
+                            </td>
+
+                            <td class="">
+                                <div class="w160 tc">
+                                    {$vo.add_time|MyDate='Y-m-d H:i:s',###}
+                                </div>
+                            </td>
+                            <td class="operation">
+                                <div class="w160 tc">
+                                    <a class="btn blue" href="JavaScript:void(0);" data-url="{:url('Member/media_order_details',array('order_id'=>$vo['order_id']))}" onclick="OpenOrderDetails(this);">详情</a>
+                                    <i></i>
+                                    <a href="JavaScript:void(0);" onclick="OrderDel('{$vo.order_id}');" class="btn blue">删除</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Member/media_order_del')}" class="layui-btn layui-btn-primary">
+                            <span>批量删除</span>
+                    </a>
+                </div>
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#add_time_begin' //指定元素
+        });
+        laydate.render({
+            elem: '#add_time_end' //指定元素
+        });
+    });
+
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        $('#postForm select[name=order_status]').change(function(){
+            $('#postForm').submit();
+        });
+    });
+
+    // 打开订单详情
+    function OpenOrderDetails(obj) {
+        var url = $(obj).attr('data-url');
+
+        // iframe窗
+        var iframes = layer.open({
+            type: 2,
+            title: '订单详情',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            area: ['100%', '100%'],
+            content: url
+        });
+        layer.full(iframes);
+    }
+
+    // 订单操作
+    function OrderDel(order_id) {
+        layer.confirm('确认删除订单？', {
+            title: false,
+            closeBtn: 0,
+            btn: ['确定','取消'],
+        },function(){
+            $.ajax({
+                url: "{:url('Member/media_order_del')}",
+                data: {del_id: order_id, _ajax: 1},
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {time: 1500}, function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        layer.msg(res.msg, {time: 1500});
+                    }
+                }
+            });
+        },function(index){
+            layer.closeAll(index);
+        });
+    }
+</script>
+
+{include file="public/footer" /}

@@ -3,12 +3,12 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/bootstrap/css/bootstrap.min.css?v={$version}">
-    <script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
-    <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
     <script type="text/javascript">
         var __root_dir__ = "__ROOT_DIR__";
         var __lang__ = "{$admin_lang}";
     </script>
+    <script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
+    <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
 </head>
 <style>
     .gray-bg {
@@ -96,7 +96,7 @@
 <script type="text/javascript">
     $('#a_close_pop').hide();
     var typeid = "{$typeid}";
-    var fid = 0;   //本次执行的下标
+    var findex = 0;   //本次执行的下标
     var achieve = 0;
     var allpagetotal = 0;
     var msg = "";
@@ -106,17 +106,17 @@
             url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildChannel&lang="+__lang__,
             type:'POST',
             dataType:'json',
-            data:{'id':typeid,'fid':fid,'achieve':achieve,_ajax:1},
+            data:{'id':typeid,'findex':findex,'achieve':achieve,_ajax:1},
             beforeSend:function(){
             },
             success:function(res){
-                fid = res.data.fid;
+                findex = res.data.findex;
                 achieve = res.data.achievepage;
                 allpagetotal = res.data.allpagetotal;
                 msg += res.msg;
                 progress = ((achieve/allpagetotal)*100).toFixed(1);
                 $('#title').html('成功创建栏目：');
-                $(".filepath").html(res.data.fid);
+                $(".filepath").html(res.data.findex);
                 $(".progress-bar").css('width',progress+'%');
                 $(".percent").text(progress);
                 if (achieve === allpagetotal){
@@ -136,8 +136,8 @@
                 }
                 send();
             },
-            error:function(){
-                parent.layer.alert('栏目页生成出错', {icon: 5, title:false});
+            error:function(e){
+                parent.layer.alert(e.responseText, {icon: 5, title:false});
             }
         });
     }

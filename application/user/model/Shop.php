@@ -49,6 +49,10 @@ class Shop extends Model
         // 查询订单id数组用于添加订单操作记录
         $OrderIds = Db::name('shop_order')->field('order_id')->where($where)->select();
 
+        // 订单过期，更新规格数量
+        $productSpecValueModel = new \app\user\model\ProductSpecValue;
+        $productSpecValueModel->SaveProducSpecValueStock($OrderIds, $users_id);
+
         //批量修改订单状态 
         Db::name('shop_order')->where($where)->update($data);
         
@@ -128,6 +132,9 @@ class Shop extends Model
                 $select_status = 0;
             }
             $OrderWhere['order_status'] = $select_status;
+            if (3 == $select_status){
+                $OrderWhere['is_comment'] = 0;
+            }
         }
 
         $order = Db::name('shop_order')->where($OrderWhere)->count();
@@ -243,4 +250,473 @@ class Shop extends Model
         }
         return $str;
     }
+
+    // 旧产品属性处理
+    public function ProductAttrProcessing($value = array())
+    {
+        $attr_value = '';
+        $AttrWhere = [
+            'a.aid'     => $value['aid'],
+            'b.lang'    => $this->home_lang
+        ];
+        $attrData = Db::name('product_attr')
+            ->alias('a')
+            ->field('a.attr_value as value, b.attr_name as name')
+            ->join('__PRODUCT_ATTRIBUTE__ b', 'a.attr_id = b.attr_id', 'LEFT')
+            ->where($AttrWhere)
+            ->order('b.sort_order asc, a.attr_id asc')
+            ->select();
+        foreach ($attrData as $val) {
+            $attr_value .= $val['name'].'：'.$val['value'].'<br/>';
+        }
+        return $attr_value;
+    }
+
+    // 新产品属性处理
+    public function ProductNewAttrProcessing($value = array())
+    {
+        $attr_value = '';
+        $where = [
+            'a.list_id' => $value['attrlist_id'],
+            'a.status'  => 1,
+            'b.aid'     => $value['aid']
+        ];
+        $attrData = Db::name('shop_product_attribute')
+            ->alias('a')
+            ->field('a.attr_name as name, b.attr_value as value')
+            ->join('__SHOP_PRODUCT_ATTR__ b', 'a.attr_id = b.attr_id', 'LEFT')
+            ->where($where)
+            ->order('a.sort_order asc, a.attr_id asc')
+            ->select();
+        foreach ($attrData as $val) {
+            $attr_value .= $val['name'].'：'.$val['value'].'<br/>';
+        }
+        return $attr_value;
+    }
+
+    // 产品规格处理
+    public function ProductSpecProcessing($value = array())
+    {
+        $spec_value_s = '';
+        if (!empty($value['spec_value_id'])) {
+            $spec_value_id = explode('_', $value['spec_value_id']);
+            if (!empty($spec_value_id)) {
+                $SpecWhere = [
+                    'aid'           => $value['aid'],
+                    'lang'          => $this->home_lang,
+                    'spec_value_id' => ['IN',$spec_value_id],
+                ];
+                $ProductSpecData = Db::name("product_spec_data")->where($SpecWhere)->field('spec_name,spec_value')->select();
+                foreach ($ProductSpecData as $spec_value) {
+                    $spec_value_s .= $spec_value['spec_name'].'：'.$spec_value['spec_value'].'<br/>';
+                }
+            }
+        }
+        return $spec_value_s;
+    }
+
+    // 产品库存处理
+    public function ProductStockProcessing($SpecValue = array())
+    {   
+        $SpecUpData = []; // 有规格
+        $ArcUpData  = []; // 无规格
+        foreach ($SpecValue as $key => $value) {
+            if (!empty($value['value_id'])) {
+                $SpecUpData[] = [
+                    'value_id'   => $value['value_id'],
+                    'spec_stock' => Db::raw('spec_stock-'.($value['quantity'])),
+                    'spec_sales_num' => Db::raw('spec_sales_num+'.($value['quantity'])),
+                ];
+                
+                $ArcUpData[] = [
+                    'aid'         => $value['aid'],
+                    'stock_count' => Db::raw('stock_count-' . ($value['quantity'])),
+                    'sales_num'   => Db::raw('sales_num+' . ($value['quantity']))
+                ];
+            }else{
+                $ArcUpData[] = [
+                    'aid'         => $value['aid'],
+                    'stock_count' => Db::raw('stock_count-'.($value['quantity'])),
+                    'sales_num'   => Db::raw('sales_num+' . ($value['quantity']))
+                ];
+            }
+        }
+
+        // 更新规格库存销量
+        if (!empty($SpecUpData)) model('ProductSpecValue')->saveAll($SpecUpData);
+
+        // 更新商品库存销量
+        if (!empty($ArcUpData)) model('Archives')->saveAll($ArcUpData);
+    }
+
+    /**
+     * 生成订单之前的产品数据整理 - 【第一步】
+     * @return [type] [description]
+     */
+    public function handlerOrderData($opt = 'normal', $OrderData = [], $list = [], $users = [], $post = [])
+    {
+        $aid = 0;
+        if ('fast' == $opt) {
+            $aid = !empty($list[0]['aid']) ? $list[0]['aid'] : 0;
+        }
+        // 会员配置
+        $usersConfig = getUsersConfigData('all');
+
+        // 产品数据处理
+        $PromType = 1; // 1表示为虚拟订单
+        $TotalAmount = $TotalNumber = 0;
+        $level_discount = $users['level_discount'];
+        foreach ($list as $key => $value) {
+            /* 未开启多规格则执行 */
+            if (!isset($usersConfig['shop_open_spec']) || empty($usersConfig['shop_open_spec'])) {
+                $value['spec_value_id'] = $value['spec_price'] = $value['spec_stock'] = $value['value_id'] = 0;
+            }
+            /* END */
+
+            // 购物车商品存在规格并且价格不为空，则覆盖商品原来的价格
+            if (!empty($value['spec_value_id']) && $value['spec_price'] >= 0) {
+                // 规格价格覆盖商品原价
+                $value['users_price'] = $value['spec_price'];
+            }
+            // 计算折扣后的价格
+            if (!empty($level_discount)) {
+                // 折扣率百分比
+                $discount_price = $level_discount / 100;
+                // 会员折扣价
+                $value['users_price']      = $value['users_price'] * $discount_price;
+            }
+            // 购物车商品存在规格并且库存不为空，则覆盖商品原来的库存
+            if (!empty($value['spec_stock'])) {
+                // 规格库存覆盖商品库存
+                $value['stock_count'] = $value['spec_stock'];
+            }
+            // 若库存为空则返回提示
+            if (empty($value['stock_count'])) return ['code'=>0, 'msg'=>"产品 《{$value['title']}》 库存不足！"];
+
+            // 金额、数量计算
+            if ($value['users_price'] >= 0 && !empty($value['product_num'])) {
+                // 合计金额
+                $TotalAmount += sprintf("%.2f", $value['users_price'] * $value['product_num']);
+                // 合计数量
+                $TotalNumber += $value['product_num'];
+                // 判断订单类型，目前逻辑：一个订单中，只要存在一个普通产品(实物产品，需要发货物流)，则为普通订单
+                if (empty($value['prom_type'])) $PromType = 0;// 0表示为普通订单
+            }
+            $list[$key] = $value;
+        }
+
+        // 添加到订单主表
+        $time = getTime();
+        $OrderData['order_code']        = date('Ymd').$time.rand(10,100); //订单生成规则
+        $OrderData['users_id']          = $users['users_id'];
+        $OrderData['order_status']      = 0; // 订单未付款
+        $OrderData['add_time']          = $time;
+        $OrderData['payment_method']    = !empty($post['payment_method']) ? intval($post['payment_method']) : 0; // 订单支付方式
+        $OrderData['order_total_amount']= $TotalAmount;
+        $OrderData['order_amount']      = $TotalAmount;
+        $OrderData['order_total_num']   = $TotalNumber;
+        $OrderData['prom_type']         = $PromType;
+        $OrderData['user_note']         = !empty($post['message']) ? $post['message'] : ''; // 会员备注
+        $OrderData['lang']              = $this->home_lang;
+
+        /*特定场景专用*/
+        $opencodetype = config('global.opencodetype');
+        if (1 == $opencodetype) {
+            $aid = !empty($list[0]['aid']) ? $list[0]['aid'] : 0;
+            $OrderData['spec_value_id'] = !empty($OrderData['spec_value_id']) ? "_".trim($OrderData['spec_value_id'], '_')."_" : '';
+            // 订单分组
+            $group = 'archives';
+            if (74 == $aid) {
+                $group = 'cloudminipro';
+            } else if (75 == $aid) {
+                $group = 'cloudminiproMall';
+            }
+            $OrderData['group'] = $group;
+            // 规格值
+            $spec_value_ids =  $OrderData['spec_value_id'];
+            // 购买套餐
+            $buy_type = 1;
+            if (stristr($spec_value_ids, '_1_')) {
+                $buy_type = 2;
+            } else if (stristr($spec_value_ids, '_2_')) {
+                $buy_type = 3;
+            }
+            $OrderData['buy_type'] = $buy_type;
+            // 购买天数
+            $buy_day = 0;
+            if (stristr($spec_value_ids, '_4_')) {
+                $buy_day = 365;
+            } else if (stristr($spec_value_ids, '_5_')) {
+                $buy_day = 365 * 2;
+            }
+            $OrderData['buy_day'] = $buy_day;
+        }
+        /*end*/
+
+        if (isMobile() && isWeixin()) {
+            $OrderData['pay_name'] = 'wechat';// 如果在微信端中则默认为微信支付
+            $OrderData['wechat_pay_type'] = 'WeChatInternal';// 如果在微信端中则默认为微信端调起支付
+        }
+
+        if (1 == $OrderData['payment_method']) {
+            // 追加添加到订单主表的数组
+            $OrderData['order_status'] = 1; // 标记已付款
+            $OrderData['pay_time']     = $time;
+            $OrderData['pay_name']     = 'delivery_pay';// 货到付款
+            $OrderData['wechat_pay_type'] = ''; // 选择货到付款，则去掉微信端调起支付标记
+            $OrderData['update_time']  = $time;
+        }
+
+        return ['code'=>1, 'msg'=>'ok', 'data'=>['OrderData'=>$OrderData, 'list'=>$list]];
+    }
+
+    /**
+     * 生成订单之后的订单明细整理 - 【第二步】
+     * @return [type] [description]
+     */
+    public function handlerDetailsData($opt = 'normal', $OrderData = [], $list = [], $users = [])
+    {
+        $OrderId = $OrderData['order_id'];
+        $cart_ids   = $UpSpecValue = [];
+        $attr_value = $spec_value = '';
+
+        if (1 == count($list) && !empty($list[0]['under_order_type'])) {
+            /*----------删除用户旧的未付款的同类记录 start ------------*/
+            $order_md5 = md5($list[0]['aid'].$list[0]['spec_value_id']);
+            $where = [
+                'order_md5'     => $order_md5,
+                'users_id'      => intval($users['users_id']),
+                'order_id'      => ['NEQ', $OrderId],
+                'order_status'  => 0,
+            ];
+            $opencodetype = config('global.opencodetype');
+            if (1 == $opencodetype) {
+                $where['group'] = $OrderData['group'];
+            }
+            $order_id_arr = Db::name('shop_order')->where($where)->column('order_id');
+            if (!empty($order_id_arr)) {
+                $r = Db::name('shop_order')->where([
+                        'order_id'  => ['IN', $order_id_arr],
+                    ])->delete();
+                if (false !== $r) {
+                    Db::name('shop_order_details')->where([
+                        'order_id'  => ['IN', $order_id_arr],
+                    ])->delete();
+                }
+            }
+            /*----------删除用户旧的未付款的同类记录 end ------------*/
+        }
+
+        /*----------------订单副表添加数组--------------*/
+        // 添加到订单明细表
+        foreach ($list as $key => $value) {
+            // 旧产品属性处理
+            $attr_value = model('Shop')->ProductAttrProcessing($value);
+            // 新产品属性处理
+            $attr_value_new = model('Shop')->ProductNewAttrProcessing($value);
+            // 产品规格处理
+            $spec_value = model('Shop')->ProductSpecProcessing($value);
+            $Data = [
+                // 产品属性
+                'attr_value' => htmlspecialchars($attr_value),
+                // 产品属性
+                'attr_value_new' => htmlspecialchars($attr_value_new),
+                // 产品规格
+                'spec_value' => htmlspecialchars($spec_value),
+                // 产品规格值ID
+                'spec_value_id' => $value['spec_value_id'],
+                // 对应规格值ID的唯一标识ID，数据表主键ID
+                'value_id'   => $value['value_id'],
+                // 后续添加
+            ];
+
+            // 订单副表添加数组
+            $OrderDetailsData[] = [
+                'order_id'      => $OrderId,
+                'users_id'      => intval($users['users_id']),
+                'product_id'    => $value['aid'],
+                'product_name'  => $value['title'],
+                'num'           => $value['product_num'],
+                'data'          => serialize($Data),
+                'product_price' => $value['users_price'],
+                'prom_type'     => $value['prom_type'],
+                'litpic'        => $value['litpic'],
+                'add_time'      => getTime(),
+                'lang'          => $this->home_lang,
+            ];
+
+            // 处理购物车ID
+            if (empty($value['under_order_type'])) array_push($cart_ids, $value['cart_id']);
+
+            // 产品库存处理
+            $UpSpecValue[] = [
+                'aid'           => $value['aid'],
+                'value_id'      => $value['value_id'],
+                'quantity'      => $value['product_num'],
+                'spec_value_id' => $value['spec_value_id'],
+            ];
+        }
+
+        return [
+            'code'  => 1,
+            'msg'   => 'ok',
+            'data'  => [
+                'cart_ids'          => $cart_ids,
+                'OrderDetailsData'  => $OrderDetailsData,
+                'UpSpecValue'       => $UpSpecValue,
+            ]
+        ];
+    }
+
+
+    /*------陈风任---2021-1-12---售后服务(退换货)------开始------*/
+
+    // 读取会员自身所有服务单信息
+    public function GetAllServiceInfo($users_id = null, $order_code = null)
+    {
+        $where = [
+            'users_id' => $users_id
+        ];
+        if (!empty($order_code)) $where['order_code'] = ['LIKE', "%{$order_code}%"];
+
+        $count   = Db::name('shop_order_service')->where($where)->count('service_id');
+        $pageObj = new Page($count, config('paginate.list_rows'));
+
+        // 订单主表数据查询
+        $Service = Db::name('shop_order_service')->where($where)
+            ->order('status asc, service_id desc')
+            ->limit($pageObj->firstRow.','.$pageObj->listRows)
+            ->select();
+        $New = get_archives_data($Service, 'product_id');
+        foreach ($Service as $key => $value) {
+            $Service[$key]['status']       = Config::get('global.order_service_status')[$value['status']];
+            $Service[$key]['service_type'] = Config::get('global.order_service_type')[$value['service_type']];
+            $Service[$key]['ArchivesUrl']  = urldecode(arcurl('home/Product/view', $New[$value['product_id']]));
+            $Service[$key]['OrDetailsUrl'] = url('user/Shop/shop_order_details', ['order_id'=>$value['order_id']]);
+            $Service[$key]['SeDetailsUrl'] = url('user/Shop/after_service_details', ['service_id'=>$value['service_id']]);
+            $Service[$key]['product_spec'] = str_replace("&lt;br/&gt;", " &nbsp; ", $value['product_spec']);
+        }
+
+        $Return['Service'] = $Service;
+        $Return['pageStr'] = $pageObj->show();
+
+        return $Return;
+    }
+
+    // 服务详情信息
+    public function GetServiceDetailsInfo($service_id = null, $users_id = null)
+    {
+        $Return = [];
+        if (empty($service_id) || empty($users_id)) return $Return;
+        $where = [
+            'users_id'   => $users_id,
+            'service_id' => $service_id
+        ];
+        $Service = Db::name('shop_order_service')->where($where)->select();
+        $New = get_archives_data($Service, 'product_id');
+        $Service = $Service[0];
+        $Service['arcurl']       = urldecode(arcurl('home/Product/view', $New[$Service['product_id']]));
+        $Service['CancelUrl']    = url('user/Shop/after_service_details', ['_ajax' => 1, 'details_id' => $Service['details_id'], 'order_id' => $Service['order_id']]);
+        $Service['StatusName']   = Config::get('global.order_service_status')[$Service['status']];
+        $Service['upload_img']   = !empty($Service['upload_img']) ? explode(',', $Service['upload_img']) : [];
+        $Service['product_img']  = handle_subdir_pic(get_default_pic($Service['product_img']));
+        if (isMobile()) {
+            $Service['product_spec'] = htmlspecialchars_decode($Service['product_spec']);
+        } else {
+            $Service['product_spec'] = str_replace("&lt;br/&gt;", " <br/> ", $Service['product_spec']);
+        }
+        $Service['service_type_old'] = $Service['service_type'];
+        $Service['service_type'] = Config::get('global.order_service_type')[$Service['service_type']];
+        $Service['admin_delivery'] = unserialize($Service['admin_delivery']);
+        $Service['product_total'] = sprintf("%.2f", $Service['refund_price'] * (string)$Service['product_num']);
+        /*计算退还余额*/
+        $field_new = 'b.details_id, b.product_price, b.num, a.shipping_fee, a.order_total_num';
+        $where_new = [
+            'b.order_id' => $Service['order_id'],
+            'b.details_id' => $Service['details_id'],
+            'b.apply_service' => 1
+        ];
+        $Order = Db::name('shop_order')->alias('a')
+            ->field($field_new)
+            ->join('__SHOP_ORDER_DETAILS__ b', 'a.order_id = b.order_id', 'LEFT')
+            ->where($where_new)
+            ->find();
+        // 运费计算
+        $ShippingFee = 0;
+        if (!empty($Order['shipping_fee'])) {
+            $ShippingFee = sprintf("%.2f", ($Order['shipping_fee'] / (string)$Order['order_total_num']) * (string)$Service['product_num']);
+            $Service['ShippingFee'] = $ShippingFee;
+        }
+        $Service['refund_total_price'] = (string)$Service['product_total'] - (string)$ShippingFee;
+        /* END */
+        return $Service;
+    }
+
+    // 服务详情记录
+    public function GetOrderServiceLog($service_id = null, $Users = []) {
+        if (empty($service_id) || empty($Users)) return [];
+        $Log = Db::name('shop_order_service_log')->order('log_id desc')->where('service_id', $service_id)->select();
+        foreach ($Log as $key => $value) {
+            if (!empty($value['users_id'])) {
+                $Log[$key]['name'] = '会员';
+            } else if (!empty($value['admin_id'])) {
+                $Log[$key]['name'] = '商家';
+            }
+        }
+        return $Log;
+    }
+
+    // 查询订单数据
+    public function GetOrderDetailsInfo($details_id = null, $users_id = null)
+    {
+        $Return = [];
+        if (empty($details_id) || empty($users_id)) return $Return;
+
+        /*查询订单明细数据并处理*/
+        $where = [
+            'details_id' => $details_id,
+            'users_id' => $users_id
+        ];
+        $Details = Db::name('shop_order_details')->where($where)->select();
+        if (empty($Details)) {
+            $Return = [
+                'code' => 0,
+                'msg'  => '售后服务单不存在'
+            ];
+            return $Return;
+        }
+
+        if (!empty($Details[0]) && 1 == $Details[0]['apply_service']) {
+            $Return = [
+                'code' => 0,
+                'msg'  => '已申请售后，请查阅退换货信息'
+            ];
+            return $Return;
+        }
+
+        $array_new = get_archives_data($Details, 'product_id');
+        $Details = $Details[0];
+        $Details['data'] = unserialize($Details['data']);
+        $Details['spec_value'] = htmlspecialchars_decode(htmlspecialchars_decode($Details['data']['spec_value']));
+        $Details['spec_value_id'] = $Details['data']['spec_value_id'];
+        $Details['value_id'] = $Details['data']['value_id'];
+        $Details['arcurl'] = url('home/View/index', ['aid' => $Details['product_id']]);
+        $Details['litpic'] = handle_subdir_pic(get_default_pic($Details['litpic']));
+        unset($Details['data']);
+        /* END */
+
+        /*查询订单主表数据并处理*/
+        $field = 'order_code, consignee, province, city, district, address, mobile';
+        $Order = Db::name('shop_order')->field($field)->where('order_id', $Details['order_id'])->find();
+        $Order['province'] = get_province_name($Order['province']);
+        $Order['city']     = get_city_name($Order['city']);
+        $Order['district'] = get_area_name($Order['district']);
+        /* END */
+
+        // 合并数据返回
+        $Return = array_merge($Details, $Order);
+        return $Return;
+    }
+    /*------陈风任---2021-1-12---售后服务(退换货)------结束------*/
 }
+

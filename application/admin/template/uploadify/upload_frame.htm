@@ -108,6 +108,7 @@ $(function(){
             "fileVal":"file",
             "auto":true,
             "formData":{},
+            "duplicate": true, // 允许上传重复文件
             // "accept": {
             //     "title": 'Images',
             //     "extensions": '{$info.type}',
@@ -116,9 +117,9 @@ $(function(){
             "pick":{"id":"#filePicker","label":"点击选择图片","name":"file"},
             "thumb":{"width":110,"height":110,"quality":70,"allowMagnify":true,"crop":true,"preserveHeaders":false,"type":"image\/jpeg"},
             "compress": {
-                "width": 3800,
-                "height": 3800,
-                "quality": 90,
+                "width": 380000,
+                "height": 380000,
+                "quality": 100,
                 "allowMagnify": false,
                 "crop": false,
                 "preserveHeaders": true

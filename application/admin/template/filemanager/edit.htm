@@ -9,16 +9,15 @@
 <script type="text/javascript" src="__SKIN__/js/codemirror/mode/clike/clike.js"></script>
 <script type="text/javascript" src="__SKIN__/js/codemirror/mode/htmlmixed/htmlmixed.js"></script>
 
-<body style="background-color: #FFF; overflow: auto;">
+<body class="bodystyle">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
-    {include file="filemanager/bar" /}
     <form class="form-horizontal" id="post_form" action="{:url('Filemanager/edit')}" method="post">
         <div class="ncap-form-default">
             <dl class="row">
-                <dt class="tit">工作目录</dt>
+                <dt class="tit"><em>*</em>所在目录</dt>
                 <dd class="opt">
                     <input type="text" name="activepath" value="{$info['activepath']|default=''}" id="activepath" class="input-txt">
                     <span class="err"></span>
@@ -27,7 +26,7 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="url">文件名称</label>
+                    <label for="url"><em>*</em>文件名称</label>
                 </dt>
                 <dd class="opt">
                     <input type="text" name="filename" value="{$info['filename']|default=''}" id="filename" class="input-txt">
@@ -45,7 +44,10 @@
                     <p class="notic"></p>
                 </dd>
             </dl>
-            <div class="bot"><a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a></div>
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                <a href="JavaScript:history.back(-1);"  class="ncap-btn-big ncap-btn-green" style="border: 1px solid #C9C9C9; background-color: #fff;color: #555;" >返回</a>
+            </div>
         </div>
     </form>
 </div>
@@ -54,6 +56,7 @@
     var editor = CodeMirror.fromTextArea(document.getElementById('content'), {
         lineNumbers: true,
         lineWrapping: true,
+        autofocus:true,  //自动聚焦
         mode: '{$info.extension}'
     });
 

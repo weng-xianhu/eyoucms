@@ -1,17 +1,21 @@
 {include file="public/layout" /}
 <script type="text/javascript" src="__PUBLIC__/plugins/laydate/laydate.js"></script>
 
-{load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
-{load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
-{load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+{eq name="$editor.editor_select" value="1"}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+{else/}
+    {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
+{/eq}
 
 <body style="background-color: #FFF; overflow: auto;min-width:auto;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width:auto;">
+<div class="page" style="min-width:auto;box-shadow:none;">
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
+        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
             <div class="subject">
                 <h3>{$info.typename|default=''} - 内容管理</h3>
                 <h5></h5>
@@ -26,7 +30,7 @@
         <!-- 常规选项 -->
         <div class="ncap-form-default">
             <div class="bot">
-                <input type="hidden" name="gourl" value="{$gourl}">
+                <input type="hidden" name="gourl" value="{$gourl|default=''}">
                 <input type="hidden" name="typeid" id="typeid" value="{$info.id|default=''}">
                 <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
             </div>

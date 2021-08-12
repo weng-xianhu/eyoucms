@@ -39,12 +39,18 @@ if (!function_exists('set_arcseotitle'))
     /**
      * 设置内容标题
      */
-    function set_arcseotitle($title = '', $seo_title = '', $typename = '')
+    function set_arcseotitle($title = '', $seo_title = '', $typename = '', $typeid = 0)
     {
         /*针对没有自定义SEO标题的文档*/
+        $title = trim($title);
+        $seo_title = trim($seo_title);
+        $typename = trim($typename);
         if (empty($seo_title)) {
             static $web_name = null;
-            null === $web_name && $web_name = tpCache('web.web_name');
+            if (null === $web_name) {
+                $web_name = tpCache('web.web_name');
+                $web_name = trim($web_name);
+            }
             static $seo_viewtitle_format = null;
             null === $seo_viewtitle_format && $seo_viewtitle_format = tpCache('seo.seo_viewtitle_format');
             switch ($seo_viewtitle_format) {
@@ -53,12 +59,21 @@ if (!function_exists('set_arcseotitle'))
                     break;
                 
                 case '3':
-                    $seo_title = $title.'_'.$typename.'_'.$web_name;
+                    $seo_title = $title;
+                    if (!empty($typename)) {
+                        $seo_title .= '_'.$typename;
+                    }
+                    $seo_title .= '_'.$web_name;
                     break;
                 
                 case '2':
                 default:
-                    $seo_title = $title.'_'.$web_name;
+                    $opencodetype = config('global.opencodetype');
+                    if (1 == $opencodetype && in_array($typeid, [3,9,10])) {
+                        $seo_title = '';
+                    } else {
+                        $seo_title = $title.'_'.$web_name;
+                    }
                     break;
             }
         }
@@ -75,8 +90,9 @@ if (!function_exists('set_typeseotitle'))
      */
     function set_typeseotitle($typename = '', $seo_title = '')
     {
-        /*针对没有自定义SEO标题的列表*/
-        if (empty($seo_title)) {
+        static $lang = null;
+        $lang === null && $lang = get_home_lang();
+        if (empty($seo_title)) { // 针对没有自定义SEO标题的列表
             $web_name = tpCache('web.web_name');
             $seo_liststitle_format = tpCache('seo.seo_liststitle_format');
             switch ($seo_liststitle_format) {
@@ -88,10 +104,57 @@ if (!function_exists('set_typeseotitle'))
                 default:
                     $page = I('param.page/d', 1);
                     if ($page > 1) {
-                        $typename .= "_第{$page}页";
+                        if (in_array($lang, ['cn'])) {
+                            $typename .= "_第{$page}页";
+                        } else {
+                            $typename .= "_{$page}";
+                        }
                     }
                     $seo_title = $typename.'_'.$web_name;
                     break;
+            }
+        } else {
+            $page = I('param.page/d', 1);
+            if ($page > 1) {
+                if (in_array($lang, ['cn'])) {
+                    $seo_title .= "_第{$page}页";
+                } else {
+                    $seo_title .= "_{$page}";
+                }
+            }
+        }
+
+        return $seo_title;
+    }
+}
+
+if (!function_exists('set_tagseotitle')) 
+{
+    /**
+     * 设置Tag标题
+     */
+    function set_tagseotitle($tag = '', $seo_title = '')
+    {
+        $page = I('param.page/d', 1);
+        static $lang = null;
+        $lang === null && $lang = get_home_lang();
+        if (empty($seo_title)) { // 针对没有自定义SEO标题的Tag
+            $web_name = tpCache('web.web_name');
+            if ($page > 1) {
+                if (in_array($lang, ['cn'])) {
+                    $tag .= "_第{$page}页";
+                } else {
+                    $tag .= "_{$page}";
+                }
+            }
+            $seo_title = $tag.'_'.$web_name;
+        } else {
+            if ($page > 1) {
+                if (in_array($lang, ['cn'])) {
+                    $seo_title .= "_第{$page}页";
+                } else {
+                    $seo_title .= "_{$page}";
+                }
             }
         }
 

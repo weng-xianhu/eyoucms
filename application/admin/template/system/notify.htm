@@ -1,0 +1,89 @@
+<div class="hDiv" id="notify_list">
+    <div class="hDivBox">
+        <table cellspacing="0" cellpadding="0" style="width: 100%">
+            <thead>
+            <tr>
+                <th class="sign w10" axis="col0">
+                    <div class="tc"></div>
+                </th>
+                <th abbr="article_title" axis="col3" class="w10">
+                    <div id="anchor-sms" class="tc">消息通知</div>
+                </th>
+                <th abbr="ac_id" axis="col4">
+                    <div class=""></div>
+                </th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+<div class="plug-list">
+    <!-- 邮箱通知 -->
+    <div class="plug-item-content">
+        <div class="plug-item-top">
+            <div class="plug-img">
+                <a href="{:url('System/smtp')}"><img src="__SKIN__/images/email.png?v={$version}"></a>
+            </div>
+            <div class="plug-text">
+                <div class="plug-text-title">
+                    <a href="{:url('System/smtp')}">电子邮箱</a>
+                </div>
+                <div class="plug-text-versions">
+                    <span>系统内置</span>
+                </div>
+                <!-- <div class="plug-text-des">暂无描述</div> -->
+            </div>
+        </div>
+        <div class="plug-item-bottm">
+            <a href="{:url('System/smtp')}">配置</a>
+        </div>
+    </div>
+    <!-- 短信通知 -->
+    <div class="plug-item-content">
+        <div class="plug-item-top">
+            <div class="plug-img">
+                <a {notempty name="$is_eyou_authortoken"}href="JavaScript:showErrorAlert('该功能仅限于商业授权使用！', 4);"{else /}href="{:url('System/sms')}"{/notempty}><img src="__SKIN__/images/sms.png?v={$version}"></a>
+            </div>
+            <div class="plug-text">
+                <div class="plug-text-title">
+                    <a {notempty name="$is_eyou_authortoken"}href="JavaScript:showErrorAlert('该功能仅限于商业授权使用！', 4);"{else /}href="{:url('System/sms')}"{/notempty}>云短信
+                        {notempty name="$is_eyou_authortoken"}
+                            <i class="anchor-icon anchor-icon-biao" title="限商业授权以上可用"></i>
+                        {/notempty}
+                    </a>
+                </div>
+                <div class="plug-text-versions">
+                    <span>系统内置</span>
+                </div>
+                <!-- <div class="plug-text-des">暂无描述</div> -->
+            </div>
+        </div>
+        <div class="plug-item-bottm">
+            <a {notempty name="$is_eyou_authortoken"}href="JavaScript:showErrorAlert('该功能仅限于商业授权使用！', 4);"{else /}href="{:url('System/sms')}"{/notempty}>配置</a>
+        </div>
+    </div>
+    <!-- 站内信通知 -->
+    {empty name='$is_eyou_authortoken'}
+        {eq name="'Notify@notify_tpl'|is_check_access" value="1"}
+        <div class="plug-item-content">
+            <div class="plug-item-top">
+                <div class="plug-img">
+                    <a href="{:url('Notify/notify_tpl')}"><img src="__SKIN__/images/notify.png?v={$version}"></a>
+                </div>
+                <div class="plug-text">
+                    <div class="plug-text-title">
+                        <a href="{:url('Notify/notify_tpl')}">站内信</a>
+                    </div>
+                    <div class="plug-text-versions">
+                        <span>系统内置</span>
+                    </div>
+                    <!-- <div class="plug-text-des">暂无描述</div> -->
+                </div>
+            </div>
+            <div class="plug-item-bottm">
+                <a href="{:url('Notify/notify_tpl')}">配置</a>
+            </div>
+        </div>
+        {/eq}
+    {/empty}
+</div>

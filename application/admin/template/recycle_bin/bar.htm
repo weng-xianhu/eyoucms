@@ -1,9 +1,14 @@
-
     <div class="fixed-bar">
         <div class="item-title">
-            <div class="subject">
-                <h3>回收站</h3>
-                <h5></h5>
-            </div>
+            <a class="back" href="{:url('Index/switch_map')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            <ul class="tab-base nc-row">
+                {eq name="'RecycleBin@archives_index'|is_check_access" value="1"}
+                    <li>
+                        <a href="{:url('RecycleBin/archives_index')}" {if condition="in_array($Think.const.CONTROLLER_NAME, ['RecycleBin'])"}class="current"{/if}>
+                            <span>回收站</span>
+                        </a>
+                    </li>
+                {/eq}
+            </ul>
         </div>
     </div>

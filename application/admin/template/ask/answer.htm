@@ -1,0 +1,298 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;">
+    {include file="ask/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>答案列表</h3>
+            </div>
+            <form class="navbar-form form-inline" action="{:url('Ask/answer')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" class="checkAll"></div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div style="text-align: left; padding-left: 10px;" class="">答案内容</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w180">
+                            <div class="tc">回答者</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w150">
+                            <div class="tc">回答时间</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">审核</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {volist name="list" id="vo"}
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc"><input type="checkbox" name="answer_ids[]" value="{$vo.answer_id}"></div>
+                            </td>
+                            <td class="sort">
+                                <div class="w40 tc">
+                                    {$vo.answer_id}
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div class="tl" style="padding-left: 10px;">
+                                    <a href="{$vo.HomeAnswerUrl}" target="_blank">
+                                        {$vo.content}
+                                    </a>
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w180 tc" style="padding: 5px 0px;text-align: left;">
+                                    <div style="float: left; margin: 0px 5px; padding: 0px;">
+                                        <img width="40" height="40" style="margin-right: 5px;float: unset;margin: auto;" src="{$vo['head_pic']|get_head_pic=###}" />
+                                    </div>
+                                    <div style="float: left; padding: 0px;">
+                                        <p style="margin-top: -5px;">
+                                        {$vo['username']|default=''}
+                                        </p>
+                                        <p style="margin-top: -10px; color: #cccccc; font-size: 12px;">昵称：{$vo['nickname']|default=$vo['username']}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w150 tc">
+                                    {$vo.add_time|MyDate='Y-m-d H:i:s',###}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w50 tc">
+                                    {eq name="$vo['is_review']" value='1'}
+                                        <span class="yes" onclick="changeTableVal('ask_answer','answer_id','{$vo.answer_id}','is_review',this);">
+                                            <i class="fa fa-check-circle"></i>是
+                                        </span>
+                                    {else /}
+                                        <span class="no" onclick="changeTableVal('ask_answer','answer_id','{$vo.answer_id}','is_review',this);">
+                                            <i class="fa fa-ban"></i>否
+                                        </span>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="operation">
+                                <div class="w120 tc">
+                                    <a href="{$vo.HomeUrl}" target="_blank" class="btn blue">查看问题</a>
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@answer_del'|is_check_access" value="1"}
+                                    <i></i>
+                                    <a class="btn red" href="javascript:void(0);" data-url="{:url('Ask/answer_del')}" onclick="FindDelData(this, '{$vo.answer_id}');">删除</a>
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" class="checkAll">
+                </div>
+                <div class="fbutton">
+                    <a onclick="BatchDelData(this, 'answer_ids');" data-url="{:url('Ask/answer_del')}" class="layui-btn layui-btn-primary">
+                            <span>批量删除</span>
+                    </a>
+                </div>
+                <div class="fbutton">
+                    <a onclick="BatchReview(this, 'answer_ids');" data-url="{:url('Ask/answer_review')}" class="layui-btn layui-btn-primary">
+                            <span>批量审核</span>
+                    </a>
+                </div>
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+    /**
+     * 批量删除提交
+     */
+    function BatchDelData(obj, name) {
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {icon: 5, title: false});
+            return;
+        }
+        // 删除按钮
+        layer.confirm('此操作不可恢复，确认批量删除？', {
+            btn: ['确定', '取消'],
+            title: false
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:a,_ajax:1},
+                dataType: 'json',
+                success: function (data) {
+                    layer.closeAll();
+                    if(parseInt(data.code) == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 5});
+                    }
+                },
+                error:function(){
+                    layer.closeAll();
+                    layer.alert(ey_unknown_error, {icon: 5});
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+
+    /**
+     * 批量审核提交
+     */
+    function BatchReview(obj, name) {
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {icon: 5, title: false});
+            return;
+        }
+        // 删除按钮
+        layer.confirm('确认批量审核？', {
+            btn: ['确定', '取消'],
+            title: false
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {ask_id:a,_ajax:1},
+                dataType: 'json',
+                success: function (data) {
+                    layer.closeAll();
+                    if(parseInt(data.code) == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 5});
+                    }
+                },
+                error:function(){
+                    layer.closeAll();
+                    layer.alert(ey_unknown_error, {icon: 5});
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+    /**
+     * 单个删除
+     */
+    function FindDelData(obj, del_id) {
+        layer.confirm('此操作不可恢复，确认删除？', {
+            btn  : ['确定', '取消'],
+            title: false
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                url: $(obj).data('url'),
+                type: 'post',
+                dataType: 'json',
+                data:{del_id:del_id,_ajax:1},
+                success: function(res){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {time: 1000},function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        layer.msg(res.msg, {time: 1500, icon: 5});
+                    }
+                },
+                error : function() {
+                    layer.closeAll();
+                    layer.alert(ey_unknown_error, {icon: 5});
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+</script>
+{include file="public/footer" /}
+

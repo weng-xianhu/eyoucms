@@ -103,6 +103,8 @@ class AuthRoleBehavior
                 }
             }
         } else {
+            $post = input('post.');
+            array_push($actArr, 'changetableval'); // 审核信息
             foreach ($actArr as $key => $cud) {
                 $act = preg_replace('/^(.*)_('.$cud.')$/i', '$2', $act); // 同名add 或者以_add类似结尾都符合
                 if ($act == $cud) {
@@ -110,7 +112,24 @@ class AuthRoleBehavior
                     $auth_role_info = !empty($admin_info['auth_role_info']) ? $admin_info['auth_role_info'] : [];
                     $cudArr = !empty($auth_role_info['cud']) ? $auth_role_info['cud'] : [];
                     if (!in_array($act, $cudArr)) {
-                        $this->error('您没有操作权限，请联系超级管理员分配权限');
+                        if ('changetableval' == $act) {
+                            // 审核信息
+                            if ('archives' == $post['table'] && 'arcrank' == $post['field']) {
+                                $this->error('您没有操作权限，请联系超级管理员分配权限', null, '', 2);
+                            }
+                        } else {
+                            $this->error('您没有操作权限，请联系超级管理员分配权限');
+                        }
+                    } else {
+                        if (!in_array('changetableval', $cudArr)) {
+                            // 审核信息
+                            if (IS_POST && 'edit' == $act) {
+                                $archivesInfo = M('archives')->field('arcrank,admin_id')->find($post['aid']);
+                                if (-1 == $archivesInfo['arcrank'] && $archivesInfo['arcrank'] != $post['arcrank']) {
+                                    $this->error('您没有操作权限，请联系超级管理员分配权限', url('Archives/edit', ['id'=>$post['aid']]), '', 3);
+                                }
+                            }
+                        }
                     }
                     break;
                 }

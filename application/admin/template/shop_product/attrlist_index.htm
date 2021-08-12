@@ -1,0 +1,392 @@
+{include file="public/layout" /}
+
+<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4; padding: 20px; ">
+    <div id="append_parent"></div>
+    <div id="ajaxwaitid"></div>
+    {empty name='$oldinlet'}
+        {include file="shop/left" /}
+    {/empty}
+    <div class="page" {empty name='$oldinlet'}style="min-width:auto;margin-left:98px;"{/empty}>
+    <div class="flexigrid">
+        <div class="mDiv">
+            
+            <form id="searchForm" class="navbar-form form-inline" action="{:url('ShopProduct/attrlist_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="ftitle">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="名称搜索...">
+                        <input type="hidden" name="oldinlet" value="{$oldinlet}">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                        </th>
+                        <th class="sign w10 none" axis="col0">
+                            <div class="tc"></div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w200">
+                            <div class="text-l10">参数名称</div>
+                        </th>
+                        <th abbr="article_title" axis="col3">
+                            <div class="tl text-l10">备注描述</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w120">
+                            <div class="tc">参数值数量</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">状态</div>
+                        </th>
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                       
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <form id="PostForm">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%;">
+                        <tbody>
+                        {empty name="list"}
+                            <tr>
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                </td>
+                            </tr>
+                        {else/}
+                            {volist name="list" id="vo" key="k"}
+                            <tr class="tr">
+                                <td class="sign">
+                                    <div class="tc w40"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.list_id}"></div>
+                                </td>
+                                <td class="sign none">
+                                    <div class="tc w10"><input type="hidden" name="list_id[]" value="{$vo.list_id}"></div>
+                                </td>
+
+                                <td>
+                                    <div class="w200 ml10">
+                                        <input type="text" name="list_name[]" value="{$vo.list_name}">
+                                    </div>
+                                </td>
+
+                                <td align="left" style="width: 100%">
+                                    <div class="tl" >
+                                        <input type="text" name="desc[]" value="{$vo.desc}" style="width: 95%">
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="w120 tc" style="white-space: nowrap;">
+                                        {$vo.attr_count}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="w100 tc">
+                                        {if condition="$vo['status'] eq 1"}
+                                            <span class="yes" onclick="ProductStatus('shop_product_attrlist', 'list_id', '{$vo.list_id}', 'status', this);">
+                                                <i class="fa fa-check-circle"></i>正常
+                                            </span>
+                                        {else /}
+                                            <span class="no" onclick="ProductStatus('shop_product_attrlist', 'list_id', '{$vo.list_id}', 'status', this);">
+                                                <i class="fa fa-ban"></i>停用
+                                            </span>
+                                        {/if}
+                                    </div>
+                                </td>
+
+                                <td class="operation">
+                                    <div class="w120 tc">
+                                        {eq name="$Think.const.CONTROLLER_NAME.'@attrlist_edit'|is_check_access" value="1"}
+                                             <a href="javascript:void(0);" data-url="{:url('ShopProduct/attrlist_edit',array('list_id'=>$vo['list_id']))}" class="btn blue" onclick="AttrBbuteEdit(this)">编辑</a>
+                                        {/eq}
+                                        {eq name="$Think.const.CONTROLLER_NAME.'@attrlist_del'|is_check_access" value="1"}
+                                            <i></i>
+                                            <a class="btn red"  href="javascript:void(0);" data-url="{:url('ShopProduct/attrlist_del')}" data-id="{$vo.list_id}" onclick="DelFind(this);">删除</a>
+                                        {/eq}
+                                    </div>
+                                </td>
+
+                                <td class="sort">
+                                    <div class="w60 tc">
+                                        {eq name="$Think.const.CONTROLLER_NAME.'@attrlist_edit'|is_check_access" value="1"}
+                                        <input style="text-align: left;" name="sort_order[]" type="text" onchange="changeTableVal('shop_product_attrlist','list_id','{$vo.list_id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                        {else /}
+                                            {$vo.sort_order}
+                                        {/eq}
+                                    </div>
+                                </td>
+                            </tr>
+                            {/volist}
+                        {/empty}
+                        </tbody>
+                    </table>
+                    <div id='Template'></div>
+                </div>
+            </form>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+
+                {eq name="$Think.const.CONTROLLER_NAME.'@attrlist_del'|is_check_access" value="1"}
+                    <div class="fbutton">
+                        <a onclick="DelBatch(this, 'ids');" data-url="{:url('ShopProduct/attrlist_del')}" class="layui-btn layui-btn-primary">
+                            <span>批量删除</span>
+                        </a>
+                    </div>
+                {/eq}
+
+                {eq name="$Think.const.CONTROLLER_NAME.'@attrlist_add'|is_check_access" value="1"}
+                    <div class="fbutton">
+                        <a href="javascript:void(0);" onclick="AttrBbuteAdd(this);" data-url="{:url('ShopProduct/attrlist_add')}" class="layui-btn layui-btn-primary">
+                            <span class="red">新增参数</span>
+                        </a>
+                    </div>
+
+                    <div class="fbutton">
+                        <a href="javascript:void(0);" data-url="{:url('ShopProduct/attrlist_save', ['oldinlet'=>$oldinlet, '_ajax'=>1])}" onclick="AddAttrListData(this);" class="layui-btn layui-btn-primary">
+                            <span class="">保存</span>
+                        </a>
+                    </div>
+                {/eq}
+                <a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=10108','attribute 商品参数列表标签调用')" style="font-size: 12px;padding-left: 10px;position:absolute;top: 18px">标签教程？</a>
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+        $('#searchForm select[name=typeid]').change(function(){
+            $('#searchForm').submit();
+        });
+    });
+
+    // 提交
+    function AddAttrListData(obj){
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : $(obj).attr('data-url'),
+            data : $('#PostForm').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {icon: 1, time:1000},function(){
+                        window.location.reload();
+                    });
+                }else{
+                    showErrorAlert(res.msg);
+                }
+            }
+        })
+    }
+
+    // 生成html
+    function AddAttrList(){
+        // tr数,取唯一标识
+        var SerialNum = $('.tr').length;
+        var AddHtml = [];
+
+        AddHtml += 
+        [
+            '<tr class="tr" id="tr_'+SerialNum+'">'+
+                '<td class="sign">'+
+                    '<div class="tc w40"></div>'+
+                '</td>'+
+
+                '<td class="sign none">'+
+                    '<div class="tc w10"><input type="hidden" name="list_id[]"></div>'+
+                '</td>'+
+
+                '<td>'+
+                    '<div class="w200">'+
+                        '<input type="text" name="list_name[]">'+
+                    '</div>'+
+                '</td>'+
+
+                '<td align="left" style="width: 100%">'+
+                    '<div class="tl">'+
+                        '<input type="text" name="desc[]" style="width: 95%">'+
+                    '</div>'+
+                '</td>'+
+
+                '<td>'+
+                    '<div class="w120 tc" style="white-space: nowrap;">0</div>'+
+                '</td>'+
+
+                '<td>'+
+                    '<div class="w120 tc" style="white-space: nowrap;"><span class="putaway">正常</span></div>'+
+                '</td>'+
+
+                '<td class="operation">'+
+                    '<div class="w180 tc">'+
+                        '<a class="btn" title="添加参数名称保存后可编辑">参数值管理</a>'+
+                        '<i></i>'+
+                        '<a class="btn red" href="javascript:void(0);" data-id="tr_'+SerialNum+'" onclick="DelHtml(this)">删除</a>'+
+                    '</div>'+
+                '</td>'+
+
+                '<td class="sort">'+
+                    '<div class="w60 tc">'+
+                        '<input type="text" name="sort_order[]" value="100">'+
+                    '</div>'+
+                '</td>'+
+            '</tr>'
+        ];
+        $('.no-data').hide();
+        $('#Template').append(AddHtml);
+    }
+
+    // 删除未保存的级别
+    function DelHtml(obj){
+        $('#'+$(obj).attr('data-id')).remove();
+    }
+
+    // 删除
+    function DelFind(obj){
+        layer.confirm('此操作不可恢复，确认彻底删除？', {
+            title: false,
+            closeBtn: 0,
+            btn: ['确定','取消']
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id'), _ajax:1},
+                dataType : 'json',
+                success : function(res){
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 1, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }
+
+    /**
+     * 批量删除提交
+     */
+    function DelBatch(obj, name) {
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            showErrorAlert('请至少选择一项');
+            return;
+        }
+        // 删除按钮
+        layer.confirm('此操作不可恢复，确认批量彻底删除？', {
+            title: false,
+            closeBtn: 0,
+            btn: ['确定', '取消']
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:a, _ajax:1},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 1, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+    // 添加参数值
+    function AttrBbuteAdd(obj) {
+        var url = $(obj).data('url');
+        layer.open({
+            type: 2,
+            title: '新增参数',
+            area: ['80%', '90%'],
+            content: url
+        });
+    }
+    // 添加参数值
+    function AttrBbuteEdit(obj) {
+        var url = $(obj).data('url');
+        console.log(url)
+        layer.open({
+            type: 2,
+            title: '编辑参数',
+            area: ['80%', '90%'],
+            content: url
+        });
+    }
+</script>
+
+{include file="public/footer" /}

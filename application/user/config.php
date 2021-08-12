@@ -31,9 +31,9 @@ $user_config = array(
     // +----------------------------------------------------------------------
 
     // 异常页面的模板文件 
-    //'exception_tmpl'         => ROOT_PATH.'public/static/errpage/404.html',
+    //'exception_tmpl'         => ROOT_PATH.'public/errpage/404.html',
     // errorpage 错误页面
-    //'error_tmpl'         => ROOT_PATH.'public/static/errpage/404.html',
+    //'error_tmpl'         => ROOT_PATH.'public/errpage/404.html',
     
     /**假设这个访问地址是 www.xxxxx.dev/index/goods/goodsInfo/id/1.html 
      *就保存名字为 index_goods_goodsinfo_1.html     
@@ -47,13 +47,19 @@ $user_config = array(
         'Users@logout', // 退出
         'Users@reg', // 注册
         'Users@vertify', // 验证码
-        'Users@retrieve_password', // 忘记密码
-        'Users@reset_password', // 忘记密码
+        'Users@retrieve_password', // 忘记密码 -- 邮箱
+        'Users@reset_password', // 忘记密码 -- 邮箱
+        'Users@retrieve_password_mobile', // 忘记密码 -- 手机
+        'Users@reset_password_mobile', // 忘记密码 --手机
         'Users@get_wechat_info', // 微信登陆
         'Users@users_select_login', // 选择登陆方式
         'Users@ajax_wechat_login', // 授权微信登陆
         'Users@pc_wechat_login',   // PC端微信扫码登陆
         'Pay@alipay_return',   // 支付宝异步通知
+        'Pay@pay_deal_with',   // 微信异步通知
+        'Pay@get_openid',   // 小程序调用
+        'Pay@ajax_applets_pay', // 小程序支付
+        'Pay@wechat_pay', // 支付预处理
         'Smtpmail@*', // 邮箱发送
         'LoginApi@*', // 第三方登录
     ),

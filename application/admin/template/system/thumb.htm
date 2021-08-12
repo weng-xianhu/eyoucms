@@ -1,5 +1,5 @@
 {include file="public/layout" /}
-<body style="background-color: #FFF; overflow-y: scroll;min-width:auto;">
+<body class="bodystyle" style="overflow-y: scroll;min-width:auto;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <style>
     .span_1 {
@@ -36,32 +36,13 @@
 <link href="__PUBLIC__/plugins/colpick/css/colpick.css" rel="stylesheet" type="text/css"/>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width:auto;">
-    {include file="system/bar" /}
+<div class="page" style="min-width: auto;box-shadow:none;">
     <div class="flexigrid">
-        {if condition="-1 != $Request.param.tabase"}
-        <div class="mDiv">
-            <div class="ftitle">
-                <h3>缩略图配置</h3>
-            </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
-            <div class="sDiv">
-                <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
-                    <input type="button" class="btn" value="缩略图配置" onclick="window.location.href='{:url("System/thumb", ['tabase'=>$Request.param.tabase])}';">
-                </div>
-            </div>
-            <div class="sDiv">
-                <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
-                    <input type="button" class="btn current" value="水印配置" onclick="window.location.href='{:url("System/water", ['tabase'=>$Request.param.tabase])}';">
-                </div>
-            </div>
-        </div>
-        {/if}
         <form class="form-horizontal" method="post" id="handlepost" action="{:url('System/thumb')}">
             <div class="ncap-form-default">
                 <dl class="row">
                     <dt class="tit">缩略图功能</dt>
-                    <dd class="opt">
+                    <dd class="opt" style="width: auto;">
                         <div class="onoff">
                             <label for="thumb_open1" class="cb-enable {if condition='isset($config.thumb_open) && $config.thumb_open eq 1'}selected{/if}" >开启</label>
                             <label for="thumb_open0" class="cb-disable {if condition='!isset($config.thumb_open) || $config.thumb_open eq 0'}selected{/if}" >关闭</label>
@@ -75,7 +56,7 @@
                     <dt class="tit">
                         <label>生成方式</label>
                     </dt>
-                    <dd class="opt">
+                    <dd class="opt" style="width: auto;">
                         <label><input type="radio" name="thumb_mode" value="1" {if condition="isset($config.thumb_mode) AND $config.thumb_mode eq 1"}checked="checked"{/if}>拉伸</label>&nbsp;
                         <br/>
                         <label><input type="radio" name="thumb_mode" value="2" {if condition="!isset($config.thumb_mode) OR $config.thumb_mode eq 2"}checked="checked"{/if}>留白</label>&nbsp;
@@ -89,7 +70,7 @@
                     <dt class="tit">
                         <label for="thumb_color">填充颜色</label>
                     </dt>
-                    <dd class="opt">
+                    <dd class="opt" style="width: auto;">
                         <input type="text" name="thumb_color" value="{$config.thumb_color|default='#FFFFFF'}" id="thumb_color" style="border-color: {$config.thumb_color|default='#FFFFFF'};" />
                         <p class="notic"></p>
                     </dd>
@@ -98,7 +79,7 @@
                     <dt class="tit">
                         <label for="title">缩略图大小</label>
                     </dt>
-                    <dd class="opt">
+                    <dd class="opt" style="width: auto;">
                         <input name="thumb_width" id="thumb_width" value="{$config.thumb_width}" type="text" style="width: 50px;" /> X <input name="thumb_height" id="thumb_height" value="{$config.thumb_height}" type="text" style="width: 50px;" /> (宽 X 高) (像素)
                         <p class="notic"></p>
                     </dd>
@@ -139,9 +120,31 @@
         });
     });
 
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     function adsubmit(){
         layer_loading('正在处理');
-        $('#handlepost').submit();
+        $.ajax({
+            type : 'post',
+            url : "{:url('System/thumb', ['_ajax'=>1])}",
+            data : $('#handlepost').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        // _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
     }
 
     function setthumb(obj){
@@ -178,7 +181,7 @@
         $.ajax({
             type: "POST",
             url: "{:url('System/ajax_tag_call')}",
-            data: {name:name},
+            data: {name:name,_ajax:1},
             dataType: 'json',
             success: function (res) {
                 if(res.code == 1){
@@ -197,7 +200,7 @@
                 }
             },
             error:function(){
-                layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+                layer.alert(ey_unknown_error, {icon: 2, title:false});
             }
         });
     }

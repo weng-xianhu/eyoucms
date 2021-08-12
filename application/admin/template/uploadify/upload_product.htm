@@ -107,12 +107,13 @@ $(function(){
             "fileVal":"file",
             "auto":true,
             "formData":{},
+            "duplicate": true, // 允许上传重复文件
             "pick":{"id":"#filePicker","label":"点击选择图片","name":"file"},
             "thumb":{"width":110,"height":110,"quality":70,"allowMagnify":true,"crop":true,"preserveHeaders":false,"type":"image\/jpeg"},
             "compress": {
-                "width": 3800,
-                "height": 3800,
-                "quality": 90,
+                "width": 380000,
+                "height": 380000,
+                "quality": 100,
                 "allowMagnify": false,
                 "crop": false,
                 "preserveHeaders": true
@@ -164,7 +165,7 @@ $(function(){
     {
         $.ajax({
             type: "POST",
-            url: "{:url('Product/ajax_save_productimg')}",
+            url: "{:url('Product/ajax_save_productimg', ['_ajax'=>1])}",
             data: {proimg:a, aid:aid},
             dataType: 'json',
             success: function (data) {
@@ -172,11 +173,11 @@ $(function(){
                     window.parent.layer.closeAll();
                     window.parent.location.reload();
                 }else{
-                    layer.alert(data.msg, {icon: 2,time: 3000, title:false});
+                    layer.alert(data.msg, {icon: 5,time: 3000, title:false});
                 }
             },
             error: function(e){
-                layer.alert('网络故障', {icon: 2,time: 3000, title:false});
+                layer.alert(e.responseText, {icon: 5,time: 3000, title:false});
             }
         });
     }

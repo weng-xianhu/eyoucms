@@ -42,7 +42,12 @@ class Other extends Base
             ->limit($row)
             ->cache(true,EYOUCMS_CACHE_TIME, 'ad')
             ->select();
-        $this->assign('ad',$ad);
+        foreach ($ad as &$value) {
+            $value['intro'] = htmlspecialchars_decode($value['intro']);
+            $value['intro'] = str_replace("\r\n", "", $value['intro']);
+            $value['intro'] = str_replace("'", "\'", $value['intro']);
+        }
+        $this->assign('ad', $ad);
         return $this->fetch();
     }
 }

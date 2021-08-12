@@ -1,0 +1,198 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="shop/left" /}
+<div class="page" style="min-width:auto;margin-left:98px;">
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>财务明细记录</h3>
+                <h5>(共{$pager->totalRows}条数据)</h5> 
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" action="{:url('Member/money_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2 fl" style="margin-right: 6px;">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索订单号...">
+                        <input type="submit" class="btn" value="搜索">
+                    </div>
+                    <!-- <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
+                        <input type="button" class="btn current" value="接口配置" onclick="window.location.href='{:url("Member/pay_set")}';">
+                    </div>
+                    <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
+                        <input type="button" class="btn selected" value="账户充值记录" onclick="window.location.href='{:url("Member/money_index")}';">
+                    </div> -->
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w10" axis="col0">
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">订单号</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w100">
+                            <div class="tc">充值金额</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w150">
+                            <div class="tc">用户名</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w150">
+                            <div class="tc">充值时间</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w100">
+                            <div class="tc">支付方式</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w100">
+                            <div class="tc">状态</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="w10 tc">
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                    {$vo.order_number}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w100 tc">
+                                    ￥{$vo.money}
+                                </div>
+                            </td>
+                            <td class="sort">
+                                <div class="w150 tc">
+                                    <a href="{:url('Member/users_edit', ['id'=>$vo.users_id,'from'=>'money_index'])}">{$vo.username}</a>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w150 tc">
+                                    {$vo.add_time|date='Y-m-d H:i:s',###}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="tc w100">
+                                {notempty name="$pay_method_arr[$vo['pay_method']]"}
+                                    {$pay_method_arr[$vo['pay_method']]}
+                                {else /}
+                                    ————
+                                {/notempty}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="tc w100">
+                                {$pay_status_arr[$vo['status']]}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="tc w120">
+                                    {if condition='$vo.status == 1'}
+                                    <a class="btn blue"  href="javascript:void(0);" data-url="{:url('Member/money_mark_order')}" data-moneyid="{$vo.moneyid}" data-title="手工充值" data-status="{$vo.status}" data-username="{$vo.username}" data-money="{$vo.money}" onClick="handle(this);"><i class="fa fa-trash-o"></i>充值</a>
+                                    {elseif condition='$vo.status == 3' /}
+                                    <a class="btn blue"  href="javascript:void(0);" data-url="{:url('Member/money_mark_order')}" data-moneyid="{$vo.moneyid}" data-title="撤销充值" data-status="{$vo.status}" data-username="{$vo.username}" data-money="{$vo.money}" onClick="handle(this);"><i class="fa fa-trash-o"></i>撤销</a>
+                                    {else /}
+                                    &nbsp;&nbsp;——&nbsp;&nbsp;
+                                    {/if}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@money_del'|is_check_access" value="1"}
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Member/money_del')}" data-id="{$vo.moneyid}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <!--分页位置-->
+        {$page} </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    // 订单处理
+    function handle(obj){
+        var msg = '';
+        var status = $(obj).attr('data-status');
+        var username = $(obj).attr('data-username');
+        var money = $(obj).attr('data-money');
+        if (1 == status) {
+            msg = "将为【<font color='red'>"+username+"</font>】账户充值<font color='red'>￥"+money+"元</font>，确认执行？";
+        } else if (3 == status) {
+            msg = "将扣除【<font color='red'>"+username+"</font>】账户余额<font color='red'>￥"+money+"元</font>，确认执行？";
+        }
+
+        layer.confirm(msg, {
+            title: false,//$(obj).data('title'),
+            btn: ['确定','取消'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {moneyid:$(obj).attr('data-moneyid'), _ajax:1},
+                dataType : 'json',
+                success : function(res){
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 1, time:1000}, function(){
+                            window.location.reload();
+                        });
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                },
+                error:function(){
+                    layer.closeAll();
+                    layer.alert(ey_unknown_error, {icon: 2, title:false});
+                }
+            })
+        }, function(index){
+            layer.closeAll();
+        });
+        return false;
+    }
+</script>
+
+{include file="public/footer" /}

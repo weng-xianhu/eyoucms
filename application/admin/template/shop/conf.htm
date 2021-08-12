@@ -1,28 +1,47 @@
 {include file="public/layout" /}
 
-<body style="background-color: #FFF; overflow-y: scroll;">
+<body class="bodystyle" style="overflow-y: scroll;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-    {include file="member/bar" /}
+{include file="shop/left" /}
+<div class="page" style="min-width:auto; margin-left:98px;">
     <div class="flexigrid">
-        <div class="mDiv">
-            <div class="ftitle">
-                <h3>功能配置</h3>
-            </div>
-            <div class="sDiv">
-                {include file="shop/shop_bar" /}
-            </div>
-        </div>
         <form class="form-horizontal" id="post_form" action="{:url('Shop/conf')}" method="post">
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">基本设置</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
             <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">标签调用</dt>
+                    <dd class="opt">
+                        <a href="javascript:void(0);" onclick="tag_call('shop_open');" class="ncap-btn ncap-btn-green">查看标签</a>
+                        <p class="notic">请确保商城模板已经调用购买行为的标签，里面包含规格、数量、价格等！</p>
+                    </dd>
+                </dl>
+
                 <dl class="row">
                     <dt class="tit">
                         <label for="uname">商家提示</label>
                     </dt>
                     <dd class="opt">
-                        <textarea name="shop[shop_prompt]" style="width: 30%; height: 60px;">{$userConfig.shop_prompt}</textarea>
+                        <textarea name="shop[shop_prompt]" placeholder="此处文字将显示在会员下单确认页面上" style="width: 30%; height: 60px;">{$userConfig.shop_prompt}</textarea>
                     </dd>
                 </dl>
 
@@ -75,8 +94,121 @@
                         </label>
                     </dd>
                 </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="username">商品规格</label>
+                    </dt>
+                    <dd class="opt" style="line-height: 30px;">
+                        <input type="hidden" id="TestPass" name="TestPass" value="{$TestPass}">
+                        <label><input type="radio" onclick="tag_call('shop_open', '{$TestPass}');" name="shop[shop_open_spec]" value="1" {if condition="$userConfig.shop_open_spec == 1"}checked="checked"{/if}/>开启</label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label><input type="radio" name="shop[shop_open_spec]" value="0" {if condition="!isset($userConfig.shop_open_spec) || empty($userConfig.shop_open_spec)"}checked="checked"{/if}/>关闭</label>
+                        <!--&nbsp;
+                        <span id="a_shop_open_spec" {if condition="!isset($userConfig.shop_open_spec) || empty($userConfig.shop_open_spec)"}style="display:none;"{/if}>
+                            <a href="javascript:void(0);" id='shop_open' onclick="tag_call('shop_open');" class="ncap-btn ncap-btn-green">标签调用</a>
+                        </span>-->
+                    </dd>
+                </dl>
+
+                <dl class="row none">
+                    <dt class="tit">订单提醒</dt>
+                    <dd class="opt">
+                        <ul class="nc-row ncap-waybill-list">
+                            <li style="width: 100%;">
+                                <label class="label" onmouseover="layer_tips = layer.tips('对管理员发送邮件提醒', this, {time:100000});" onmouseout="layer.close(layer_tips);">
+                                    <input class="check" type="checkbox" name="smtp_shop_order_pay" {if condition="!empty($smtp.smtp_shop_order_pay)"} value="1" checked="checked" {/if} onclick="OpenSmtp(this);"><span>管理员邮箱</span>
+                                </label>
+                            </li>
+                        </ul>
+                    </dd>
+                </dl>
+
+                <dl class="row none">
+                    <dt class="tit">发货提醒</dt>
+                    <dd class="opt">
+                        <ul class="nc-row ncap-waybill-list">
+                            <li style="width: 100%;">
+                                <label class="label" onmouseover="layer_tips = layer.tips('对用户发送邮件提醒', this, {time:100000});" onmouseout="layer.close(layer_tips);">
+                                    <input class="check" type="checkbox" name="smtp_shop_order_send" {if condition="!empty($smtp.smtp_shop_order_send)"} value="1" checked="checked" {/if} onclick="OpenSmtp(this);"><span>用户邮箱</span>
+                                </label>
+                            </li>
+                        </ul>
+                    </dd>
+                </dl>
+
+                <script type="text/javascript">
+                    function OpenSmtp(obj) {
+                        if (true == $(obj).is(':checked')) {
+                            $.ajax({
+                                type: "post",
+                                url : "{:url('Shop/FindSmptConfig', ['_ajax'=>1])}",
+                                data: {field:$(obj).attr('name')},
+                                dataType: 'json',
+                                success: function (res) {
+                                    layer.closeAll();
+                                    if(res.code == 0) {
+                                        $(obj).removeAttr("checked");
+                                        layer.alert(res.msg, {title:false, closeBtn:0, btn:['确认', '取消']}, function(){
+                                            window.location.href = res.url;
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    }
+                </script>
             </div>
 
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">商家收货信息</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="addr_contact_person">联系人</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" id="addr_contact_person" style="width: 30%;" name="addr[addr_contact_person]" value='{if condition="!isset($userConfig.addr_contact_person) || empty($userConfig.addr_contact_person)"}商家客服{else/}{$userConfig.addr_contact_person}{/if}'/>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="addr_contact_phone">联系号码</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" id="addr_contact_phone" style="width: 30%;" maxlength="11" name="addr[addr_contact_phone]" value='{if condition="!isset($userConfig.addr_contact_phone) || empty($userConfig.addr_contact_phone)"}18388888888{else/}{$userConfig.addr_contact_phone}{/if}'/>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="addr_shipping_addr">收货地址</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" id="addr_shipping_addr" style="width: 30%;" name="addr[addr_shipping_addr]" value='{if condition="!isset($userConfig.addr_shipping_addr) || empty($userConfig.addr_shipping_addr)"}北京市 西城区 西长安街街道{else/}{$userConfig.addr_shipping_addr}{/if}'/>
+                    </dd>
+                </dl>
+            </div>
+            
             <div class="ncap-form-default">
                 <dl class="row">
                     <div class="bot">
@@ -90,13 +222,12 @@
 <script type="text/javascript">
 
     $(function(){
-
         // 点击刷新数据
         $('.fa-refresh').click(function(){
             location.href = location.href;
         });
 
-        $('input[name="shop[shop_open_shipping]"]').click(function(){
+        $('input[name="shop[shop_open_shipping]"]').click(function() {
             var shop_open_shipping = $(this).val();
             if (1 == shop_open_shipping) {
                 $('#a_shop_open_shipping').show();
@@ -104,9 +235,13 @@
                 $('#a_shop_open_shipping').hide();
             }
         });
+
+        var ForceUse = $('#shop_force_use_wechat').val();
+        if (1 == ForceUse) $('#shop_micro0').attr("disabled", "disabled");
     });
 
-    function SetShipping(){
+    // 设置运费模板
+    function SetShipping() {
         var url = "{:url('Shop/shipping_template')}";
         //iframe窗
         layer.open({
@@ -119,8 +254,77 @@
         });
     }
 
+    // 标签调用
+    function tag_call(name, TestPass) {
+        if (1 == TestPass) return false
+        $.ajax({
+            type: "POST",
+            url: "{:url('System/ajax_tag_call', ['_ajax'=>1])}",
+            data: {name:name},
+            dataType: 'json',
+            success: function (res) {
+                if(res.code == 1){
+                    //询问框
+                    var layer_str = '<style type="text/css">.layui-layer-content{text-align:left!important;}</style>'+res.data.msg;
+                    var confirm = layer.confirm(layer_str, {
+                            title: false,
+                            area: ['80%','80%'],
+                            btn: ['已完成，验证下','下次再操作'],
+                            cancel: function(){
+                                window.location.href = "{:url('Shop/conf',['close'=>1])}";
+                            }
+                        }, function (){
+                            VerifyLatestTemplate(name);
+
+                        }, function(){
+                            window.location.href = "{:url('Shop/conf',['close'=>1])}";
+                        }
+                    );  
+                }else{
+                    layer.alert(res.msg, {icon: 2, title:false});
+                }
+            },
+            error:function(){
+                layer.alert(ey_unknown_error, {icon: 2, title:false});
+            }
+        });
+    }
+
+    // 检测文件是否最新版
+    function VerifyLatestTemplate(name, is_close) {
+        layer_loading('正在处理');
+        $.ajax({
+            type: "POST",
+            url: "{:url('Shop/VerifyLatestTemplate', ['_ajax'=>1])}",
+            data: {name:name, is_close:is_close},
+            dataType: 'json',
+            success: function (res) {
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {icon: 1, time:1500}, function(){
+                        window.location.href = "{:url('Shop/conf')}";
+                    });
+                }else{
+                    layer.alert(res.msg, {
+                        icon: 2, 
+                        title: false,
+                        cancel: function(){ 
+                            window.location.href = "{:url('Shop/conf')}";
+                        }
+                    }, function(){
+                        window.location.href = "{:url('Shop/conf')}";
+                    });
+                }
+            },
+            error:function(){
+                layer.closeAll();
+                layer.alert(ey_unknown_error, {icon: 2, title:false});
+            }
+        });
+    }
+
     // 判断输入框是否为空
-    function ShopConfig(){
+    function ShopConfig() {
         layer_loading('正在处理');
         $('#post_form').submit();
     }

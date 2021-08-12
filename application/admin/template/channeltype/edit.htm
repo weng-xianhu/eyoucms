@@ -1,24 +1,10 @@
 {include file="public/layout" /}
-<body style="background-color: #FFF; overflow: auto;">
-<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<body class="bodystyle">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div> 
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
-    <div class="fixed-bar">
-        <div class="item-title">
-            <a class="back" href="{:url('Channeltype/index')}" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
-            <div class="subject">
-                <h3>模型管理</h3>
-                <h5></h5>
-            </div>
-            <ul class="tab-base nc-row">
-                <li><a href="{:url('Channeltype/index')}" class="tab {eq name='$Request.controller' value='Channeltype'}current{/eq}"><span>编辑模型</span></a></li>
-                {notin name="$field.nid" value="guestbook"}
-                <li><a href="{:url('Field/channel_index', array('channel_id'=>$field.id))}" class="tab {eq name='$Request.controller' value='Field'}current{/eq}"><span>内容字段</span></a></li>
-                {/notin}
-            </ul>
-        </div>
-    </div>
+    
     <form class="form-horizontal" id="post_form" action="{:url('Channeltype/edit')}" method="post">
         <div class="ncap-form-default">
             <dl class="row">
@@ -43,9 +29,17 @@
                     {$field.nid}
                     <input type="hidden" name="nid" value="{$field.nid|default=''}">
                     <span class="err"></span>
-                    <p class="">与文档的模板相关连，建议由小写字母、数字组成，因为部份Unix系统无法识别中文文件。<br/>列表模板是：lists_模型标识.htm<br/>文档模板是：view_模型标识.htm</p>
+                    <p class="">
+                        与文档的模板相关连，建议由小写字母、数字组成，因为部份Unix系统无法识别中文文件。
+                        <br/>列表模板是：lists_模型标识.htm
+                        {notin name="$field.nid" value="single,guestbook"}
+                        <br/>文档模板是：view_模型标识.htm
+                        {/notin}
+                    </p>
                 </dd>
             </dl>
+
+            {notin name="$field.nid" value="single,guestbook"}
             <dl class="row">
                 <dt class="tit">
                     <label>文档标题重复</label>
@@ -60,6 +54,185 @@
                     <p class="notic">新增/编辑文档时，是否允许标题的重复</p>
                 </dd>
             </dl>
+            {/notin}
+
+            {in name="$field.nid" value="guestbook"}
+            <dl class="row">
+                <dt class="tit">
+                    <label for="channel_guestbook_interval">留言间隔时间</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="channel_guestbook_interval" value="{$channel_guestbook_interval}" id="channel_guestbook_interval" style="width: 60px;">&nbsp;秒
+                    <span class="err"></span>
+                    <p class="notic">同一个IP在指定间隔秒数之内不能提交留言！</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>留言邮箱提醒</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="smtp_is_open1" class="cb-enable {if condition='isset($smtpTplRow.is_open) && $smtpTplRow.is_open eq 1'}selected{/if}">开启</label>
+                        <label for="smtp_is_open0" class="cb-disable {if condition='empty($smtpTplRow.is_open)'}selected{/if}">关闭</label>
+                        <input id="smtp_is_open1" name="smtp_is_open" value="1" type="radio" {if condition="isset($smtpTplRow.is_open) && $smtpTplRow.is_open eq 1"} checked="checked"{/if}>
+                        <input id="smtp_is_open0" name="smtp_is_open" value="0" type="radio" {if condition="empty($smtpTplRow.is_open)"} checked="checked"{/if}>
+                    </div>
+                    <p class="notic">客户端提交留言后，管理员会第一时间收到邮箱提醒！</p>
+                    <p id="txt_smtp_is_open" class="none">提交保存后，请检查【<a href="javascript:void(0);" onclick="smtp_config();">邮件配置</a>】是否正常发送与接收！</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="channel_guestbook_time">留言跳转时间</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="channel_guestbook_time" value="{$channel_guestbook_time|default=5}" id="channel_guestbook_time" autocomplete="off" style="width: 60px;" onkeyup="this.value=this.value.replace(/[^\d]/g,'-');" onpaste="this.value=this.value.replace(/[^\d]/g,'-');">&nbsp;秒
+                    <span class="err"></span>
+                    <p class="notic">官方默认5秒，不建议设置太少，可能会导致邮箱没来得及发送。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="channel_guestbook_gourl">留言跳转URL</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="channel_guestbook_gourl" value="{$channel_guestbook_gourl}" id="channel_guestbook_gourl" placeholder="http://" autocomplete="off" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic">前台提交留言完成后，统一跳转到指定的URL。如果不填写，默认跳转到当前页面URL。</p>
+                </dd>
+            </dl>
+            <script type="text/javascript">
+                $(function(){
+                    $('input[name="smtp_is_open"]').click(function(){
+                        if (1 == $(this).val()) {
+                            $('#txt_smtp_is_open').show();
+                        } else {
+                            $('#txt_smtp_is_open').hide();
+                        }
+                    });
+                });
+
+                function smtp_config()
+                {
+                    parent.$('#Index_switch_map', parent.window.parent.document).removeClass('on');
+                    parent.$('#System_web', parent.window.parent.document).addClass('on');
+                    parent.$('#workspace', parent.window.parent.document).attr('src', "{:url('System/smtp', ['goback'=>'off'])}");
+                    //iframe窗
+                    // var iframes = layer.open({
+                    //     type: 2,
+                    //     title: '邮件配置',
+                    //     fixed: true, //不固定
+                    //     shadeClose: false,
+                    //     shade: 0.3,
+                    //     content: "{:url('System/smtp', ['iframes'=>1])}"
+                    // });
+                    // layer.full(iframes);
+                }
+            </script>
+            {/in}
+
+            {in name="$field.nid" value="article,images,download"}
+                {eq name='$IsOpenRelease' value='1'}
+                    <!--<dl class="row">-->
+                        <!--<dt class="tit">-->
+                            <!--<label>开启会员投稿</label>-->
+                        <!--</dt>-->
+                        <!--<dd class="opt">-->
+                            <!--<div class="onoff">-->
+                                <!--<label for="is_release1" class="cb-enable {if condition='!isset($field.is_release) || $field.is_release eq 1'}selected{/if}">是</label>-->
+                                <!--<label for="is_release0" class="cb-disable {if condition='isset($field.is_release) && $field.is_release eq 0'}selected{/if}">否</label>-->
+                                <!--<input id="is_release1" name="is_release" value="1" type="radio" {if condition="!isset($field.is_release) || $field.is_release eq 1"} checked="checked"{/if}>-->
+                                <!--<input id="is_release0" name="is_release" value="0" type="radio" {if condition="isset($field.is_release) && $field.is_release eq 0"} checked="checked"{/if}>-->
+                            <!--</div>-->
+                            <!--<p class="notic">开启则在会员投稿中有发布入口</p>-->
+                        <!--</dd>-->
+                    <!--</dl>-->
+                    <dl class="row">
+                        <dt class="tit">
+                            <label>开启投稿缩略图</label>
+                        </dt>
+                        <dd class="opt">
+                            <div class="onoff">
+                                <label for="is_litpic_users_release1" class="cb-enable {if condition='!isset($field.is_litpic_users_release) || $field.is_litpic_users_release eq 1'}selected{/if}">是</label>
+                                <label for="is_litpic_users_release0" class="cb-disable {if condition='isset($field.is_litpic_users_release) && $field.is_litpic_users_release eq 0'}selected{/if}">否</label>
+                                <input id="is_litpic_users_release1" name="is_litpic_users_release" value="1" type="radio" {if condition="!isset($field.is_litpic_users_release) || $field.is_litpic_users_release eq 1"} checked="checked"{/if}>
+                                <input id="is_litpic_users_release0" name="is_litpic_users_release" value="0" type="radio" {if condition="isset($field.is_litpic_users_release) && $field.is_litpic_users_release eq 0"} checked="checked"{/if}>
+                            </div>
+                            <p class="notic">会员投稿时，是否允许填写缩略图选项</p>
+                        </dd>
+                    </dl>
+                {/eq}
+            {/in}
+
+            {eq name="$field.nid" value="article"}
+                <dl class="row">
+                    <dt class="tit">
+                        <label>开启文章付费</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="onoff">
+                            <label for="is_article_pay1" class="cb-enable {if condition='isset($field.data.is_article_pay) && $field.data.is_article_pay eq 1'}selected{/if}">是</label>
+                            <label for="is_article_pay0" class="cb-disable {if condition='!isset($field.data.is_article_pay) || $field.data.is_article_pay eq 0'}selected{/if}">否</label>
+                            <input id="is_article_pay1" name="data[is_article_pay]" value="1" type="radio" {if condition="isset($field.data.is_article_pay) && $field.data.is_article_pay eq 1"} checked="checked"{/if}>
+                            <input id="is_article_pay0" name="data[is_article_pay]" value="0" type="radio" {if condition="!isset($field.data.is_article_pay) || $field.data.is_article_pay eq 0"} checked="checked"{/if}>
+                        </div>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+            {/eq}
+
+            {in name="$field.nid" value="media,download"}
+                {eq name='$weappRow.Qiniuyun' value='1'}
+                <dl class="row">
+                    <dt class="tit">
+                        <label>七牛云存储</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="onoff">
+                            <label for="qiniuyun_open1" class="cb-enable {if condition='isset($field.data.qiniuyun_open) && $field.data.qiniuyun_open eq 1'}selected{/if}">开启</label>
+                            <label for="qiniuyun_open0" class="cb-disable {if condition='empty($field.data.qiniuyun_open)'}selected{/if}">关闭</label>
+                            <input id="qiniuyun_open1" name="data[qiniuyun_open]" value="1" type="radio" {if condition="isset($field.data.qiniuyun_open) && $field.data.qiniuyun_open eq 1"} checked="checked"{/if} onclick="qiniuyun_open(this);">
+                            <input id="qiniuyun_open0" name="data[qiniuyun_open]" value="0" type="radio" {if condition="empty($field.data.qiniuyun_open)"} checked="checked"{/if} onclick="qiniuyun_open(this);">
+                        </div>
+                        <p class="notic">开启前，请先安装插件【七牛云图片加速】</p>
+                    </dd>
+                </dl>
+                {/eq}
+                {eq name='$weappRow.AliyunOss' value='1'}
+                <dl class="row">
+                    <dt class="tit">
+                        <label>oss存储</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="onoff">
+                            <label for="oss_open1" class="cb-enable {if condition='isset($field.data.oss_open) && $field.data.oss_open eq 1'}selected{/if}">开启</label>
+                            <label for="oss_open0" class="cb-disable {if condition='empty($field.data.oss_open)'}selected{/if}">关闭</label>
+                            <input id="oss_open1" name="data[oss_open]" value="1" type="radio" {if condition="isset($field.data.oss_open) && $field.data.oss_open eq 1"} checked="checked"{/if} onclick="oss_open(this);">
+                            <input id="oss_open0" name="data[oss_open]" value="0" type="radio" {if condition="empty($field.data.oss_open)"} checked="checked"{/if} onclick="oss_open(this);">
+                        </div>
+                        <p class="notic">开启前，请先安装插件【阿里云OSS对象存储】</p>
+                    </dd>
+                </dl>
+                {/eq}
+                {eq name='$weappRow.Cos' value='1'}
+                <dl class="row">
+                    <dt class="tit">
+                        <label>cos存储</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="onoff">
+                            <label for="cos_open1" class="cb-enable {if condition='isset($field.data.cos_open) && $field.data.cos_open eq 1'}selected{/if}">开启</label>
+                            <label for="cos_open0" class="cb-disable {if condition='empty($field.data.cos_open)'}selected{/if}">关闭</label>
+                            <input id="cos_open1" name="data[cos_open]" value="1" type="radio" {if condition="isset($field.data.cos_open) && $field.data.cos_open eq 1"} checked="checked"{/if} onclick="cos_open(this);">
+                            <input id="cos_open0" name="data[cos_open]" value="0" type="radio" {if condition="empty($field.data.cos_open)"} checked="checked"{/if} onclick="cos_open(this);">
+                        </div>
+                        <p class="notic">开启前，请先安装插件【腾讯云COS对象存储】</p>
+                    </dd>
+                </dl>
+                {/eq}
+            {/in}
+
             <div class="bot">
                 <input type="hidden" name="id" value="{$field.id}">
                 <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
@@ -68,6 +241,243 @@
     </form>
 </div>
 <script type="text/javascript">
+    // 七牛云上传开启
+    function qiniuyun_open(obj)
+    {
+        if ($(obj).val() == 1) {
+            $.ajax({
+                type: 'GET',
+                url: "{:url('Channeltype/ajax_qiniuyun_open')}",
+                data: {_ajax:1},
+                dataType: "JSON",
+                success: function(res1) {
+                    if (1 == res1.code) {
+                        // 七牛云开启，关闭腾讯云COS、阿里云OSS
+                        $('label[for=cos_open1], label[for=oss_open1]').removeClass('selected');
+                        $('#cos_open1, #oss_open1').attr('checked','');
+                        $('label[for=cos_open0], label[for=oss_open0]').addClass('selected');
+                        $('#cos_open0, #oss_open0').attr('checked','checked');
+                    } else {
+                        $('label[for=qiniuyun_open1]').removeClass('selected');
+                        $('#qiniuyun_open1').attr('checked','');
+                        $('label[for=qiniuyun_open0]').addClass('selected');
+                        $('#qiniuyun_open0').attr('checked','checked');
+
+                        if (res1.data.code == -1) {
+                            showErrorMsg(res1.msg);
+                        } else if (res1.data.code == -2) {
+                            layer.alert(res1.msg, {icon: 5, title: false, btn:['启用']}, function(index){
+                                layer.close(index);
+                                layer_loading('正在启用');
+                                $.ajax({
+                                    type: 'POST',
+                                    url: "{:url('Index/changeTableVal')}",
+                                    data: {table:'weapp', id_name:'id', id_value:res1.data.id, field:'status', value:1, _ajax:1},
+                                    dataType: "JSON",
+                                    success: function (res) {
+                                        layer.closeAll();
+                                        if (res.code == 1) {
+                                            // $('label[for=qiniuyun_open1]').addClass('selected');
+                                            // $('#qiniuyun_open1').attr('checked','checked');
+                                            // $('label[for=qiniuyun_open0]').removeClass('selected');
+                                            // $('#qiniuyun_open0').attr('checked','');
+                                        } else {
+                                            showErrorMsg(res.msg);
+                                        }
+                                    }
+                                })
+                            });
+                        } else if (res1.data.code == -3) {
+                            layer.confirm(res1.msg, {
+                                icon: 5,
+                                title: false,
+                                btn: ['立即配置']
+                            }, function () {
+                                layer.closeAll();
+                                //iframe窗
+                                layer.open({
+                                    type: 2,
+                                    title: false,
+                                    fixed: true, //不固定
+                                    shadeClose: false,
+                                    shade: 0.3,
+                                    maxmin: false, //开启最大化最小化按钮
+                                    area: ['80%', '80%'],
+                                    content: "{:weapp_url('Qiniuyun/Qiniuyun/index')}"
+                                });
+                            }, function (index) {
+                                layer.closeAll();
+                            });
+                        } else {
+                            showErrorMsg(res1.msg);
+                        }
+                    }
+                },
+                error: function(e){
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }
+    }
+
+    // 阿里云上传开启
+    function oss_open(obj)
+    {
+        if ($(obj).val() == 1) {
+            $.ajax({
+                type: 'GET',
+                url: "{:url('Channeltype/ajax_oss_open')}",
+                data: {_ajax:1},
+                dataType: "JSON",
+                success: function(res1) {
+                    if (1 == res1.code) {
+                        // 阿里云OSS开启，关闭腾讯云COS、七牛云
+                        $('label[for=cos_open1], label[for=qiniuyun_open1]').removeClass('selected');
+                        $('#cos_open1, #qiniuyun_open1').attr('checked','');
+                        $('label[for=cos_open0], label[for=qiniuyun_open0]').addClass('selected');
+                        $('#cos_open0, #qiniuyun_open0').attr('checked','checked');
+                    } else {
+                        $('label[for=oss_open1]').removeClass('selected');
+                        $('#oss_open1').attr('checked','');
+                        $('label[for=oss_open0]').addClass('selected');
+                        $('#oss_open0').attr('checked','checked');
+
+                        if (res1.data.code == -1) {
+                            showErrorMsg(res1.msg);
+                        } else if (res1.data.code == -2) {
+                            layer.alert(res1.msg, {icon: 5, title: false, btn:['启用']}, function(index){
+                                layer.close(index);
+                                layer_loading('正在启用');
+                                $.ajax({
+                                    type: 'POST',
+                                    url: "{:url('Index/changeTableVal')}",
+                                    data: {table:'weapp', id_name:'id', id_value:res1.data.id, field:'status', value:1, _ajax:1},
+                                    dataType: "JSON",
+                                    success: function (res) {
+                                        layer.closeAll();
+                                        if (res.code == 1) {
+                                            // $('label[for=qiniuyun_open1]').addClass('selected');
+                                            // $('#qiniuyun_open1').attr('checked','checked');
+                                            // $('label[for=qiniuyun_open0]').removeClass('selected');
+                                            // $('#qiniuyun_open0').attr('checked','');
+                                        } else {
+                                            showErrorMsg(res.msg);
+                                        }
+                                    }
+                                })
+                            });
+                        } else if (res1.data.code == -3) {
+                            layer.confirm(res1.msg, {
+                                icon: 5,
+                                title: false,
+                                btn: ['立即配置']
+                            }, function () {
+                                layer.closeAll();
+                                //iframe窗
+                                layer.open({
+                                    type: 2,
+                                    title: false,
+                                    fixed: true, //不固定
+                                    shadeClose: false,
+                                    shade: 0.3,
+                                    maxmin: false, //开启最大化最小化按钮
+                                    area: ['80%', '80%'],
+                                    content: "{:weapp_url('AliyunOss/AliyunOss/index')}"
+                                });
+                            }, function (index) {
+                                layer.closeAll();
+                            });
+                        } else {
+                            showErrorMsg(res1.msg);
+                        }
+                    }
+                },
+                error: function(e){
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }
+    }
+
+    // 腾讯云上传开启
+    function cos_open(obj) {
+        if ($(obj).val() == 1) {
+            $.ajax({
+                type: 'GET',
+                url : "{:url('Channeltype/ajax_cos_open')}",
+                data: {_ajax: 1},
+                dataType: "JSON",
+                success: function(res1) {
+                    if (1 == res1.code) {
+                        // 腾讯云COS开启，关闭七牛云、阿里云OSS
+                        $('label[for=qiniuyun_open1], label[for=oss_open1]').removeClass('selected');
+                        $('#qiniuyun_open1, #oss_open1').attr('checked','');
+                        $('label[for=qiniuyun_open0], label[for=oss_open0]').addClass('selected');
+                        $('#qiniuyun_open0, #oss_open0').attr('checked','checked');
+                    } else {
+                        $('label[for=cos_open1]').removeClass('selected');
+                        $('#cos_open1').attr('checked','');
+                        $('label[for=cos_open0]').addClass('selected');
+                        $('#cos_open0').attr('checked','checked');
+
+                        if (res1.data.code == -1) {
+                            showErrorMsg(res1.msg);
+                        } else if (res1.data.code == -2) {
+                            layer.alert(res1.msg, {icon: 5, title: false, btn:['启用']}, function(index){
+                                layer.close(index);
+                                layer_loading('正在启用');
+                                $.ajax({
+                                    type: 'POST',
+                                    url: "{:url('Index/changeTableVal')}",
+                                    data: {table:'weapp', id_name:'id', id_value:res1.data.id, field:'status', value:1, _ajax:1},
+                                    dataType: "JSON",
+                                    success: function (res) {
+                                        layer.closeAll();
+                                        if (res.code == 1) {
+                                            // $('label[for=cos_open1]').addClass('selected');
+                                            // $('#cos_open1').attr('checked','checked');
+                                            // $('label[for=cos_open0]').removeClass('selected');
+                                            // $('#cos_open0').attr('checked','');
+                                        } else {
+                                            showErrorMsg(res.msg);
+                                        }
+                                    }
+                                })
+                            });
+                        } else if (res1.data.code == -3) {
+                            layer.confirm(res1.msg, {
+                                icon: 5,
+                                title: false,
+                                btn: ['立即配置']
+                            }, function () {
+                                layer.closeAll();
+                                //iframe窗
+                                layer.open({
+                                    type: 2,
+                                    title: false,
+                                    fixed: true, //不固定
+                                    shadeClose: false,
+                                    shade: 0.3,
+                                    maxmin: false, //开启最大化最小化按钮
+                                    area: ['80%', '80%'],
+                                    content: "{:weapp_url('Cos/Cos/index')}"
+                                });
+                            }, function (index) {
+                                layer.closeAll();
+                            });
+                        } else {
+                            showErrorMsg(res1.msg);
+                        }
+                    }
+                },
+                error: function(e){
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }
+    }
+
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     // 判断输入框是否为空
     function checkForm(){
         {neq name="$field.ifsystem" value="1"}
@@ -77,8 +487,48 @@
             return false;
         }
         {/neq}
+
+        {in name="$field.nid" value="guestbook"}
+        var channel_guestbook_time = $.trim($('input[name=channel_guestbook_time]').val());
+        if(parseInt(channel_guestbook_time) < 2){
+            showErrorMsg('留言跳转时间不能少于2秒');
+            $('input[name=channel_guestbook_time]').focus();
+            return false;
+        }
+
+        var channel_guestbook_gourl = $.trim($('input[name=channel_guestbook_gourl]').val());
+        var exp = /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/;
+        var objExp = new RegExp(exp);
+        if(channel_guestbook_gourl != '' && objExp.test(channel_guestbook_gourl) != true) {
+            showErrorMsg('留言跳转URL格式不正确！');
+            $('input[name=channel_guestbook_gourl]').focus();
+            return false;
+        }
+        {/in}
+
         layer_loading('正在处理');
-        $('#post_form').submit();
+        $.ajax({
+            type : 'post',
+            url : "{:url('Channeltype/edit', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
     }
 </script>
 {include file="public/footer" /}

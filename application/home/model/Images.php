@@ -52,13 +52,13 @@ class Images extends Model
         $result = array();
         if ($isshowbody) {
             $field = !empty($field) ? $field : 'b.*, a.*';
-            $result = db('archives')->field($field)
+            $result = Db::name('archives')->field($field)
                 ->alias('a')
                 ->join('__IMAGES_CONTENT__ b', 'b.aid = a.aid', 'LEFT')
                 ->find($aid);
         } else {
             $field = !empty($field) ? $field : 'a.*';
-            $result = db('archives')->field($field)
+            $result = Db::name('archives')->field($field)
                 ->alias('a')
                 ->find($aid);
         }

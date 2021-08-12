@@ -14,7 +14,8 @@
 
 $html_cache_arr = array();
 // 全局变量数组
-$global = tpCache('global');
+$global = config('tpcache');
+empty($global) && $global = tpCache('global');
 // 系统模式
 $web_cmsmode = isset($global['web_cmsmode']) ? $global['web_cmsmode'] : 2;
 /*页面缓存有效期*/
@@ -31,9 +32,12 @@ $html_cache_arr = array();
 /*--end*/
 
 /*引入全部插件的页面缓存规则*/
-$html_list = glob(WEAPP_DIR_NAME.DS.'*'.DS.'html.php');
-if (!empty($html_list)) {
-    foreach ($html_list as $key => $file) {
+$weappRow = \think\Db::name('weapp')->field('code')->where([
+    'status'    => 1,
+])->cache(true, null, "weapp")->select();
+foreach ($weappRow as $key => $val) {
+    $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'html.php';
+    if (file_exists($file)) {
         $html_value = include_once $file;
         if (empty($html_value)) {
             continue;
@@ -59,7 +63,7 @@ return array(
         // 模板后缀
         'view_suffix' => 'htm',
         // 模板引擎禁用函数
-        'tpl_deny_func_list' => 'eval,echo,exit',
+        'tpl_deny_func_list' => config('global.tpl_deny_func_list'),
         // 默认模板引擎是否禁用PHP原生代码 苦恼啊！ 鉴于百度统计使用原生php，这里暂时无法开启
         'tpl_deny_php'       => false,
     ),

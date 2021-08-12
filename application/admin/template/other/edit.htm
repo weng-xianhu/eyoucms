@@ -1,16 +1,19 @@
 {include file="public/layout" /}
 
-{load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
-{load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
-{load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
-
-<body style="background-color: #FFF; overflow: auto;min-width:auto;">
+{eq name="$editor.editor_select" value="1"}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+{else/}
+    {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
+{/eq}
+<body class="bodystyle" style="min-width:auto;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page" style="min-width:auto;">
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
+        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
             <div class="subject">
                 <h3>编辑广告</h3>
                 <h5></h5>
@@ -84,7 +87,7 @@
                             </a>
                         </span>
                         <span class="type-file-box">
-                            <input type="text" id="litpic_local" name="litpic_local" value="{$field.litpic_local|default=''}" class="type-file-text">
+                            <input type="text" id="litpic_local" name="litpic_local" value="{$field.litpic_local|default=''}" class="type-file-text" autocomplete="off">
                             <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
                             <input class="type-file-file" onClick="GetUploadify(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
                                  title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">

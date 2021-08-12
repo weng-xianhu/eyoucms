@@ -1,6 +1,6 @@
 {include file="public/layout" /}
 
-<body style="background-color: #FFF; overflow: auto; min-width: auto;">
+<body style="background-color:#F1F1F1;overflow: auto;min-width: auto;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
@@ -26,7 +26,9 @@
 <script type="text/javascript">
     $(function () {
         $('#typeid').find('option').click(function(){
-            if (!$('#typeid').val()) {
+            var typeid = $('#typeid').val();
+
+            if (!typeid) {
                 layer.alert('请选择栏目…！', {icon:5, title:false}, function(index){
                     $('#typeid').val('');
                     layer.close(index);
@@ -54,12 +56,12 @@
             } else {
                 url += '?';
             }
-            url += 'typeid=' + $('#typeid').val();
+            url += 'typeid=' + typeid;
 
             {eq name="iframe" value="2"}
-            parent.window.location = url;
+                parent.window.location = url;
             {else /}
-            parent.content_body.location = url;
+                parent.content_body.location = url;
             {/eq}
         });
     });

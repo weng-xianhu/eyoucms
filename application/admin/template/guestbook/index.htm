@@ -1,56 +1,86 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width: auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-    {include file="guestbook/bar" /}
-    <div class="flexigrid">
-        <div class="mDiv">
+<div class="page" style="min-width: auto;box-shadow:none;">
+    <div class="flexigrid" {eq name='$Request.param.archives' value='1'}style="margin-top: 0px;"{/eq}>
+        <div class="mDiv" {eq name='$Request.param.archives' value='1'}style="padding: 5px 0px;"{/eq}>
             <div class="ftitle">
-                <h3>{$arctype_info.typename|default=''}</h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
+                {eq name="$Think.const.CONTROLLER_NAME.'@excel_export'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" onclick="excel_export(this, 'ids');" data-url="{:url('Guestbook/excel_export')}">
+                        <div class="add" title="导出Excel">
+                            <span><i class="fa fa-reply"></i>导出Excel</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
-            <form class="navbar-form form-inline" action="{:U('Guestbook/index')}" method="get" onsubmit="layer_loading('正在处理');">
+            <form class="navbar-form form-inline" action="{:url('Guestbook/index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" name="add_time_begin" id="add_time_begin" value="{$Request.param.add_time_begin}" class="qsbox" autocomplete="off" placeholder="起始日期">
+                    </div>
+                    &nbsp;至&nbsp;
+                    <div class="sDiv2">
+                        <input type="text" name="add_time_end" id="add_time_end" value="{$Request.param.add_time_end}" class="qsbox" autocomplete="off" placeholder="结束日期">
+                    </div>
                     <div class="sDiv2">
                         <input type="hidden" name="typeid" id="typeid" value="{$Request.param.typeid|default=''}">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="模糊搜索...">
                         <input type="submit" class="btn" value="搜索">
+						<i class="fa fa-search"></i>
                     </div>
-                    <!-- <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:U('Guestbook/index', array("typeid"=>$Request.param.typeid))}';">
-                    </div> -->
+                    
                 </div>
             </form>
         </div>
         <div class="hDiv">
             <div class="hDivBox">
-                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                <table cellspacing="0" cellpadding="0" style="width: 100%;">
                     <thead>
                     <tr>
                         <th class="sign w40" axis="col0">
-                            <div class="tc">选择</div>
+                            <div class="tc w40"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                         </th>
-                        <th abbr="article_title" axis="col3" class="w40">
-                            <div  class="tc">ID</div>
+                        <th abbr="article_show" axis="col5" class="w50">
+                            <div class="tc">ID</div>
                         </th>
-                        
-                        <th abbr="article_time" axis="col6" class="">
-                            <div style="text-align: left; padding-left: 10px;">属性内容</div>
+                        {volist name="tab_list" id="vo1"}
+                            {if condition="$i elt 4" }
+                                {if $i == 1}
+                                <th abbr="ac_id" axis="col4">
+                                    <div class="text-l10">{$vo1.attr_name}</div>
+                                </th>
+                                {else /}
+                                <th abbr="article_show" axis="col5" class="w150">
+                                    <div class="tc">{$vo1.attr_name}</div>
+                                </th>
+                                {/if}
+                            {/if}
+                        {/volist}
+
+                        {empty name='$tab_list'}
+                            <th abbr="ac_id" axis="col4">
+                                <div class="text-l10">所属栏目</div>
+                            </th>
+                        {else /}
+                            <th abbr="article_time" axis="col6" class="w100">
+                                <div class="tc">所属栏目</div>
+                            </th>
+                        {/empty}
+
+                        <th abbr="article_time" axis="col6" class="w50">
+                            <div class="tc">查阅</div>
                         </th>
-                        <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">所属栏目</div>
+                        <th abbr="article_time" axis="col6" class="w160">
+                            <div class="tc">新增时间</div>
                         </th>
-                        <th align="center" abbr="article_time" axis="col6" class="w160">
-                            <div class="tc">更新时间</div>
-                        </th>
-                        <th axis="col1" class="w60">
+                        <th axis="col1" class="w120">
                             <div class="tc">操作</div>
                         </th>
-                       
                     </tr>
                     </thead>
                 </table>
@@ -58,7 +88,7 @@
         </div>
         <div class="bDiv" style="height: auto;">
             <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
-                <table style="width: 100%">
+                <table style="width: 100%;">
                     <tbody>
                     {empty name="list"}
                         <tr>
@@ -70,37 +100,68 @@
                         {foreach name="list" item="vo" key="k" }
                         <tr>
                             <td class="sign">
-                                <div class="tc w40"><input type="checkbox" name="ids[]" value="{$vo.aid}"></div>
+                                <div class="w40 tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.aid}"></div>
                             </td>
                             <td class="sort">
-                                <div class="tc w40">
+                                <div class="w50 tc">
                                     {$vo.aid}
                                 </div>
                             </td>
-                            
-                            <td style="width: 100%;">
-                                <div class="tl" style="padding-left: 10px;">
-                                    {volist name="vo.attr_list" id="vo2"}
-                                        <strong>{$vo2.attr_name}：</strong>{$vo2.attr_value}<br/>
-                                    {/volist}
-                                </div>
-                            </td>
-                            <td>
-                                <div class="w100 tc">{$vo.typename|default='<i class="red">数据出错！</i>'}</div>
-                            </td>
-                            <td>
-                                <div class="w160 tc">
-                                    {$vo.update_time|date='Y-m-d H:i:s',###}
-                                </div>
-                            </td>
-                            <td>
-                                <div class="w60 tc">
-                                    {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
-                                    <a class="btn red"  href="javascript:void(0);" data-url="{:U('Guestbook/del')}" data-id="{$vo.aid}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                            {for start="0" end="count($tab_list)"}
+                                {if condition="$i lt 4" }
+                                    {if $i == 0}
+                                    <td style="width: 100%">
+                                        <div class="text-l10">
+                                            {$vo['attr_list'][$i]['attr_value']}
+                                        </div>
+                                    </td>
+                                    {else /}
+                                    <td class="">
+                                        <div class="w150 tc">
+                                            {$vo['attr_list'][$i]['attr_value']}
+                                        </div>
+                                    </td>
+                                    {/if}
+                                {/if}
+                            {/for}
+
+                            {empty name='$tab_list'}
+                                <td style="width: 100%">
+                                    <div class="text-l10">
+                                        <a href="{:url('Guestbook/index', ['typeid'=>$vo.typeid])}">{$vo.typename|default='<i class="red">数据出错！</i>'}</a>
+                                    </div>
+                                </td>
+                            {else /}
+                                <td class="">
+                                    <div class="w100 tc">
+                                        <a href="{:url('Guestbook/index', ['typeid'=>$vo.typeid])}">{$vo.typename|default='<i class="red">数据出错！</i>'}</a>
+                                    </div>
+                                </td>
+                            {/empty}
+
+                            <td class="">
+                                <div class="w50 tc" id="td_is_read_{$vo.aid}">
+                                    {eq name='$vo.is_read' value='1'}
+                                        已读
+                                    {else /}
+                                        <font color="red">未读</font>
                                     {/eq}
                                 </div>
                             </td>
-                            
+                            <td class="">
+                                <div class="w160 tc">
+                                    {$vo.add_time|date='Y-m-d H:i:s',###}
+                                </div>
+                            </td>
+                            <td class="operation">
+                                <div class="w120 tc">
+                                    <a class="btn blue" href="javascript:void(0);" data-href="{:url('Guestbook/details', ['aid'=>$vo['aid']])}" onclick="openFullframe(this, '查看ID={$vo.aid}的数据');$('#td_is_read_{$vo.aid}').html('已读');">查看</a>
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                                    <i></i>
+                                    <a class="btn red" href="javascript:void(0);" data-url="{:url('Guestbook/del')}" data-id="{$vo.aid}" onClick="delfun(this);">删除</a>
+                                    {/eq}
+                                </div>
+                            </td>
                         </tr>
                         {/foreach}
                     {/empty}
@@ -112,44 +173,48 @@
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
-                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
                 </div>
                 {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
                 <div class="fbutton">
-                    <a onclick="batch_del(this, 'ids');" data-url="{:U('Guestbook/del')}">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Guestbook/del')}">
                         <div class="add" title="批量删除">
-                            <span><i class="fa fa-close"></i>批量删除</span>
+                            <span>批量删除</span>
                         </div>
                     </a>
                 </div>
                 {/eq}
-                <!--{eq name="$Think.const.CONTROLLER_NAME.'@attribute_index'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a href="{:U('Guestbook/attribute_index')}">
-                        <div class="add" title="属性列表">
-                            <span><i class="fa fa-list"></i>属性列表</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
-                {eq name="$Think.const.CONTROLLER_NAME.'@attribute_add'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a href="{:U('Guestbook/attribute_add')}">
-                        <div class="add" title="新增属性">
-                            <span><i class="fa fa-plus"></i>新增属性</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
-            -->
+                {include file="public/page" /}
             </div>
             <div style="clear:both"></div>
         </div>
-        <!--分页位置-->
-        {$page}
     </div>
 </div>
 <script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#add_time_begin' //指定元素
+        });
+        laydate.render({
+            elem: '#add_time_end' //指定元素
+        });
+    });
+
     $(document).ready(function(){
 
         // 表格行点击选中切换
@@ -162,6 +227,21 @@
             location.href = location.href;
         });
     });
+    
+    function excel_export(obj,name) {
+        var url = $(obj).attr('data-url');
+        var aid = [];
+        var typeid =  $('input[name=typeid]').val();
+        var start_time =  $('input[name=add_time_begin]').val();
+        var end_time =  $('input[name=add_time_end]').val();
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                aid.push($(o).val());
+            }
+        });
+        url = url+"&aid="+aid+"&typeid="+typeid+"&start_time="+start_time+"&end_time="+end_time;
+        window.location.href = url;
+    }
 </script>
 
 {include file="public/footer" /}

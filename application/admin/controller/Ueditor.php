@@ -14,9 +14,6 @@
 namespace app\admin\controller;
 
 use common\util\File;
-use think\log;
-use think\Image;
-use think\Request;
 use think\Db;
 
 /**
@@ -25,9 +22,10 @@ use think\Db;
  */
 class Ueditor extends Base
 {
+    private $image_type = '';
     private $sub_name = array('date', 'Ymd');
+    private $imageExt = '';
     private $savePath = 'allimg/';
-    private $fileExt = 'jpg,png,gif,jpeg,bmp,ico';
     private $nowFileName = '';
 
     public function __construct()
@@ -50,15 +48,14 @@ class Ueditor extends Base
         
         header("Content-Type: text/html; charset=utf-8");
 
-        $image_type = tpCache('basic.image_type');
-        $this->fileExt = !empty($image_type) ? str_replace('|', ',', $image_type) : $this->fileExt;
+        $this->imageExt = config('global.image_ext');
+        $this->image_type = tpCache('basic.image_type');
+        $this->image_type = !empty($this->image_type) ? str_replace('|', ',', $this->image_type) : $this->imageExt;
     }
     
-    public function index(){
-        
+    public function index() {
         $CONFIG2 = json_decode(preg_replace("/\/\*[\s\S]+?\*\//", "", file_get_contents("./public/plugins/Ueditor/php/config.json")), true);
         $action = $_GET['action'];
-        
         switch ($action) {
             case 'config':
                 $result =  json_encode($CONFIG2);
@@ -68,15 +65,12 @@ class Ueditor extends Base
                 $fieldName = $CONFIG2['imageFieldName'];
                 $result = $this->upFile($fieldName);
 
-                /*编辑器七牛云同步*/
+                /*同步到第三方对象存储空间*/
                 $result = json_decode($result, true);
-                $data = Db::name('weapp')->where('code','Qiniuyun')->field('status')->find();
-                if (!empty($data) && 1 == $data['status']) {
-                    // 同步图片到七牛云
-                    $result['url'] = SynchronizeQiniu($result['url']);
-                }
+                $bucket_data = SynImageObjectBucket($result['url']);
+                $result = array_merge($result, $bucket_data);
                 $result = json_encode($result);
-                /* END */
+                /*end*/
 
                 break;
             /* 上传涂鸦 */
@@ -130,8 +124,21 @@ class Ueditor extends Base
                 $list = array();
                 isset($_POST[$fieldName]) ? $source = $_POST[$fieldName] : $source = $_GET[$fieldName];
                 
+                /*编辑器七牛云/OSS等同步*/
+                $weappList = Db::name('weapp')->where([
+                    'status'    => 1,
+                ])->cache(true, EYOUCMS_CACHE_TIME, 'weapp')
+                ->getAllWithIndex('code');
+                /* END */
+                
                 foreach($source as $imgUrl){
                     $info = json_decode($this->saveRemote($config,$imgUrl),true);
+
+                    /*同步到第三方对象存储空间*/
+                    $bucket_data = SynImageObjectBucket($info['url'], $weappList);
+                    $info = array_merge($info, $bucket_data);
+                    /*end*/
+
                     array_push($list, array(
                         "state" => $info["state"],
                         "url" => $info["url"],
@@ -170,114 +177,83 @@ class Ueditor extends Base
     }
     
     //上传文件
-    private function upFile($fieldName){
-        $image_upload_limit_size = intval(tpCache('basic.file_size') * 1024 * 1024);
+    private function upFile($fieldName) {
         $file = request()->file($fieldName);
+        if (empty($file)) $file = request()->file('upfile');
+        if (empty($file)) $file = request()->file('upload');
+
         if(empty($file)){
-            return json_encode(['state' =>'ERROR，请上传文件']);
+            if (!@ini_get('file_uploads')) {
+                return json_encode(['state' =>'请检查空间是否开启文件上传功能！']);
+            } else {
+                return json_encode(['state' =>'ERROR，请上传文件']);
+            }
         }
         $error = $file->getError();
         if(!empty($error)){
             return json_encode(['state' =>$error]);
         }
+
+        $max_file_size = intval(tpCache('basic.file_size') * 1024 * 1024);
+        $fileExt = '';
+        $image_type = tpCache('basic.image_type');
+        !empty($image_type) && $fileExt .= '|'.$image_type;
+        $file_type = tpCache('basic.file_type');
+        !empty($file_type) && $fileExt .= '|'.$file_type;
+        $media_type = tpCache('basic.media_type');
+        !empty($media_type) && $fileExt .= '|'.$media_type;
+        $fileExt = !empty($fileExt) ? str_replace('||', '|', $fileExt) : config('global.image_ext');
+        $fileExt = str_replace('|', ',', trim($fileExt, '|'));
         $result = $this->validate(
             ['file' => $file], 
-            ['file'=>'fileSize:'.$image_upload_limit_size],
-            ['file.fileSize' => '上传文件过大']
+            ['file'=>'fileSize:'.$max_file_size.'|fileExt:'.$fileExt],
+            ['file.fileSize' => '上传文件过大','file.fileExt'=>'上传文件后缀名必须为'.$fileExt]
         );
         if (true !== $result || empty($file)) {
             $state = "ERROR" . $result;
             return json_encode(['state' =>$state]);
         }
 
-        $ossConfig = tpCache('oss');
-        if ($ossConfig['oss_switch']) {
-            //商品图片可选择存放在oss
-            $savePath = $this->savePath.date('Ymd/');
-            $object = UPLOAD_PATH.$savePath.md5(getTime().uniqid(mt_rand(), TRUE)).'.'.pathinfo($file->getInfo('name'), PATHINFO_EXTENSION);
-            $ossClient = new \app\common\logic\OssLogic;
-            $return_url = $ossClient->uploadFile($file->getRealPath(), $object);
-            if (!$return_url) {
-                $data = array('state' => 'ERROR'.$ossClient->getError());
-            } else {
-                $data = array(
-                    'state'     => 'SUCCESS',
-                    'url'       => $return_url,
-                    'title'     => $file->getInfo('name'),
-                    'original'  => $file->getInfo('name'),
-                    'type'      => $file->getInfo('type'),
-                    'size'      => $file->getInfo('size'),
-                );
-            }
-            @unlink($file->getRealPath());
-            return json_encode($data);
-        } else {
-            // 移动到框架应用根目录/public/uploads/ 目录下
-            $this->savePath = $this->savePath.date('Ymd/');
-            // 使用自定义的文件保存规则
-            $info = $file->rule(function ($file) {
-                return  md5(mt_rand());
-            })->move(UPLOAD_PATH.$this->savePath);
-        }
-        
-        if($info){
+        // 移动到框架应用根目录/public/uploads/ 目录下
+        $this->savePath = $this->savePath.date('Ymd/');
+        // 使用自定义的文件保存规则
+        $info = $file->rule(function ($file) {
+            return session('admin_id').'-'.dd2char(date("ymdHis").mt_rand(100,999));
+        })->move(UPLOAD_PATH.$this->savePath);
+
+        if (!empty($info)) {
             $data = array(
                 'state' => 'SUCCESS',
                 'url' => '/'.UPLOAD_PATH.$this->savePath.$info->getSaveName(),
-                'title' => $info->getSaveName(),
+                'title' => '',//$info->getSaveName(),
                 'original' => $info->getSaveName(),
                 'type' => '.' . $info->getExtension(),
                 'size' => $info->getSize(),
             );
 
             //图片加水印
-            if($data['state'] == 'SUCCESS'){
+            if ($data['state'] == 'SUCCESS') {
                 $file_type = $file->getInfo('type');
                 $file_ext = pathinfo($file->getInfo('name'), PATHINFO_EXTENSION);
-                $fileextArr = explode(',', $this->fileExt);
+                $fileextArr = explode(',', $this->image_type);
                 if (stristr($file_type, 'image') && 'ico' != $file_ext) {
-                    $imgresource = ".".$data['url'];
-                    $image = \think\Image::open($imgresource);
-                    $water = tpCache('water');
-                    $return_data['mark_type'] = $water['mark_type'];
-                    if($water['is_mark']==1 && $image->width()>$water['mark_width'] && $image->height()>$water['mark_height']){
-                        if($water['mark_type'] == 'text'){
-                            //$image->text($water['mark_txt'],ROOT_PATH.'public/static/common/font/hgzb.ttf',20,'#000000',9)->save($imgresource);
-                            $ttf = ROOT_PATH.'public/static/common/font/hgzb.ttf';
-                            if (file_exists($ttf)) {
-                                $size = $water['mark_txt_size'] ? $water['mark_txt_size'] : 30;
-                                $color = $water['mark_txt_color'] ?: '#000000';
-                                if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
-                                    $color = '#000000';
-                                }
-                                $transparency = intval((100 - $water['mark_degree']) * (127/100));
-                                $color .= dechex($transparency);
-                                $image->open($imgresource)->text($water['mark_txt'], $ttf, $size, $color, $water['mark_sel'])->save($imgresource);
-                                $return_data['mark_txt'] = $water['mark_txt'];
-                            }
-                        }else{
-                            /*支持子目录*/
-                            $water['mark_img'] = preg_replace('#^(/[/\w]+)?(/public/upload/|/uploads/)#i', '$2', $water['mark_img']); // 支持子目录
-                            /*--end*/
-                            //$image->water(".".$water['mark_img'],9,$water['mark_degree'])->save($imgresource);
-                            $waterPath = "." . $water['mark_img'];
-                            if (eyPreventShell($waterPath) && file_exists($waterPath)) {
-                                $quality = $water['mark_quality'] ? $water['mark_quality'] : 80;
-                                $waterTempPath = dirname($waterPath).'/temp_'.basename($waterPath);
-                                $image->open($waterPath)->save($waterTempPath, null, $quality);
-                                $image->open($imgresource)->water($waterTempPath, $water['mark_sel'], $water['mark_degree'])->save($imgresource);
-                                @unlink($waterTempPath);
-                            }
-                        }
-                    }
+                    print_water($data['url']);
                 }
             }
 
             $data['url'] = ROOT_DIR.$data['url']; // 支持子目录
-        }else{
+        } else {
             $data = array('state' => 'ERROR'.$info->getError());
         }
-        return json_encode($data);
+        
+        if (1 == $this->editor['editor_select']) {
+            return json_encode($data);
+        } else if (2 == $this->editor['editor_select']) {
+            $CKEditorFuncNum = input('param.CKEditorFuncNum/d');
+            $message = '';
+            $str = '<script type="text/javascript">window.parent.CKEDITOR.tools.callFunction('.$CKEditorFuncNum.', \''.$data['url'].'\', \''.$message.'\');</script>';
+            exit($str);
+        }
     }
 
     //列出图片
@@ -358,8 +334,13 @@ class Ueditor extends Base
             return json_encode($data);
         }
         //获取请求头并检测死链
-        $heads = get_headers($imgUrl);
-        if(!(stristr($heads[0],"200") && stristr($heads[0],"OK"))){
+        $heads = @get_headers($imgUrl, 1);
+        if (empty($heads)) {
+            $data=array(
+                'state' => '链接不可用',
+            );
+            return json_encode($data);
+        } else if(!(stristr($heads[0],"200") && !stristr($heads[0],"304"))){
             $data=array(
                 'state' => '链接不可用',
             );
@@ -368,12 +349,17 @@ class Ueditor extends Base
         //格式验证(扩展名验证和Content-Type验证)
         if(preg_match("/^http(s?):\/\/mmbiz.qpic.cn\/(.*)/", $imgUrl) != 1){
             $fileType = strtolower(strrchr($imgUrl,'.'));
-            if(!in_array($fileType,$config['allowFiles']) || (isset($heads['Content-Type']) && stristr($heads['Content-Type'],"image"))){
+            if(!in_array($fileType,$config['allowFiles']) || (isset($heads['Content-Type']) && !stristr($heads['Content-Type'],"image"))){
                 $data=array(
                     'state' => '链接contentType不正确',
                 );
                 return json_encode($data);
             }
+        } else {
+            $data=array(
+                'state' => '微信公众号图片请点击远程本地化处理！',
+            );
+            return json_encode($data);
         }
 
         //打开输出缓冲区并获取远程图片
@@ -392,7 +378,7 @@ class Ueditor extends Base
         $file['oriName'] = $m ? $m[1] : "";
         $file['filesize'] = strlen($img);
         $file['ext'] = strtolower(strrchr($config['oriName'],'.'));
-        $file['name'] = uniqid().$file['ext'];
+        $file['name'] = session('admin_id').'-'.dd2char(date("ymdHis").mt_rand(100,999)).$file['ext'];
         $file['fullName'] = $dirname.$file['name'];
         $fullName = $file['fullName'];
 
@@ -424,7 +410,7 @@ class Ueditor extends Base
             );
             return json_encode($data);
         }else{ //移动成功
-            $data=array(
+            $data = array(
                 'state' => 'SUCCESS',
                 'url' => ROOT_DIR.substr($file['fullName'],1), // 支持子目录
                 'title' => $file['name'],
@@ -433,23 +419,7 @@ class Ueditor extends Base
                 'size' => $file['filesize'],
             );
 
-            $ossConfig = tpCache('oss');
-            if ($ossConfig['oss_switch']) {
-                //图片可选择存放在oss
-                $savePath = $this->savePath.date('Ymd/');
-                $object = UPLOAD_PATH.$savePath.md5(getTime().uniqid(mt_rand(), TRUE)).'.'.pathinfo($data['url'], PATHINFO_EXTENSION);
-                $getRealPath = ltrim($data['url'], '/');
-                $ossClient = new \app\common\logic\OssLogic;
-                $return_url = $ossClient->uploadFile($getRealPath, $object);
-                if (!$return_url) {
-                    $state = "ERROR" . $ossClient->getError();
-                    $return_url = '';
-                } else {
-                    $state = "SUCCESS";
-                }
-                @unlink($getRealPath);
-                $data['url'] = $return_url;
-            }
+            print_water($data['url']); // 添加水印
         }
         return json_encode($data);
     }
@@ -520,7 +490,7 @@ class Ueditor extends Base
             respose($return_data,'json');
         }
         
-        $image_upload_limit_size = intval(tpCache('basic.file_size') * 1024 * 1024);
+        $max_file_size = intval(tpCache('basic.file_size') * 1024 * 1024);
         // 上传图片框中的描述表单名称，
         $pictitle = input('pictitle');
         $dir = input('dir');
@@ -529,24 +499,29 @@ class Ueditor extends Base
         //$input_file ['upfile'] = $info['Filedata'];  一个是上传插件里面来的, 另外一个是 文章编辑器里面来的
         // 获取表单上传文件
         $file = request()->file('file');
-        if(empty($file))
-            $file = request()->file('upfile');    
-
+        empty($file) && $file = request()->file('upfile');
+        if (empty($file) || !@ini_get('file_uploads')) {
+            $return_data['state'] = '请检查空间是否开启文件上传功能！';
+            respose($return_data,'json');
+        }
         // ico图片文件不进行验证
         if (pathinfo($file->getInfo('name'), PATHINFO_EXTENSION) != 'ico') {
             $result = $this->validate(
                 ['file' => $file], 
-                ['file'=>'image|fileSize:'.$image_upload_limit_size.'|fileExt:'.$this->fileExt],
-                ['file.image' => '上传文件必须为图片','file.fileSize' => '上传文件过大','file.fileExt'=>'上传文件后缀名必须为'.$this->fileExt]                
-               );
+                ['file' => 'image|fileSize:' . $max_file_size . '|fileExt:' . $this->image_type],
+                [
+                    'file.image'    => '上传文件必须为图片',
+                    'file.fileSize' => '上传图片过大',
+                    'file.fileExt'  => '上传图片后缀名必须为' . $this->image_type
+                ]
+            );
         } else {
             $result = true;
         }
 
         /*验证图片一句话木马*/
-        $imgstr = @file_get_contents($file->getInfo('tmp_name'));
-        if (false !== $imgstr && preg_match('#<\?php#i', $imgstr)) {
-            $result = '上传图片不合格';
+        if (false === check_illegal($file->getInfo('tmp_name'))) {
+            $result = '疑似木马图片！';
         }
         /*--end*/
 
@@ -555,86 +530,47 @@ class Ueditor extends Base
         } else {
             if ('adminlogo/' == $this->savePath) {
                 $savePath = 'public/static/admin/logo/';
+            } else if ('loginlogo/' == $this->savePath) {
+                $savePath = 'public/static/admin/login/';
+            } else if ('loginbgimg/' == $this->savePath) {
+                $savePath = 'public/static/admin/loginbg/';
             } else {
-                $savePath = UPLOAD_PATH.$this->savePath.date('Ymd/');
+                $savePath = UPLOAD_PATH . $this->savePath . date('Ymd/');
             }
-            $ossConfig = tpCache('oss');
-            if ($ossConfig['oss_switch']) {
-                //商品图片可选择存放在oss
-                $object = $savePath.md5(getTime().uniqid(mt_rand(), TRUE)).'.'.pathinfo($file->getInfo('name'), PATHINFO_EXTENSION);
-                $ossClient = new \app\common\logic\OssLogic;
-                $return_url = $ossClient->uploadFile($file->getRealPath(), $object);
-                if (!$return_url) {
-                    $state = "ERROR" . $ossClient->getError();
-                    $return_url = '';
-                } else {
-                    $state = "SUCCESS";
-                }
-                @unlink($file->getRealPath());
+            // 移动到框架应用根目录/public/uploads/ 目录下
+            $info = $file->rule(function ($file) {
+                // return  md5(mt_rand()); // 使用自定义的文件保存规则
+                return session('admin_id').'-'.dd2char(date("ymdHis").mt_rand(100,999)); // 使用自定义的文件保存规则
+            })->move($savePath);
+            if ($info) {
+                $state = "SUCCESS";
             } else {
-                // 移动到框架应用根目录/public/uploads/ 目录下
-                $info = $file->rule(function ($file) {    
-                return  md5(mt_rand()); // 使用自定义的文件保存规则
-                })->move($savePath);
-                if ($info) {
-                    $state = "SUCCESS";
-                } else {
-                    $state = "ERROR" . $file->getError();
-                }
-                $return_url = '/'.$savePath.$info->getSaveName();
+                $state = "ERROR" . $file->getError();
             }
-            $return_data['url'] = ROOT_DIR.$return_url; // 支持子目录
-        }
-        
-        if($state == 'SUCCESS' && pathinfo($file->getInfo('name'), PATHINFO_EXTENSION) != 'ico'){
-            if(true || $this->savePath=='news/'){ // 添加水印
-                $imgresource = ".".$return_url;
-                $image = \think\Image::open($imgresource);
-                $water = tpCache('water');
-                $return_data['mark_type'] = $water['mark_type'];
-                if($water['is_mark']==1 && $image->width()>$water['mark_width'] && $image->height()>$water['mark_height']){
-                    if($water['mark_type'] == 'text'){
-                        //$image->text($water['mark_txt'],ROOT_PATH.'public/static/common/font/hgzb.ttf',20,'#000000',9)->save($imgresource);
-                        $ttf = ROOT_PATH.'public/static/common/font/hgzb.ttf';
-                        if (file_exists($ttf)) {
-                            $size = $water['mark_txt_size'] ? $water['mark_txt_size'] : 30;
-                            $color = $water['mark_txt_color'] ?: '#000000';
-                            if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
-                                $color = '#000000';
-                            }
-                            $transparency = intval((100 - $water['mark_degree']) * (127/100));
-                            $color .= dechex($transparency);
-                            $image->open($imgresource)->text($water['mark_txt'], $ttf, $size, $color, $water['mark_sel'])->save($imgresource);
-                            $return_data['mark_txt'] = $water['mark_txt'];
-                        }
-                    }else{
-                        /*支持子目录*/
-                        $water['mark_img'] = preg_replace('#^(/[/\w]+)?(/public/upload/|/uploads/)#i', '$2', $water['mark_img']); // 支持子目录
-                        /*--end*/
-                        //$image->water(".".$water['mark_img'],9,$water['mark_degree'])->save($imgresource);
-                        $waterPath = "." . $water['mark_img'];
-                        if (eyPreventShell($waterPath) && file_exists($waterPath)) {
-                            $quality = $water['mark_quality'] ? $water['mark_quality'] : 80;
-                            $waterTempPath = dirname($waterPath).'/temp_'.basename($waterPath);
-                            $image->open($waterPath)->save($waterTempPath, null, $quality);
-                            $image->open($imgresource)->water($waterTempPath, $water['mark_sel'], $water['mark_degree'])->save($imgresource);
-                            @unlink($waterTempPath);
-                        }
-                    }
-                }
-            }
-        }
-        $return_data['title'] = $title;
-        $return_data['original'] = ''; // 这里好像没啥用 暂时注释起来
-        $return_data['state'] = $state;
-        $return_data['path'] = $path;
+            $return_url = '/' . $savePath . $info->getSaveName();
+            $return_data['url'] = ROOT_DIR . $return_url; // 支持子目录
 
-        // 是否开启七牛云插件
-        $data = Db::name('weapp')->where('code','Qiniuyun')->field('status')->find();
-        if (!empty($data) && 1 == $data['status']) {
-            // 同步图片到七牛云
-            $return_data['url'] = SynchronizeQiniu($return_data['url']);
+            // 重新制作一张图片，抹去任何可能有危害的数据
+            // $image       = \think\Image::open('.'.$return_url);
+            // $image->save('.'.$return_url, null, 100);
         }
+
+        // 添加水印
+        if($state == 'SUCCESS' && pathinfo($file->getInfo('name'), PATHINFO_EXTENSION) != 'ico'){
+            $is_water = input('param.is_water/d');
+            if(!in_array($this->savePath, ['adminlogo/','loginlogo/','loginbgimg/']) && $is_water == 1) print_water($return_url);
+        }
+
+        // 返回数据
+        $return_data['title']    = $title;
+        $return_data['original'] = $title;
+        $return_data['state']    = $state;
+        $return_data['path']     = $path;
+
+        /*同步到第三方对象存储空间*/
+        $bucket_data = SynImageObjectBucket($return_url, [], $file);
+        $return_data = array_merge($return_data, $bucket_data);
+        /*end*/
 
         respose($return_data,'json');
     }
@@ -644,7 +580,7 @@ class Ueditor extends Base
      */
     public function appFileUp()
     {      
-        $image_upload_limit_size = intval(tpCache('basic.file_size') * 1024 * 1024);
+        $max_file_size = intval(tpCache('basic.file_size') * 1024 * 1024);
         $path = UPLOAD_PATH.'soft/'.date('Ymd/');
         if (!file_exists($path)) {
             mkdir($path);
@@ -659,7 +595,7 @@ class Ueditor extends Base
         
         $result = $this->validate(
             ['file2' => $file], 
-            ['file2'=>'fileSize:'.$image_upload_limit_size.'|fileExt:apk,ipa,pxl,deb'],
+            ['file2'=>'fileSize:'.$max_file_size.'|fileExt:apk,ipa,pxl,deb'],
             ['file2.fileSize' => '上传文件过大', 'file2.fileExt' => '上传文件后缀名必须为：apk,ipa,pxl,deb']                    
            );
         if (true !== $result || empty($file)) {            
@@ -683,500 +619,6 @@ class Ueditor extends Base
 
         respose($return_data);
     }
-    
-    /**
-     * 资料文件上传
-     */
-    public function downFileUp()
-    {
-        // ini_set('upload_max_filesize', '500M');
-        // ini_set('post_max_size', '500M');
-
-        $this->downFileUpMd5();
-        exit;
-
-        // Make sure file is not cached (as it happens for example on iOS devices)
-        header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-        header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-        header("Cache-Control: no-store, no-cache, must-revalidate");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
-
-        // Support CORS
-        // header("Access-Control-Allow-Origin: *");
-        // other CORS headers if any...
-        if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-            exit; // finish preflight CORS requests here
-        }
-
-
-        if ( !empty($_REQUEST[ 'debug' ]) ) {
-            $random = rand(0, intval($_REQUEST[ 'debug' ]) );
-            if ( $random === 0 ) {
-                header("HTTP/1.0 500 Internal Server Error");
-                exit;
-            }
-        }
-
-        // 5 minutes execution time
-        @set_time_limit(5 * 60);
-
-        // Settings
-        // $targetDir = ini_get("upload_tmp_dir") . '/' . "plupload";
-        $targetDir = UPLOAD_PATH.trim($this->savePath, '/').'_tmp/'.date('Ymd');
-        $uploadDir = UPLOAD_PATH.$this->savePath.date('Ymd');
-
-        $cleanupTargetDir = true; // Remove old files
-        $maxFileAge = 5 * 3600; // Temp file age in seconds
-
-        // Create target dir
-        if (!file_exists($targetDir)) {
-            @tp_mkdir($targetDir);
-        }
-
-        // Create target dir
-        if (!file_exists($uploadDir)) {
-            @tp_mkdir($uploadDir);
-        }
-
-        // Get a file name
-        $fileSize = 0;
-        $fileName = '';
-        $fileMime = '';
-        if (isset($_REQUEST["name"])) {
-            $fileMime = $_REQUEST["type"]; // application/x-zip-compressed
-            $lastModifiedDate = !empty($_REQUEST["lastModifiedDate"]) ? strtotime($_REQUEST["lastModifiedDate"]) : time(); // Tue Apr 03 2018 09:42:55 GMT+0800 (中国标准时间)
-            $fileSize = $_REQUEST["size"]; // 文件大小
-            $fileName = $_REQUEST["name"]; // include_new.zip
-        } elseif (!empty($_FILES)) {
-            $fileName = $_FILES["file"]["name"];
-            $fileSize = $_FILES["file"]["size"]; // 文件大小
-            $fileMime = $_FILES["file"]["type"]; // application/x-zip-compressed
-        } else {
-            $fileName = uniqid("file_");
-        }
-        // 提取文件名后缀
-        $file_ext = pathinfo($fileName, PATHINFO_EXTENSION);
-        // 提取出文件名，不包括扩展名
-        $newfileName = preg_replace('/\.([^\.]+)$/', '', $fileName);
-        // 过滤文件名.\/的特殊字符，防止利用上传漏洞
-        $newfileName = preg_replace('#(\\\|\/|\.)#i', '', $newfileName);
-        // 过滤后的新文件名
-        $fileName = $newfileName.'.'.$file_ext;
-
-        $upload_limit_size = intval(tpCache('basic.file_size') * 1024 * 1024);
-        if ($fileSize >= $upload_limit_size) {
-            respose(array(
-                'jsonrpc'   => '2.0',
-                'error' => array(
-                    'code'  => 90,
-                    'msg'   => '上传文件过大',
-                ),
-                'id'    => 'id',
-            ));
-        }
-        $file_type = tpCache('basic.file_type');
-        $file_type = !empty($file_type) ? $file_type : 'zip|gz|rar|iso|doc|xsl|ppt|wps';
-        $file_type_arr = explode('|', $file_type);
-        if (!in_array($file_ext, $file_type_arr)) {
-            respose(array(
-                'jsonrpc'   => '2.0',
-                'error' => array(
-                    'code'  => 91,
-                    'msg'   => '上传文件后缀不正确',
-                ),
-                'id'    => 'id',
-            ));
-        }
-
-        if ($this->nowFileName == -1) {
-            // 提取出文件名，不包括扩展名
-            $this->nowFileName = preg_replace('/\.([^\.]+)$/', '', $fileName);
-        }
-        $filePath = $targetDir . '/' . $fileName;
-        $uploadPath = $uploadDir . '/' . $this->nowFileName .'.'.pathinfo($fileName, PATHINFO_EXTENSION);
-
-        // Chunking might be enabled
-        $chunk = isset($_REQUEST["chunk"]) ? intval($_REQUEST["chunk"]) : 0;
-        $chunks = isset($_REQUEST["chunks"]) ? intval($_REQUEST["chunks"]) : 1;
-
-        // Remove old temp files
-        if ($cleanupTargetDir) {
-            if (!is_dir($targetDir) || !$dir = opendir($targetDir)) {
-                respose(array(
-                    'jsonrpc'   => '2.0',
-                    'error' => array(
-                        'code'  => 100,
-                        'msg'   => '打开临时目录失败。',
-                    ),
-                    'id'    => 'id',
-                ));
-            }
-
-            while (($file = readdir($dir)) !== false) {
-                $tmpfilePath = $targetDir . DIRECTORY_SEPARATOR . $file;
-
-                // If temp file is current file proceed to the next
-                if ($tmpfilePath == "{$filePath}_{$chunk}.part" || $tmpfilePath == "{$filePath}_{$chunk}.parttmp") {
-                    continue;
-                }
-
-                // Remove temp file if it is older than the max age and is not the current file
-                if (preg_match('/\.(part|parttmp)$/', $file) && (@filemtime($tmpfilePath) < time() - $maxFileAge)) {
-                    @unlink($tmpfilePath);
-                }
-            }
-            closedir($dir);
-        }
-
-
-        // Open temp file
-        if (!$out = @fopen("{$filePath}_{$chunk}.parttmp", "wb")) {
-            respose(array(
-                'jsonrpc'   => '2.0',
-                'error' => array(
-                    'code'  => 102,
-                    'msg'   => '打开输出流失败。',
-                ),
-                'id'    => 'id',
-            ));
-        }
-
-        if (!empty($_FILES)) {
-            if ($_FILES["file"]["error"] || !is_uploaded_file($_FILES["file"]["tmp_name"])) {
-                respose(array(
-                    'jsonrpc'   => '2.0',
-                    'error' => array(
-                        'code'  => 103,
-                        'msg'   => '移动上传文件失败。',
-                    ),
-                    'id'    => 'id',
-                ));
-            }
-
-            // Read binary input stream and append it to temp file
-            if (!$in = @fopen($_FILES["file"]["tmp_name"], "rb")) {
-                respose(array(
-                    'jsonrpc'   => '2.0',
-                    'error' => array(
-                        'code'  => 101,
-                        'msg'   => '打开输入流失败。',
-                    ),
-                    'id'    => 'id',
-                ));
-            }
-        } else {
-            if (!$in = @fopen("php://input", "rb")) {
-                respose(array(
-                    'jsonrpc'   => '2.0',
-                    'error' => array(
-                        'code'  => 101,
-                        'msg'   => '打开输入流失败。',
-                    ),
-                    'id'    => 'id',
-                ));
-            }
-        }
-
-        while ($buff = fread($in, 4096)) {
-            fwrite($out, $buff);
-        }
-
-        @fclose($out);
-        @fclose($in);
-
-        rename("{$filePath}_{$chunk}.parttmp", "{$filePath}_{$chunk}.part");
-
-        $index = 0;
-        $done = true;
-        for( $index = 0; $index < $chunks; $index++ ) {
-            if ( !file_exists("{$filePath}_{$index}.part") ) {
-                $done = false;
-                break;
-            }
-        }
-        if ( $done ) {
-            if (!$out = @fopen($uploadPath, "wb")) {
-                respose(array(
-                    'jsonrpc'   => '2.0',
-                    'error' => array(
-                        'code'  => 102,
-                        'msg'   => '打开输出流失败。',
-                    ),
-                    'id'    => 'id',
-                ));
-            }
-
-            if ( flock($out, LOCK_EX) ) {
-                for( $index = 0; $index < $chunks; $index++ ) {
-                    if (!$in = @fopen("{$filePath}_{$index}.part", "rb")) {
-                        break;
-                    }
-
-                    while ($buff = fread($in, 4096)) {
-                        fwrite($out, $buff);
-                    }
-
-                    @fclose($in);
-                    @unlink("{$filePath}_{$index}.part");
-                }
-
-                flock($out, LOCK_UN);
-            }
-            @fclose($out);
-        }
-
-        $path = '/'.$uploadPath;
-        // Return Success JSON-RPC response
-        respose(array(
-            'jsonrpc'   => '2.0',
-            'error' => array(
-                'code'  => 0,
-                'msg'   => '上传成功',
-                'path'    => $path,
-                'mime'  => $fileMime,
-            ),
-            'id'    => 'id',
-        ));
-    }
-
-    public function downFileUpMd5()
-    {
-        // Make sure file is not cached (as it happens for example on iOS devices)
-        header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-        header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-        header("Cache-Control: no-store, no-cache, must-revalidate");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
-
-        // Support CORS
-        // header("Access-Control-Allow-Origin: *");
-        // other CORS headers if any...
-        if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-            exit; // finish preflight CORS requests here
-        }
-
-        if ( !empty($_REQUEST[ 'debug' ]) ) {
-            $random = rand(0, intval($_REQUEST[ 'debug' ]) );
-            if ( $random === 0 ) {
-                header("HTTP/1.0 500 Internal Server Error");
-                exit;
-            }
-        }
-
-        // 5 minutes execution time
-        @set_time_limit(5 * 60);
-
-        // Settings
-        // $targetDir = ini_get("upload_tmp_dir") . '/' . "plupload";
-        $targetDir = UPLOAD_PATH.trim($this->savePath, '/').'_tmp/'.date('Ymd');
-        $uploadDir = UPLOAD_PATH.$this->savePath.date('Ymd');
-
-        $cleanupTargetDir = true; // Remove old files
-        $maxFileAge = 5 * 3600; // Temp file age in seconds
-
-        // Create target dir
-        if (!file_exists($targetDir)) {
-            @tp_mkdir($targetDir);
-        }
-
-        // Create target dir
-        if (!file_exists($uploadDir)) {
-            @tp_mkdir($uploadDir);
-        }
-
-        // Get a file name
-        $fileSize = 0;
-        $fileName = '';
-        $fileMime = '';
-        if (isset($_REQUEST["name"])) {
-            $fileMime = $_REQUEST["type"]; // application/x-zip-compressed
-            $lastModifiedDate = !empty($_REQUEST["lastModifiedDate"]) ? strtotime($_REQUEST["lastModifiedDate"]) : time(); // Tue Apr 03 2018 09:42:55 GMT+0800 (中国标准时间)
-            $fileSize = $_REQUEST["size"]; // 文件大小
-            $fileName = $_REQUEST["name"]; // include_new.zip
-        } elseif (!empty($_FILES)) {
-            $fileName = $_FILES["file"]["name"];
-            $fileSize = $_FILES["file"]["size"]; // 文件大小
-            $fileMime = $_FILES["file"]["type"]; // application/x-zip-compressed
-        } else {
-            $fileName = uniqid("file_");
-        }
-        // 提取文件名后缀
-        $file_ext = pathinfo($fileName, PATHINFO_EXTENSION);
-        // 提取出文件名，不包括扩展名
-        $newfileName = preg_replace('/\.([^\.]+)$/', '', $fileName);
-        // 过滤文件名.\/的特殊字符，防止利用上传漏洞
-        $newfileName = preg_replace('#(\\\|\/|\.)#i', '', $newfileName);
-        // 过滤后的新文件名
-        $fileName = $newfileName.'.'.$file_ext;
-
-        $upload_limit_size = intval(tpCache('basic.file_size') * 1024 * 1024);
-        if ($fileSize >= $upload_limit_size) {
-            respose(array(
-                'jsonrpc'   => '2.0',
-                'error' => array(
-                    'code'  => 90,
-                    'msg'   => '上传文件过大',
-                ),
-                'id'    => 'id',
-            ));
-        }
-        $file_type = tpCache('basic.file_type');
-        $file_type = !empty($file_type) ? $file_type : 'zip|gz|rar|iso|doc|xsl|ppt|wps';
-        $file_type_arr = explode('|', $file_type);
-        if (!in_array($file_ext, $file_type_arr)) {
-            respose(array(
-                'jsonrpc'   => '2.0',
-                'error' => array(
-                    'code'  => 91,
-                    'msg'   => '上传文件后缀不正确',
-                ),
-                'id'    => 'id',
-            ));
-        }
-
-        $uhash_list = @file(APP_PATH.MODULE_NAME.'/conf/md5list2.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $uhash_list = $uhash_list ? $uhash_list : array();
-
-        if (isset($_REQUEST["md5"]) && array_search($_REQUEST["md5"], $uhash_list ) !== FALSE ) {
-            respose(array(
-                'jsonrpc'   => '2.0',
-                'error' => array(
-                    'code'  => 0,
-                    'msg'   => 'md5',
-                ),
-                'id'    => 'id',
-                'exist' => 1,
-            ));
-        }
-
-        if ($this->nowFileName == -1) {
-            // 提取出文件名，不包括扩展名
-            $this->nowFileName = preg_replace('/\.([^\.]+)$/', '', $fileName);
-        }
-
-        $filePath = $targetDir . '/' . $fileName;
-        $uploadPath = $uploadDir . '/' . $this->nowFileName .'.'.pathinfo($fileName, PATHINFO_EXTENSION);
-
-        // Chunking might be enabled
-        $chunk = isset($_REQUEST["chunk"]) ? intval($_REQUEST["chunk"]) : 0;
-        $chunks = isset($_REQUEST["chunks"]) ? intval($_REQUEST["chunks"]) : 1;
-
-        // Remove old temp files
-        if ($cleanupTargetDir) {
-            if (!is_dir($targetDir) || !$dir = opendir($targetDir)) {
-                respose(array(
-                    'jsonrpc'   => '2.0',
-                    'error' => array(
-                        'code'  => 100,
-                        'msg'   => '打开临时目录失败。',
-                    ),
-                    'id'    => 'id',
-                ));
-            }
-
-            while (($file = readdir($dir)) !== false) {
-                $tmpfilePath = $targetDir . DIRECTORY_SEPARATOR . $file;
-
-                // If temp file is current file proceed to the next
-                if ($tmpfilePath == "{$filePath}.part") {
-                    continue;
-                }
-
-                // Remove temp file if it is older than the max age and is not the current file
-                if (preg_match('/\.part$/', $file) && (filemtime($tmpfilePath) < time() - $maxFileAge)) {
-                    @unlink($tmpfilePath);
-                }
-            }
-            closedir($dir);
-        }
-
-
-        // Open temp file
-        if (!$out = @fopen("{$filePath}.part", $chunks ? "ab" : "wb")) {
-            respose(array(
-                'jsonrpc'   => '2.0',
-                'error' => array(
-                    'code'  => 102,
-                    'msg'   => '打开输出流失败。',
-                ),
-                'id'    => 'id',
-            ));
-        }
-
-        if (!empty($_FILES)) {
-            if ($_FILES["file"]["error"] || !is_uploaded_file($_FILES["file"]["tmp_name"])) {
-                respose(array(
-                    'jsonrpc'   => '2.0',
-                    'error' => array(
-                        'code'  => 103,
-                        'msg'   => '移动上载文件失败。',
-                    ),
-                    'id'    => 'id',
-                ));
-            }
-
-            // Read binary input stream and append it to temp file
-            if (!$in = @fopen($_FILES["file"]["tmp_name"], "rb")) {
-                respose(array(
-                    'jsonrpc'   => '2.0',
-                    'error' => array(
-                        'code'  => 101,
-                        'msg'   => '打开输入流失败',
-                    ),
-                    'id'    => 'id',
-                ));
-            }
-        } else {
-            if (!$in = @fopen("php://input", "rb")) {
-                respose(array(
-                    'jsonrpc'   => '2.0',
-                    'error' => array(
-                        'code'  => 101,
-                        'msg'   => '打开输入流失败',
-                    ),
-                    'id'    => 'id',
-                ));
-            }
-        }
-
-        while ($buff = fread($in, 4096)) {
-            fwrite($out, $buff);
-        }
-
-        @fclose($out);
-        @fclose($in);
-
-        // Check if file has been uploaded
-        $uhash = '';
-        $md5file = '';
-        if (!$chunks || $chunk == $chunks - 1) {
-            // Strip the temp .part suffix off
-            rename("{$filePath}.part", $filePath);
-
-            rename($filePath, $uploadPath);
-            $uhash = $this->uhash($uploadPath);
-            $md5file = md5_file($uploadPath);
-            array_push($uhash_list, $uhash);
-            $uhash_list = array_unique($uhash_list);
-            file_put_contents(APP_PATH.MODULE_NAME.'/conf/md5list2.txt', join($uhash_list, "\n"));
-        }
-
-        $path = '/'.$uploadPath;
-        // Return Success JSON-RPC response
-        respose(array(
-            'jsonrpc'   => '2.0',
-            'error' => array(
-                'code'  => 0,
-                'msg'   => '上传成功',
-                'path'    => $path,
-                'mime'  => $fileMime,
-                'uhash' => $uhash,
-                'md5file' => $md5file,
-            ),
-            'id'    => 'id',
-        ));
-    }
 
     public function uhash( $file ) {
         $fragment = 65536;
@@ -1190,5 +632,219 @@ class Ueditor extends Base
         fclose($rh);
 
         return md5( $part1.$part2 );
+    }
+
+    //上传文件
+    public function DownloadUploadFile(){
+        header('Content-Type: text/html; charset=utf-8');
+        // 获取定义的上传最大参数
+        $max_file_size = intval(tpCache('basic.file_size') * 1024 * 1024);
+        // 获取上传的文件信息
+        $files = request()->file();
+        // 若获取不到则定义为空
+        $file  = !empty($files['file']) ? $files['file'] : '';
+
+        /*判断上传文件是否存在错误*/
+        if(empty($file)){
+            echo json_encode(['msg' => '文件过大或文件已损坏！']);exit;
+        }
+        $error = $file->getError();
+        if(!empty($error)){
+            echo json_encode(['msg' => $error]);exit;
+        }
+
+        $file_type = tpCache('basic.file_type');
+        $file_type = !empty($file_type) ? str_replace('|', ',', $file_type) : 'zip,gz,rar,iso,doc,xls,ppt,wps,txt,docx';
+
+        $result = $this->validate(
+            ['file' => $file],
+            ['file'=>'fileSize:'.$max_file_size.'|fileExt:'.$file_type],
+            ['file.fileSize' => '上传文件过大','file.fileExt'=>'上传文件后缀名必须为'.$file_type]
+        );
+        if (true !== $result || empty($file)) {
+            echo json_encode(['msg' => $result]);exit;
+        }
+        /*--end*/
+
+        // 移动到框架应用根目录/public/uploads/ 目录下
+        $this->savePath = $this->savePath.date('Ymd/');
+        // 定义文件名
+        $fileName    = $file->getInfo('name');
+        // 提取文件名后缀
+        $file_ext    = pathinfo($fileName, PATHINFO_EXTENSION);
+        // 提取出文件名，不包括扩展名
+        $newfileName = preg_replace('/\.([^\.]+)$/', '', $fileName);
+        // 过滤文件名.\/的特殊字符，防止利用上传漏洞
+        $newfileName = preg_replace('#(\\\|\/|\.)#i', '', $newfileName);
+        // 过滤后的新文件名
+        $fileName = $newfileName.'.'.$file_ext;
+        // 中文转码
+        $this->fileName = iconv("utf-8","gb2312//IGNORE",$fileName);
+
+        // 使用自定义的文件保存规则
+        $info = $file->rule(function ($file) {
+            return  $this->fileName;
+        })->move(UPLOAD_PATH.$this->savePath);
+        if($info){
+            // 拼装数据存入session
+            $file_path = UPLOAD_PATH.$this->savePath.$info->getSaveName();
+            $return = array(
+                'code'      => 1,
+                'msg'       => '上传成功',
+                'file_url'  => '/' . UPLOAD_PATH.$this->savePath.$fileName,
+                'file_mime' => $file->getInfo('type'),
+                'file_name' => $fileName,
+                'file_ext'  => '.' . $file_ext,
+                'file_size' => $info->getSize(),
+                'uhash'     => $this->uhash($file_path),
+                'md5file'   => md5_file($file_path),
+            );
+        }else{
+            $return = array('msg' => $info->getError());
+        }
+        echo json_encode($return);
+    }
+
+    //上传文件
+    public function DownloadUploadFileAjax()
+    {
+        // 获取上传的文件信息
+        $file = request()->file('file');
+        /*判断上传文件是否存在错误*/
+        if (empty($file)) {
+            $res = ['code' => 0, 'msg' => '文件过大或文件已损坏！'];
+            respose($res);
+        }
+        $error = $file->getError();
+        if (!empty($error)) {
+            $res = ['code' => 0, 'msg' => $error];
+            respose($res);
+        }
+
+        $file_type = tpCache('basic.file_type');
+        $file_type = !empty($file_type) ? str_replace('|', ',', $file_type) : 'zip,gz,rar,iso,doc,xls,ppt,wps,txt,docx';
+        $max_file_size = intval(tpCache('basic.file_size') * 1024 * 1024);
+
+        $result  = $this->validate(
+            ['file' => $file],
+            ['file'=>'fileSize:'.$max_file_size.'|fileExt:'.$file_type],
+            ['file.fileSize' => '上传文件过大','file.fileExt'=>'上传文件后缀名必须为'.$file_type]
+        );
+
+        if (true !== $result || empty($file)) {
+            $res = ['code' => 0, 'msg' => $result];
+            respose($res);
+        }
+        /*--end*/
+
+        // 移动到框架应用根目录/public/uploads/ 目录下
+        $this->savePath = "soft/" . date('Ymd/');
+        // 定义文件名
+        $fileName = $file->getInfo('name');
+        // 提取文件名后缀
+        $file_ext = pathinfo($fileName, PATHINFO_EXTENSION);
+
+        // 使用自定义的文件保存规则
+        $info = $file->rule(function ($file) {
+            return session('admin_id') . '-' . dd2char(date("ymdHis") . mt_rand(100, 999));
+        })->move(UPLOAD_PATH . $this->savePath);
+        if ($info) {
+            // 拼装数据存入session
+            $file_path = UPLOAD_PATH . $this->savePath . $info->getSaveName();
+            $return    = array(
+                'code'      => 1,
+                'msg'       => '上传成功',
+                'file_url'  => ROOT_DIR.'/' . UPLOAD_PATH . $this->savePath . $info->getSaveName(),
+                'file_mime' => $file->getInfo('type'),
+                'file_name' => $fileName,
+                'file_ext'  => '.' . $file_ext,
+                'file_size' => $info->getSize(),
+                'uhash'     => $this->uhash($file_path),
+                'md5file'   => md5_file($file_path),
+            );
+        } else {
+            $res = ['code' => 0, 'msg' => $info->getError()];
+        }
+        respose($return);
+    }
+
+    // 上传视频
+    public function upVideo()
+    {
+        $file     = request()->file('file');
+        if (empty($file)) {
+            if (!@ini_get('file_uploads')) {
+                return json_encode(['state' => '请检查空间是否开启文件上传功能！']);
+            } else {
+                return json_encode(['state' => 'ERROR，空间限制上传大小！']);
+            }
+        }
+        $error = $file->getError();
+        if (!empty($error)) {
+            return json_encode(['state' => $error]);
+        }
+
+        $media_type                 = tpCache('basic.media_type');
+        $media_type = !empty($media_type) ? str_replace('|', ',', $media_type) : config('global.media_ext');
+        if (empty($media_type)) {
+            return json_encode(['state' => 'ERROR，请设置上传多媒体文件类型！']);
+        } else {
+            $media_type = str_replace('|', ',', $media_type);
+        }
+        $max_file_size = intval(tpCache('basic.file_size') * 1024 * 1024);
+        $result  = $this->validate(
+            ['file' => $file],
+            ['file' => 'fileSize:' . $max_file_size . '|fileExt:' . $media_type],
+            ['file.fileSize' => '上传视频过大', 'file.fileExt' => '上传视频后缀名必须为' . $media_type]
+        );
+        if (true !== $result || empty($file)) {
+            $state = "ERROR" . $result;
+            return json_encode(['state' => $state]);
+        }
+
+        //获取视频时长start
+        vendor('getid3.getid3');
+        // 实例化
+        $getID3       = new \getID3();  //实例化类
+        $tmp_name = $file->getInfo('tmp_name');
+        $ThisFileInfo = $getID3->analyze($tmp_name); //分析文件，$path为音频文件的地址
+        $fileduration = intval($ThisFileInfo['playtime_seconds']); //这个获得的便是音频文件的时长
+        //获取视频时长end
+
+        // 移动到框架应用根目录/public/uploads/ 目录下
+        $this->savePath = $this->savePath.date('Ymd/');
+        // 使用自定义的文件保存规则
+        $info = $file->rule(function ($file) {
+            return session('admin_id') . '-' . dd2char(date("ymdHis") . mt_rand(100, 999));
+        })->move(UPLOAD_PATH . $this->savePath);
+
+        if ($info) {
+            // 定义文件名
+            $fileName    = $file->getInfo('name');
+            // 提取出文件名，不包括扩展名
+            $newfileName = preg_replace('/\.([^\.]+)$/', '', $fileName);
+            // 过滤文件名.\/的特殊字符，防止利用上传漏洞
+            $newfileName = preg_replace('#(\\\|\/|\.)#i', '', $newfileName);
+
+            $file_path = UPLOAD_PATH.$this->savePath.$info->getSaveName();
+
+            $file_size = $info->getSize();
+
+            $data = array(
+                'state'    => 'SUCCESS',
+                'url'      => '/' . $file_path,
+                'time'     => $fileduration,
+                'title'    => $newfileName,
+                'original' => $info->getSaveName(),
+                'type'     => '.' . $info->getExtension(),
+                'size'     => $file_size,
+                'mime'     => $file->getInfo('type'),
+            );
+
+            $data['url'] = ROOT_DIR . $data['url']; // 支持子目录
+        } else {
+            $data = array('state' => 'ERROR' . $info->getError());
+        }
+        return $data;
     }
 }

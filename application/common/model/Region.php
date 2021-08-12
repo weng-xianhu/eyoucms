@@ -12,6 +12,7 @@
  */
 namespace app\common\model;
 
+use think\Db;
 use think\Model;
 
 /**
@@ -32,7 +33,7 @@ class Region extends Model
      */
     public function getInfo($id, $field = '*')
     {
-        $result = db('Region')->field($field)->find($id);
+        $result = Db::name('region')->field($field)->find($id);
 
         return $result;
     }
@@ -46,7 +47,7 @@ class Region extends Model
         $map = array(
             'id'   => array('IN', $ids),
         );
-        $result = db('Region')->field($field)
+        $result = Db::name('region')->field($field)
             ->where($map)
             ->select();
 
@@ -79,7 +80,7 @@ class Region extends Model
             $map['parent_id'] = $parent_id;
         }
 
-        $result = db('Region')->field($field)
+        $result = Db::name('region')->field($field)
             ->where($map)
             ->select();
 
@@ -100,7 +101,7 @@ class Region extends Model
             'level' => $level,
         );
 
-        $result = db('Region')->field($field)
+        $result = Db::name('region')->field($field)
             ->where($map)
             ->select();
 

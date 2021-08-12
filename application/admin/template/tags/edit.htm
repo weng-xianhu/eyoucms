@@ -1,0 +1,121 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style=" padding:0; overflow: hidden;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <form class="form-horizontal" id="editpostForm">
+        <input type="hidden" name="id" value="{$tag.id}">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label>标签名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="tag_tag" id="tag_tag" value="{$tag.tag}" class="input-txt">
+                    <input type="hidden" name="tag_tagold" id="tag_tagold" value="{$tag.tag}" class="input-txt">
+                    <p class="notic">标签调用方法：{literal}{$eyou.field.tag}{/literal}</p>
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                  <label>缩略图</label>
+                </dt>
+                <dd class="opt">
+                    <div class="input-file-show div_litpic_local" {neq name="$tag.is_remote" value="0"}style="display: none;"{/neq}>
+                        <span class="show">
+                            <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="{$tag.litpic_local|default='javascript:void(0);'}">
+                                <i id="img_i" class="fa fa-picture-o" {notempty name="$tag.litpic_local"}onmouseover="layer_tips=layer.tips('<img src={$tag.litpic_local} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                            </a>
+                        </span>
+                        <span class="type-file-box">
+                            <input type="text" id="litpic_local" name="litpic_local" value="{$tag.litpic_local|default=''}" class="type-file-text" autocomplete="off">
+                            <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                            <input class="type-file-file" onClick="GetUploadify(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
+                                 title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                        </span>
+                    </div>
+                    <input type="text" id="litpic_remote" name="litpic_remote" value="{$tag.litpic_remote|default=''}" placeholder="http://" class="input-txt" onKeyup="keyupRemote(this, 'litpic');" {neq name="$tag.is_remote" value="1"}style="display: none;"{/neq}>
+                    &nbsp;
+                    <label><input type="checkbox" name="is_remote" id="is_remote" value="1" {eq name="$tag.is_remote" value="1"}checked="checked"{/eq} onClick="clickRemote(this, 'litpic');">远程图片</label>
+                    <span class="err"></span>
+                    <p class="notic">标签调用方法：{literal}{$eyou.field.litpic}{/literal}</p>
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="tag_seo_title">SEO标题</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="tag_seo_title" id="tag_seo_title" value="{$tag.seo_title}" class="input-txt">
+                    <p class="notic">标签调用方法：{literal}{$eyou.field.seo_title}{/literal}</p>
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="tag_seo_keywords">SEO关键词</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="60" name="tag_seo_keywords" id="tag_seo_keywords" style="height: 40px;">{$tag.seo_keywords}</textarea>
+                    <p class="notic">标签调用方法：{literal}{$eyou.field.seo_keywords}{/literal}</p>
+                </dd>
+            </dl>
+            
+            <dl class="row">
+                <dt class="tit">
+                    <label for="tag_seo_description">SEO描述</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="60" name="tag_seo_description" id="tag_seo_description" style="height: 60px;">{$tag.seo_description}</textarea>
+                    <p class="notic">标签调用方法：{literal}{$eyou.field.seo_description}{/literal}</p>
+                </dd>
+            </dl>
+            
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+    // 判断输入框是否为空
+    function checkForm() {
+        layer_loading('正在处理');
+        $.ajax({
+            url : "{:url('Tags/edit', ['_ajax'=>1])}",
+            data: $('#editpostForm').serialize(),
+            type: 'POST',
+            success:function(res) {
+                layer.closeAll();
+                if (1 == res.code) {
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                } else {
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e) {
+                layer.closeAll();
+                showErrorMsg(e.responseText);
+            }
+       });
+    }
+
+    function img_call_back(fileurl_tmp)
+    {
+        $("#litpic_local").val(fileurl_tmp);
+        $("#img_a").attr('href', fileurl_tmp);
+        $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+    }
+</script>
+
+{include file="public/footer" /}

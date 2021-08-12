@@ -1,29 +1,24 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
     {include file="recycle_bin/bar" /}
     <div class="flexigrid">
         <div class="mDiv">
-            <div class="ftitle">
-                <h3>栏目回收列表</h3>
-                <h5>(共{$pageObj->totalRows}条记录)</h5>
-            </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" action="{:url('RecycleBin/arctype_index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
-                <div class="sDiv">
+					<div class="ftitle">
                     {include file="recycle_bin/btn" /}
-                    <div class="sDiv2">
-                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="名称搜索...">
-                        <input type="submit" class="btn" value="搜索">
-                    </div>
-                    <!-- <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('RecycleBin/arctype_index')}';">
-                    </div> -->
-                </div>
+					</div>
+					<div class="sDiv">
+						<div class="sDiv2">
+							<input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="名称搜索...">
+							<input type="submit" class="btn" value="搜索">
+							<i class="fa fa-search"></i>
+						</div>
+					</div>
             </form>
         </div>
         <div class="hDiv">
@@ -31,11 +26,14 @@
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
                     <thead>
                     <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                        </th>
                         <th abbr="article_show" axis="col5" class="w60">
                             <div class="tc">ID</div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="">栏目名称</div>
+                            <div class="text-l10">栏目名称</div>
                         </th>
                         <th axis="col2" class="w150">
                             <div class="tc">所属模型</div>
@@ -64,13 +62,16 @@
                     {else/}
                         {foreach name="list" item="vo" key="k" }
                         <tr>
+                            <td class="sign">
+                                <div class="tc w40"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.id}"></div>
+                            </td>
                             <td class="sort">
                                 <div class="w60 tc">
                                     {$vo.id}
                                 </div>
                             </td>
                             <td style="width: 100%">
-                                <div style="">
+                                <div class="text-l10">
                                     {$vo.typename}
                                 </div>
                             </td>
@@ -84,13 +85,15 @@
                                     {$vo.update_time|date='Y-m-d',###}
                                 </div>
                             </td>
-                            <td>
+                            <td class="operation">
                                 <div class="w150 tc">
                                     {eq name="'RecycleBin@arctype_recovery'|is_check_access" value="1"}
-                                    <a class="btn blue" href="javascript:void(0);" data-url="{:url('RecycleBin/arctype_recovery')}" data-id="{$vo.id}" data-typename="{$vo.typename}" onClick="recovery(this);"><i class="fa fa-trash-o"></i>还原</a>
+                                    <a class="btn blue" href="javascript:void(0);" data-url="{:url('RecycleBin/arctype_recovery')}" data-id="{$vo.id}" data-typename="{$vo.typename}" onClick="recovery(this);">还原</a>
                                     {/eq}
+									
                                     {eq name="'RecycleBin@arctype_del'|is_check_access" value="1"}
-                                    <a class="btn red" href="javascript:void(0);" data-url="{:url('RecycleBin/arctype_del')}" data-id="{$vo.id}" data-typename="{$vo.typename}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>彻底删除</a>
+									<i></i>
+                                    <a class="btn red" href="javascript:void(0);" data-url="{:url('RecycleBin/arctype_del')}" data-id="{$vo.id}" data-typename="{$vo.typename}" onClick="delfun(this);">彻底删除</a>
                                     {/eq}
                                 </div>
                             </td>
@@ -102,14 +105,45 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        
         <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                {eq name="'RecycleBin@arctype_recovery'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_recovery(this, 'ids');" data-url="{:url('RecycleBin/batch_arctype_recovery')}" class="layui-btn layui-btn-primary">
+                        <span>批量还原</span>
+                    </a>
+                </div>
+                {/eq}
+                {eq name="'RecycleBin@arctype_del'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('RecycleBin/batch_arctype_del')}" class="layui-btn layui-btn-primary">
+                        <span>批量彻底删除</span>
+                    </a>
+                </div>
+                {/eq}
+                {include file="public/page" /}
             <div style="clear:both"></div>
         </div>
-        <!--分页位置-->
-        {$pageStr}
     </div>
 </div>
 <script>
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+
     $(document).ready(function(){
         // 表格行点击选中切换
         $('#flexigrid > table>tbody >tr').click(function(){
@@ -133,15 +167,15 @@
             $.ajax({
                 type : 'post',
                 url : $(obj).attr('data-url'),
-                data : {del_id:$(obj).attr('data-id')},
+                data : {del_id:$(obj).attr('data-id'), _ajax:1},
                 dataType : 'json',
                 success : function(data){
                     layer.closeAll();
                     if(data.code == 1){
-                        layer.msg(data.msg, {icon: 1});
+                        layer.msg(data.msg, {icon: 6});
                         window.location.reload();
                     }else{
-                        layer.alert(data.msg, {icon: 2, title:false});
+                        layer.alert(data.msg, {icon: 5, title:false});
                     }
                 }
             })
@@ -149,6 +183,50 @@
             layer.close(index);
         });
         return false;
+    }
+
+    /**
+     * 批量还原提交
+     */
+    function batch_recovery(obj, name) {
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {icon: 5, title:false});
+            return;
+        }
+        // 还原按钮
+        layer.confirm('<font color="red">选定文档与关联栏目一起还原</font>，确认批量还原？', {
+            title: false,
+            btn: ['确定', '取消'] //按钮
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:a, _ajax:1},
+                dataType: 'json',
+                success: function (data) {
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 6});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 5, title:false});
+                    }
+                },
+                error:function(){
+                    layer.closeAll();
+                    layer.alert(ey_unknown_error, {icon: 5, title:false});
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
     }
 
     // 删除
@@ -162,15 +240,15 @@
             $.ajax({
                 type : 'post',
                 url : $(obj).attr('data-url'),
-                data : {del_id:$(obj).attr('data-id')},
+                data : {del_id:$(obj).attr('data-id'), _ajax:1},
                 dataType : 'json',
                 success : function(data){
                     layer.closeAll();
                     if(data.code == 1){
-                        layer.msg(data.msg, {icon: 1});
+                        layer.msg(data.msg, {icon: 6});
                         window.location.reload();
                     }else{
-                        layer.alert(data.msg, {icon: 2, title:false});
+                        layer.alert(data.msg, {icon: 5, title:false});
                     }
                 }
             })
@@ -191,11 +269,11 @@
             }
         })
         if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 2, title:false});
+            layer.alert('请至少选择一项', {icon: 5, title:false});
             return;
         }
         // 删除按钮
-        layer.confirm('此操作不可逆，确认批量彻底删除？', {
+        layer.confirm('此操作不可恢复，确认批量彻底删除？', {
             title: false,
             btn: ['确定', '取消'] //按钮
         }, function () {
@@ -203,20 +281,20 @@
             $.ajax({
                 type: "POST",
                 url: $(obj).attr('data-url'),
-                data: {del_id:a},
+                data: {del_id:a, _ajax:1},
                 dataType: 'json',
                 success: function (data) {
                     layer.closeAll();
                     if(data.code == 1){
-                        layer.msg(data.msg, {icon: 1});
+                        layer.msg(data.msg, {icon: 6});
                         window.location.reload();
                     }else{
-                        layer.alert(data.msg, {icon: 2, title:false});
+                        layer.alert(data.msg, {icon: 5, title:false});
                     }
                 },
                 error:function(){
                     layer.closeAll();
-                    layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+                    layer.alert(ey_unknown_error, {icon: 5, title:false});
                 }
             });
         }, function (index) {

@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <link rel="stylesheet" href="__PUBLIC__/plugins/layui/css/layui.css?v={$version}">
+    <title>地图标注</title>
+    <style>
+        #map{width:100%;height:800px;}
+        .layui-form-item{position:absolute;top:10px;z-index: 999999;}
+    </style>
+</head>
+<body>
+<div class="layui-form-item">
+    <div class="layui-inline">
+        <label class="layui-form-label"></label>
+        <div class="layui-input-inline" style="width: 220px;">
+            <input name="keyword" id="keyword" type="text" placeholder="输入地址搜索,可以移动标注点" title="输入地址搜索,可以移动标注点更改位置确定保存" class="layui-input" autocomplete="off" size="25" value="{$field.mapConf.keyword}" />
+        </div>
+        <input type="hidden" id="alladdress" value="">
+        <button class="layui-btn layui-btn-normal" id="search">搜索</button>
+        <button class="layui-btn layui-btn-danger" id="sure">确定</button>
+
+        <form class="form-horizontal" id="post_form" onsubmit="return check_submit();">
+            <input type="hidden" name="location" id="location" value="{$field.mapConf.lng},{$field.mapConf.lat}">
+            <input type="hidden" name="zoom" id="zoom" value="{$field.mapConf.zoom|default='13'}">
+            <input type="hidden" name="id" value="{$field.id|default=''}">
+            <input type="hidden" name="type" value="{$field.type|default=''}">
+            <input type="hidden" name="page" value="{$field.page|default=''}">
+            <input type="hidden" name="v" value="{$v|default='pc'}">
+            <input type="hidden" name="lang" value="{$field.lang|default='cn'}">
+            <input type="hidden" name="idcode" value="{$field.idcode|default=''}">
+            <input type="hidden" name="iframe" value="1">
+        </form>
+    </div>
+</div>
+<div id="map">
+
+</div>
+<script src="__PUBLIC__/plugins/layui/layui.js?v={$version}"></script>
+<script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak={$field.mapConf.ak}"></script>
+<script type="text/javascript">
+    // 百度地图API功能
+    var lng = "{$field.mapConf.lng}",lat = "{$field.mapConf.lat}",keyword = "{$field.mapConf.keyword}";
+    var map = new BMap.Map("map",{enableMapClick:false});
+    // 创建地址解析器实例
+    var myGeo = new BMap.Geocoder();
+
+    if(lng*1 && lat*1)
+    {
+        var point = new BMap.Point(lng,lat);
+        map.centerAndZoom(point, 15);
+        var marker = new BMap.Marker(point);// 创建标注
+        map.addOverlay(marker);             // 将标注添加到地图中
+        marker.enableDragging();           // 可拖拽
+        marker.addEventListener('dragend',getMarkerPoint);
+        getMarkerPoint(point);
+    }else{
+        //new BMap.Point(110.211023,20.007536);
+        // map.centerAndZoom(keyword,14);
+        // 将地址解析结果显示在地图上,并调整地图视野
+        myGeo.getPoint(keyword, function(point){
+            if (point) {
+                map.centerAndZoom(point, 15);
+                var marker = new BMap.Marker(point);
+                map.addOverlay(marker);
+                marker.enableDragging();           // 可拖拽
+                marker.addEventListener('dragend',getMarkerPoint);
+                getMarkerPoint(point);
+            }
+        }, "海口市");
+    }
+    map.addControl(new BMap.NavigationControl());
+    map.enableScrollWheelZoom(true);
+    map.addEventListener("zoomend", function(e){
+      var zoom = map.getZoom();
+      document.getElementById('zoom').value = zoom;
+    });
+
+    window.onload = function(){
+        var h = document.documentElement.clientHeight - 20;
+        document.getElementById('map').style.height = h+'px';
+    };
+    function getMarkerPoint(e)
+    {
+        //通过点击百度地图，可以获取到对应的point, 由point的lng、lat属性就可以获取对应的经度纬度  
+        var pot = '';
+        if (!e.point) {
+            pot = e;
+        } else {
+            pot = e.point;
+        }
+        myGeo.getLocation(pot, function(rs){
+            //addressComponents对象可以获取到详细的地址信息
+            var addComp = rs.addressComponents;
+            var alladdress = addComp.province + addComp.city + addComp.district + addComp.street + addComp.streetNumber;
+            document.getElementById("alladdress").value = alladdress; //详细地址
+            document.getElementById("location").value = pot.lng + ',' + pot.lat; // 经度 纬度
+        });
+    }
+</script>
+<script>
+    layui.use(['layer','jquery'], function(){
+        var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
+
+        $(document).keydown(function(event){
+            if(event.keyCode ==13){
+                $('#search').trigger("click");
+            }
+        });
+        
+        $("#search").on('click',function(){
+            var keyword = $("#keyword").val();
+            var url     = "{:url('api/Uiset/mapGetLocationByAddress')}";
+            var param = {
+                address : keyword,
+                _ajax:1,
+            };
+            $.get(url,param,function(res){
+                if(res.code == 1)
+                {
+                    map.clearOverlays();
+                    var point = new BMap.Point(res.data.lng,res.data.lat);
+                    map.centerAndZoom(point, 15);
+                    var marker = new BMap.Marker(point);// 创建标注
+                    map.addOverlay(marker);
+                    marker.enableDragging();
+                    marker.addEventListener('dragend',getMarkerPoint);
+                    getMarkerPoint(point);
+                }
+            });
+        });
+
+        var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+        $("#sure").on('click',function(){
+            if ($('input[name=id]').val() == '' || $('input[name=id]').val() == undefined || $('input[name=type]').val() == '' || $('input[name=page]').val() == '') {
+                parent.showErrorMsg('缺少系统参数：id、type、page，尝试请求技术支持！');
+                return false;
+            }
+
+            parent.eyou_layer_loading('正在处理');
+            var url = "{:url('api/Uiset/submit', ['_ajax'=>1])}";
+            $.ajax({
+                url: url,
+                type: 'POST',
+                dataType: 'JSON',
+                data: $('#post_form').serialize(),
+                success: function(res){
+                    parent.layer.closeAll();
+                    if (res.code == 1) {
+                        $('#workspace', window.parent.document).attr('src', $('#workspace', window.parent.document).attr('src'));
+                        parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000});
+                    } else {
+                        parent.eyou_showErrorAlert(res.msg);
+                    }
+                },
+                error: function(e){
+                    parent.layer.closeAll();
+                    parent.eyou_showErrorAlert(e.responseText);
+                }
+            });
+        });
+    });
+
+</script>
+</body>
+</html>

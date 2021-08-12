@@ -13,6 +13,7 @@
 
 namespace app\admin\model;
 
+use think\Db;
 use think\Model;
 // use app\admin\logic\WeappLogic;
 
@@ -35,12 +36,31 @@ class Weapp extends Model
      * 获取插件列表
      */
     public function getList($where = array()){
-        $result = M('weapp')->where($where)->getAllWithIndex('code');
+        $result = Db::name('weapp')->where($where)->getAllWithIndex('code');
         foreach ($result as $key => $val) {
             $config = include WEAPP_PATH.$val['code'].DS.'config.php';
             $val['config'] = json_encode($config);
             $result[$key] = $val;
         }
         return $result;
+    }
+
+    /**
+     * 清除插件列表的缓存
+     */
+    public function clearWeappCache()
+    {
+        extra_cache('common_weapp_getWeappList', NULL);
+        $weappM = new \app\common\model\Weapp;
+        $weappM->getWeappList();
+    }
+
+    /**
+     * 获取插件列表所有信息，方便系统其它地方使用
+     */
+    public function getWeappList($code = '')
+    {
+        $weappM = new \app\common\model\Weapp;
+        return $weappM->getWeappList($code);
     }
 }

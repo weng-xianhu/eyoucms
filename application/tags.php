@@ -2,105 +2,69 @@
 
 // 应用行为扩展定义文件
 
-/*引入全部插件的app_init行为*/
+$weappRow = \think\Db::name('weapp')->field('code')->where([
+    'status'    => 1,
+])->cache(true, null, "weapp")->select();
+
 $app_init = [
     'app\\common\\behavior\\AppInitBehavior',
 ];
-$files = glob(WEAPP_DIR_NAME.DS.'*'.DS.'behavior'.DS.'AppInitBehavior.php');
-if (!empty($files)) {
-    foreach ($files as $key => $file) {
-        if (is_file($file) && file_exists($file)) {
-            $fileStr = str_replace('/', '\\', $file);
-            $fileStr = str_replace('.php', '', $fileStr);
-            array_push($app_init, $fileStr);
-        }
-    }
-}
-/*--end*/
-
-/*引入全部插件的app_begin行为*/
 $app_begin = [];
-$files = glob(WEAPP_DIR_NAME.DS.'*'.DS.'behavior'.DS.'AppBeginBehavior.php');
-if (!empty($files)) {
-    foreach ($files as $key => $file) {
-        if (is_file($file) && file_exists($file)) {
-            $fileStr = str_replace('/', '\\', $file);
-            $fileStr = str_replace('.php', '', $fileStr);
-            array_push($app_begin, $fileStr);
-        }
-    }
-}
-/*--end*/
-
-/*引入全部插件的app_begin行为*/
 $module_init = [];
-$files = glob(WEAPP_DIR_NAME.DS.'*'.DS.'behavior'.DS.'ModuleInitBehavior.php');
-if (!empty($files)) {
-    foreach ($files as $key => $file) {
-        if (is_file($file) && file_exists($file)) {
-            $fileStr = str_replace('/', '\\', $file);
-            $fileStr = str_replace('.php', '', $fileStr);
-            array_push($module_init, $fileStr);
-        }
-    }
-}
-/*--end*/
-
-/*引入全部插件的action_begin行为*/
 $action_begin = [];
-$files = glob(WEAPP_DIR_NAME.DS.'*'.DS.'behavior'.DS.'ActionBeginBehavior.php');
-if (!empty($files)) {
-    foreach ($files as $key => $file) {
-        if (is_file($file) && file_exists($file)) {
-            $fileStr = str_replace('/', '\\', $file);
-            $fileStr = str_replace('.php', '', $fileStr);
-            array_push($action_begin, $fileStr);
-        }
-    }
-}
-/*--end*/
-
-/*引入全部插件的view_filter行为*/
 $view_filter = [];
-$files = glob(WEAPP_DIR_NAME.DS.'*'.DS.'behavior'.DS.'ViewFilterBehavior.php');
-if (!empty($files)) {
-    foreach ($files as $key => $file) {
-        if (is_file($file) && file_exists($file)) {
-            $fileStr = str_replace('/', '\\', $file);
-            $fileStr = str_replace('.php', '', $fileStr);
-            array_push($view_filter, $fileStr);
-        }
-    }
-}
-/*--end*/
-
-/*引入全部插件的log_write行为*/
 $log_write = [];
-$files = glob(WEAPP_DIR_NAME.DS.'*'.DS.'behavior'.DS.'LogWriteBehavior.php');
-if (!empty($files)) {
-    foreach ($files as $key => $file) {
-        if (is_file($file) && file_exists($file)) {
-            $fileStr = str_replace('/', '\\', $file);
-            $fileStr = str_replace('.php', '', $fileStr);
-            array_push($log_write, $fileStr);
-        }
-    }
-}
-/*--end*/
-
-/*引入全部插件的app_end行为*/
 $app_end = [];
-$files = glob(WEAPP_DIR_NAME.DS.'*'.DS.'behavior'.DS.'AppEndBehavior.php');
-if (!empty($files)) {
-    foreach ($files as $key => $file) {
-        if (is_file($file) && file_exists($file)) {
-            $fileStr = str_replace('/', '\\', $file);
-            $fileStr = str_replace('.php', '', $fileStr);
-            array_push($app_end, $fileStr);
-        }
+foreach ($weappRow as $key => $val) {
+    /*引入全部插件的app_init行为*/
+    $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'behavior'.DS.'AppInitBehavior.php';
+    if (file_exists($file)) {
+        $fileStr = 'weapp\\'.$val['code'].'\\behavior\\AppInitBehavior';
+        array_push($app_init, $fileStr);
+    }
+
+    /*引入全部插件的app_begin行为*/
+    $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'behavior'.DS.'AppBeginBehavior.php';
+    if (file_exists($file)) {
+        $fileStr = 'weapp\\'.$val['code'].'\\behavior\\AppBeginBehavior';
+        array_push($app_begin, $fileStr);
+    }
+
+    /*引入全部插件的module_init行为*/
+    $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'behavior'.DS.'ModuleInitBehavior.php';
+    if (file_exists($file)) {
+        $fileStr = 'weapp\\'.$val['code'].'\\behavior\\ModuleInitBehavior';
+        array_push($module_init, $fileStr);
+    }
+    
+    /*引入全部插件的action_begin行为*/
+    $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'behavior'.DS.'ActionBeginBehavior.php';
+    if (file_exists($file)) {
+        $fileStr = 'weapp\\'.$val['code'].'\\behavior\\ActionBeginBehavior';
+        array_push($action_begin, $fileStr);
+    }
+
+    /*引入全部插件的view_filter行为*/
+    $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'behavior'.DS.'ViewFilterBehavior.php';
+    if (file_exists($file)) {
+        $fileStr = 'weapp\\'.$val['code'].'\\behavior\\ViewFilterBehavior';
+        array_push($view_filter, $fileStr);
+    }
+
+    /*引入全部插件的log_write行为*/
+    $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'behavior'.DS.'LogWriteBehavior.php';
+    if (file_exists($file)) {
+        $fileStr = 'weapp\\'.$val['code'].'\\behavior\\LogWriteBehavior';
+        array_push($log_write, $fileStr);
+    }
+    
+    /*引入全部插件的app_end行为*/
+    $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'behavior'.DS.'AppEndBehavior.php';
+    if (file_exists($file)) {
+        $fileStr = 'weapp\\'.$val['code'].'\\behavior\\AppEndBehavior';
+        array_push($app_end, $fileStr);
     }
 }
-/*--end*/
 
 return array(
     // 应用初始化

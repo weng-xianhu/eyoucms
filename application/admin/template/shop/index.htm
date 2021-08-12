@@ -1,35 +1,40 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width:auto;">
-    {include file="member/bar" /}
+{include file="shop/left" /}
+<div class="page" style="min-width:auto;margin-left:98px;">
+    {include file="shop/shop_bar" /}
     <div class="flexigrid">
         <div class="mDiv">
             <div class="ftitle">
-                <h3>订单列表</h3>
-                <h5>(共{$pageObj->totalRows}条记录)</h5>
+                {if condition="'index' == $Think.const.ACTION_NAME and '' == $Request.param.order_status"}<h3>全部列表</h3>{/if}
+                {eq name="$Request.param.order_status" value="10"}<h3>待付款列表</h3>{/eq}
+                {eq name="$Request.param.order_status" value="1"}<h3>待发货列表</h3>{/eq}
+                {eq name="$Request.param.order_status" value="2"}<h3>已发货列表</h3>{/eq}
+                {eq name="$Request.param.order_status" value="3"}<h3>已完成列表</h3>{/eq}
+                <h5>(共{$pager->totalRows}条数据)</h5>
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" id="postForm" action="{:url('Shop/index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
-                    <!-- 订单状态查询 -->
-                    <div class="sDiv2 fl" style="margin-right: 6px;">  
-                        <select name="order_status" class="select" style="margin:0px 5px;" onchange="OrderQueryStatus();">
-                            <option value="">查看全部</option>
-                            {volist name="$OrderStatus" id="vo"}
-                                <option value="{$vo.order_status}" {eq name="$Request.param.order_status" value="$vo.order_status"}selected{/eq}>{$vo.status_name}</option>
-                            {/volist}
-                        </select>
+                    <div class="fl">
+                        <!-- #weapp_ExportOrder_btn# -->
                     </div>
-                    <!-- 订单号查询 -->
-                    <div class="sDiv2 fl" style="margin-right: 6px;">
-                        <input type="text" size="50"  name="order_code" class="qsbox" style="width: 200px;" value="{$Request.param.order_code}" placeholder="搜索订单号...">
+                    <div class="sDiv2">
+                        <input type="text" name="add_time_begin" id="add_time_begin" autocomplete="off" value="{$Request.param.add_time_begin}" class="qsbox" placeholder="起始日期">
+                    </div>
+                    &nbsp;至&nbsp;
+                    <div class="sDiv2">
+                        <input type="text" name="add_time_end" id="add_time_end" autocomplete="off" value="{$Request.param.add_time_end}" class="qsbox" placeholder="结束日期">
+                    </div>
+                    <div class="sDiv2">
+                        <input type="text" size="50" name="order_code" value="{$Request.param.keywords}" class="qsbox" style="width: 200px;" placeholder="搜索订单号...">
                         <input type="submit" class="btn" value="搜索">
+						<i class="fa fa-search"></i>
                     </div>
-                    {include file="shop/shop_bar" /}
+
                 </div>
             </form>
         </div>
@@ -39,13 +44,19 @@
                     <thead>
                     <tr>
                         <th class="sign w40" axis="col0">
-                            <div class="tc">选择</div>
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                         </th>
+						<th align="center" abbr="article_title" axis="col3" class="w60">
+						    <div class="tc">缩略图</div>
+						</th>
                         <th abbr="article_title" axis="col3" class="">
-                            <div style="text-align: left; padding-left: 10px;" class="">订单号</div>
+                            <div class="text-l10">订单号</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">订单金额</div>
+                            <div class="tc">用户名</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">订单金额<span class="hint" data-hint="当前列表订单总金额：￥{$total_money|default='0.00'}"><i class="fa fa-jpy ml5"></i></span></div>
                         </th>
                         <!--<th abbr="article_time" axis="col6" class="w100">
                             <div class="tc">支付方式</div>
@@ -81,11 +92,21 @@
                         {volist name="list" id="vo"}
                         <tr>
                             <td class="sign">
-                                <div class="w40 tc"><input type="checkbox" name="ids[]" value="{$vo.order_id}"></div>
+                                <div class="w40 tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.order_id}"></div>
                             </td>
+							<td class="w60">
+							    <div class="tc">
+                                    <a href="{$vo.arcurl}" target="_blank"><img width="60" height="60" src="{$vo.litpic}"></a>
+							    </div>
+							</td>
                             <td class="" style="width: 100%;">
-                                <div class="tl" style="padding-left: 10px;">
-                                    <a href="{:url('Shop/order_details',array('order_id'=>$vo['order_id']))}">{$vo.order_code}</a>
+                                <div class="tl text-l10">
+                                    <a href="javascript:void(0);" data-href="{:url('Shop/order_details',array('order_id'=>$vo['order_id']))}" onclick="openFullframe(this, '订单详情', '100%', '100%');">{$vo.order_code}</a>
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                     <a href="javascript:void(0);" data-href="{:url('Member/users_edit',array('id'=>$vo['users_id']))}" onclick="openFullframe(this, '用户资料', '100%', '100%');">{$vo.username}</a>
                                 </div>
                             </td>
                             <td class="">
@@ -125,51 +146,122 @@
                                 </div>
                             </td>
                             -->
-                            <td>
+                            <td class="operation">
                                 <div class="w160 tc">
-                                    <a href="{:url('Shop/order_details',array('order_id'=>$vo['order_id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>详情</a>
+                                    <a href="javascript:void(0);" data-href="{:url('Shop/order_details',array('order_id'=>$vo['order_id']))}" class="btn blue" onclick="openFullframe(this, '订单详情', '100%', '100%');">详情</a>
                                     {eq name="$vo.order_status" value='0'}
                                         <!-- 订单未付款时出现 -->
+										<i></i>
                                         <a href="JavaScript:void(0);" onclick="OrderMark('yfk','{$vo.order_id}','{$vo.users_id}');" class="btn blue">
-                                            <i class="fa fa-pencil-square-o"></i>付款
+                                            付款
                                         </a>
+										<i></i>
+                                        <a href="JavaScript:void(0);" onclick="PromptChangePrice('{$vo.order_id}', '{$vo.order_amount}');" class="btn blue">
+                                            改价
+                                        </a>
+                                        <script type="text/javascript">
+                                            // 弹出改价输入框
+                                            function PromptChangePrice(order_id, order_amount) {
+                                                layer.prompt({
+                                                    title: false, 
+                                                    formType: 3,
+                                                    id: 'BulkSetPrice',
+                                                    btn: ['确定', '关闭'],
+                                                    closeBtn: 0,
+                                                    success: function(layero, index) {
+                                                        $("#BulkSetPrice").find('input').attr('placeholder', '请输入应付金额');
+                                                        $("#BulkSetPrice").find('input').attr('value', order_amount);
+                                                        $("#BulkSetPrice").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                                        $("#BulkSetPrice").find('input').attr('onpaste', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                                        var msg = '<span style="color: red;">改价后让用户重新进入订单列表点击支付</span>';
+                                                        $("#BulkSetPrice").append(msg);
+                                                        // 修改订单金额后为保证支付金额准确有效<br/>请让用户刷新订单列表页后重新点击支付
+                                                    }
+                                                }, function(price, index) {
+                                                    if (0 < price) {
+                                                        layer.close(index);
+                                                        OrderChangePrice(order_id, order_amount, price);
+                                                    } else {
+                                                        layer.msg('应付金额不允许为0', {time: 1500});
+                                                    }
+                                                });
+                                            }
 
-                                        <a href="JavaScript:void(0);" onclick="OrderMark('gbdd','{$vo.order_id}','{$vo.users_id}');" class="btn blue">
-                                            <i class="fa fa-pencil-square-o"></i>关闭
-                                        </a>
+                                            // 提交改价数据并追加一条订单操作记录
+                                            function OrderChangePrice(OrderID, OrderAmount, Price) {
+                                                if (0 >= Price) layer.msg('应付金额不允许为0', {time: 1500});
+                                                layer_loading('正在处理');
+                                                $.ajax({
+                                                    type : 'post',
+                                                    url  : "{:url('Shop/order_change_price')}",
+                                                    data : {
+                                                        order_id: OrderID,
+                                                        order_amount_old: OrderAmount,
+                                                        order_amount: Price,
+                                                        _ajax: 1
+                                                    },
+                                                    dataType : 'json',
+                                                    success : function(res) {
+                                                        layer.closeAll();
+                                                        if (1 == res.code) {
+                                                            layer.msg(res.msg, {time: 1500}, function() {
+                                                                window.location.reload();
+                                                            });
+                                                        } else {
+                                                            layer.alert(res.msg, {title: false, closeBtn: 0}, function() {
+                                                                window.location.reload();
+                                                            });
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        </script>
                                     {/eq}
 
                                     {eq name="$vo.order_status" value='1'}
                                         <!-- 订单待发货时出现 -->
+										<i></i>
                                         <a href="JavaScript:void(0);" data-url="{:url('Shop/order_send', ['order_id'=>$vo.order_id])}" onclick="OrderSend(this);" class="btn blue">
-                                            <i class="fa fa-pencil-square-o"></i>发货
+                                            发货
                                         </a>
-
-                                        <a href="JavaScript:void(0);" onclick="OrderMark('gbdd','{$vo.order_id}','{$vo.users_id}');" class="btn blue">
-                                            <i class="fa fa-pencil-square-o"></i>关闭
+										<i></i>
+                                        <a href="JavaScript:void(0);" class="btn blue" title="买家提醒商家发货次数">
+                                            提醒
+                                            {notempty name="$LogData[$vo.order_id]['action_count']"}
+                                                <em class="num">{$LogData[$vo.order_id]['action_count']}</em>
+                                            {/notempty}
                                         </a>
                                     {/eq}
 
                                     {eq name="$vo.order_status" value='2'}
                                         <!-- 订单已发货时出现 -->
+										<i></i>
                                         <a href="JavaScript:void(0);" onclick="OrderMark('ysh','{$vo.order_id}','{$vo.users_id}');" class="btn blue">
-                                            <i class="fa fa-pencil-square-o"></i>完成
+                                            完成
                                         </a>
-
-                                        <a href="JavaScript:void(0);" onclick="OrderMark('gbdd','{$vo.order_id}','{$vo.users_id}');" class="btn blue">
-                                            <i class="fa fa-pencil-square-o"></i>关闭
+										<i></i>
+                                        <a href="JavaScript:void(0);" onclick="OrderMark('ddbz','{$vo.order_id}','{$vo.users_id}','{$vo.admin_note}', '{$vo.update_time|MyDate="Y-m-d H:i:s",###}');" class="btn blue">
+                                            备注
+                                            {notempty name="$vo.admin_note"}
+                                                <em class="num" style="z-index: 9999; width: 8px; height: 8px; line-height: 8px; right: -2px; top: -2px;"></em>
+                                            {/notempty}
+                                            <input type="hidden" id="beizhu-url" value="{:url('Shop/update_note')}">
                                         </a>
                                     {/eq}
 
-                                    {if condition="-1 == $vo.order_status or 4 == $vo.order_status"}
+                                    {if condition="-1 == $vo.order_status or 3 == $vo.order_status"}
                                         <!-- 订单取消或取消过期时出现 -->
-                                        <a href="JavaScript:void(0);" onclick="OrderMark('ddbz','{$vo.order_id}','{$vo.users_id}','{$vo.admin_note}');" class="btn blue">
-                                            <i class="fa fa-pencil-square-o"></i>备注
+										<i></i>
+                                        <a href="JavaScript:void(0);" onclick="OrderMark('ddbz','{$vo.order_id}','{$vo.users_id}','{$vo.admin_note}', '{$vo.update_time|MyDate="Y-m-d H:i:s",###}');" class="btn blue">
+                                            备注
+                                            {notempty name="$vo.admin_note"}
+                                                <em class="num" style="z-index: 9999; width: 8px; height: 8px; line-height: 8px; right: -2px; top: -2px;"></em>
+                                            {/notempty}
                                             <input type="hidden" id="beizhu-url" value="{:url('Shop/update_note')}">
                                         </a>
-
+										<i></i>
                                         <a href="JavaScript:void(0);" onclick="OrderMark('ddsc','{$vo.order_id}','{$vo.users_id}');" class="btn blue">
-                                            <i class="fa fa-pencil-square-o"></i>删除
+                                            删除
                                         </a>
                                     {/if}
                                 </div>
@@ -185,23 +277,46 @@
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
-                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
                 </div>
                 <div class="fbutton">
-                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Shop/order_del')}">
-                        <div class="add" title="批量删除">
-                            <span><i class="fa fa-close"></i>批量删除</span>
-                        </div>
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Shop/order_del')}" class="layui-btn layui-btn-primary">
+                            <span>批量删除</span>
                     </a>
                 </div>
+                {include file="public/page" /}
             </div>
             <div style="clear:both"></div>
         </div>
         <!--分页位置-->
-        {$pageStr}
     </div>
 </div>
 <script>
+    
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#add_time_begin' //指定元素
+        });
+        laydate.render({
+            elem: '#add_time_end' //指定元素
+        });
+    });
+
     $(document).ready(function(){
         // 表格行点击选中切换
         $('#flexigrid > table>tbody >tr').click(function(){
@@ -223,7 +338,7 @@
             $.ajax({
                 type : 'get',
                 url : "{:url('Shop/ajax_syn_theme_shop')}",
-                data : {},
+                data : {_ajax:1},
                 dataType : 'json',
                 success : function(res){
                     layer.closeAll();
@@ -237,7 +352,7 @@
                 },
                 error: function(e){
                     layer.closeAll();
-                    layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false}, function(){
+                    layer.alert(ey_unknown_error, {icon: 2, title:false}, function(){
                         window.location.reload();
                     });
                 }
@@ -266,7 +381,7 @@
     }
 
     // 订单操作
-    function OrderMark(status_name,order_id,users_id,admin_note){
+    function OrderMark(status_name, order_id, users_id, admin_note, update_time) {
         if('yfk' == status_name){
             var msg = '确认订单已付款？';
         }else if('ysh' == status_name){
@@ -278,29 +393,37 @@
                 formType: 2,
                 value: admin_note,
                 title: false,
-                area: ['300px', '100px']
-            }, function(value, index, elem){
+                closeBtn: 0,
+                id: 'AdminNote',
+                area: ['300px', '100px'],
+                success: function(layero, index) {
+                    if (admin_note) {
+                        var msg = '<br/><span style="color: #999; font-size: 12px;">最后更新：'+update_time+'</span>';
+                        $("#AdminNote").append(msg);
+                    }
+                }
+            }, function(value, index, elem) {
                 UpNote(order_id,value);
                 layer.close(index);
             });
-            
             return false;
         }else if('ddsc' == status_name){
             var msg = '确认删除订单？';
         }
 
         layer.confirm(msg, {
-            title:false,
+            title: false,
+            closeBtn: 0,
             btn: ['确定','取消'],
         },function(){
             $.ajax({
                 url: "{:url('Shop/order_mark_status')}",
-                data: {order_id:order_id,status_name:status_name,users_id:users_id},
+                data: {order_id:order_id,status_name:status_name,users_id:users_id, _ajax:1},
                 type:'post',
                 dataType:'json',
                 success:function(res){
                     layer.closeAll();
-                    if ('1' == res.code) {
+                    if (1 == res.code) {
                         layer.msg(res.msg, {time: 1500},function(){
                             window.location.reload();
                         });
@@ -317,7 +440,7 @@
     function UpNote(order_id,admin_note){
         $.ajax({
             url: "{:url('Shop/update_note')}",
-            data: {order_id:order_id,admin_note:admin_note},
+            data: {order_id:order_id,admin_note:admin_note, _ajax:1},
             type:'post',
             dataType:'json',
             success:function(res){

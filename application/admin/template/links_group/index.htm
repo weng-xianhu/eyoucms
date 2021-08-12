@@ -1,0 +1,237 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="flexigrid">
+        <!-- 操作说明 -->
+        <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+            <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+                <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+            </div>
+            <ul>
+                <li>必填：只针对友情链接的分组有效。</li>
+            </ul>
+        </div>
+        <br/>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                   <thead>
+                    <tr>
+                        <th abbr="article_title" axis="col3" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="text-l10">分组名称</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead> 
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <form id="PostForm">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody id="Template">
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr class="tr">
+                            <td class="sort">
+                                <div class="w40 tc"><input type="hidden" name="id[]" value="{$vo.id}">{$vo.id}</div>
+                            </td>
+                            <td style="width: 100%">
+                                <div class="text-l10">
+                                    {eq name="'LinksGroup@linksgroup_save'|is_check_access" value="1"}
+                                        <input type="text" name="group_name[]" value="{$vo.group_name}" style="width: 200px;">
+                                    {else /}
+                                        {$vo.group_name}
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {eq name="'LinksGroup@linksgroup_save'|is_check_access" value="1"}
+                                    <input class="tc" type="text" name="sort_order[]" size="4" value="{$vo.sort_order}" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')" />
+                                    {else /}
+                                    {$vo.sort_order}
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="operation">
+                                <div class="w120 tc">
+                                    {neq name="$vo.id" value="1"}
+                                        {eq name="'LinksGroup@del'|is_check_access" value="1"}
+                                            <a class="btn red"  href="javascript:void(0);" data-url="{:url('LinksGroup/del')}" data-title="{$vo.group_name}" data-id="{$vo.id}" onClick="delGroup(this);">删除</a>
+                                        {/eq}
+                                    {else/}
+                                        {eq name="'LinksGroup@del'|is_check_access" value="1"}
+                                            <a class="btn grey"  href="javascript:void(0);">删除</a>
+                                        {/eq}
+                                    {/neq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            </form>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="footer-oper">
+            {eq name="$Think.const.CONTROLLER_NAME.'@linksgroup_save'|is_check_access" value="1"}
+            <div class="fbutton">
+                <a href="javascript:void(0);" data-url="{:url('LinksGroup/linksgroup_save', ['_ajax'=>1])}" onclick="linksgroup_save(this);" class="layui-btn layui-btn-primary">
+                    <span class="">保存</span>
+                </a>
+            </div>
+            <div class="fbutton">
+                <a href="javascript:void(0);" onclick="link_group_add();" class="layui-btn layui-btn-primary">
+                    <span>新增分组</span>
+                </a>
+            </div>
+            {/eq}
+            {include file="public/page" /}
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    // tr数,取唯一标识
+    var tr_id = $('#Template .tr').length;
+
+    function link_group_add(){
+        var AddHtml = [];
+        AddHtml += 
+            '<tr class="tr" id="tr_'+tr_id+'">'+
+                '<td class="sort">'+
+                    '<div class="w40 tc"><input type="hidden" name="id[]">&nbsp;</div>'+
+                '</td>'+
+
+                '<td style="width: 100%">'+
+                    '<div class="text-l10">'+
+                        '<input type="text" name="group_name[]" value="" style="width: 200px;">'+
+                    '</div>'+
+                '</td>'+
+
+                '<td class="sort">'+
+                    '<div class="w60 tc">'+
+                        '<input class="tc" type="text" name="sort_order[]" size="4" value="100" onkeyup="this.value=this.value.replace(/[^\d]/g,\'\');" onpaste="this.value=this.value.replace(/[^\d]/g,\'\')" />'+
+                    '</div>'+
+                '</td>' +
+
+                '<td class="operation">'+
+                    '<div class="w120 tc">'+
+                        '<a class="btn red" href="javascript:void(0);" data-trid="tr_'+tr_id+'" onclick="DelHtml(this)">删除</a>'+
+                    '</div>'+
+                '</td>'+
+            '</tr>';
+        $('#Template').append(AddHtml);
+        tr_id += 1;
+    }
+
+    // 删除未保存的级别
+    function DelHtml(obj){
+        $('#'+$(obj).attr('data-trid')).remove();
+    }
+
+    // 删除
+    function delGroup(obj){
+        layer.confirm('<font color="#ff0000">该链接分组的数据将一起清空</font>，确认彻底删除？', {
+            title: false, // $(obj).data('title'),
+            btn: ['确定','取消'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id'),_ajax:1},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 6});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 5, title:false});
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }
+
+    // 提交
+    function linksgroup_save(obj){
+        if ($('input[name*=group_name]').length == 0) {
+            showErrorAlert('至少新增一个分组！');
+            return false;
+        } else {
+            var is_empty = true;
+            $('input[name*=group_name]').each(function(index, item){
+                if ($.trim($(item).val()) != '') {
+                    is_empty = false;
+                    return false;
+                }
+            });
+            if (true == is_empty) {
+                showErrorAlert('分组名称不能为空！');
+                return false;
+            }
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : $(obj).attr('data-url'),
+            data : $('#PostForm').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {icon: 6, time: 1000}, function(){
+                        window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

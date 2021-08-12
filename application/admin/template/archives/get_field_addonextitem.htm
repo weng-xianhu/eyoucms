@@ -1,0 +1,88 @@
+<span id="FieldAddonextitem"></span>
+<script type="text/javascript">
+    $(function() {
+        var aidNew = {$field.aid|default='0'};
+        var typeidNew = {$typeid|default='0'};
+        if (!typeidNew) typeidNew = {$field.typeid|default='0'};
+        var channeltypeNew = {$channeltype|default='0'};
+        var ControllerName = '{$Think.const.CONTROLLER_NAME}';
+        GetAddonextitem(0, typeidNew, channeltypeNew, aidNew, false, ControllerName);
+    });
+    
+    function GetAddonextitem(init, typeidNew, channeltypeNew, aidNew, is_destroy, ControllerName) {
+        var loadingTxt = 1 == init ? '正在切换' : '正在加载';
+        layer_loading(loadingTxt);
+        ControllerName = ControllerName ? ControllerName : '';
+        
+        $.ajax({
+            url: "{:url('Archives/ajax_get_addonextitem')}",
+            data: {typeid: typeidNew, channeltype: channeltypeNew, aid: aidNew, controller_name: ControllerName, _ajax:1},
+            type:'get',
+            success:function(res) {
+                layer.closeAll();
+                if (res.code == 0) {
+                    layer.alert(res.msg, {icon: 2, title:false});
+                } else {
+                    var EditorSelect = {$editor.editor_select};
+                    if (2 == EditorSelect) {
+                        // 编辑器内容数据提取
+                        var contentData = [];
+                        $.each(res.data.htmltextField, function (index, value) {
+                            var contentID = 'addonFieldExt_' + value;
+                            var getContent = '';
+                            for (instance in CKEDITOR.instances) {
+                                CKEDITOR.instances[contentID].updateElement();
+                                getContent = CKEDITOR.instances[contentID].getData();
+                            }
+                            contentData.push(getContent);
+                        });
+                        // 覆盖原先的编辑器HTML
+                        $('#FieldAddonextitem').empty().html(res.data.html);
+                        // 追加编辑器的内容
+                        $.each(res.data.htmltextField, function (index, value) {
+                            if (contentData[index]) {
+                                var contentID = 'addonFieldExt_' + value;
+                                CKEDITOR.instances[contentID].setData(contentData[index]);
+                            }
+                        });
+                    } else if (1 == EditorSelect) {
+                        $('#FieldAddonextitem').empty().html(res.data.html);
+                        
+                        if (1 == init) {
+                            $.each(res.data.htmltextField, function (index, value) {
+                                showEditor_1597892187('addonFieldExt_'+value);
+                            });
+                        }
+                    }
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 2, title:false});
+            }
+        });
+    }
+
+    // 渲染编辑器
+    function showEditor_1597892187(elemtid) {
+        var content = '';
+        try{
+            content = UE.getEditor(elemtid).getContent();
+            UE.getEditor(elemtid).destroy();
+        }catch(e){}
+        var serverUrl = eyou_basefile+'?m=admin&c=Ueditor&a=index&savepath=ueditor&lang='+__lang__;
+        var options = {
+            serverUrl : serverUrl,
+            zIndex: 999,
+            initialFrameWidth: "100%", //初化宽度
+            initialFrameHeight: 450, //初化高度            
+            focus: false, //初始化时，是否让编辑器获得焦点true或false
+            maximumWords: 99999,
+            removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
+            pasteplain:false, //是否默认为纯文本粘贴。false为不使用纯文本粘贴，true为使用纯文本粘贴
+            autoHeightEnabled: false,
+            toolbars: ueditor_toolbars
+        };
+        eval("ue_"+elemtid+" = UE.getEditor(elemtid, options);ue_"+elemtid+".ready(function() {ue_"+elemtid+".setContent(content);});");
+    }
+</script>

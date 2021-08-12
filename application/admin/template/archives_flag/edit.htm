@@ -1,0 +1,47 @@
+{include file="public/layout" /}
+<body class="bodystyle">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <form class="form-horizontal" id="post_form" action="{:U('LinksGroup/edit')}" method="post">
+        <input type="hidden" name="id" value="{$info.id}">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="group_name"><em>*</em>分组名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="group_name" value="{$info.group_name|default=''}" id="group_name" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="sort_order">排序</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="sort_order" value="{$info.sort_order|default='100'}" id="sort_order" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic">越小越靠前</p>
+                </dd>
+            </dl>
+            <div class="bot"><a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a></div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    // 判断输入框是否为空
+    function checkForm(){
+        if($('input[name=group_name]').val() == ''){
+            showErrorMsg('分组名称不能为空！');
+            $('input[name=group_name]').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+
+</script>
+{include file="public/footer" /}

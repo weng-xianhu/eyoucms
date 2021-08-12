@@ -1,11 +1,10 @@
 {include file="public/layout" /}
 
-<body style="background-color: #FFF; overflow: auto;">
+<body class="bodystyle">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
-    {include file="field/arctype_bar" /}
     <form class="form-horizontal" id="post_form" action="{:url('Field/arctype_edit')}" method="post">
         <!-- 常规选项 -->
         <div class="ncap-form-default tab_div_1">
@@ -32,11 +31,13 @@
                     <label for="dtype"><em>*</em>字段类型</label>
                 </dt>
                 <dd class="opt">
-                    <select name="dtype" id="dtype">
                     {volist name='$fieldtype_list' id='vo'}
-                    <option value="{$vo.name}" data-ifoption="{$vo.ifoption|default=0}" {eq name="$info.dtype" value="$vo.name"}selected{/eq}>{$vo.title}</option>
+                        <div style="width: 150px; float: left;">
+                            <label><input type="radio" name="dtype" value="{$vo.name}" data-ifoption="{$vo.ifoption|default=0}" {eq name="$info.dtype" value="$vo.name"} checked="checked" {/eq} data-text="{$vo.title}">{$vo.title}</label>&nbsp;
+                        </div>
+                        {if condition="$i % 4 == 0"}<br/>{/if}
                     {/volist}
-                    </select>
+                    <input type="hidden" name="old_dtype" value="{$info.dtype}">
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
@@ -47,8 +48,9 @@
                 </dt>
                 <dd class="opt">
                     <textarea rows="5" cols="60" id="dfvalue" name="dfvalue" placeholder="如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。" style="height:60px;">{$info.dfvalue|default=''}</textarea>
+                    <textarea rows="5" cols="60" name="old_dfvalue" style="display: none;">{$info.dfvalue|default=''}</textarea>
                     <span class="err"></span>
-                    <p class="notic">如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。</p>
+                    <p class="notic">1、如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。<br/>2、特殊符号会被过滤掉，比如：&、=、?等</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -84,14 +86,26 @@
 </div>
 <script type="text/javascript">
     $(function(){
-        dtype_change($('#dtype'));
-        $('#dtype').change(function(){
+        dtype_change($('input[name=dtype]:checked'));
+        $('input[name=dtype]').click(function(){
+            /*多选项不能切换为指定的字段类型*/
+            var dtype = $(this).val();
+            var old_dtype = $('input[name=old_dtype]').val();
+            if ('checkbox' == old_dtype && 0 <= $.inArray(dtype, ['radio','select'])) {
+                $("input[name=dtype][value="+old_dtype+"]").attr("checked",'checked');
+                var old_dtype_text = $("input[name=dtype][value="+old_dtype+"]").data('text');
+                var dtype_text = $("input[name=dtype][value="+dtype+"]").data('text');
+                showErrorMsg(old_dtype_text+"不能更改为"+dtype_text+"！");
+                $(this).focus();
+                return false;
+            }
+            /*end*/
             dtype_change(this);
         });
 
         function dtype_change(obj){
             var dtype = $(obj).val();
-            var ifoption = $(obj).find('option:selected').data('ifoption');
+            var ifoption = $(obj).data('ifoption');
             if (0 <= $.inArray(dtype, ['datetime','switch','img','imgs','files'])) {
                 $('#dl_dfvalue').hide();
             } else {
@@ -105,6 +119,7 @@
         }
     });
 
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     function check_submit(){
         if($('input[name="title"]').val() == ''){
             showErrorMsg('字段标题不能为空！');
@@ -124,12 +139,12 @@
             $('input[name=name]').focus();
             return false;
         }
-        if($('#dtype').val() == ''){
+        if($('input[name=dtype]:checked').val() == ''){
             showErrorMsg('请选择字段类型！');
             $('input[name=dtype]').focus();
             return false;
         } else {
-            var ifoption = $('#dtype').find('option:selected').data('ifoption');
+            var ifoption = $('input[name=dtype]:checked').data('ifoption');
             if (1 == ifoption) {
                 if ($.trim($('#dfvalue').val()) == '') {
                     showErrorMsg('默认值不能为空！');
@@ -137,10 +152,45 @@
                     return false;
                 }
             }
+            
+            if (0 <= $.inArray($('input[name=dtype]:checked').val(), ['radio','checkbox','select'])) {
+                var dfvalue = $.trim($('#dfvalue').val());
+                data = dfvalue.split(',');
+                for(var i = 0;i < data.length ;i++) {
+                    for(var j = i+1;j < data.length;j++) {
+                        if ($.trim(data[i]) == $.trim(data [j])){
+                            showErrorMsg('默认值不能含有相同的值！');
+                            $('#dfvalue').focus();
+                            return false;
+                        }
+                    }
+                }
+            }
         }
-        
+
         layer_loading('正在处理');
-        $('#post_form').submit();
+        $.ajax({
+            type : 'post',
+            url : "{:url('Field/arctype_edit', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
     }
 </script>
 

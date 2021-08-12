@@ -1,5 +1,5 @@
 {include file="public/layout" /}
-<body style="background-color: #FFF; overflow-y: scroll;">
+<body class="bodystyle" style="overflow-y: scroll;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page atta">
@@ -8,7 +8,7 @@
         <div class="ncap-form-default">
             <dl class="row">
                 <dt class="tit">
-                    <label for="basic_indexname">主页链接名</label>
+                    <label for="basic_indexname">面包屑首页名</label>
                 </dt>
                 <dd class="opt">
                     <input id="basic_indexname" name="basic_indexname" value="{$config.basic_indexname|default='首页'}" class="input-txt" type="text" />
@@ -18,7 +18,7 @@
             {eq name='$main_lang' value='$admin_lang'}
             <dl class="row">
                 <dt class="tit">
-                    <label for="list_symbol">栏目位置的间隔符号</label>
+                    <label for="list_symbol">面包屑间隔符</label>
                 </dt>
                 <dd class="opt">
                     <input id="list_symbol" name="list_symbol" value="{$config.list_symbol|default=' > '}" class="input-txt" type="text" />
@@ -27,28 +27,28 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="image_type">允许上传的图片类型</label>
+                    <label for="image_type">允许上传图片类型</label>
                 </dt>
                 <dd class="opt">
-                    <textarea rows="5" cols="60" id="image_type" name="image_type" style="height:40px;">{empty name='config.image_type'}jpg|gif|png|bmp|jpeg|ico{else /}{$config.image_type}{/empty}</textarea>
+                    <textarea rows="5" cols="60" id="image_type" name="image_type" style="height:20px;">{empty name='config.image_type'}jpg|gif|png|bmp|jpeg|ico{else /}{$config.image_type}{/empty}</textarea>
                     <p class="notic">禁止非图片的扩展名，比如：php</p>
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="file_type">允许上传的软件类型</label>
+                    <label for="file_type">允许上传软件类型</label>
                 </dt>
                 <dd class="opt">
-                    <textarea rows="5" cols="60" id="file_type" name="file_type" style="height:40px;">{empty name='config.file_type'}zip|gz|rar|iso|doc|xsl|ppt|wps{else /}{$config.file_type}{/empty}</textarea>
+                    <textarea rows="5" cols="60" id="file_type" name="file_type" style="height:20px;">{empty name='config.file_type'}zip|gz|rar|iso|doc|xsl|ppt|wps{else /}{$config.file_type}{/empty}</textarea>
                     <p class="notic">禁止非软件的扩展名，比如：php</p>
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="media_type">允许多媒体文件类型</label>
+                    <label for="media_type">允许多媒体类型</label>
                 </dt>
                 <dd class="opt">
-                    <textarea rows="5" cols="60" id="media_type" name="media_type" style="height:40px;">{empty name='config.media_type'}swf|mpg|mp3|rm|rmvb|wmv|wma|wav|mid|mov|mp4{else /}{$config.media_type}{/empty}</textarea>
+                    <textarea rows="5" cols="60" id="media_type" name="media_type" style="height:20px;">{empty name='config.media_type'}swf|mpg|mp3|rm|rmvb|wmv|wma|wav|mid|mov|mp4{else /}{$config.media_type}{/empty}</textarea>
                     <p class="notic">禁止非媒体的扩展名，比如：php</p>
                 </dd>
             </dl>
@@ -61,10 +61,52 @@
                     <p class="notic">附件上传大小限制，如果空间不支持，请与空间商联系修改php.ini部分参数</p>
                 </dd>
             </dl>
+            <dl class="row">
+                <dt class="tit">文档图片自适应</dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="basic_img_style_wh1" class="cb-enable {if condition='isset($config.basic_img_style_wh) && $config.basic_img_style_wh eq 1'}selected{/if}" >开启</label>
+                        <label for="basic_img_style_wh0" class="cb-disable {if condition='!isset($config.basic_img_style_wh) || $config.basic_img_style_wh == 0'}selected{/if}" >关闭</label>
+                        <input id="basic_img_style_wh1" name="basic_img_style_wh" value="1" {if condition="isset($config.basic_img_style_wh) && $config.basic_img_style_wh == 1"}checked{/if} type="radio">
+                        <input id="basic_img_style_wh0" name="basic_img_style_wh" value="0" {if condition="!isset($config.basic_img_style_wh) || $config.basic_img_style_wh == 0"}checked{/if} type="radio">
+                    </div>
+                    <p class="notic">自动通过样式控制，确保手机端下图片不拉伸变形</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="other_arcclick">文档默认浏览量</label>
+                </dt>
+                <dd class="opt">
+                    <input id="other_arcclick" name="other_arcclick" value="{if isset($other_config.other_arcclick) && 0 <= $other_config.other_arcclick}{$other_config.other_arcclick}{else /}500|1000{/if}" onkeyup="this.value=this.value.replace(/[^\|\d]/g,'');" onpaste="this.value=this.value.replace(/[^\|\d]/g,'')" class="input-txt" type="text" />
+                    <p class="notic">比如：500|1000 表示随机数500-1000之间</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="other_arcdownload">软件默认下载量</label>
+                </dt>
+                <dd class="opt">
+                    <input id="other_arcdownload" name="other_arcdownload" value="{if isset($other_config.other_arcdownload) && 0 <= $other_config.other_arcdownload}{$other_config.other_arcdownload}{else /}100|500{/if}" onkeyup="this.value=this.value.replace(/[^\|\d]/g,'');" onpaste="this.value=this.value.replace(/[^\|\d]/g,'')" class="input-txt" type="text" />
+                    <p class="notic">比如：100|500 表示随机数100-500之间</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="editor_select">内容编辑器</label>
+                </dt>
+                <dd class="opt">
+                    <label class="curpoin"><input type="radio" name="editor_select" value="1" {if condition="empty($editor.editor_select) || $editor.editor_select eq 1"} checked="checked" {/if}>Ueditor</label>
+                    &nbsp;&nbsp;
+                    <label class="curpoin"><input type="radio" name="editor_select" value="2" {if condition="isset($editor.editor_select) && $editor.editor_select eq 2"} checked="checked" {/if}>Ckeditor</label>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
             {/eq}
             <div class="bot">
                 <input type="hidden" name="max_filesize" id="max_filesize" value="{$max_filesize}">
                 <input type="hidden" name="max_sizeunit" id="max_sizeunit" value="{$max_sizeunit}">
+                <input type="hidden" name="old_basic_img_style_wh" value="{$config.basic_img_style_wh|default=0}">
                 <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">确认提交</a>
             </div>
         </div>

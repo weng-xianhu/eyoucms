@@ -29,7 +29,7 @@ class FieldLogic extends Model
      * @param array $batch 是否批量列表
      * @author 小虎哥 by 2018-7-25
      */
-    public function getChannelFieldList($data, $channel_id = '', $batch = false)
+    public function getChannelFieldList($data, $channel_id = '', $batch = false, $is_minipro = false)
     {
         if (!empty($data) && !empty($channel_id)) {
             /*获取模型对应的附加表字段信息*/
@@ -38,7 +38,7 @@ class FieldLogic extends Model
             );
             $fieldInfo = model('Channelfield')->getListByWhere($map, '*', 'name');
             /*--end*/
-            $data = $this->handleAddonFieldList($data, $fieldInfo, $batch);
+            $data = $this->handleAddonFieldList($data, $fieldInfo, $batch, $is_minipro);
         } else {
             $data = array();
         }
@@ -77,7 +77,7 @@ class FieldLogic extends Model
      * @param array $batch 是否批量列表
      * @author 小虎哥 by 2018-7-25
      */
-    public function handleAddonFieldList($data, $fieldInfo, $batch = false)
+    public function handleAddonFieldList($data, $fieldInfo, $batch = false, $is_minipro = false)
     {
         if (false !== $batch) {
             return $this->handleBatchAddonFieldList($data, $fieldInfo);
@@ -86,29 +86,69 @@ class FieldLogic extends Model
         if (!empty($data) && !empty($fieldInfo)) {
             foreach ($data as $key => $val) {
                 $dtype = !empty($fieldInfo[$key]) ? $fieldInfo[$key]['dtype'] : '';
+                if (empty($dtype)) {
+                    continue;
+                }
                 $dfvalue_unit = !empty($fieldInfo[$key]) ? $fieldInfo[$key]['dfvalue_unit'] : '';
                 switch ($dtype) {
                     case 'int':
                     case 'float':
-                    case 'decimal':
                     case 'text':
                     {
-                        $data[$key.'_unit'] = $dfvalue_unit;
+                        !empty($dfvalue_unit) && $data[$key.'_unit'] = $dfvalue_unit;
                         break;
                     }
 
-                    case 'checkbox':
                     case 'imgs':
+                    {
+                        if (!is_array($val)) {
+                            $eyou_imgupload_list = @unserialize($val);
+                            if (false === $eyou_imgupload_list) {
+                                $eyou_imgupload_list = [];
+                                $eyou_imgupload_data = explode(',', $val);
+                                foreach ($eyou_imgupload_data as $k1 => $v1) {
+                                    $eyou_imgupload_list[$k1] = [
+                                        'image_url' => handle_subdir_pic($v1),
+                                        'intro'     => '',
+                                    ];
+                                }
+                            }
+                        } else {
+                            $eyou_imgupload_list = [];
+                            $eyou_imgupload_data = $val;
+                            foreach ($eyou_imgupload_data as $k1 => $v1) {
+                                $v1['image_url'] = handle_subdir_pic($v1['image_url']);
+                                isset($v1['intro']) && $v1['intro'] = htmlspecialchars_decode($v1['intro']);
+                                $eyou_imgupload_list[$k1] = $v1;
+                            }
+                        }
+                        $val = $eyou_imgupload_list;
+                        break;
+                    }
+                    case 'img':
+                        {
+                            $val = handle_subdir_pic($val);
+                            break;
+                        }
+                    case 'media':
+                    {
+                        $val = handle_subdir_pic($val,'media');
+                        break;
+                    }
+                    case 'file':
+                        {
+                            $val = handle_subdir_pic($val);
+                            break;
+                        }
+                    case 'checkbox':
                     case 'files':
                     {
                         if (!is_array($val)) {
                             $val = !empty($val) ? explode(',', $val) : array();
                         }
-                        /*支持子目录*/
                         foreach ($val as $k1 => $v1) {
                             $val[$k1] = handle_subdir_pic($v1);
                         }
-                        /*--end*/
                         break;
                     }
 
@@ -124,12 +164,52 @@ class FieldLogic extends Model
                         /*支持子目录*/
                         $val = handle_subdir_pic($val, 'html');
                         /*--end*/
+
+                        if (true === $is_minipro) {
+                            $baseTag = new \think\template\taglib\api\Base;
+                            $val = $baseTag->html_httpimgurl($val);
+                        }
+
                         break;
                     }
 
                     case 'decimal':
                     {
                         $val = number_format($val,'2','.',',');
+                        break;
+                    }
+
+                    case 'region':
+                    {
+                        // 先在默认值里寻找是否存在对应区域ID的名称
+                        $dfvalue = !empty($fieldInfo[$key]['dfvalue']) ? $fieldInfo[$key]['dfvalue'] : '';
+                        if (!empty($dfvalue)) {
+                            $dfvalue_tmp = unserialize($dfvalue);
+                            $region_ids = !empty($dfvalue_tmp['region_ids']) ? explode(',', $dfvalue_tmp['region_ids']) : [];
+                            if (!empty($region_ids)) {
+                                $arr_index = array_search($val, $region_ids);
+                                if (false !== $arr_index && 0 <= $arr_index) {
+                                    $dfvalue_tmp['region_names'] = str_replace('，', ',', $dfvalue_tmp['region_names']);
+                                    $region_names = explode(',', $dfvalue_tmp['region_names']);
+                                    $val = $region_names[$arr_index];
+                                }
+                            }
+                        }
+                        // 默认值里不存在，则去区域表里获取
+                        if (!empty($val) && is_numeric($val)) {
+                            $city_list = get_city_list();
+                            if (!empty($city_list[$val])) {
+                                $val = $city_list[$val]['name'];
+                            } else {
+                                $province_list = get_province_list();
+                                if (!empty($province_list[$val])) {
+                                    $val = $province_list[$val]['name'];
+                                } else {
+                                    $area_list = get_area_list();
+                                    $val = !empty($area_list[$val]) ? $area_list[$val]['name'] : '';
+                                }
+                            }
+                        }
                         break;
                     }
                     

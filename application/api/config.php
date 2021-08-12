@@ -23,9 +23,9 @@ $api_config = array(
     // +----------------------------------------------------------------------
 
     // 异常页面的模板文件 
-    //'exception_tmpl'         => ROOT_PATH.'public/static/errpage/404.html',
+    //'exception_tmpl'         => ROOT_PATH.'public/errpage/404.html',
     // errorpage 错误页面
-    //'error_tmpl'         => ROOT_PATH.'public/static/errpage/404.html',
+    //'error_tmpl'         => ROOT_PATH.'public/errpage/404.html',
 
     // 过滤不需要登录的操作
     'filter_login_action' => array(

@@ -40,7 +40,7 @@ class Arctype extends Model
         $field .= ', a.id as typeid';
 
         /*当前栏目信息*/
-        $result = db('Arctype')->field($field)
+        $result = Db::name('Arctype')->field($field)
             ->alias('a')
             ->where('a.id', $id)
             ->join('__CHANNELTYPE__ c', 'c.id = a.current_channel', 'LEFT')
@@ -52,7 +52,7 @@ class Arctype extends Model
                 $result['typeurl'] = $this->getTypeUrl($result); // 当前栏目的URL
                 /*获取当前栏目父级栏目信息*/
                 if ($result['parent_id'] > 0) {
-                    $parent_row = db('Arctype')->field($field)
+                    $parent_row = Db::name('Arctype')->field($field)
                         ->alias('a')
                         ->where('a.id', $result['parent_id'])
                         ->join('__CHANNELTYPE__ c', 'c.id = a.current_channel', 'LEFT')
@@ -89,7 +89,7 @@ class Arctype extends Model
         $result['typeurl'] = $this->getTypeUrl($result); // 当前栏目的URL
         if (!empty($result['parent_id'])) {
             // 当前栏目的父级栏目信息
-            $parent_row = M('arctype')->where('id', $result['parent_id'])
+            $parent_row = Db::name('arctype')->where('id', $result['parent_id'])
                 ->cache(true,EYOUCMS_CACHE_TIME,"arctype")
                 ->find();
             $ptypeid = $parent_row['id'];
@@ -136,7 +136,7 @@ class Arctype extends Model
     {
         $field = 'c.*, a.*, a.id as typeid';
 
-        $result = db('Arctype')->field($field)
+        $result = Db::name('Arctype')->field($field)
             ->alias('a')
             ->where('a.dirname', $dirname)
             ->join('__CHANNELTYPE__ c', 'c.id = a.current_channel', 'LEFT')
@@ -145,7 +145,7 @@ class Arctype extends Model
         if (!empty($result)) {
             $result['typeurl'] = $this->getTypeUrl($result);
 
-            $result_tmp = M('arctype')->where('id', $result['parent_id'])->find();
+            $result_tmp = Db::name('arctype')->where('id', $result['parent_id'])->find();
             $result['ptypeurl'] = $this->getTypeUrl($result_tmp);
         }
 
@@ -160,10 +160,18 @@ class Arctype extends Model
     {
         if (is_array($id)) {
             $ids = array_unique($id);
-            $row = db('Arctype')->field('parent_id, count(id) AS total')->where(['parent_id'=>['IN', $ids]])->group('parent_id')->getAllWithIndex('parent_id');
+            $row = Db::name('Arctype')->field('parent_id, count(id) AS total')->where([
+                    'parent_id'=>['IN', $ids],
+                    'current_channel'=>['neq', 51], // 过滤问答模型
+                    'is_del'    => 0,
+                ])->group('parent_id')->getAllWithIndex('parent_id');
             return $row;
         } else {
-            $count = db('Arctype')->where('parent_id', $id)->count('id');
+            $count = Db::name('Arctype')->where([
+                    'parent_id' => $id,
+                    'current_channel'=>['neq', 51], // 过滤问答模型
+                    'is_del'    => 0,
+                ])->count('id');
             return ($count > 0 ? 1 : 0);
         }
     }
@@ -177,7 +185,7 @@ class Arctype extends Model
             $typeurl = $res['typelink'];
         } else {
             $ctl_name = get_controller_byct($res['current_channel']);
-            $typeurl = typeurl('home/'.$ctl_name."/lists", $res);
+            $typeurl = typeurl("home/{$ctl_name}/lists", $res);
         }
 
         return $typeurl;
@@ -275,7 +283,7 @@ class Arctype extends Model
             'status'  => 1,
             'is_del'  => 0, // 回收站功能
         );
-        $res = M('arctype')->field('parent_id')->where($map)->find();
+        $res = Db::name('arctype')->field('parent_id')->where($map)->find();
 
         if ($res) {
             $newId = $res['parent_id'];
@@ -347,23 +355,73 @@ class Arctype extends Model
     public function getHasChildren($id, $self = true)
     {
         $lang = get_current_lang(); // 多语言
+        $cacheKey = "common_model_Arctype_getAllHasChildren_{$id}_{$self}_{$lang}";
+        $result = cache($cacheKey);
+        if (empty($result)) {
+
+            static $res = null;
+            if (null === $res) {
+                $childrenRow = Db::name('arctype')->field('parent_id, count(id) as has_children')
+                    ->where([
+                        'status'  => 1,
+                        'lang'    => $lang,
+                        'is_del'  => 0,
+                    ])->group('parent_id')
+                    ->getAllWithIndex('parent_id');
+
+                $where = [
+                    'status'  => 1,
+                    'lang'    => $lang,
+                    'is_del'  => 0,
+                ];
+                $res = Db::name('arctype')->where($where)->order('parent_id asc, sort_order asc, id asc')->select();
+                foreach ($res as $key => $val) {
+                    $val['has_children'] = !empty($childrenRow[$val['id']]) ? $childrenRow[$val['id']]['has_children'] : 0;
+                    $res[$key] = $val;
+                }
+            }
+
+            $result = arctype_options($id, $res, 'id', 'parent_id');
+
+            if (!$self) {
+                array_shift($result);
+            }
+
+            cache($cacheKey, $result, null, "arctype");
+        }
+
+        return $result;
+    }
+
+    /**
+     * 获取当前栏目及所有子栏目【已优化为 getHasChildren 函数】
+     * @param boolean $self 包括自己本身
+     * @author wengxianhu by 2017-7-26
+     */
+    public function getHasChildren_old($id, $self = true)
+    {
+        $lang = get_current_lang(); // 多语言
         $cacheKey = "common_model_Arctype_getHasChildren_{$id}_{$self}_{$lang}";
         $result = cache($cacheKey);
         if (empty($result)) {
-            $where = array(
-                'c.status'  => 1,
-                'c.lang'    => $lang,
-                'c.is_del'  => 0,
-            );
-            $fields = "c.*, count(s.id) as has_children";
-            $res = db('arctype')
-                ->field($fields)
-                ->alias('c')
-                ->join('__ARCTYPE__ s','s.parent_id = c.id','LEFT')
-                ->where($where)
-                ->group('c.id')
-                ->order('c.parent_id asc, c.sort_order asc, c.id')
-                ->select();
+
+            static $res = null;
+            if (null === $res) {
+                $where = array(
+                    'c.status'  => 1,
+                    'c.lang'    => $lang,
+                    'c.is_del'  => 0,
+                );
+                $fields = "c.*, count(s.id) as has_children";
+                $res = Db::name('arctype')
+                    ->field($fields)
+                    ->alias('c')
+                    ->join('__ARCTYPE__ s','s.parent_id = c.id','LEFT')
+                    ->where($where)
+                    ->group('c.id')
+                    ->order('c.parent_id asc, c.sort_order asc, c.id')
+                    ->select();
+            }
 
             $result = arctype_options($id, $res, 'id', 'parent_id');
 
@@ -404,7 +462,7 @@ class Arctype extends Model
     public function getAll($field = '*', $map = array(), $index_key = '')
     {
         $lang = get_current_lang(); // 多语言
-        $result = db('arctype')->field($field)
+        $result = Db::name('arctype')->field($field)
             ->where($map)
             ->where('lang',$lang)
             ->order('sort_order asc')
@@ -422,25 +480,28 @@ class Arctype extends Model
      * 获取当前栏目的所有父级
      * @author wengxianhu by 2018-4-26
      */
-    public function getAllPid($id)
+    public function getAllPid($id, $is_RecycleBin = false)
     {
         $cacheKey = array(
             'common',
             'model',
             'Arctype',
             'getAllPid',
+            THEME_STYLE,
             $id,
+            $is_RecycleBin
         );
         $cacheKey = json_encode($cacheKey);
         $data = cache($cacheKey);
         if (empty($data)) {
             $data = array();
             $typeid = $id;
-            $arctype_list = M('Arctype')->field('*, id as typeid')
-                ->where([
-                    'status'    => 1,
-                    'is_del'    => 0,
-                ])
+            $map = [
+                'status'    => 1,
+            ];
+            if (false === $is_RecycleBin) $map['is_del'] = 0;
+            $arctype_list = Db::name('Arctype')->field('*, id as typeid')
+                ->where($map)
                 ->getAllWithIndex('id');
             if (isset($arctype_list[$typeid])) {
                 // 第一个先装起来
@@ -610,7 +671,7 @@ class Arctype extends Model
         {
             $lang = get_current_lang(); // 多语言
             $fields = "c.id, c.parent_id, c.dirname, c.grade, count(s.id) as has_children";
-            $row = db('arctype')
+            $row = Db::name('arctype')
                 ->field($fields)
                 ->alias('c')
                 ->join('__ARCTYPE__ s','s.parent_id = c.id','LEFT')
@@ -648,7 +709,7 @@ class Arctype extends Model
     {
         $insertId = false;
         if (!empty($data)) {
-            $insertId = M('arctype')->insertGetId($data);
+            $insertId = Db::name('arctype')->insertGetId($data);
             if($insertId){
                 // --存储单页模型
                 if ($data['current_channel'] == 6) {
@@ -661,18 +722,19 @@ class Arctype extends Model
                         'add_time'  => getTime(),
                     );
                     // $archivesData = array_merge($archivesData, $data);
-                    $aid = M('archives')->insertGetId($archivesData);
+                    $aid = Db::name('archives')->insertGetId($archivesData);
                     if ($aid) {
                         // ---------后置操作
-                        if (!isset($post['addonFieldExt'])) {
-                            $post['addonFieldExt'] = array(
+                        if (!isset($data['addonFieldExt'])) {
+                            $data['addonFieldExt'] = array(
                                 'typeid'    => $archivesData['typeid'],
                             );
                         } else {
-                            $post['addonFieldExt']['typeid'] = $archivesData['typeid'];
+                            $data['addonFieldExt']['typeid'] = $archivesData['typeid'];
                         }
+                        $data['addonFieldExt']['content'] = !empty($data['addonFieldExt']['content']) ? $data['addonFieldExt']['content'] : '';
                         $addData = array(
-                            'addonFieldExt' => $post['addonFieldExt'],
+                            'addonFieldExt' => $data['addonFieldExt'],
                         );
                         $addData = array_merge($addData, $archivesData);
                         model('Single')->afterSave($aid, $addData, 'add');
@@ -691,10 +753,189 @@ class Arctype extends Model
 
                 // \think\Cache::clear("arctype");
                 // extra_cache('admin_all_menu', NULL);
-                // \think\Cache::clear('admin_archives_release');
             }
         }
         return $insertId;
+    }
+
+    /**
+     * 批量增加顶级栏目数据
+     *
+     * @param array $data
+     * @return intval|boolean
+     */
+    public function batchAddTopData($addData = [], $post = [])
+    {
+        $arctypeLogic = new \app\common\logic\ArctypeLogic;
+
+        $result = [];
+        if (!empty($addData)) {
+            $rdata = $this->saveAll($addData);
+            if ($rdata) {
+                // --存储单页模型的主表
+                $archivesData = [];
+                foreach ($rdata as $k1 => $v1) {
+                    $info = $v1->getData();
+                    if ($info['current_channel'] == 6) {
+                        $archivesData[] = [
+                            'title' => $info['typename'],
+                            'typeid'=> $info['id'],
+                            'channel'   => $info['current_channel'],
+                            'sort_order'    => 100,
+                            'lang'  => $info['lang'],
+                            'add_time'  => getTime(),
+                        ];
+                    } else {
+                        break;
+                    }
+                }
+                // --存储单页模型的附表
+                if (!empty($archivesData)) {
+                    $arcdata = model('Archives')->saveAll($archivesData);
+                    if ($arcdata) {
+                        $singleData = [];
+                        foreach ($arcdata as $k1 => $v1) {
+                            $info = $v1->getData();
+                            $singleData[] = [
+                                'aid' => $info['aid'],
+                                'typeid'=> $info['typeid'],
+                                'content'   => '',
+                                'add_time'  => getTime(),
+                                'update_time'  => getTime(),
+                            ];
+                        }
+                        !empty($singleData) && Db::name('single_content')->insertAll($singleData);
+                    }
+                }
+
+                foreach ($rdata as $k1 => $v1) {
+                    $info = $v1->getData();
+                    $result[] = $info;
+
+                    /*同步栏目ID到权限组，默认是赋予该栏目的权限*/
+                    model('AuthRole')->syn_auth_role($info['id']);
+                    /*--end*/
+
+                    /*同步栏目ID到多语言的模板栏目变量里*/
+                    $arctypeLogic->syn_add_language_attribute($info['id']);
+                    /*--end*/
+                }
+
+                /*新增顶级栏目的下级栏目*/
+                $saveData = [];
+                $dirnameArr = [];
+                foreach ($result as $key => $val) {
+                    if (!empty($post['sontype'][$key])) {
+                        $sontype = $post['sontype'][$key];
+                        foreach ($sontype as $son_k => $son_v) {
+                            $typename = trim($son_v);
+                            if (empty($typename)) continue;
+
+                            // 目录名称
+                            $dirname = $arctypeLogic->get_dirname($typename, '', 0, $dirnameArr);
+                            array_push($dirnameArr, $dirname);
+
+                            $dirpath = $val['dirpath'].'/'.$dirname;
+
+                            $data = [
+                                'typename'  => $typename,
+                                'channeltype'   => $val['channeltype'],
+                                'current_channel'   => $val['current_channel'],
+                                'parent_id' => intval($val['id']),
+                                'dirname'   => $dirname,
+                                'dirpath'   => $dirpath,
+                                'grade' => intval($val['grade']) + 1,
+                                'templist'  => !empty($val['templist']) ? $val['templist'] : '',
+                                'tempview'  => !empty($val['tempview']) ? $val['tempview'] : '',
+                                'is_hidden'  => $val['is_hidden'],
+                                'seo_description'   => '',
+                                'admin_id'  => $val['admin_id'],
+                                'lang'  => $val['lang'],
+                                'sort_order'    => $val['sort_order'],
+                                'add_time'  => $val['add_time'],
+                                'update_time'  => $val['update_time'],
+                            ];
+
+                            $saveData[] = $data;
+                        }
+                    }
+                }
+                if (!empty($saveData)) {
+                    $result2 = $this->batchAddSubData($saveData);
+                    $result = array_merge($result, $result2);
+                }
+                /*end*/
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * 批量增加下级栏目数据
+     *
+     * @param array $data
+     * @return intval|boolean
+     */
+    public function batchAddSubData($addData = [])
+    {
+        $result = [];
+        if (!empty($addData)) {
+            $rdata = $this->saveAll($addData);
+            if ($rdata) {
+                // --存储单页模型的主表
+                $archivesData = [];
+                foreach ($rdata as $k1 => $v1) {
+                    $info = $v1->getData();
+                    if ($info['current_channel'] == 6) {
+                        $archivesData[] = [
+                            'title' => $info['typename'],
+                            'typeid'=> $info['id'],
+                            'channel'   => $info['current_channel'],
+                            'sort_order'    => 100,
+                            'lang'  => $info['lang'],
+                            'add_time'  => getTime(),
+                        ];
+                    } else {
+                        break;
+                    }
+                }
+                // --存储单页模型的附表
+                if (!empty($archivesData)) {
+                    $arcdata = model('Archives')->saveAll($archivesData);
+                    if ($arcdata) {
+                        $singleData = [];
+                        foreach ($arcdata as $k1 => $v1) {
+                            $info = $v1->getData();
+                            $singleData[] = [
+                                'aid' => $info['aid'],
+                                'typeid'=> $info['typeid'],
+                                'content'   => '',
+                                'add_time'  => getTime(),
+                                'update_time'  => getTime(),
+                            ];
+                        }
+                        !empty($singleData) && Db::name('single_content')->insertAll($singleData);
+                    }
+                }
+
+                foreach ($rdata as $k1 => $v1) {
+                    $info = $v1->getData();
+                    $result[] = $info;
+
+                    /*同步栏目ID到权限组，默认是赋予该栏目的权限*/
+                    model('AuthRole')->syn_auth_role($info['id']);
+                    /*--end*/
+
+                    /*同步栏目ID到多语言的模板栏目变量里*/
+                    $arctypeLogic = new \app\common\logic\ArctypeLogic;
+                    $arctypeLogic->syn_add_language_attribute($info['id']);
+                    /*--end*/
+                }
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -708,35 +949,62 @@ class Arctype extends Model
         $bool = false;
         if (!empty($data)) {
             $admin_lang = get_admin_lang();
-            $bool = M('arctype')->where([
+            $bool = Db::name('arctype')->where([
                     'id'    => $data['id'],
                     'lang'  => $admin_lang,
                 ])
                 ->cache(true,null,"arctype")
                 ->update($data);
             if($bool){
-                /*批量更新所有子孙栏目的最顶级模型ID*/
+                /*批量更新所有子孙栏目的最顶级模型ID / 顶级栏目ID*/
                 $allSonTypeidArr = $this->getHasChildren($data['id'], false); // 获取当前栏目的所有子孙栏目（不包含当前栏目）
                 if (!empty($allSonTypeidArr)) {
+                    /*记录每一上级的指定数据*/
+                    $arctypeArr = [];
+                    $arctypeArr[$data['id']] = [
+                        'dirpath'   => $data['dirpath'],
+                    ];
+                    /*end*/
+
                     $i = 1;
                     $minuendGrade = 0;
+                    $update_data_all = [];
                     foreach ($allSonTypeidArr as $key => $val) {
                         if ($i == 1) {
-                            $firstGrade = intval($post['oldgrade']);
-                            $minuendGrade = intval($grade) - $firstGrade;
+                            $firstGrade = intval($data['oldgrade']);
+                            $minuendGrade = intval($data['grade']) - $firstGrade;
                         }
-                        $update_data = array(
-                            'channeltype'        => $data['channeltype'],
-                            'update_time'        => getTime(),
-                            'grade'   =>  Db::raw('grade+'.$minuendGrade),
-                        );
-                        M('arctype')->where([
-                                'id'    => $val['id'],
-                                'lang'  => $admin_lang,
-                            ])
-                            ->cache(true,null,"arctype")
-                            ->update($update_data);
+
+                        /*记录每一上级的指定数据*/
+                        $arctypeArr[$val['id']] = [
+                            'dirpath'   => $arctypeArr[$val['parent_id']]['dirpath'].'/'.$val['dirname'],
+                        ];
+                        /*end*/
+
+                        $update_data = [
+                            'id'                => $val['id'],
+                            'channeltype'       => $data['channeltype'],
+                            'topid'             => !empty($data['topid']) ? $data['topid'] : $data['id'],
+                            'dirpath'           => $arctypeArr[$val['id']]['dirpath'],
+                            'update_time'       => getTime(),
+                        ];
+                        !empty($minuendGrade) && $update_data['grade'] = Db::raw('grade+'.$minuendGrade);
+
+                        /*父级模板继承*/
+                        if (!empty($data['inherit_status'])) {
+                            $update_data['templist'] = $data['templist'];
+                            $update_data['tempview'] = $data['tempview'];
+                        }
+                        /*end*/
+
+                        $update_data_all[] = $update_data;
+
                         ++$i;
+                    }
+
+                    if (!empty($update_data_all)) {
+                        model('Arctype')->saveAll($update_data_all);
+                        \think\Cache::clear('arctype');
                     }
                 }
                 /*--end*/
@@ -751,30 +1019,30 @@ class Arctype extends Model
                         'update_time'     => getTime(),
                     );
                     // $archivesData = array_merge($archivesData, $data);
-                    $aid = M('single_content')->where(array('typeid'=>$data['id']))->getField('aid');
+                    $aid = Db::name('single_content')->where(array('typeid'=>$data['id']))->getField('aid');
                     if (empty($aid)) {
                         $opt = 'add';
                         $archivesData['lang'] = get_admin_lang();
                         $archivesData['add_time'] = getTime();
-                        $up = $aid = M('archives')->insertGetId($archivesData);
+                        $up = $aid = Db::name('archives')->insertGetId($archivesData);
                     } else {
                         $opt = 'edit';
-                        $up = M('archives')->where([
+                        $up = Db::name('archives')->where([
                                 'aid'   => $aid,
                                 'lang'  => get_admin_lang(),
                             ])->update($archivesData);
                     }
                     if ($up) {
                         // ---------后置操作
-                        if (!isset($post['addonFieldExt'])) {
-                            $post['addonFieldExt'] = array(
+                        if (!isset($data['addonFieldExt'])) {
+                            $data['addonFieldExt'] = array(
                                 'typeid'    => $data['id'],
                             );
                         } else {
-                            $post['addonFieldExt']['typeid'] = $data['id'];
+                            $data['addonFieldExt']['typeid'] = $data['id'];
                         }
                         $updateData = array(
-                            'addonFieldExt' => $post['addonFieldExt'],
+                            'addonFieldExt' => $data['addonFieldExt'],
                         );
                         $updateData = array_merge($updateData, $archivesData);
                         model('Single')->afterSave($aid, $updateData, $opt);
@@ -807,9 +1075,32 @@ class Arctype extends Model
 
                 // \think\Cache::clear("arctype");
                 // extra_cache('admin_all_menu', NULL);
-                // \think\Cache::clear('admin_archives_release');
             }
         }
         return $bool;
+    }
+
+    /**
+     * 获取当前栏目下有几层，包括自身这一层
+     * @author wengxianhu by 2017-7-26
+     */
+    public function getHierarchy($id = '')
+    {
+        $hierarchy = 1;
+        $ids = [$id];
+        while (true)
+        {
+            $ids = Db::name('arctype')->where([
+                    'parent_id'    => ['IN', $ids],
+                    'lang'    => get_admin_lang(),
+                ])->column('id');
+            if (empty($ids)) {
+                break;
+            } else {
+                $hierarchy++;
+            }
+        }
+
+        return $hierarchy;
     }
 }

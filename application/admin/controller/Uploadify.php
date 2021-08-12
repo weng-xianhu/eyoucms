@@ -8,7 +8,7 @@
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
  * ============================================================================
  * Author: 小虎哥 <1105415366@qq.com>
- * Date: 2018-4-3
+ * Date: 2018-4-3 
  */
  
 namespace app\admin\controller;
@@ -19,6 +19,7 @@ use app\common\logic\ArctypeLogic;
 class Uploadify extends Base
 {
     public $image_type = '';
+    private $imageExt = '';
 
     /**
      * 析构函数
@@ -26,8 +27,9 @@ class Uploadify extends Base
     function __construct() 
     {
         parent::__construct();
+        $this->imageExt = config('global.image_ext');
         $this->image_type = tpCache('basic.image_type');
-        $this->image_type = !empty($this->image_type) ? str_replace('|', ',', $this->image_type) : 'jpg,gif,png,bmp,jpeg,ico';
+        $this->image_type = !empty($this->image_type) ? str_replace('|', ',', $this->image_type) : $this->imageExt;
     }
 
     /**
@@ -38,13 +40,14 @@ class Uploadify extends Base
         $func = input('func');
         $path = input('path','allimg');
         $num  = input('num/d', '1');
+        $is_water  = input('is_water/d', 1);
         $default_size = intval(tpCache('basic.file_size') * 1024 * 1024); // 单位为b
         $size = input('size/d'); // 单位为kb
         $size = empty($size) ? $default_size : $size*1024;
         $info = array(
             'num'      => $num,
             'title'    => '',          
-            'upload'   => url('Ueditor/imageUp',array('savepath'=>$path,'pictitle'=>'banner','dir'=>'images')),
+            'upload'   => url('Ueditor/imageUp',array('savepath'=>$path,'pictitle'=>'banner','dir'=>'images','is_water'=>$is_water)),
             'fileList' => url('Uploadify/fileList',array('path'=>$path)),
             'size'     => $size,
             'type'     => $this->image_type,
@@ -93,6 +96,11 @@ class Uploadify extends Base
                 $dirArr[$key] = [];
                 continue;
             }
+            /*图库显示数量*/
+            $countFile = 0;
+            $dirfileArr2 = glob("{$val['dirpath']}/*.*"); // 文件数量
+            $countFile = count($dirfileArr2);
+            /*end*/
             $dirname = preg_replace('/([^\/]+)$/i', '', $val['dirpath']);
             $arr_key = array_search(trim($dirname, '/'), $dirArr2);
             if (!empty($arr_key)) {
@@ -101,6 +109,7 @@ class Uploadify extends Base
                 $dirArr[$key]['pId'] = 0;
             }
             $dirArr[$key]['name'] = preg_replace('/^(.*)\/([^\/]+)$/i', '${2}', $val['dirpath']);
+            !empty($countFile) && $dirArr[$key]['name'] .= "({$countFile})"; // 图库显示数量
         }
 
         $zNodes = json_encode($dirArr,true);
@@ -132,7 +141,7 @@ class Uploadify extends Base
             $where = [
                 'lang' => $this->admin_lang,
             ];
-            $common_pic = M('common_pic')->where($where)->order('id desc')->limit(6)->field('pic_path')->select();
+            $common_pic = Db::name('common_pic')->where($where)->order('id desc')->limit(6)->field('pic_path')->select();
         }
         $this->assign('common_pic', $common_pic);
 
@@ -141,7 +150,7 @@ class Uploadify extends Base
         $list = [];
         if (!empty($images_data)) {
             // 图片类型数组
-            $image_ext = explode(',', config('global.image_ext'));
+            $image_ext = explode(',', $this->imageExt);
             // 处理图片
             foreach ($images_data as $key => $file) {
                 $fileArr = explode('.', $file);    
@@ -297,30 +306,36 @@ class Uploadify extends Base
      */
     public function delupload()
     {
+        echo 1;
+        exit;
+            
         if (IS_POST) {
+            $action = input('action','del');  
+            $filename= input('filename/s');
+            $filename= empty($filename) ? input('url') : $filename;
+            $filename= str_replace(['(',')',',',' ','../'],'',$filename);
+            $filename= trim($filename,'.');
+            $filename = preg_replace('#^(/[/\w]+)?(/public/upload/|/uploads/|/public/static/admin/logo/)#i', '$2', $filename);
+            if(eyPreventShell($filename) && $action=='del' && !empty($filename) && file_exists('.'.$filename)){
+                if (stristr($filename, '/admin/logo/')) {
+                    $filetype = preg_replace('/^(.*)\.(\w+)$/i', '$2', $filename);
+                    $phpfile = strtolower(strstr($filename,'.php'));  //排除PHP文件
+                    $size = getimagesize('.'.$filename);
+                    $fileInfo = explode('/',$size['mime']);
+                    if($fileInfo[0] != 'image' || $phpfile || !in_array($filetype, explode(',', $this->imageExt))){
+                        exit;
+                    }
+                    if(@unlink('.'.$filename)){
+                        echo 1;
+                    }else{
+                        echo 0;
+                    }  
+                    exit;
+                }
+            }
+
             echo 1;
             exit;
-            // $action = input('action','del');                
-            // $filename= input('filename/s');
-            // $filename= empty($filename) ? input('url') : $filename;
-            // $filename= str_replace('../','',$filename);
-            // $filename= trim($filename,'.');
-            // $filename= trim($filename,'/');
-            // if(eyPreventShell($filename) && $action=='del' && !empty($filename) && file_exists($filename)){
-            //     $filetype = preg_replace('/^(.*)\.(\w+)$/i', '$2', $filename);
-            //     $phpfile = strtolower(strstr($filename,'.php'));  //排除PHP文件
-            //     $size = getimagesize($filename);
-            //     $fileInfo = explode('/',$size['mime']);
-            //     if($fileInfo[0] != 'image' || $phpfile || !in_array($filetype, explode(',', config('global.image_ext')))){
-            //         exit;
-            //     }
-            //     if(@unlink($filename)){
-            //         echo 1;
-            //     }else{
-            //         echo 0;
-            //     }  
-            //     exit;
-            // }
         }
     }
     
@@ -363,6 +378,10 @@ class Uploadify extends Base
         }
         if ('adminlogo' == $path) {
             $path = 'public/static/admin/logo';
+        } else if ('loginlogo' == $path) {
+            $path = 'public/static/admin/login';
+        } else if ('loginbgimg' == $path) {
+            $path = 'public/static/admin/loginbg';
         } else {
             $path = UPLOAD_PATH.$path;
         }
@@ -462,7 +481,7 @@ class Uploadify extends Base
         }
         if (!empty($mydir)) {
             foreach ($mydir as $key => $dir) {
-                if (stristr("$dir/", 'uploads/soft_tmp/')) {
+                if (stristr("$dir/", 'uploads/soft_tmp/') || stristr("$dir/", 'uploads/tmp/')) {
                     continue;
                 }
                 $num++;
@@ -526,7 +545,7 @@ class Uploadify extends Base
         }
 
         // 图片类型数组
-        $image_ext = explode(',', config('global.image_ext'));
+        $image_ext = explode(',', $this->imageExt);
         $mydir = dir($directory);
         while($file = $mydir->read())
         {
@@ -558,5 +577,50 @@ class Uploadify extends Base
         $mydir->close();
 
         return $arr_file;
+    }
+
+    /**
+     * 未开启同步本地功能，并删除本地图片
+     * @return [type] [description]
+     */
+    public function del_local()
+    {
+        if (IS_AJAX_POST) {
+            \think\Session::pause(); // 暂停session，防止session阻塞机制
+            $filename = input('post.filename/s');
+            $filename = strstr($filename, "/uploads/");
+            if (!empty($filename)){
+                $weappList = Db::name('weapp')->field('code,data,status,config')->where([
+                    'status'    => 1,
+                ])->cache(true, EYOUCMS_CACHE_TIME, 'weapp')
+                ->getAllWithIndex('code');
+
+                if (!empty($weappList['Qiniuyun']) && 1 == $weappList['Qiniuyun']['status']) {
+                    $weappConfig = json_decode($weappList['Qiniuyun']['config'], true);
+                    if (!empty($weappConfig['version']) && 'v1.0.9' <= $weappConfig['version']) {
+                        $qnyData = json_decode($weappList['Qiniuyun']['data'], true);
+                        if (!empty($qnyData['local_save']) && $qnyData['local_save'] == 1) {
+                            $qiniuyunOssModel = new \weapp\Qiniuyun\model\QiniuyunModel;
+                            $qiniuyunOssModel->del_local($filename);
+                        }
+                    }
+                } else if (!empty($weappList['AliyunOss']) && 1 == $weappList['AliyunOss']['status']) {
+                    $weappConfig = json_decode($weappList['AliyunOss']['config'], true);
+                    if (!empty($weappConfig['version']) && 'v1.0.2' <= $weappConfig['version']) {
+                        $ossData = json_decode($weappList['AliyunOss']['data'], true);
+                        if (!empty($ossData['local_save']) && $ossData['local_save'] == 1) {
+                            $aliyunOssModel = new \weapp\AliyunOss\model\AliyunOssModel;
+                            $aliyunOssModel->del_local($filename);
+                        }
+                    }
+                } else if (!empty($weappList['Cos']) && 1 == $weappList['Cos']['status']) {
+                    $cosData = json_decode($weappList['Cos']['data'], true);
+                    if (!empty($cosData['local_save']) && $cosData['local_save'] == 1) {
+                        $cosModel = new \weapp\Cos\model\CosModel;
+                        $cosModel->del_local($filename);
+                    }
+                }
+            }
+        }
     }
 }

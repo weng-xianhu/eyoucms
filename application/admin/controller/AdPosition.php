@@ -31,7 +31,7 @@ class AdPosition extends Base
         $keywords = input('keywords/s');
         $condition = [];
         // 应用搜索条件
-        foreach (['keywords'] as $key) {
+        foreach (['keywords', 'type'] as $key) {
             if (isset($get[$key]) && $get[$key] !== '') {
                 if ($key == 'keywords') {
                     $condition['a.title'] = array('LIKE', "%{$get[$key]}%");
@@ -45,20 +45,49 @@ class AdPosition extends Base
         // 多语言
         $condition['a.lang'] = array('eq', $this->admin_lang);
 
-        $adPositionM =  M('ad_position');
+        $adPositionM =  Db::name('ad_position');
         $count = $adPositionM->alias('a')->where($condition)->count();// 查询满足要求的总记录数
         $Page = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
-        $list = $adPositionM->alias('a')->where($condition)->order('id desc')->limit($Page->firstRow.','.$Page->listRows)->select();
+        $list = $adPositionM->alias('a')->where($condition)->order('id desc')->limit($Page->firstRow.','.$Page->listRows)->getAllWithIndex('id');
 
-        // 获取指定位置的广告数目
-        $cid = get_arr_column($list, 'id');
-        $ad_list = M('ad')->field('pid, count(id) AS has_children')
-            ->where([
-                'pid'   => ['IN', $cid],
-                'lang'  => $this->admin_lang,
-            ])->group('pid')
-            ->getAllWithIndex('pid');
-        $this->assign('ad_list', $ad_list);
+        // 每组获取三张图片
+        $pids = get_arr_column($list, 'id');
+        $ad = Db::name('ad')->where(['pid' => ['IN', $pids], 'lang' => $this->admin_lang])->order('pid asc, id asc')->select();
+        foreach ($list as $k => $v) {
+            if (1 == $v['type']) {
+                // 图片封面图片
+                $v['ad'] = [];
+                foreach ($ad as $m => $n) {
+                    if ($v['id'] == $n['pid']) {
+                        $n['litpic'] = get_default_pic($n['litpic']); // 支持子目录
+                        $v['ad'][] = $n;
+                        unset($ad[$m]);
+                    } else {
+                        continue;
+                    }
+                }
+                // 若没有内容则显示默认图片
+                if (empty($v['ad'])) {
+                    $v['ad_count'] = 0;
+                    $v['ad'][]['litpic'] = ROOT_DIR . '/public/static/common/images/not_adv.jpg';
+                } else {
+                    $v['ad_count'] = count($v['ad']);
+                }
+                // 广告类型
+                $v['type_name'] = '图片';
+            } else if (2 == $v['type']) {
+                // 多媒体封面图片
+                $v['ad'][]['litpic'] = ROOT_DIR . '/public/static/admin/images/ad_type_media.png';
+                // 广告类型
+                $v['type_name'] = '多媒体';
+            } else if (3 == $v['type']) {
+                // HTML代码封面图片
+                $v['ad'][]['litpic'] = ROOT_DIR . '/public/static/admin/images/ad_type_html.png';
+                // 广告类型
+                $v['type_name'] = 'HTML代码';
+            }
+            $list[$k] = $v;
+        }
 
         $show = $Page->show();// 分页显示输出
         $this->assign('page',$show);// 赋值分页输出
@@ -79,65 +108,137 @@ class AdPosition extends Base
 
         if (IS_POST) {
             $post = input('post.');
-
             $map = array(
                 'title' => trim($post['title']),
                 'lang'  => $this->admin_lang,
             );
-            if(M('ad_position')->where($map)->count() > 0){
+            if(Db::name('ad_position')->where($map)->count() > 0){
                 $this->error('该广告名称已存在，请检查', url('AdPosition/index'));
             }
 
             // 添加广告位置表信息
             $data = array(
                 'title'       => trim($post['title']),
+                'type'        => $post['type'],
                 'intro'       => $post['intro'],
                 'admin_id'    => session('admin_id'),
                 'lang'        => $this->admin_lang,
                 'add_time'    => getTime(),
                 'update_time' => getTime(),
             );
-            $insertId = M('ad_position')->insertGetId($data);
+            $insertID = Db::name('ad_position')->insertGetId($data);
 
-            if ($insertId) {
+            if (!empty($insertID)) {
                 // 同步广告位置ID到多语言的模板变量里，添加多语言广告位
-                $this->syn_add_language_attribute($insertId);
+                $this->syn_add_language_attribute($insertID);
 
                 // 读取组合广告位的图片及信息
-                $i = '1';
-                foreach ($post['img_litpic'] as $key => $value) {
-                    if (!empty($value)) {
-                        if (!empty($post['img_target'][$key])) {
-                            $target = '1';
-                        }else{
-                            $target = '0';
+                $AdData = [];
+                if (1 == $post['type'] && !empty($post['img_litpic'])) { // 图片类型
+                    $i = 1;
+                    foreach ($post['img_litpic'] as $key => $value) {
+                        if (!empty($value)) {
+                            // 去掉http:
+                            $value = str_replace("http:", "", $value);
+                            // 去掉https:
+                            $value = str_replace("https:", "", $value);
+                            // 主要参数
+                            $AdData['litpic'] = $value;
+                            $AdData['pid']    = $insertID;
+                            $AdData['title']  = trim($post['img_title'][$key]);
+                            $AdData['links']  = $post['img_links'][$key];
+                            $AdData['intro']  = $post['img_intro'][$key];
+                            $target = !empty($post['img_target'][$key]) ? 1 : 0;
+                            $AdData['target'] = $target;
+                            // 其他参数
+                            $AdData['media_type']  = 1;
+                            $AdData['admin_id']    = session('admin_id');
+                            $AdData['lang']        = $this->admin_lang;
+                            $AdData['sort_order']  = $i++;
+                            $AdData['add_time']    = getTime();
+                            $AdData['update_time'] = getTime();
+                            // 添加到广告图表
+                            $ad_id = Db::name('ad')->add($AdData);
+                            // 同步多语言
+                            $this->syn_add_ad_language_attribute($ad_id);
                         }
-                        // 主要参数
-                        $AdData['litpic']      = $value;
-                        $AdData['pid']         = $insertId;
-                        $AdData['title']       = trim($post['img_title'][$key]);
-                        $AdData['links']       = $post['img_links'][$key];
-                        $AdData['target']      = $target;
-                        // 其他参数
-                        $AdData['media_type']  = 1;
-                        $AdData['admin_id']    = session('admin_id');
-                        $AdData['lang']        = $this->admin_lang;
-                        $AdData['sort_order']  = $i++;
-                        $AdData['add_time']    = getTime();
-                        $AdData['update_time'] = getTime();
-                        // 添加到广告图表
-                        $ad_id = Db::name('ad')->add($AdData);
-                        // 同步多语言
-                        $this->syn_add_ad_language_attribute($ad_id);
                     }
+
+                } else if (2 == $post['type'] && !empty($post['video_litpic'])) { // 媒体类型
+                    // 去掉http:
+                    $video_litpic = str_replace("http:", "", $post['video_litpic']);
+                    // 去掉https:
+                    $video_litpic = str_replace("https:", "", $post['video_litpic']);
+                    // 主要参数
+                    $AdData['litpic'] = $video_litpic;
+                    $AdData['pid']    = $insertID;
+                    $AdData['title']  = trim($post['title']);
+                    // 其他参数
+                    $AdData['intro']       = '';
+                    $AdData['links']       = '';
+                    $AdData['target']      = 0;
+                    $AdData['media_type']  = 2;
+                    $AdData['admin_id']    = session('admin_id');
+                    $AdData['lang']        = $this->admin_lang;
+                    $AdData['sort_order']  = 1;
+                    $AdData['add_time']    = getTime();
+                    $AdData['update_time'] = getTime();
+                    // 添加到广告图表
+                    $ad_id = Db::name('ad')->add($AdData);
+                    // 同步多语言
+                    $this->syn_add_ad_language_attribute($ad_id);
+
+                } else if (3 == $post['type'] && !empty($post['html_intro'])) { // HTML代码
+                    // 主要参数
+                    $AdData['pid']   = $insertID;
+                    $AdData['title'] = trim($post['title']);
+                    $AdData['intro'] = $post['html_intro'];
+                    // 其他参数
+                    $AdData['litpic']      = '';
+                    $AdData['links']       = '';
+                    $AdData['target']      = 0;
+                    $AdData['media_type']  = 3;
+                    $AdData['admin_id']    = session('admin_id');
+                    $AdData['lang']        = $this->admin_lang;
+                    $AdData['sort_order']  = 1;
+                    $AdData['add_time']    = getTime();
+                    $AdData['update_time'] = getTime();
+                    // 添加到广告图表
+                    $ad_id = Db::name('ad')->add($AdData);
+                    // 同步多语言
+                    $this->syn_add_ad_language_attribute($ad_id);
+
                 }
                 adminLog('新增广告：'.$post['title']);
                 $this->success("操作成功", url('AdPosition/index'));
             } else {
                 $this->error("操作失败", url('AdPosition/index'));
             }
-            exit;
         }
+
+        // 上传通道
+        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos'])->select();
+        $WeappOpen = [];
+        foreach ($WeappConfig as $value) {
+            if ('Qiniuyun' == $value['code']) {
+                $WeappOpen['qny_open'] = $value['status'];
+            } else if ('AliyunOss' == $value['code']) {
+                $WeappOpen['oss_open'] = $value['status'];
+            } else if ('Cos' == $value['code']) {
+                $WeappOpen['cos_open'] = $value['status'];
+            }
+        }
+        $this->assign('WeappOpen', $WeappOpen);
+
+        // 系统最大上传视频的大小
+        $upload_max_filesize = upload_max_filesize();
+        $this->assign('upload_max_filesize', $upload_max_filesize);
+
+        // 视频类型
+        $media_type = tpCache('basic.media_type');
+        $media_type = !empty($media_type) ? $media_type : config('global.media_ext');
+        $media_type = str_replace(",", "|", $media_type);
+        $this->assign('media_type', $media_type);
 
         return $this->fetch();
     }
@@ -150,67 +251,107 @@ class AdPosition extends Base
     {
         if (IS_POST) {
             $post = input('post.');
-            if(!empty($post['id'])){
-                if(array_key_exists($post['id'], $this->ad_position_system_id)){
+            if (!empty($post['id'])) {
+                if (array_key_exists($post['id'], $this->ad_position_system_id)) {
                     $this->error("不可更改系统预定义位置", url('AdPosition/edit',array('id'=>$post['id'])));
                 }
 
+                /* 判断除自身外是否还有相同广告名称已存在 */
                 $map = array(
                     'id'    => array('NEQ', $post['id']),
                     'title' => trim($post['title']),
                     'lang'  => $this->admin_lang,
                 );
+                if (Db::name('ad_position')->where($map)->count() > 0) $this->error('该广告名称已存在，请检查');
+                /* END */
 
-                if(Db::name('ad_position')->where($map)->count() > 0){
-                    $this->error('该广告名称已存在，请检查', url('AdPosition/index'));
-                }
+                /* 判断广告是否切换广告类型 */
+                // $where = [
+                //     'id'   => $post['id'],
+                //     'type' => $post['type'],
+                //     'lang' => $this->admin_lang
+                // ];
+                // if (Db::name('ad_position')->where($where)->count() == 0) {
+                //     // 已切换广告类型，清除广告中的广告内容
+                //     $where = [
+                //         'pid'  => $post['id'],
+                //         'lang' => $this->admin_lang
+                //     ];
+                //     Db::name('ad')->where($where)->delete();
+                // }
+                /* END */
 
+                /* 修改广告主体信息 */
                 $data = array(
                     'id'          => $post['id'],
                     'title'       => trim($post['title']),
+                    'type'        => $post['type'],
                     'intro'       => $post['intro'],
                     'update_time' => getTime(),
                 );
-                $r = Db::name('ad_position')->update($data);
+                $resultID = Db::name('ad_position')->update($data);
+                /* END */
             }
 
-            if ($r) {
-                $i = '1';
+            if (!empty($resultID)) {
                 $ad_db = Db::name('ad');
-                // 读取组合广告位的图片及信息
-                foreach ($post['img_litpic'] as $key => $value) {
-                    if (!empty($value)) {
-                        // 是否新窗口打开
-                        if (!empty($post['img_target'][$key])) {
-                            $target = '1';
-                        }else{
-                            $target = '0';
-                        }
-                        // 广告位ID，为空则表示添加
-                        $ad_id = $post['img_id'][$key];
-                        if (!empty($ad_id)) {
-                            // 查询更新条件
-                            $where = [
-                                'id'   => $ad_id,
-                                'lang' => $this->admin_lang,
-                            ];
-                            if ($ad_db->where($where)->count() > 0) {
-                                // 主要参数
-                                $AdData['litpic']      = $value;
-                                $AdData['title']       = $post['img_title'][$key];
-                                $AdData['links']       = $post['img_links'][$key];
-                                $AdData['target']      = $target;
-                                // 其他参数
-                                $AdData['sort_order']  = $i++;
-                                $AdData['update_time'] = getTime();
-                                // 更新，不需要同步多语言
-                                $ad_db->where($where)->update($AdData);
-                            }else{
+                if (1 == $post['type'] && !empty($post['img_litpic'])) { // 图片类型
+                    // 读取组合广告位的图片及信息
+                    $i = 1;
+                    foreach ($post['img_litpic'] as $key => $value) {
+                        if (!empty($value)) {
+                            // 去掉http:
+                            $value = str_replace("http:", "", $value);
+                            // 去掉https:
+                            $value = str_replace("https:", "", $value);
+                            // 是否新窗口打开
+                            $target = !empty($post['img_target'][$key]) ? 1 : 0;
+                            // 广告位ID，为空则表示添加
+                            $ad_id = $post['img_id'][$key];
+                            if (!empty($ad_id)) {
+                                // 查询更新条件
+                                $where = [
+                                    'id'   => $ad_id,
+                                    'lang' => $this->admin_lang,
+                                ];
+                                if ($ad_db->where($where)->count() > 0) {
+                                    // 主要参数
+                                    $AdData['litpic']      = $value;
+                                    $AdData['title']       = $post['img_title'][$key];
+                                    $AdData['links']       = $post['img_links'][$key];
+                                    $AdData['intro']       = $post['img_intro'][$key];
+                                    $AdData['target']      = $target;
+                                    // 其他参数
+                                    $AdData['sort_order']  = $i++;
+                                    $AdData['update_time'] = getTime();
+                                    // 更新，不需要同步多语言
+                                    $ad_db->where($where)->update($AdData);
+                                } else {
+                                    // 主要参数
+                                    $AdData['litpic']      = $value;
+                                    $AdData['pid']         = $post['id'];
+                                    $AdData['title']       = $post['img_title'][$key];
+                                    $AdData['links']       = $post['img_links'][$key];
+                                    $AdData['intro']       = $post['img_intro'][$key];
+                                    $AdData['target']      = $target;
+                                    // 其他参数
+                                    $AdData['media_type']  = 1;
+                                    $AdData['admin_id']    = session('admin_id');
+                                    $AdData['lang']        = $this->admin_lang;
+                                    $AdData['sort_order']  = $i++;
+                                    $AdData['add_time']    = getTime();
+                                    $AdData['update_time'] = getTime();
+                                    $ad_id = $ad_db->add($AdData);
+                                    // 同步多语言
+                                    $this->syn_add_ad_language_attribute($ad_id);
+                                }
+                            } else {
                                 // 主要参数
                                 $AdData['litpic']      = $value;
                                 $AdData['pid']         = $post['id'];
                                 $AdData['title']       = $post['img_title'][$key];
                                 $AdData['links']       = $post['img_links'][$key];
+                                $AdData['intro']       = $post['img_intro'][$key];
                                 $AdData['target']      = $target;
                                 // 其他参数
                                 $AdData['media_type']  = 1;
@@ -223,27 +364,68 @@ class AdPosition extends Base
                                 // 同步多语言
                                 $this->syn_add_ad_language_attribute($ad_id);
                             }
-                        }else{
-                            // 主要参数
-                            $AdData['litpic']      = $value;
-                            $AdData['pid']         = $post['id'];
-                            $AdData['title']       = $post['img_title'][$key];
-                            $AdData['links']       = $post['img_links'][$key];
-                            $AdData['target']      = $target;
-                            // 其他参数
-                            $AdData['media_type']  = 1;
-                            $AdData['admin_id']    = session('admin_id');
-                            $AdData['lang']        = $this->admin_lang;
-                            $AdData['sort_order']  = $i++;
-                            $AdData['add_time']    = getTime();
-                            $AdData['update_time'] = getTime();
-                            $ad_id = $ad_db->add($AdData);
-                            // 同步多语言
-                            $this->syn_add_ad_language_attribute($ad_id);
                         }
                     }
-                }
 
+                } else if (2 == $post['type'] && !empty($post['video_litpic'])) { // 媒体类型
+                    // 去掉http:
+                    $video_litpic = str_replace("http:", "", $post['video_litpic']);
+                    // 去掉https:
+                    $video_litpic = str_replace("https:", "", $post['video_litpic']);
+                    if (!empty($post['video_id'])) {
+                        // 更新广告内容
+                        $AdData['litpic']      = $video_litpic;
+                        $AdData['title']       = trim($post['title']);
+                        $AdData['media_type']  = 2;
+                        $AdData['update_time'] = getTime();
+                        $ad_db->where('id', $post['video_id'])->update($AdData);
+                    } else {
+                        // 新增广告内容
+                        $AdData['litpic']      = $video_litpic;
+                        $AdData['pid']         = $post['id'];
+                        $AdData['title']       = trim($post['title']);
+                        $AdData['links']       = '';
+                        $AdData['intro']       = '';
+                        $AdData['target']      = 0;
+                        $AdData['media_type']  = 2;
+                        $AdData['admin_id']    = session('admin_id');
+                        $AdData['lang']        = $this->admin_lang;
+                        $AdData['sort_order']  = 1;
+                        $AdData['add_time']    = getTime();
+                        $AdData['update_time'] = getTime();
+                        $ad_id = $ad_db->add($AdData);
+                        // 同步多语言
+                        $this->syn_add_ad_language_attribute($ad_id);
+                    }
+                    
+                } else if (3 == $post['type'] && !empty($post['html_intro'])) { // HTML代码
+                    if (!empty($post['html_id'])) {
+                        // 更新广告内容
+                        $AdData['title']       = trim($post['title']);
+                        $AdData['intro']       = $post['html_intro'];
+                        $AdData['media_type']  = 3;
+                        $AdData['update_time'] = getTime();
+                        $ad_db->where('id', $post['html_id'])->update($AdData);
+                    } else {
+                        // 新增广告内容
+                        $AdData['litpic']      = '';
+                        $AdData['pid']         = $post['id'];
+                        $AdData['title']       = trim($post['title']);
+                        $AdData['intro']       = $post['html_intro'];
+                        $AdData['links']       = '';
+                        $AdData['target']      = 0;
+                        $AdData['media_type']  = 3;
+                        $AdData['admin_id']    = session('admin_id');
+                        $AdData['lang']        = $this->admin_lang;
+                        $AdData['sort_order']  = 1;
+                        $AdData['add_time']    = getTime();
+                        $AdData['update_time'] = getTime();
+                        $ad_id = $ad_db->add($AdData);
+                        // 同步多语言
+                        $this->syn_add_ad_language_attribute($ad_id);
+                    }
+                    
+                }
                 adminLog('编辑广告：'.$post['title']);
                 $this->success("操作成功", url('AdPosition/index'));
             } else {
@@ -254,23 +436,59 @@ class AdPosition extends Base
         $assign_data = array();
 
         $id = input('id/d');
-        $field = M('ad_position')->field('a.*')
-            ->alias('a')
-            ->where(array('a.id'=>$id))
-            ->find();
-        if (empty($field)) {
-            $this->error('广告不存在，请联系管理员！');
-            exit;
+        $field = Db::name('ad_position')->field('a.*')->alias('a')->where(array('a.id'=>$id))->find();
+        if (empty($field)) $this->error('广告不存在，请联系管理员！');
+        switch ($field['type']) {
+            case '1':
+                $field['type_name'] = '图片';
+                break;
+            case '2':
+                $field['type_name'] = '多媒体';
+                break;
+            case '3':
+                $field['type_name'] = 'HTML代码';
+                break;
         }
         $assign_data['field'] = $field;
 
         // 广告
         $ad_data = Db::name('ad')->where(array('pid'=>$field['id']))->order('sort_order asc')->select();
         foreach ($ad_data as $key => $val) {
-            $ad_data[$key]['litpic'] = handle_subdir_pic($val['litpic']); // 支持子目录
+            if (1 == $val['type']) {
+                $ad_data[$key]['litpic'] = get_default_pic($val['litpic']); // 支持子目录
+            }
         }
         $assign_data['ad_data'] = $ad_data;
-        
+
+        // 上传通道
+        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos'])->select();
+        $WeappOpen = [];
+        foreach ($WeappConfig as $value) {
+            if ('Qiniuyun' == $value['code']) {
+                $WeappOpen['qny_open'] = $value['status'];
+            } else if ('AliyunOss' == $value['code']) {
+                $WeappOpen['oss_open'] = $value['status'];
+            } else if ('Cos' == $value['code']) {
+                $WeappOpen['cos_open'] = $value['status'];
+            }
+        }
+        $this->assign('WeappOpen', $WeappOpen);
+
+        // 系统最大上传视频的大小
+        $file_size  = tpCache('basic.file_size');
+        $postsize   = @ini_get('file_uploads') ? ini_get('post_max_size') : -1;
+        $fileupload = @ini_get('file_uploads') ? ini_get('upload_max_filesize') : -1;
+        $min_size   = strval($file_size) < strval($postsize) ? $file_size : $postsize;
+        $min_size   = strval($min_size) < strval($fileupload) ? $min_size : $fileupload;
+        $upload_max_filesize = intval($min_size) * 1024 * 1024;
+        $assign_data['upload_max_filesize'] = $upload_max_filesize;
+
+        // 视频类型
+        $media_type = tpCache('basic.media_type');
+        $media_type = !empty($media_type) ? $media_type : config('global.media_ext');
+        $media_type = str_replace(",", "|", $media_type);
+        $assign_data['media_type'] = $media_type;
+
         $this->assign($assign_data);
         return $this->fetch();
     }
@@ -339,11 +557,6 @@ class AdPosition extends Base
                 }
             }
 
-            $ad_count = M('ad')->where('pid','IN',$id_arr)->count();
-            if ($ad_count > 0){
-                $this->error('该位置下有广告，不允许删除，请先删除该位置下的广告');
-            }  
-
             /*多语言*/
             $attr_name_arr = [];
             foreach ($id_arr as $key => $val) {
@@ -358,21 +571,23 @@ class AdPosition extends Base
             }
             /*--end*/
 
-            $r = M('ad_position')->where('id','IN',$id_arr)->delete();
+            $r = Db::name('ad_position')->where('id','IN',$id_arr)->delete();
             if ($r) {
 
                 /*多语言*/
                 if (!empty($attr_name_arr)) {
-                    M('language_attr')->where([
+                    Db::name('language_attr')->where([
                             'attr_name' => ['IN', $attr_name_arr],
                             'attr_group'    => 'ad_position',
                         ])->delete();
-                    M('language_attribute')->where([
+                    Db::name('language_attribute')->where([
                             'attr_name' => ['IN', $attr_name_arr],
                             'attr_group'    => 'ad_position',
                         ])->delete();
                 }
                 /*--end*/
+
+                Db::name('ad')->where('pid','IN',$id_arr)->delete();
 
                 adminLog('删除广告-id：'.implode(',', $id_arr));
                 $this->success('删除成功');
@@ -381,6 +596,40 @@ class AdPosition extends Base
             }
         }else{
             $this->error('参数有误');
+        }
+    }
+
+    /**
+     * 打开预览视频
+     */
+    public function open_preview_video()
+    {
+        $post = input('post.');
+        $video_litpic = $post['video_litpic'];
+        if (!is_http_url($video_litpic)) {
+            $video_litpic = request()->domain() . handle_subdir_pic($video_litpic, 'media');
+        }
+        $this->success('执行成功', $video_litpic);
+    }
+
+    /**
+     * 检测广告名称是否存在重复
+     */
+    public function detection_title_repeat()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+            $where = [
+                'id'    => ['NEQ', $post['id']],
+                'title' => trim($post['title']),
+                'lang'  => $this->admin_lang,
+            ];
+            $count = Db::name('ad_position')->where($where)->count();
+            if (empty($count)) {
+                $this->success('检测通过');
+            } else {
+                $this->error('该广告名称已存在，请检查');
+            }
         }
     }
 

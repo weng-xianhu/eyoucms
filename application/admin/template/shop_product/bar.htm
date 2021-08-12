@@ -1,0 +1,36 @@
+<div class="sidebar-second ">
+    <ul>
+        <li class="sidebar-second-title">商品管理</li>
+        <li>
+            <a  {if condition="'Product'==$Think.const.CONTROLLER_NAME && in_array($Think.const.ACTION_NAME, ['index','add','edit'])"}class="active"{/if} href='{:url("Product/index")}'>商品列表</a>
+        </li>
+        <li>
+            <a {if condition="'Arctype'==$Think.const.CONTROLLER_NAME"}class="active"{/if} href='{:url("Arctype/index", ["channel_id"=>2])}'>商品分类</a>
+        </li>
+        <li>
+            <a {if condition="in_array($Think.const.ACTION_NAME, ['comment_index', 'comment_details'])"}class="active"{/if} href='{:url("Shop/comment_index")}'>商品评价</a>
+        </li>
+        <li>
+            <a {if condition="in_array($Think.const.ACTION_NAME, ['spec_index', 'spec_value_index'])"}class="active"{/if} href='{:url("Product/spec_index")}'>商品规格</a>
+        </li>
+        <li>
+            <a {if condition="in_array($Think.const.ACTION_NAME, ['attrlist_index','attrlist_add','attrlist_edit','attribute_index','attribute_add','attribute_edit'])"}class="active"{/if} href='{:url("Product/attrlist_index")}'>商品参数</a>
+        </li>
+        <li>
+            <a {if condition="in_array($Think.const.CONTROLLER_NAME, ['Brand'])"}class="active"{/if} href='{:url("Brand/index")}'>商品品牌</a>
+        </li>
+    </ul>
+</div>
+<!-- <div class="fixed-bar">
+    <div class="item-title">
+        <a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+        <div class="subject">
+            <h3>内容管理</h3>
+            <h5></h5>
+        </div>
+        <ul class="tab-base nc-row">
+            <li><a href="{eq name='$Request.action' value='index'}javascript:void(0);{else /}{:U('Product/index', array('typeid'=>$Request.param.typeid))}{/eq}" data-index='1' class="tab {eq name='$Request.action' value='index'}current{/eq}"><span>商品列表</span></a></li>
+            <li><a href="{eq name='$Request.action' value='attribute_index'}javascript:void(0);{else /}{:U('Product/attribute_index', array('typeid'=>$Request.param.typeid))}{/eq}" data-index='2' class="tab {eq name='$Request.action' value='attribute_index'}current{/eq}"><span>参数列表</span></a></li>
+        </ul>
+    </div>
+</div> -->

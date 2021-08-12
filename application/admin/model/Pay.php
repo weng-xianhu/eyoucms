@@ -40,17 +40,27 @@ class Pay extends Model
     public function payForQrcode($wechat,$out_trade_no='',$total_fee='',$body="充值",$attach="微信扫码支付")
     {
         $this->key = $wechat['key'];
+
+        // 支付备注
+        $body = "支付";
+        if (1 == config('global.opencodetype')) {
+            $web_name = tpCache('web.web_name');
+            $web_name = !empty($web_name) ? "[{$web_name}]" : "";
+            $body = $web_name.$body;
+        }
+
         //支付数据
-        $data['out_trade_no']     = getTime();
+        $out_trade_no             = getTime();
+        $data['out_trade_no']     = $out_trade_no;
         $data['total_fee']        = '1';
         $data['spbill_create_ip'] = $this->get_client_ip();
         $data['attach']           = $attach;
-        $data['body']             = $body;
+        $data['body']             = $body."订单号:{$out_trade_no}";
         $data['appid']            = $wechat['appid'];
         $data['mch_id']           = $wechat['mchid'];
         $data['nonce_str']        = getTime();
         $data['trade_type']       = "NATIVE";
-        $data['notify_url']       = url('users/Pay/pay_deal_with');
+        $data['notify_url']       = url('user/Pay/pay_deal_with');
 
         $sign = $this->getParam($data);
 

@@ -32,7 +32,7 @@
             onkeyup: false,   
             submitHandler: function(form){   //表单提交句柄,为一回调函数，带一个参数：form   
                 $.ajax({
-                    url:"{:url('Admin/admin_pwd')}",
+                    url:"{:url('Admin/admin_pwd', ['_ajax'=>1])}",
                     type:'post',
                     dataType:'json',
                     data: $("#admin_form").serialize(),

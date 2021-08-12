@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>可视化编辑</title>
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/bootstrap/css/bootstrap.min.css">
+    {load href="__STATIC__/common/js/jquery.min.js" /}
+    {load href="__PUBLIC__/plugins/layer-v3.1.0/layer.js" /}
+    <style type="text/css">
+        .controls {
+            width: 100%;
+            padding: 4px 0;
+        }
+
+        .bg{
+            background-color: #FDFDFD;
+            overflow: hidden;
+            height: auto;
+            padding: 8px 0;
+            border-top:1px solid #f7f7f7;
+            border-bottom:1px solid #f7f7f7;
+        }
+        .container-fluid {
+            padding: 10px 10px;
+            overflow: hidden;
+        }
+        .control-group {
+            
+        }
+        .title{
+            float: left;
+            width: 70px;
+            text-align: right;
+            color: #888;
+        }
+        .left {
+            float: left;
+            width: 250px;
+        }
+        .btn{
+            background-color: #4fc0e8;
+            color: #FFF;
+            border-radius: 4px;
+            padding: 6px 20px;
+        }
+        .btn:hover {
+            color: #FFF;
+            background-color: #3aa8cf;
+
+        }
+        .input-txt{
+            width: 100%;
+        }
+        .pl70{
+            padding-left: 70px;
+        }
+       .div_litpic_local [type=file]{
+            color: #666;
+        }
+        .controls label{
+            color: #666;
+        }
+        .imgsrc{
+            position: relative;
+            width: 60px;
+            height: 60px;
+            display: inline-block;
+            border: 1px solid #eee;
+            overflow: hidden;
+        }
+        .imgsrc .upload-btn{
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            opacity: 0;
+            z-index: 3;
+        }
+        .imgsrc em {
+            height: 18px;
+            position: absolute;
+            bottom: 0;
+            line-height: 18px;
+            display: block;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            text-align: center;
+            font-size: 12px;
+            font-style: normal;
+            font-family: 宋体;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span12">
+                <form class="form-horizontal" id="post_form" onsubmit="return check_submit();">
+                    <div class="control-group">
+                        <div class="controls">
+                            <div class="title">原图片：</div>
+                            <div class="imgsrc">
+                               <input class="upload-btn" type="file" name="litpic_local" id="litpic_local" value="{$field.litpic_local|default=''}">
+                               <img src="" width="60" height="60" />
+                               <em>更换图片</em>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group bg">
+                        <div class="controls">
+                            <div class="title">&nbsp;</div>
+                           <!-- <div class="left div_litpic_local" {if condition="isset($field.is_remote) AND $field.is_remote == 1"}style="display: none;"{/if}>
+                               <input type="file" name="litpic_local" id="litpic_local" value="{$field.litpic_local|default=''}">
+                            </div> -->
+                            <div class="left">
+                                <input type="text" id="litpic_remote" name="litpic_remote" value="{$field.litpic_remote|default=''}" autocomplete="off" placeholder="http://" class="input-txt" {if condition="!isset($field.is_remote) OR empty($field.is_remote)"} style="display: none;"{/if}>
+                                <label style="cursor: pointer;"><input type="checkbox" name="is_remote" id="is_remote" value="1" {if condition="isset($field.is_remote) AND $field.is_remote == 1"}checked="checked"{/if} onClick="clickRemote(this, 'litpic');">远程图片</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls pl70">
+                            <input type="hidden" name="oldhtml" value="">
+                            <input type="hidden" name="id" value="{$field.id|default=''}">
+                            <input type="hidden" name="type" value="{$field.type|default=''}">
+                            <input type="hidden" name="page" value="{$field.page|default=''}">
+                            <input type="hidden" name="v" value="{$v|default='pc'}">
+                            <input type="hidden" name="lang" value="{$field.lang|default='cn'}">
+                            <input type="hidden" name="idcode" value="{$field.idcode|default=''}">
+                            <input type="hidden" name="iframe" value="1">
+                            <label class="checkbox"><input type="button" class="btn" value="确认提交" onclick="check_submit();" /></label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+
+        $(function(){
+            var oldhtml = parent.eyou_getOldHtml();
+            var oldimgsrc = parent.eyou_getOldImgsrc();
+            $('input[name=oldhtml]').val(oldhtml);
+            $('.imgsrc img').attr('src',oldimgsrc);
+
+            //在input file内容改变的时候触发事件
+            $('#litpic_local').change(function(){
+                //获取input file的files文件数组;
+                //$('#filed')获取的是jQuery对象，.get(0)转为原生对象;
+                //这边默认只能选一个，但是存放形式仍然是数组，所以取第一个元素使用[0];
+                var file = $('#litpic_local').get(0).files[0];
+                //创建用来读取此文件的对象
+                var reader = new FileReader();
+                //使用该对象读取file文件
+                reader.readAsDataURL(file);
+                //读取文件成功后执行的方法函数
+                reader.onload=function(e){
+                    //读取成功后返回的一个参数e，整个的一个进度事件
+                    //选择所要显示图片的img，要赋值给img的src就是e中target下result里面
+                    //的base64编码格式的地址
+                    $('.imgsrc img').get(0).src = e.target.result;
+                }
+            })
+        });
+
+        var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        
+        // 远程/本地上传图片切换
+        function clickRemote(obj, id)
+        {
+            if ($(obj).is(':checked')) {
+                $('#litpic_remote').focus();
+                $('#'+id+'_remote').show();
+                $('.div_'+id+'_local').hide();
+            } else {
+                $('.div_'+id+'_local').show();
+                $('#'+id+'_remote').hide();
+            }
+        }
+
+        function check_submit()
+        {
+            parent.eyou_layer_loading('正在处理');
+
+            var formData = new FormData($("#post_form")[0]);
+            var url = "{:url('api/Uiset/submit', ['_ajax'=>1])}";
+            $.ajax({
+                url: url,
+                type: 'POST',  
+                data: formData,  
+                // async: false,  
+                cache: false,  
+                contentType: false,  
+                processData: false,
+                dataType: 'JSON',
+                success: function(res){
+                    parent.layer.closeAll();
+                    if (res.code == 1) {
+                        $('input[name=oldhtml]').val(res.data.html);
+                        $('.imgsrc img').attr('src', res.data.imgsrc);
+                        $('#workspace', window.parent.document).attr('src', $('#workspace', window.parent.document).attr('src'));
+                        parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000});
+                    } else {
+                        parent.eyou_showErrorAlert(res.msg);
+                    }
+                },
+                error: function(e){
+                    parent.layer.closeAll();
+                    parent.eyou_showErrorAlert(e.responseText);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

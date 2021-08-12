@@ -25,58 +25,53 @@ class Base extends Common {
      */
     public function _initialize() {
         parent::_initialize();
+        
+        $assignName2 = $this->arrJoinStr(['cGhwX3Nlcn','ZpY2VtZWFs']);
+        $assignValue2 = tpCache('php.'.$assignName2);
+        $this->assign($assignName2, $assignValue2);
 
-        if(session('?users_id'))
-        {
+        if (session('?users_id')) {
             $users_id = session('users_id');
-            $users = M('users')->field('a.*,b.level_name')
-                ->alias('a')
-                ->join('__USERS_LEVEL__ b', 'a.level = b.level_id', 'LEFT')
-                ->where([
-                    'a.users_id'        => $users_id,
-                    'a.lang'            => $this->home_lang,
-                    'a.is_activation'   => 1,
-                ])->find();
-            session('users',$users);  //覆盖session 中的 users
+            $users = GetUsersLatestData($users_id);
             $this->users = $users;
             $this->users_id = $users['users_id'];
-            
-            $nickname = $this->users['nickname'];
-            if (empty($nickname)) {
-                $nickname = $this->users['username'];
-            }
-            $this->assign('nickname',$nickname);
-            
-            $this->assign('users',$users); //存储用户信息
-            $this->assign('users_id',$this->users_id);
+            $this->assign('users', $users);
+            $this->assign('users_id', $this->users_id);
+            $this->assign('nickname', !empty($this->users['nickname']) ? $this->users['nickname'] : $this->users['username']);
         } else {
             //过滤不需要登陆的行为
             $ctl_act = CONTROLLER_NAME.'@'.ACTION_NAME;
             $ctl_all = CONTROLLER_NAME.'@*';
             $filter_login_action = config('filter_login_action');
             if (!in_array($ctl_act, $filter_login_action) && !in_array($ctl_all, $filter_login_action)) {
-                if (IS_AJAX) {
-                    $this->error('请先登录！');
+                $resource = input('param.resource/s');
+                if ('Uploadify@*' == $ctl_all && 'reg' == $resource) {
+                    // 注册时上传图片不验证登录行为
                 } else {
-                    if (isWeixin()) {
-                        //微信端
-                        $this->redirect('user/Users/users_select_login');
-                        exit;
-                    }else{
-                        // 其他端
-                        $this->redirect('user/Users/login');
-                        exit;
+                    if (IS_AJAX) {
+                        $this->error('请先登录！', null, ['url'=>url('user/Users/login')]);
+                    } else {
+                        if (isWeixin()) {
+                            //微信端
+                            $this->redirect('user/Users/users_select_login');
+                        } else {
+                            // 其他端
+                            $this->redirect('user/Users/login');
+                        }
                     }
                 }
             }
         }
 
         // 订单超过 get_shop_order_validity 设定的时间，则修改订单为已取消状态，无需返回数据
-        model('Shop')->UpdateShopOrderData($this->users_id);
+        // model('Shop')->UpdateShopOrderData($this->users_id);
+
+        $usersTplVersion = getUsersTplVersion();
 
         // 会员功能是否开启
         $logut_redirect_url = '';
         $this->usersConfig = getUsersConfigData('all');
+        $this->assign('usersConfig', $this->usersConfig);
         $web_users_switch = tpCache('web.web_users_switch');
         if (empty($web_users_switch) || isset($this->usersConfig['users_open_register']) && $this->usersConfig['users_open_register'] == 1) { 
             // 前台会员中心已关闭
@@ -85,39 +80,63 @@ class Base extends Common {
             // 登录的会员被后台删除，立马退出会员中心
             $logut_redirect_url = url('user/Users/centre');
         }
+
+        // 是否开启会员注册功能
+        if (isset($this->usersConfig['users_open_reg']) && $this->usersConfig['users_open_reg'] == 1 && 'reg' == request()->action()) {
+            $logut_redirect_url = ROOT_DIR.'/';
+        }
         if (!empty($logut_redirect_url)) {
             // 清理session并回到首页
             session('users_id', null);
             session('users', null);
             $this->redirect($logut_redirect_url);
-            exit;
         }
         // --end
         
-        $this->assign('usersConfig', $this->usersConfig);
-        
-        $this->usersConfig['theme_color'] = $theme_color = !empty($this->usersConfig['theme_color']) ? $this->usersConfig['theme_color'] : '#ff6565'; // 默认主题颜色
+        // 默认主题颜色
+        if (!empty($this->usersConfig['theme_color'])) {
+            $theme_color = $this->usersConfig['theme_color'];
+        } else {
+            if ($usersTplVersion == 'v1') {
+                $theme_color = '#ff6565';
+            } else {
+                $theme_color = '#fd8a27';
+            }
+        }
+        $this->usersConfig['theme_color'] = $theme_color;
         $this->assign('theme_color', $theme_color);
 
-        // 是否为手机端
-        $is_mobile = 2;     // 其他端
-        if (isMobile()) {
-            $is_mobile = 1; // 手机端
-        }
-        $this->assign('is_mobile',$is_mobile);
+        // 是否为手机端，1手机端，2其他端
+        $this->assign('is_mobile', isMobile() ? 1 : 2);
         
-        // 是否为端微信
-        $is_wechat = 2;     // 其他端
-        if (isWeixin()) {
-            $is_wechat = 1; // 微信端
-        }
-        $this->assign('is_wechat',$is_wechat);
+        // 是否为端微信，1微信端，2其他端
+        $this->assign('is_wechat', isWeixin() ? 1 : 2);
 
-        // 是否为微信端小程序
-        $is_wechat_applets = 0;     // 不在微信小程序中
-        if (isWeixinApplets()) {
-            $is_wechat_applets = 1; // 在微信小程序中
+        // 是否为微信端小程序，1在微信小程序中，0不在微信小程序中
+        $this->assign('is_wechat_applets', isWeixinApplets() ? 1 : 0);
+
+        // 站内消息
+        if ($usersTplVersion != 'v1') {
+            // 未读消息数
+            $unread_num = Db::name('users')->where(['users_id' => $this->users_id])->value("unread_notice_num");
+            $this->assign('unread_num',$unread_num);
+            // 总消息数
+            $allNotice_num = Db::name('users_notice')->where([
+                    'users_id' => [
+                        ['EQ', ''],
+                        ['EQ', $this->users_id],
+                        'OR'
+                    ]
+                ])->whereOR("FIND_IN_SET({$this->users_id}, users_id)")->count();
+            $this->assign('allNotice_num', $allNotice_num);
         }
-        $this->assign('is_wechat_applets',$is_wechat_applets);
+
+        //积分名称
+        $score_name = getUsersConfigData('score.score_name');
+        $score_name = $score_name?:'积分';
+        $this->assign('score_name',$score_name);
+
+        // 子目录
+        $this->assign('RootDir', ROOT_DIR); 
     }
 }

@@ -1,0 +1,214 @@
+{include file="public/layout" /}
+<style>
+    .ncap-form-default dl.row {position: unset;}
+    .comboTreeDropDownContainer {width: 388px !important;}
+    .multiplesFilter {border: 0 !important;border-bottom: solid 1px #eee !important;outline: none !important; }
+    .comboTreeDropDownContainer {box-shadow: 0 0 8px rgba(0,0,0,0.2);border-radius: 4px!important;background-color: #FFF !important;border: solid 1px #eee !important;}
+    .multiplesFilter{height: 30px !important;}
+</style>
+{eq name="$editor.editor_select" value="1"}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+{else/}
+    {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
+{/eq}
+<link href="__SKIN__/css/notice.css?v={$version}" rel="stylesheet" type="text/css">
+
+<script type="text/javascript" src="__SKIN__/js/icontains.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/comboTreePlugin.js?v={$version}"></script>
+<body class="bodystyle" style="overflow-y: scroll;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    
+    <form class="form-horizontal" id="post_form" action="{:url('Encodes/users_notice_add')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="usernames">通知对象</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="usernames" placeholder="可以多选，全站通知不选" id="justAnInputBox" class="input-txt" autocomplete="off">
+                    <input type="hidden" name="users_id" placeholder="可以多选，全站通知不选" id="ids" class="input-txt" autocomplete="off">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>通知标题</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="title" value="" id="title" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="remark"><em>*</em>通知内容</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="60" id="remark" name="remark" style="height:150px;"></textarea>
+                    <!-- <textarea class="span12 ckeditor" id="remark" placeholder="通知内容" name="remark" ></textarea>
+                    <div class="opt-moreOper">
+                        <p>
+                            <a href="javascript:void(0);" onclick="remote_to_local_remark();" class="ncap-btn2">远程图片本地化</a>&nbsp;
+                            <a href="javascript:void(0);" onclick="replace_links_remark();" class="ncap-btn2">清除非本站链接</a>&nbsp;
+                        </p>
+                    </div> -->
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    var SampleJSONData = [
+	    {empty name="listname"}
+        {
+            id: 0,
+            title: '没有符合条件的记录'
+        }
+		{else/}
+		    {volist name="listname" id="vo"}
+		        {
+                    id: {$vo.users_id},
+                    title: '{$vo.username}',
+                },
+		    {/volist}
+        {/empty}
+    ];
+    var comboTree1, comboTree2;
+    jQuery(document).ready(function($) {
+		comboTree1 = $('#justAnInputBox').comboTree({
+			source : SampleJSONData,
+			isMultiple: true
+		});
+    });
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+    // 判断输入框是否为空
+    function checkForm(){
+        if($('input[name=title]').val() == ''){
+            showErrorMsg('通知标题不能为空！');
+            $('input[name=title]').focus();
+            return false;
+        }
+		if($('textarea[name=remark]').val() == ''){
+            showErrorMsg('通知内容不能为空！');
+            $('textarea[name=remark]').focus();
+            return false;
+        }
+        var a = comboTree1.getSelectedItemsId();
+        if (false == a) {
+            a = '';
+        }
+        $("#ids").val(a);
+
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Encodes/users_notice_add', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
+    }
+    
+</script>
+<script type="text/javascript">
+    /*
+    UE.getEditor('remark',{
+        serverUrl :"{:url('Ueditor/index',array('savepath'=>'ueditor'))}",
+        zIndex: 999,
+        initialFrameWidth: "100%", //初化宽度
+        initialFrameHeight: 450, //初化高度
+        focus: false, //初始化时，是否让编辑器获得焦点true或false
+        maximumWords: 99999,
+        removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
+        pasteplain:false, //是否默认为纯文本粘贴。false为不使用纯文本粘贴，true为使用纯文本粘贴
+        autoHeightEnabled: false,
+        toolbars: ueditor_toolbars
+    });
+
+    //必须在提交前渲染编辑器；
+    function remark() {
+        //判断编辑模式状态:0表示【源代码】HTML视图；1是【设计】视图,即可见即所得；-1表示不可用
+        if(UE.getEditor("remark").queryCommandState('source') != 0) {
+            UE.getEditor("remark").execCommand('source'); //切换到【设计】视图
+        }
+    }
+
+    // 远程图片本地化
+    function remote_to_local_remark() {
+        var body = UE.getEditor("remark").getContent();
+        layer_loading('下载中');
+        $.ajax({
+            type: 'POST',
+            url: "{:url('Archives/ajax_remote_to_local')}",
+            data: {body:body,_ajax:1},
+            dataType: "JSON",
+            success: function(res){
+                layer.closeAll();
+                if (res.code == 1) {
+                    UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").setContent(res.data.body);
+                    layer.msg(res.msg, {icon: 1, time:1000});
+                } else {
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorMsg(res.msg);
+            }
+        });
+    }
+
+    // 清除非本站链接
+    function replace_links_remark() {
+        var body = UE.getEditor("remark").getContent();
+        layer_loading('正在处理');
+        $.ajax({
+            type: 'POST',
+            url: "{:url('Archives/ajax_replace_links')}",
+            data: {body:body,_ajax:1},
+            dataType: "JSON",
+            success: function(res){
+                layer.closeAll();
+                if (res.code == 1) {
+                    UE.getEditor("remark").setContent(res.data.body);
+                    layer.msg(res.msg, {icon: 1, time:1000});
+                } else {
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorMsg(res.msg);
+            }
+        });
+    }
+    */
+</script>
+{include file="public/footer" /}

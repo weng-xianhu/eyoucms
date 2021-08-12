@@ -31,6 +31,7 @@ class FilemanagerLogic extends Model
     public $delOpArr = array(); // 删除权限
     public $moveOpArr = array(); // 移动权限
     public $editExt = array(); // 允许新增/编辑扩展名文件
+    public $disableFuns = array(); // 允许新增/编辑扩展名文件
 
     /**
      * 析构函数
@@ -51,6 +52,8 @@ class FilemanagerLogic extends Model
         $this->moveOpArr = array('gif','jpg','svg','flash','zip','exe','mp3','wmv','rm','txt','htm','js','css','other');
         // 允许新增/编辑扩展名文件
         $this->editExt = array('htm','js','css','txt');
+        // 过滤php危险函数
+        $this->disableFuns = ['phpinfo'];
     }
 
     /**
@@ -66,6 +69,7 @@ class FilemanagerLogic extends Model
     {
         $fileinfo = pathinfo($filename);
         $ext = strtolower($fileinfo['extension']);
+        $filename = trim($fileinfo['filename'], '.').'.'.$fileinfo['extension'];
 
         /*不允许越过指定最大级目录的文件编辑*/
         $tmp_max_dir = preg_replace("#\/#i", "\/", $this->maxDir);
@@ -80,15 +84,19 @@ class FilemanagerLogic extends Model
         }
         /*--end*/
 
-        $filename = str_replace("..", "", $filename);
         $file = $this->baseDir."$activepath/$filename";
         if (!is_writable(dirname($file))) {
             return "请把模板文件目录设置为可写入权限！";
         }
-        if ('css' != $ext) {
+        if ('htm' == $ext) {
             $content = htmlspecialchars_decode($content, ENT_QUOTES);
-            $content = preg_replace("/(@)?eval(\s*)\(/i", 'intval(', $content);
-            // $content = preg_replace("/\?\bphp\b/i", "？ｍｕｍａ", $content);
+            if (preg_match('#<([^?]*)\?php#i', $content) || preg_match('#<\?\=(\s+)#i', $content) || preg_match('#\{eyou\:php([^\}]*)\}#i', $content) || preg_match('#\{php([^\}]*)\}#i', $content)) {
+                return "模板里不允许有php语法，为了安全考虑，请通过FTP工具进行编辑上传。";
+            }
+            foreach ($this->disableFuns as $key => $val) {
+                $val_new = msubstr($val, 0, 1).'-'.msubstr($val, 1);
+                $content = preg_replace("/(@)?".$val."(\s*)\(/i", "{$val_new}(", $content);
+            }
         }
         $fp = fopen($file, "w");
         fputs($fp, $content);
@@ -102,26 +110,41 @@ class FilemanagerLogic extends Model
      * @param     string  $dirname  新目录
      * @param     string  $activepath  当前路径
      * @param     boolean  $replace  是否替换
+     * @param     string  $type  文件类型：图片image , 附件file , 视频media
      */
-    public function upload($fileElementId, $activepath = '', $replace = false)
+    public function upload($fileElementId, $activepath = '', $replace = false, $type = 'image')
     {
+        $retData = [];
         $file = request()->file($fileElementId);
         if (is_object($file) && !is_array($file)) {
-            $fileArr[] = $file;
-        } else if (!is_object($file) && is_array($file)) {
+            $retData = $this->uploadfile($file, $activepath, $replace, $type);
+        } 
+        else if (!is_object($file) && is_array($file)) {
             $fileArr = $file;
-        }
-        $i = 0;
-        foreach ($fileArr as $key => $fileObj) {
-            if (empty($fileObj)) {
-                continue;
+            $i = 0;
+            $j = 0;
+            foreach ($fileArr as $key => $fileObj) {
+                if (empty($fileObj)) {
+                    continue;
+                }
+                $res = $this->uploadfile($fileObj, $activepath, $replace, $type);
+                if(!empty($res['code']) && $res['code'] == 1) {
+                    $i++;
+                } else {
+                    $j++;
+                }
             }
-            if($this->uploadfile($fileObj, $activepath, $replace)) {
-                $i++;
+
+            if ($j == 0) {
+                $retData['code'] = 0;
+                $retData['msg'] = "上传失败 $i 个文件到: $activepath";
+            } else {
+                $retData['code'] = 1;
+                $retData['msg'] = "上传成功！";
             }
         }
 
-        return "成功上传 $i 个文件到: $activepath";
+        return $retData;
     }
 
     /**
@@ -130,21 +153,45 @@ class FilemanagerLogic extends Model
      * @param     object  $file  文件对象
      * @param     string  $activepath  当前路径
      * @param     boolean  $replace  是否替换
+     * @param     string  $type  文件类型：图片image , 附件file , 视频media
      */
-    public function uploadfile($file, $activepath = '', $replace = false)
+    public function uploadfile($file, $activepath = '', $replace = false, $type = 'image')
     {
         $validate = array();
+
+        /*文件类型限制*/
+        switch ($type) {
+            case 'image':
+                $validate_ext = tpCache('basic.image_type');
+                break;
+
+            case 'file':
+                $validate_ext = tpCache('basic.file_type');
+                break;
+
+            case 'media':
+                $validate_ext = tpCache('basic.media_type');
+                break;
+            
+            default:
+                $validate_ext = tpCache('basic.image_type');
+                break;
+        }
+        $validate['ext'] = explode('|', $validate_ext);
+        /*--end*/
+
         /*文件大小限制*/
         $validate_size = tpCache('basic.file_size');
         if (!empty($validate_size)) {
             $validate['size'] = $validate_size * 1024 * 1024; // 单位为b
         }
         /*--end*/
+
         /*上传文件验证*/
         if (!empty($validate)) {
             $is_validate = $file->check($validate);
             if ($is_validate === false) {
-                return false;
+                return ['code'=>0, 'msg'=>$file->getError()];
             }   
         }
         /*--end*/
@@ -160,13 +207,17 @@ class FilemanagerLogic extends Model
         } else {
             $filename = $replace;
         }
+        $fileExt = pathinfo($filename, PATHINFO_EXTENSION); //获取上传文件扩展名
+        if (!in_array($fileExt, $validate['ext'])) {
+            return ['code'=>0, 'msg'=>'上传文件后缀不允许'];
+        }
 
         // 使用自定义的文件保存规则
         $info = $file->move($savePath, $filename, true);
         if($info){
-            return true;
+            return ['code'=>1, 'msg'=>'上传成功'];
         }else{
-            return false;
+            return ['code'=>0, 'msg'=>$file->getError()];
         }
     }
 
@@ -182,7 +233,7 @@ class FilemanagerLogic extends Model
         $fileArr = $dirArr = $parentArr = array();
 
         $mydir = dir($directory);
-        while($file = $mydir->read())
+        while(false !== $file = $mydir->read())
         {
             $filesize = $filetime = $intro = '';
             $filemine = 'file';
@@ -240,7 +291,7 @@ class FilemanagerLogic extends Model
                 $filetype = 'gif';
                 $icon = 'gif.gif';
             }
-            else if(preg_match("#\.(jpg|jpeg|bmp)#i",$file))
+            else if(preg_match("#\.(jpg|jpeg|bmp|webp)#i",$file))
             {
                 $filemine = 'image';
                 $filetype = 'jpg';

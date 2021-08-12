@@ -1,16 +1,16 @@
     <div class="fixed-bar">
         <div class="item-title">
-            <div class="subject">
-                <h3>SEO设置</h3>
-                <h5></h5>
-            </div>
             <ul class="tab-base nc-row">
                 {eq name='$main_lang' value='$admin_lang'}
-                <li><a href="{:url('Seo/index',['inc_type'=>'seo'])}" {if condition="'seo'==$inc_type"}class="current"{/if}><span>URL配置</span></a></li>
+                {eq name="'Seo@seo'|is_check_access" value="1"}
+                <li><a href="{:url('Seo/seo')}" {if condition="'seo'==$Think.const.ACTION_NAME"}class="current"{/if}><span>URL配置</span></a></li>
+                {/eq}
                 {/eq}
 
                 {eq name='$main_lang' value='$admin_lang'}
-                <li><a href="{:url('Seo/index',['inc_type'=>'sitemap'])}" {if condition="'sitemap'==$inc_type"}class="current"{/if}><span>Sitemp</span></a></li>
+                {eq name="'Sitemap@index'|is_check_access" value="1"}
+                <li><a href="{:url('Sitemap/index')}" {if condition="'Sitemap'==$Think.const.CONTROLLER_NAME"}class="current"{/if}><span>Sitemap</span></a></li>
+                {/eq}
                 {/eq}
 
                 {eq name="'Links@index'|is_check_access" value="1"}

@@ -1,0 +1,200 @@
+<form class="form-horizontal" id="postMicrosite" method="post">
+    <div class="hDiv" id="microsite">
+        <div class="hDivBox">
+            <table cellspacing="0" cellpadding="0" style="width: 100%">
+                <thead>
+                <tr>
+                    <th class="sign w10" axis="col0">
+                        <div class="tc"></div>
+                    </th>
+                    <th abbr="article_title" axis="col3" class="w10">
+                        <div class="tc">
+                            {notempty name="$is_eyou_authortoken"}
+                                <i class="anchor-icon anchor-icon-biao" title="限商业授权以上可用"></i>
+                            {/notempty}
+                            微站点设置
+                        </div>
+                    </th>
+                    <th abbr="ac_id" axis="col4">
+                        <div class=""></div>
+                    </th>
+                </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div class="ncap-form-default">
+        <dl class="row">
+            <dt class="tit">
+                <label>微站点模式</label>
+                <input type="hidden" id="shop_micro" value="{$userConfig.shop_micro|default=0}">
+            </dt>
+            <dd class="opt" style="line-height: 30px;">
+                <label>
+                    <input type="radio" name="shop[shop_micro]" id="shop_micro1" value="1" {if condition="isset($userConfig.shop_micro) && $userConfig.shop_micro == 1"} checked="checked" {/if} onclick="DetectConfig(1);"/>开启
+                </label>
+                &nbsp;&nbsp;&nbsp;
+                <label>
+                    <input type="radio" name="shop[shop_micro]" id="shop_micro0" value="0" {if condition="empty($userConfig.shop_micro)"} checked="checked" {/if}/>关闭
+                </label>
+                &nbsp;&nbsp;&nbsp;
+                <p class="notic">开启后，在微信里访问不需要注册或登录，需要先配置下方微信参数</p>
+            </dd>
+        </dl>
+
+        <dl class="row">
+            <dt class="tit">
+                <label>强制微信模式</label>
+                <input type="hidden" id="shop_force_use_wechat" value="{$userConfig.shop_force_use_wechat|default=0}">
+            </dt>
+            <dd class="opt" style="line-height: 30px;">
+                <label>
+                    <input type="radio" name="shop[shop_force_use_wechat]" id="shop_force_use_wechat1" value="1" {if condition="isset($userConfig.shop_force_use_wechat) && $userConfig.shop_force_use_wechat == 1"} checked="checked" {/if} onclick="DetectConfig(2);"/>开启
+                </label>
+                &nbsp;&nbsp;&nbsp;
+                <label>
+                    <input type="radio" name="shop[shop_force_use_wechat]" id="shop_force_use_wechat0" value="0" {if condition="empty($userConfig.shop_force_use_wechat)"} checked="checked" {/if} onclick="DetectConfig(3);"/>关闭
+                </label>
+                &nbsp;&nbsp;&nbsp;
+                <p class="notic">开启后，只能在微信内访问，需要先开启微站点模式</p>
+            </dd>
+        </dl>
+
+        <dl class="row">
+            <dt class="tit">
+                <label for="WX_appid"><em>*</em>微信AppId</label>
+            </dt>
+            <dd class="opt">
+                <input type="text" name="login[appid]" id="WX_appid" value="{$login.appid|default=''}" class="input-txt">
+                <p class="notic">微信公众平台微信AppId，用于微信登录<span style="color: red;">(同微信支付配置AppId)</span></p>
+            </dd>
+        </dl>
+
+        <dl class="row">
+            <dt class="tit">
+                <label for="appsecret"><em>*</em>微信AppSecret</label>
+            </dt>
+            <dd class="opt">
+                <input type="text" name="login[appsecret]" id="appsecret" value="{$login.appsecret|default=''}" class="input-txt">
+                <p class="notic">微信公众平台微信AppSecret密钥，用于微信登录</p>
+            </dd>
+        </dl>
+
+        <dl class="row">
+            <dt class="tit">
+                <label for="wechat_name">公众号的微信号</label>
+            </dt>
+            <dd class="opt">
+                <input type="text" name="login[wechat_name]" id="wechat_name" value="{$login.wechat_name|default=''}" class="input-txt">
+                <p class="notic">微信公众平台微信号，用于开启<span style="color: red;">强制微信模式</span>时在PC和移动端展示</p>
+            </dd>
+        </dl>
+
+        <dl class="row">
+            <dt class="tit">
+                <label for="wechat_pic">公众号二维码</label>
+            </dt>
+            <dd class="opt">
+                <div class="input-file-show">
+                    <span class="show">
+                        <a id="img_a_wechat_pic" class="nyroModal" rel="gal" href="{$login.wechat_pic|default='javascript:void(0);'}?t={php}echo time();{/php}" target="_blank">
+                            <i id="img_i_wechat_pic" class="fa fa-picture-o" {notempty name="$login.wechat_pic"}onmouseover="layer_tips=layer.tips('<img src={$login.wechat_pic|default=''}?t={php}echo time();{/php} width=300 height=300>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                        </a>
+                    </span>
+                    <span class="type-file-box">
+                        <input type="text" id="wechat_pic" name="login[wechat_pic]" value="{$login.wechat_pic|default=''}" class="type-file-text" autocomplete="off">
+                        <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                        <input class="type-file-file" onclick="GetUploadify(1, '', 'allimg', 'wechat_pic_call_back')" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                    </span>
+                </div>
+                <span class="err"></span>
+                <p class="notic">微信公众平台微信号，用于开启<span style="color: red;">强制微信模式</span>时在PC和移动端展示</p>
+            </dd>
+        </dl>
+
+        <dl class="row">
+            <div class="bot" style="padding-bottom:0px;">
+                <a href="JavaScript:void(0);" onclick="submit_microsite();" class="ncap-btn-big ncap-btn-green">确认提交</a>
+                &nbsp;<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=10166','微站点设置')" style="font-size: 12px;padding-left: 10px;position:absolute;top: 30px">不会配置？</a>
+            </div>
+        </dl>
+    </div>
+</form>
+<script type="text/javascript">
+    // 提交
+    function submit_microsite(){
+        layer_loading("正在处理");
+        $.ajax({
+            url: "{:url('System/microsite', ['_ajax'=>1])}",
+            type: 'POST',
+            dataType: 'JSON',
+            data: $('#postMicrosite').serialize(),
+            success: function(res){
+                layer.closeAll();
+                if (1 == res.code) {
+                    layer.msg(res.msg, {icon: 1, time: 1000});
+                    return false;
+                } else {
+                    var icon = 2;
+                    try{
+                        if (res.data.icon) {
+                            icon = res.data.icon;
+                        }
+                    }catch(e){}
+                    layer.alert(res.msg, {icon: icon, title:false});
+                    return false;
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorMsg(ey_unknown_error);
+                return false;
+            }
+        });
+    }
+
+    // 检测是否配置微信参数
+    function DetectConfig(type) {
+        if (3 == type) {
+            $('#shop_micro0').removeAttr("disabled");
+            return false;
+        }
+
+        var WX_appid = $('#WX_appid');
+        if (!WX_appid.val() || '' == WX_appid.val()) {
+            WX_appid.focus();
+            layer.msg('请先填写微信AppId');
+            if (1 == type) {
+                $("#shop_micro0").click();
+            } else if (2 == type) {
+                $("#shop_force_use_wechat0").click();
+            }
+            return false;
+        }
+
+        var appsecret = $('#appsecret');
+        if (!appsecret.val() || '' == appsecret.val()) {
+            appsecret.focus();
+            layer.msg('请先填写微信AppSecret');
+            if (1 == type) {
+                $("#shop_micro0").click();
+            } else if (2 == type) {
+                $("#shop_force_use_wechat0").click();
+            }
+            return false;
+        }
+
+        if (2 == type) {
+            // 设置微信端开启
+            $("#shop_force_use_wechat1, #shop_micro1").attr('checked', true);
+            $('#shop_micro0').attr("disabled", "disabled");
+        }
+    }
+
+    // 加载图片显示
+    function wechat_pic_call_back(fileurl_tmp) {
+        $("#wechat_pic").val(fileurl_tmp);
+        $("#img_a_wechat_pic").attr('href', fileurl_tmp);
+        $("#img_i_wechat_pic").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" width=300 height=300>',this,{tips: [1, '#fff']});");
+    }
+</script>

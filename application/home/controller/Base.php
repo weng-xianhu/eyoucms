@@ -32,6 +32,9 @@ class Base extends Common {
         
         // 设置URL模式
         set_home_url_mode();
+        
+        // 子目录
+        $this->assign('RootDir', ROOT_DIR);
     }
 
     /**

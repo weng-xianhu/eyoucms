@@ -1,367 +1,544 @@
 {include file="public/layout" /}
-<body style="background-color: #FFF; overflow: auto;min-width: auto;">
-<style type="text/css">
-    .ncap-form-default dd.opt{
-        width: auto;
-    }
-</style>
-<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
-<div id="append_parent"></div>
-<div id="ajaxwaitid"></div>
-<div class="page" style="min-width: auto;">
-    <div class="fixed-bar">
-        <div class="item-title">
-            <div class="subject">
-                <h3>功能开关</h3>
-                <h5></h5>
+<body class="bodystyle" style="min-width: auto;">
+    {eq name="'Index@switch_map'|is_check_access" value="1"}
+        {eq name='$main_lang' value='$admin_lang'}
+        <div class="on-off_panel" id="mokuaikaiguan" style="display: none;">
+            <div class="title">模块开关</div>
+            <div class="on-off_btns">
+                <form class="layui-form" action="">
+                    <ul>
+                        {eq name="'Member@index'|is_check_access" value="1"}
+                        <li class="more_li">
+                            <div class="on-off_btn">
+                                <div class="on-off_btn_l">
+                                    <p>会员中心：</p>
+                                </div>
+                                <div class="on-off_btn_r">
+                                    <input type="checkbox" name="web[web_users_switch]" lay-skin="switch" lay-text="开启|关闭" lay-filter="switchTest"
+                                           data-authortoken="{$is_eyou_authortoken}" data-is_online="{$is_online}" {eq name="$globalConfig.web_users_switch" value="1"}checked="" {/eq}
+                                           data-type="web" data-name="web_users_switch" data-lmenuid="Member_users_index" value="{$globalConfig.web_users_switch}">
+                                </div>
+                            </div>
+                        </li>
+                        <li class="more_li">
+                            <div class="on-off_btn">
+                                <div class="on-off_btn_l">
+                                    <p>会员投稿：</p>
+                                </div>
+                                <div class="on-off_btn_r">
+                                    <input type="checkbox" name="users[users_open_release]" lay-skin="switch" lay-text="开启|关闭" lay-filter="switchTest"
+                                           data-authortoken="{$is_eyou_authortoken}" data-is_online="{$is_online}" {eq name="$userConfig.users_open_release" value="1"}checked="" {/eq}
+                                           data-type="users" data-name="users_open_release" data-lmenuid="Archives_index_draft" value="{$userConfig.users_open_release}">
+                                </div>
+                            </div>
+                        </li>
+                        <li class="more_li">
+                            <div class="on-off_btn">
+                                <div class="on-off_btn_l">
+                                    <p>会员升级：</p>
+                                </div>
+                                <div class="on-off_btn_r">
+                                    <input type="checkbox" name="level[level_member_upgrade]" lay-skin="switch" lay-text="开启|关闭" lay-filter="switchTest"
+                                           data-authortoken="{$is_eyou_authortoken}" data-is_online="{$is_online}" {eq name="$userConfig.level_member_upgrade" value="1"}checked="" {/eq}
+                                    data-type="level" data-name="level_member_upgrade" data-lmenuid="off" value="{$userConfig.level_member_upgrade}">
+                                </div>
+                            </div>
+                        </li>
+                        {/eq}
+
+                        {eq name="'Shop@index'|is_check_access" value="1"}
+                            {if condition="$php_servicemeal > 1"}
+                            <li class="more_li">
+                                <div class="on-off_btn">
+                                    <div class="on-off_btn_l">
+                                        <p>商城中心：</p>
+                                    </div>
+                                    <div class="on-off_btn_r">
+                                        <input type="checkbox" name="shop[shop_open]" lay-skin="switch" lay-text="开启|关闭" lay-filter="switchTest"
+                                               data-authortoken="{$is_eyou_authortoken}" data-is_online="{$is_online}" {eq name="$userConfig.shop_open" value="1"}checked="" {/eq}
+                                        data-type="shop" data-name="shop_open" data-lmenuid="Shop_home" value="{$userConfig.shop_open}">
+                                    </div>
+                                </div>
+                            </li>
+                            {/if}
+                        {/eq}
+
+                        {eq name="'Member@index'|is_check_access" value="1"}
+                        <li class="more_li">
+                            <div class="on-off_btn">
+                                <div class="on-off_btn_l">
+                                    <p>支付功能：</p>
+                                </div>
+                                <div class="on-off_btn_r">
+                                    <input type="checkbox" name="pay[pay_open]" lay-skin="switch" lay-text="开启|关闭" lay-filter="switchTest"
+                                           data-authortoken="{$is_eyou_authortoken}" data-is_online="{$is_online}" {eq name="$userConfig.pay_open" value="1"}checked="" {/eq}
+                                    data-type="pay" data-name="pay_open" data-lmenuid="off" value="{$userConfig.pay_open}">
+            
+                                </div>
+                            </div>
+                        </li>
+                        {/eq}
+
+                        {eq name="'Weapp@index'|is_check_access" value="1"}
+                            {eq name="weapp_switch" value="true"}
+                            <li class="more_li">
+                                <div class="on-off_btn">
+                                    <div class="on-off_btn_l">
+                                        <p>插件应用：</p>
+                                    </div>
+                                    <div class="on-off_btn_r">
+                                        <input type="checkbox" name="web[web_weapp_switch]" lay-skin="switch" lay-text="开启|关闭" lay-filter="switchTest2"
+                                               data-type="web" data-name="web_weapp_switch" data-lmenuid="Weapp_index" value="{$globalConfig.web_weapp_switch}"
+                                               {eq name="$globalConfig.web_weapp_switch" value="1"}checked="" {/eq}>
+                                    </div>
+                                </div>
+                            </li>
+                            {/eq}
+                        {/eq}
+
+                        {eq name="'Language@index'|is_check_access" value="1"}
+                            {if condition="$php_servicemeal >= 1 || !empty($global.system_use_language)"}
+                            <li class="more_li">
+                                <div class="on-off_btn">
+                                    <div class="on-off_btn_l">
+                                        <p>多语言：</p>
+                                    </div>
+                                    <div class="on-off_btn_r">
+                                        <input type="checkbox" name="web[web_language_switch]" lay-skin="switch" lay-text="开启|关闭" lay-filter="switchTest"
+                                               data-type="web" data-name="web_language_switch" data-lmenuid="Language_index" value="{$globalConfig.web_language_switch}"
+                                               {eq name="$globalConfig.web_language_switch" value="1"}checked="" {/eq}>
+                                    </div>
+                                </div>
+                            </li>
+                            {/if}
+                        {/eq}
+                    </ul>
+                </form>
             </div>
         </div>
-    </div>
-    <div class="ncap-form-default">
-        <dl class="row">
-            <dt class="tit">
-                <label for="site_url">插件应用</label>
-            </dt>
-            <dd class="opt">
-                <div class="onoff">
-                    <label for="web_weapp_switch1" class="cb-enable {if condition='isset($globalConfig.web_weapp_switch) && $globalConfig.web_weapp_switch eq 1'}selected{/if}">开启</label>
-                    <label for="web_weapp_switch0" class="cb-disable {if condition='!isset($globalConfig.web_weapp_switch) || $globalConfig.web_weapp_switch eq -1'}selected{/if}">关闭</label>
-                    <input id="web_weapp_switch1" name="web[web_weapp_switch]" value="1" type="radio" {if condition="isset($globalConfig.web_weapp_switch) && $globalConfig.web_weapp_switch eq 1"} checked="checked"{/if} onclick="ajax_submit(this, 'web', 'web_weapp_switch');" data-lmenuid="Weapp_index">
-                    <input id="web_weapp_switch0" name="web[web_weapp_switch]" value="-1" type="radio" {if condition="!isset($globalConfig.web_weapp_switch) || $globalConfig.web_weapp_switch eq -1"} checked="checked"{/if} onclick="ajax_submit(this, 'web', 'web_weapp_switch');" data-lmenuid="Weapp_index">
-                </div>
-                <p class="notic">开启之后，左侧菜单会显示插件应用入口</p>
-                <span id="guide_web_weapp_switch" style="{if condition='1 != $globalConfig.web_weapp_switch'} display: none;{/if}">
-                    &nbsp;<a href="{:url('Weapp/index')}">[上传管理]</a>
-                </span>
-            </dd>
-        </dl>
-        <dl class="row">
-            <dt class="tit">
-                <label for="site_url">多语言</label>
-            </dt>
-            <dd class="opt">
-                <div class="onoff">
-                    <label for="web_language_switch1" class="cb-enable {if condition='isset($globalConfig.web_language_switch) && $globalConfig.web_language_switch eq 1'}selected{/if}">开启</label>
-                    <label for="web_language_switch0" class="cb-disable {if condition='empty($globalConfig.web_language_switch)'}selected{/if}">关闭</label>
-                    <input id="web_language_switch1" name="web[web_language_switch]" value="1" type="radio" {if condition="isset($globalConfig.web_language_switch) && $globalConfig.web_language_switch eq 1"} checked="checked"{/if} onclick="ajax_submit(this, 'web', 'web_language_switch');" data-lmenuid="Language_index">
-                    <input id="web_language_switch0" name="web[web_language_switch]" value="0" type="radio" {if condition="empty($globalConfig.web_language_switch)"} checked="checked"{/if} onclick="ajax_submit(this, 'web', 'web_language_switch');" data-lmenuid="Language_index">
-                </div>
-                <p class="notic">开启之后，顶部菜单会显示多语言入口</p>
-                <span id="guide_web_language_switch" style="{if condition='empty($globalConfig.web_language_switch)'} display: none;{/if}">
-                    &nbsp;<a href="{:url('Language/index')}">[多语言设置]</a>
-                    &nbsp;<a href="javascript:void(0);" onclick="tag_call('web_language_switch');" class="red">[标签调用]</a>
-                </span>
-            </dd>
-        </dl>
-        <dl class="row">
-            <dt class="tit">
-                <label for="site_url">会员中心</label>
-            </dt>
-            <dd class="opt">
-                <div class="onoff">
-                    <label for="web_users_switch1" class="cb-enable {if condition='isset($globalConfig.web_users_switch) && $globalConfig.web_users_switch eq 1'}selected{/if}">开启</label>
-                    <label for="web_users_switch0" class="cb-disable {if condition='empty($globalConfig.web_users_switch)'}selected{/if}">关闭</label>
-                    <input id="web_users_switch1" name="web[web_users_switch]" value="1" type="radio" {if condition="isset($globalConfig.web_users_switch) && $globalConfig.web_users_switch eq 1"} checked="checked"{/if} onclick="ajax_submit(this, 'web', 'web_users_switch');" data-lmenuid="Member_users_index">
-                    <input id="web_users_switch0" name="web[web_users_switch]" value="0" type="radio" {if condition="empty($globalConfig.web_users_switch)"} checked="checked"{/if} onclick="ajax_submit(this, 'web', 'web_users_switch');" data-lmenuid="Member_users_index">
-                </div>
-                <p class="notic">开启之后，左侧菜单会显示会员中心入口</p>
-                <span id="guide_web_users_switch" style="{if condition='empty($globalConfig.web_users_switch)'} display: none;{/if}">
-                    &nbsp;<a href="{:url('Member/users_index')}">[用户列表]</a>
-                    &nbsp;<a href="{:url('Member/users_config')}">[功能配置]</a>
-                    &nbsp;<a href="javascript:void(0);" onclick="tag_call('web_users_switch');" class="red">[标签调用]</a>
-                </span>
-            </dd>
-        </dl>
-        <dl class="row">
-            <dt class="tit">
-                <label for="uname">支付功能</label>
-            </dt>
-            <dd class="opt">
-                <div class="onoff">
-                    <label for="pay_open1" class="cb-enable {if condition="$userConfig.pay_open == 1"}selected{/if}">开启</label>
-                    <label for="pay_open0" class="cb-disable {if condition="!isset($userConfig.pay_open) || empty($userConfig.pay_open)"}selected{/if}">关闭</label>
-                    <input id="pay_open1" name="pay[pay_open]" value="1" type="radio" {if condition="$userConfig.pay_open == 1"} checked="checked"{/if} onclick="ajax_submit(this, 'pay', 'pay_open');">
-                    <input id="pay_open0" name="pay[pay_open]" value="0" type="radio" {if condition="!isset($userConfig.pay_open) || empty($userConfig.pay_open)"} checked="checked"{/if} onclick="ajax_submit(this, 'pay', 'pay_open');">
-                </div>
-                <p class="notic">关闭则自动隐藏支付入口。</p>
-                <span id="guide_pay_open" style="{if condition='!isset($userConfig.pay_open) || empty($userConfig.pay_open)'} display: none;{/if}">
-                    &nbsp;<a href="{:url('Member/money_index')}">[充值列表]</a>
-                    &nbsp;<a href="{:url('Member/pay_set')}">[接口配置]</a>
-                </span>
-            </dd>
-        </dl>
-        <dl class="row">
-            <dt class="tit">
-                <label for="uname">商城中心</label>
-            </dt>
-            <dd class="opt">
-                <div class="onoff">
-                    <label for="shop_open1" class="cb-enable {if condition="$userConfig.shop_open == 1"}selected{/if}">开启</label>
-                    <label for="shop_open0" class="cb-disable {if condition="!isset($userConfig.shop_open) || empty($userConfig.shop_open)"}selected{/if}">关闭</label>
-                    <input id="shop_open1" name="shop[shop_open]" value="1" type="radio" {if condition="$userConfig.shop_open == 1"} checked="checked"{/if} data-authortoken="{$is_eyou_authortoken}" data-is_online="{$is_online}" onclick="ajax_submit(this, 'shop', 'shop_open');" data-lmenuid="Shop_index">
-                    <input id="shop_open0" name="shop[shop_open]" value="0" type="radio" {if condition="!isset($userConfig.shop_open) || empty($userConfig.shop_open)"} checked="checked"{/if} data-authortoken="{$is_eyou_authortoken}" data-is_online="{$is_online}" onclick="ajax_submit(this, 'shop', 'shop_open');" data-lmenuid="Shop_index">
-                </div>
-                <p class="notic">关闭则自动隐藏商城中心入口。</p>
-                <span id="guide_shop_open" style="{if condition='!isset($userConfig.shop_open) || empty($userConfig.shop_open)'} display: none;{/if}">
-                    &nbsp;<a href="{:url('Shop/index')}">[订单列表]</a>
-                    &nbsp;<a href="{:url('Shop/conf')}">[功能配置]</a>
-                    &nbsp;<a href="javascript:void(0);" onclick="tag_call('shop_open');" class="red">[标签调用]</a>
-                </span>
-            </dd>
-        </dl>
-    </div>
-</div>
+        {/eq}
+    {/eq}
 
-<input type="hidden" name="is_themeusers_exist" id="is_themeusers_exist" value="{$is_themeusers_exist}">
-<input type="hidden" name="is_themeshop_exist" id="is_themeshop_exist" value="{$is_themeshop_exist}">
+    <div class="on-off_panel" id="gengduogongneng" style="display: none;">
+       <!-- <div class="title">更多功能</div> -->
+            <div class="on-off_list">
+                <div class="son-tit" id="wendangxiagnguan" style="display: none;">
+                    <div class="title">文档相关</div>
+                </div>
+                <div class="on-off_list" id="wendangxiagnguan_child" style="display: none;">
+                    <ul>
+                        {eq name="'ArchivesFlag@index'|is_check_access" value="1"}
+                            {eq name='$main_lang' value='$admin_lang'}
+                            <li class="more_li"><a href="javascript:void(0);" data-href="{:url('ArchivesFlag/index')}" data-leftmenu="Index_switch_map" onclick="openFullframe(this, '文档属性配置');"><img src="__SKIN__/images/map_icon_wendang.png?v={$version}" ><span>文档属性</span></a></li>
+                            {/eq}
+                        {/eq}
 
-<script type="text/javascript">
+                        {eq name="'System@water'|is_check_access" value="1"}
+                            {eq name='$main_lang' value='$admin_lang'}
+                            <li class="more_li"><a href="javascript:void(0);" data-href="{:url('System/water')}" data-leftmenu="Index_switch_map" onclick="openFullframe(this, '水印配置', '100%', '100%');"><img src="__SKIN__/images/map_icon_shuiyin.png?v={$version}" ><span>水印配置</span></a></li>
+                            {/eq}
+                        {/eq}
 
-    // 提交表单
-    function ajax_submit(obj, inc_type, name){
-        var _parent = parent;
-        var value = $(obj).val();
-        var lmenuid = $(obj).attr('data-lmenuid');
-        var url = "{:url('Index/switch_map', ['_ajax'=>1])}";
-        // 验证
-        switch (name)
-        {
-            case 'shop_open':
-            case 'pay_open':
-                // 第一次使用会员中心，其他功能开关不与会员中心开关关联
-                var web_users_switch = $('input[name="web[web_users_switch]"]:checked').val();
-                if (1 == $('#is_themeusers_exist').val() && 1 != web_users_switch) {
-                    $('label[for='+name+'1]').removeClass('selected');
-                    $('#'+name+'1').attr('checked','');
-                    $('label[for='+name+'0]').addClass('selected');
-                    $('#'+name+'0').attr('checked','checked');
-                    if ('pay_open' == name) {
-                        nameTitle = '支付功能';
-                    } else if ('shop_open' == name) {
-                        nameTitle = '商城功能';
+                        {eq name="'System@thumb'|is_check_access" value="1"}
+                            {eq name='$main_lang' value='$admin_lang'}
+                            <li class="more_li"><a href="javascript:void(0);" data-href="{:url('System/thumb')}" data-leftmenu="Index_switch_map" onclick="openFullframe(this, '缩略图配置', '100%', '100%');"><img src="__SKIN__/images/map_icon_suoluetu.png?v={$version}" ><span>缩略图配置</span></a></li>
+                            {/eq}
+                        {/eq}
+
+                        {eq name="'Tags@index'|is_check_access" value="1"}
+                        <li class="more_li"><a href="javascript:void(0);" data-href="{:url('Tags/index')}" data-leftmenu="Index_switch_map" onclick="gourl2(this,1);"><img src="__SKIN__/images/map_icon_tag.png?v={$version}" ><span>TAG管理</span></a></li>
+                        {/eq}
+                    </ul>
+                </div>
+            </div>
+            <script type="text/javascript">
+                $(function(){
+                    if ($('#mokuaikaiguan').find('.more_li').length > 0) {
+                        $('#mokuaikaiguan').show();
                     }
-                    parent.layer.alert('使用【<font color="red">'+nameTitle+'</font>】请先开启【<font color="red">会员中心</font>】！', {icon: 3, title:false}, function(){
-                        parent.layer.closeAll();
-                        // $('label[for=web_users_switch0]').removeClass('selected');
-                        // $('#web_users_switch0').attr('checked','');
-                        // $('label[for=web_users_switch1]').addClass('selected');
-                        // $('#web_users_switch1').attr('checked','checked');
-                        // ajax_submit($('#web_users_switch1'), 'web', 'web_users_switch');
-                    });
-                    return false;
-                }
-                // --end
-                if(false == check_shop_open())
-                {
-                    return false;
-                }
-                // 同时开启会员中心
-                if (1 == value) {
-                    $('label[for=web_users_switch0]').removeClass('selected');
-                    $('#web_users_switch0').attr('checked','');
-                    $('label[for=web_users_switch1]').addClass('selected');
-                    $('#web_users_switch1').attr('checked','checked');
-                }
-                break;
-        }
-        // 标签调用按钮的显示与隐藏
-        if (1 == value) {
-            $('#guide_'+name).show();
-        } else {
-            $('#guide_'+name).hide();
-        }
-
-        if (1 == $('#is_themeusers_exist').val()) {
-            $('#is_themeusers_exist').val(0)
-            loadmsg = '初始化中';
-        } else if (1 == $('#is_themeshop_exist').val()) {
-            $('#is_themeshop_exist').val(0)
-            loadmsg = '初始化中';
-        } else {
-            loadmsg = '正在处理';
-        }
-        parent_layer_loading(loadmsg);
-
-        $.ajax({
-            type: "POST",
-            url: url,
-            data: {inc_type:inc_type,name:name,value:value,lmenuid:lmenuid},
-            dataType: 'json',
-            success: function (res) {
-                if(res.code == 1){
-                    // 第一次模板同步下载
-                    if ('web_users_switch' == name && 1 == res.data.is_syn) { // 会员中心模板下载
-                        syn_theme_users(value,lmenuid);
-                        return false;
-                    } else if ('shop_open' == name && 1 == res.data.is_syn) { // 订单中心模板下载
-                        syn_theme_shop(value,lmenuid);
-                        return false;
-                    } else {
-                        _parent.layer.closeAll();
-                        // 根据不同场景进行页面加载的处理
-                        _parent.layer.msg(res.msg, {icon: 1, time: 1000}, function(){
-                            if (1 == res.data.reload) {
-                                window.location.reload();
-                            } else if (2 == res.data.reload) {
-                                top.window.location.reload();
-                            }
-                        });
-                    }
-                }else{
-                    if (1 == res.data.code) {
-                        _parent.layer.closeAll();
-                        _parent.layer.alert(res.msg, {btn: ['购买授权'], icon: 2, title:false}, function(){
-                            _parent.layer.closeAll();
-                            window.location.reload();
-                            window.open('http://www.eyoucms.com/buy');
-                        });
-                    } else {
-                        _parent.layer.closeAll();
-                        _parent.layer.alert(res.msg, {icon: 2, title:false}, function(){
-                            _parent.layer.closeAll();
-                            window.location.reload();
-                        });
-                    }
-                }
-                // 控制顶部与左侧菜单的显示与隐藏
-                if (1 == value) {
-                    $('#'+lmenuid, window.parent.document).show();
-                } else {
-                    $('#'+lmenuid, window.parent.document).hide();
-                }
-            },
-            error:function(){
-                _parent.layer.closeAll();
-                _parent.layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false}, function(){
-                    _parent.layer.closeAll();
-                    window.location.reload();
                 });
-            }
+            </script>
+         
+            <div class="son-tit" id="gaojixuanxiang" style="display: none;">
+                <div class="title">高级选项</div>
+            </div>
+            <div class="on-off_list" id="gaojixuanxiang_child" style="display: none;">
+                <ul>
+                    {eq name="'Admin@admin_pwd'|is_check_access" value="1"}
+                    <li class="more_li"><a href="javascript:void(0);" data-href="{:url('Admin/index')}" data-leftmenu="Index_switch_map" onclick="gourl2(this,1);"><img src="__SKIN__/images/map_icon_guanliyuan.png?v={$version}" ><span>管理员</span></a></li>
+                    {/eq}
+                    {eq name="'RecycleBin@arctype_index'|is_check_access" value="1"}
+                        {eq name='$main_lang' value='$admin_lang'}
+                            {neq name='$recycle_switch' value='1'}
+                            <li class="more_li"><a href="javascript:void(0);" data-href="{:url('RecycleBin/archives_index')}" data-leftmenu="Index_switch_map" onclick="gourl2(this,1);"><img src="__SKIN__/images/map_icon_huishouzhan.png?v={$version}" ><span>回收站</span></a></li>
+                            {/neq}
+                        {/eq}
+                    {/eq}
+                    {eq name="'Tools@index'|is_check_access" value="1"}
+                        {eq name='$main_lang' value='$admin_lang'}
+                        <li class="more_li"><a href="javascript:void(0);" data-href="{:url('Tools/index')}" data-leftmenu="Index_switch_map" onclick="gourl2(this,1);"><img src="__SKIN__/images/map_icon_beifenhuanyuan.png?v={$version}" ><span>备份还原</span></a></li>
+                        {/eq}
+                    {/eq}
+                    {eq name="'Channeltype@index'|is_check_access" value="1"}
+                        {eq name='$main_lang' value='$admin_lang'}
+                        <li class="more_li"><a href="javascript:void(0);" data-href="{:url('Channeltype/index')}" data-leftmenu="Index_switch_map" onclick="gourl2(this,1);"><img src="__SKIN__/images/map_icon_pindao.png?v={$version}" ><span>频道模型</span></a></li>
+                        {/eq}
+                    {/eq}
+                    {eq name="'Field@arctype_index'|is_check_access" value="1"}
+                        {eq name='$main_lang' value='$admin_lang'}
+                        <li class="more_li"><a href="javascript:void(0);" data-href="{:url('Field/arctype_index')}" data-leftmenu="Index_switch_map" onclick="gourl2(this,1);"><img src="__SKIN__/images/map_icon_lanmuziduan.png?v={$version}" ><span>栏目字段</span></a></li>
+                        {/eq}
+                    {/eq}
+                    {eq name="'Filemanager@index'|is_check_access" value="1"}
+                    <li class="more_li"><a href="javascript:void(0);" data-href="{:url('Filemanager/index')}" data-leftmenu="Index_switch_map" onclick="gourl2(this,1);"><img src="__SKIN__/images/map_icon_moban.png?v={$version}" ><span>模板管理</span></a></li>
+                    {/eq}
+                    <!-- {eq name="'Notify@index'|is_check_access" value="1"}
+                    <li class="more_li"><a href="javascript:void(0);" data-href="{:url('Notify/index')}" data-leftmenu="Index_switch_map" onclick="gourl2(this,1);"><i class="fa fa-volume-up"></i><span>通知管理</span></a></li>
+                    {/eq} -->
+                </ul>
+            </div>
+            <script type="text/javascript">
+                $(function(){
+                    if ($('#gengduogongneng').find('.more_li').length > 0) {
+                        $('#gengduogongneng').show();
+                    }
+                    if ($('#gaojixuanxiang_child').find('.more_li').length > 0) {
+                        $('#gaojixuanxiang').show();
+                        $('#gaojixuanxiang_child').show();
+                    }
+                    if ($('#wendangxiagnguan_child').find('.more_li').length > 0) {
+                        $('#wendangxiagnguan').show();
+                        $('#wendangxiagnguan_child').show();
+                    }
+                });
+            </script>
+        </div>
+    </div>
+    <input type="hidden" name="is_themeusers_exist" id="is_themeusers_exist" value="{$is_themeusers_exist}">
+    <input type="hidden" name="is_themeshop_exist" id="is_themeshop_exist" value="{$is_themeshop_exist}">
+    <script>
+        layui.use(['form'], function() {
+            var form = layui.form,
+                layer = layui.layer
+            //监听指定开关
+            form.on('switch(switchTest)', function(data) {
+                var name = $(this).attr('data-name');
+                var type = $(this).attr('data-type');
+                if (this.checked) {
+                    $(this).val(1);
+                    ajax_submit(this, type, name, 1);
+                } else {
+                    $(this).val(0);
+                    ajax_submit(this, type, name, 0);
+                }
+            });
+            form.on('switch(switchTest2)', function(data) {
+                var name = $(this).attr('data-name');
+                var type = $(this).attr('data-type');
+                if (this.checked) {
+                    $(this).val(1);
+                    ajax_submit(this, type, name, 1);
+                } else {
+                    $(this).val(0);
+                    ajax_submit(this, type, name, -1);
+                }
+            });
         });
-    }
 
-    // 会员模板初始化下载
-    function syn_theme_users(value,lmenuid)
-    {
-        $.ajax({
-            type : 'get',
-            url : "{:url('Member/ajax_syn_theme_users', ['_ajax'=>1])}",
-            data : {},
-            dataType : 'json',
-            success : function(res){
-                parent.layer.closeAll();
-                if(res.code == 1){
-                    parent.layer.msg(res.msg, {icon: 1, time: 1000});
-                }else{
-                    parent.layer.alert(res.msg, {icon: 2, title:false}, function(){
-                        parent.layer.closeAll();
-                        window.location.reload();
-                    });
-                }
-                // 控制顶部与左侧菜单的显示与隐藏
-                if (1 == value) {
-                    $('#'+lmenuid, window.parent.document).show();
-                } else {
-                    $('#'+lmenuid, window.parent.document).hide();
-                }
-            },
-            error: function(e){
-                parent.layer.closeAll();
-                parent.layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false}, function(){
-                    parent.layer.closeAll();
-                    window.location.reload();
-                });
-            }
-        })
-    }
-
-    // 订单模板初始化下载
-    function syn_theme_shop(value,lmenuid)
-    {
-        $.ajax({
-            type : 'get',
-            url : "{:url('Shop/ajax_syn_theme_shop', ['_ajax'=>1])}",
-            data : {},
-            dataType : 'json',
-            success : function(res){
-                parent.layer.closeAll();
-                if(res.code == 1){
-                    parent.layer.msg(res.msg, {icon: 1, time: 1000});
-                }else{
-                    parent.layer.alert(res.msg, {icon: 2, title:false}, function(){
-                        parent.layer.closeAll();
-                        window.location.reload();
-                    });
-                }
-                // 控制顶部与左侧菜单的显示与隐藏
-                if (1 == value) {
-                    $('#'+lmenuid, window.parent.document).show();
-                } else {
-                    $('#'+lmenuid, window.parent.document).hide();
-                }
-            },
-            error: function(e){
-                parent.layer.closeAll();
-                parent.layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false}, function(){
-                    parent.layer.closeAll();
-                    window.location.reload();
-                });
-            }
-        })
-    }
-
-    function check_shop_open()
-    {
-        var obj = $('input[name="shop[shop_open]"]:checked');
-        var is_online = $(obj).attr('data-is_online');
-        if (1 == is_online) {
-            var shop_open = $(obj).val();
-            if (1 == shop_open && $(obj).attr('data-authortoken') == -1) {
-                $('label[for=shop_open1]').removeClass('selected');
-                $('#shop_open1').attr('checked','');
-                $('label[for=shop_open0]').addClass('selected');
-                $('#shop_open0').attr('checked','checked');
-                var alert1 = layer.alert('订单功能只限于授权域名！', {
-                    icon: 4,
-                    title:false,
-                    btn: ['购买授权']
-                }, function(){
-                    window.open('http://www.eyoucms.com/buy');
-                    layer.close(alert1);
-                });
-                return false;
-            }
-        }
-        return true;
-    }
-
-    function tag_call(name)
-    {
-        $.ajax({
-            type: "POST",
-            url: "{:url('System/ajax_tag_call', ['_ajax'=>1])}",
-            data: {name:name},
-            dataType: 'json',
-            success: function (res) {
-                if(res.code == 1){
-                    //询问框
-                    var confirm = layer.confirm(res.data.msg, {
-                            title: false,
-                            area: ['60%','80%'],
-                            btn: ['关闭'] //按钮
-
-                        }, function(){
-                            layer.close(confirm);
+        // 提交表单
+        function ajax_submit(obj, inc_type, name, value){
+            var _parent = parent;
+            var lmenuid = $(obj).attr('data-lmenuid');
+            var url = "{:url('Index/switch_map', ['_ajax'=>1])}";
+            var syn_open_users = false; // 是否同步开启会员中心
+            // 验证
+            switch (name)
+            {
+                case 'shop_open':
+                case 'pay_open':
+                case 'users_open_release':
+                case 'level_member_upgrade':
+                    if (-1 < $.inArray(name, ['shop_open','pay_open']))
+                    {
+                        if(false == check_shop_open())
+                        {
+                            return false;
                         }
-                    );  
-                }else{
-                    layer.alert(res.msg, {icon: 2, title:false});
-                }
-            },
-            error:function(){
-                layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+                    } else if (-1 < $.inArray(name, ['users_open_release','level_member_upgrade']))
+                    {
+                        if(false == check_users_open_release())
+                        {
+                            return false;
+                        }
+                    }
+                    // 是否同时开启会员中心
+                    if (1 == value) {
+                        syn_open_users = true;
+                    } else {
+                        syn_open_users = false;
+                    }
+                    break;
             }
-        });
-    }
-</script>
+            // 同时开启会员中心
+            if (true == syn_open_users) {
+                $('input[name="web[web_users_switch]"]').attr('checked', 'checked');
+                $('input[name="web[web_users_switch]"]').val(1);
+                $('input[name="web[web_users_switch]"]').next().addClass('layui-form-onswitch');
+                $('input[name="web[web_users_switch]"]').next().html('<em>开启</em><i></i>');
+            }
+            // 标签调用按钮的显示与隐藏
+            if (1 == value) {
+                $('#guide_'+name).show();
+            } else {
+                $('#guide_'+name).hide();
+            }
+
+            if (1 == $('#is_themeusers_exist').val()) {
+                $('#is_themeusers_exist').val(0)
+                loadmsg = '初始化中';
+            } else if (1 == $('#is_themeshop_exist').val()) {
+                $('#is_themeshop_exist').val(0)
+                loadmsg = '初始化中';
+            } else {
+                loadmsg = '正在处理';
+            }
+            parent_layer_loading(loadmsg);
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: {inc_type:inc_type,name:name,value:value},
+                dataType: 'json',
+                success: function (res) {
+                    if(res.code == 1){
+                        // 第一次模板同步下载
+                        if ('web_users_switch' == name && 1 == res.data.is_syn) { // 会员中心模板下载
+                            syn_theme_users(value,lmenuid);
+                            return false;
+                        } else if ('shop_open' == name && 1 == res.data.is_syn) { // 订单中心模板下载
+                            syn_theme_shop(value,lmenuid);
+                            return false;
+                        } else {
+                            _parent.layer.closeAll();
+                            // 根据不同场景进行页面加载的处理
+                            _parent.layer.msg(res.msg, {icon: 1, time: 1000}, function(){
+                                if (1 == res.data.reload) {
+                                    window.location.reload();
+                                } else if (2 == res.data.reload) {
+                                    top.window.location.reload();
+                                }
+                            });
+                        }
+                    }else{
+                        if (1 == res.data.code) {
+                            $('input[name="shop[shop_open]').removeAttr('checked');
+                            $('input[name="shop[shop_open]').val(0);
+                            $('input[name="shop[shop_open]').next().removeClass('layui-form-onswitch');
+                            $('input[name="shop[shop_open]').next().html('<em>关闭</em><i></i>');
+                            _parent.layer.closeAll();
+                            _parent.layer.alert(res.msg, {btn: ['购买授权'], icon: 4, title:false}, function(){
+                                _parent.layer.closeAll();
+                                window.location.reload();
+                                window.open('https://www.eyoucms.com/buy');
+                            });
+                        } else {
+                            _parent.layer.closeAll();
+                            _parent.layer.alert(res.msg, {icon: 5, title:false, closeBtn:false}, function(){
+                                _parent.layer.closeAll();
+                                window.location.reload();
+                            });
+                        }
+                    }
+
+                    // 控制顶部与左侧菜单的显示与隐藏
+                    try{
+                        if (1 == value) {
+                            $('#'+lmenuid, window.parent.document).show();
+                            if (-1 < $.inArray(name, ['shop_open','users_open_release','level_member_upgrade','pay_open'])) {
+                                $('#Member_users_index', window.parent.document).show();
+                            } else if ('web_users_switch' == name && 1 == $("input[name='shop[shop_open]']:checked").val()) {
+                                $('#Shop_home', window.parent.document).show();
+                            }
+                        } else {
+                            $('#'+lmenuid, window.parent.document).hide();
+                            if (-1 < $.inArray(name, ['web_users_switch'])) {
+                                $('#Shop_home', window.parent.document).hide();
+                                $('#Archives_index_draft', window.parent.document).hide();
+
+                                $('input[name="users[users_open_release]').removeAttr('checked');
+                                $('input[name="users[users_open_release]').val(0);
+                                $('input[name="users[users_open_release]').next().removeClass('layui-form-onswitch');
+                                $('input[name="users[users_open_release]').next().html('<em>关闭</em><i></i>');
+
+                                $('input[name="level[level_member_upgrade]').removeAttr('checked');
+                                $('input[name="level[level_member_upgrade]').val(0);
+                                $('input[name="level[level_member_upgrade]').next().removeClass('layui-form-onswitch');
+                                $('input[name="level[level_member_upgrade]').next().html('<em>关闭</em><i></i>');
+
+                                $('input[name="shop[shop_open]').removeAttr('checked');
+                                $('input[name="shop[shop_open]').val(0);
+                                $('input[name="shop[shop_open]').next().removeClass('layui-form-onswitch');
+                                $('input[name="shop[shop_open]').next().html('<em>关闭</em><i></i>');
+
+                                $('input[name="pay[pay_open]').removeAttr('checked');
+                                $('input[name="pay[pay_open]').val(0);
+                                $('input[name="pay[pay_open]').next().removeClass('layui-form-onswitch');
+                                $('input[name="pay[pay_open]').next().html('<em>关闭</em><i></i>');
+                            }
+                        }
+                    }catch(e){}
+                },
+                error:function(e){
+                    _parent.layer.closeAll();
+                    _parent.layer.alert(e.responseText, {icon: 5, title:false, closeBtn: false}, function(){
+                        _parent.layer.closeAll();
+                        window.location.reload();
+                    });
+                }
+            });
+        }
+
+        //左侧菜单栏有二级菜单的type=2
+        function gourl2(obj,type)
+        {
+            var leftmenu = $(obj).data('leftmenu');
+            var href = $(obj).data('href');
+            $('.eycms_cont_left .sub-menu a', window.parent.document).removeClass('on');
+            $('.eycms_cont_left .sub-menu dl.jslist dt', window.parent.document).removeClass('on');
+
+            if (2 == type) {
+                $('#'+leftmenu+' dt', window.parent.document).addClass('on');
+            } else {
+                $('#'+leftmenu, window.parent.document).addClass('on');
+            }
+            window.location.href = href;
+        }
+
+        // 会员模板初始化下载
+        function syn_theme_users(value,lmenuid)
+        {
+            $.ajax({
+                type : 'get',
+                url : "{:url('Member/ajax_syn_theme_users', ['_ajax'=>1])}",
+                data : {},
+                dataType : 'json',
+                success : function(res){
+                    parent.layer.closeAll();
+                    if(res.code == 1){
+                        parent.layer.msg(res.msg, {icon: 1, time: 1000});
+                    }else{
+                        parent.layer.alert(res.msg, {icon: 5, title:false, closeBtn:false}, function(){
+                            parent.layer.closeAll();
+                            window.location.reload();
+                        });
+                    }
+                    // 控制顶部与左侧菜单的显示与隐藏
+                    if (1 == value) {
+                        $('#'+lmenuid, window.parent.document).show();
+                    } else {
+                        $('#'+lmenuid, window.parent.document).hide();
+                    }
+                },
+                error: function(e){
+                    parent.layer.closeAll();
+                    parent.layer.alert(e.responseText, {icon: 5, title:false, closeBtn:false}, function(){
+                        parent.layer.closeAll();
+                        window.location.reload();
+                    });
+                }
+            })
+        }
+
+        // 订单模板初始化下载
+        function syn_theme_shop(value,lmenuid)
+        {
+            $.ajax({
+                type : 'get',
+                url : "{:url('Shop/ajax_syn_theme_shop', ['_ajax'=>1])}",
+                data : {},
+                dataType : 'json',
+                success : function(res){
+                    parent.layer.closeAll();
+                    if(res.code == 1){
+                        parent.layer.msg(res.msg, {icon: 1, time: 1000});
+                    }else{
+                        var icon = 5;
+                        if (res.data.icon) {icon = res.data.icon;}
+                        parent.layer.alert(res.msg, {icon: icon, title:false, closeBtn:false}, function(){
+                            parent.layer.closeAll();
+                            window.location.reload();
+                        });
+                    }
+                    // 控制顶部与左侧菜单的显示与隐藏
+                    try{
+                        if (1 == value) {
+                            $('#Member_users_index', window.parent.document).show();
+                            $('#'+lmenuid, window.parent.document).show();
+                        }
+                    }catch(e){}
+                },
+                error: function(e){
+                    parent.layer.closeAll();
+                    parent.layer.alert(e.responseText, {icon: 5, title:false, closeBtn: false}, function(){
+                        parent.layer.closeAll();
+                        window.location.reload();
+                    });
+                }
+            })
+        }
+
+        function check_shop_open()
+        {
+            var obj = $('input[name="shop[shop_open]"]:checked');
+            var is_online = $(obj).attr('data-is_online');
+            if (1 == is_online) {
+                var shop_open = $(obj).val();
+                if (1 == shop_open && $(obj).attr('data-authortoken') == -1) {
+
+                    $('input[name="shop[shop_open]').removeAttr('checked');
+                    $('input[name="shop[shop_open]').val(0);
+                    $('input[name="shop[shop_open]').next().removeClass('layui-form-onswitch');
+                    $('input[name="shop[shop_open]').next().html('<em>关闭</em><i></i>');
+
+                    var alert1 = layer.alert('订单功能只限于授权域名！', {
+                        icon: 4,
+                        title:false,
+                        btn: ['购买授权']
+                    }, function(){
+                        window.open('https://www.eyoucms.com/buy');
+                        layer.close(alert1);
+                    });
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function check_users_open_release()
+        {
+            var obj = $('input[name="users[users_open_release]"]:checked');
+            var is_online = $(obj).attr('data-is_online');
+            if (1 == is_online) {
+                var users_open_release = $(obj).val();
+                if (1 == users_open_release && $(obj).attr('data-authortoken') == -1) {
+
+                    $('input[name="users[users_open_release]"]').removeAttr('checked');
+                    $('input[name="users[users_open_release]"]').val(0);
+                    $('input[name="users[users_open_release]"]').next().removeClass('layui-form-onswitch');
+                    $('input[name="users[users_open_release]"]').next().html('<em>关闭</em><i></i>');
+
+                    var alert1 = layer.alert('会员投稿功能只限于授权域名！', {
+                        icon: 4,
+                        title:false,
+                        btn: ['购买授权']
+                    }, function(){
+                        window.open('https://www.eyoucms.com/buy');
+                        layer.close(alert1);
+                    });
+                    return false;
+                }
+            }
+            return true;
+        }
+    </script>
 {include file="public/footer" /}

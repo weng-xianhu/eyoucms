@@ -1,0 +1,180 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="shop/left" /}
+<div class="page" style="min-width:auto;margin-left:98px;">
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle"> <h3>评价列表</h3> <h5>(共{$pager->totalRows}条数据)</h5> </div>
+            <form class="navbar-form form-inline" id="postForm" action="{:url('ShopComment/comment_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="50" name="order_code" value="{$Request.param.order_code}" class="qsbox" style="width: 200px;" placeholder="搜索订单号..."> <input type="submit" class="btn" value="搜索"> <i class="fa fa-search"></i>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                        </th>
+
+                        <th align="center" abbr="article_title" axis="col3" class="w60">
+                            <div class="tc">缩略图</div>
+                        </th>
+
+                        <th abbr="article_time" axis="col6" class="w180">
+                            <div class="tc">订单号</div>
+                        </th>
+
+                        <th abbr="article_title" axis="col3" class="">
+                            <div style="text-align: left; padding-left: 10px;" class="">评价内容</div>
+                        </th>
+
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">评价评分</div>
+                        </th>
+
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">用户名</div>
+                        </th>
+
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">显示</div>
+                        </th>
+
+                        <th abbr="article_time" axis="col6" class="w160">
+                            <div class="tc">评价时间</div>
+                        </th>
+
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="Comment"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {volist name="Comment" id="vo"}
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc"> <input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.comment_id}"> </div>
+                            </td>
+
+                            <td class="w60">
+                                <div class="tc">
+                                    <a href="{$vo.arcurl}" target="_blank"><img width="60" height="60" src="{$vo.product_img}"></a>
+                                </div>
+                            </td>
+
+                             <td class="">
+                                <div class="w180 tc">
+                                    <a href="javascript:void(0);" data-href="{:url('Shop/order_details', array('order_id' => $vo['order_id']))}" onclick="openFullframe(this, '订单详情', '100%', '100%');"> {$vo.order_code} </a>
+                                </div>
+                            </td>
+
+                            <td class="" style="width: 100%;">
+                                <div class="tl" style="padding-left: 10px;"> {$vo.content} </div>
+                            </td>
+
+                            <td class="">
+                                <div class="w100 tc"> {$vo.order_total_score} <br/><i class="z_comment-star z_star{$vo.total_score}"></i></div>
+                            </td>
+
+                            <td class="">
+                                <div class="w100 tc">
+                                    <a href="javascript:void(0);" data-href="{:url('Member/users_edit', array('id' => $vo['users_id']))}" onclick="openFullframe(this, '用户资料', '100%', '100%');"> {$vo.username} </a>
+                                </div>
+                            </td>
+
+                            <td class="">
+                                <div class="w60 tc">
+                                    {eq name="$vo['is_show']" value='1'}
+                                        <span class="yes" onClick="changeTableVal('shop_order_comment', 'comment_id', '{$vo.comment_id}', 'is_show', this);"><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                        <span class="no" onClick="changeTableVal('shop_order_comment', 'comment_id', '{$vo.comment_id}', 'is_show', this);"><i class="fa fa-ban"></i>否</span>
+                                    {/eq}
+                                </div>
+                            </td>
+
+                            <td class=""> <div class="w160 tc"> {$vo.add_time|MyDate='Y-m-d H:i:s',###} </div> </td>
+
+                            <td class="operation">
+                                <div class="w120 tc">
+                                    <a href="javascript:void(0);" data-href="{:url('ShopComment/comment_details', array('comment_id' => $vo['comment_id']))}" onclick="openFullframe(this, '评价详情', '100%', '100%');" class="btn blue">详情</a>
+                                    <i></i>
+                                    <a href="javascript:void(0);" data-url="{:url('ShopComment/comment_del')}" data-id="{$vo.comment_id}" onclick="delfun(this);" class="btn blue">删除</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('ShopComment/comment_del')}" class="layui-btn layui-btn-primary"><span>批量删除</span></a>
+                </div>
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+
+{include file="public/footer" /}

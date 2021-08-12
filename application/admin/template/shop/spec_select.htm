@@ -1,0 +1,175 @@
+{include file="public/layout" /}
+
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width: auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;">
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w180">
+                            <div class="">规格名称</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">规格值</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w160">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <form id="PostForm">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%">
+                        <tbody>
+                            {volist name="info" id="vo"}
+                                <tr>
+                                    <td class="sign">
+                                        <div class="w40 tc">
+                                            <input type="checkbox" name="" value="">
+                                        </div>
+                                    </td>
+
+                                    <td class="" >
+                                        <div class="w180 tc" style="text-align: left;">
+                                            {$vo.preset_name}
+                                        </div>
+                                    </td>
+
+                                    <td style="width: 100%">
+                                        <div style="text-align: left;">
+                                            {volist name="vo.preset_value" id="value"}
+                                                <label>
+                                                    <input type="checkbox" name="" value="">{$value.preset_value} &nbsp; 
+                                                </label>
+                                            {/volist}
+                                        </div>
+                                    </td>
+
+                                    <td class="">
+                                        <div class="w160 tc">
+                                            <a href="JavaScript:void(0);" data-id="{$vo.preset_id}" onclick="SelectSpec(this);" class="btn blue">
+                                                <i class="fa fa-pencil-square-o"></i>选择
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {/volist}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton">
+                    <a href="JavaScript:void(0);" onclick="SaveSpecTpl(this);">
+                        <div class="add" title="批量选择">
+                            <span class="red"></i>批量选择</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    function SelectSpec(obj, preset_id){
+        var url = "{:url('Shop/spec_select')}";
+        $.ajax({
+            type : 'post',
+            url  : url,
+            data : {preset_id:preset_id, _ajax:1},
+            dataType : 'json',
+            success : function(data){
+
+                // layer.closeAll();
+                // if(0 == data.code){
+                //     layer.alert(data.msg, {icon: 2, title:false});
+                // }
+            }
+        });
+
+
+        // SpecTempLateDiv
+    }
+
+    // 删除指定规格值
+    function DelSpecTplValue(obj, preset_id = null){
+        var del_val =  $(obj).next().val();
+        layer.confirm('此操作不可恢复，确认删除规格值：<span style="color:red;">'+del_val+'</span>？', {
+            title: false,
+            btn: ['确定', '取消']
+        }, function () {
+            if (preset_id) {
+                var url = "{:url('Shop/spec_del')}";
+                $.ajax({
+                    type : 'post',
+                    url  : url,
+                    data : {preset_id:preset_id, _ajax:1},
+                    dataType : 'json',
+                    success : function(data){
+                        layer.closeAll();
+                        if(0 == data.code){
+                            layer.alert(data.msg, {icon: 2, title:false});
+                        }
+                    }
+                });
+            }
+            // 确定
+            $(obj).parent().remove();
+            layer.closeAll();
+            layer.msg('操作成功！', {icon: 1, time:1500});
+        }, function (index) {
+            // 取消
+            layer.closeAll(index);
+        });
+    }
+
+    // 保存规格信息
+    function SaveSpecTpl(obj){
+        // layer_loading('正在处理');
+        var url = "{:url('Shop/spec_template', ['_ajax'=>1])}";
+        $.ajax({
+            type : 'post',
+            url  : url,
+            data : $('#PostForm').serialize(),
+            dataType : 'json',
+            success : function(data){
+                layer.closeAll();
+                if(data.code == 1){
+                    layer.msg(data.msg, {icon: 1, time:1500},function(){
+                        window.location.reload();
+                    });
+                }else{
+                    layer.alert(data.msg, {icon: 2, title:false});
+                }
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

@@ -1,11 +1,45 @@
-    {eq name="'Shop@index'|is_check_access" value="1"}
-    <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
-        <input type="button" class="btn {if condition="!in_array($Request.action, ['index'])"}current{/if}" value="订单列表" onclick="window.location.href='{:url("Shop/index")}';">
-    </div>
-    {/eq}
+<div class="fixed-bar">
+    <div class="item-title">
+        <!-- <a class="back" href="{:url("Shop/index")}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a></a> -->
+        <ul class="tab-base nc-row">
+            <li>
+                <a {if condition="'index' == $Think.const.ACTION_NAME and '' == $Request.param.order_status"}class="current"{/if} href='{:url("Shop/index")}'>
+                    <span>全部</span>
+                </a>
+            </li>
 
-    {eq name="'Shop@conf'|is_check_access" value="1"}
-    <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
-        <input type="button" class="btn {if condition="!in_array($Request.action, ['conf'])"}current{/if}" value="功能配置" onclick="window.location.href='{:url("Shop/conf")}';">
+            <li>
+                <a {eq name="$Request.param.order_status" value="10"}class="current"{/eq} href='{:url("Shop/index", ["order_status"=>10])}'>
+                    <span>待付款</span>
+                </a>
+            </li>
+
+            <li>
+                <a {eq name="$Request.param.order_status" value="1"}class="current"{/eq} href='{:url("Shop/index", ["order_status"=>1])}' href="{:url('Shop/conf')}">
+                    <span>待发货</span>
+                </a>
+            </li>
+
+            <li>
+                <a {eq name="$Request.param.order_status" value="2"}class="current"{/eq} href='{:url("Shop/index", ["order_status"=>2])}' href="{:url('Shop/conf')}">
+                    <span>已发货</span>
+                </a>
+            </li>
+
+            <li>
+                <a {eq name="$Request.param.order_status" value="3"}class="current"{/eq} href='{:url("Shop/index", ["order_status"=>3])}' href="{:url('Shop/conf')}">
+                    <span>已完成</span>
+                </a>
+            </li>
+            
+            {if condition="$php_servicemeal > 1"}
+            <li>
+                <a {if condition="'ShopService' == $Think.const.CONTROLLER_NAME"}class="current"{/if} href='{:url("ShopService/after_service")}'>
+                    <span>售后</span>
+                </a>
+            </li>
+            {/if}
+            
+        </ul>
     </div>
-    {/eq}
+</div>

@@ -1,0 +1,41 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width: auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;box-shadow:none;">
+    <!-- 操作说明 -->
+    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+        </div>
+        <ul>
+            <li>请鼠标点击选择服务器名称</li>
+        </ul>
+    </div>
+    <div style="margin-top: 20px;">
+        {volist name="select_servername" id="vo"}
+            <span style="cursor: pointer;" data-servername="{$vo}" data-file_key="{$file_key}" data-sn_type="{$sn_type}" data-sn_name_sub="{$sn_name_sub}" onclick="selectServername(this);">{$vo}&nbsp;&nbsp;</span>{if condition="$key < count($select_servername) - 1"}|&nbsp;{/if}
+        {/volist}
+    </div>
+</div>
+<script type="text/javascript">
+
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+    // 选择服务器名称
+    function selectServername(th){
+        var servername = $(th).attr('data-servername');
+        var file_key = $(th).attr('data-file_key');
+        var sn_type = $(th).attr('data-sn_type');
+        var sn_name_sub = $(th).attr('data-sn_name_sub');
+        var _parent = parent;
+        if (sn_type==1) {
+            $(window.parent.document).find("#" + file_key).find('input[name="fileupload[server_name][]"]').val(servername);
+        }else{
+            $(window.parent.document).find("#server_name_"+sn_name_sub+'_' + file_key).val(servername);
+        }
+        _parent.layer.close(parentObj);
+    }
+</script>
+{include file="public/footer" /}

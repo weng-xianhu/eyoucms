@@ -19,6 +19,7 @@ class Common extends Controller {
 
     public $session_id;
     public $theme_style = '';
+    public $theme_style_path = '';
     public $view_suffix = 'html';
     public $eyou = array();
 
@@ -52,26 +53,69 @@ class Common extends Controller {
         header("Cache-control: private");  // history.back返回后输入框值丢失问题 
         $this->session_id = session_id(); // 当前的 session_id
         !defined('SESSION_ID') && define('SESSION_ID', $this->session_id); //将当前的session_id保存为常量，供其它方法调用
+        
+        if (!session('?users_id')) {
+            session('users_id', null);
+            session('users', null);
+            cookie('users_id', null);
+        }
+
+        $global = tpCache('global'); 
 
         /*关闭网站*/
-        if (tpCache('web.web_status') == 1) {
+        if (in_array(MODULE_NAME, ['home']) && !empty($global['web_status']) && $global['web_status'] == 1) {
             die("<div style='text-align:center; font-size:20px; font-weight:bold; margin:50px 0px;'>网站暂时关闭，维护中……</div>");
         }
         /*--end*/
 
-        $this->global_assign(); // 获取网站全局变量值
+        /*强制微信模式，仅允许微信端访问*/
+        $shop_force_use_wechat = getUsersConfigData('shop.shop_force_use_wechat');
+        if (!empty($shop_force_use_wechat) && 1 == $shop_force_use_wechat  && !isWeixin()) {
+            $html = "<div style='text-align:center; font-size:20px; font-weight:bold; margin:50px 0px;'>网站仅微信端可访问</div>";
+            $WeChatLoginConfig = getUsersConfigData('wechat.wechat_login_config') ? unserialize(getUsersConfigData('wechat.wechat_login_config')) : [];
+            if (!empty($WeChatLoginConfig['wechat_name'])) $html .= "<div style='text-align:center; font-size:20px; font-weight:bold; margin:50px 0px;'>关注微信公众号：".$WeChatLoginConfig['wechat_name']."</div>";
+            if (!empty($WeChatLoginConfig['wechat_pic'])) $html .= "<div style='text-align:center; font-size:20px; font-weight:bold; margin:50px 0px;'><img style='width: 400px; height: 400px;' src='".$WeChatLoginConfig['wechat_pic']."'></div>";
+            die($html);
+        }
+        /*END*/
+
+        $this->global_assign($global); // 获取网站全局变量值
         $this->view_suffix = config('template.view_suffix'); // 模板后缀htm
-        $this->theme_style = THEME_STYLE; // 模板目录
+        $this->theme_style = THEME_STYLE; // 模板标识
+        $this->theme_style_path = THEME_STYLE_PATH; // 模板目录
         //全局变量
-        $global = tpCache('global'); 
         $this->eyou['global'] = $global;
         // 多语言变量
-        $langArr = include_once APP_PATH."lang/{$this->home_lang}.php";
+        try {
+            $langArr = include_once APP_PATH."lang/{$this->home_lang}.php";
+        } catch (\Exception $e) {
+            $this->home_lang = $this->main_lang;
+            $langCookieVar = \think\Config::get('global.home_lang');
+            \think\Cookie::set($langCookieVar, $this->home_lang);
+            $langArr = include_once APP_PATH."lang/{$this->home_lang}.php";
+        }
         $this->eyou['lang'] = !empty($langArr) ? $langArr : [];
         /*电脑版与手机版的切换*/
         $v = I('param.v/s', 'pc');
         $v = trim($v, '/');
         $this->assign('v', $v);
+        /*--end*/
+
+        /*多语言开关限制 - 不开某个语言情况下，报404 */
+        if ($this->main_lang != $this->home_lang) {
+            if (1 != $global['web_language_switch']) {
+                abort(404,'页面不存在');
+            } else {
+                $langInfo = Db::name('language')->field('id')
+                    ->where([
+                        'mark'      => $this->home_lang,
+                        'status'    => 1,
+                    ])->find();
+                if (empty($langInfo)) {
+                    abort(404,'页面不存在');
+                }
+            }
+        }
         /*--end*/
 
         // 判断是否开启注册入口
@@ -82,9 +126,11 @@ class Common extends Controller {
     /**
      * 获取系统内置变量 
      */
-    public function global_assign()
+    public function global_assign($globalParams = [])
     {
-        $globalParams = tpCache('global');
+        if (empty($globalParams)) {
+            $globalParams = tpCache('global');
+        }
         $this->assign('global', $globalParams);
     }
 }

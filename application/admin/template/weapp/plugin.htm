@@ -1,0 +1,290 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+
+    <div class="row-bar clearfix mb10">
+        <div class="row-bar-l fl">
+            <ul class="tab-base nc-row">
+                {eq name="$Think.const.CONTROLLER_NAME.'@index'|is_check_access" value="1"}
+                <li><a href="{:url('Weapp/index')}" class="tab {eq name="$Request.action" value="index"}current{/eq}"><span>我的插件</span></a></li>
+                {/eq}
+                
+                {eq name="$Think.const.CONTROLLER_NAME.'@plugin'|is_check_access" value="1"}
+                    {eq name="$weapp_plugin_open" value="1"}
+                    <li><a href="{:url('Weapp/plugin')}" class="tab {eq name="$Request.action" value="plugin"}current{/eq}"><span>云插件库</span></a></li>
+                    {/eq}
+                {/eq}
+                
+                {eq name="$Think.const.CONTROLLER_NAME.'@mybuy'|is_check_access" value="1"}
+                <li><a href="{:url('Weapp/mybuy', ['install'=>0])}" class="tab {eq name="$Request.action" value="mybuy"}current{/eq}"><span>已购买插件</span></a></li>
+                {/eq}
+            </ul>
+        </div>
+        <div class="flexigrid fr">
+            <form  id="searchForm" class="navbar-form form-inline fl" action="{:url('Weapp/plugin')}" method="get"
+                  onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2 fl" style="margin-right: 6px;">
+                        <select name="is_pay" class="select" style="margin:5px 5px;" onchange="$('#searchForm').submit();">
+                            <option value="">--全部--</option>
+                            <option value="1" {eq name="$Request.param.is_pay" value="1"}selected{/eq}>免费</option>
+                            <option value="2" {eq name="$Request.param.is_pay" value="2"}selected{/eq}>付费</option>
+                            <option value="3" {eq name="$Request.param.is_pay" value="3"}selected{/eq}>已购买</option>
+                        </select>
+                    </div>
+                    <div class="sDiv2 fl" style="margin-right: 6px;">
+                        <input type="text" size="30" name="keywords" class="qsbox" value="{$Request.param.keywords}" placeholder="搜索相关数据...">
+                        <input type="submit" class="btn" value="搜索">
+            			<i class="fa fa-search"></i>
+                    </div>
+                    
+                </div>
+            </form>
+            <div class="mDiv fl">
+                <div class="fbutton">
+                	<a href="{:url('Weapp/create')}">
+                		<div class="add" title="插件开发者">
+                			<span>插件开发者</span>
+                		</div>
+                	</a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <div class="flexigrid">
+        <div class="plug-list"> 
+            {empty name="list"}
+            <div class="bDiv" style="height: auto;">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%">
+                        <tbody>
+                            <tr>
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="iDiv" style="display: none;"></div>
+            </div>
+            {else /}
+                {foreach name="list" item="vo" key="k" }
+                <div class="plug-item-content">
+                    <div class="plug-item-top">
+                        <div class="plug-img">
+                            <a href="https://www.eyoucms.com/plus/view.php?aid={$vo.id}" target="_blank"><img src="{$vo.litpic|get_default_pic=###}" ></a>
+                        </div>
+                        <div class="plug-text">
+                            <div class="plug-text-title">
+                                <a href="https://www.eyoucms.com/plus/view.php?aid={$vo.id}" target="_blank">{$vo.name}</a>
+                            </div>
+                            {if condition="'v'.$vo.min_version > $version"}
+                            <div class="plug-text-versions"><span class="red">当前CMS版本太低，该插件要求CMS版本 >= v{$vo.min_version}，请升级系统！</span></div>
+                            {/if}
+                            <div class="plug-text-des2">
+                              {$vo.description}
+                            </div>
+                            <div class="plug-price">
+                                {empty name="$vo.meal"}
+                                    {empty name="$vo.needmoney"}
+                                        免费
+                                    {else /}
+                                        {empty name="$vo.buy"}
+                                            <em>￥</em>{$vo.needmoney/10}
+                                        {else /}
+                                            已购买
+                                        {/empty}
+                                    {/empty}
+                                {else /}
+                                    {empty name="$vo.buy"}
+                                        <em>￥</em>{$vo.meal[0]['price']|default='0.00'}
+                                    {else /}
+                                        已购买
+                                    {/empty}
+                                {/empty}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="plug-item-bottm">
+                    {eq name="'Weapp@install'|is_check_access" value="1"}
+                        {if condition="'v'.$vo.min_version > $version"}
+                        <div class="plug-status">
+                            <a class="no" title="当前CMS版本太低，该插件要求CMS版本 >= v{$vo.min_version}，请升级系统！">不支持安装</a>
+                        </div>
+                        {else /}
+                            {empty name="$vo.buy"}
+                                {empty name="$vo.install"}
+                                    <a href="javascript:void(0);" onclick="goPage(this);" data-id="{$vo['id']}"  data-weapp_code="{$vo['weapp_code']}"  data-min_version="{$vo['min_version']}" data-buy="{$vo['buy']}" data-needmoney="{$vo['needmoney']}">
+                                        {empty name="$vo.needmoney"}
+                                            安装
+                                        {else /}
+                                            购买
+                                        {/empty}
+                                    </a>
+                                {else /}
+                                    <div class="plug-status">
+                                        <a class="no">已安装</a>
+                                    </div>
+                                {/empty}
+                            {else /}
+                                {empty name="$vo.install"}
+                                    <a href="javascript:void(0);" onclick="goPage(this);" data-id="{$vo['id']}"  data-weapp_code="{$vo['weapp_code']}"  data-min_version="{$vo['min_version']}" data-buy="{$vo['buy']}" data-needmoney="{$vo['needmoney']}">安装</a>
+                                {else /}
+                                    <div class="plug-status">
+                                        <a class="no">已安装</a>
+                                    </div>
+                                {/empty}
+                            {/empty}
+                        {/if}
+                    {/eq}
+                    </div>
+                </div>
+                {/foreach}
+            {/empty}
+			<div class="flexigrid">
+			<div class="footer-oper">
+				<div class="fbuttonr">
+				    <div class="pages">
+				       {$page}
+				    </div>
+				</div>
+			</div>
+			</div>
+        </div>
+        
+    </div>
+</div>
+<form name="form2" id="form2" method="post" action="">
+    <input type="hidden" name="id" value=""/>
+    <input type="hidden" name="code" value=""/>
+    <input type="hidden" name="min_version" value=""/>
+    <input type="hidden" name="thorough" value="1"/>
+</form>
+<form name="payForm" id="payForm" method="post" action="" target="_blank"></form>
+
+<script>
+    $(document).ready(function () {
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function () {
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function () {
+            location.href = location.href;
+        });
+    });
+
+    function install(obj) {
+        var code = $(obj).attr('data-weapp_code');
+        var min_version = $(obj).attr('data-min_version');
+        pay(code,min_version);
+    }
+
+    function pay(code,min_version) {
+        layer_loading('正在处理');
+        $.ajax({
+            type: 'post',
+            url: "{$service_ey}/index.php?m=api&c=Pay&a=alipayPay",
+            data: {
+                domain: window.location.host,
+                code: code,
+                url: '__SITE_URL__'+eyou_basefile+'?m=admin&c=Weapp&a=pay_success&lang='+__lang__,
+                cms_version:"{$version}",
+                ip:"{$ip}",
+                n:"{$serial_number}"
+            },
+            dataType: 'jsonp',
+            jsonpCallback: "callback", /*设置一个回调函数，名字随便取，和下面的函数里的名字相同就行*/
+            success: function (res) {
+                layer.closeAll();
+                if (res.code == 0){
+                    layer.alert(res.msg, {icon: 2, title: false});
+                }else if (res.code == 2){
+                    remoteInstall(code,min_version)
+                }else if (res.code ==1){
+                    var payForm = $('#payForm');
+                    payForm.attr('action', res.payurl);
+                    payForm.submit();
+                    // window.open(res.payurl);
+                    layer.open({
+                        type: 1
+                        , btn: ['支付成功', '支付失败']
+                        , yes: function (index, layero) {
+                            remoteInstall(code,min_version);
+                        }
+                        ,btn2: function(index, layero){
+                            layer.close();
+                            // location.reload()//重新加载页面
+                        }
+                        , cancel: function () {
+                            //右上角关闭回调
+                            // return false //开启该代码可禁止点击该按钮关闭
+                        }
+                        ,shadeClose: true //点击遮罩关闭
+                        ,content: '\<\div style="padding:20px;">支付成功可下载安装该插件！\<\/div>'
+                    });
+                }
+
+            }
+        })
+    }
+
+    function remoteInstall(code, min_version) {
+        var form2 = $('#form2');
+        form2.find('input[name=code]').val(code);
+        form2.find('input[name=min_version]').val(min_version);
+        var url = "{:url('Weapp/remoteInstall')}";
+        form2.attr('action', url);
+        layer_loading('正在处理');
+        form2.submit();
+    }
+
+    function goPage(obj) {
+        var id = $(obj).attr('data-id');
+        var buy = $(obj).attr('data-buy');
+        var needmoney = $(obj).attr('data-needmoney');
+        var code = $(obj).attr('data-weapp_code');
+        var min_version = $(obj).attr('data-min_version');
+        if (buy == 1 ){
+            remoteInstall(code,min_version);
+        } else {
+            if (needmoney == 0){
+                remoteInstall(code,min_version);
+            }else {
+                window.open("https://www.eyoucms.com/plus/view.php?aid="+id);
+                layer.open({
+                    type: 1
+                    , title: '友情提示'
+                    , btn: ['购买成功', '购买失败']
+                    , yes: function (index, layero) {
+                        layer.closeAll();
+                        remoteInstall(code, min_version);
+                    }
+                    ,btn2: function(index, layero){
+                        layer.close();
+                        // location.reload()//重新加载页面
+                    }
+                    , cancel: function () {
+                        //右上角关闭回调
+                        // return false //开启该代码可禁止点击该按钮关闭
+                    }
+                    ,shadeClose: true //点击遮罩关闭
+                    ,content: "<div style='padding:20px;'>购买成功可在线安装该插件！</div>"
+                });
+            }
+        }
+    }
+
+    function jump() {
+        location.reload();
+    }
+</script>
+
+{include file="public/footer" /}

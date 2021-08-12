@@ -3,31 +3,35 @@
 <body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-    {include file="product/bar" /}
+<div class="page" style="box-shadow:none;">
     <div class="flexigrid">
         <div class="mDiv">
             <div class="ftitle">
-                <h3>{$arctype_info.typename|default=''}</h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
+                {eq name='$main_lang' value='$admin_lang'}
+                {eq name="$Think.const.CONTROLLER_NAME.'@attribute_add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-href="{:url('Product/attribute_add', array('typeid'=>$Request.param.typeid))}" onclick="openFullframe(this, '新增产品参数', '80%', '80%');">
+                        <div class="add" title="新增参数">
+                            <span><i class="layui-icon layui-icon-addition"></i>新增参数</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {/eq}
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
-            <form class="navbar-form form-inline" action="{:U('Product/attribute_index')}" method="get" onsubmit="layer_loading('正在处理');">
+            <form id="searchForm" class="navbar-form form-inline" action="{:url('Product/attribute_index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
-                    <!-- <div class="sDiv2">  
+                    <div class="sDiv2">  
                         <select name="typeid" class="select" style="margin:0px 5px;">
-                            <option value="">--全部栏目--</option>
                             {$select_html|default=''}
                         </select>
-                    </div> -->
+                    </div>
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="名称搜索...">
                         <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
                     </div>
-                    <!-- <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:U('Product/attribute_index', array('typeid'=>$Request.param.typeid))}';">
-                    </div> -->
                 </div>
             </form>
         </div>
@@ -38,7 +42,7 @@
                     <tr>
                         {eq name='$main_lang' value='$admin_lang'}
                         <th class="sign w40" axis="col0">
-                            <div class="tc">选择</div>
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                         </th>
                         {/eq}
                         <th abbr="article_title" axis="col3" class="w40">
@@ -86,7 +90,7 @@
                         <tr>
                             {eq name='$main_lang' value='$admin_lang'}
                             <td class="sign">
-                                <div class="tc w40"><input type="checkbox" name="ids[]" value="{$vo.attr_id}"></div>
+                                <div class="tc w40"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.attr_id}"></div>
                             </td>
                             {/eq}
                             <td class="sort">
@@ -97,7 +101,7 @@
                             <td align="left" style="width: 100%">
                                 <div class="tl" style="padding-left: 10px;">
                                     {eq name="$Think.const.CONTROLLER_NAME.'@attribute_edit'|is_check_access" value="1"}
-                                    <a href="{:U('Product/attribute_edit',array('id'=>$vo['attr_id']))}">{$vo.attr_name}</a>
+                                    <a href="{:url('Product/attribute_edit',array('id'=>$vo['attr_id']))}">{$vo.attr_name}</a>
                                     {else /}
                                     {$vo.attr_name}
                                     {/eq}
@@ -119,14 +123,15 @@
                                     {$vo.update_time|date='Y-m-d',###}
                                 </div>
                             </td>
-                            <td>
+                            <td class="operation">
                                 <div class="w120 tc">
                                     {eq name="$Think.const.CONTROLLER_NAME.'@attribute_edit'|is_check_access" value="1"}
-                                    <a href="{:U('Product/attribute_edit',array('id'=>$vo['attr_id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    <a href="javascript:void(0);" data-href="{:url('Product/attribute_edit',array('id'=>$vo['attr_id']))}" class="btn blue" onclick="openFullframe(this, '编辑产品参数 ', '80%', '80%');">编辑</a>
                                     {/eq}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@attribute_del'|is_check_access" value="1"}
                                     {eq name='$main_lang' value='$admin_lang'}
-                                    <a class="btn red"  href="javascript:void(0);" data-url="{:U('Product/attribute_del')}" data-id="{$vo.attr_id}" data-deltype="pseudo" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    <i></i>
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Product/attribute_del')}" data-id="{$vo.attr_id}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
                                     {/eq}
                                     {/eq}
                                     <!-- <a class="btn blue" href="javascript:void(0);" onclick="copyToClipBoard('{$vo.fieldname}', '{$vo.attr_id}', {$vo.attr_input_type|default='0'})">标签调用</a> -->
@@ -154,26 +159,16 @@
             <div class="tDiv2">
                 {eq name='$main_lang' value='$admin_lang'}
                 <div class="fbutton checkboxall">
-                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
                 </div>
                 {eq name="$Think.const.CONTROLLER_NAME.'@attribute_del'|is_check_access" value="1"}
                 <div class="fbutton">
-                    <a onclick="batch_del(this, 'ids');" data-url="{:U('Product/attribute_del')}" data-deltype="pseudo">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Product/attribute_del')}" data-deltype="pseudo">
                         <div class="add" title="批量删除">
-                            <span><i class="fa fa-close"></i>批量删除</span>
+                            <span>批量删除</span>
                         </div>
                     </a>
                 </div>
-                {/eq}
-                {eq name="$Think.const.CONTROLLER_NAME.'@attribute_add'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a href="{:U('Product/attribute_add', array('typeid'=>$Request.param.typeid))}">
-                        <div class="add" title="新增参数">
-                            <span class="red"><i class="fa fa-plus"></i>新增参数</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
                 {/eq}
             </div>
             <div style="clear:both"></div>
@@ -183,6 +178,19 @@
     </div>
 </div>
 <script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    
     $(document).ready(function(){
 
         // 表格行点击选中切换
@@ -193,6 +201,10 @@
         // 点击刷新数据
         $('.fa-refresh').click(function(){
             location.href = location.href;
+        });
+
+        $('#searchForm select[name=typeid]').change(function(){
+            $('#searchForm').submit();
         });
     });
 

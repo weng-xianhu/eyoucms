@@ -11,82 +11,95 @@
 </script> 
 </head>
 <body>
-<div class="upload-box" style="height: 90%;">
-    <ul class="tabs">
-        <li class="checked" id="upload_tab">本地上传</li>
-        <a href="javascript:void(0);" onclick="picture_folder(this);" data-url="{:url('Uploadify/picture_folder',['num'=>$info['num'],'input'=>$info['input'],'path'=>$info['path'],'func'=>$info['func']])}"><li>在线管理</li></a>
-        <!-- <li id="search_tab">文件搜索</li> -->
-    </ul>
-    <div class="container">
-        <div class="area upload-area area-checked" id="upload_area">
-            <div id="uploader">
-                <div class="statusBar" style="display:none;">
-                    <div class="progress">
-                        <span class="text">0%</span>
-                        <span class="percentage"></span>
-                    </div><div class="info"></div>
-                    <div class="btns">
-                        <div id="filePicker2"></div><div class="uploadBtn">开始上传</div>
-                        <div class="saveBtn">确定使用</div>
-                    </div>
-                </div>
-                <div class="queueList">
-                    <div id="dndArea" class="placeholder">
-                        <div id="filePicker"></div>
-                        <p>或将文件拖到这里，本次最多可选{$info.num|default=1}个</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="area manage-area" id="manage_area">
-            <ul class="choose-btns">
-                <li class="btn sure checked">确定</li>
-                <li class="btn cancel">取消</li>
-            </ul>
-            <div class="file-list">
-                <ul id="file_all_list">
-                    <!--<li class="checked">
-                        <div class="img">
-                            <img src="" />
-                            <span class="icon"></span>
-                        </div>
-                        <div class="desc"></div>
-                    </li>-->
-                </ul>
-            </div>
-        </div>
-        <div class="area search-area" id="search_area">
-            <ul class="choose-btns">
-                <li class="search">
-                    <div class="search-condition">
-                        <input class="key" type="text" />
-                        <input class="submit" type="button" hidefocus="true" value="搜索" />
-                    </div>
-                </li>
-                <li class="btn sure checked">确定</li>
-                <li class="btn cancel">取消</li>
-            </ul>
-            <div class="file-list">
-                <ul id="file_search_list">
-                    <!--<li>
-                        <div class="img">
-                            <img src="" />
-                            <span class="icon"></span>
-                        </div>
-                        <div class="desc"></div>
-                    </li>-->
-                </ul>
-            </div>
-        </div>
-        <div class="fileWarp" style="display:none;">
-            <fieldset>
-                <legend>列表</legend>
-                <ul>
-                </ul>
-            </fieldset>
-        </div>
-    </div>
+<div class="upload-main">
+	<div class="upload-main-left">
+		<div class="upload-nav">
+			<ul>
+				<li><a class="upload-nav-active" href="javascript:void(0);" id="upload_tab">本地上传</a></li>
+				<li> <a href="javascript:void(0);" onclick="picture_folder(this);" data-url="{:url('Uploadify/picture_folder',['num'=>$info['num'],'input'=>$info['input'],'path'=>$info['path'],'func'=>$info['func']])}">在线管理</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="upload-content">
+		<div class="upload-box" style="padding: 20px;">
+		 <!--   <ul class="tabs">
+		        <li class="checked" id="upload_tab">本地上传</li>
+		        <a href="javascript:void(0);" onclick="picture_folder(this);" data-url="{:url('Uploadify/picture_folder',['num'=>$info['num'],'input'=>$info['input'],'path'=>$info['path'],'func'=>$info['func']])}"><li>在线管理</li></a>
+		    </ul> -->
+		    <div class="container">
+		        <div class="area upload-area area-checked" id="upload_area">
+		            <div id="uploader">
+		                <div class="statusBar" style="display:none;">
+		                    <div class="progress">
+		                        <span class="text">0%</span>
+		                        <span class="percentage"></span>
+		                    </div><div class="info"></div>
+		                    <div class="btns">
+		                        <div id="filePicker2"></div><div class="uploadBtn">开始上传</div>
+		                        <div class="saveBtn">确定使用</div>
+		                    </div>
+		                </div>
+		                <div class="queueList">
+		                    <div id="dndArea" class="placeholder">
+		                        <div id="filePicker"></div>
+		                        <p>或将文件拖到这里，本次最多可选{$info.num|default=1}个</p>
+		                    </div>
+		                </div>
+		            </div>
+		        </div>
+		        <div class="area manage-area" id="manage_area">
+		            <ul class="choose-btns">
+		                <li class="btn sure checked">确定</li>
+		                <li class="btn cancel">取消</li>
+		            </ul>
+		            <div class="file-list">
+		                <ul id="file_all_list">
+		                    <!--<li class="checked">
+		                        <div class="img">
+		                            <img src="" />
+		                            <span class="icon"></span>
+		                        </div>
+		                        <div class="desc"></div>
+		                    </li>-->
+		                </ul>
+		            </div>
+		        </div>
+		        <div class="area search-area" id="search_area">
+		            <ul class="choose-btns">
+		                <li class="search">
+		                    <div class="search-condition">
+		                        <input class="key" type="text" />
+		                        <input class="submit" type="button" hidefocus="true" value="搜索" />
+		                    </div>
+		                </li>
+		                <li class="btn sure checked">确定</li>
+		                <li class="btn cancel">取消</li>
+		            </ul>
+		            <div class="file-list">
+		                <ul id="file_search_list">
+		                    <!--<li>
+		                        <div class="img">
+		                            <img src="" />
+		                            <span class="icon"></span>
+		                        </div>
+		                        <div class="desc"></div>
+		                    </li>-->
+		                </ul>
+		            </div>
+		        </div>
+		        <div class="fileWarp" style="display:none;">
+		            <fieldset>
+		                <legend>列表</legend>
+		                <ul>
+		                </ul>
+		            </fieldset>
+		        </div>
+		    </div>
+		</div>
+	</div>
+
 </div>
+
 
 <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js"></script>
 <script type="text/javascript" src="__PUBLIC__/plugins/webuploader/webuploader.min.js?v={$version|default='1.2.9'}"></script>
@@ -108,6 +121,7 @@ $(function(){
             "fileVal":"file",
             "auto":true,
             "formData":{},
+            "duplicate": true, // 允许上传重复文件
             // "accept": {
             //     "title": 'Images',
             //     "extensions": '{$info.type}',
@@ -116,9 +130,9 @@ $(function(){
             "pick":{"id":"#filePicker","label":"点击选择图片","name":"file"},
             "thumb":{"width":110,"height":110,"quality":70,"allowMagnify":true,"crop":true,"preserveHeaders":false,"type":"image\/jpeg"},
             "compress": {
-                "width": 3800,
-                "height": 3800,
-                "quality": 90,
+                "width": 380000,
+                "height": 380000,
+                "quality": 100,
                 "allowMagnify": false,
                 "crop": false,
                 "preserveHeaders": true
@@ -141,7 +155,7 @@ $(function(){
                     fileurl_tmp[index] = dom.value;
                  });    
             }else{
-                fileurl_tmp = $("input[name^='fileurl_tmp']").val();    
+                fileurl_tmp = $("input[name^='fileurl_tmp']").val();
             }
             /*防止图片上传过程中用户点击确定，导致获取图片失败 by 小虎哥*/
             if (fileurl_tmp == undefined || fileurl_tmp.length == 0) {
@@ -149,8 +163,20 @@ $(function(){
                 return false;
             }
             /*--end*/
+
             eval('window.parent.'+callback+'(fileurl_tmp)');
             window.parent.layer.closeAll();
+
+            //去判断是否需要删除本地的
+            try{
+	            $.ajax({
+	                type:'POST',
+	                url:"{:url('Uploadify/del_local', ['_ajax'=>1])}",
+	                data:{action:"del", filename:fileurl_tmp},
+	                success:function(){}
+	            });
+            }catch(e){}
+            
             return;
         }                    
         if(num > 1){

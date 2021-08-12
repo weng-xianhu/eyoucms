@@ -26,7 +26,7 @@ class Other extends Base
         parent::_initialize();
         // 判断是否有广告位置
         if (strtolower(ACTION_NAME) != 'index') {
-            $count = M('ad_position')->count('id');
+            $count = Db::name('ad_position')->count('id');
             if (empty($count)) {
                 $this->success('缺少广告位置，正在前往中……', url('AdPosition/add'), '', 3);
                 exit;
@@ -56,7 +56,7 @@ class Other extends Base
         // 多语言
         $condition['a.lang'] = array('eq', $this->admin_lang);
 
-        $adM =  M('ad');
+        $adM =  Db::name('ad');
         $count = $adM->alias('a')->where($condition)->count();// 查询满足要求的总记录数
         $Page = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
         $list = $adM->alias('a')->where($condition)->order('id desc')->limit($Page->firstRow.','.$Page->listRows)->select();
@@ -104,7 +104,7 @@ class Other extends Base
                 'update_time'   => getTime(),
             );
             $data = array_merge($post, $newData);
-            $insertId = M('ad')->insertGetId($data);
+            $insertId = Db::name('ad')->insertGetId($data);
 
             if ($insertId) {
 
@@ -154,7 +154,7 @@ class Other extends Base
                     'update_time'       => getTime(),
                 );
                 $data = array_merge($post, $newData);
-                $r = M('ad')->where([
+                $r = Db::name('ad')->where([
                         'id'    => $post['id'],
                     ])
                     ->cache(true,null,'ad')
@@ -171,7 +171,7 @@ class Other extends Base
         $assign_data = array();
 
         $id = input('id/d');
-        $field = M('ad')->where([
+        $field = Db::name('ad')->where([
                 'id'    => $id,
             ])->find();
         if (empty($field)) {
@@ -223,7 +223,7 @@ class Other extends Base
                 !empty($new_id_arr) && $id_arr = $new_id_arr;
             }
             /*--end*/
-            $r = M('ad')->where([
+            $r = Db::name('ad')->where([
                     'id'    => ['IN', $id_arr],
                 ])
                 ->cache(true,null,'ad')
@@ -232,11 +232,11 @@ class Other extends Base
 
                 /*多语言*/
                 if (!empty($attr_name_arr)) {
-                    M('language_attr')->where([
+                    Db::name('language_attr')->where([
                             'attr_name' => ['IN', $attr_name_arr],
                             'attr_group'    => 'ad',
                         ])->delete();
-                    M('language_attribute')->where([
+                    Db::name('language_attribute')->where([
                             'attr_name' => ['IN', $attr_name_arr],
                             'attr_group'    => 'ad',
                         ])->delete();
@@ -277,7 +277,7 @@ class Other extends Base
                 'update_time'       => getTime(),
             );
             $data = array_merge($post, $newData);
-            $insertId = M('ad')->insertGetId($data);
+            $insertId = Db::name('ad')->insertGetId($data);
             if ($insertId) {
 
                 /*同步广告位置ID到多语言的模板变量里*/
@@ -326,7 +326,7 @@ class Other extends Base
                     'update_time'       => getTime(),
                 );
                 $data = array_merge($post, $newData);
-                $r = M('ad')->where([
+                $r = Db::name('ad')->where([
                         'id'    => $post['id'],
                     ])
                     ->cache(true,null,'ad')
@@ -342,7 +342,7 @@ class Other extends Base
         $assign_data = array();
 
         $id = input('id/d');
-        $field = M('ad')->where([
+        $field = Db::name('ad')->where([
                 'id'    => $id,
             ])->find();
         if (empty($field)) {
@@ -388,7 +388,7 @@ class Other extends Base
             }
             /*--end*/
 
-            $r = M('ad')->where([
+            $r = Db::name('ad')->where([
                     'id'    => ['IN', $id_arr],
                 ])
                 ->cache(true,null,'ad')
@@ -397,11 +397,11 @@ class Other extends Base
 
                 /*多语言*/
                 if (!empty($attr_name_arr)) {
-                    M('language_attr')->where([
+                    Db::name('language_attr')->where([
                             'attr_name' => ['IN', $attr_name_arr],
                             'attr_group'    => 'ad',
                         ])->delete();
-                    M('language_attribute')->where([
+                    Db::name('language_attribute')->where([
                             'attr_name' => ['IN', $attr_name_arr],
                             'attr_group'    => 'ad',
                         ])->delete();

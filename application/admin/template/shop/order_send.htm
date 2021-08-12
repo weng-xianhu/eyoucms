@@ -1,11 +1,11 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;min-width:auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page" style="min-width:auto;">
     <div class="flexigrid">
-        <form class="form-horizontal" id="postForm" action="{:url('Shop/order_send_operating')}" method="post">
+        <form class="form-horizontal" id="postForm" action="{:url('Shop/order_send_operating', ['_ajax'=>1])}" method="post">
             <input type="hidden" name="order_id" value="{$OrderData.order_id}">
             <input type="hidden" name="order_code" value="{$OrderData.order_code}">
             <input type="hidden" name="users_id" value="{$OrderData.users_id}">
@@ -22,7 +22,7 @@
                                     <div class="tc">基本信息</div>
                                 </th>
                                 <th abbr="ac_id" axis="col4">
-                                    <div class=""></div>
+                                    <div class="item-title" style="margin-bottom: 0px;line-height: 26px;"><a class="back" style="margin: 1px 0px 0px 0px;" href="{:url('Shop/order_details',array('order_id'=>$OrderData['order_id']))}" title="返回详情"><i class="fa fa-angle-double-left"></i>返回</a></div>
                                 </th>
                             </tr>
                         </thead>
@@ -85,9 +85,9 @@
                         <dd class="opt">          
                             <span id="express_name_new">{$OrderData.express_name}</span>
                             &nbsp;<a href="javascript:void(0);" onclick="Express();" class="ncap-btn ncap-btn-green">选择快递</a>
-                            <input type="hidden" name="express_name" value="{$OrderData.express_name}" id="express_name">
-                            <input type="hidden" name="express_id" value="{$OrderData.express_id}" id="express_id"/>
-                            <input type="hidden" name="express_code" value="{$OrderData.express_code}" id="express_code">
+                            <input type="hidden" name="express_name" value="{$OrderData.express_name|default=''}" id="express_name">
+                            <input type="hidden" name="express_id" value="{$OrderData.express_id|default=''}" id="express_id"/>
+                            <input type="hidden" name="express_code" value="{$OrderData.express_code|default=''}" id="express_code">
                         </dd>
                     </dl>
                     <dl class="row">
@@ -108,7 +108,7 @@
                     </dl>
                 </div>
 
-                <div class="{eq name='$OrderData.prom_type' value='0'}none{/eq}" id="VirtualDelivery">
+                <div class="{if condition='$OrderData.prom_type == 0 && $OrderData.prom_type_virtual == false'}none{/if}" id="VirtualDelivery">
                     <dl class="row">
                         <dt class="tit">
                             <label>给买家回复</label>
@@ -253,7 +253,7 @@
     }
 
     // 表单提交
-    function checkForm(){
+    function checkForm() {
         if(0 == $('#prom_type').val() && $('input[name=express_order]').val() == ''){
             showErrorMsg('配送单号不能为空！');
             $('input[name=express_order]').focus();
@@ -262,7 +262,7 @@
 
         var _parent = parent;
 
-        layer.confirm('此操作不可逆，确认发货？', {
+        layer.confirm('此操作不可恢复，确认发货？', {
             title: false,
             btn: ['确定','取消']
         },function(){
@@ -273,22 +273,54 @@
                 data: $('#postForm').serialize(),
                 dataType: 'json',
                 success: function (res) {
-                    layer.closeAll();
                     if(res.code == 1){
-                        layer.msg(res.msg, {icon: 1, time: 1000}, function(){
-                            _parent.window.location.reload();
-                        });
-                    }else{
+                        if (!res.data.email && !res.data.mobile) {
+                            layer.closeAll();
+                            layer.msg(res.msg, {icon: 1, time: 1000}, function(){
+                                _parent.window.location.reload();
+                            });
+                        } else {
+                            if (res.data.email) SendEmail(res.data.email);
+                            if (res.data.mobile) SendMobile(res.data.mobile);
+                            layer.closeAll();
+                            layer.msg('发货成功', {icon: 1, time: 1000}, function(){
+                                _parent.window.location.reload();
+                            });
+                        }
+                    } else {
+                        layer.closeAll();
                         layer.alert(res.msg, {icon: 2, title:false});
                         return false;
                     }
                 },
                 error:function(){
                     layer.closeAll();
-                    layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+                    layer.alert(ey_unknown_error, {icon: 2, title:false});
                 }
             });
         });
     }
-</script>
+
+    function SendEmail(result) {
+        if (result) {
+            $.ajax({
+                url: result.url,
+                data: result.data,
+                type:'post',
+                dataType:'json'
+            });
+        }
+    }
+
+    function SendMobile(result) {
+        if (result) {
+            $.ajax({
+                url: result.url,
+                data: result.data,
+                type:'post',
+                dataType:'json'
+            });
+        }
+    }
+</script> 
 {include file="public/footer" /}

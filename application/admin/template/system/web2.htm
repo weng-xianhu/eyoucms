@@ -1,5 +1,5 @@
 {include file="public/layout" /}
-<body style="background-color: #FFF; overflow-y: scroll;">
+<body class="bodystyle" style="overflow-y: scroll;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
@@ -10,15 +10,16 @@
                 <dt class="tit">系统模式</dt>
                 <dd class="opt">
                     <div class="onoff">
-                        <label for="web_cmsmode2" class="cb-enable {if condition="!isset($config.web_cmsmode) || $config.web_cmsmode eq 2"}selected{/if}" >开发模式</label>
-                        <label for="web_cmsmode1" class="cb-disable {if condition="isset($config.web_cmsmode) && $config.web_cmsmode eq 1"}selected{/if}" >运营模式</label>
+                        <label for="web_cmsmode2" class="cb-enable {if condition="!isset($config.web_cmsmode) || $config.web_cmsmode eq 2"}selected{/if}" >开发</label>
+                        <label for="web_cmsmode1" class="cb-disable {if condition="isset($config.web_cmsmode) && $config.web_cmsmode eq 1"}selected{/if}" >运营</label>
                         <input id="web_cmsmode2" onClick="set_cmsmode(2)" name="web_cmsmode" value="2" {if condition="!isset($config.web_cmsmode) || $config.web_cmsmode eq 2"}checked{/if} type="radio">
                         <input id="web_cmsmode1" onClick="set_cmsmode(1)" name="web_cmsmode"  value="1" {if condition="isset($config.web_cmsmode) && $config.web_cmsmode eq 1"}checked{/if} type="radio">
                     </div>
                     <br/>
-                    <p class="">开发模式：方便修改模板，及时预览前台效果，没缓存，一改便生效。<br/>运营模式：提高前台响应速度，利于收录；改模板及后台发布内容需执行【<a href="{:U('System/clear_cache')}">更新缓存</a>】后才能在前台展示。</p>
+                    <p class="notic2">开发模式：方便修改模板，及时预览前台效果，没缓存，一改便生效。<br/>运营模式：提高前台响应速度，利于收录；改模板及后台发布内容需执行【<a href="{:U('System/clear_cache')}">更新缓存</a>】后才能在前台展示。</p>
                 </dd>
             </dl>
+            {eq name="upgrade" value="true"}
             <dl class="row">
                 <dt class="tit">
                     <label for="site_url">升级弹窗提醒</label>
@@ -33,9 +34,38 @@
                     <p class="notic">开启之后，第一时间收到系统更新提醒</p>
                 </dd>
             </dl>
+            {/eq}
             <dl class="row">
                 <dt class="tit">
-                    <label for="site_url">强制启用https</label>
+                    <label for="web_mobile_domain_open">手机站域名</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="web_mobile_domain_open1" class="cb-enable {if condition='isset($config.web_mobile_domain_open) && $config.web_mobile_domain_open eq 1'}selected{/if}">开启</label>
+                        <label for="web_mobile_domain_open0" class="cb-disable {if condition='empty($config.web_mobile_domain_open)'}selected{/if}">关闭</label>
+                        <input id="web_mobile_domain_open1" name="web_mobile_domain_open" value="1" type="radio" {if condition="isset($config.web_mobile_domain_open) && $config.web_mobile_domain_open eq 1"} checked="checked"{/if}>
+                        <input id="web_mobile_domain_open0" name="web_mobile_domain_open" value="0" type="radio" {if condition="empty($config.web_mobile_domain_open)"} checked="checked"{/if}>
+                    </div>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row {if condition='empty($config.web_mobile_domain_open)'}none{/if}" id="dl_web_mobile_domain">
+                <dt class="tit">
+                    <label for="web_mobile_domain"></label>
+                </dt>
+                <dd class="opt">
+                    {eq name="$is_localhost" value="1"}
+                    <p class="red">本地url路径不支持指定手机站二级域名</p>
+                    {else /}
+                    <input id="web_mobile_domain" name="web_mobile_domain" value="{$config.web_mobile_domain|default=''}" type="text" placeholder="手机域名" onKeyUp="this.value=this.value.replace(/[^0-9a-z]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-z]/g,''));" style="width: 60px;" />.{$Request.rootDomain}__ROOT_DIR__
+                    <p class="notic">为了更好的体验效果，IP访问不会自动跳转到手机站域名访问。</p>
+                    <p class="{empty name='$config.web_mobile_domain'}none{/empty} red" id="p_web_mobile_domain">先做好子域名 <span id="span_web_mobile_domain">{$config.web_mobile_domain|default=''}</span>.{$Request.rootDomain} 的解析及绑定 ，已处理请忽略！ <a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=8432','域名解析与绑定')">【操作示例】</a></p>
+                    {/eq}
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="site_url">URL启用https</label>
                 </dt>
                 <dd class="opt">
                     <div class="onoff">
@@ -45,7 +75,20 @@
                         <input id="web_is_https0" name="web_is_https" value="0" type="radio" {if condition="empty($config.web_is_https)"} checked="checked"{/if}>
                     </div>
                     <p class="notic">开启之后，sitemap.xml地图以及全站URL将带有https头协议</p>
-                    <p class="">开启前，请先在空间正确配置SSL证书。<br/>在能正常访问https://域名的情况下，才开启这个功能，使整站的URL都强制采用https协议访问。</p>
+                    <p class="notic2">开启前，请先在空间正确配置SSL证书。<br/>在能正常访问https://域名的情况下，才开启这个功能，使整站的URL都强制采用https协议访问。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="switch">回收站</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="recycle_switch0" class="cb-enable {if condition='empty($recycle_switch)'}selected{/if}">开启</label>
+                        <label for="recycle_switch1" class="cb-disable {if condition='$recycle_switch eq 1'}selected{/if}">关闭</label>
+                        <input id="recycle_switch0" name="recycle_switch" value="0" type="radio" {if condition="empty($recycle_switch)"} checked="checked"{/if}>
+                        <input id="recycle_switch1" name="recycle_switch" value="1" type="radio" {if condition="$recycle_switch eq 1"} checked="checked"{/if}>
+                    </div>
                 </dd>
             </dl>
             <dl class="row none">
@@ -59,55 +102,163 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="adminbasefile">新后台地址</label>
+                    <label for="adminbasefile">后台路径</label>
                 </dt>
                 <dd class="opt">
-                    __SITE_URL____ROOT_DIR__/<input type="hidden" name="adminbasefile_old" value="{$adminbasefile|default='login'}"><input id="adminbasefile" name="adminbasefile" value="{$adminbasefile|default='login'}" type="text" data-site_url="__SITE_URL__" onKeyUp="this.value=this.value.replace(/[^0-9a-zA-Z_-]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-zA-Z_-]/g,''));" style="width: 80px;" />.php
+                    __SITE_URL____ROOT_DIR__/<input type="hidden" name="adminbasefile_old" value="{$adminbasefile|default='login'}"><input id="adminbasefile" name="adminbasefile" value="{$adminbasefile|default='login'}" type="text" data-site_url="__SITE_URL__" onKeyUp="this.value=this.value.replace(/[^0-9a-zA-Z_-]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-zA-Z_-]/g,''));" style="width: 120px;" />.php
                     <p class="notic">为了提高后台的安全性，请及时更改后台入口文件。</p>
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="web_sqldatapath">数据库备份目录</label>
+                    <label for="web_sqldatapath">数据备份路径</label>
                 </dt>
                 <dd class="opt">
                     __ROOT_DIR__<input id="web_sqldatapath" name="web_sqldatapath" value="{$config.web_sqldatapath|default=$sqlbackuppath}" class="input-txt" type="text" />
                     <p class="notic"></p>
                 </dd>
             </dl>
-<!--             <dl class="row">
+            <dl class="row">
                 <dt class="tit">
-                    <label for="site_url">启用绝对网址</label>
+                    <label for="web_login_expiretime">后台登录超时</label>
                 </dt>
                 <dd class="opt">
-                    <div class="onoff">
-                        <label for="web_multi_site1" class="cb-enable {if condition='isset($config.web_multi_site) AND $config.web_multi_site eq 1'}selected{/if}">是</label>
-                        <label for="web_multi_site0" class="cb-disable {if condition='!isset($config.web_multi_site) OR empty($config.web_multi_site)'}selected{/if}">否</label>
-                        <input id="web_multi_site1" name="web_multi_site" value="1" type="radio" {if condition="isset($config.web_multi_site) AND $config.web_multi_site eq 1"} checked="checked"{/if}>
-                        <input id="web_multi_site0" name="web_multi_site" value="0" type="radio" {if condition="!isset($config.web_multi_site) OR empty($config.web_multi_site)"} checked="checked"{/if}>
-                    </div>
-                    <p class="notic">启用绝对网址，开启此项后附件、栏目连接、arclist内容等都使用http路径</p>
+                    <input id="web_login_expiretime" name="web_login_expiretime" value="{$config.web_login_expiretime|default=config('login_expire')}" autocomplete="off" type="text" style="width: 200px;" />&nbsp;(秒)
+                    <p class="notic">默认3600秒等于1小时，最多不超过1个月（2592000秒）</p>
+                    <p class="notic2 none red" id="tips_web_login_expiretime"></p>
                 </dd>
-            </dl> -->
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="web_tpl_theme">前台模板风格</label>
+                </dt>
+                <dd class="opt">
+                    <select name="web_tpl_theme">
+                        <option value="">默认风格</option>
+                        {volist name='$tpl_theme_list' id='vo'}
+                            {notin name="$vo" value="default,plugins,weapp,pc,mobile"}
+                            <option value="{$vo}" {eq name='$config.web_tpl_theme' value='$vo'}selected{/eq}>{$vo}</option>
+                            {/notin}
+                        {/volist}
+                    </select>
+                    &nbsp;<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=9976','如何防止网站模板文件被仿盗？')" style="font-size: 12px;padding-left: 38px;position:absolute;top: 18px;">查看教程？</a>
+                    <p class="notic">如果是静态URL模式，每次切换请重新生成所有静态页面！</p>
+                </dd>
+            </dl>
             <div class="bot">
                 <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onClick="adsubmit();">确认提交</a>
             </div>
         </div>
     </form>
 </div>
+<input type="hidden" id="show_uiset" value="{$show_uiset|default=''}">
 <script type="text/javascript">
+
+    $(document).ready(function(){
+        
+        // 可视化编辑入口
+        var show_uiset = $('#show_uiset').val();
+        if ('pc+mobile' == show_uiset) { // 显示PC和手机入口
+            $('#Uiset_index', window.parent.document).show();
+            $('#Uiset_pc', window.parent.document).show();
+            $('#Uiset_mobile', window.parent.document).show();
+        } else if ('pc' == show_uiset) { // 显示PC入口
+            $('#Uiset_index', window.parent.document).show();
+            $('#Uiset_pc', window.parent.document).show();
+            $('#Uiset_mobile', window.parent.document).hide();
+        } else if ('mobile' == show_uiset) { // 显示手机入口
+            $('#Uiset_index', window.parent.document).show();
+            $('#Uiset_pc', window.parent.document).hide();
+            $('#Uiset_mobile', window.parent.document).show();
+        } else { // 隐藏PC和手机入口
+            $('#Uiset_index', window.parent.document).hide();
+            $('#Uiset_pc', window.parent.document).hide();
+            $('#Uiset_mobile', window.parent.document).hide();
+        }
+
+        // 手机域名配置
+        $('input[name=web_mobile_domain_open]').click(function(){
+            if($(this).val() == 1){
+                $('#dl_web_mobile_domain').show();
+            }else{
+                $('#dl_web_mobile_domain').hide();
+            }
+        });
+
+        // 输入手机站域名的事件
+        $('#web_mobile_domain').keyup(function(){
+            var web_mobile_domain = $(this).val();
+            if (web_mobile_domain != '') {
+                $('#p_web_mobile_domain').show();
+                $('#span_web_mobile_domain').html(web_mobile_domain);
+            } else {
+                $('#p_web_mobile_domain').hide();
+            }
+        });
+
+        $('input[name="web_is_https"]').click(function(){
+            if (1 == $(this).val()) {
+                layer.confirm('确认空间已配置SSL证书，否则网站无法访问？', {
+                    title: false,
+                    closeBtn: false,
+                    btn: ['确定', '取消'] //按钮
+                }, function (index) {
+                    layer.close(index);
+                }, function (index) {
+                    $('label[for=web_is_https1]').removeClass('selected');
+                    $('#web_is_https1').attr('checked','');
+                    $('label[for=web_is_https0]').addClass('selected');
+                    $('#web_is_https0').attr('checked','checked');
+                    layer.close(index);
+                });
+            }
+        });
+
+        $('#web_login_expiretime').keyup(function(){
+            var web_login_expiretime = $(this).val();
+            if (web_login_expiretime > 2592000) {
+                $(this).val(2592000);
+                $('#tips_web_login_expiretime').html('最多不能设置超过一个月（2592000秒）').show();
+            } else if (web_login_expiretime < 60) {
+                $('#tips_web_login_expiretime').html('最少不能设置低于60秒').show();
+            } else {
+                $('#tips_web_login_expiretime').hide();
+            }
+        });
+
+    });
+
     function adsubmit(){
+
+        // 手机域名开关
+        var web_mobile_domain_obj = $('input[name=web_mobile_domain]');
+        if ($('input[name=web_mobile_domain_open]:checked').val() == 1) {
+            if (web_mobile_domain_obj.val() == "{$subDomain|default='www'}") {
+                showErrorMsg('手机站域名配置不能与主站域名一致！');
+                web_mobile_domain_obj.focus();
+                return false;
+            }
+        }
+        
+        // 后台登录超时
+        var web_login_expiretime_obj = $('input[name=web_login_expiretime]');
+        if (web_login_expiretime_obj.val() < 60) {
+            showErrorMsg('后台登录超时不能少于60秒！');
+            web_login_expiretime_obj.focus();
+            return false;
+        }
+
         var adminbasefileObj = $('input[name=adminbasefile]');
         var adminbasefile_oldObj = $('input[name=adminbasefile_old]');
         if($.trim(adminbasefileObj.val()) == ''){
-            showErrorMsg('新后台地址不能为空！');
+            showErrorMsg('后台路径不能为空！');
             adminbasefileObj.focus();
             return false;
         }
         if(adminbasefile_oldObj.val() != adminbasefileObj.val()){
             var flag = false;
             var site_url = adminbasefileObj.data('site_url');
-            layer.confirm('新后台地址：<font color="red">'+site_url+'__ROOT_DIR__/'+adminbasefileObj.val()+'.php</font>，确认更改？', {
+            layer.confirm('后台路径：<font color="red">'+site_url+'__ROOT_DIR__/'+adminbasefileObj.val()+'.php</font>，确认更改？', {
                     title: false,
                     btn: ['继续更改','取消'] //按钮
                 }, function(){
@@ -129,35 +280,6 @@
         }else{
             $('#dl_web_htmlcache_expires_in').hide();
         }
-    }
-
-    function tag_call(name)
-    {
-        $.ajax({
-            type: "POST",
-            url: "{:url('System/ajax_tag_call')}",
-            data: {name:name},
-            dataType: 'json',
-            success: function (res) {
-                if(res.code == 1){
-                    //询问框
-                    var confirm = layer.confirm(res.data.msg, {
-                            title: false,
-                            area: ['60%','80%'],
-                            btn: ['关闭'] //按钮
-
-                        }, function(){
-                            layer.close(confirm);
-                        }
-                    );  
-                }else{
-                    layer.alert(res.msg, {icon: 2, title:false});
-                }
-            },
-            error:function(){
-                layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
-            }
-        });
     }
 </script>
 

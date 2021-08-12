@@ -1,0 +1,150 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="member/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                 {include file="users_score/bar" /}
+            </div>
+        </div>
+        <form class="form-horizontal" id="post_form" action="{:url('UsersScore/conf')}" method="post">
+            <div class="hDiv htitx">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">积分设置</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">
+                        <label><em>*</em>积分名称</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="score_name" value="{$score.score_name|default='积分'}" class="w100" placeholder="前台积分文案">
+                        <span class="err"></span>
+                        <p class="notic">注：修改积分名称后，在买家端的所有页面里，看到的都是自定义的名称
+                            例：商家使用自定义的积分名称来做品牌运营。如京东把积分称为“京豆”，淘宝把积分称为“淘金币”</p>
+                    </dd>
+                </dl>
+                <dl class="row none">
+                    <dt class="tit">
+                        <label for="score_intro">积分说明</label>
+                    </dt>
+                    <dd class="opt ui-web_description ui-text">
+                        <textarea rows="5" cols="100" id="score_intro" name="score_intro" style="height:100px;"
+                                  class="ui-input" data-num="200">{$score.score_intro|default='a) 积分不可兑现、不可转让,仅可在本平台使用;
+b) 您在本平台参加特定活动也可使用积分,详细使用规则以具体活动时的规则为准;
+c) 积分的数值精确到个位(小数点后全部舍弃,不进行四舍五入)
+d) 买家在完成该笔交易(订单状态为“已签收”)后才能得到此笔交易的相应积分,如购买商品参加店铺其他优惠,则优惠的金额部分不享受积分获取;'}</textarea>
+                        <p class="notic"></p>
+                        <p class="ui-big-text none"></p>
+                    </dd>
+                </dl>
+            </div>
+            <div class="hDiv htitx">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">积分赠送</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit" style="width: auto">
+                        <label><b>签到模块</b></label>
+                    </dt>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>签到送积分</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="onoff">
+                            <label for="score_signin_status1" class="cb-enable {if condition='isset($score.score_signin_status) AND $score.score_signin_status eq 1'}selected{/if}" onclick="changeSigninStatus('control_signin_status',1);">开启</label>
+                            <label for="score_signin_status0" class="cb-disable {if condition='!isset($score.score_signin_status) OR empty($score.score_signin_status)'}selected{/if}" onclick="changeSigninStatus('control_signin_status',0);">关闭</label>
+                            <input id="score_signin_status1" name="score_signin_status" value="1" type="radio" {if condition="isset($score.score_signin_status) AND $score.score_signin_status eq 1" } checked="checked" {/if}>
+                            <input id="score_signin_status0" name="score_signin_status" value="0" type="radio" {if condition="!isset($score.score_signin_status) OR empty($score.score_signin_status)" } checked="checked" {/if}>
+                        </div>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <div id="control_signin_status" {empty name="$score.score_signin_status"}style="display:none;"{/empty}>
+                    <dl class="row">
+                        <dt class="tit">
+                            <label>签到加积分</label>
+                        </dt>
+                        <dd class="opt">
+                            <input type="text" name="score_signin_score" value="{$score.score_signin_score|default=3}" class="w80">&nbsp;积分/次
+                            <span class="err"></span>
+                            <p class="notic"></p>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <div class="bot">
+                    <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green"
+                       id="submitBtn">确认提交</a>
+                    </div>
+                </dl>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    function check_submit() {
+        if($('input[name=score_name]').val() == ''){
+            showErrorMsg('积分名称不能为空！');
+            $('input[name=score_name]').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+
+    function changeStatus(id,val) {
+        if (1 == val) {
+            $("#"+id).show();
+        }else{
+            $("#"+id).hide();
+        }
+    }
+
+    function changeSigninStatus(id,val) {
+        if (1 == val) {
+            $("#"+id).show();
+        }else{
+            $("#"+id).hide();
+        }
+    }
+</script>
+{include file="public/footer" /}

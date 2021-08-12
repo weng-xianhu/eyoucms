@@ -57,6 +57,11 @@ class Language extends Base
         $this->langAttributeModel = model('LanguageAttribute');
         $this->langAttrModel = model('LanguageAttr');
         $this->langPackModel = model('LanguagePack');
+        $system_use_language = tpCache('system.system_use_language');
+        if (empty($system_use_language) && empty($this->php_servicemeal)) {
+            $str = '6K+l5Yqf6IO95LuF6ZmQ5LqO5o6I5p2D5Z+f5ZCN5Y+v55So77yB';
+            $this->error(base64_decode($str));
+        }
     }
 
     /**
@@ -239,6 +244,10 @@ class Language extends Base
                         }
                     }
                     /*--end*/
+
+                    /*统计多语言数量*/
+                    model('Language')->setLangNum();
+                    
                     adminLog('编辑多语言：'.$post['title']); // 写入操作日志
                     $this->success("操作成功!", url('Language/index'));
                 }
@@ -277,15 +286,15 @@ class Language extends Base
 
             /*不允许删除默认语言*/
             $count = $this->langModel->where([
-                'id'    => ['IN', $id_arr],
-                'is_home_default' => 1,
-            ])->count();
+                    'id'    => ['IN', $id_arr],
+                ])->where("is_home_default=1 OR mark='{$this->main_lang}'")
+                ->count();
             if (!empty($count)) {
                 $this->error('禁止删除前台默认语言');
             }
             /*--end*/
 
-            $result = $this->langModel->where("id",'IN',$id_arr)->select();
+            $result = Db::name('language')->where("id",'IN',$id_arr)->select();
             $title_list = get_arr_column($result, 'title');
             $lang_list = get_arr_column($result, 'mark');
 
@@ -1191,11 +1200,17 @@ class Language extends Base
             $values = array(            
                 'lang'=>$mark, 
             );
-            $url = base64_decode($service_ey).base64_decode($query_str).http_build_query($values);
-            $context = stream_context_set_default(array('http' => array('timeout' => 3,'method'=>'GET')));
-            $response = @file_get_contents($url,false,$context);
+            $url = base64_decode($service_ey).base64_decode($query_str);
+            $response = httpRequest2($url, 'POST', $values);
             $params = json_decode($response,true);
             if (is_array($params) && !empty($params)) {
+                if ($params['code'] === 0) {
+                    $mark_id = Db::name('language')->where(['mark'=>$mark])->value('id');
+                    $this->langModel->where("id",$mark_id)->delete();
+                    $this->langModel->afterDel([$mark_id], [$mark]);
+                    $this->error($params['msg'], url('Language/index'));
+                }
+
                 $saveData = [];
                 foreach ($params as $key => $val) {
                     $saveData[] = [

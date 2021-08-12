@@ -1,0 +1,97 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width: auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;box-shadow:none;">
+    <!-- 操作说明 -->
+    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+        </div>
+        <ul>
+            <li>安全验证：请设置好相关的问题答案，并记好答案！方便下次安装插件时回答验证。</li>
+        </ul>
+    </div>
+    <form class="form-horizontal" id="post_form" method="post" onsubmit="return false;">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="ask"><em>*</em>安全问题列表</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <select name="ask" id="ask" class="w210">
+                        <option value="">请选择…</option>
+                        {volist name='$weapp_askanswer_list' id='vo'}
+                        <option value="{$key}">{$vo}</option>
+                        {/volist}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="answer"><em>*</em>设置答案内容</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <input type="text" name="answer" value="" id="answer" class="w200">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <div class="bot" style="padding-bottom:0px;"><a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a></div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+    $("body").bind('keydown', function(event){
+        if(event.keyCode ==13){
+            checkForm();
+        }
+    });
+
+    function checkForm()
+    {
+        if($('select[name=ask]').val() == ''){
+            showErrorMsg('请选择安全问题…');
+            $('select[name=ask]').focus();
+            return false;
+        }
+        if($('input[name=answer]').val() == ''){
+            showErrorMsg('答案内容不能为空！');
+            $('input[name=answer]').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            url: "{:url('Weapp/setting', ['_ajax'=>1])}",
+            type: 'POST',
+            dataType: 'JSON',
+            data: $('#post_form').serialize(),
+            success: function(res){
+                layer.closeAll();
+                if (res.code == 1) {
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                } else {
+                    layer.alert(res.msg, {icon:5});
+                }
+                return false;
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert('操作失败', {icon:5});
+                return false;
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

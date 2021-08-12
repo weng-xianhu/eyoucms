@@ -25,7 +25,7 @@ class Ueditor extends Base
 {
     private $sub_name = array('date', 'Ymd');
     private $savePath = 'allimg/';
-    private $fileExt = 'jpg,png,gif,jpeg,bmp,ico';
+    private $fileExt = 'jpg,png,gif,jpeg,bmp,ico,webp';
 
     public function __construct()
     {

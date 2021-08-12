@@ -1,5 +1,5 @@
 {include file="public/layout" /}
-<body style="background-color: #FFF; overflow-y: scroll;min-width:auto;">
+<body class="bodystyle" style="overflow-y: scroll;min-width:auto;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <style>
     .span_1 {
@@ -37,24 +37,7 @@
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page" style="min-width:auto;">
-    {include file="system/bar" /}
     <div class="flexigrid">
-        <div class="mDiv">
-            <div class="ftitle">
-                <h3>水印配置</h3>
-            </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
-            <div class="sDiv">
-                <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
-                    <input type="button" class="btn current" value="缩略图配置" onclick="window.location.href='{:url("System/thumb", ['tabase'=>$Request.param.tabase])}';">
-                </div>
-            </div>
-            <div class="sDiv">
-                <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
-                    <input type="button" class="btn" value="水印配置" onclick="window.location.href='{:url("System/water", ['tabase'=>$Request.param.tabase])}';">
-                </div>
-            </div>
-        </div>
         <form method="post" id="handlepost" action="{:url('System/water')}">
             <div class="ncap-form-default">
                 <dl class="row">
@@ -69,7 +52,7 @@
                         <p class="notic">全站图片添加水印</p>
                     </dd>
                 </dl>
-                <dl class="row">
+                <dl class="row none">
                     <dt class="tit">缩略图水印</dt>
                     <dd class="opt">
                         <div class="onoff">
@@ -131,9 +114,9 @@
                                 </a>
                             </span>
                             <span class="type-file-box">
-                                <input type="text"  name="mark_img_local" id="mark_img_local" value="{$config.mark_img_local|default=''}" class="type-file-text">
+                                <input type="text"  name="mark_img_local" id="mark_img_local" value="{$config.mark_img_local|default=''}" class="type-file-text" autocomplete="off">
                                 <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
-                                <input class="type-file-file" onClick="GetUploadify(1,'','allimg','call_back');" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                                <input class="type-file-file" onClick="GetUploadify(1,'','allimg','call_back','water');" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
                             </span>
                         </div>
                         <input type="text" id="mark_img_remote" name="mark_img_remote" value="{$config.mark_img_remote|default=''}" placeholder="http://" class="input-txt" {if condition="!isset($config.mark_img_is_remote) OR empty($config.mark_img_is_remote)"}style="display: none;"{/if}>
@@ -275,9 +258,31 @@
         });
     });
 
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     function adsubmit(){
         layer_loading('正在处理');
-        $('#handlepost').submit();
+        $.ajax({
+            type : 'post',
+            url : "{:url('System/water', ['_ajax'=>1])}",
+            data : $('#handlepost').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        // _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
     }
 
     // 上传水印图片成功回调函数

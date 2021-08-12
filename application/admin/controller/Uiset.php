@@ -13,6 +13,7 @@
 
 namespace app\admin\controller;
 
+use think\Db;
 use think\Page;
 
 class Uiset extends Base
@@ -28,10 +29,10 @@ class Uiset extends Base
         $this->theme_style = 'pc';
 
         /*模板列表*/
-        if (file_exists(ROOT_PATH.'template/pc/uiset.txt')) {
+        if (file_exists(ROOT_PATH.'template/'.TPL_THEME.'pc/uiset.txt')) {
             array_push($this->templateArr, 'pc');
         }
-        if (file_exists(ROOT_PATH.'template/mobile/uiset.txt')) {
+        if (file_exists(ROOT_PATH.'template/'.TPL_THEME.'mobile/uiset.txt')) {
             array_push($this->templateArr, 'mobile');
         }
         /*--end*/
@@ -107,6 +108,8 @@ class Uiset extends Base
             if (isset($param[$key]) && $param[$key] !== '') {
                 if ($key == 'keywords') {
                     $condition['a.page|a.type|a.name'] = array('eq', "%{$param[$key]}%");
+                } else if ($key == 'theme_style') {
+                    $condition['a.'.$key] = array('eq', TPL_THEME.$param[$key]);
                 } else {
                     $condition['a.'.$key] = array('eq', $param[$key]);
                 }
@@ -119,7 +122,7 @@ class Uiset extends Base
 
         $list = array();
 
-        $uiconfigM =  M('ui_config');
+        $uiconfigM =  Db::name('ui_config');
         $count = $uiconfigM->alias('a')->where($condition)->count('id');// 查询满足要求的总记录数
         $Page = $pager = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
         $list = $uiconfigM->alias('a')->where($condition)->order('id desc')->limit($Page->firstRow.','.$Page->listRows)->select();
@@ -142,8 +145,8 @@ class Uiset extends Base
         $id_arr = input('del_id/a');
         $id_arr = eyIntval($id_arr);
         if(!empty($id_arr)){
-            $result = M('ui_config')->where("id",'IN',$id_arr)->getAllWithIndex('name');
-            $r = M('ui_config')->where("id",'IN',$id_arr)->delete();
+            $result = Db::name('ui_config')->where("id",'IN',$id_arr)->getAllWithIndex('name');
+            $r = Db::name('ui_config')->where("id",'IN',$id_arr)->delete();
             if($r){
                 \think\Cache::clear('ui_config');
                 delFile(RUNTIME_PATH.'ui/'.$result['theme_style']);

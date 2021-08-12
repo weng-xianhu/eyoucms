@@ -61,7 +61,7 @@
                             </a>
                         </span>
                         <span class="type-file-box">
-                            <input type="text" id="litpic_local" name="litpic_local" value="" class="type-file-text">
+                            <input type="text" id="litpic_local" name="litpic_local" value="" class="type-file-text" autocomplete="off">
                             <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
                             <input class="type-file-file" onClick="GetUploadify(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
                                  title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
@@ -122,7 +122,7 @@
         layer_loading('正在处理');
 
         $.ajax({
-            url: "{:url('Other/ui_add')}",
+            url: "{:url('Other/ui_add', ['_ajax'=>1])}",
             type: 'POST',
             dataType: 'JSON',
             data: $('#post_form').serialize(),
@@ -157,15 +157,16 @@
     }
 
     function ui_delfun(obj) {
-        layer.confirm('此操作不可逆，确认删除？', {
-              btn: ['确定','取消'] //按钮
+        layer.confirm('此操作不可恢复，确认删除？', {
+                title: false,
+                btn: ['确定','取消'] //按钮
             }, function(){
                 // 确定
                 layer_loading('正在处理');
                 $.ajax({
                     type : 'post',
                     url : $(obj).attr('data-url'),
-                    data : {del_id:$(obj).attr('data-id')},
+                    data : {del_id:$(obj).attr('data-id'), _ajax:1},
                     dataType : 'json',
                     success : function(data){
                         layer.closeAll();

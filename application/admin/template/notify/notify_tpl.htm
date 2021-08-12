@@ -1,0 +1,144 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit; min-width:400px;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: 400px;">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back" href="{:url('System/api_conf')}" title="返回"><i class="fa fa-angle-double-left"></i>返回</a>
+            <ul class="tab-base nc-row">
+                {eq name="'Notify@notify_tpl'|is_check_access" value="1"}
+                <li>
+                    <a href="{:url('Notify/notify_tpl')}" class="current">
+                    <span>站内通知</span>
+                    </a>
+                </li>
+                {/eq}
+            </ul>
+        </div>
+    </div>
+    
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                {include file="users_notice/bar" /}
+            </div>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th abbr="article_title" axis="col3" class="w150">
+                            <div class="text-l10">模板名称</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="">
+                            <div class="text-l10">站内信标题</div>
+                        </th>
+                        <!-- <th abbr="ac_id" axis="col4">
+                            <div class="">模板内容</div>
+                        </th> -->
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">接收者</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w50">
+                            <div class="tc">启用</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">更新时间</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            
+                            <td class="">
+                                <div class="w150 text-l10">
+                                    {$vo.tpl_name}
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div class="">
+                                    {php}
+                                        $disabled_str = '';
+                                        $web_users_switch = !empty($global['web_users_switch']) ? $global['web_users_switch'] : 0;
+                                        if ((empty($shop_open) || $php_servicemeal <= 1) && in_array($vo['send_scene'], [5,6])) {
+                                            $disabled_str = 'disabled="disabled" title="请开启商城中心"';
+                                        }
+                                    {/php}
+                                    <input type="text" name="tpl_title" value="{$vo.tpl_title}" onchange="changeTableVal('users_notice_tpl','tpl_id','{$vo.tpl_id}','tpl_title',this);" style="width: 94%;" {$disabled_str}>
+                                </div>
+                            </td>
+                            <!-- <td style="width: 100%">
+                                <div style="">
+                                    {$vo.tpl_content}
+                                </div>
+                            </td> -->
+                            <td class=""> 
+                                <div class="w60 tc">
+                                    {eq name="$vo['send_scene']" value='6'}
+                                        会员
+                                    {else /}
+                                        站长
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w50 tc">
+                                    {eq name="$vo['is_open']" value='1'}
+                                        <span class="yes" onClick="changeTableVal('users_notice_tpl','tpl_id','{$vo.tpl_id}','is_open',this);"><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                        <span class="no" onClick="changeTableVal('users_notice_tpl','tpl_id','{$vo.tpl_id}','is_open',this);"><i class="fa fa-ban"></i>否</span>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class=""> 
+                                <div class="w100 tc">
+                                    {$vo.update_time|MyDate='Y-m-d',###}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+
+{include file="public/footer" /}

@@ -1,0 +1,11 @@
+<div class="top-menu">
+    <div class="item-menu">
+        <a {if condition="'Coupon'==$Think.const.CONTROLLER_NAME && in_array($Request.action, ['index', 'add', 'edit'])"}class="current"{/if} href='{:url("Coupon/index")}'>优惠券</a>
+    </div>
+    <!-- <div class="item-menu">
+        <a {if condition="'Spike'==$Think.const.CONTROLLER_NAME && in_array($Request.action, ['index', 'add', 'edit'])"}class="current"{/if} href='{:url("Spike/index")}'>限时活动</a>
+    </div>
+    <div class="item-menu">
+        <a {if condition="'SingleSpike'==$Think.const.CONTROLLER_NAME && in_array($Request.action, ['index', 'add', 'edit'])"}class="current"{/if} href='{:url("SingleSpike/index")}'>单品秒杀</a>
+    </div> -->
+</div>

@@ -1,0 +1,154 @@
+{include file="public/layout" /}
+<script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;">
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w50" axis="col1">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w250">
+                            <div class="tl">菜单名称</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">菜单选择</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w100">
+                            <div class="tc">显示</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto; min-height: auto;">
+            <form id="PostForm">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%">
+                        <tbody id="tbody">
+                        {empty name="list"}
+                            <tr>
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的数据
+                                </td>
+                            </tr>
+                        {else/}
+                            {foreach name="list" item="vo" key="k" }
+                            <tr class="tr">
+                                <td>
+                                    <div class="w50 tc">
+                                        <span>{$vo.id}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="w250 tl">
+                                        <input type="text" name="title" id="title_{$vo.id}" value="{$vo.title}" style="width: 200px;"  onchange="changeTableVal('users_bottom_menu','id','{$vo.id}','title',this);">
+                                        <input type="hidden" name="mca" id="mca_{$vo.id}" value="{$vo.mca}">
+                                        <input type="hidden" name="icon" id="icon_{$vo.id}" value="{$vo.icon}">
+                                    </div>
+                                </td>
+                                <td style="width: 100%">
+                                    <div style="">
+                                        <select onchange="chooseMenu({$vo.id},this);">
+                                            <option value="">请选择</option>
+                                            {eyou:volist name="$mobile_user_bottom_menu_config" id="voo"}
+                                                <option value="{$key}" data-title="{$voo.title}" data-mca="{$voo.mca}" data-icon="{$voo.icon}" {if $vo.mca==$voo.mca}selected{/if}>{$voo.title}</option>
+                                            {/eyou:volist}
+                                        </select>
+                                    </div>
+                                </td>
+                                <td class="">
+                                    <div class="w100 tc">
+                                        {eq name="$vo['status']" value='1'}
+                                            {eq name="$vo['display']" value='1'}
+                                            <span class="yes" onClick="changeTableVal('users_bottom_menu','id','{$vo.id}','display',this);"><i class="fa fa-check-circle"></i>是</span>
+                                            {else /}
+                                            <span class="no" onClick="changeTableVal('users_bottom_menu','id','{$vo.id}','display',this);"><i class="fa fa-ban"></i>否</span>
+                                            {/eq}
+                                        {else /}
+                                            功能未开启
+                                        {/eq}
+                                    </div>
+                                </td>
+                                <td class="sort">
+                                    <div class="w100 tc">
+                                        <input type="text" onchange="changeTableVal('users_bottom_menu','id','{$vo.id}','sort_order',this);" size="4"  value="{$vo.sort_order}" class="tc" />
+                                    </div>
+                                </td>
+                            </tr>
+                            {/foreach}
+                        {/empty}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <!--分页位置-->
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    function chooseMenu(id,obj) {
+        if ($(obj).find("option:selected").val() != '') {
+            var new_title = $(obj).find("option:selected").attr("data-title");
+            var new_mca = $(obj).find("option:selected").attr("data-mca");
+            var new_icon = $(obj).find("option:selected").attr("data-icon");
+
+            $("#title_" + id).val(new_title);
+            $("#mca_" + id).val(new_mca);
+            $("#icon_" + id).val(new_icon);
+            changeTableVal_1609402253('users_bottom_menu', 'id', id, 'title', new_title);
+            changeTableVal_1609402253('users_bottom_menu', 'id', id, 'mca', new_mca);
+            changeTableVal_1609402253('users_bottom_menu', 'id', id, 'icon', new_icon);
+        }
+
+        return false;
+    }
+
+    function changeTableVal_1609402253(table,id_name,id_value,field,field_val)
+    {
+        var url = eyou_basefile + "?m="+module_name+"&c=Index&a=changeTableVal&_ajax=1";
+        var lang = $.cookie('admin_lang');
+        if (!lang) lang = __lang__;
+        if ($.trim(lang) != '') {
+            url = url + '&lang=' + lang;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {table:table,id_name:id_name,id_value:id_value,field:field,value:field_val},
+            dataType: 'json',
+            success: function(res){
+                layer.closeAll();
+            },error:function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+</script>
+
+{include file="public/footer" /}

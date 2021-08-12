@@ -1,0 +1,1233 @@
+{include file="public/layout" /}
+<script type="text/javascript" src="__PUBLIC__/plugins/laydate/laydate.js"></script>
+
+{eq name="$editor.editor_select" value="1"}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+{else/}
+    {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
+{/eq}
+
+<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4; padding: 20px; ">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="shop/left" /}
+<div class="page" style="min-width:auto; margin-left:98px;">
+    <div class="flexigrid">
+        <div class="fixed-bar">
+            <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+                
+                <ul class="tab-base nc-row">
+                    <li><a href="javascript:void(0);" data-index='1' class="tab current"><span>常规选项</span></a></li>
+                    <li><a href="javascript:void(0);" data-index='2' class="tab"><span>商品参数</span></a></li>
+                    <li><a href="javascript:void(0);" data-index='3' class="tab"><span>SEO选项</span></a></li>
+                    <li><a href="javascript:void(0);" data-index='4' class="tab"><span>其他选项</span></a></li>
+                </ul>
+            </div>
+        </div>
+        <form class="form-horizontal" id="post_form" action="{:url('ShopProduct/add')}" method="post">
+            <!-- 常规信息 -->
+            <div class="ncap-form-default tab_div_1">
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="title"><em>*</em>标题</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="title" value="" id="title" class="input-txt" maxlength="100" {eq name="$channelRow.is_repeat_title" value="0"} oninput="check_title_repeat(this,0);" {/eq}>
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="title"><em>*</em>所属栏目</label>
+                    </dt>
+                    <dd class="opt"> 
+                        <select name="typeid" id="typeid">
+                            <option value="0">请选择栏目…</option>
+                            {$arctype_html}
+                        </select>
+                        <span class="err"></span>
+                        <p class="notic">谨慎切换，自定义字段的内容会随着栏目切换而清空，在保存之前不受影响！</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>文档属性</label>
+                    </dt>
+                    <dd class="opt">
+                        <label><input type="checkbox" name="is_head" value="1">头条[h]</label>&nbsp;
+                        <label><input type="checkbox" name="is_recom" value="1">推荐[c]</label>&nbsp;
+                        <label><input type="checkbox" name="is_special" value="1">特荐[a]</label>&nbsp;
+                        <label><input type="checkbox" name="is_b" value="1">加粗[b]</label>&nbsp;
+                        <label><input type="checkbox" name="is_litpic" value="1">图片[p]</label>&nbsp;
+                        <label><input type="checkbox" name="is_jump" value="1">跳转[j]</label>&nbsp;
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row none dl_jump">
+                    <dt class="tit">
+                        <label>跳转网址</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" value="" name="jumplinks" id="jumplinks" class="input-txt" placeholder="http://">
+                        <span class="err"></span>
+                        <p class="notic">请输入完整的URL网址（包含http或https），设置后访问该条信息将直接跳转到设置的网址</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                      <label>缩略图</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="input-file-show div_litpic_local">
+                            <span class="show">
+                                <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="javascript:void(0);">
+                                    <i id="img_i" class="fa fa-picture-o" onmouseover="" onmouseout="layer.close(layer_tips);"></i>
+                                </a>
+                            </span>
+                            <span class="type-file-box">
+                                <input type="text" id="litpic_local" name="litpic_local" value="" class="type-file-text" autocomplete="off">
+                                <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                                <input class="type-file-file" onClick="GetUploadify(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
+                                     title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                            </span>
+                        </div>
+                        <input type="text" id="litpic_remote" name="litpic_remote" value="" placeholder="http://" class="input-txt" onKeyup="keyupRemote(this, 'litpic');" style="display: none;">
+                        &nbsp;
+                        <label><input type="checkbox" name="is_remote" id="is_remote" value="1" onClick="clickRemote(this, 'litpic');">远程图片</label>
+                        <span class="err"></span>
+                        <p class="notic">当没有手动上传图片时候，会自动提取正文的第一张图片作为缩略图</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>图片集</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="tab-pane pics" id="tab_proimg">
+                            <!-- <a href="javascript:void(0);" onClick="GetUploadify(30,'','allimg','proimg_call_back');" class="imgupload">
+                                <i class="fa fa-photo"></i>上传图片
+                            </a> -->
+                            <table class="table table-bordered">
+                                <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="sort-list">
+                                            <div class="images_upload">
+                                            </div>
+                                        </div>
+                                       <a href="javascript:void(0);" onClick="GetUploadify(30,'','allimg','proimg_call_back');" class="img-upload mb15" title="点击上传">
+                                           <div class="y-line"></div>
+                                           <div class="x-line"></div>
+                                       </a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- 上传图片显示的样板 start -->
+                        <div class="images_upload_tpl none">
+                            <div class="images_upload">
+                                <div style="position: relative; height: 130px;">
+                                    <input type="hidden" name="proimg[]" value="" />
+                                    <a href="javascript:void(0);" onClick="" class="upimg" title="拖动修改排序">
+                                        <img src="__STATIC__/admin/images/add-button.jpg" width="136" height="136" />
+                                    </a>
+                                    <a href="javascript:void(0)" class="delect" title="删除">&nbsp;&nbsp;</a>
+                                </div>
+                                <textarea rows="5" cols="60" name="imgintro[]" style="height:28px; width: 136px;" placeholder="图片注释"></textarea>
+                            </div>
+                        </div>
+                        <!-- 上传图片显示的样板 end -->
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+        
+                {if condition="!empty($shopConfig['shop_open']) && 1 == $shopConfig['shop_open']"}
+                    <!-- 产品价格属性 -->
+                    {empty name="$shopConfig['shop_type']"}
+                        <!-- 普通产品 -->
+                        <input type="hidden" name="prom_type" value="0"/>
+                    {/empty}
+
+                    {eq name="$shopConfig['shop_type']" value="1"}
+                        <!-- 虚拟产品 -->
+                        <input type="hidden" name="prom_type" value="1"/>
+                        <dl class="row" id="fahuoxingshi" >
+                            <dt class="tit">
+                                <label for="fahuo">发货形式</label>
+                            </dt>
+                            <dd class="opt">
+                                <label>
+                                    <input type="radio" name="prom_type_vir" value="1" checked="checked" onclick="change_prom_type(2)"/>手动发货
+                                </label>
+                                &nbsp;
+                                <label>
+                                    <input type="radio" name="prom_type_vir" value="2" onclick="change_prom_type(3)"/>网盘下载
+                                </label>
+                                &nbsp;
+                                <label>
+                                    <input type="radio" name="prom_type_vir" value="3" onclick="change_prom_type(4)"/>文本内容
+                                </label>
+                            </dd>
+                        </dl>
+                        <div id="wangpanxiazai" class="none">
+                            <dl class="row">
+                                <dt class="tit">
+                                    <label for="netdisk_url"><em>*</em>网盘地址</label>
+                                </dt>
+                                <dd class="opt">
+                                    <input type="text" name="netdisk_url" value="" id="netdisk_url" class="input-txt" placeholder="http://">
+                                    <span class="err"></span>
+                                    <p class="notic">输入完整的URL网址（包含http或https）</p>
+                                </dd>
+                            </dl>
+                            <dl class="row">
+                                <dt class="tit">
+                                    <label for="netdisk_pwd">提取码</label>
+                                </dt>
+                                <dd class="opt">
+                                    <input type="text" name="netdisk_pwd" value="" id="netdisk_pwd" class="input-txt">
+                                    <span class="err"></span>
+                                    <p class="notic"></p>
+                                </dd>
+                            </dl>
+                            <dl class="row">
+                                <dt class="tit">
+                                    <label for="unzip_pwd">解压密码</label>
+                                </dt>
+                                <dd class="opt">
+                                    <input type="text" name="unzip_pwd" value="" id="unzip_pwd" class="input-txt">
+                                    <span class="err"></span>
+                                    <p class="notic"></p>
+                                </dd>
+                            </dl>
+                        </div>
+                        <dl class="row none" id="wenbenneirong">
+                            <dt class="tit">
+                                <label for="text_content"><em>*</em>文本内容</label>
+                            </dt>
+                            <dd class="opt">
+                                <textarea rows="5" cols="80" id="text_content" name="text_content" style="width: 375px;height:160px;"></textarea>
+                                <p class="notic"></p>
+                            </dd>
+                        </dl>
+                    {/eq}
+
+                    {eq name="$shopConfig['shop_type']" value="2"}
+                        <!-- 两者都有 -->
+                        <dl class="row">
+                            <dt class="tit">
+                                <label for="uname">产品类型</label>
+                            </dt>
+                            <dd class="opt">
+                                <label>
+                                    <input type="radio" name="prom_type" value="0" checked="checked" onclick="change_prom_type(0)"/>普通产品
+                                </label>
+                                <br/>
+                                <label>
+                                    <input type="radio" name="prom_type" value="1" onclick="change_prom_type(1)"/>虚拟产品
+                                </label>
+                            </dd>
+                        </dl>
+
+                        <dl class="row none" id="fahuoxingshi">
+                            <dt class="tit">
+                                <label for="fahuo">发货形式</label>
+                            </dt>
+                            <dd class="opt">
+                                <label>
+                                    <input type="radio" name="prom_type_vir" value="1" checked="checked" onclick="change_prom_type(2)"/>手动发货
+                                </label>
+                                &nbsp;
+                                <label>
+                                    <input type="radio" name="prom_type_vir" value="2" onclick="change_prom_type(3)"/>网盘下载
+                                </label>
+                                &nbsp;
+                                <label>
+                                    <input type="radio" name="prom_type_vir" value="3" onclick="change_prom_type(4)"/>文本内容
+                                </label>
+                            </dd>
+                        </dl>
+                        <div id="wangpanxiazai" class="none">
+                            <dl class="row">
+                                <dt class="tit">
+                                    <label for="netdisk_url"><em>*</em>网盘地址</label>
+                                </dt>
+                                <dd class="opt">
+                                    <input type="text" name="netdisk_url" value="" id="netdisk_url" class="input-txt" placeholder="http://">
+                                    <span class="err"></span>
+                                    <p class="notic">输入完整的URL网址（包含http或https）</p>
+                                </dd>
+                            </dl>
+                            <dl class="row">
+                                <dt class="tit">
+                                    <label for="netdisk_pwd">提取码</label>
+                                </dt>
+                                <dd class="opt">
+                                    <input type="text" name="netdisk_pwd" value="" id="netdisk_pwd" class="input-txt">
+                                    <span class="err"></span>
+                                    <p class="notic"></p>
+                                </dd>
+                            </dl>
+                            <dl class="row">
+                                <dt class="tit">
+                                    <label for="unzip_pwd">解压密码</label>
+                                </dt>
+                                <dd class="opt">
+                                    <input type="text" name="unzip_pwd" value="" id="unzip_pwd" class="input-txt">
+                                    <span class="err"></span>
+                                    <p class="notic"></p>
+                                </dd>
+                            </dl>
+                        </div>
+                        <dl class="row none" id="wenbenneirong">
+                            <dt class="tit">
+                                <label for="text_content"><em>*</em>文本内容</label>
+                            </dt>
+                            <dd class="opt">
+                                <textarea rows="5" cols="80" id="text_content" name="text_content" style="width: 375px;height:160px;"></textarea>
+                                <p class="notic"></p>
+                            </dd>
+                        </dl>
+                    {/eq}
+                {/if}
+                    
+                {if condition="1 == $shopConfig['shop_open'] && !empty($ifcontrolRow['users_price'])"}
+                    {if condition="!isset($shopConfig['shop_open_spec']) || 0 == $shopConfig['shop_open_spec']"}
+                        <!-- 待添加后续逻辑... -->
+                    {else/}
+                        <dl class="row">
+                            <dt class="tit"> <label for="users_price">商品规格</label> </dt>
+                            <dd class="opt">
+                                <label><input type="radio" id="spec_type1" name="spec_type" value="1" checked="checked" onclick="SpecTypeSelect(1);">单规格</label>&nbsp;
+                                <label><input type="radio" id="spec_type2" name="spec_type" value="2" onclick="SpecTypeSelect(2);">多规格</label>
+                                <span class="err"></span>
+                                <p class="notic"></p>
+                            </dd>
+                        </dl>
+                        <script type="text/javascript">
+                            function SpecTypeSelect(spec_type) {
+                                var IsSpecData = $('#SpecTempLateDiv').html();
+                                if (1 == spec_type) {
+                                    $('.spec_type_1').show();
+                                    $('.spec_type_2').hide();
+                                    $('#users_price, #stock_count').removeAttr("readonly");
+                                    if (IsSpecData && IsSpecData != ' ') {
+                                        layer.confirm('<span style="color: red;">请注意：您已添加多规格，若切换单规格并保存商品，则清空多规格数据！</span>', {
+                                            title: false,
+                                            closeBtn: false,
+                                            btn: ['确定', '取消']
+                                        }, function (index) {
+                                            $('#spec_type1').attr('checked', 'checked');
+                                            $('#spec_type2').removeAttr('checked');
+                                            layer.close(index);
+                                        }, function (index) {
+                                            $('.spec_type_1').hide();
+                                            $('.spec_type_2').show();
+                                            $('#users_price, #stock_count').attr("readonly", "readonly");
+                                            $('#spec_type1').removeAttr('checked');
+                                            $('#spec_type2').attr('checked', 'checked');
+                                            layer.close(index);
+                                        });
+                                    }
+                                } else {
+                                    $('.spec_type_1').hide();
+                                    $('.spec_type_2').show();
+                                    $('#users_price, #stock_count').attr("readonly", "readonly");
+                                }
+                            }
+                        </script>
+
+                        <dl class="row spec_type_2" style="display: none;">
+                            <dt class="tit"> <label for="users_price"></label> </dt>
+                            <dd class="opt">
+                                <div>
+                                    <div>
+                                        <input type="hidden" id="preset_mark_id_arr">
+                                        <select name="spec_value" id="spec_value" onchange="SpecSelectName(this)">
+                                            <option value="0">选择规格名称</option>
+                                            {volist name="preset_value" id="vo"}
+                                                <option value="{$vo.preset_mark_id}">{$vo.preset_name}</option>
+                                            {/volist}
+                                        </select>
+                                        <!-- <a href="javascript:void(0);" onclick="SpecTempLate();" class="ncap-btn ncap-btn-green">规格模板库</a> -->
+                                    </div><br/>
+                                    <div id='SpecSelectName'></div>
+                                </div>
+                                <span class="err"></span>
+                                <p class="notic"></p>
+                            </dd>
+                        </dl>
+
+                        <dl class="row spec_type_2" style="display: none;">
+                            <dt class="tit">
+                                <label for="users_price">价格/库存</label>
+                            </dt>
+                            <dd class="opt">
+                                <div id='SpecTempLateDiv'></div>
+                                <span class="err"></span>
+                                <p class="notic"></p>
+                            </dd>
+                        </dl>
+                    {/if}
+                {/if}
+
+                {if condition="!empty($ifcontrolRow['users_price'])"}
+                    <dl class="row spec_type_1">
+                        <dt class="tit">
+                            <label for="users_price">
+                                {if condition="1 == $shopConfig['shop_open']"}<em>*</em>{/if}价格
+                            </label>
+                        </dt>
+                        <dd class="opt">
+                            <input type="text" name="users_price" id="users_price" style="width: 10%;" placeholder="原价" onkeyup="this.value=this.value.replace(/[^\.\d]/g,'');" onpaste="this.value=this.value.replace(/[^\.\d]/g,'')">
+                            <span class="err"></span>
+                            <p class="notic"></p>
+                        </dd>
+                    </dl>
+                {/if}
+
+                {if condition="1 == $shopConfig['shop_open'] && !empty($ifcontrolRow['users_price'])"}
+                    <dl class="row spec_type_1">
+                        <dt class="tit">
+                            <label for="stock_count">库存</label>
+                        </dt>
+                        <dd class="opt">
+                            <input type="text" name="stock_count" id="stock_count" style="width: 10%;" value="99999">
+                            <label>
+                                <input type="checkbox" name="stock_show" value="1" checked="checked">
+                                页面显示商品库存
+                            </label>
+                            <span class="err"></span>
+                            <p class="notic"></p>
+                        </dd>
+                    </dl>
+                    {if condition="!isset($shopConfig['shop_open_spec']) || 0 == $shopConfig['shop_open_spec']"}
+                        <!-- 待添加后续逻辑... -->
+                    {else /}
+                        <script type="text/javascript">
+                            // 规格列表管理
+                            var TemplateUrl = "{:url('Shop/spec_template')}";
+                            // 规格选择
+                            var SelectUrl = "{:url('Shop/spec_select')}";
+                            // 获取规格名称规格值框架URL
+                            var GetHtmlUrl = "{:url('Shop/assemble_spec_data')}";
+                            // 当规格库更新后，调用此方式及时更新选择规格名称的下拉框信息
+                            var GetPresetSpecUrl = "{:url('Shop/update_spec_info')}";
+                            // 同步更新规格库数据到产品规格中，单条操作
+                            var RefreshPresetUrl = "{:url('Shop/refresh_preset_value')}";
+
+                            $(function () {
+                                // 初始化规格，清除多余规格数据
+                                AjaxInitializationSpec();
+                                function AjaxInitializationSpec() {
+                                    $.ajax({
+                                        type : 'post',
+                                        url  : GetHtmlUrl,
+                                        data:{initialization:true, _ajax:1},
+                                        dataType : 'json',
+                                    });
+                                }
+                            });
+
+                            // 规格列表管理
+                            function SpecTempLate() {
+                                //iframe窗
+                                layer.open({
+                                    type: 2,
+                                    title: '规格模板库',
+                                    shadeClose: false,
+                                    maxmin: false, //开启最大化最小化按钮
+                                    area: ['90%', '90%'],
+                                    content: TemplateUrl
+                                });
+                            }
+
+                            // 规格库删除规格值时，同步更新页面上的规格信息
+                            function RefreshPresetValue(preset_id, preset_mark_id) {
+                                $.ajax({
+                                    type : 'post',
+                                    url  : RefreshPresetUrl,
+                                    data : {preset_id:preset_id, preset_mark_id:preset_mark_id, _ajax:1},
+                                    dataType : 'json',
+                                    success : function(res){
+                                        if (1 == res.code) {
+                                            // 删除规格值
+                                            $('#preset-bt2_'+preset_id).remove();
+                                            if (res.data.DelAllPreset) {
+                                                // 删除整个规格名称
+                                                $('#preset_'+preset_mark_id).remove();
+                                            }
+                                            if (res.data.HtmlTable) {
+                                                // 加载规格框架
+                                                $('#SpecTempLateDiv').html(res.data.HtmlTable);
+                                                // 合并单元格
+                                                MergeCells();
+                                            }
+                                        }
+                                    },
+                                    error : function(e) {
+                                        layer.closeAll();
+                                        layer.alert(e.responseText, {icon: 5});
+                                    }
+                                });
+                            }
+
+                            // 生成选中规格名称html并更新加载规格值
+                            function SpecSelectName(obj) {
+                                var preset_mark_id = $(obj).val();
+                                var preset_mark_id_arr = $('#preset_mark_id_arr').val();
+                                $.ajax({
+                                    type : 'post',
+                                    url  : SelectUrl,
+                                    data : {preset_mark_id:preset_mark_id,preset_mark_id_arr:preset_mark_id_arr,_ajax:1},
+                                    dataType : 'json',
+                                    success : function(res){
+                                        if (0 == res.code) {
+                                            showErrorMsg(res.msg);
+                                        }else{
+                                            var html = [];
+                                            // 主DIV加载
+                                            html += [
+                                                '<div class="prset-box" id="preset_'+preset_mark_id+'">'+
+                                                    '<div id="div_'+preset_mark_id+'">'+
+                                                        '<div><span class="preset-bt"><span class="preset_name_span_'+preset_mark_id+'">'+res.data.preset_name+ '</span><em data-name="'+res.data.preset_name+'" data-mark_id="'+preset_mark_id+'" onclick="DelDiv(this)"><i class="fa fa-times-circle" title="关闭"></i></em></span>'+
+                                                            '<span id="SelectEd_'+preset_mark_id+'"></span> &nbsp; &nbsp;'+
+                                                            '<select name="spec_value" id="spec_value_'+preset_mark_id+'" onchange="AppEndPreset(this,'+preset_mark_id+')">'+
+                                                            '</select>'+
+                                                        '</div>'+
+                                                    '</div><br/>'+
+                                                '</div>'
+                                            ];
+                                            $('#SpecSelectName').append(html);
+                                            // 预设值加载
+                                            $('#spec_value_'+preset_mark_id).empty().html(res.data.preset_value_option);
+                                            // 更新预设名称下拉框
+                                            res.data.preset_name_option = '<option value="0">选择规格名称</option>'+ res.data.preset_name_option;
+                                            $('#spec_value').empty().html(res.data.preset_name_option);
+                                            // 加载选中的规格名称ID
+                                            $('#preset_mark_id_arr').val(res.data.preset_mark_id_arr); 
+                                        }
+                                    }
+                                });
+                            }
+
+                            // 清除session中的指定数据，同时对数据库进行操作
+                            function DelDiv(obj) {
+                                var del_mark_id = $(obj).attr('data-mark_id');
+                                var preset_mark_id_arr = $('#preset_mark_id_arr').val();
+                                $.ajax({
+                                    type : 'post',
+                                    url  : GetHtmlUrl,
+                                    data : {del_mark_id:del_mark_id,preset_mark_id_arr:preset_mark_id_arr,_ajax:1},
+                                    dataType : 'json',
+                                    success : function(res){
+                                        layer.closeAll();
+                                        $(obj).parent().parent().parent().parent().remove();
+                                        if (res.data.HtmlTable) {
+                                            // 加载规格框架
+                                            $('#SpecTempLateDiv').html(res.data.HtmlTable);
+                                            // 合并单元格
+                                            MergeCells();
+                                            if (res.data.HtmlTable != ' ') {
+                                                $("#users_price").attr("readonly", "readonly");
+                                                $("#stock_count").attr("readonly", "readonly");
+                                            } else {
+                                                $("#users_price").removeAttr("readonly");
+                                                $("#stock_count").removeAttr("readonly");
+                                            }
+                                        } else {
+                                            $("#users_price").removeAttr("readonly");
+                                            $("#stock_count").removeAttr("readonly");
+                                        }
+                                        // 更新预设名称下拉框
+                                        res.data.PresetNameOption = '<option value="0">选择规格名称</option>'+ res.data.PresetNameOption;
+                                        $('#spec_value').empty().html(res.data.PresetNameOption);
+                                        // 加载选中的规格名称ID
+                                        $('#preset_mark_id_arr').val(res.data.PresetMarkIdArray);
+                                    }
+                                });
+                            }
+
+                            // 清除session中的指定数据，同时对数据库进行操作
+                            function DelValue(obj) {
+                                var del_mark_id   = $(obj).attr('data-mark_id');
+                                var del_preset_id = $(obj).attr('data-preset_id');
+                                $.ajax({
+                                    type : 'post',
+                                    url  : GetHtmlUrl,
+                                    data : {del_preset_id:del_preset_id,del_mark_id:del_mark_id,_ajax:1},
+                                    dataType : 'json',
+                                    success : function(res){
+                                        layer.closeAll();
+                                        $(obj).parent().remove();
+                                        if (res.data.PresetValueOption) {
+                                            $('#spec_value_'+del_mark_id).empty().html(res.data.PresetValueOption);
+                                        }
+                                        if (res.data.HtmlTable) {
+                                            // 加载规格框架
+                                            $('#SpecTempLateDiv').html(res.data.HtmlTable);
+                                            // 合并单元格
+                                            MergeCells();
+                                            if (res.data.HtmlTable != ' ') {
+                                                $("#users_price").attr("readonly", "readonly");
+                                                $("#stock_count").attr("readonly", "readonly");
+                                            } else {
+                                                $("#users_price").removeAttr("readonly");
+                                                $("#stock_count").removeAttr("readonly");
+                                            }
+                                        } else {
+                                            $("#users_price").removeAttr("readonly");
+                                            $("#stock_count").removeAttr("readonly");
+                                        }
+                                    }
+                                });
+                            }
+
+                            // 追加预设规格名称和规格值
+                            function AppEndPreset(obj, preset_mark_id) {
+                                var preset_id = $(obj).val();
+                                $.ajax({
+                                    type : 'post',
+                                    url  : GetHtmlUrl,
+                                    data:{preset_id:preset_id,preset_mark_id:preset_mark_id,_ajax:1},
+                                    dataType : 'json',
+                                    success : function(res){
+                                        if (0 == res.code) {
+                                            showErrorMsg(res.msg);
+                                        }else{
+                                            // 追加选中的值
+                                            $('#SelectEd_'+preset_mark_id).append(
+                                                '<span class="preset-bt2" id="preset-bt2_'+preset_id+'"><span class="preset_value_span_'+preset_id+'">'+res.data.SelectPresetValue+'</span><em data-value="'+res.data.SelectPresetValue+'" data-mark_id="'+preset_mark_id+'" data-preset_id="'+preset_id+'" onclick="DelValue(this)"><i class="fa fa-times-circle" title="关闭"></i></em> &nbsp; </span>'
+                                            );
+                                            if (res.data.PresetValueOption) {
+                                                $('#spec_value_'+preset_mark_id).empty().html(res.data.PresetValueOption);
+                                            }
+                                            if (res.data.HtmlTable) {
+                                                // 加载规格框架
+                                                $('#SpecTempLateDiv').html(res.data.HtmlTable);
+                                                // 合并单元格
+                                                MergeCells();
+                                                $('#stock_count').val(0);
+                                                $('#stock_count').attr('readonly','readonly');
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+
+                            // 当规格库更新后，调用此方式及时更新选择规格名称的下拉框信息及规格框信息
+                            function UpPresetSpecData(preset_mark_id, mark_preset_ids, mark_mark_ids) {
+                                var preset_mark_id_arr = $('#preset_mark_id_arr').val();
+                                $.ajax({
+                                    type : 'post',
+                                    url  : GetPresetSpecUrl,
+                                    data : {preset_mark_id:preset_mark_id,preset_mark_id_arr:preset_mark_id_arr,_ajax:1},
+                                    dataType : 'json',
+                                    success : function(res){
+                                        // 更新规格名称下拉框
+                                        res.data.preset_name_option = '<option value="0">选择规格名称</option>'+ res.data.preset_name_option;
+                                        $('#spec_value').empty().html(res.data.preset_name_option);
+
+                                        if (res.data.preset_value_id) {
+                                            for (var i = 0; i < res.data.preset_value_id.length; i++) {
+                                                if (res.data.preset_value_option[res.data.preset_value_id[i]]) {
+                                                    $('#spec_value_'+res.data.preset_value_id[i]).empty().html(res.data.preset_value_option[res.data.preset_value_id[i]]);
+                                                }
+                                            }
+                                        }
+
+                                        if (preset_mark_id) {
+                                            // 删除指定的规格选框
+                                            $('#preset_'+preset_mark_id).remove();
+                                            $('#preset_mark_id_arr').val(res.data.preset_mark_id_arr);
+                                            if (res.data.HtmlTable) {
+                                                // 加载规格框架
+                                                $('#SpecTempLateDiv').html(res.data.HtmlTable);
+                                                // 合并单元格
+                                                MergeCells();
+                                                $('#stock_count').val(0);
+                                                $('#stock_count').attr('readonly','readonly');
+                                            }
+                                        }
+
+                                        if (mark_preset_ids || mark_mark_ids) {
+                                            UpPresetSpecValue(mark_preset_ids, mark_mark_ids);
+                                        }
+                                    }
+                                });
+                            }
+
+                            // 替换页面上已选的规格名称和规格值
+                            function UpPresetSpecValue(mark_preset_ids, mark_mark_ids) {
+                                $.ajax({
+                                    type : 'post',
+                                    url  : RefreshPresetUrl,
+                                    data : {mark_preset_ids:mark_preset_ids, mark_mark_ids:mark_mark_ids, _ajax:1},
+                                    dataType : 'json',
+                                    success : function(res){
+                                        if (1 == res.code) {
+                                            if (res.data.PresetData) {
+                                                for (var i = 0; i < res.data.PresetData.length; i++) {
+                                                    /*替换规格值*/
+                                                    $('.preset_value_span_'+res.data.PresetData[i]['preset_id']).html(res.data.PresetData[i]['preset_value']);
+                                                    /* END */
+                                                }
+                                            }
+
+                                            if (res.data.MarkData) {
+                                                for (var i = 0; i < res.data.MarkData.length; i++) {
+                                                    /*替换规格名称*/
+                                                    $('.preset_name_span_'+res.data.MarkData[i]['preset_mark_id']).html(res.data.MarkData[i]['preset_name']);
+                                                    /* END */
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+
+                            // 批量设置价格
+                            function BulkSetPrice(obj) {
+                                layer.prompt({
+                                    title: false, 
+                                    formType: 3,
+                                    id: 'BulkSetPrice',
+                                    btn: ['确定', '关闭'],
+                                    closeBtn: 0,
+                                    success: function(layero, index){
+                                        $("#BulkSetPrice").find('input').attr('placeholder', '批量设置价格');
+                                        $("#BulkSetPrice").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                        $("#BulkSetPrice").find('input').attr('onpaste', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                    }
+                                }, function(price, index){
+                                    layer.close(index);
+                                    // 规格中的价格
+                                    $('.users_price').val(price);
+                                    // 产品价格
+                                    $('#users_price').val(price);
+                                });
+                            }
+
+                            // 更新价格，取出最小的值赋值到价格中
+                            function UpPrice(obj) {
+                                var UsersPriceArray = new Array();
+                                $('.users_price').each(function(){
+                                    UsersPriceArray.push($(this).val());
+                                });
+                                // 取出最小值
+                                var MinValue = Math.min.apply(Math, UsersPriceArray);
+                                $('#users_price').val(MinValue);
+                            }
+
+                            // 批量设置价格
+                            function BulkSetStock(obj) {
+                                layer.prompt({
+                                    title: false, 
+                                    formType: 3,
+                                    id: 'BulkSetStock',
+                                    btn: ['确定', '关闭'],
+                                    closeBtn: 0,
+                                    success: function(layero, index){
+                                        $("#BulkSetStock").find('input').attr('placeholder', '批量设置库存');
+                                        $("#BulkSetStock").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                        $("#BulkSetStock").find('input').attr('onpaste', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                    }
+                                }, function(stock, index){
+                                    layer.close(index);
+                                    // 单个库存
+                                    $('.stock_count').val(stock);
+                                    $('.stock_count').attr('data-old_stock',stock);
+                                    stock_count = Number($('.stock_count').length) * Number(stock);
+                                    $('#stock_count').val(stock_count);
+                                    // 禁用库存框
+                                    $('#stock_count').attr('readonly','readonly');
+                                });
+                            }
+
+                            // 更新库存量
+                            function UpStock(obj) {
+                                var stock_count = $('#stock_count').val();
+                                var new_stock = $(obj).val();
+                                var old_stock = $(obj).attr('data-old_stock');
+                                $(obj).attr('data-old_stock',new_stock);
+                                if (Number(old_stock) > Number(new_stock)) {
+                                    new_stock   = Number(old_stock) - Number(new_stock);
+                                    stock_count = Number(stock_count) - Number(new_stock);
+                                }else{
+                                    new_stock   = Number(new_stock) - Number(old_stock);
+                                    stock_count = Number(stock_count) + Number(new_stock);
+                                }
+                                $('#stock_count').val(stock_count);
+                                $('#stock_count').attr('readonly','readonly');
+                            }
+
+                            // 合并单元格
+                            function MergeCells() {
+                                var tab = document.getElementById("spec_input_tab");
+                                var maxCol = 2, val, count, start; 
+                                if (tab != null) {
+                                    for (var col = maxCol - 1; col >= 0; col--) {
+                                        count = 1;
+                                        val = "";
+                                        for (var i = 0; i < tab.rows.length; i++) {
+                                            if (val == tab.rows[i].cells[col].innerHTML) {
+                                                count++;
+                                            } else {
+                                                if (count > 1) { //合并
+                                                    start = i - count;
+                                                    tab.rows[start].cells[col].rowSpan = count;
+                                                    for (var j = start + 1; j < i; j++) {
+                                                        tab.rows[j].cells[col].style.display = "none";
+                                                    }
+                                                    count = 1;
+                                                }
+                                                val = tab.rows[i].cells[col].innerHTML;
+                                            }
+                                        }
+                                        if (count > 1) { //合并，最后几行相同的情况下
+                                            start = i - count;
+                                            tab.rows[start].cells[col].rowSpan = count;
+                                            for (var j = start + 1; j < i; j++) {
+                                                tab.rows[j].cells[col].style.display = "none";
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        </script>
+                    {/if}
+                    <!-- 产品价格属性 -->
+                {/if}
+
+                {include file="archives/get_field_addonextitem" /}
+            </div>
+            <!-- 常规信息 -->
+
+            <!-- 产品参数 -->
+            <div class="ncap-form-default tab_div_2" style="display:none;">
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="add_time">商品参数</label>
+                    </dt>
+                    <dd class="opt">
+                        <div>
+                            <div class="selectPro_arg">
+                                <select name="attrlist_id" id="attrlist_id" onchange="AttrListSelect(this);">
+                                    <option value="0">请选择参数</option>
+                                    {volist name="AttrList" id="vo"}
+                                        <option value="{$vo.list_id}">{$vo.list_name}</option>
+                                    {/volist}
+                                </select>
+                                <!-- &nbsp;<a href="JavaScript:void(0);" onclick="attrlistLayer(this)" style="font-size: 12px;padding-left: 10px;">[管理]</a> -->
+                            </div>
+                            <div id='AttrSelectName' style="margin: 1px;"></div>
+                        </div>
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <script type="text/javascript">
+                    // 参数选择
+                    function AttrListSelect(obj) {
+                        var aid = '';
+                        var list_id = $(obj).val();
+                        if (parseInt(list_id) < 1) {
+                            $("#AttrSelectName").empty();
+                            return false;
+                        }
+                        $('#AttrSelectName').html('<div style="color: red;font-size: 12px;text-align: center;">加载中……</div>');
+                        // 商品栏目切换时 ajax 调用  返回不同的属性输入框     
+                        $.ajax({
+                            type:'GET',
+                            data:{aid:aid, list_id:list_id, _ajax:1}, 
+                            url :"{:url('ShopProduct/ajax_get_shop_attr_input')}",
+                            success:function(data) {
+                                $("#AttrSelectName").empty().append(data);
+                            }
+                        });
+                    }
+
+                    function attrlistLayer(obj)
+                    {
+                        var url = "{:url('ShopProduct/attrlist_index', ['oldinlet'=>1])}";
+                        //iframe窗
+                        layer.open({
+                            type: 2,
+                            title: '商品参数管理',
+                            fixed: true, //不固定
+                            shadeClose: false,
+                            shade: 0.3,
+                            area: ['100%', '100%'],
+                            content: url,
+                            end: function(index){
+                                var list_id = $('#attrlist_id').val();
+                                $.ajax({
+                                    url:"{:url('Product/ajax_get_shop_attrlist')}",
+                                    type:'GET',
+                                    data:{list_id:list_id, _ajax:1},
+                                    success:function(res) {
+                                        var html = "<option value='0'>请选择参数</option>";
+                                        html += res;
+                                        $("#attrlist_id").empty().append(html);
+
+                                        // 删掉选中的参数之后，默认不选中，参数属性同时要清空掉
+                                        if ($('#attrlist_id').val() < 1) {
+                                            $("#AttrSelectName").empty();
+                                        }
+                                    },
+                                    error: function(e){
+                                        showErrorAlert(e.responseText);
+                                    }
+                                });
+                            }
+                        });
+                        layer.full(iframes);
+                    }
+                </script>
+            </div>
+            <!-- 产品参数 -->
+
+            <!-- SEO设置 -->
+            <div class="ncap-form-default tab_div_3" style="display:none;">
+                <dl class="row" style="z-index:2;">
+                    <dt class="tit">
+                        <label>TAG标签</label>
+                    </dt>
+                    <dd class="opt">          
+                        <input type="text" value="" name="tags" id="tags" class="input-txt" placeholder="多个标签之间以逗号隔开" autocomplete="off" oninput="get_common_tagindex_input(this);" onfocus="$('#often_tags').hide();" onkeyup="this.value=this.value.replace(/[\，]/g,',');" onpaste="this.value=this.value.replace(/[\，]/g,',')">&nbsp;
+                        <a href="javascript:void(0);" onclick="get_common_tagindex(this);">显示常用标签</a>&nbsp;<img id="tag_loading" src="__STATIC__/common/images/loading.gif" style="display: none;" />
+                        <div class="often_tags" id="often_tags" style="display: none;"></div>
+                        <div class="often_tags" id="often_tags_input" style="display: none;"></div>
+                        <input type="hidden" id="tags_click_count">
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="seo_title">SEO标题</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" value="" name="seo_title" id="seo_title" class="input-txt">
+                        <p class="notic">一般不超过80个字符，为空时系统自动构成，可以到 <a href="{:url('Seo/index', array('inc_type'=>'seo'))}">SEO设置 - SEO基础</a> 中设置构成规则。</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>SEO关键词</label>
+                    </dt>
+                    <dd class="opt">          
+                        <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:40px;"></textarea>
+                        <span class="err"></span>
+                        <p class="notic">一般不超过100个字符，多个关键词请用英文逗号（,）隔开，建议3到5个关键词。</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>SEO描述</label>
+                    </dt>
+                    <dd class="opt">          
+                        <textarea rows="5" cols="60" id="seo_description" name="seo_description" style="height:60px;"></textarea>
+                        <span class="err"></span>
+                        <p class="notic">一般不超过200个字符，不填写时系统自动提取正文的前200个字符</p>
+                    </dd>
+                </dl>
+            </div>
+            <!-- SEO设置 -->
+
+            <!-- 其他参数 -->
+            <div class="ncap-form-default tab_div_4" style="display:none;">
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="author">作者</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" value="{$Think.session.admin_info.pen_name|default='小编'}" name="author" id="author" class="input-txt">
+                        &nbsp;<a href="javascript:void(0);" onclick="set_author();" class="ncap-btn ncap-btn-green">设置</a>
+                        <p class="notic">设置作者默认名称（将同步至管理员笔名）</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>浏览量</label>
+                    </dt>
+                    <dd class="opt">    
+                        <input type="text" value="{$rand_arcclick}"" name="click" id="click" class="input-txt">
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>阅读权限</label>
+                    </dt>
+                    <dd class="opt">
+                        <select name="arcrank" id="arcrank">
+                            {volist name="arcrank_list" id="vo"}
+                            <option value="{$vo.rank}">{$vo.name}</option>
+                            {/volist}
+                        </select>    
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="articleForm">发布时间</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" class="input-txt" id="add_time" name="add_time" value="{php}echo date('Y-m-d H:i:s'){/php}" autocomplete="off">        
+                        <span class="add-on input-group-addon">
+                            <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                        </span> 
+                        <span class="err"></span>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="tempview">文档模板</label>
+                    </dt>
+                    <dd class="opt">
+                        <select name="tempview" id="tempview">
+                            {volist name='$templateList' id='vo'}
+                            <option value="{$vo}" {eq name='$vo' value='$tempview'}selected{/eq}>{$vo}</option>
+                            {/volist}
+                        </select>
+                        <input type="hidden" name="type_tempview" value="{$tempview}" />
+                        <span class="err"></span>
+                    </dd>
+                </dl>
+                <dl class="row" {notin name='$seo_pseudo' value='2'}style="display: none;"{/notin}>
+                    <dt class="tit">
+                        <label>自定义文件名</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" value="" name="htmlfilename" id="htmlfilename" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\w\-]/g,'-');" onpaste="this.value=this.value.replace(/[^\w\-]/g,'-');" class="input-txt">.html
+                        <span class="err"></span>
+                        <p class="notic">自定义文件名可由字母、数字、下划线(_)、连接符(-)等符号组成，除此之外其他字符将自动转为连接符(-)</p>
+                    </dd>
+                </dl>
+            </div>
+            <!-- 其他参数 -->
+            
+            <div class="ncap-form-default">
+                <div class="bot">
+                    <input type="hidden" name="gourl" value="{$gourl|default=''}">
+                    <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                </div>
+            </div> 
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        $('#add_time').layDate();   
+     
+        //选项卡切换列表
+        $('.tab-base').find('.tab').click(function(){
+            $('.tab-base').find('.tab').each(function(){
+                $(this).removeClass('current');
+            });
+            $(this).addClass('current');
+            var tab_index = $(this).data('index');          
+            $(".tab_div_1, .tab_div_2, .tab_div_3, .tab_div_4").hide();          
+            $(".tab_div_"+tab_index).show();
+        });
+
+        $('input[name=is_jump]').click(function(){
+            if ($(this).is(':checked')) {
+                $('.dl_jump').show();
+            } else {
+                $('.dl_jump').hide();
+            }
+        });
+
+        var dftypeid = {$typeid|default='0'};
+        $('#typeid').change(function(){
+            var current_channel = $(this).find('option:selected').data('current_channel');
+            if (0 < $(this).val() && {$channeltype} != current_channel) {
+                showErrorMsg('请选择对应模型的栏目！');
+                $(this).val(dftypeid);
+            } else if ({$channeltype} == current_channel) {
+                layer.closeAll();
+            }
+            GetAddonextitem(1, $(this).val(), {$channeltype}, 0, true);
+        });
+
+        $(document).click(function(){
+            $('#often_tags').hide();
+            $('#often_tags_input').hide();
+            event.stopPropagation();
+        });
+
+        $('#often_tags').click(function(){
+            $('#often_tags').show();
+            event.stopPropagation();
+        });
+    });
+    
+    function change_prom_type(val) {
+        if ( val == 1 ){
+            $("input[name=prom_type_vir]:eq(0)").attr("checked",'checked');
+            $("#fahuoxingshi").show();
+        } else if ( val == 2 ){
+            $("#wangpanxiazai").hide();
+            $("#wenbenneirong").hide();
+        } else if ( val == 3 ){
+            $("#wangpanxiazai").show();
+            $("#wenbenneirong").hide();
+        } else if( val == 4 ){
+            $("#wangpanxiazai").hide();
+            $("#wenbenneirong").show();
+        }
+        else {
+            $("#wangpanxiazai").hide();
+            $("#wenbenneirong").hide();
+            $("#fahuoxingshi").hide();
+        }
+    }
+
+    // 判断输入框是否为空
+    function check_submit(){
+        if($.trim($('input[name=title]').val()) == ''){
+            showErrorMsg('标题不能为空！');
+            $($('.tab-base').find('.tab')[0]).trigger('click'); 
+            $('input[name=title]').focus();
+            return false;
+        }
+        if ($('#typeid').val() == 0) {
+            showErrorMsg('请选择栏目…！');
+            $($('.tab-base').find('.tab')[0]).trigger('click'); 
+            $('#typeid').focus();
+            return false;
+        }
+        if ($('input[name=prom_type]:checked').val() == 1) {
+            if($('input[name=prom_type_vir]:checked').val() == 2 && $.trim($('input[name=netdisk_url]').val()) == ''){
+                showErrorMsg('网盘地址不能为空！');
+                $($('.tab-base').find('.tab')[0]).trigger('click'); 
+                $('input[name=netdisk_url]').focus();
+                return false;
+            }
+            if($('input[name=prom_type_vir]:checked').val() == 3 && $.trim($('textarea[name=text_content]').val()) == ''){
+                showErrorMsg('虚拟文本内容不能为空！');
+                $($('.tab-base').find('.tab')[0]).trigger('click'); 
+                $('textarea[name=text_content]').focus();
+                return false;
+            }
+        }
+        
+        layer_loading('正在处理');
+        if(!ajax_check_htmlfilename())
+        {
+            layer.closeAll();
+            showErrorMsg('自定义文件名已存在！');
+            $('input[name=htmlfilename]').focus();
+            return false;
+        }
+
+        $('#post_form').submit();
+    }
+
+    function img_call_back(fileurl_tmp)
+    {
+        $("#litpic_local").val(fileurl_tmp);
+        $("#img_a").attr('href', fileurl_tmp);
+        $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+        $("input[name=is_litpic]").attr('checked', true); // 自动勾选属性[图片]
+    }
+
+    // 上传产品相册回调函数
+    function proimg_call_back(paths){
+        
+        var  last_div = $(".images_upload_tpl").html();
+        for (var i=0;i<paths.length ;i++ )
+        {
+            $(".images_upload:eq(0)").before(last_div);  // 插入一个 新图片
+            $(".images_upload:eq(0)").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+            $(".images_upload:eq(0)").find('img').attr('src',paths[i]);// 修改他的图片路径
+            $(".images_upload:eq(0)").find('a:eq(1)').attr('onclick',"ClearPicArr2(this,'"+paths[i]+"')").text('');
+            $(".images_upload:eq(0)").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+        }             
+    }
+    /*
+     * 上传之后删除组图input     
+     * @access   public
+     * @val      string  删除的图片input
+     */
+    function ClearPicArr2(obj,path)
+    {
+        $(obj).parent().parent().remove(); // 删除完服务器的, 再删除 html上的图片
+        $.ajax({
+            type:'POST',
+            url:"{:url('Uploadify/delupload')}",
+            data:{action:"del", filename:path,_ajax:1},
+            success:function(){}
+        });
+    }
+
+
+    /** 以下 产品参数相关 js*/
+    $(document).ready(function(){
+        // 产品栏目切换时 ajax 调用  返回不同的属性输入框
+        $("#typeid").change(function(){
+            get_attr_input();
+        });
+        // 触发产品栏目
+        // $("#typeid").trigger('change'); 
+    });
+
+    // 产品栏目切换时 ajax 调用  返回不同的参数输入框
+    function get_attr_input()
+    {
+        var aid = '';
+        var typeid = $("#typeid").val();
+        if (parseInt(typeid) < 1) {
+            return false;
+        }
+        $('#product_attr_table').html('<div style="color: red;font-size: 12px;text-align: center;">加载中……</div>');
+        // 产品栏目切换时 ajax 调用  返回不同的属性输入框     
+        $.ajax({
+            type:'GET',
+            data:{aid:aid,typeid:typeid,_ajax:1}, 
+            url:"{:url('Product/ajax_get_attr_input')}",
+            success:function(data){
+                $("#product_attr_table").html('').append(data);
+            },
+            error: function(e){
+                $('#product_attr_table').html('<div style="color: red;font-size: 12px;text-align: center;">加载失败，点击此处<a href="javascript:void(0);" onClick="get_attr_input();">刷新</a></div>');
+            }
+       });
+    }
+
+    /** 以下 产品相册的拖动排序相关 js*/
+
+    $( ".sort-list" ).sortable({
+        start: function( event, ui) {
+        
+        }
+        ,stop: function( event, ui ) {
+            // var rdata = '', url="{:url('Product/ajax_sort_proimg')}";
+            // var container = $(ui.item).closest("TB");
+            // var LIs = $(container).find("DIV");
+            // $(LIs).each(function(){
+            //     console.log($(this))
+            //     rdata += $(this).attr('rel') + ',' + $(this).index() + '|';
+            // });
+            // rdata = rdata.substr(0, (rdata.length-1));
+            // console.log(rdata)
+            // $.post(url, {str:rdata}, function(){
+            
+            // });
+        }
+    });
+    //因为他们要拖动，所以尽量设置他们的文字不能选择。 
+    $( ".sort-list" ).disableSelection();
+
+</script>
+
+{include file="public/footer" /}

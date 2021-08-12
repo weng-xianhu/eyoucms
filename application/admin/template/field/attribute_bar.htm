@@ -1,0 +1,18 @@
+
+    <div class="fixed-bar">
+        <div class="item-title">
+            {in name="$Think.const.ACTION_NAME" value='attribute_index'}
+            <a class="back" href="{:url('Channeltype/index')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a></a>
+            {else /}
+            <a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            {/in}
+            <div class="subject">
+                <h3>模型管理</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                <li><a href="{:url('Channeltype/edit', array('id'=>8))}" class="tab"><span>编辑模型</span></a></li>
+                <li><a href="{:url('Field/attribute_index')}" class="tab current"><span>内容字段</span></a></li>
+            </ul>
+        </div>
+    </div>

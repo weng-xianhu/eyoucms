@@ -1,11 +1,10 @@
 {include file="public/layout" /}
 
-<body style="background-color: #FFF; overflow: auto;">
+<body class="bodystyle">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
-    {include file="field/channel_bar" /}
     <form class="form-horizontal" id="post_form" action="{:url('Field/channel_edit')}" method="post">
         <!-- 常规选项 -->
         <div class="ncap-form-default tab_div_1">
@@ -29,14 +28,16 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="dtype"><em>*</em>字段类型</label>
+                    <label for="dtype"><em>*</em>数据类型</label>
                 </dt>
                 <dd class="opt">
-                    <select name="dtype" id="dtype">
                     {volist name='$fieldtype_list' id='vo'}
-                    <option value="{$vo.name}" data-ifoption="{$vo.ifoption|default=0}" {eq name="$info.dtype" value="$vo.name"}selected{/eq}>{$vo.title}</option>
+                        <div style="width: 150px; float: left;">
+                            <label><input type="radio" name="dtype" value="{$vo.name}" data-ifoption="{$vo.ifoption|default=0}" {eq name="$info.dtype" value="$vo.name"} checked="checked" {/eq} data-text="{$vo.title}">{$vo.title}</label>&nbsp;
+                        </div>
+                        {if condition="$i % 4 == 0"}<br/>{/if}
                     {/volist}
-                    </select>
+                    <input type="hidden" name="old_dtype" value="{$info.dtype}">
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
@@ -67,7 +68,7 @@
                         <span class="err"></span>
                         <p class="notic"></p>
                     </dd>
-                    <input type="hidden" id="GetRegionDataUrl" value="{:url('Field/get_region_data')}">
+                    <input type="hidden" id="GetRegionDataUrl" value="{:url('Field/ajax_get_region_data')}">
                     <input type="hidden" name="region_data[region_id]" id="RegionId" value="{$region.region_id}">
                 </dl>
 
@@ -90,8 +91,9 @@
                 </dt>
                 <dd class="opt">
                     <textarea rows="5" cols="60" id="dfvalue" name="dfvalue" placeholder="如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。" style="height:60px;">{$info.dfvalue|default=''}</textarea>
+                    <textarea rows="5" cols="60" name="old_dfvalue" style="display: none;">{$info.dfvalue|default=''}</textarea>
                     <span class="err"></span>
-                    <p class="notic">如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。</p>
+                    <p class="notic">1、如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。<br/>2、特殊符号会被过滤掉，比如：&、=、?等</p>
                 </dd>
             </dl>
             <dl class="row" id="dl_dfvalue_unit">
@@ -101,6 +103,23 @@
                 <dd class="opt">
                     <input type="text" value="{$info.dfvalue_unit|default=''}" name="dfvalue_unit" id="dfvalue_unit" placeholder="比如：元、个、件等等" class="input-txt">
                     <p class="notic">比如：元、个、件等等</p>
+                </dd>
+            </dl>
+            <dl class="row" id='IsRelease' {eq name='$userConfig.users_open_release' value='0'} style="display: none;" {/eq}>
+                <dt class="tit">
+                    <label>应用于投稿</label>
+                </dt>
+                <dd class="opt">
+                    <div class="onoff">
+                        <label for="IsRelease_1" class="cb-enable {if condition='$info.is_release == 1'}selected{/if}">是</label>
+                        <input id="IsRelease_1" name="is_release" value="1" type="radio" {if condition="$info.is_release == 1"}checked="checked"{/if}>
+
+                        <label for="IsRelease_0" class="cb-disable {if condition='!isset($info.is_release) || empty($info.is_release)'}selected{/if}">否</label>
+                        <input id="IsRelease_0" name="is_release" value="0" type="radio" {if condition="!isset($info.is_release) || empty($info.is_release)"}checked="checked"{/if}>
+                    </div>
+                    &nbsp;
+                    <span class="err"></span>
+                    <p class="notic">是否应用于会员投稿中</p>
                 </dd>
             </dl>
             <dl class="row" id='IsScreening' style="display: none;">
@@ -114,11 +133,12 @@
 
                         <label for="IsScreening_0" class="cb-disable {if condition='!isset($info.is_screening) || empty($info.is_screening)'}selected{/if}">否</label>
                         <input id="IsScreening_0" name="is_screening" value="0" type="radio" {if condition="!isset($info.is_screening) || empty($info.is_screening)"}checked="checked"{/if}>
+                        <input type="hidden" name="IsScreening_status" value="0">
                     </div>
                     &nbsp;
                     <span class="err"></span>
                     <p class="notic">是否应用于列表的条件筛选中</p>
-                    <a id="call_tags_help" href="https://www.eyoucms.com/plus/view.php?aid=7881" target="_blank" class="{if condition='!isset($info.is_screening) || empty($info.is_screening)'}none{/if}">查看标签调用</a>
+                    <a id="call_tags_help" href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=7881','筛选标签调用')" class="{if condition='!isset($info.is_screening) || empty($info.is_screening)'}none{/if}">查看标签调用</a>
                 </dd>
             </dl>
             <!-- <dl class="row" id='IsSelect' style="display: none;">
@@ -197,15 +217,27 @@
         var screening_value = $('input:radio[name="is_screening"]:checked').val();
         $('#IsScreening_'+screening_value).click();
 
-        dtype_change($('#dtype'));
-        $('#dtype').change(function(){
+        dtype_change($('input[name=dtype]:checked'));
+        $('input[name=dtype]').click(function(){
+            /*多选项不能切换为指定的字段类型*/
+            var dtype = $(this).val();
+            var old_dtype = $('input[name=old_dtype]').val();
+            if (('checkbox' == old_dtype && 0 <= $.inArray(dtype, ['radio','select'])) || 'media' == old_dtype) {
+                $("input[name=dtype][value="+old_dtype+"]").attr("checked",'checked');
+                var old_dtype_text = $("input[name=dtype][value="+old_dtype+"]").data('text');
+                var dtype_text = $("input[name=dtype][value="+dtype+"]").data('text');
+                showErrorMsg(old_dtype_text+"不能更改为"+dtype_text+"！");
+                $(this).focus();
+                return false;
+            }
+            /*end*/
             dtype_change(this);
         });
 
         function dtype_change(obj) {
             var dtype = $(obj).val();
-            var ifoption = $(obj).find('option:selected').data('ifoption');
-            if (0 <= $.inArray(dtype, ['datetime','switch','img','imgs','files'])) {
+            var ifoption = $(obj).data('ifoption');
+            if (0 <= $.inArray(dtype, ['datetime','switch','img','imgs','file','media'])) {
                 $('#dl_dfvalue').hide();
                 ClearAreaData();
             } else if ('region' == dtype) {
@@ -222,8 +254,11 @@
             }
             if (0 <= $.inArray(dtype, ['region','checkbox','radio','select'])) {
                 $('#IsScreening').show();
+                $('input[name=IsScreening_status]').val(1);
             } else {
                 $('#IsScreening').hide();
+                $('input[name=IsScreening_status]').val(0);
+                $('#select_title').html('指定栏目');
             }
             if (0 <= $.inArray(dtype, ['text','int','float','decimal'])) {
                 $('#dl_dfvalue_unit').show();
@@ -250,7 +285,7 @@
         var url = $('#GetRegionDataUrl').val();
         $.ajax({
             url: url,
-            data: {parent_id:parent_id},
+            data: {parent_id:parent_id,_ajax:1},
             type:'post',
             dataType:'json',
             success:function(res){
@@ -274,7 +309,7 @@
             },
             error : function() {
                 layer.closeAll();
-                layer.alert('网络失败，请刷新页面后重试', {icon: 5});
+                layer.alert(ey_unknown_error, {icon: 5});
             }
         });
     }
@@ -291,6 +326,7 @@
         $('#call_tags_help').hide();
     });
 
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     function check_submit(){
         if($('input[name="title"]').val() == ''){
             showErrorMsg('字段标题不能为空！');
@@ -310,18 +346,18 @@
             $('input[name=name]').focus();
             return false;
         }
-        if($('#dtype').val() == ''){
+        if($('input[name=dtype]:checked').val() == ''){
             showErrorMsg('请选择字段类型！');
             $('input[name=dtype]').focus();
             return false;
-        } else if ('region' == $('#dtype').val()){
+        } else if ('region' == $('input[name=dtype]:checked').val()){
             if (-1 == $('#RegionId').val()) {
                 showErrorMsg('请选择区域范围！');
                 $('#province').focus();
                 return false;
             }
         } else {
-            var ifoption = $('#dtype').find('option:selected').data('ifoption');
+            var ifoption = $('input[name=dtype]:checked').data('ifoption');
             if (1 == ifoption) {
                 if ($.trim($('#dfvalue').val()) == '') {
                     showErrorMsg('默认值不能为空！');
@@ -335,6 +371,20 @@
                     $('#dfvalue').focus();
                     return false;
             　　}
+            }
+            
+            if (0 <= $.inArray($('input[name=dtype]:checked').val(), ['radio','checkbox','select'])) {
+                var dfvalue = $.trim($('#dfvalue').val());
+                data = dfvalue.split(',');
+                for(var i = 0;i < data.length ;i++) {
+                    for(var j = i+1;j < data.length;j++) {
+                        if ($.trim(data[i]) == $.trim(data [j])){
+                            showErrorMsg('默认值不能含有相同的值！');
+                            $('#dfvalue').focus();
+                            return false;
+                        }
+                    }
+                }
             }
         }
         if (0 >= parseInt($('#typeid').find('option:selected').length)) {
@@ -355,7 +405,28 @@
         }
 
         layer_loading('正在处理');
-        $('#post_form').submit();
+        $.ajax({
+            type : 'post',
+            url : "{:url('Field/channel_edit', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
     }
 </script>
 

@@ -21,7 +21,7 @@ class Region extends Base
     /**
     * 获取子类列表
     */  
-    public function ajax_get_region($pid = 0, $text = ''){
+    /*public function ajax_get_region($pid = 0, $text = ''){
         $data = model('Region')->getList($pid);
         $html = "<option value=''>--".urldecode($text)."--</option>";
         foreach($data as $key=>$val){
@@ -29,5 +29,5 @@ class Region extends Base
         }
 
         return $html;
-    }
+    }*/
 }

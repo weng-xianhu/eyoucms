@@ -1,5 +1,5 @@
 {include file="public/layout" /}
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
@@ -7,20 +7,24 @@
     <div class="flexigrid">
         <div class="mDiv">
             <div class="ftitle">
-                <h3>权限组列表</h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
+                {eq name="'AuthRole@add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-href="{:url('AuthRole/add')}" onclick="openFullframe(this, '新增权限组', '100%', '100%');">
+                        <div class="add" title="新增权限组">
+                            <span><i class="layui-icon layui-icon-addition"></i>新增角色</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" action="{:url('AuthRole/index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索相关数据...">
                         <input type="submit" class="btn" value="搜索">
+						<i class="fa fa-search"></i>
                     </div>
-                    <!-- <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('AuthRole/index')}';">
-                    </div> -->
                 </div>
             </form>
         </div>
@@ -30,13 +34,13 @@
                     <thead>
                     <tr>
                         <th class="sign w40" axis="col0">
-                            <div class="tc">选择</div>
+                            <div class="tc"><input type="checkbox" class="checkAll"></div>
                         </th>
                         <th abbr="article_show" axis="col5" class="w40">
                             <div class="tc">ID</div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="">用户组</div>
+                            <div class="text-l10">用户组</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w100">
                             <div class="tc">更新时间</div>
@@ -66,6 +70,8 @@
                                 <div class="w40 tc">
                                     {empty name="$vo.built_in"}
                                     <input type="checkbox" name="ids[]" value="{$vo.id}">
+									{else /}
+									<input disabled type="checkbox" name="ids[]" value="{$vo.id}">
                                     {/empty}
                                 </div>
                             </td>
@@ -75,9 +81,9 @@
                                 </div>
                             </td>
                             <td style="width: 100%">
-                                <div style="">
+                                <div class="text-l10">
                                     {eq name="'AuthRoleAuthRole@edit'|is_check_access" value="1"}
-                                    <a href="{:url('AuthRole/edit',array('id'=>$vo['id']))}">{$vo.name}</a>
+                                    <a href="javascript:void(0);" data-href="{:url('AuthRole/edit',array('id'=>$vo['id']))}" onclick="openFullframe(this, '编辑角色', '100%', '100%');">{$vo.name}</a>
                                     {else /}
                                     {$vo.name}
                                     {/eq}
@@ -88,15 +94,19 @@
                                     {$vo.update_time|date='Y-m-d',###}
                                 </div>
                             </td>
-                            <td>
+                            <td class="operation">
                                 <div class="w120 tc">
                                     {eq name="'AuthRole@edit'|is_check_access" value="1"}
-                                    <a href="{:url('AuthRole/edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    <a href="javascript:void(0);" data-href="{:url('AuthRole/edit',array('id'=>$vo['id']))}" class="btn blue" onclick="openFullframe(this, '编辑角色', '100%', '100%');">编辑</a>
                                     {/eq}
 
                                     {eq name="'AuthRole@del'|is_check_access" value="1"}
                                     {empty name="$vo.built_in"}
-                                    <a class="btn red"  href="javascript:void(0)" data-url="{:url('AuthRole/del')}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+									<i></i>
+                                    <a class="btn red"  href="javascript:void(0)" data-url="{:url('AuthRole/del')}" data-id="{$vo.id}" onClick="delfun(this);">删除</a>
+									{else /}
+                                    <i></i>
+									<a class="btn grey"  href="javascript:void(0)" data-id="{$vo.id}">删除</a>
                                     {/empty}
                                     {/eq}
                                 </div>
@@ -112,34 +122,35 @@
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
-                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                    <input type="checkbox" class="checkAll">
                 </div>
                 {eq name="'AuthRole@del'|is_check_access" value="1"}
                 <div class="fbutton">
-                    <a onclick="batch_del(this, 'ids');" data-url="{:url('AuthRole/del')}">
-                        <div class="add" title="批量删除">
-                            <span><i class="fa fa-close"></i>批量删除</span>
-                        </div>
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('AuthRole/del')}" class="layui-btn layui-btn-primary">
+                            <span>批量删除</span>
                     </a>
                 </div>
                 {/eq}
-                {eq name="'AuthRole@add'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a href="{:url('AuthRole/add')}">
-                        <div class="add" title="新增权限组">
-                            <span class="red"><i class="fa fa-plus"></i>新增权限组</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
+                {include file="public/page" /}
             </div>
             <div style="clear:both"></div>
         </div>
-        <!--分页位置-->
-        {$page}
     </div>
 </div>
 <script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    
     $(document).ready(function(){
         // 表格行点击选中切换
         $('#flexigrid > table>tbody >tr').click(function(){

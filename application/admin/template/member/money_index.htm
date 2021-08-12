@@ -1,6 +1,6 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
@@ -8,25 +8,34 @@
     <div class="flexigrid">
         <div class="mDiv">
             <div class="ftitle">
-                <h3>账户充值记录</h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
+                {include file="member/order_bar" /}
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
-            <form class="navbar-form form-inline" action="{:url('Member/money_index')}" method="get" onsubmit="layer_loading('正在处理');">
+           
+            <form class="navbar-form form-inline" id="postForm" action="{:url('Member/money_index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
-                    <div class="sDiv2 fl" style="margin-right: 6px;">
+                    <div class="fl">
+                        <!-- #weapp_ExportOrder_btn# -->
+                    </div>
+                    <div class="sDiv2">
+                        <select name="status" class="select" style="margin:0px 5px;">
+                            <option value="">--订单状态--</option>
+                            {volist name="$pay_status_arr" id="vo"}
+                            <option value="{$key}" {eq name="$Request.param.status" value="$key"} selected {/eq}>{$vo}</option>
+                            {/volist}
+                        </select>
+                    </div>
+                    <div class="sDiv2">
+                        <input type="text" name="add_time_begin" id="add_time_begin" value="{$Request.param.add_time_begin}" class="qsbox" autocomplete="off" placeholder="起始日期">
+                    </div>
+                    &nbsp;至&nbsp;
+                    <div class="sDiv2">
+                        <input type="text" name="add_time_end" id="add_time_end" value="{$Request.param.add_time_end}" class="qsbox" autocomplete="off" placeholder="结束日期">
+                    </div>
+                    <div class="sDiv2" style="margin-right: 6px;">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索订单号...">
                         <input type="submit" class="btn" value="搜索">
-                    </div>
-                    <!-- <div class="sDiv2 fl" style="margin-right: 6px;">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Member/money_index')}';">
-                    </div> -->
-                    <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
-                        <input type="button" class="btn current" value="接口配置" onclick="window.location.href='{:url("Member/pay_set")}';">
-                    </div>
-                    <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
-                        <input type="button" class="btn" value="账户充值记录" onclick="window.location.href='{:url("Member/money_index")}';">
+						<i class="fa fa-search"></i>
                     </div>
                 </div>
             </form>
@@ -36,13 +45,14 @@
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
                     <thead>
                     <tr>
-                        <th class="sign w10" axis="col0">
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="">订单号</div>
+                            <div class="text-l10">订单号</div>
                         </th>
                         <th abbr="ac_id" axis="col4" class="w100">
-                            <div class="tc">充值金额</div>
+                            <div class="tc">充值金额<span class="hint" data-hint="当前列表订单总金额：￥{$total_money|default='0.00'}"><i class="fa fa-jpy ml5"></i></span></div>
                         </th>
                         <th abbr="article_title" axis="col3" class="w150">
                             <div class="tc">用户名</div>
@@ -56,7 +66,7 @@
                         <th abbr="ac_id" axis="col4" class="w100">
                             <div class="tc">状态</div>
                         </th>
-                        <th abbr="ac_id" axis="col4" class="w100">
+                        <th abbr="ac_id" axis="col4" class="w120">
                             <div class="tc">操作</div>
                         </th>
                     </tr>
@@ -78,11 +88,10 @@
                         {foreach name="list" item="vo" key="k" }
                         <tr>
                             <td class="sign">
-                                <div class="w10 tc">
-                                </div>
+                                <div class="w40 tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.moneyid}"></div>
                             </td>
                             <td style="width: 100%">
-                                <div style="">
+                                <div class="text-l10">
                                     {$vo.order_number}
                                 </div>
                             </td>
@@ -93,7 +102,7 @@
                             </td>
                             <td class="sort">
                                 <div class="w150 tc">
-                                    <a href="{:url('Member/users_edit', ['id'=>$vo.users_id,'from'=>'money_index'])}">{$vo.username}</a>
+                                    <a href="javascript:void(0);" data-href="{:url('Member/users_edit', ['id'=>$vo.users_id,'from'=>'money_index'])}" onclick="openFullframe(this, '会员中心 - 用户基本资料');">{$vo.username}</a>
                                 </div>
                             </td>
                             <td>
@@ -115,15 +124,21 @@
                                 {$pay_status_arr[$vo['status']]}
                                 </div>
                             </td>
-                            <td class="">
-                                <div class="tc w100">
+                            <td class="operation">
+                                <div class="tc w120">
                                     {if condition='$vo.status == 1'}
-                                    <a class="btn blue"  href="javascript:void(0);" data-url="{:url('Member/money_mark_order')}" data-moneyid="{$vo.moneyid}" data-title="手工充值" data-status="{$vo.status}" data-username="{$vo.username}" data-money="{$vo.money}" onClick="handle(this);"><i class="fa fa-trash-o"></i>充值</a>
+                                        <a class="btn blue"  href="javascript:void(0);" data-url="{:url('Member/money_mark_order')}" data-moneyid="{$vo.moneyid}" data-title="手工充值" data-status="{$vo.status}" data-username="{$vo.username}" data-money="{$vo.money}" onClick="handle(this);">充值</a>
+										<i></i>
                                     {elseif condition='$vo.status == 3' /}
-                                    <a class="btn blue"  href="javascript:void(0);" data-url="{:url('Member/money_mark_order')}" data-moneyid="{$vo.moneyid}" data-title="撤销充值" data-status="{$vo.status}" data-username="{$vo.username}" data-money="{$vo.money}" onClick="handle(this);"><i class="fa fa-trash-o"></i>撤销</a>
-                                    {else /}
-                                    ————
-                                    {/if}
+                                        <a class="btn blue"  href="javascript:void(0);" data-url="{:url('Member/money_mark_order')}" data-moneyid="{$vo.moneyid}" data-title="撤销充值" data-status="{$vo.status}" data-username="{$vo.username}" data-money="{$vo.money}" onClick="handle(this);">撤销</a>
+										<i></i>
+									{else /}
+										<a class="btn grey"  href="javascript:void(0);" data-moneyid="{$vo.moneyid}" data-title="撤销充值" data-status="{$vo.status}" data-username="{$vo.username}" data-money="{$vo.money}">撤销</a>
+                                        <i></i>
+									{/if}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@money_del'|is_check_access" value="1"}
+                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Member/money_del')}" data-id="{$vo.moneyid}" onClick="delfun(this);">删除</a>
+                                    {/eq}
                                 </div>
                             </td>
                         </tr>
@@ -134,10 +149,48 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
-        <!--分页位置-->
-        {$page} </div>
-</div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Member/money_del')}" class="layui-btn layui-btn-primary">
+                            <span>批量删除</span>
+                    </a>
+                </div>
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+		
+    </div>
+</div> 
 <script>
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#add_time_begin' //指定元素
+        });
+        laydate.render({
+            elem: '#add_time_end' //指定元素
+        });
+    });
+
     $(document).ready(function(){
         // 表格行点击选中切换
         $('#flexigrid > table>tbody >tr').click(function(){
@@ -147,6 +200,10 @@
         // 点击刷新数据
         $('.fa-refresh').click(function(){
             location.href = location.href;
+        });
+
+        $('#postForm select[name=status]').change(function(){
+            $('#postForm').submit();
         });
     });
 
@@ -171,7 +228,7 @@
             $.ajax({
                 type : 'post',
                 url : $(obj).attr('data-url'),
-                data : {moneyid:$(obj).attr('data-moneyid')},
+                data : {moneyid:$(obj).attr('data-moneyid'), _ajax:1},
                 dataType : 'json',
                 success : function(res){
                     layer.closeAll();
@@ -180,12 +237,12 @@
                             window.location.reload();
                         });
                     }else{
-                        layer.alert(data.msg, {icon: 2, title:false});
+                        layer.alert(res.msg, {icon: 2, title:false});
                     }
                 },
                 error:function(){
                     layer.closeAll();
-                    layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+                    layer.alert(ey_unknown_error, {icon: 2, title:false});
                 }
             })
         }, function(index){

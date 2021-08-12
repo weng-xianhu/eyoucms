@@ -1,0 +1,250 @@
+{include file="public/layout" /}
+
+<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4; padding: 20px; ">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="shop/left" /}
+<div class="page" style="margin-left:98px;">
+    <div class="flexigrid">
+        <!-- 操作说明 -->
+        <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+            <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+                <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+            </div>
+            <ul>
+                <li style="color: red;">注意：该功能仅限于【可视化微信小程序（商城版）】插件</li>
+            </ul>
+        </div>
+        <div class="mDiv">
+            <div class="ftitle">
+                {eq name="$Think.const.CONTROLLER_NAME.'@add'|is_check_access" value="1"}
+                <div class="fbutton" style="float: none;">
+                    <a href="{:url('Coupon/add')}">
+                        <div class="add">
+                            <span><i class="layui-icon layui-icon-addition"></i>新增优惠券</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+            </div>
+            <form class="navbar-form form-inline" id="searchForm" action="{:url('Coupon/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="优惠券...">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" class="checkAll"></div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="text-l10">优惠券名称</div>
+                        </th>
+                        <th abbr="" axis="col6" class="w80">
+                            <div class="tc">优惠券类型</div>
+                        </th>
+                        <th abbr="" axis="col6" class="w150">
+                            <div class="tc">优惠规则</div>
+                        </th>
+                        <th abbr="" axis="col6" class="w100">
+                            <div class="tc">库存数量</div>
+                        </th>
+                        <th abbr="" axis="col6" class="w100">
+                            <div class="tc">已领取数量</div>
+                        </th>
+                        <th abbr="" axis="col6" class="w160">
+                            <div class="tc">有效期</div>
+                        </th>
+                        <th abbr="" axis="col6" class="w60">
+                            <div class="tc">启用</div>
+                        </th>
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                        {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                        {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc">
+                                    <input type="checkbox" name="ids[]" value="{$vo.coupon_id}">
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div class="text-l10" style="color: {$vo.coupon_color}">
+                                    {$vo.coupon_name}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w80 tc">
+                                    {eq name="$vo['coupon_type']" value='1'}
+                                    全站通用
+                                    {/eq}
+                                    {eq name="$vo['coupon_type']" value='2'}
+                                    指定商品
+                                    {/eq}
+                                    {eq name="$vo['coupon_type']" value='3'}
+                                    指定分类
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w150 tc">
+                                    满{$vo.conditions_use}减{$vo.coupon_price}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w100 tc">
+                                    {$vo.coupon_stock}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w100 tc">
+                                    {$vo.geted|default=0}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w160 tc">
+                                    {$vo.start_date|MyDate='Y-m-d H:i:s',###} 至 <br>{$vo.end_date|MyDate='Y-m-d H:i:s',###}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w60 tc">
+                                    {eq name="$vo['status']" value='1'}
+                                    <span class="yes" onclick="changeTableVal('shop_coupon', 'coupon_id', '{$vo.coupon_id}', 'status', this);"> <i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                    <span class="no" onclick="changeTableVal('shop_coupon', 'coupon_id', '{$vo.coupon_id}', 'status', this);"> <i class="fa fa-ban"></i>否</span>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="operation">
+                                <div class="w120 tc">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
+                                    <a href="{:url('Coupon/edit',array('id'=>$vo['coupon_id']))}" class="btn blue">
+                                        编辑
+                                    </a>
+                                    {/eq}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                                    <i></i>
+                                    <a class="btn red" href="javascript:void(0);" data-url="{:url('Coupon/del')}" data-id="{$vo.coupon_id}" onClick="delfun(this);">
+                                        删除
+                                    </a>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
+                                    <input type="text" onchange="changeTableVal('shop_coupon', 'coupon_id', '{$vo.coupon_id}', 'sort_order' ,this);" size="4" value="{$vo.sort_order}" />
+                                    {else /}
+                                    {$vo.sort_order}
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                        {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="footer-oper">
+            <span class="ml15">
+                <input type="checkbox" class="checkAll">
+            </span>
+            {eq name="'Coupon@del'|is_check_access" value="1"}
+            <a href="javascript:void(0);" onclick="batch_del(this, 'ids');" data-url="{:url('Coupon/del')}" class="layui-btn layui-btn-primary" title="批量删除">批量删除</a>
+            {/eq}
+            {include file="public/page" /}
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    $(document).ready(function() {
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function() {
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function() {
+            location.href = location.href;
+        });
+
+        // 批量操作
+        $(".dropdown-bt").click(function(){
+            $(".dropdown-menus").slideToggle(200);
+            event.stopPropagation();
+        })
+        $(document).click(function(){
+            $(".dropdown-menus").slideUp(200);
+            event.stopPropagation();
+        })
+    });
+
+</script>
+
+<script type="text/javascript">
+    /*模拟下拉选择 select */
+    $('.cate-select').on('click', '.placeholder', function(e) {
+        var parent = $(this).closest('.cate-select');
+        if (!parent.hasClass('is-open')) {
+            parent.addClass('is-open');
+            $('.cate-select.is-open').not(parent).removeClass('is-open');
+        } else {
+            parent.removeClass('is-open');
+        }
+        e.stopPropagation();
+    }).on('click', 'ul>li', function() {
+        var parent = $(this).closest('.cate-select');
+        parent.removeClass('is-open').find('.placeholder').text($(this).text());
+    });
+
+    $('body').on('click', function() {
+        $('.cate-select.is-open').removeClass('is-open');
+    });
+</script>
+{include file="public/footer" /}

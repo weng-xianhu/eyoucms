@@ -14,8 +14,19 @@
     <!-- <link rel="stylesheet" href="__PUBLIC__/plugins/ztree/css/amazeui.min.css"> -->
     <link rel="stylesheet" href="__PUBLIC__/plugins/ztree/css/iframe.css?v={$version}">
     <link rel="stylesheet" href="__PUBLIC__/plugins/ztree/css/zTreeStyle/zTreeStyle.css?v={$version}" type="text/css">
+    <link href="__SKIN__/font/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="__SKIN__/css/left_nav_tree.css?v={$version}" rel="stylesheet" type="text/css">
+    <style type="text/css">
+        .ztree{padding-top: 0;}
+        .ztree li{line-height: 22px;}
+        .ztree .node_name{font-size: 13px !important;}
+        .ui-layout-west{background-color: #fff;}
+        .title-cate{padding:6px 6px 8px 6px;border-bottom: 1px solid #eee;color: #999;font-size: 14px;}
+        .allshow{padding:10px 4px 6px;font-size: 13px;color: #333;cursor: pointer;}
+        .allshow i{font-style: normal;border: 1px solid #ddd;width: 12px;height: 12px;display:inline-block;line-height: 12px;text-align: center;color: #333;}
+    </style>
+    {include file="public/theme_css" /}
     <script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
-    <!-- <script src="__SKIN__/js/jquery-ui/jquery-ui.min.js"></script> -->
     <script src="__STATIC__/admin/js/jquery.layout-latest.min.js"></script>
     <script type="text/javascript" src="__PUBLIC__/plugins/ztree/js/jquery.ztree.core.min.js"></script>
     <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
@@ -23,16 +34,6 @@
     <script src="__STATIC__/admin/js/html5shiv.js"></script>
     <script src="__STATIC__/admin/js/respond.min.js"></script>
     <![endif]-->
-
-    <style type="text/css">
-        .ztree li{
-            line-height: 22px;
-        }
-        .ztree .node_name{
-            font-size: 13px !important;
-           
-        }
-    </style>
 
     <script type="text/javascript">
         var myLayout;
@@ -47,8 +48,8 @@
             /*  底部配置 */
             ,   south__spacing_open:        0       /* 底部边框大小*/
             /*  some pane-size settings*/
-            ,   west__minSize:              200     /*左侧最小宽度*/
-            ,   west__maxSize:              500     /*左侧最大宽度*/
+            ,   west__minSize:              160     /*左侧最小宽度*/
+            ,   west__maxSize:              160     /*左侧最大宽度*/
             /*  左侧配置 */
             ,   west__slidable:             false
             ,   west__animatePaneSizing:    false
@@ -66,7 +67,7 @@
             view:{
                 dblClickExpand:false
                 ,showLine:true
-                // ,showIcon: false
+                 ,showIcon: false
             },
             data:{
                 simpleData:{
@@ -141,6 +142,18 @@
             $.fn.zTree.init($("#tree"),setting,zNodes);
             $(".ui-layout-north li:first-child").click();
         });
+
+        function expandAll(obj){
+            var expand = $(obj).attr('data-expand');
+            var zTree = $.fn.zTree.getZTreeObj("tree");
+            if ('shrink' == expand) { // 展开时收缩
+                zTree.expandAll(false);
+                $(obj).attr('data-expand', 'spread').attr('title', '点击全部展开').html('<i>+</i>全部展开');
+            } else { // 收缩时展开
+                zTree.expandAll(true);
+                $(obj).attr('data-expand', 'shrink').attr('title', '点击全部收缩').html('<i>─</i>全部收缩');
+            }
+        }
     </script>
 
     <script type="text/javascript">
@@ -155,24 +168,17 @@
                 shade: 0.3,
                 maxmin: true, //开启最大化最小化按钮
                 area: ['600px', '520px'],
-                content: "//{$Request.host}{$Request.baseFile}?m=admin&c=Archives&a=release&iframe=1&lang={$Request.param.lang}",
-                success: function(layero, index){
-                    // var body = layer.getChildFrame('body', index);
-                    // var gourl = $('.curSelectedNode').attr('href');
-                    // if (!$.trim(gourl)) {
-                    //     gourl = "{:url('Archives/index_archives')}";
-                    // }
-                    // body.find('input[name=gourl]').val(gourl);
-                }
+                content: "//{$Request.host}{$Request.baseFile}?m=admin&c=Archives&a=release&iframe=1&lang={$Request.param.lang}"
             });
         }
     </script>
 </head>
-<body>
+<body style="padding: 20px 10px 20px 15px;background-color: #f4f4f4;">
     <div class="ui-layout-west">
-        <h3><a href="javascript:void(0);" onclick="quick_release();"><i class="fa fa-edit"></i>快捷发布文档</a></h3>
+        <div class="title-cate">内容栏目</div>
+        <div class="allshow" onclick="expandAll(this);" data-expand="init" title="点击全部展开"><i>+</i>全部展开</div>
         <div id="tree" class="ztree"></div>
     </div>
-    <div class="ui-layout-center"><iframe name="content_body" id="content_body" src="//{$Request.host}{$Request.baseFile}?m=admin&c=Archives&a=index_archives&lang={$Request.param.lang}" width="100%" height="100%" frameborder="0"></iframe></div>
+    <div class="index_archives ui-layout-center"><iframe name="content_body" id="content_body" src="//{$Request.host}{$Request.baseFile}?m=admin&c=Archives&a=index_archives&lang={$Request.param.lang}" style="padding-left: 10px;background-color: #f4f4f4; width: calc(100% -15px);" width="100%" height="100%" frameborder="0"></iframe></div>
 </body>
 </html>

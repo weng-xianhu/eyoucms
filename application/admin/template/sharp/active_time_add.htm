@@ -1,0 +1,204 @@
+{include file="public/layout" /}
+<body class="bodystyle">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="flexigrid">
+        <div class="ncap-form-default">
+            <form class="form-horizontal" id="post_form" action="{:url('Sharp/active_time_add')}" method="post">
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="limit"><em>*</em>活动日期</label>
+                    </dt>
+                    <dd class="opt">
+                        {$info.active_date|date='Y-m-d',###}
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="seckill_price"><em>*</em>活动场次</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin"><input type="checkbox" value="0" {if condition="in_array(0,$info.active_time)"} checked disabled {else /} name="active_time[]" {/if}/>00:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="1" {if condition="in_array(1,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>01:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="2" {if condition="in_array(2,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>02:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="3" {if condition="in_array(3,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>03:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="4" {if condition="in_array(4,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>04:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="5" {if condition="in_array(5,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>05:00</label>&nbsp;&nbsp;&nbsp;<br>
+                        <label class="curpoin"><input type="checkbox" value="6" {if condition="in_array(6,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>06:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="7" {if condition="in_array(7,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>07:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="8" {if condition="in_array(8,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>08:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="9" {if condition="in_array(9,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>09:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="10" {if condition="in_array(10,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>10:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="11" {if condition="in_array(11,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>11:00</label>&nbsp;&nbsp;&nbsp;<br>
+                        <label class="curpoin"><input type="checkbox" value="12" {if condition="in_array(12,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>12:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="13" {if condition="in_array(13,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>13:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="14" {if condition="in_array(14,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>14:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="15" {if condition="in_array(15,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>15:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="16" {if condition="in_array(16,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>16:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="17" {if condition="in_array(17,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>17:00</label>&nbsp;&nbsp;&nbsp;<br>
+                        <label class="curpoin"><input type="checkbox" value="18" {if condition="in_array(18,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>18:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="19" {if condition="in_array(19,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>19:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="20" {if condition="in_array(20,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>20:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="21" {if condition="in_array(21,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>21:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="22" {if condition="in_array(22,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>22:00</label>&nbsp;&nbsp;&nbsp;
+                        <label class="curpoin"><input type="checkbox" value="23" {if condition="in_array(23,$info.active_time)"} checked disabled {else /} name="active_time[]" {{/if}/>23:00</label>&nbsp;&nbsp;&nbsp;
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="total_stock">选择商品 </label>
+                    </dt>
+                    <dd class="opt">
+                        <a href="javascript:void(0);" onclick="choGoods();" class="ncap-btn ncap-btn-green"><i class="layui-icon">&#xe608;</i>选择秒杀商品</a>
+                        <p class="notic2">注：每个活动场次中出售的秒杀商品，此处非必选，可在场次管理中单独设置</p>
+                        <div class="none" id="goods_show_list" style="margin-top: 15px;width: 850px;">
+                            <div class="flexigrid">
+                                <div class="hDiv">
+                                    <div class="hDivBox">
+                                        <table cellspacing="0" cellpadding="0" style="width: 100%;">
+                                            <thead>
+                                                <tr>
+                                                    <th abbr="id" axis="col5" class="w60">
+                                                        <div class="tc">商品ID</div>
+                                                    </th>
+                                                    <th align="center" abbr="article_title" axis="col3" class="w40">
+                                                        <div class="tc">封面图</div>
+                                                    </th>
+                                                    <th align="left" abbr="article_title" axis="col3" class="">
+                                                        <div style="text-align: left; padding-left: 10px;" class="">商品标题</div>
+                                                    </th>
+                                                    <th abbr="article_time" axis="col6" class="w60">
+                                                        <div class="tc">操作</div>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                    <div class="bDiv" style="height: auto;">
+                                        <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                                            <table style="width: 100%;">
+                                                <tbody id="Template">
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </dd>
+                </dl>
+                <div class="bot">
+                    <input type="hidden" name="active_id" value="{$info.active_id}" />
+                    <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    function reback(info) {
+        layer.closeAll();
+        if (info) {
+            $("#goods_show_list").show();
+            info.forEach(function (v) {
+                v = JSON.parse(v,true)
+                if ($('div').is('.goods_show_list_div_'+v.sharp_goods_id) == false){
+                    var html = '';
+                    html += '<tr class="tr goods_show_list_div goods_show_list_div_' + v.sharp_goods_id + '">';
+                    html += '    <td class="sort">';
+                    html += '        <div class="w60 tc">';
+                    html += '            ' + v.sharp_goods_id;
+                    html += '            <input type="hidden" name="goods[sharp_goods_id][]" value="' + v.sharp_goods_id + '">';
+                    html += '            <input type="hidden" name="goods[aid][]" value="' + v.aid + '">';
+                    html += '        </div>';
+                    html += '    </td>';
+                    html += '    <td class="w40">';
+                    html += '        <div class="tc">';
+                    html += '            <img width="40" height="40" src="' + v.litpic + '">';
+                    html += '        </div>';
+                    html += '    </td>';
+                    html += '    <td class="" style="width: 100%;">';
+                    html += '        <div class="tl" style="padding-left: 10px;">';
+                    html += '            ' + v.title;
+                    html += '        </div>';
+                    html += '    </td>';
+                    html += '    <td class="">';
+                    html += '        <div class="w60 tc">';
+                    html += '            <a class="btn red" href="javascript:void(0);" onclick="del(' + v.sharp_goods_id + ');">删除</a>';
+                    html += '        </div>';
+                    html += '    </td>';
+                    html += '</tr>';
+                    $("#Template").append(html);
+                }
+            })
+        }
+    }
+    function del(sid){
+        $(".goods_show_list_div_"+sid).remove();
+        if ($('.goods_show_list_div').length <= 0) {
+            $("#goods_show_list").hide();
+        }
+    }
+    layui.use(['form', 'laydate'], function(){
+        var form = layui.form,
+            laydate = layui.laydate;
+
+        laydate.render({
+            elem: '#active_date'
+        });
+
+        form.render();
+    });
+    function choGoods() {
+        layer.open({
+            type: 2,
+            title: '选择秒杀商品',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            maxmin: true, //开启最大化最小化按钮
+            area: ['80%', '90%'],
+            content: "{:url('Sharp/goods_list')}"
+        });
+    }
+</script>
+<script type="text/javascript">
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+    // 判断输入框是否为空
+    function checkForm(){
+
+        if($('input[name^=active_time]:checked').length == 0){
+            showErrorMsg('请选择活动场次！');
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            url : "{:url('Sharp/active_time_add')}",
+            data: $('#post_form').serialize(),
+            type: 'post',
+            dataType: 'json',
+            success: function(res) {
+                layer.closeAll();
+                if (res.code == 1) {
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                } else {
+                    showErrorAlert(res.msg);
+                }
+            },
+            error: function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        })
+    }
+</script>
+{include file="public/footer" /}

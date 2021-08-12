@@ -30,3 +30,22 @@ if (!function_exists('is_adminlogin'))
         }
     }
 }
+
+if (!function_exists('apiAdminLog'))
+{
+    /**
+     * 管理员操作记录
+     * @param $log_url 操作URL
+     * @param $log_info 记录信息
+     */
+    function apiAdminLog($log_info = ''){
+        $admin_id = session('admin_id');
+        $admin_id = !empty($admin_id) ? $admin_id : -2;
+        $add['log_time'] = getTime();
+        $add['admin_id'] = $admin_id;
+        $add['log_info'] = $log_info;
+        $add['log_ip'] = clientIP();
+        $add['log_url'] = request()->baseUrl() ;
+        M('admin_log')->add($add);
+    }
+}

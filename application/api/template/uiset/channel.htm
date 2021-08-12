@@ -14,19 +14,23 @@
         .control-group {
             padding: 5px 0px;
         }
+        .controls{
+            text-align: center;
+        }
         .input{
             width: 92px;
         }
         .select {
             height: 28px;
             font-size: 12px;
+            border: 1px solid #ddd;
+            border-radius:4px;
         }
         .btn{
-            font: bold 14px/20px "microsoft yahei", arial;
             background-color: #4fc0e8;
             color: #FFF;
-            text-shadow: 0 -1px 0 rgba(0,0,0,0.10);
-            border-color: #3aa8cf;
+            border-radius: 4px;
+            padding: 6px 20px;
         }
         .btn:hover {
             color: #FFF;
@@ -53,6 +57,7 @@
                             <input type="hidden" name="page" value="{$field.page|default=''}">
                             <input type="hidden" name="v" value="{$v|default='pc'}">
                             <input type="hidden" name="lang" value="{$field.lang|default='cn'}">
+                            <input type="hidden" name="idcode" value="{$field.idcode|default=''}">
                             <label class="checkbox"><input type="button" class="btn" value="确认提交" onclick="check_submit();" /></label>
                         </div>
                     </div>
@@ -66,7 +71,7 @@
         function check_submit()
         {
             layer_loading('正在处理');
-            var url = "{:url('api/Uiset/submit')}";
+            var url = "{:url('api/Uiset/submit', ['_ajax'=>1])}";
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -75,21 +80,18 @@
                 success: function(res){
                     layer.closeAll();
                     if (res.code == 1) {
-                        parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
-                            parent.window.location.reload();
-                            parent.layer.close(parentObj);
+                        var _parent = parent;
+                        _parent.layer.close(parentObj);
+                        _parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                            _parent.window.location.reload();
                         });
                     } else {
-                        // parent.showErrorMsg(res.msg);
-                        layer.alert(res.msg, {icon:5});
+                        parent.eyou_showErrorAlert(res.msg);
                     }
-                    return false;
                 },
                 error: function(e){
                     layer.closeAll();
-                    // parent.showErrorMsg('操作失败');
-                    layer.alert('操作失败', {icon:5});
-                    return false;
+                    parent.eyou_showErrorAlert(e.responseText);
                 }
             });
         }
@@ -102,12 +104,11 @@
             msg+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请勿刷新页面', 
             {
                 icon: 1,
-                time: 3600000, //1小时后后自动关闭
-                shade: [0.2] //0.1透明度的白色背景
+                time: 3600000,
+                shade: [0.2]
             });
-            //loading层
             var index = layer.load(3, {
-                shade: [0.1,'#fff'] //0.1透明度的白色背景
+                shade: [0.1,'#fff']
             });
 
             return loading;

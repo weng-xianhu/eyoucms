@@ -1,25 +1,28 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back" href="{:url('Index/switch_map')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            <ul class="tab-base nc-row">
+                <li><a href="{:url('Channeltype/index')}" class="tab current"><span>频道模型</span></a></li>
+            </ul>
+        </div>
+    </div>
     <div class="flexigrid">
         <div class="mDiv">
             <div class="ftitle">
-                <h3>频道模型列表</h3>
-                <h5>(共{$pageObj->totalRows}条记录)</h5>
-            </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
-            <div class="sDiv">
-                {eq name="'Field@arctype_index'|is_check_access" value="1"}
-                    <div class="fbutton" style="float: none;">
-                          <a href="{:url('Field/arctype_index')}">
-                              <div class="add">
-                                  <span><i class="fa fa-cogs"></i>栏目字段管理</span>
-                              </div>
-                          </a>
-                    </div>
+                {eq name="'Channeltype@add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-href="{:url('Channeltype/add')}" onclick="openFullframe(this, '新增模型');">
+                        <div class="add" title="新增模型">
+                            <span><i class="layui-icon layui-icon-addition"></i>新增模型</span>
+                        </div>
+                    </a>
+                </div>
                 {/eq}
             </div>
         </div>
@@ -32,10 +35,13 @@
                             <div class="tc">ID</div>
                         </th>
                         <th abbr="article_title" axis="col3" class="">
-                            <div style="text-align: left; padding-left: 10px;" class="">模型名称</div>
+                            <div class="text-l10">模型名称</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w120">
                             <div class="tc">模型标识</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w80">
+                            <div class="tc">字段数</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w50">
                             <div class="tc">启用</div>
@@ -67,16 +73,23 @@
                                 </div>
                             </td>
                             <td class="" style="width: 100%;">
-                                <div class="tl" style="padding-left: 10px;">
+                                <div class="tl text-l10">
                                     {eq name="'Channeltype@edit'|is_check_access" value="1"}
-                                    <a href="{:url('Channeltype/edit',array('id'=>$vo['id']))}">{$vo.title}</a>
+                                        {eq name="$vo.nid" value="ask"}
+                                            <a href="javascript:void(0);" data-href="{:url('Ask/index')}" onclick="openFullframe(this, '问答模型', '100%', '100%');">{$vo.title}</a>
+                                        {else /}
+                                            <a href="javascript:void(0);" data-href="{:url('Channeltype/edit',array('id'=>$vo['id']))}" onclick="openFullframe(this, '模型编辑', '100%', '100%');">{$vo.title}</a>
+                                        {/eq}
                                     {else /}
-                                    {$vo.title}
+                                        {$vo.title}
                                     {/eq}
                                 </div>
                             </td>
                             <td class="">
                                 <div class="w120 tc">{$vo.nid}</div>
+                            </td>
+                            <td class="">
+                                <div class="w80 tc">{$channelfieldRow[$vo['id']]['num']|default='0'}</div>
                             </td>
                             <td>
                                 <div class="tc w50">
@@ -91,33 +104,36 @@
                                 {/eq}
                                 </div>
                             </td>
-                            <td class="">
-                                <div class="tl {empty name="$vo.ifsystem"}w230{else /}w160{/empty}">
-                                    {eq name="'Channeltype@edit'|is_check_access" value="1"}
-                                        {eq name="$vo.nid" value="guestbook"}
-                                        &nbsp;&nbsp;&nbsp;———
-                                        {else /}
-                                        <a href="{:url('Channeltype/edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o blocki"></i>编辑</a>
+                            <td class="operation">
+                                <div class="tc w160">
+                                    {eq name="$vo.nid" value="ask"}
+                                        <a href="javascript:void(0);" data-href="{:url('Ask/index')}" onclick="openFullframe(this, '问答模型', '100%', '100%');" class="btn blue">管理</a>
+                                        <i></i>
+                                        <a class="btn grey" href="javascript:void(0);">内容字段</a>
+                                    {else /}
+                                        {eq name="'Channeltype@edit'|is_check_access" value="1"}
+                                            <a href="javascript:void(0);" data-href="{:url('Channeltype/edit',array('id'=>$vo['id']))}" class="btn blue" onclick="openFullframe(this, '模型编辑', '100%', '100%');">编辑</a>
                                         {/eq}
-                                    {/eq}
 
-                                    {eq name="'Channeltype@edit'|is_check_access" value="1"}
-                                        {eq name="$vo.nid" value="guestbook"}
-                                        &nbsp;&nbsp;&nbsp;&nbsp;—————
-                                        {else /}
-                                        <a href="{:url('Field/channel_index',array('channel_id'=>$vo['id']))}" class="btn blue"><i class="fa fa-code blocki"></i>内容字段</a>
+                                        {eq name="'Channeltype@edit'|is_check_access" value="1"}
+                                            {eq name="$vo.nid" value="guestbook"}
+                                            <i></i>
+                                            <a href="{:url('Field/attribute_index')}" class="btn blue">内容属性</a>
+                                            {else /}
+                                            <i></i>
+                                            <a href="{:url('Field/channel_index',array('channel_id'=>$vo['id']))}" class="btn blue">内容字段</a>
+                                            {/eq}
                                         {/eq}
                                     {/eq}
 
                                     {empty name="$vo.ifsystem"}
                                         {eq name="'Channeltype@del'|is_check_access" value="1"}
-                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Channeltype/del')}" data-id="{$vo.id}" data-deltype="pseudo" onClick="delfun(this);"><i class="fa fa-trash-o blocki"></i>删除</a>
+                                        <i></i>
+                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Channeltype/del')}" data-id="{$vo.id}" data-deltype="pseudo" onClick="delfun(this);">删除</a>
                                         {/eq}
-                                        <script type="text/javascript">
-                                            $(function(){
-                                                $('#th_handle').removeClass('w160').addClass('w230');
-                                            });
-                                        </script>
+                                    {else /}
+                                        <i></i>
+                                        <a class="btn grey"  href="javascript:void(0);">删除</a>
                                     {/empty}
                                 </div>
                             </td>
@@ -134,20 +150,12 @@
         </div>
         <div class="tDiv">
             <div class="tDiv2">
-                {eq name="'Channeltype@add'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a href="{:url('Channeltype/add')}">
-                        <div class="add" title="新增模型">
-                            <span class="red"><i class="fa fa-plus"></i>新增模型</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
+                {include file="public/page" /}
             </div>
             <div style="clear:both"></div>
         </div>
         <!--分页位置-->
-        {$pageStr}
+       
     </div>
 </div>
 <script>
@@ -174,16 +182,19 @@
             $.ajax({
                 type : 'post',
                 url : $(obj).attr('data-url'),
-                data : {del_id:$(obj).attr('data-id')},
+                data : {del_id:$(obj).attr('data-id'), _ajax:1},
                 dataType : 'json',
-                success : function(data){
+                success : function(res){
                     layer.closeAll();
-                    if(data.code == 1){
-                        layer.msg(data.msg, {icon: 1});
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 1});
                         window.location.reload();
                     }else{
-                        layer.alert(data.msg, {icon: 2, title:false});  //alert(data);
+                        showErrorAlert(res.msg);
                     }
+                },
+                error:function(e){
+                    showErrorAlert(e.responseText);
                 }
             })
         }, function(index){
@@ -194,10 +205,11 @@
 
     function handleShow(obj){
         var title = $(obj).attr('data-title');
+        var channel_id = $(obj).attr('data-id');
         $.ajax({
             type : 'post',
             url : "{:url('Channeltype/ajax_show')}",
-            data : {id:$(obj).attr('data-id'),status:$(obj).attr('data-status')},
+            data : {id:channel_id,status:$(obj).attr('data-status'), _ajax:1},
             dataType : 'json',
             success : function(res){
                 if (res.code == 1) {
@@ -211,32 +223,68 @@
                             btn: ['启用','取消'] //按钮
                         }, function(index){
                             layer.close(index);
-                            layer_loading('正在处理');
                             // 确定
-                            $.ajax({
-                                type : 'post',
-                                url : "{:url('Channeltype/ajax_check_tpl')}",
-                                data : {id:$(obj).attr('data-id'),status:$(obj).attr('data-status'),tpltype:res.data.tpltype},
-                                dataType : 'json',
-                                success : function(res){
-                                    layer.closeAll();
-                                    if(res.code == 1){
-                                        layer.msg(res.msg, {icon: 1, time: 500}, function(){
-                                            window.location.reload();
-                                        });
-                                    }else{
-                                        layer.alert(res.msg, {icon: 2, title:false});
+                            if (51 == channel_id) {
+                                layer_loading('正在下载');
+                                $.ajax({
+                                    type : 'post',
+                                    url : "{:url('Channeltype/ajax_syn_theme_ask', ['_ajax'=>1])}",
+                                    data : {id:channel_id,status:$(obj).attr('data-status'),_ajax:1},
+                                    dataType : 'json',
+                                    success : function(res){
+                                        layer.closeAll();
+                                        if(res.code == 1){
+                                            layer.msg(res.msg, {icon: 1, time: 500}, function(){
+                                                window.location.reload();
+                                            });
+                                        }else{
+                                            var icon = 5;
+                                            if (res.data.icon) {icon = res.data.icon;}
+                                            layer.alert(res.msg, {icon: icon, title:false, closeBtn:false}, function(){
+                                                window.location.reload();
+                                            });
+                                        }
+                                    },
+                                    error:function(e){
+                                        showErrorAlert(e.responseText);
                                     }
-                                }
-                            })
+                                })
+                            } else {
+                                layer_loading('正在处理');
+                                $.ajax({
+                                    type : 'post',
+                                    url : "{:url('Channeltype/ajax_check_tpl')}",
+                                    data : {id:channel_id,status:$(obj).attr('data-status'),tpltype:res.data.tpltype, _ajax:1},
+                                    dataType : 'json',
+                                    success : function(res){
+                                        layer.closeAll();
+                                        if(res.code == 1){
+                                            layer.msg(res.msg, {icon: 1, time: 500}, function(){
+                                                window.location.reload();
+                                            });
+                                        }else{
+                                            showErrorAlert(res.msg);
+                                        }
+                                    },
+                                    error:function(e){
+                                        showErrorAlert(e.responseText);
+                                    }
+                                })
+                            }
                         });
                     }
                 } else {
-                    layer.alert(res.msg, {icon: 2, title:false});
+                    var icon = 5;
+                    try {
+                        if (res.data.icon) {
+                            icon = res.data.icon;
+                        }
+                    }catch(err){}
+                    showErrorAlert(res.msg, icon);
                 }
             },
-            error:function(){
-                layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+            error:function(e){
+                showErrorAlert(e.responseText);
             }
         });
     }

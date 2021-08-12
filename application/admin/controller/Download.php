@@ -22,127 +22,158 @@ class Download extends Base
     public $nid = 'download';
     // 模型ID
     public $channeltype = '';
-    
-    public function _initialize() {
+
+    public function _initialize()
+    {
         parent::_initialize();
-        $channeltype_list = config('global.channeltype_list');
+        $channeltype_list  = config('global.channeltype_list');
         $this->channeltype = $channeltype_list[$this->nid];
+        empty($this->channeltype) && $this->channeltype = 4;
         $this->assign('nid', $this->nid);
         $this->assign('channeltype', $this->channeltype);
     }
 
-    /**
-     * 列表
-     */
+    //列表
     public function index()
     {
-        $assign_data = array();
-        $condition = array();
+        $assign_data = $condition = [];
+
         // 获取到所有GET参数
         $param = input('param.');
-        $flag = input('flag/s');
         $typeid = input('typeid/d', 0);
-        $begin = strtotime(input('add_time_begin'));
-        $end = strtotime(input('add_time_end'));
 
-        // 应用搜索条件
-        foreach (['keywords','typeid','flag'] as $key) {
+        // 搜索、筛选查询条件处理
+        foreach (['keywords', 'typeid', 'flag', 'is_release'] as $key) {
+            if ($key == 'typeid' && empty($param['typeid'])) {
+                $typeids = Db::name('arctype')->where('current_channel', $this->channeltype)->column('id');
+                $condition['a.typeid'] = array('IN', $typeids);
+            }
             if (isset($param[$key]) && $param[$key] !== '') {
                 if ($key == 'keywords') {
+                    $keywords = $param[$key];
                     $condition['a.title'] = array('LIKE', "%{$param[$key]}%");
                 } else if ($key == 'typeid') {
                     $typeid = $param[$key];
                     $hasRow = model('Arctype')->getHasChildren($typeid);
                     $typeids = get_arr_column($hasRow, 'id');
-                    /*权限控制 by 小虎哥*/
+                    // 权限控制 by 小虎哥
                     $admin_info = session('admin_info');
                     if (0 < intval($admin_info['role_id'])) {
                         $auth_role_info = $admin_info['auth_role_info'];
-                        if(! empty($auth_role_info)){
-                            if(isset($auth_role_info['only_oneself']) && 1 == $auth_role_info['only_oneself']){
-                                $condition['a.admin_id'] = $admin_info['admin_id'];
-                            }
-                            if(! empty($auth_role_info['permission']['arctype'])){
-                                if (!empty($typeid)) {
-                                    $typeids = array_intersect($typeids, $auth_role_info['permission']['arctype']);
-                                }
-                            }
+                        if (!empty($typeid) && !empty($auth_role_info) && !empty($auth_role_info['permission']['arctype'])) {
+                            $typeids = array_intersect($typeids, $auth_role_info['permission']['arctype']);
                         }
                     }
-                    /*--end*/
                     $condition['a.typeid'] = array('IN', $typeids);
                 } else if ($key == 'flag') {
-                    $condition['a.'.$param[$key]] = array('eq', 1);
+                    if ('is_release' == $param[$key]) {
+                        $condition['a.users_id'] = array('gt', 0);
+                    } else {
+                        $FlagNew = $param[$key];
+                        $condition['a.'.$param[$key]] = array('eq', 1);
+                    }
                 } else {
                     $condition['a.'.$key] = array('eq', $param[$key]);
                 }
             }
         }
 
-        // 时间检索
+        // 权限控制 by 小虎哥
+        $admin_info = session('admin_info');
+        if (0 < intval($admin_info['role_id'])) {
+            $auth_role_info = $admin_info['auth_role_info'];
+            if (!empty($auth_role_info) && isset($auth_role_info['only_oneself']) && 1 == $auth_role_info['only_oneself']) {
+                $condition['a.admin_id'] = $admin_info['admin_id'];
+            }
+        }
+
+        // 时间检索条件
+        $begin = strtotime(input('add_time_begin'));
+        $end = strtotime(input('add_time_end'));
         if ($begin > 0 && $end > 0) {
-            $condition['a.add_time'] = array('between',"$begin,$end");
+            $condition['a.add_time'] = array('between', "$begin, $end");
         } else if ($begin > 0) {
             $condition['a.add_time'] = array('egt', $begin);
         } else if ($end > 0) {
             $condition['a.add_time'] = array('elt', $end);
         }
 
-        // 模型ID
+        // 必要条件
         $condition['a.channel'] = array('eq', $this->channeltype);
-        // 多语言
         $condition['a.lang'] = array('eq', $this->admin_lang);
-        // 回收站
         $condition['a.is_del'] = array('eq', 0);
+        $conditionNew = "(a.users_id = 0 OR (a.users_id > 0 AND a.arcrank >= 0))";
 
-        /**
-         * 数据查询，搜索出主键ID的值
-         */
-        $count = DB::name('archives')->alias('a')->where($condition)->count('aid');// 查询满足要求的总记录数
-        $Page = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
-        $fields = "b.*, a.*, a.aid as aid";
-        $list = DB::name('archives')
-            ->field($fields)
-            ->alias('a')
-            ->join('__ARCTYPE__ b', 'a.typeid = b.id', 'LEFT')
-            ->where($condition)
-            ->order('a.aid desc')
-            ->limit($Page->firstRow.','.$Page->listRows)
-            ->getAllWithIndex('aid');
-        foreach ($list as $key => $val) {
-            $val['arcurl'] = get_arcurl($val);
-            $val['litpic'] = handle_subdir_pic($val['litpic']); // 支持子目录
-            $list[$key] = $val;
+        // 自定义排序
+        $orderby = input('param.orderby/s');
+        $orderway = input('param.orderway/s');
+        if (!empty($orderby) && !empty($orderway)) {
+            $orderby = "a.{$orderby} {$orderway}, a.aid desc";
+        } else {
+            $orderby = "a.aid desc";
         }
-        $show = $Page->show(); // 分页显示输出
-        $assign_data['page'] = $show; // 赋值分页输出
-        $assign_data['list'] = $list; // 赋值数据集
-        $assign_data['pager'] = $Page; // 赋值分页对象
 
-        // 栏目ID
-        $assign_data['typeid'] = $typeid; // 栏目ID
-        /*当前栏目信息*/
-        $arctype_info = array();
-        if ($typeid > 0) {
-            $arctype_info = M('arctype')->field('typename')->find($typeid);
+        // 数据查询，搜索出主键ID的值
+        $SqlQuery = Db::name('archives')->alias('a')->where($condition)->where($conditionNew)->fetchSql()->count('aid');
+        $count = Db::name('sql_cache_table')->where(['sql_md5'=>md5($SqlQuery)])->getField('sql_result');
+        if (!isset($count)) {
+            $count = Db::name('archives')->alias('a')->where($condition)->where($conditionNew)->count('aid');
+            /*添加查询执行语句到mysql缓存表*/
+            $SqlCacheTable = [
+                'sql_name' => '|download|' . $this->channeltype . '|',
+                'sql_result' => $count,
+                'sql_md5' => md5($SqlQuery),
+                'sql_query' => $SqlQuery,
+                'add_time' => getTime(),
+                'update_time' => getTime(),
+            ];
+            if (!empty($FlagNew)) $SqlCacheTable['sql_name'] = $SqlCacheTable['sql_name'] . $FlagNew . '|';
+            if (!empty($typeid)) $SqlCacheTable['sql_name'] = $SqlCacheTable['sql_name'] . $typeid . '|';
+            if (!empty($keywords)) $SqlCacheTable['sql_name'] = '|download|keywords|';
+            Db::name('sql_cache_table')->insertGetId($SqlCacheTable);
+            /*END*/
         }
-        $assign_data['arctype_info'] = $arctype_info;
-        /*--end*/
 
-        /*选项卡*/
-        $tab = input('param.tab/d', 3);
-        $assign_data['tab'] = $tab;
-        /*--end*/
+        $Page = new Page($count, config('paginate.list_rows'));
+        $list = [];
+        if (!empty($count)) {
+            $limit = $count > config('paginate.list_rows') ? $Page->firstRow.','.$Page->listRows : $count;
+            $list = Db::name('archives')
+                ->field("a.aid")
+                ->alias('a')
+                ->where($condition)
+                ->where($conditionNew)
+                ->order($orderby)
+                ->limit($limit)
+                ->getAllWithIndex('aid');
+            if (!empty($list)) {
+                $aids = array_keys($list);
+                $fields = "b.*, a.*, a.aid as aid";
+                $row = Db::name('archives')
+                    ->field($fields)
+                    ->alias('a')
+                    ->join('__ARCTYPE__ b', 'a.typeid = b.id', 'LEFT')
+                    ->where('a.aid', 'in', $aids)
+                    ->getAllWithIndex('aid');
+                foreach ($list as $key => $val) {
+                    $row[$val['aid']]['arcurl'] = get_arcurl($row[$val['aid']]);
+                    $row[$val['aid']]['litpic'] = handle_subdir_pic($row[$val['aid']]['litpic']);
+                    $list[$key] = $row[$val['aid']];
+                }
+            }
+        }
 
+        $show = $Page->show();
+        $assign_data['page'] = $show;
+        $assign_data['list'] = $list;
+        $assign_data['pager'] = $Page;
+        $assign_data['typeid'] = $typeid;
+        $assign_data['tab'] = input('param.tab/d', 3);// 选项卡
+        $assign_data['archives_flags'] = model('ArchivesFlag')->getList();// 文档属性
+        $assign_data['arctype_info'] = $typeid > 0 ? Db::name('arctype')->field('typename')->find($typeid) : [];// 当前栏目信息
         $this->assign($assign_data);
-        
-        /* 生成静态页面代码 */
-        $aid = input('param.aid/d',0);
-        $this->assign('aid',$aid);
-        $tid = input('param.tid/d',0);
-        $this->assign('typeid',$tid);
-        /* end */
-        
+        $recycle_switch = tpSetting('recycle.recycle_switch');//回收站开关
+        $this->assign('recycle_switch', $recycle_switch);
         return $this->fetch();
     }
 
@@ -151,10 +182,32 @@ class Download extends Base
      */
     public function add()
     {
+        $admin_info = session('admin_info');
+        $auth_role_info = $admin_info['auth_role_info'];
+        $this->assign('auth_role_info', $auth_role_info);
+        $this->assign('admin_info', $admin_info);
+
         if (IS_POST) {
             $post = input('post.');
-            $content = input('post.addonFieldExt.content', '', null);
 
+            /* 处理TAG标签 */
+            if (!empty($post['tags_new'])) {
+                $post['tags'] = !empty($post['tags']) ? $post['tags'] . ',' . $post['tags_new'] : $post['tags_new'];
+                unset($post['tags_new']);
+            }
+            $post['tags'] = explode(',', $post['tags']);
+            $post['tags'] = array_unique($post['tags']);
+            $post['tags'] = implode(',', $post['tags']);
+            /* END */
+
+            $content = input('post.addonFieldExt.content', '', null);
+            if (!empty($post['fileupload'])){
+                foreach ($post['fileupload']['file_url'] as $k => $v){
+                    if (is_http_url($v)){
+                        $post['fileupload']['uhash'][$k] = md5($v);
+                    }
+                }
+            }
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
             if (!empty($seo_keywords)) {
@@ -204,6 +257,27 @@ class Download extends Base
                 unset($post['tempview']);
             }
 
+            //处理自定义文件名,仅由字母数字下划线和短横杆组成,大写强制转换为小写
+            $htmlfilename = trim($post['htmlfilename']);
+            if (!empty($htmlfilename)) {
+                $htmlfilename = preg_replace("/[^a-zA-Z0-9_-]+/", "-", $htmlfilename);
+                $htmlfilename = strtolower($htmlfilename);
+                //判断是否存在相同的自定义文件名
+                $filenameCount = Db::name('archives')->where([
+                    'htmlfilename'  => $htmlfilename,
+                    'lang'  => $this->admin_lang,
+                ])->count();
+                if (!empty($filenameCount)) {
+                    $this->error("自定义文件名已存在，请重新设置！");
+                }
+            }
+            $post['htmlfilename'] = $htmlfilename;
+
+            //做自动通过审核判断
+            if ($admin_info['role_id'] > 0 && $auth_role_info['check_oneself'] < 1) {
+                $post['arcrank'] = -1;
+            }
+
             // --存储数据
             $newData = array(
                 'typeid'=> empty($post['typeid']) ? 0 : $post['typeid'],
@@ -212,6 +286,9 @@ class Download extends Base
                 'is_head'      => empty($post['is_head']) ? 0 : $post['is_head'],
                 'is_special'      => empty($post['is_special']) ? 0 : $post['is_special'],
                 'is_recom'      => empty($post['is_recom']) ? 0 : $post['is_recom'],
+                'is_roll'      => empty($post['is_roll']) ? 0 : $post['is_roll'],
+                'is_slide'      => empty($post['is_slide']) ? 0 : $post['is_slide'],
+                'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
                 'is_jump'     => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
@@ -225,11 +302,13 @@ class Download extends Base
             );
             $data = array_merge($post, $newData);
 
-            $aid = M('archives')->insertGetId($data);
+            $aid          = Db::name('archives')->insertGetId($data);
             $_POST['aid'] = $aid;
             if ($aid) {
                 // ---------后置操作
                 model('Download')->afterSave($aid, $data, 'add');
+                // 添加查询执行语句到mysql缓存表
+                model('SqlCacheTable')->InsertSqlCacheTable();
                 // ---------end
                 adminLog('新增下载：'.$data['title']);
 
@@ -252,25 +331,38 @@ class Download extends Base
         // 栏目信息
         $arctypeInfo = Db::name('arctype')->find($typeid);
 
+        //第三方存储空间 七牛云/oss开关信息
+        $assign_data['qiniu_open'] = 0;
+        $assign_data['oss_open'] = 0;
+        $assign_data['cos_open'] = 0;
+        $channelRow = Db::name('channeltype')->where('id', $this->channeltype)->find();
+        $assign_data['channelRow'] = $channelRow;
+        if(!empty($channelRow)){
+            $channelRow['data'] = json_decode($channelRow['data'], true);
+            $assign_data['qiniu_open'] = !empty($channelRow['data']['qiniuyun_open']) ? $channelRow['data']['qiniuyun_open'] : 0;
+            $assign_data['oss_open'] = !empty($channelRow['data']['oss_open']) ? $channelRow['data']['oss_open'] : 0;
+            $assign_data['cos_open'] = !empty($channelRow['data']['cos_open']) ? $channelRow['data']['cos_open'] : 0;
+        }
+
         /*允许发布文档列表的栏目*/
         $arctype_html = allow_release_arctype($typeid, array($this->channeltype));
         $assign_data['arctype_html'] = $arctype_html;
         /*--end*/
 
         /*自定义字段*/
-        $addonFieldExtList = model('Field')->getChannelFieldList($this->channeltype);
-        $channelfieldBindRow = Db::name('channelfield_bind')->where([
-                'typeid'    => ['IN', [0,$typeid]],
-            ])->column('field_id');
-        if (!empty($channelfieldBindRow)) {
-            foreach ($addonFieldExtList as $key => $val) {
-                if (!in_array($val['id'], $channelfieldBindRow)) {
-                    unset($addonFieldExtList[$key]);
-                }
-            }
-        }
-        $assign_data['addonFieldExtList'] = $addonFieldExtList;
-        $assign_data['aid'] = 0;
+        // $addonFieldExtList = model('Field')->getChannelFieldList($this->channeltype);
+        // $channelfieldBindRow = Db::name('channelfield_bind')->where([
+        //         'typeid'    => ['IN', [0,$typeid]],
+        //     ])->column('field_id');
+        // if (!empty($channelfieldBindRow)) {
+        //     foreach ($addonFieldExtList as $key => $val) {
+        //         if (!in_array($val['id'], $channelfieldBindRow)) {
+        //             unset($addonFieldExtList[$key]);
+        //         }
+        //     }
+        // }
+        // $assign_data['addonFieldExtList'] = $addonFieldExtList;
+        // $assign_data['aid'] = 0;
         /*--end*/
 
         // 阅读权限
@@ -289,6 +381,78 @@ class Download extends Base
         $this->assign('tempview', $tempview);
         /*--end*/
 
+        /*会员等级信息*/
+        $assign_data['users_level'] = DB::name('users_level')->field('level_id,level_name')->where('lang',$this->admin_lang)->select();
+        /*--end*/
+
+        /*下载模型自定义属性字段*/
+        $attr_field = Db::name('download_attr_field')->select();
+        $servername_use = 0;
+        if ($attr_field) {
+            $servername_info = [];
+            for ($i = 0; $i < count($attr_field); $i++) {
+                if ($attr_field[$i]['field_name'] == 'server_name') {
+                    if ($attr_field[$i]['field_use'] == 1) {
+                        $servername_use = 1;
+                    }
+                    $servername_info = $attr_field[$i];
+                    break;
+                }
+            }
+            $assign_data['servername_info'] = $servername_info;
+        }
+        $assign_data['attr_field'] = $attr_field;
+        $assign_data['servername_use'] = $servername_use;
+
+        $servername_arr = unserialize(tpCache('download.download_select_servername'));
+        $assign_data['default_servername'] = $servername_arr?$servername_arr[0]:'立即下载';
+        /*--end*/
+
+        // 文档默认浏览量 / 软件默认下载量
+        $other_config = tpCache('other');
+        if (isset($other_config['other_arcclick']) && 0 <= $other_config['other_arcclick']) {
+            $arcclick_arr = explode("|", $other_config['other_arcclick']);
+            if (count($arcclick_arr) > 1) {
+                $assign_data['rand_arcclick'] = mt_rand($arcclick_arr[0], $arcclick_arr[1]);
+            } else {
+                $assign_data['rand_arcclick'] = intval($arcclick_arr[0]);
+            }
+        }else{
+            $arcclick_config['other_arcclick'] = '500|1000';
+            tpCache('other', $arcclick_config);
+            $assign_data['rand_arcclick'] = mt_rand(500, 1000);
+        }
+
+        if (isset($other_config['other_arcdownload']) && 0 <= $other_config['other_arcdownload']) {
+            $arcdownload_arr = explode("|", $other_config['other_arcdownload']);
+            if (count($arcdownload_arr) > 1) {
+                $assign_data['rand_arcdownload'] = mt_rand($arcdownload_arr[0], $arcdownload_arr[1]);
+            } else {
+                $assign_data['rand_arcdownload'] = intval($arcdownload_arr[0]);
+            }
+        }else{
+            $arcdownload_config['other_arcdownload'] = '100|500';
+            tpCache('other', $arcdownload_config);
+            $assign_data['rand_arcdownload'] = mt_rand(100, 500);
+        }
+
+        /*文档属性*/
+        $assign_data['archives_flags'] = model('ArchivesFlag')->getList();
+
+        // URL模式
+        $tpcache = config('tpcache');
+        $assign_data['seo_pseudo'] = !empty($tpcache['seo_pseudo']) ? $tpcache['seo_pseudo'] : 1;
+        // 系统最大上传视频的大小  限制类型
+        $file_size = tpCache('basic.file_size');
+        $postsize       = @ini_get('file_uploads') ? ini_get('post_max_size') : -1;
+        $fileupload     = @ini_get('file_uploads') ? ini_get('upload_max_filesize') : -1;
+        $min_size = strval($file_size) < strval($postsize) ? $file_size : $postsize;
+        $min_size = strval($min_size) < strval($fileupload) ? $min_size : $fileupload;
+        $basic['file_size'] = intval($min_size) * 1024 * 1024;
+        $file_type = tpCache('basic.file_type');
+        $basic['file_type'] = !empty($file_type) ? $file_type : "zip|gz|rar|iso|doc|xls|ppt|wps";
+        $assign_data['basic'] = $basic;
+
         $this->assign($assign_data);
 
         return $this->fetch();
@@ -299,11 +463,33 @@ class Download extends Base
      */
     public function edit()
     {
+        $admin_info = session('admin_info');
+        $auth_role_info = $admin_info['auth_role_info'];
+        $this->assign('auth_role_info', $auth_role_info);
+        $this->assign('admin_info', $admin_info);
+
         if (IS_POST) {
             $post = input('post.');
+
+            /* 处理TAG标签 */
+            if (!empty($post['tags_new'])) {
+                $post['tags'] = !empty($post['tags']) ? $post['tags'] . ',' . $post['tags_new'] : $post['tags_new'];
+                unset($post['tags_new']);
+            }
+            $post['tags'] = explode(',', $post['tags']);
+            $post['tags'] = array_unique($post['tags']);
+            $post['tags'] = implode(',', $post['tags']);
+            /* END */
+
             $typeid = input('post.typeid/d', 0);
             $content = input('post.addonFieldExt.content', '', null);
-
+            if (!empty($post['fileupload'])){
+                foreach ($post['fileupload']['file_url'] as $k => $v){
+                    if (is_http_url($v)){
+                        $post['fileupload']['uhash'][$k] = md5($v);
+                    }
+                }
+            }
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
             if (!empty($seo_keywords)) {
@@ -353,8 +539,34 @@ class Download extends Base
                 unset($post['tempview']);
             }
 
+            //处理自定义文件名,仅由字母数字下划线和短横杆组成,大写强制转换为小写
+            $htmlfilename = trim($post['htmlfilename']);
+            if (!empty($htmlfilename)) {
+                $htmlfilename = preg_replace("/[^a-zA-Z0-9_-]+/", "-", $htmlfilename);
+                $htmlfilename = strtolower($htmlfilename);
+                //判断是否存在相同的自定义文件名
+                $filenameCount = Db::name('archives')->where([
+                    'aid'      => ['NEQ', $post['aid']],
+                    'htmlfilename'  => $htmlfilename,
+                    'lang'  => $this->admin_lang,
+                ])->count();
+                if (!empty($filenameCount)) {
+                    $this->error("自定义文件名已存在，请重新设置！");
+                }
+            }
+            $post['htmlfilename'] = $htmlfilename;
+
             // 同步栏目切换模型之后的文档模型
             $channel = Db::name('arctype')->where(['id'=>$typeid])->getField('current_channel');
+
+            //做未通过审核文档不允许修改文档状态操作
+            if ($admin_info['role_id'] > 0 && $auth_role_info['check_oneself'] < 1) {
+                $old_archives_arcrank = Db::name('archives')->where(['aid' => $post['aid']])->getField("arcrank");
+                if ($old_archives_arcrank < 0) {
+                    unset($post['arcrank']);
+                }
+            }
+
             // --存储数据
             $newData = array(
                 'typeid'=> $typeid,
@@ -363,6 +575,9 @@ class Download extends Base
                 'is_head'      => empty($post['is_head']) ? 0 : $post['is_head'],
                 'is_special'      => empty($post['is_special']) ? 0 : $post['is_special'],
                 'is_recom'      => empty($post['is_recom']) ? 0 : $post['is_recom'],
+                'is_roll'      => empty($post['is_roll']) ? 0 : $post['is_roll'],
+                'is_slide'      => empty($post['is_slide']) ? 0 : $post['is_slide'],
+                'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
                 'is_jump'   => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
@@ -373,7 +588,7 @@ class Download extends Base
             );
             $data = array_merge($post, $newData);
 
-            $r = M('archives')->where([
+            $r = Db::name('archives')->where([
                     'aid'   => $data['aid'],
                     'lang'  => $this->admin_lang,
                 ])->update($data);
@@ -414,9 +629,23 @@ class Download extends Base
         }
         /*--end*/
         $typeid = $info['typeid'];
+        $assign_data['typeid'] = $typeid;
 
         // 栏目信息
         $arctypeInfo = Db::name('arctype')->find($typeid);
+
+        //第三方存储空间 七牛云/oss开关信息
+        $assign_data['qiniu_open'] = 0;
+        $assign_data['oss_open'] = 0;
+        $assign_data['oss_open'] = 0;
+        $channelRow = Db::name('channeltype')->where('id', $this->channeltype)->find();
+        $assign_data['channelRow'] = $channelRow;
+        if(!empty($channelRow)){
+            $channelRow['data'] = json_decode($channelRow['data'], true);
+            $assign_data['qiniu_open'] = !empty($channelRow['data']['qiniuyun_open']) ? $channelRow['data']['qiniuyun_open'] : 0;
+            $assign_data['oss_open'] = !empty($channelRow['data']['oss_open']) ? $channelRow['data']['oss_open'] : 0;
+            $assign_data['cos_open'] = !empty($channelRow['data']['cos_open']) ? $channelRow['data']['cos_open'] : 0;
+        }
 
         $info['channel'] = $arctypeInfo['current_channel'];
         if (is_http_url($info['litpic'])) {
@@ -438,25 +667,19 @@ class Download extends Base
         $downfile_list = model('DownloadFile')->getDownFile($id);
         $assign_data['downfile_list'] = $downfile_list;
 
+        // 下载文件中是否存在远程链接
+        $is_remote_file = 0;
+        foreach ($downfile_list as $key => $value) {
+            if (1 == $value['is_remote']) {
+                $is_remote_file = 1;
+                break;
+            }
+        }
+        $assign_data['is_remote_file'] = $is_remote_file;
+
         /*允许发布文档列表的栏目，文档所在模型以栏目所在模型为主，兼容切换模型之后的数据编辑*/
         $arctype_html = allow_release_arctype($typeid, array($info['channel']));
         $assign_data['arctype_html'] = $arctype_html;
-        /*--end*/
-        
-        /*自定义字段*/
-        $addonFieldExtList = model('Field')->getChannelFieldList($info['channel'], 0, $id, $info);
-        $channelfieldBindRow = Db::name('channelfield_bind')->where([
-                'typeid'    => ['IN', [0,$typeid]],
-            ])->column('field_id');
-        if (!empty($channelfieldBindRow)) {
-            foreach ($addonFieldExtList as $key => $val) {
-                if (!in_array($val['id'], $channelfieldBindRow)) {
-                    unset($addonFieldExtList[$key]);
-                }
-            }
-        }
-        $assign_data['addonFieldExtList'] = $addonFieldExtList;
-        $assign_data['aid'] = $id;
         /*--end*/
 
         // 阅读权限
@@ -475,6 +698,50 @@ class Download extends Base
         $this->assign('tempview', $tempview);
         /*--end*/
 
+        /*会员等级信息*/
+        $assign_data['users_level'] = DB::name('users_level')->field('level_id,level_name')->where('lang',$this->admin_lang)->select();
+        /*--end*/
+
+        /*下载模型自定义属性字段*/
+        $attr_field = Db::name('download_attr_field')->select();
+        $servername_use = 0;
+        if ($attr_field) {
+            $servername_info = [];
+            for ($i = 0; $i < count($attr_field); $i++) {
+                if ($attr_field[$i]['field_name'] == 'server_name') {
+                    if ($attr_field[$i]['field_use'] == 1) {
+                        $servername_use = 1;
+                    }
+                    $servername_info = $attr_field[$i];
+                    break;
+                }
+            }
+            $assign_data['servername_info'] = $servername_info;
+        }
+        $assign_data['attr_field'] = $attr_field;
+        $assign_data['servername_use'] = $servername_use;
+
+        $servername_arr = unserialize(tpCache('download.download_select_servername'));
+        $assign_data['default_servername'] = $servername_arr?$servername_arr[0]:'立即下载';
+        /*--end*/
+
+        // URL模式
+        $tpcache = config('tpcache');
+        $assign_data['seo_pseudo'] = !empty($tpcache['seo_pseudo']) ? $tpcache['seo_pseudo'] : 1;
+
+        /*文档属性*/
+        $assign_data['archives_flags'] = model('ArchivesFlag')->getList();
+
+        // 系统最大上传视频的大小  限制类型
+        $file_size = tpCache('basic.file_size');
+        $postsize       = @ini_get('file_uploads') ? ini_get('post_max_size') : -1;
+        $fileupload     = @ini_get('file_uploads') ? ini_get('upload_max_filesize') : -1;
+        $min_size = strval($file_size) < strval($postsize) ? $file_size : $postsize;
+        $min_size = strval($min_size) < strval($fileupload) ? $min_size : $fileupload;
+        $basic['file_size'] = intval($min_size) * 1024 * 1024;
+        $file_type = tpCache('basic.file_type');
+        $basic['file_type'] = !empty($file_type) ? $file_type : "zip|gz|rar|iso|doc|xls|ppt|wps";
+        $assign_data['basic'] = $basic;
         $this->assign($assign_data);
         return $this->fetch();
     }
@@ -486,7 +753,171 @@ class Download extends Base
     {
         if (IS_POST) {
             $archivesLogic = new \app\admin\logic\ArchivesLogic;
-            $archivesLogic->del();
+            $archivesLogic->del([], 0, 'download');
         }
     }
+
+    public function template_set()
+    {
+
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+
+            // 修改是否使用
+            if (!empty($post) && isset($post['field_use'])) {
+                $data['field_use']   = $post['field_use'];
+                $data['update_time'] = getTime();
+                Db::name('download_attr_field')->where('field_id',$post['field_id'])->update($data);
+                $this->success("更新成功！");
+            }
+            // 修改标题
+            if (!empty($post) && isset($post['field_title'])) {
+                $data['field_title'] = $post['field_title'];
+                $data['update_time'] = getTime();
+                Db::name('download_attr_field')->where('field_id',$post['field_id'])->update($data);
+                $this->success("更新成功！");
+            }
+        }
+
+        $list = Db::name('download_attr_field')->select();
+        $assign_data['list'] = $list;
+        $this->assign($assign_data);
+        return $this->fetch();
+    }
+
+    public function select_servername()
+    {
+        $servername_arr = unserialize(tpCache('download.download_select_servername'));
+        $param = input('param.');
+        $assign_data['select_servername'] = $servername_arr;
+        $assign_data['file_key'] = $param['file_key'];
+        $assign_data['sn_type'] = $param['sn_type'];
+        $assign_data['sn_name_sub'] = $param['sn_name_sub'];
+        $this->assign($assign_data);
+        return $this->fetch();
+    }
+
+    public function set_servername()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('param.');
+            $servernames = htmlspecialchars($post['servername']);
+            $servernames = str_replace("\r\n", "\n", trim($servernames));
+            $servernames = explode("\n", $servernames);
+
+            $servernames_new = array_unique($servernames);
+            $servernames_new = serialize($servernames_new);
+            $param = ['download_select_servername'=>$servernames_new];
+
+            /*多语言*/
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('download', $param, $val['mark']);
+                }
+            } else {
+                tpCache('download', $param);
+            }
+            /*--end*/
+
+            $this->success("更新成功！");
+        }
+
+        $servername_arr = unserialize(tpCache('download.download_select_servername'));
+        $servername_arr = implode("\n",$servername_arr);
+
+        $assign_data['servernames'] = $servername_arr;
+        $this->assign($assign_data);
+        return $this->fetch();
+    }
+
+    public function search_servername()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('param.');
+            $keyword = $post['keyword'];
+
+            $servernames = tpCache('download.download_select_servername');
+            $servernames = unserialize($servernames);
+
+            $search_data = $servernames;
+            if (!empty($keyword)) {
+                $search_data = [];
+                if ($servernames) {
+                    foreach ($servernames as $k => $v) {
+                        if (preg_match("/$keyword/s", $v)) $search_data[] = $v;
+                    }
+                }
+            }
+
+            $this->success("获取成功",null,$search_data);
+        }
+    }
+
+    public function get_template()
+    {
+        if (IS_AJAX_POST) {
+            //$list = Db::name('download_attr_field')->where('field_use',1)->select();
+            $list = Db::name('download_attr_field')->select();
+            $this->success("查询成功！", null, $list);
+        }
+    }
+
+    /**
+     * 获取七牛云token
+     */
+/*    public function qiniu_upload()
+    {
+        if (IS_AJAX_POST) {
+            $weappInfo     = Db::name('weapp')->where('code','Qiniuyun')->field('id,status,data')->find();
+            if (empty($weappInfo)) {
+                $this->error('请先安装配置【七牛云图片加速】插件!', null, ['code'=>-1]);
+            } else if (1 != $weappInfo['status']) {
+                $this->error('请先启用【七牛云图片加速】插件!', null, ['code'=>-2,'id'=>$weappInfo['id']]);
+            } else {
+                $Qiniuyun = json_decode($weappInfo['data'], true);
+                if (empty($Qiniuyun)) {
+                    $this->error('请先配置【七牛云图片加速】插件!', null, ['code'=>-3]);
+                } else if (empty($Qiniuyun['domain'])) {
+                    $this->error('请先配置【七牛云图片加速】插件中的域名!', null, ['code'=>-3]);
+                }
+            }
+
+            //引入七牛云的相关文件
+            weapp_vendor('Qiniu.src.Qiniu.Auth', 'Qiniuyun');
+            weapp_vendor('Qiniu.src.Qiniu.Storage.UploadManager', 'Qiniuyun');
+            require_once ROOT_PATH.'weapp/Qiniuyun/vendor/Qiniu/autoload.php';
+
+            // 配置信息
+            $accessKey = $Qiniuyun['access_key'];
+            $secretKey = $Qiniuyun['secret_key'];
+            $bucket    = $Qiniuyun['bucket'];
+            $domain    = '//'.$Qiniuyun['domain'];
+
+            // 区域对应的上传URl
+            $config = new \Qiniu\Config(null);
+            $uphost  = $config->getUpHost($accessKey, $bucket);
+            $uphost = str_replace('http://', '//', $uphost);
+
+            // 生成上传Token
+            $auth = new \Qiniu\Auth($accessKey, $secretKey);
+            $token = $auth->uploadToken($bucket);
+            if ($token) {
+                $filePath = UPLOAD_PATH.'soft/';
+//                $filePath = UPLOAD_PATH.'soft/' . date('Ymd/') . session('admin_id') . '-' . dd2char(date("ymdHis") . mt_rand(100, 999));
+                $data = [
+                    'token'  => $token,
+                    'domain'  => $domain,
+                    'uphost'  => $uphost,
+                    'filePath'  => $filePath,
+                ];
+                $this->success('获取token成功!', null, $data);
+            } else {
+                $this->error('获取token失败!');
+            }
+        }
+
+    }*/
 }

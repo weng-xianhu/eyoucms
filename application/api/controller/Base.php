@@ -19,6 +19,7 @@ class Base extends Common {
 
     public $uipath = '';
     public $theme_style = '';
+    public $theme_style_path = '';
 
     /**
      * 析构函数
@@ -27,7 +28,8 @@ class Base extends Common {
     {
         parent::__construct();
         $this->theme_style = THEME_STYLE;
-        $this->uipath = RUNTIME_PATH.'ui/'.$this->theme_style.'/';
+        $this->theme_style_path = THEME_STYLE_PATH;
+        $this->uipath = RUNTIME_PATH.'ui/'.$this->theme_style_path.'/';
     }
     
     /*
@@ -53,7 +55,7 @@ class Base extends Common {
         $global_variable = array();
         $view_replace_str = config('view_replace_str');
         foreach ($view_replace_str as $key => $val) {
-            $view_replace_str[$key] = preg_replace('/(.*?)(\/'.MODULE_NAME.'\/)(\w+)(.*?)/i', '${1}${2}'.$this->theme_style.'${4}', $val);
+            $view_replace_str[$key] = preg_replace('/(.*?)(\/'.MODULE_NAME.'\/)(\w+)(.*?)/i', '${1}${2}'.$this->theme_style_path.'${4}', $val);
         }
         config('view_replace_str', $view_replace_str);
         $global_variable = array_merge($global_variable, config('view_replace_str'));

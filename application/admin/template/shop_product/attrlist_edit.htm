@@ -1,0 +1,240 @@
+{include file="public/layout" /}
+<body style="background-color: #FFF; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="box-shadow:none;">
+    <form class="form-horizontal" id="PostForm">
+        <input type="hidden" name="list_id" value="{$list.list_id}">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="ac_name"><em>*</em>参数名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="list_name" value="{$list.list_name}" id="list_name" class="input-txt" autocomplete="off">
+                    <span class="err" id="err_attr_name" style="color: #F00; display: none;"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="ac_name">参数描述</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="desc" value="{$list.desc}" id="desc" class="input-txt" autocomplete="off">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="attr_input_type">参数值列表</label>
+                </dt>
+                <dd class="opt">
+                    <a href="JavaScript:void(0);" class="ncap-btn ncap-btn-green" onclick="Add();">新增</a>
+                    <div class="" style="margin-top: 15px;width: 850px;">
+                        <div class="flexigrid">
+                            <div class="hDiv">
+                                <div class="hDivBox">
+                                    <table cellspacing="0" cellpadding="0" style="width: 100%;">
+                                        <thead>
+                                            <tr>
+                                                <th abbr="article_title" axis="col3" class="">
+                                                    <div style="text-align: left; padding-left: 10px;" class="">参数名称</div>
+                                                </th>
+                                                
+                                                <th abbr="article_time" axis="col4" class="w150">
+                                                    <div class="tc">参数类型</div>
+                                                </th>
+
+                                                <th abbr="article_time" axis="col4" class="w250">
+                                                    <div class="tc" id="PromptText">参数可选值</div>
+                                                </th>
+
+                                                <th abbr="article_time" axis="col4" class="w100">
+                                                    <div class="tc" >排序</div>
+                                                </th>
+
+                                                <th abbr="article_time" axis="col6" class="w60">
+                                                    <div class="tc">操作</div>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+                                <div class="bDiv" style="height: auto;">
+                                    <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                                        <table style="width: 100%;">
+                                            <tbody id="Template">
+                                            {empty name="$list.attr"}
+                                                <tr id="empty_tr">
+                                                    <td class="no-data" align="center" axis="col0" colspan="50">
+                                                        <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                                    </td>
+                                                </tr>
+                                            {else/}
+                                                {foreach name="$list.attr" item="vo" key="k"}
+                                                    <tr class="tr" id="tr_{$k}">
+                                                        <td style="width: 100%">
+                                                            <div style="">
+                                                                <input type="text" name="attr_name[]" value="{$vo.attr_name}" style="width: 90%;" autocomplete="off">
+                                                                <input type="hidden" name="attr_id[]" value="{$vo.attr_id}">
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                            <div class="w150 tc">
+                                                                <select name="attr_input_type[]" class="w100" data-id="OptContent_{$k}" onchange="ChangeDisplay(this);">
+                                                                    <option value="0" {eq name="$vo.attr_input_type" value="0"} selected="true" {/eq}>手工录入</option>
+                                                                    <option value="1" {eq name="$vo.attr_input_type" value="1"} selected="true" {/eq}>下拉选择</option>
+                                                                </select>
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                            <div class="w250 tc" id="OptContent_{$k}">
+                                                                {if condition="1 == $vo.attr_input_type"}
+                                                                    <textarea rows="5" cols="30" name="attr_values[]" style="height: 60px;" placeholder="一行代表一个可选值">{$vo.attr_values}</textarea>
+                                                                {else/}
+                                                                    ——————
+                                                                    <input type="hidden" name="attr_values[]" value="{$vo.attr_values}" class="w160">
+                                                                {/if}
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                            <div class="w100 tc">
+                                                                <input type="text" name="attr_sort_order[]" style="width: 60px;text-align: center;" value="{$vo.sort_order}" >
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="">
+                                                            <div class="w60 tc">
+                                                                <a class="btn red" href="javascript:void(0);" data-id="tr_{$k}" onclick="DelHtml(this)">删除</a>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                {/foreach}
+                                            {/empty}
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </dd>
+            </dl>
+        </div>
+        <div class="ncap-form-default">
+            <div class="bot">
+                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="SubmitForm(this);" data-url="{:url('ShopProduct/attrlist_edit', ['_ajax'=>1])}">确认提交</a>
+            </div>
+        </div> 
+    </form>
+</div>
+
+<script type="text/javascript">
+
+    // tr数,取唯一标识
+    var tr_id = $('#Template .tr').length;
+
+    function Add() {
+        if (0 == tr_id){
+            $('#empty_tr').hide();
+        }
+        var AddHtml = '';
+        AddHtml += 
+            '<tr class="tr" id="tr_'+tr_id+'">'+
+                '<td style="width: 100%">'+
+                    '<div style="">'+
+                        '<input type="text" name="attr_name[]" style="width: 90%;" autocomplete="off">'+
+                        '<input type="hidden" name="attr_id[]">'+
+                    '</div>'+
+                '</td>'+
+
+                '<td>'+
+                    '<div class="w150 tc">'+
+                        '<select name="attr_input_type[]" class="w100" data-id="OptContent_'+tr_id+'" onchange="ChangeDisplay(this);">'+
+                            '<option value="0">手工录入</option>'+
+                            '<option value="1">下拉选择</option>' +
+                        '</select>'+
+                    '</div>'+
+                '</td>'+
+
+                '<td>'+
+                    '<div class="w250 tc" id="OptContent_'+tr_id+'">'+
+                        '——————<input type="hidden" name="attr_values[]" autocomplete="off" class="w160">'+
+                    '</div>'+
+                '</td>'+
+
+                '<td>'+
+                    '<div class="w100 tc">'+
+                        '<input type="text" name="attr_sort_order[]" style="width: 60px;text-align: center;" value="100" >'+
+                    '</div>'+
+                '</td>'+
+
+                '<td class="">'+
+                    '<div class="w60 tc">'+
+                        '<a class="btn red" href="javascript:void(0);" data-id="tr_'+tr_id+'" onclick="DelHtml(this)">删除</a>'+
+                    '</div>'+
+                '</td>'+
+            '</tr>';
+        $('#Template').append(AddHtml);
+        tr_id++;
+    }
+
+    // 删除未保存的数据
+    function DelHtml(obj){
+        $('#'+$(obj).attr('data-id')).remove();
+        if (0 == $('.tr').length) $('#empty_tr').show();
+    }
+
+    // 字段切换，字段可选值框跟着改变
+    function ChangeDisplay(obj) {
+        var value = $(obj).val();
+        if (1 == value){
+            //多行文本
+            var html = '<textarea rows="5" cols="30" name="attr_values[]" style="height: 60px;" placeholder="一行代表一个可选值"></textarea>';
+        } else{
+            var html = '——————<input type="hidden" name="attr_values[]" autocomplete="off" class="w160">';
+        }
+        $('#'+$(obj).attr('data-id')).empty().html(html);
+    }
+
+    // 添加新增数据
+    function SubmitForm(obj) {
+        var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+        if($.trim($('input[name=list_name]').val()) == ''){
+            showErrorMsg('参数名称不能为空！');
+            $('input[name=list_name]').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            url : $(obj).attr('data-url'),
+            data: $('#PostForm').serialize(),
+            type: 'post',
+            dataType: 'json',
+            success: function(res) {
+                layer.closeAll();
+                if (res.code == 1) {
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                } else {
+                    showErrorAlert(res.msg);
+                }
+            },
+            error: function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        })
+    }
+</script>
+{include file="public/footer" /}

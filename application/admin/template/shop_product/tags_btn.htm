@@ -1,0 +1,38 @@
+<div class="sDiv2">  
+    <select name="typeid" class="select" style="margin:0px 5px;">
+        <option value="">--所有栏目--</option>
+        {$arctype_html}
+    </select>
+</div>
+<!-- 扩展 -->
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#searchForm select[name=typeid]').change(function() {
+            $('#searchForm').submit();
+        });
+    });
+    function quick_release(is_product_arctype) {
+        if (is_product_arctype && 0 < is_product_arctype) {
+            //iframe窗
+            layer.open({
+                type: 2,
+                title: '快捷发布商品',
+                fixed: true, //不固定
+                shadeClose: false,
+                shade: 0.3,
+                maxmin: true, //开启最大化最小化按钮
+                area: ['600px', '520px'],
+                content: "//{$Request.host}{$Request.baseFile}?m=admin&c=shopProduct&a=release&lang={$Request.param.lang}"
+            });
+        } else {
+            layer.alert('至少要新增一个产品模型的栏目！', {icon: 5, title: false, btn: ['进入栏目管理']}, function(index){
+                layer.close(index);
+                /*左侧菜单焦点定位*/
+                $('.eycms_cont_left .sub-menu a', window.parent.document).removeClass('on');
+                $('#Arctype_index', window.parent.document).addClass('on');
+                /*end*/
+                window.location.href = "{:url('Arctype/index')}";
+            });
+        }
+    }
+</script>

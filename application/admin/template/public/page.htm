@@ -1,0 +1,17 @@
+<div class="fbuttonr">
+    <div class="pages">
+       {$page}
+    </div>
+</div>
+<div class="fbuttonr">
+    <div class="total">
+        <h5>共有{$pager->totalRows}条,每页显示
+            <select name="pagesize" style="width: 60px;" onchange="ey_selectPagesize(this);">
+                <option {if condition="$pager->listRows == 20"} selected {/if} value="20">20</option>
+                <option {if condition="$pager->listRows == 50"} selected {/if} value="50">50</option>
+                <option {if condition="$pager->listRows == 100"} selected {/if} value="100">100</option>
+                <option {if condition="$pager->listRows == 200"} selected {/if} value="200">200</option>
+            </select>
+        </h5>
+    </div>
+</div>

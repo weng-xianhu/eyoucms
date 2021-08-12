@@ -71,7 +71,7 @@ class ArctypeLogic extends Model
                 unset($where[$key]);
             }
             $fields = "c.*, c.id as typeid, count(s.id) as has_children, '' as children";
-            $res = DB::name('arctype')
+            $res = Db::name('arctype')
                 ->field($fields)
                 ->alias('c')
                 ->join('__ARCTYPE__ s','s.parent_id = c.id','LEFT')
@@ -138,7 +138,7 @@ class ArctypeLogic extends Model
                 {
                     $select .= str_repeat('&nbsp;', $var['level'] * 4);
                 }
-                $select .= htmlspecialchars(addslashes($var['typename'])) . '</option>';
+                $select .= htmlspecialchars_decode(addslashes($var['typename'])) . '</option>';
             }
     
             return $select;
@@ -192,7 +192,7 @@ class ArctypeLogic extends Model
                         $options[$id]          = $value;
                         $options[$id]['level'] = $level;
                         $options[$id]['id']    = $id;
-                        $options[$id]['typename']  = $value['typename'];
+                        $options[$id]['typename']  = htmlspecialchars_decode($value['typename']);
                         unset($arr[$key]);
     
                         if ($value['has_children'] == 0)
@@ -210,7 +210,7 @@ class ArctypeLogic extends Model
                         $options[$id]          = $value;
                         $options[$id]['level'] = $level;
                         $options[$id]['id']    = $id;
-                        $options[$id]['typename']  = $value['typename'];
+                        $options[$id]['typename']  = htmlspecialchars_decode($value['typename']);
                         unset($arr[$key]);
     
                         if ($value['has_children'] > 0)
@@ -311,4 +311,119 @@ class ArctypeLogic extends Model
         }
     }
 
+    /**
+     * 同步新增栏目ID到多语言的模板栏目变量里
+     */
+    public function syn_add_language_attribute($typeid)
+    {
+        /*单语言情况下不执行多语言代码*/
+        if (!is_language()) {
+            return true;
+        }
+        /*--end*/
+
+        $attr_group = 'arctype';
+        $admin_lang = get_admin_lang();
+        $main_lang = get_main_lang();
+        $languageRow = Db::name('language')->field('mark')->order('id asc')->select();
+        if (!empty($languageRow) && $admin_lang == $main_lang) { // 当前语言是主体语言，即语言列表最早新增的语言
+            $arctypeRow = Db::name('arctype')->find($typeid);
+            $attr_name = 'tid'.$typeid;
+            $r = Db::name('language_attribute')->save([
+                'attr_title'    => $arctypeRow['typename'],
+                'attr_name'     => $attr_name,
+                'attr_group'    => $attr_group,
+                'add_time'      => getTime(),
+                'update_time'   => getTime(),
+            ]);
+            if (false !== $r) {
+                $data = [];
+                foreach ($languageRow as $key => $val) {
+                    /*同步新栏目到其他语言栏目列表*/
+                    if ($val['mark'] != $admin_lang) {
+                        $addsaveData = $arctypeRow;
+                        $addsaveData['lang'] = $val['mark'];
+                        $addsaveData['typename'] = $val['mark'].$addsaveData['typename']; // 临时测试
+                        $parent_id = Db::name('language_attr')->where([
+                                'attr_name' => 'tid'.$arctypeRow['parent_id'],
+                                'lang'  => $val['mark'],
+                            ])->getField('attr_value');
+                        $addsaveData['parent_id'] = intval($parent_id);
+                        /*获取顶级栏目ID*/
+                        if (empty($parent_id)) {
+                            $topid = 0;
+                        } else {
+                            $parentInfo = Db::name('arctype')->field('id,topid')->where('id', $parent_id)->find();
+                            $topid = !empty($parentInfo['topid']) ? $parentInfo['topid'] : $parentInfo['id'];
+                        }
+                        $addsaveData['topid'] = $topid;
+                        /*end*/
+                        unset($addsaveData['id']);
+                        $typeid = model('Arctype')->addData($addsaveData);
+                    }
+                    /*--end*/
+                    
+                    /*所有语言绑定在主语言的ID容器里*/
+                    $data[] = [
+                        'attr_name' => $attr_name,
+                        'attr_value'    => $typeid,
+                        'lang'  => $val['mark'],
+                        'attr_group'    => $attr_group,
+                        'add_time'      => getTime(),
+                        'update_time'   => getTime(),
+                    ];
+                    /*--end*/
+                }
+                if (!empty($data)) {
+                    model('LanguageAttr')->saveAll($data);
+                }
+            }
+        }
+    }
+
+    /**
+     * 获取栏目的目录名称，确保唯一性
+     */
+    public function get_dirname($typename = '', $dirname = '', $id = 0, $newDirnameArr = [])
+    {
+        $id = intval($id);
+        if (!trim($dirname) || empty($dirname)) {
+            $dirname = get_pinyin($typename);
+        }
+        if (strval(intval($dirname)) == strval($dirname)) {
+            $dirname .= get_rand_str(3,0,2);
+        }
+        $dirname = preg_replace('/(\s)+/', '_', $dirname);
+        if (!$this->dirname_unique($dirname, $id, $newDirnameArr)) {
+            $nowDirname = $dirname.get_rand_str(3,0,2);
+            return $this->get_dirname($typename, $nowDirname, $id, $newDirnameArr);
+        }
+
+        return $dirname;
+    }
+
+    /**
+     * 判断目录名称的唯一性
+     */
+    public function dirname_unique($dirname = '', $typeid = 0, $newDirnameArr = [])
+    {
+        $result = Db::name('arctype')->field('id,dirname')
+            ->where(['lang'=>get_admin_lang()])
+            ->getAllWithIndex('id');
+        if (!empty($result)) {
+            if (0 < $typeid) unset($result[$typeid]);
+            !empty($result) && $result = get_arr_column($result, 'dirname');
+        }
+        empty($result) && $result = [];
+        $langMarks = Db::name('language_mark')->column('mark'); // 多语言标识
+        $disableDirname = config('global.disable_dirname');
+        $disableDirname = array_merge($disableDirname, $langMarks, $result);
+        !empty($newDirnameArr) && $disableDirname = array_merge($disableDirname, $newDirnameArr);
+        foreach ($disableDirname as $key => $val) {
+            if (strtolower($dirname) == strtolower($val)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

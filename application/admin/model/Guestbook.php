@@ -13,6 +13,7 @@
 
 namespace app\admin\model;
 
+use think\Db;
 use think\Model;
 
 /**
@@ -39,7 +40,7 @@ class Guestbook extends Model
         }
 
         // 同时删除属性内容
-        M('guestbook_attr')->where([
+        Db::name('guestbook_attr')->where([
                 'aid'   => ['IN', $aidArr]
             ])->delete();
     }

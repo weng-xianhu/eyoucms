@@ -1,172 +1,289 @@
 {include file="public/layout" /}
 <body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; overflow-y: scroll;">
 <style type="text/css">
-  .tb_child {
-    background:#FFFFDF;
-  }
+    .tb_child {
+        background:#FFFFDF;
+    }
 </style>
-<div class="page">
-  <form method="post">
+<div class="page arctype">
     <div class="flexigrid">
-      <div class="mDiv">
-        <div class="ftitle">
-          <h3>栏目列表</h3>
-          <h5>(共{$arctype_list|count}条记录)</h5>
+        <div class="mDiv">
+            <div class="ftitle">
+                {eq name='$main_lang' value='$admin_lang'}
+                    {eq name="'Arctype@add'|is_check_access" value="1"}
+                    <div class="fbutton">
+                        <a href="{:url('Arctype/add')}">
+                            <div class="add">
+                                <span>
+                                    <i class="layui-icon layui-icon-addition"></i>
+                                    增加栏目
+                                </span>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="fbutton">
+                        <a href="{:url('Arctype/batch_add')}">
+                            <div class="adds">
+                                <span>
+                                    批量增加
+                                </span>
+                            </div>
+                        </a>
+                    </div>
+                    {/eq}
+                {/eq}
+            </div>
         </div>
-        <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
-        {eq name='$main_lang' value='$admin_lang'}
-        <div class="fbutton">
-              <a href="{if condition="in_array($Request.action, array('add','edit'))"}javascript:void(0);{else /}{:url("Arctype/add")}{/if}">
-                  <div class="add">
-                      <span><i class="fa fa-plus"></i>增加顶级栏目</span>
-                  </div>
-              </a>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellpadding="0" cellspacing="0" style="width: 100%">
+                    <thead>
+                        <tr>
+                            <th class="sign w40" axis="col0">
+                                <div class="tc"><input type="checkbox" onClick="javascript:$('input[name*=ids]').prop('checked',this.checked);" autocomplete="off"></div>
+                            </th>
+                            <th axis="col3" class="w60">
+                                <div class="sundefined tc">ID</div>
+                            </th>
+                            <th axis="col3" class="">
+                                <div class="sundefined text-l10">
+                                    <img src="__SKIN__/images/tv-expandable.gif" id="all_treeclicked" title="展开所有子栏目" style="float: none;" data-status="close" onClick="treeClicked(this,'all',0);">
+                                栏目名称
+                                </div>
+                            </th>
+                            <th axis="col2" class="w100">
+                                <div class="tc">所属模型</div>
+                            </th>
+                            <th axis="col2" class="w60">
+                                <div class="tc">显示</div>
+                            </th>
+                            <th axis="col1" class="w300">
+                                <div class="tc">操作</div>
+                            </th>
+                            <th axis="col2" class="w60">
+                                <div class="tc">排序</div>
+                            </th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
-        {/eq}
-      </div>
-      <div class="hDiv">
-        <div class="hDivBox">
-          <table cellpadding="0" cellspacing="0" style="width: 100%">
-            <thead>
-              <tr>
-                <th axis="col3" class="w60">
-                  <div class="sundefined tc">ID</div>
-                </th>
-                <th axis="col3" class="">
-                  <div class="sundefined" style="padding-left: 15px">
-                    <img src="__SKIN__/images/tv-expandable.gif" id="all_treeclicked" title="展开所有子栏目" style="float: none;" data-status="close" onClick="treeClicked(this,'all',0);">
-                    栏目名称
-                  </div>
-                </th>
-                <th axis="col2" class="w100">
-                  <div class="tc">所属模型</div>
-                </th>
-                <th axis="col2" class="w60">
-                  <div>隐藏</div>
-                </th>
-                <th axis="col1" class="w300">
-                    <div class="tl" style="text-indent: 6px">操作</div>
-                </th>
-                <th axis="col2" class="w60">
-                  <div class="tc">排序</div>
-                </th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-      </div>
-         
-      <div id="flexigrid" class="bDiv" style="height: auto;">
+
+        <div id="flexigrid" class="bDiv" style="height: auto;">
         {empty name="arctype_list"}
-        <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
-            <table>
-                <tbody>
-                    <tr>
-                        <td class="no-data" align="center" axis="col0" colspan="50">
-                            <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+            <div id="" cellpadding="0" cellspacing="0" border="0">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        {else /}
+            <table class="flex-table autoht" cellpadding="0" cellspacing="0" border="0" id="arctype_table" style="width: 100%">
+                <tbody id="treet1">
+                {foreach name="arctype_list" item="vo" key="k" }
+                    <tr nctype="0" {if condition="$vo['parent_id'] gt 0"} style="display:none;"{/if} class="parent_id_{$vo['parent_id']}" data-level="{$vo['level']}" data-id="{$vo['id']}">
+                        <td class="sign">
+                            <div class="tc w40"><input type="checkbox" name="ids[]" value="{$vo.id}" autocomplete="off"></div>
+                        </td>
+                        <td class="name">
+                            <div class="w60 tc">
+                            {eq name='$main_lang' value='$admin_lang'}
+                                {$vo.id}
+                            {else /}
+                                {$main_arctype_list[$vo['id']]['id']|default=$vo['id']}
+                            {/eq}
+                            </div>
+                        </td>
+                        <td class="typename" style="width: 100%">
+                            <div>
+                            {gt name='vo.level' value='0'}
+                              {php}
+                              if (1 == $vo['level']) {
+                                echo '<span class="w40x"></span>';
+                              } elseif (2 == $vo['level']) {
+                                echo '<span class="w40x w40xc"></span>';
+                              }
+                              {/php}
+                            {/gt}
+
+                            {gt name="vo.has_children" value="0"}
+                                <img src="__SKIN__/images/tv-expandable.gif" style="float: none;" fieldid="2" status="open" nc_type="flex" onClick="treeClicked(this,{$vo['id']},0);" class="has_children">
+                            {else /}
+                                <img src="__SKIN__/images/tv-collapsable-last.gif" style="float: none;" fieldid="2" status="open" nc_type="flex">
+                            {/gt}
+
+                            {if condition="!empty($vo['weapp_code'])"}
+                                <!-- 插件栏目 -->
+                                <a href="{:weapp_url($vo['weapp_code'].'/'.$vo['weapp_code'].'/index')}" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
+                                <!-- end -->
+                            {else /}
+                                {if condition="$vo['current_channel'] == 6"}
+                                    <a href="{:url('Arctype/single_edit',array('typeid'=>$vo['id']))}" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
+                                    {assign name='$uisetRow' value=":check_single_uiset($vo['templist'])"}
+                                    {if condition="!empty($uisetRow['pc']) && !empty($uisetRow['mobile'])"}
+                                        &nbsp;&nbsp;<a href="javascript:void(0);" data-href="{:url('Arctype/single_uiset', ['tid'=>$vo['id']])}" onclick="single_uiset_select(this);" title="可视化编辑"><i class="fa fa-edit"></i></a>
+                                    {else /}
+                                        {if condition="!empty($uisetRow['pc'])"}
+                                            &nbsp;&nbsp;<a href="{:url('Arctype/single_uiset', ['tid'=>$vo['id'], 'v'=>'pc'])}" target="_blank" title="PC端可视化编辑"><i class="fa fa-edit"></i></a>
+                                        {elseif condition="!empty($uisetRow['mobile'])"}
+                                            &nbsp;&nbsp;<a href="{:url('Arctype/single_uiset', ['tid'=>$vo['id'], 'v'=>'mobile'])}" target="_blank" title="手机端可视化编辑"><i class="fa fa-edit"></i></a>
+                                        {/if}
+                                    {/if}
+                                {elseif condition="$vo['current_channel'] == 5"}
+                                    {if condition="$php_servicemeal > 1"}
+                                        <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',['typeid'=>$vo['id']])}" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
+                                    {else /}
+                                    <a href="javascript:void(0);" class="btn grey" title="该功能仅限专业版授权！" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
+                                    {/if}
+                                    <i class="arctotal">（文档：{$vo.id|get_total_arc=###}条）</i>
+                                {elseif condition="$vo['current_channel'] == 51"}
+                                    {if condition="$php_servicemeal >= 2"}
+                                        <a href="{:url('Ask/index')}" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
+                                    {else /}
+                                        <a href="javascript:void(0);" class="btn grey" title="该功能仅限专业版授权！" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
+                                    {/if}
+                                {else /}
+                                    {if condition="empty($channeltype_list[$vo['current_channel']]['ifsystem'])"}
+                                        <a href="{:url('Custom/index',['channel'=>$vo['current_channel'],'typeid'=>$vo['id']])}" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
+                                    {else /}
+                                        <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',['typeid'=>$vo['id']])}" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
+                                    {/if}
+                                    <i class="arctotal">（文档：{$vo.id|get_total_arc=###}条）</i>
+                                {/if}
+                            {/if}
+                            </div>
+                        </td>
+                        <td class="sort">
+                            <div class="w100 tc">
+                                {$channeltype_list[$vo['current_channel']]['title']|default=''}
+                            </div>
+                        </td>
+                        <td align="center" class="">
+                            <div class="w60 tc">
+                            {if condition='$vo.is_hidden eq 1'}
+                                <span class="no" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('arctype','id','{$vo.id}','is_hidden',this);"{/eq} ><i class="fa fa-ban"></i>否</span>
+                            {else /}
+                                <span class="yes" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('arctype','id','{$vo.id}','is_hidden',this);"{/eq} ><i class="fa fa-check-circle"></i>是</span>
+                            {/if}
+                            </div>
+                        </td>
+                        <td class="operation">
+                            <div class="w300 tc pb0">
+                                {eq name="'Archives@index'|is_check_access" value="1"}
+                                    {if condition="!empty($vo['weapp_code'])"}
+                                    <!-- 插件栏目 -->
+                                    <a href="{:weapp_url($vo['weapp_code'].'/'.$vo['weapp_code'].'/index')}" class="btn blue">内容</a>
+                                    <!-- end -->
+                                    {else /}
+                                        {if condition="$vo['current_channel'] == 6" /}
+                                            <a href="{:url('Arctype/single_edit',array('typeid'=>$vo['id']))}" class="btn blue">内容</a>
+                                        {elseif condition="$vo['current_channel'] == 5"}
+                                            {if condition="$php_servicemeal > 1"}
+                                                <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',array('typeid'=>$vo['id'], 'tab'=>3))}" class="btn blue">内容</a>
+                                            {else /}
+                                                <a class="btn grey" href="javascript:void(0);" title="该功能仅限专业版授权！">内容</a>
+                                            {/if}
+                                        {elseif condition="$vo['current_channel'] == 51"}
+                                            {if condition="$php_servicemeal >= 2"}
+                                                <a href="{:url('Ask/index')}" class="btn blue">内容</a>
+                                            {else /}
+                                                <a class="btn grey" href="javascript:void(0);" title="该功能仅限专业版授权！">内容</a>
+                                            {/if}
+                                        {else /}
+                                            {if condition="empty($channeltype_list[$vo['current_channel']]['ifsystem'])"}
+                                                <a href="{:url('Custom/index',array('channel'=>$vo['current_channel'],'typeid'=>$vo['id'], 'tab'=>3))}" class="btn blue">内容</a>
+                                            {else /}
+                                                <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',array('typeid'=>$vo['id'], 'tab'=>3))}" class="btn blue">内容</a>
+                                            {/if}
+                                        {/if}
+                                    {/if}
+                                {/eq}
+                                <i></i>
+                                <a href="{:url('Arctype/edit',array('id'=>$vo['id']))}" class="btn blue">编辑</a>
+                                {eq name="'Arctype@add'|is_check_access" value="1"}
+                                    {if condition="!empty($vo['weapp_code'])"}
+                                    <i></i>
+                                    <a href="javascript:void(0);" class="btn grey">增加子栏目</a>
+                                    {else /}
+                                        {if condition="$main_lang == $admin_lang && empty($vo['weapp_code'])"}
+                                            {if condition="$vo['grade'] < ($arctype_max_level - 1)"}
+                                                <i></i>
+                                                <a href="{:url('Arctype/add',array('parent_id'=>$vo['id']))}" class="btn blue">增加子栏目</a>
+                                            {else /}
+                                                <i></i>
+                                                <a class="btn grey" title="不支持增加四级栏目">不支持增加</a>
+                                            {/if}
+                                        {/if}
+                                    {/if}
+                                {/eq}
+
+                                {eq name="'Arctype@pseudo_del'|is_check_access" value="1"}
+                                    {eq name='$main_lang' value='$admin_lang'}
+                                        <i></i><a class="btn red"  href="javascript:void(0);" data-url="{:url('Arctype/pseudo_del')}" data-id="{$vo.id}" data-typename="{$vo.typename}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
+                                    {/eq}
+                                {/eq}
+                                <i></i>
+                                <a href="{$vo|get_typeurl=###}" class="btn blue" target="_blank">浏览</a>
+                            </div>
+                        </td>
+                        <td class="sort">
+                            <div class="w60 tc pb0">
+                            {eq name="'Arctype@edit'|is_check_access" value="1"}
+                                <input type="text" onChange="changeTableVal('arctype','id','{$vo.id}','sort_order',this);" size="4" value="{$vo.sort_order}" class="tc" />
+                            {else /}
+                                {$vo.sort_order}
+                            {/eq}
+                            </div>
                         </td>
                     </tr>
+                {/foreach}
                 </tbody>
             </table>
-        </div>
-        <div class="iDiv" style="display: none;"></div>
-        {else /}
-        <table class="flex-table autoht" cellpadding="0" cellspacing="0" border="0" id="arctype_table" style="width: 100%">
-          <tbody id="treet1">
-          {foreach name="arctype_list" item="vo" key="k" }
-            <tr nctype="0" {if condition="$vo['parent_id'] gt 0"} style="display:none;"{/if} class="parent_id_{$vo['parent_id']}" data-level="{$vo['level']}" data-id="{$vo['id']}">
-              <td class="name">
-                <div class="w60 tc">       
-                  {$vo.id}
-                </div>
-              </td>
-              <td class="typename" style="width: 100%">
-                <div>
-                  {gt name='vo.level' value='0'}
-                  {php}
-                  if (1 == $vo['level']) {
-                    echo '<span class="w40x"></span>';
-                  } elseif (2 == $vo['level']) {
-                    echo '<span class="w40x w40xc"></span>';
-                  }
-                  {/php}
-                  {/gt}
-
-                  {gt name="vo.has_children" value="0"}
-                  <img src="__SKIN__/images/tv-expandable.gif" style="float: none;" fieldid="2" status="open" nc_type="flex" onClick="treeClicked(this,{$vo['id']},0);" class="has_children">
-                  {else /}
-                  <img src="__SKIN__/images/tv-collapsable-last.gif" style="float: none;" fieldid="2" status="open" nc_type="flex">
-                  {/gt}
-                  
-                  {if condition="$vo['current_channel'] == 6" /}
-                  <a href="{:url('Arctype/single_edit',array('typeid'=>$vo['id']))}">{$vo.typename}</a>
-                  {else /}
-                  <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',array('typeid'=>$vo['id'], 'tab'=>3))}">{$vo.typename}</a>
-                  <i class="arctotal">（文档：{$vo.id|get_total_arc=###}条）</i>
-                  {/if}
-                </div>
-              </td>
-              <td class="sort">
-                <div class="w100 tc">
-                  {$channeltype_list[$vo['current_channel']]['title']|default=''}
-                </div>
-              </td>
-              
-              <td align="center" class="">
-                  <div class="w60">
-                  {if condition='$vo.is_hidden eq 1'}
-                      <span class="yes" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('arctype','id','{$vo.id}','is_hidden',this);"{/eq} ><i class="fa fa-check-circle"></i>是</span>
-                  {else /}
-                      <span class="no" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('arctype','id','{$vo.id}','is_hidden',this);"{/eq} ><i class="fa fa-ban"></i>否</span>
-                  {/if}
-                  </div>
-              </td>
-              <td>
-                  <div class="w300 tl pb0">
-                      {eq name="'Archives@index'|is_check_access" value="1"}  
-                        {if condition="$vo['current_channel'] == 6" /}
-                        <a href="{:url('Arctype/single_edit',array('typeid'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>内容</a>
-                        {else /}
-                        <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',array('typeid'=>$vo['id'], 'tab'=>3))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>内容</a>
-                        {/if}
-                      {/eq}
-                      <a href="{:url('Arctype/edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
-                      {eq name="'Arctype@add'|is_check_access" value="1"}
-                      {eq name='$main_lang' value='$admin_lang'}
-                        {if condition="$vo['grade'] < ($arctype_max_level - 1)"}           
-                          <a href="{:url('Arctype/add',array('parent_id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>增加子栏目</a>
-                        {else /}
-                          <a class="btn blue" title="不支持增加四级栏目"><i class="fa fa-pencil-square-o"></i>不支持增加</a>
-                        {/if}
-                      {/eq}
-                      {/eq}
-                      {eq name="'Arctype@pseudo_del'|is_check_access" value="1"}
-                      {eq name='$main_lang' value='$admin_lang'}
-                      <a class="btn red"  href="javascript:void(0);" data-url="{:url('Arctype/pseudo_del')}" data-id="{$vo.id}" data-typename="{$vo.typename}" data-deltype="pseudo" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
-                      {/eq}
-                      {/eq}
-                      <a href="{$vo|get_typeurl=###}" class="btn blue" target="_blank"><i class="fa fa-pencil-square-o"></i>浏览</a>
-                  </div>
-              </td>
-              <td class="sort">
-                <div class="w60 tc pb0">
-                  {eq name="'Arctype@edit'|is_check_access" value="1"}
-                  <input type="text" onChange="changeTableVal('arctype','id','{$vo.id}','sort_order',this);" size="4" value="{$vo.sort_order}" class="tc" />
-                  {else /}
-                  {$vo.sort_order}
-                  {/eq}
-                </div>
-              </td>
-              
-            </tr>
-            {/foreach}                
-          </tbody>
-        </table>
         {/empty}
-      </div> 
+
+        <div class="footer-oper">
+            <span class="ml15">
+                <input type="checkbox" class="checkAll" autocomplete="off">
+            </span>
+            <div class="nav-dropup">
+                {eq name="'Arctype@pseudo_del'|is_check_access" value="1"}
+                    <button class="layui-btn layui-btn-primary" onclick="batch_del_arctype(this, 'ids')"  data-url="{:url('Arctype/batch_pseudo_del')}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}>批量删除</button>
+                {/eq}
+            </div>
+            {eq name="'RecycleBin@arctype_index'|is_check_access" value="1"}
+                {neq name='$recycle_switch' value='1'}
+                    <a href="{:url('RecycleBin/arctype_index')}" style="text-decoration:none;color: #555;" class="layui-btn layui-btn-primary" title="回收站">回收站</a>
+                {/neq}
+            {/eq}
+        </div>
     </div>
-  </form>
-  <script type="text/javascript">
+</div>
+<div id="div_single_uiset_select" style="display: none;">
+    <div class="select-show-box">
+        <a href="pc_url" target="_blank" class="pc" title="可视化编辑"><i class="fa fa-desktop"></i>PC端</a>
+        <a href="mobile_url" target="_blank" class="mobile" title="可视化编辑"><i class="fa fa-mobile"></i>手机端</a>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
     $(document).ready(function(){
         // 表格行点击选中切换
         $('#flexigrid > table>tbody >tr').click(function(){
@@ -177,6 +294,16 @@
         $('.fa-refresh').click(function(){
             location.href = location.href;
         });
+
+        // 批量操作
+        $(".dropdown-bt").click(function(){
+            $(".dropdown-menus").slideToggle(200);
+            event.stopPropagation();
+        })
+        $(document).click(function(){
+            $(".dropdown-menus").slideUp(200);
+            event.stopPropagation();
+        })
 
         // treeClicked($('#all_treeclicked'), 'all', 1);
     });
@@ -255,7 +382,12 @@
   
     function delfun(obj){
         var title = $(obj).attr('data-typename');
-        layer.confirm('<font color="#ff0000">如有子栏目及文档将一起清空</font>，确认删除到回收站？', {
+        var deltype = $(obj).attr('data-deltype');
+        var confirm_title = '<font color="#ff0000">如有子栏目及文档将一起清空</font>，确认删除到回收站？';
+        if ('del' == deltype) {
+            confirm_title = '<font color="#ff0000">如有子栏目及文档将一起清空</font>，确认直接删除？';
+        }
+        layer.confirm(confirm_title, {
             title: false,
             btn: ['确定','取消'] //按钮
         }, function(){
@@ -264,7 +396,7 @@
             $.ajax({
                 type : 'post',
                 url : $(obj).attr('data-url'),
-                data : {del_id:$(obj).attr('data-id')},
+                data : {del_id:$(obj).attr('data-id'),deltype:deltype,_ajax:1},
                 dataType : 'json',
                 success : function(data){
                     layer.closeAll();
@@ -281,7 +413,72 @@
             layer.close(index);
         });
         return false;
-    }  
+    }
+
+    /**
+     * 批量删除栏目提交
+     */
+    function batch_del_arctype(obj, name){
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {icon: 5, title:false});
+            return;
+        }
+        var deltype = $(obj).attr('data-deltype');
+        var confirm_title = '<font color="#ff0000">如有子栏目及文档将一起清空</font>，确认删除到回收站？';
+        if ('del' == deltype) {
+            confirm_title = '<font color="#ff0000">如有子栏目及文档将一起清空</font>，确认直接删除？';
+        }
+        layer.confirm(confirm_title, {
+            title: false,
+            btn: ['确定','取消'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:a,deltype:deltype,_ajax:1},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 6});
+                        window.location.reload();
+                        // $('tr[data-id="'+$(obj).attr('data-id')+'"]').remove();
+                    }else{
+                        layer.alert(data.msg, {icon: 5, title:false});  //alert(data);
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }
+
+    function single_uiset_select(obj)
+    {
+        var url = $(obj).attr('data-href');
+        var pc_url = url + '&v=pc';
+        var mobile_url = url + '&v=mobile';
+        var content = $('#div_single_uiset_select').html();
+        content = content.replace('pc_url', pc_url);
+        content = content.replace('mobile_url', mobile_url);
+        layer.open({
+            type: 1,
+            title: false,
+            shadeClose: false,
+            maxmin: false, //开启最大化最小化按钮
+            area: ['350px', '150px'],
+            content: content
+        });
+    }
 
     /* 生成静态页面代码 */
     var typeid = "{$typeid}";
@@ -298,7 +495,6 @@
       });
     } 
     /* end */
-  </script>
-</div>
+</script>
 
 {include file="public/footer" /}

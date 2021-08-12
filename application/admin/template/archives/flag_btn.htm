@@ -1,0 +1,8 @@
+    <div class="sDiv2">  
+        <select name="flag" class="select" style="margin:0px 5px;">
+            <option value="">--属性--</option>
+            {volist name="archives_flags" id="vo"}
+                <option value="{$vo.flag_fieldname}" {eq name="$Request.param.flag" value="$vo.flag_fieldname"}selected{/eq}>{$vo.flag_name}</option>
+            {/volist}
+        </select>
+    </div>

@@ -1,6 +1,6 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit; min-width: auto;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit; min-width: auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page ad" style="min-width: auto;">
@@ -8,7 +8,7 @@
         <div class="mDiv">
             <div class="ftitle">
                 <h3>快递列表</h3>
-                <h5>(共{$pageObj->totalRows}条记录)</h5>
+                <h5>(共{$pageObj->totalRows}条数据)</h5>
             </div>
             <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" action="{:url('Shop/order_express')}" method="get" onsubmit="layer_loading('正在处理');">
@@ -17,9 +17,7 @@
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="名称搜索...">
                         <input type="submit" class="btn" value="搜索">
-                    </div>
-                    <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Shop/order_express')}';">
+                        <i class="fa fa-search"></i>
                     </div>
                 </div>
             </form>

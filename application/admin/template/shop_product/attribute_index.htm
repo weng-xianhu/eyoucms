@@ -1,0 +1,302 @@
+{include file="public/layout" /}
+
+<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4; padding: 20px; ">
+    <div id="append_parent"></div>
+    <div id="ajaxwaitid"></div>
+    <div class="page" style="min-width:auto;">
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                {eq name="$Think.const.CONTROLLER_NAME.'@attribute_add'|is_check_access" value="1"}
+                    <div class="fbutton">
+                        <a href="javascript:void(0);" onclick="AttrBbuteAdd(this);" data-url="{:U('ShopProduct/attribute_add', array('list_id'=>$Request.param.list_id))}">
+                            <div class="add" title="新增参数">
+                                <span>新增参数</span>
+                            </div>
+                        </a>
+                    </div>
+                {/eq}
+            </div>
+            <form id="searchForm" class="navbar-form form-inline" action="{:U('ShopProduct/attribute_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="名称搜索...">
+                        <input type="submit" class="btn" value="搜索">
+						<i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w200">
+                            <div class="tc">参数值名称</div>
+                        </th>
+                        <th abbr="article_title" axis="col3">
+                            <div style="padding-left: 10px;" class="tl">可选值列表</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w120">
+                            <div class="tc">参数值类型</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w120">
+                            <div class="tc">状态</div>
+                        </th>
+                        <th axis="col1" class="w200">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%;">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {volist name="list" id="vo" key="k"}
+                        <tr>
+                            <td class="sign">
+                                <div class="tc w40"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.attr_id}"></div>
+                            </td>
+
+                            <td class="sort">
+                                <div class="tc w40">{$vo.attr_id}</div>
+                            </td>
+
+                            <td>
+                                <div class="w200 tc" style="white-space: nowrap;">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@attribute_edit'|is_check_access" value="1"}
+                                        <a href="javascript:void(0);" onclick="AttrBbuteEdit(this);" data-url="{:U('ShopProduct/attribute_edit',array('id'=>$vo['attr_id']))}">{$vo.attr_name}</a>
+                                    {else /}
+                                        {$vo.attr_name}
+                                    {/eq}
+                                </div>
+                            </td>
+
+                            <td align="left" style="width: 100%">
+                                <div class="tl" style="padding-left: 10px;">{$vo.attr_values}</div>
+                            </td>
+
+                            <td>
+                                <div class="w120 tc">{$attrInputTypeArr[$vo.attr_input_type]}</div>
+                            </td>
+
+                            <td>
+                                <div class="w120 tc">
+                                    {if condition="$vo['status'] eq 1"}
+                                        <span class="yes" onclick="ProductStatus('shop_product_attribute', 'attr_id', '{$vo.attr_id}', 'status', this);">
+                                            <i class="fa fa-check-circle"></i>正常
+                                        </span>
+                                    {else /}
+                                        <span class="no" onclick="ProductStatus('shop_product_attribute', 'attr_id', '{$vo.attr_id}', 'status', this);">
+                                            <i class="fa fa-ban"></i>停用
+                                        </span>
+                                    {/if}
+                                </div>
+                            </td>
+
+                            <td class="operation">
+                                <div class="w200 tc">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@attribute_edit'|is_check_access" value="1"}
+                                        <a href="javascript:void(0);" onclick="AttrBbuteEdit(this);" data-url="{:U('ShopProduct/attribute_edit',array('id'=>$vo['attr_id']))}" class="btn blue">
+                                            编辑
+                                        </a>
+                                        <i></i>
+                                    {/eq}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@attribute_del'|is_check_access" value="1"}
+                                        <a class="btn red" href="javascript:void(0);" data-url="{:U('ShopProduct/attribute_del')}" data-id="{$vo.attr_id}" data-deltype="pseudo" onclick="DelFind(this);">
+                                            删除
+                                        </a>
+                                    {/eq}
+                                </div>
+                            </td>
+                            
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@attribute_edit'|is_check_access" value="1"}
+                                        <input style="text-align: left;" type="text" onchange="changeTableVal('product_attribute','attr_id','{$vo.attr_id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                    {else /}
+                                        {$vo.sort_order}
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                {eq name="$Think.const.CONTROLLER_NAME.'@attribute_del'|is_check_access" value="1"}
+                    <div class="fbutton">
+                        <a href="javascript:void(0);" onclick="DelBatch(this, 'ids');" data-url="{:U('ShopProduct/attribute_del')}" data-deltype="pseudo" class="layui-btn layui-btn-primary">
+                                <span>批量删除</span>
+                        </a>
+                    </div>
+                {/eq}
+                
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        $('#searchForm select[name=typeid]').change(function(){
+            $('#searchForm').submit();
+        });
+    });
+
+    // 添加参数值
+    function AttrBbuteAdd(obj) {
+        var url = $(obj).data('url');
+        layer.open({
+            type: 2,
+            title: '添加参数值',
+            area: ['70%', '550px'],
+            content: url
+        });
+    }
+
+    // 编辑参数值
+    function AttrBbuteEdit(obj) {
+        var url = $(obj).data('url');
+        layer.open({
+            type: 2,
+            title: '编辑参数值',
+            area: ['70%', '550px'],
+            content: url
+        });
+    }
+
+    var list_id = {$Request.param.list_id};
+    // 删除
+    function DelFind(obj) {
+        layer.confirm('此操作不可恢复，确认彻底删除？', {
+            title: false,
+            closeBtn: 0,
+            btn: ['确定','取消']
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id'), list_id:list_id, _ajax:1},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                },
+                error:function(){
+                    layer.closeAll();
+                    layer.alert(ey_unknown_error, {icon: 2, title:false});
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }
+
+    /**
+     * 批量删除提交
+     */
+    function DelBatch(obj, name) {
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {icon: 2, title:false});
+            return;
+        }
+        // 删除按钮
+        layer.confirm('此操作不可恢复，确认批量彻底删除？', {
+            title: false,
+            closeBtn: 0,
+            btn: ['确定', '取消']
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:a, list_id:list_id, _ajax:1},
+                dataType: 'json',
+                success: function (data) {
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                },
+                error:function(){
+                    layer.closeAll();
+                    layer.alert(ey_unknown_error, {icon: 2, title:false});
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+</script>
+
+{include file="public/footer" /}

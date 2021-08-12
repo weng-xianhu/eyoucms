@@ -1,35 +1,21 @@
 {include file="public/layout" /}
-
-<body style="background-color: rgb(255, 255, 255); overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
 <style type="text/css">
-
-.system_table{ border:1px solid #dcdcdc; width:100%;}
-.system_table td{ height:40px; line-height:40px; font-size:12px; color:#454545; border-bottom:1px solid #dcdcdc; border-right:1px solid #dcdcdc; width:35%;padding-left:3%;}
-.system_table td.gray_bg{ background:#f7f7f7; width:15%;}
-
+    .system_table{ border:1px solid #dcdcdc; width:100%;}
+    .system_table td{ height:40px; line-height:40px; font-size:12px; color:#454545; border-bottom:1px solid #dcdcdc; border-right:1px solid #dcdcdc; width:35%; padding-left:1%;}
+    .system_table td.gray_bg{ background:#f7f7f7; width:15%;}
 </style>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
-    {include file="member/bar" /}
     <div class="flexigrid">
-        <div class="mDiv">
-            <div class="ftitle">
-                <h3>订单详情</h3>
-            </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
-            <div class="sDiv">
-                <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
-                    <input type="button" class="btn current" value="返回列表" onclick="window.location.href='{:url("Shop/index")}';">
-                </div>
-            </div>
-        </div>
+        
         <form class="form-horizontal" id="postForm" action="{:url('Shop/order_mark_status')}" method="post">
-            <input type="hidden" name="order_id" value="{$OrderData.order_id}">
+            <input type="hidden" name="order_id" id="order_id" value="{$OrderData.order_id}">
             <input type="hidden" name="order_code" value="{$OrderData.order_code}">
             <input type="hidden" name="users_id" value="{$OrderData.users_id}">
             <input type="hidden" name="consignee" value="{$OrderData.consignee}">
-            <div class="hDiv">
+            <div class="hDiv htitx">
                 <div class="hDivBox">
                     <table cellspacing="0" cellpadding="0" style="width: 100%">
                         <thead>
@@ -68,8 +54,77 @@
                             <td class="gray_bg">手机号码：</td>
                             <td>{$UsersData.mobile}</td>
                             <td class="gray_bg">应付金额：</td>
-                            <td>￥{$OrderData.order_amount}</td>
+                            <td>
+                                <input type="hidden" id="order_amount_old" value="{$OrderData.order_amount}">
+                                <span id="order_amount">￥{$OrderData.order_amount}</span>
+                                {gt name="$OrderData.shipping_fee" value="0"}(含运费:{$OrderData.shipping_fee}){/gt}
+                                
+                                {eq name="$OrderData.order_status" value="0"}
+                                    <a href="JavaScript:void(0);" style="color: red;" onclick="PromptChangePrice();">[改价]</a>
+                                {else/}
+                                    {gt name="$OrderData.order_total_amount" value="$OrderData.order_amount"}
+                                        <span style="color: red;" title="应付金额已被更改过">[已改价]</span>
+                                    {/gt}
+                                {/eq}
+                            </td>
                         </tr>
+                        <script type="text/javascript">
+                            // 弹出改价输入框
+                            function PromptChangePrice() {
+                                layer.prompt({
+                                    title: false, 
+                                    formType: 3,
+                                    id: 'BulkSetPrice',
+                                    btn: ['确定', '关闭'],
+                                    closeBtn: 0,
+                                    success: function(layero, index) {
+                                        $("#BulkSetPrice").find('input').attr('placeholder', '请输入应付金额');
+                                        $("#BulkSetPrice").find('input').attr('value', $('#order_amount_old').val());
+                                        $("#BulkSetPrice").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                        $("#BulkSetPrice").find('input').attr('onpaste', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                        var msg = '<span style="color: red;">改价后让用户重新进入订单列表点击支付</span>';
+                                        $("#BulkSetPrice").append(msg);
+                                        // 修改订单金额后为保证支付金额准确有效<br/>请让用户刷新订单列表页后重新点击支付
+                                    }
+                                }, function(price, index) {
+                                    if (0 < price) {
+                                        layer.close(index);
+                                        OrderChangePrice(price);
+                                    } else {
+                                        layer.msg('应付金额不允许为0', {time: 1500});
+                                    }
+                                });
+                            }
+
+                            // 提交改价数据并追加一条订单操作记录
+                            function OrderChangePrice(Price) {
+                                if (0 >= Price) layer.msg('应付金额不允许为0', {time: 1500});
+                                layer_loading('正在处理');
+                                $.ajax({
+                                    type : 'post',
+                                    url  : "{:url('Shop/order_change_price')}",
+                                    data : {
+                                        order_id: $('#order_id').val(),
+                                        order_amount_old: $('#order_amount_old').val(),
+                                        order_amount: Price,
+                                        _ajax: 1
+                                    },
+                                    dataType : 'json',
+                                    success : function(res) {
+                                        layer.closeAll();
+                                        if (1 == res.code) {
+                                            layer.msg(res.msg, {time: 1500}, function() {
+                                                window.location.reload();
+                                            });
+                                        } else {
+                                            layer.alert(res.msg, {title: false, closeBtn: 0}, function() {
+                                                window.location.reload();
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        </script>
                         <tr>
                             <td class="gray_bg">支付方式：</td>
                             <td>
@@ -83,26 +138,9 @@
                             <td>
                                 {$admin_order_status_arr[$OrderData.order_status]|default=''}
                                 {eq name="$OrderData.order_status" value="2"}
-                                    &nbsp;<a href="javascript:void(0);" data-url="{:url('Shop/order_send',array('order_id'=>$OrderData['order_id']))}" onclick="sendOrderDetails(this);" class="ncap-btn ncap-btn-green" >
+                                    &nbsp;<a href="{:url('Shop/order_send',array('order_id'=>$OrderData['order_id']))}" class="ncap-btn ncap-btn-green" >
                                         发货详情
                                     </a>
-                                    <script type="text/javascript">
-                                        // 发货、标记未付款
-                                        function sendOrderDetails(obj){
-                                            var url = $(obj).attr('data-url');
-                                            //iframe窗
-                                            var iframes = layer.open({
-                                                type: 2,
-                                                title: '订单发货详情',
-                                                fixed: true, //不固定
-                                                shadeClose: false,
-                                                shade: 0.3,
-                                                area: ['100%', '100%'],
-                                                content: url
-                                            });
-                                            layer.full(iframes);
-                                        }
-                                    </script>
                                     {eq name="$OrderData.prom_type" value="0"}
                                         &nbsp;<a href="javascript:void(0);" data-url="{$MobileExpressUrl}" onclick="LogisticsInquiry(this);" class="ncap-btn ncap-btn-green" >
                                             物流查询
@@ -130,7 +168,7 @@
                             <td class="gray_bg">下单时间：</td>
                             <td>{$OrderData.add_time|MyDate='Y-m-d H:i:s',###}</td>
                             <td class="gray_bg">付款时间：</td>
-                            <td>{$OrderData.pay_time|MyDate='Y-m-d H:i:s',###}</td>
+                            <td>{neq name="$OrderData.pay_time" value="0"}{$OrderData.pay_time|MyDate='Y-m-d H:i:s',###}{/neq}</td>
                         </tr>
                         <tr>
                             <td class="gray_bg">付款方式：</td>
@@ -156,7 +194,7 @@
                 </table>
             </div>
 
-            <div class="hDiv">
+            <div class="hDiv htitx">
                 <div class="hDivBox">
                     <table cellspacing="0" cellpadding="0" style="width: 100%">
                         <thead>
@@ -178,7 +216,7 @@
             <div class="ncap-form-default">
                 {empty name="$OrderData.prom_type"}
                 <dl class="row">
-                    <dt class="tit">
+                    <dt class="tit pl15">
                         <label>收货人</label>
                     </dt>
                     <dd class="opt">          
@@ -186,7 +224,7 @@
                     </dd>
                 </dl>
                 <dl class="row">
-                    <dt class="tit">
+                    <dt class="tit pl15">
                         <label>联系方式</label>
                     </dt>
                     <dd class="opt">          
@@ -194,7 +232,7 @@
                     </dd>
                 </dl>
                 <dl class="row">
-                    <dt class="tit">
+                    <dt class="tit pl15">
                         <label>收货地址</label>
                     </dt>
                     <dd class="opt">          
@@ -204,7 +242,7 @@
                
                 {/empty}
                 <dl class="row">
-                    <dt class="tit">
+                    <dt class="tit pl15">
                         <label>订单留言</label>
                     </dt>
                     <dd class="opt">          
@@ -212,7 +250,7 @@
                     </dd>
                 </dl>
                 <dl class="row">
-                    <dt class="tit">
+                    <dt class="tit pl15">
                         <label>管理员备注</label>
                     </dt>
                     <dd class="opt">          
@@ -221,53 +259,33 @@
                         <p class="notic"></p>
                     </dd>
                 </dl>
-                <div class="bot" style="padding-bottom:0px;">
-                    <input type="hidden" name="gourl" value="{$gourl}">
+                <div class="bot pl120" style="padding-bottom:0px;">
+                    <input type="hidden" name="gourl" value="{$gourl|default=''}">
                     <a href="JavaScript:void(0);" onclick="UpNote('{$OrderData.order_id}');" class="ncap-btn-big ncap-btn-green" id="submitBtn">保存</a>
                 </div>
             </div>
 
-            <div class="hDiv">
-                <div class="hDivBox">
-                    <table cellspacing="0" cellpadding="0" style="width: 100%">
-                        <thead>
-                        <tr>
-                            <th class="sign w10" axis="col0">
-                                <div class="tc"></div>
-                            </th>
-                            <th abbr="article_title" axis="col3" class="w10">
-                                <div class="tc">商品信息</div>
-                            </th>
-                            <th abbr="ac_id" axis="col4">
-                                <div class=""></div>
-                            </th>
-                        </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
+            
 
             <div class="hDiv" style="margin-top: 5px;">
                 <div class="hDivBox">
                     <table cellspacing="0" cellpadding="0" style="width: 100%">
                         <thead>
                             <tr>
-                                <th class="sign w60" axis="col0">
-                                    <div class="tc">商品ID</div>
-                                </th>
+                                
                                 <th abbr="article_title" axis="col3" class="">
-                                    <div style="text-align: left; padding-left: 10px;" class="">商品名称</div>
+                                    <div class="tl text-l10">商品名称</div>
                                 </th>
-                                <th abbr="article_time" axis="col6" class="w150">
-                                    <div class="tl">规格属性</div>
+                                <th abbr="article_time" axis="col6" class="w210">
+                                    <div class="tc ">规格属性</div>
                                 </th>
-                                <th abbr="article_time" axis="col6" class="w80">
+                                <th abbr="article_time" axis="col6" class="w210">
                                     <div class="tc">数量</div>
                                 </th>
-                                <th abbr="article_time" axis="col6" class="w100">
+                                <th abbr="article_time" axis="col6" class="w150">
                                     <div class="tc">会员价格</div>
                                 </th>
-                                <th abbr="article_title" axis="col3" class="w100">
+                                <th abbr="article_title" axis="col3" class="w300">
                                     <div class="tc">单品小计</div>
                                 </th>
                             </tr>
@@ -288,35 +306,31 @@
                         {else/}
                             {foreach name="DetailsData" item="vo" key="k" }
                             <tr>
-                                <td class="sort">
-                                    <div class="tc w60">
-                                        {$vo.product_id}
-                                    </div>
-                                </td>
+                                
                                 <td class="" style="width: 100%;">
-                                    <div class="tl" style="padding-left: 10px;">
+                                    <div class="tl text-l10">
                                         <a href="{$vo.arcurl}" target="_blank">
                                             <img src="{$vo.litpic}" style="width: 60px;height: 60px;"> {$vo.product_name}
                                         </a>
                                     </div>
                                 </td>
                                 <td class="sort">
-                                    <div class="tl w150">
+                                    <div class="tc w210 text-l10">
                                         {$vo.data}
                                     </div>
                                 </td>
                                 <td class="sort">
-                                    <div class="tc w80">
+                                    <div class="tc w210">
                                         {$vo.num}
                                     </div>
                                 </td>
                                 <td class="sort">
-                                    <div class="tc w100">
+                                    <div class="tc w150">
                                         ￥{$vo.product_price}
                                     </div>
                                 </td>
                                 <td class="sort">
-                                    <div class="tc w100">
+                                    <div class="tc w300">
                                         ￥{$vo.subtotal}
                                     </div>
                                 </td>
@@ -374,53 +388,27 @@
                 </dl>
             </div> -->
 
-            <div class="hDiv">
-                <div class="hDivBox">
-                    <table cellspacing="0" cellpadding="0" style="width: 100%">
-                        <thead>
-                        <tr>
-                            <th class="sign w10" axis="col0">
-                                <div class="tc"></div>
-                            </th>
-                            <th abbr="article_title" axis="col3" class="w10">
-                                <div class="tc">操作记录</div>
-                            </th>
-                            <th abbr="ac_id" axis="col4">
-                                <div class=""></div>
-                            </th>
-                        </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
+            
             <div class="hDiv" style="margin-top: 5px;">
                 <div class="hDivBox">
                     <table cellspacing="0" cellpadding="0" style="width: 100%">
                         <thead>
                         <tr>
-                            <th class="sign w10" axis="col0">
-                                <div class="tl"></div>
+                            
+                            <th abbr="article_time" axis="col6">
+                                <div class="tl text-l10">操作记录</div>
                             </th>
-                            <th class="sign w130" axis="col0">
-                                <div class="tl">操作者</div>
+                            <th class="sign w210" axis="col0">
+                                <div class="tc">操作者</div>
                             </th>
-                            <th abbr="article_title" axis="col3" class="w180">
+                            <th abbr="article_title" axis="col3" class="w210">
                                 <div class="tc">操作时间</div>
                             </th>
-                            <th abbr="article_time" axis="col6" class="w100">
-                                <div class="tc">支付状态</div>
-                            </th>
-                            <th abbr="article_time" axis="col6" class="w100">
-                                <div class="tc">发货状态</div>
-                            </th>
-                            <th abbr="article_time" axis="col6" class="w100">
+                            <th abbr="article_time" axis="col6" class="w150">
                                 <div class="tc">订单状态</div>
                             </th>
-                            <th abbr="article_time" axis="col6" class="w100">
-                                <div class="tc">操作描述</div>
-                            </th>
-                            <th abbr="article_title" axis="col3" class="">
-                                <div style="text-align: left; padding-left: 10px;" class="">操作备注</div>
+                            <th abbr="article_title" axis="col3" class="w300">
+                                <div class="tc">操作备注</div>
                             </th>
                         </tr>
                         </thead>
@@ -440,41 +428,31 @@
                         {else/}
                             {foreach name="Action" item="vo" key="k" }
                             <tr>
-                                <td class="sort">
-                                    <div class="tl w10"></div>
+                                
+                                <td class="sort" style="width: 100%;">
+                                    <div class="tl text-l10" >
+                                        {$vo.action_desc}
+                                    </div>
                                 </td>
                                 <td class="sort">
-                                    <div class="tl w130">
+                                    <div class="tc w210">
                                         {$vo.username}
                                     </div>
                                 </td>
                                 <td class="sort">
-                                    <div class="tc w180">
+                                    <div class="tc w210">
                                         {$vo.add_time|MyDate='Y-m-d H:i:s',###}
                                     </div>
                                 </td>
+                               
                                 <td class="sort">
-                                    <div class="tc w100">
+                                    <div class="tc w150">
+                                        
                                         {$admin_order_status_arr[$vo.order_status]|default=''}
                                     </div>
                                 </td>
-                                <td class="sort">
-                                    <div class="tc w100">
-                                        {$vo.pay_status}
-                                    </div>
-                                </td>
-                                <td class="sort">
-                                    <div class="tc w100">
-                                        {$vo.express_status}
-                                    </div>
-                                </td>
-                                <td class="sort">
-                                    <div class="tc w100">
-                                        {$vo.action_desc}
-                                    </div>
-                                </td>
-                                <td class="" style="width: 100%;">
-                                    <div class="tl" style="padding-left: 10px;">
+                                <td class="sort" >
+                                    <div class="tc w300" >
                                         {$vo.action_note}
                                     </div>
                                 </td>
@@ -529,7 +507,7 @@
     function UpNote(order_id){
         var admin_note = $('#admin_note').val();
         $.ajax({
-            url: "{:url('Shop/update_note')}",
+            url: "{:url('Shop/update_note', ['_ajax'=>1])}",
             data: {order_id:order_id,admin_note:admin_note},
             type:'post',
             dataType:'json',

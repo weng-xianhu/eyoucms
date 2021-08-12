@@ -1,0 +1,70 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width: auto;padding-bottom: 0px;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div style="min-width: auto;box-shadow:none;">
+    <form class="form-horizontal" id="postForm" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="tags"><em>*</em>Tag标签列表</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <textarea style="width:250px; height:380px;" name="tags" id="tags" placeholder="一行代表一个Tag标签"></textarea>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+    function checkForm(){
+
+        if($('input[name=tags]').val() == ''){
+            showErrorMsg('Tag列表不能为空！');
+            $('input[name=tags]').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+        
+        $.ajax({
+            type : 'post',
+            url : "{:url('Encodes/ajax_tags_batch_add', ['_ajax'=>1])}",
+            data : $('#postForm').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
+    }
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        $('#think_page_trace_open').css('z-index', 99999);
+    });
+</script>
+</body>
+</html>

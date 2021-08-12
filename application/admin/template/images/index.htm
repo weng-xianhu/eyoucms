@@ -3,33 +3,23 @@
 <body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page" style="box-shadow:none;">
     {include file="article/bar" /}
-    <div class="flexigrid">
+    <div class="flexigrid" style="min-height: 600px;">
         <div class="mDiv">
             <div class="ftitle">
-                <h3>{$arctype_info.typename|default=''}</h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
+                {include file="archives/tags_btn" /}
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
-            <form class="navbar-form form-inline" action="{:url('Images/index')}" method="get" onsubmit="layer_loading('正在处理');">
+            <form class="navbar-form form-inline" id="searchForm" action="{:url('Images/index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
-                    {include file="archives/tags_btn" /}
-                    <div class="sDiv2">  
-                        <select name="flag" class="select" style="margin:0px 5px;">
-                            <option value="">--属性--</option>
-                            <option value="is_recom" {eq name="$Request.param.flag" value="is_recom"}selected{/eq}>推荐</option>
-                        </select>
-                    </div>
+                    {include file="archives/flag_btn" /}
                     <div class="sDiv2">
                         <input type="hidden" name="typeid" id="typeid" value="{$Request.param.typeid|default=''}">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="标题搜索...">
                         <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
                     </div>
-                    <!-- <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Images/index', array("typeid"=>$Request.param.typeid))}';">
-                    </div> -->
                 </div>
             </form>
         </div>
@@ -39,9 +29,9 @@
                     <thead>
                     <tr>
                         <th class="sign w40" axis="col0">
-                            <div class="tc">选择</div>
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                         </th>
-                        <th abbr="article_title" axis="col3" class="w40">
+                        <th abbr="article_title" axis="col3" class="w70">
                             <div class="tc">ID</div>
                         </th>
                         <th abbr="article_title" axis="col3" class="">
@@ -51,15 +41,18 @@
                             <div class="tc">所属栏目</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w50">
+                            <div class="tc"><a href="{:getArchivesSortUrl('arcrank')}">审核&nbsp;<i {eq name='$Request.param.orderway' value='asc'}class="fa fa-sort"{else /}class="fa fa-sort"{/eq}></i></a></div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w50">
                             <div class="tc">推荐</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w60">
-                            <div class="tc">浏览量</div>
+                            <div class="tc">点击</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">更新时间</div>
+                            <div class="tc">发布时间</div>
                         </th>
-                        <th align="center" axis="col1" class="w180">
+                        <th align="center" axis="col1" class="w160">
                             <div class="tc">操作</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w60">
@@ -85,27 +78,42 @@
                         {foreach name="list" item="vo" key="k" }
                         <tr>
                             <td class="sign">
-                                <div class="tc w40"><input type="checkbox" name="ids[]" value="{$vo.aid}"></div>
+                                <div class="tc w40"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.aid}"></div>
                             </td>
                             <td class="sort">
-                                <div class="tc w40">
+                                <div class="tc w70">
                                     {$vo.aid}
                                 </div>
                             </td>
                             <td style="width: 100%;">
                                 <div class="tl" style="padding-left: 10px;">
-                                    {notempty name="vo.litpic"}
-                                        <img src="__SKIN__/images/pic.gif" onmouseover="layer_tips=layer.tips('<img src={$vo.litpic} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});" onmouseout="layer.close(layer_tips);">&nbsp;
+                                    {notempty name="$vo.is_litpic"}
+                                        <i class="fa fa-picture-o color_z" onmouseover="layer_tips=layer.tips('<img src={$vo.litpic} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});" onmouseout="layer.close(layer_tips);"></i>
                                     {/notempty}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
                                     <a href="{:url('Images/edit',array('id'=>$vo['aid']))}" style="{eq name="vo.is_b" value="1"} font-weight: bold;{/eq}">{$vo.title}</a>
                                     {else /}
                                     {$vo.title}
                                     {/eq}
+                                    {assign name='showArcFlagData' value='$vo|showArchivesFlagStr'}
+                                    {volist name='$showArcFlagData' id="vo1"}
+                                        {eq name='$i' value='1'}<span style="color: red;">[{/eq}
+                                        <i style="font-size: 12px;">{$vo1['small_name']}</i>
+                                        {eq name='$i' value='$showArcFlagData|count'}]</span>{/eq}
+                                    {/volist}
                                 </div>
                             </td>
                             <td align="center" class="">
                                 <div class="w100 tc"><a href="{:url('Images/index', array('typeid'=>$vo['typeid'], 'tab'=>3))}">{$vo.typename|default='<i class="red">数据出错！</i>'}</a></div>
+                            </td>
+                            <td align="center" class="">
+                                <div class="tc w50">
+                                    {if condition="$vo['arcrank'] eq -1"}
+                                    <span class="no" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"} data-typeid="{$vo.typeid}" data-seo_pseudo="{$seo_pseudo|default='1'}" onclick="changeTableVal('archives','aid','{$vo.aid}','arcrank',this);" {/eq} ><i class="fa fa-ban"></i>否</span>
+                                    {else /}
+                                    <span class="yes" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"} data-typeid="{$vo.typeid}" data-seo_pseudo="{$seo_pseudo|default='1'}" onclick="changeTableVal('archives','aid','{$vo.aid}','arcrank',this);" {/eq} ><i class="fa fa-check-circle"></i>是</span>
+                                    {/if}
+                                </div>
                             </td>
                             <td align="center" class="">
                                 <div class="tc w50">
@@ -123,24 +131,26 @@
                             </td>
                             <td>
                                 <div class="w100 tc">
-                                    {$vo.update_time|date='Y-m-d',###}
+                                    {$vo.add_time|date='Y-m-d',###}
                                 </div>
                             </td>
-                            <td>
-                                <div class="w180 tc">
+                            <td class="operation">
+                                <div class="w160 tc">
                                     {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
-                                    <a href="{:url('Images/edit',array('id'=>$vo['aid']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    <a href="{:url('Images/edit',array('id'=>$vo['aid']))}" class="btn blue">编辑</a>
+                                    <i></i>
                                     {/eq}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
-                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Images/del')}" data-id="{$vo.aid}" data-deltype="pseudo" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
-                                    <a href="{$vo.arcurl}" class="btn blue" target="_blank"><i class="fa fa-pencil-square-o"></i>浏览</a>
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Images/del')}" data-id="{$vo.aid}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
+                                    <i></i>
                                     {/eq}
+                                    <a href="{$vo.arcurl}" class="btn blue" target="_blank">浏览</a>
                                 </div>
                             </td>
                             <td class="sort">
                                 <div class="w60 tc">
                                     {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
-                                    <input style="text-align: center;" type="text" onchange="changeTableVal('archives','aid','{$vo.aid}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                    <input type="text" onchange="changeTableVal('archives','aid','{$vo.aid}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
                                     {else /}
                                     {$vo.sort_order}
                                     {/eq}
@@ -155,46 +165,55 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
-        <div class="tDiv">
-            <div class="tDiv2">
-                <div class="fbutton checkboxall">
-                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+        <div class="footer-oper">
+            <span class="ml15">
+                <input type="checkbox" autocomplete="off" class="checkAll">
+            </span>
+            <div class="nav-dropup">
+                <button class="layui-btn layui-btn-primary dropdown-bt">批量操作<i class="layui-icon layui-icon-up"></i></button>
+                <div class="dropdown-menus" style="display:none; {if condition='0 < $pager->totalRows && ($pager->totalRows < 3 || $pager->listRows < 3)'}top:28px;bottom:unset;border-bottom:1px solid rgba(0,0,0,.15);border-top:none;min-height: 250px;{/if}">
+                    {eq name="'Archives@batch_attr'|is_check_access" value="1"}
+                    <a href="javascript:void(0);" onclick="batch_attr(this, 'ids', '批量新增属性');" data-url="{:url('Archives/batch_attr', ['opt'=>'add'])}">新增属性</a>
+                    <a href="javascript:void(0);" onclick="batch_attr(this, 'ids', '批量删除属性');" data-url="{:url('Archives/batch_attr', ['opt'=>'del'])}">删除属性</a>
+                    <hr class="layui-bg-gray">
+                    {/eq}
+                    {eq name="'Archives@batch_copy'|is_check_access" value="1"}
+                    <a href="javascript:void(0);" onclick="func_batch_copy(this, 'ids');" data-url="{:url('Archives/batch_copy', array('typeid'=>$Request.param.typeid))}">复制文档</a>
+                    {/eq}
+                    {eq name="'Archives@move'|is_check_access" value="1"}
+                    <a href="javascript:void(0);" onclick="func_move(this, 'ids');" data-url="{:url('Archives/move', array('typeid'=>$Request.param.typeid))}">移动文档</a>
+                    {/eq}
+                    {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                    <a href="javascript:void(0);" onclick="batch_del(this, 'ids');" data-url="{:url('Images/del')}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}>删除文档</a>
+                    {/eq}
+                    {eq name="'Archives@check'|is_check_access" value="1"}
+                    <hr class="layui-bg-gray">
+                    <a href="javascript:void(0);" onclick="batch_check(this, 'ids');" data-url="{:url('Archives/check')}">审核文档</a>
+                    <a href="javascript:void(0);" onclick="batch_check(this, 'ids');" data-url="{:url('Archives/uncheck')}">取消审核</a>
+                    {/eq}
                 </div>
-                {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Images/del')}" data-deltype="pseudo">
-                        <div class="add" title="批量删除">
-                            <span><i class="fa fa-close"></i>批量删除</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
-                {eq name="'Archives@move'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a onclick="func_move(this, 'ids');" data-url="{:url('Archives/move', array('typeid'=>$Request.param.typeid))}">
-                        <div class="add" title="批量移动">
-                            <span><i class="fa fa-hdd-o"></i>批量移动</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
-                {eq name="$Think.const.CONTROLLER_NAME.'@add'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a href="{:url('Images/add', array('typeid'=>$Request.param.typeid))}">
-                        <div class="add" title="新增图集">
-                            <span class="red"><i class="fa fa-plus"></i>新增图集</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
             </div>
-            <div style="clear:both"></div>
+            {eq name="'RecycleBin@archives_index'|is_check_access" value="1"}
+                {neq name='$recycle_switch' value='1'}  <a href="{:url('RecycleBin/archives_index')}" class="layui-btn layui-btn-primary" title="回收站">回收站</a>{/neq}
+            {/eq}
+            {include file="public/page" /}
         </div>
-        <!--分页位置-->
-        {$page}
     </div>
 </div>
 <script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    
     $(document).ready(function(){
 
         // 表格行点击选中切换
@@ -206,6 +225,16 @@
         $('.fa-refresh').click(function(){
             location.href = location.href;
         });
+
+        // 批量操作
+        $(".dropdown-bt").click(function(){
+            $(".dropdown-menus").slideToggle(200);
+            event.stopPropagation();
+        })
+        $(document).click(function(){
+            $(".dropdown-menus").slideUp(200);
+            event.stopPropagation();
+        })
     });
 
     var aids = '';
@@ -241,6 +270,56 @@
             area: ['350px', '260px'],
             content: url
         });
+    }
+
+    /**
+     * 批量审核
+     */
+    function batch_check(obj, name) {
+
+        var url = $(obj).attr('data-url');
+
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {icon: 2, title:false});
+            return;
+        }
+
+        // title = '批量审核';
+        // btn = ['确定', '取消']; //按钮
+        // // 删除按钮
+        // layer.confirm(title, {
+        //     title: false,
+        //     btn: btn //按钮
+        // }, function () {
+        layer_loading('正在处理');
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: {ids:a, _ajax:1},
+            dataType: 'json',
+            success: function (data) {
+                layer.closeAll();
+                if(data.code == 1){
+                    layer.msg(data.msg, {icon: 1});
+                    window.location.reload();
+                }else{
+                    layer.alert(data.msg, {icon: 2, title:false});
+                }
+            },
+            error:function(){
+                layer.closeAll();
+                layer.alert(ey_unknown_error, {icon: 2, title:false});
+            }
+        });
+        // }, function (index) {
+        //     layer.closeAll(index);
+        // });
     }
 
     /**

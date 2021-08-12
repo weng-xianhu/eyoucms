@@ -1,0 +1,401 @@
+{include file="public/layout" /}
+<script type="text/javascript" src="__PUBLIC__/plugins/laydate/laydate.js"></script>
+<script type="text/javascript" src="__PUBLIC__/plugins/colpick/js/colpick.js"></script>
+<link href="__PUBLIC__/plugins/colpick/css/colpick.css" rel="stylesheet" type="text/css"/>
+<style type="text/css">
+#coupon_color {
+    /*margin:0;*/
+    /*padding:0;*/
+    border:solid 1px #dc143c;
+    width:70px;
+    height:20px;
+    border-right:40px solid green;
+    /*line-height:20px;*/
+} 
+</style>
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="shop/left" /}
+<div class="page" style="margin-left:98px;">
+    <div class="fixed-bar">
+        <div class="item-title"><a class="back" href="{:url('Coupon/index')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            <ul class="tab-base nc-row">
+                <li><a href="javascript:void(0);" class="tab current"><span>编辑优惠券</span></a></li>
+            </ul>
+        </div>
+    </div>
+    <form class="form-horizontal" id="postForm" action="{:url('Coupon/edit')}" method="post">
+        <input type="hidden" name="coupon_id" value="{$info.coupon_id}">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="coupon_name"><em>*</em>优惠券名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="coupon_name" id="coupon_name" value="{$info.coupon_name}" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="coupon_name"><em>*</em>优惠券颜色</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="coupon_color" id="coupon_color" value="{$info.coupon_color|default='#dc143c'}" style="border-color: {$info.coupon_color|default='#dc143c'};">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row" onselectstart="return false">
+                <dt class="tit">
+                    <label for="coupon_type"><em>*</em>可使用商品</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="radio" name="coupon_type" value="1" {eq name="$info.coupon_type" value="1"} checked="checked" {/eq}/>&nbsp;全站通用</label>
+                    &nbsp; &nbsp;
+                    <label><input type="radio" name="coupon_type" value="2" {eq name="$info.coupon_type" value="2"} checked="checked" {/eq}/>&nbsp;指定商品</label>
+                    &nbsp; &nbsp;
+                    <label><input type="radio" name="coupon_type" value="3" {eq name="$info.coupon_type" value="3"} checked="checked" {/eq}/>&nbsp;指定分类</label>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row none">
+                <dt class="tit">
+                    <label for="coupon_form"><em>*</em>优惠券类型</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="radio" name="coupon_form" value="1" checked="checked"/>&nbsp;满减券</label>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row none" {eq name="$info.coupon_type" value="2"} style="display: block;" {/eq}>
+                <dt class="tit">
+                    <label for="product_id"><em>*</em>商品集合</label>
+                </dt>
+                <dd class="opt">
+                    <a href="JavaScript:void(0);" onclick="Product();" class="ncap-btn ncap-btn-green">选择商品</a>
+                    <input type="hidden" name="product_id" id="product_id" value="{$info.product_id}">
+                    <input type="hidden" id="SelectProductID" value="{$info.product_id}">
+                    <span style="color: red;">已选 <a href="JavaScript:void(0);" id="product_id_num">{$info.product_id_num}</a> 商品</span>
+                </dd>
+            </dl>
+            <script type="text/javascript">
+                $( function() {
+                    $('#product_id_num').click( function() {
+                        var product_ids = $('#product_id').val();
+                        var url = "{:url('Coupon/select_product', ['coupon_id'=>$info.coupon_id])}";
+                        url = url + '&product_ids=' + product_ids;
+                        //iframe窗
+                        layer.open({
+                            type: 2,
+                            title: '已选商品列表',
+                            shadeClose: false,
+                            shade: 0.3,
+                            area: ['80%', '90%'],
+                            content: url
+                        });
+                    });
+                });
+
+                function Product() {
+                    var url = "{:url('Coupon/select_product')}";
+                    //iframe窗
+                    layer.open({
+                        type: 2,
+                        title: '请选择商品',
+                        shadeClose: false,
+                        shade: 0.3,
+                        area: ['80%', '90%'],
+                        content: url
+                    });
+                }
+            </script>
+
+            <dl class="row none" {eq name="$info.coupon_type" value="3"} style="display: block;" {/eq}>
+                <dt class="tit">
+                    <label for="arctype_id"><em>*</em>商品分类</label>
+                </dt>
+                <dd class="opt">
+                    <a href="JavaScript:void(0);" onclick="Arctype();" class="ncap-btn ncap-btn-green">选择分类</a>
+                    <input type="hidden" name="arctype_id" id="arctype_id" value="{$info.arctype_id}">
+                    <input type="hidden" id="SelectArctypeID" value="{$info.arctype_id}">
+                    <span style="color: red;">已选 <a href="JavaScript:void(0);" id="arctype_id_num">{$info.arctype_id_num}</a> 分类</span>
+                </dd>
+            </dl>
+            <script type="text/javascript">
+                $( function() {
+                    $('#arctype_id_num').click( function() {
+                        var arctype_ids = $('#arctype_id').val();
+                        var url = "{:url('Coupon/select_arctype', ['coupon_id'=>$info.coupon_id])}";
+                        url = url + '&arctype_ids=' + arctype_ids;
+                        //iframe窗
+                        layer.open({
+                            type: 2,
+                            title: '已选分类列表',
+                            shadeClose: false,
+                            shade: 0.3,
+                            area: ['80%', '90%'],
+                            content: url
+                        });
+                    });
+                });
+
+                function Arctype() {
+                    var url = "{:url('Coupon/select_arctype')}";
+                    //iframe窗
+                    layer.open({
+                        type: 2,
+                        title: '请选择分类',
+                        shadeClose: false,
+                        shade: 0.3,
+                        area: ['80%', '90%'],
+                        content: url
+                    });
+                }
+            </script>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="coupon_price"><em>*</em>优惠规则</label>
+                    <!--减免金额-->
+                </dt>
+                <dd class="opt">
+                    满
+                    <input type="text" name="conditions_use" id="conditions_use" value="{$info.conditions_use}" class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 80px !important;">
+                    元，减
+                    <input type="text" name="coupon_price" id="coupon_price" value="{$info.coupon_price}" class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 80px !important;">
+                    元
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="coupon_stock"><em>*</em>库存</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="coupon_stock" id="coupon_stock" value="{$info.coupon_stock}" class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 100px !important;">&nbsp;张
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+
+            <dl class="row none">
+                <dt class="tit">
+                    <label for="redeem_points">兑换所需积分</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="redeem_points" id="redeem_points" value="{$info.redeem_points}" class="input-txt">
+                    <p class="notic">兑换优惠券需要的积分，为0时免费领取</p>
+                </dd>
+            </dl>
+
+            <dl class="row none">
+                <dt class="tit">
+                    <label for="redeem_authority">领取权限</label>
+                </dt>
+                <dd class="opt">
+                    {volist name="users_level" id="vo"}
+                        <label><input type="checkbox" name="level_id[]" value="{$vo.level_id}" {if condition="in_array($vo.level_id, $info.redeem_authority)"} checked="checked" {/if}>{$vo.level_name}</label>
+                    {/volist}
+                    <p class="notic">未勾选时，所有用户都可以领取</p>
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="use_type"><em>*</em>使用期限</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="radio" name="use_type" value="1" {eq name="$info.use_type" value="1"} checked="checked" {/eq} onclick="chooseUseType(this);" />&nbsp;固定时间内有效</label>
+                    <input type="text" autocomplete="off" name="use_start_time" id="use_start_time" {eq name="$info.use_type" value="1"} value="{$info.use_start_time|MyDate='Y-m-d H:i:s',###}" {/eq} {neq name="$info.use_type" value="1"} disabled="disabled" {/neq} class="input-txt" style="width: 130px !important;" />-
+                    <input type="text" autocomplete="off" name="use_end_time" id="use_end_time" {eq name="$info.use_type" value="1"} value="{$info.use_end_time|MyDate='Y-m-d H:i:s',###}" {/eq}  {neq name="$info.use_type" value="1"} disabled="disabled" {/neq} class="input-txt" style="width: 130px !important;" />
+                    <br>
+                    <label><input type="radio" name="use_type" value="2" {eq name="$info.use_type" value="2"} checked="checked" {/eq} onclick="chooseUseType(this);" />&nbsp;领到当日开始</label>
+                    <input type="text" id="valid_days_2" value="{$info.valid_days}" {neq name="$info.use_type" value="2"} disabled="disabled" {/neq} class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 50px !important;">&nbsp;天内有效
+                    <br>
+                    <label><input type="radio" name="use_type" value="3" {eq name="$info.use_type" value="3"} checked="checked" {/eq} onclick="chooseUseType(this);" />&nbsp;领到次日开始</label>
+                    <input type="text" id="valid_days_3" value="{$info.valid_days}" {neq name="$info.use_type" value="3"} disabled="disabled" {/neq}  class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 50px !important;">&nbsp;天内有效
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="start_date"><em>*</em>发放日期</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" autocomplete="off" name="start_date" id="start_date" value="{$info.start_date|MyDate='Y-m-d H:i:s',###}" class="input-txt">
+                    <p class="notic">优惠券开始发放时间</p>
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="end_date"><em>*</em>结束日期</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" autocomplete="off" name="end_date" id="end_date" value="{$info.end_date|MyDate='Y-m-d H:i:s',###}" class="input-txt">
+                    <p class="notic">优惠券发放结束时间</p>
+                </dd>
+            </dl>
+            
+            <div class="bot">
+                <input type="hidden" name="valid_days" id="valid_days" value="{$info.valid_days}">
+
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        // 颜色选择
+        $('#coupon_color').colpick({
+            flat:false,
+            layout:'rgbhex',
+            submit:0,
+            colorScheme:'light',
+            color:$('#coupon_color').val(),
+            onChange:function(hsb,hex,rgb,el,bySetColor) {
+                $(el).css('border-color','#'+hex);
+                // Fill the text box just if the color was set using the picker, and not the colpickSetColor function.
+                if(!bySetColor) $(el).val('#'+hex);
+            }
+        }).keyup(function(){
+            $(this).colpickSetColor('#'+this.value);
+        });
+    });
+
+    function chooseUseType(obj){
+        var val = $(obj).val();
+        if ( 1 == val ){
+            $("#use_start_time").attr('disabled',false);
+            $("#use_end_time").attr('disabled',false);
+            $("#valid_days_2").attr('disabled',true);
+            $("#valid_days_3").attr('disabled',true);
+        }else if( 2 == val ){
+            $("#valid_days_2").attr('disabled',false);
+            $("#use_start_time").attr('disabled',true);
+            $("#use_end_time").attr('disabled',true);
+            $("#valid_days_3").attr('disabled',true);
+        }else if( 3 == val ){
+            $("#valid_days_3").attr('disabled',false);
+            $("#use_start_time").attr('disabled',true);
+            $("#use_end_time").attr('disabled',true);
+            $("#valid_days_2").attr('disabled',true);
+        }
+    }
+
+    $(function () {
+        $('#start_date').layDate();
+        $('#end_date').layDate();
+        $('#use_start_time').layDate();
+        $('#use_end_time').layDate();
+
+        $('input[name=coupon_type]').click(function() {
+            if (3 == $(this).val()) {
+                $('#arctype_id').parent().parent().show();
+                $('#product_id').parent().parent().hide();
+            } else if (2 == $(this).val()) {
+                $('#product_id').parent().parent().show();
+                $('#arctype_id').parent().parent().hide();
+            } else {
+                $('#product_id').parent().parent().hide();
+                $('#arctype_id').parent().parent().hide();
+            }
+        });
+    });
+
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+    function checkForm(){
+        if ($('#coupon_name').val() == '') {
+            showErrorMsg('请填写优惠券名称');
+            $('#coupon_name').focus();
+            return false;
+        }
+        if ($('#conditions_use').val() == '') {
+            showErrorMsg('请填写优惠规则-使用条件');
+            $('#conditions_use').focus();
+            return false;
+        }
+        if ($('#coupon_price').val() == '') {
+            showErrorMsg('请填写优惠规则-减免金额');
+            $('#coupon_price').focus();
+            return false;
+        }
+
+        if ($('#coupon_stock').val() == '') {
+            showErrorMsg('请填写库存');
+            $('#coupon_stock').focus();
+            return false;
+        }
+        var use_type = $("input[name='use_type']:checked").val();
+
+        if ( 1 == use_type ) {
+            if ($('#use_start_time').val() == '') {
+                showErrorMsg('请填写优惠券有效开始时间');
+                $('#use_start_time').focus();
+                return false;
+            }
+            if ($('#use_end_time').val() == '') {
+                showErrorMsg('请填写优惠券有效结束时间');
+                $('#use_end_time').focus();
+                return false;
+            }
+        }else if ( 2 == use_type ) {
+            var valid_days_2 = $('#valid_days_2').val();
+            console.log(valid_days_2)
+            if ( valid_days_2 == '') {
+                showErrorMsg('请填写优惠券有效天数');
+                $('#valid_days_2').focus();
+                return false;
+            }
+            $("#valid_days").val(valid_days_2)
+        }else if ( 3 == use_type ) {
+            var valid_days_3 = $('#valid_days_3').val();
+            console.log(valid_days_3)
+            if ( valid_days_3 == '') {
+                showErrorMsg('请填写优惠券有效天数');
+                $('#valid_days_3').focus();
+                return false;
+            }
+            $("#valid_days").val(valid_days_3)
+        }
+
+        if ($('#start_date').val() == '') {
+            showErrorMsg('请选择优惠券发放日期');
+            $('#start_date').focus();
+            return false;
+        }
+
+        if ($('#end_date').val() == '') {
+            showErrorMsg('请选择优惠券结束日期');
+            $('#end_date').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Coupon/edit', ['_ajax'=>1])}",
+            data : $('#postForm').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                        window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

@@ -1,10 +1,26 @@
 {include file="public/layout" /}
-<body style="background-color: #FFF; overflow: auto;">
+<body class="bodystyle">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
-    {include file="weapp/bar" /}
+    <div class="fixed-bar">
+        <div class="item-title"><a class="back" href="{:url("Weapp/index")}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a></a>
+            <div class="subject">
+                <h3>插件应用</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                {eq name="$Think.const.CONTROLLER_NAME.'@create'|is_check_access" value="1"}
+                <li><a href="{:url("Weapp/create")}" class="tab {if condition="in_array($Request.action, array('create'))"}current{/if}"><span>创建插件</span></a></li>
+                {/eq}
+
+                {eq name="$Think.const.CONTROLLER_NAME.'@pack'|is_check_access" value="1"}
+                <li><a href="{:url("Weapp/pack")}" class="tab {if condition="in_array($Request.action, array('pack'))"}current{/if}"><span>打包插件</span></a></li>
+                {/eq}
+            </ul>
+        </div>
+    </div>
     <form class="form-horizontal" id="post_form" action="{:url('Weapp/create')}" method="post">
         <div class="ncap-form-default">
             <dl class="row">
@@ -54,7 +70,7 @@
                     <label for="author"><em>*</em>开发者</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="author" value="" id="author" class="input-txt">
+                    <input type="text" name="author" value="" id="author" autocomplete="off" class="input-txt">
                     <p class="notic"></p>
                 </dd>
             </dl>
@@ -102,7 +118,7 @@
      * @param str
      */
     function checkVersion(str){
-        var reg = /^v([0-9]+)\.([0-9]+)\.([0-9]+)$/i;
+        var reg = /^v\d+\.\d+\.\d+([0-9\.]*)$/i;
         if(reg.test(str)){
             return true;
         }else{
@@ -118,7 +134,7 @@
     {
         var flag = false;
         var code = $.trim($('input[name=code]').val());
-        var reg = /(^[a-zA-Z0-9]{1,}$)/;
+        var reg = /(^[A-Z]([a-zA-Z0-9]*)$)/;
         if (!reg.test(code)) {
             showErrorMsg('插件标识格式不正确！');
             $('input[name=code]').focus();
@@ -131,13 +147,12 @@
         }
 
         $.ajax({
-            url: "{:url('Weapp/ajax_check_code')}",
+            url: "{:url('Weapp/ajax_check_code', ['_ajax'=>1])}",
             type: 'GET',
             async: false,
             dataType: 'JSON',
             data: {code: code},
             success: function(res){
-                console.log(res)
                 if(res.code == 1){
                     flag = true;
                 } else {

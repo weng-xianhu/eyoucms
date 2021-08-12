@@ -39,7 +39,9 @@ class Tools extends Base {
         }
         $path = tpCache('global.web_sqldatapath');
         $path = !empty($path) ? $path : config('DATA_BACKUP_PATH');
-        @unlink(realpath(trim($path, '/')) . DS . 'backup.lock');
+        if (file_exists(realpath(trim($path, '/')) . DS . 'backup.lock')) {
+            @unlink(realpath(trim($path, '/')) . DS . 'backup.lock');
+        }
         // if (session('?backup_config.path')) {
             //备份完成，清空缓存
             session('backup_tables', null);
@@ -59,6 +61,7 @@ class Tools extends Base {
     {
         //防止备份数据过程超时
         function_exists('set_time_limit') && set_time_limit(0);
+        @ini_set('memory_limit','-1');
 
         /*升级完自动备份所有数据表*/
         if ('all' == $tables) {
@@ -92,7 +95,7 @@ class Tools extends Base {
             //检查是否有正在执行的任务
             $lock = "{$config['path']}backup.lock";
             if(is_file($lock)){
-                return json(array('info'=>'检测到有一个备份任务正在执行，请稍后再试！', 'status'=>0, 'url'=>''));
+                return json(array('msg'=>'检测到有一个备份任务正在执行，请稍后再试！', 'code'=>0, 'url'=>''));
             } else {
                 //创建锁文件
                 file_put_contents($lock, $_SERVER['REQUEST_TIME']);
@@ -100,7 +103,7 @@ class Tools extends Base {
 
             //检查备份目录是否可写
             if(!is_writeable($config['path'])){
-                return json(array('info'=>'备份目录不存在或不可写，请检查后重试！', 'status'=>0, 'url'=>''));
+                return json(array('msg'=>'备份目录不存在或不可写，请检查后重试！', 'code'=>0, 'url'=>''));
             }
             session('backup_config', $config);
 
@@ -119,9 +122,9 @@ class Tools extends Base {
                 $speed = (floor((1/count($tables))*10000)/10000*100);
                 $speed = sprintf("%.2f", $speed);
                 $tab = array('id' => 0, 'start' => 0, 'speed'=>$speed, 'table'=>$tables[0], 'optstep'=>1);
-                return json(array('tables' => $tables, 'tab' => $tab, 'info'=>'初始化成功！', 'status'=>1, 'url'=>''));
+                return json(array('tables' => $tables, 'tab' => $tab, 'msg'=>'初始化成功！', 'code'=>1, 'url'=>''));
             } else {
-                return json(array('info'=>'初始化失败，备份文件创建失败！', 'status'=>0, 'url'=>''));
+                return json(array('msg'=>'初始化失败，备份文件创建失败！', 'code'=>0, 'url'=>''));
             }
         } elseif (IS_POST && is_numeric($id) && is_numeric($start) && 1 == intval($optstep)) { //备份数据
             $tables = session('backup_tables');
@@ -129,13 +132,13 @@ class Tools extends Base {
             $Database = new Backup(session('backup_file'), session('backup_config'));
             $start  = $Database->backup($tables[$id], $start);
             if(false === $start){ //出错
-                return json(array('info'=>'备份出错！', 'status'=>0, 'url'=>''));
+                return json(array('msg'=>'备份出错！', 'code'=>0, 'url'=>''));
             } elseif (0 === $start) { //下一表
                 if(isset($tables[++$id])){
                     $speed = (floor((($id+1)/count($tables))*10000)/10000*100);
                     $speed = sprintf("%.2f", $speed);
                     $tab = array('id' => $id, 'start' => 0, 'speed' => $speed, 'table'=>$tables[$id], 'optstep'=>1);
-                    return json(array('tab' => $tab, 'info'=>'备份完成！', 'status'=>1, 'url'=>''));
+                    return json(array('tab' => $tab, 'msg'=>'备份完成！', 'code'=>1, 'url'=>''));
                 } else { //备份完成，清空缓存
                     /*自动覆盖安装目录下的eyoucms.sql*/
                     $install_time = DEFAULT_INSTALL_DATE;
@@ -155,14 +158,16 @@ class Tools extends Base {
                             /*替换所有表的前缀为官方默认ey_，并重写安装数据包里*/
                             $eyouDbStr = file_get_contents($dstfile);
                             $dbtables = Db::query('SHOW TABLE STATUS');
+                            $tableName = $eyTableName = [];
                             foreach ($dbtables as $k => $v) {
-                                $tableName = $v['Name'];
-                                if (preg_match('/^'.PREFIX.'/i', $tableName)) {
-                                    $eyTableName = preg_replace('/^'.PREFIX.'/i', 'ey_', $tableName);
-                                    $eyouDbStr = str_replace('`'.$tableName.'`', '`'.$eyTableName.'`', $eyouDbStr);
+                                if (preg_match('/^'.PREFIX.'/i', $v['Name'])) {
+                                    $tableName[] = "`{$v['Name']}`";
+                                    $eyTableName[] = preg_replace('/^`'.PREFIX.'/i', '`ey_', "`{$v['Name']}`");
                                 }
                             }
+                            $eyouDbStr = str_replace($tableName, $eyTableName, $eyouDbStr);
                             @file_put_contents($dstfile, $eyouDbStr);
+                            unset($eyouDbStr);
                             /*--end*/
                         } else {
                             @unlink($dstfile); // 复制失败就删掉，避免安装错误的数据包
@@ -173,18 +178,18 @@ class Tools extends Base {
                     session('backup_tables', null);
                     session('backup_file', null);
                     session('backup_config', null);
-                    return json(array('info'=>'备份完成！', 'status'=>1, 'url'=>''));
+                    return json(array('msg'=>'备份完成！', 'code'=>1, 'url'=>''));
                 }
             } else {
                 $rate = floor(100 * ($start[0] / $start[1]));
                 $speed = floor((($id+1)/count($tables))*10000)/10000*100 + ($rate/100);
                 $speed = sprintf("%.2f", $speed);
                 $tab  = array('id' => $id, 'start' => $start[0], 'speed' => $speed, 'table'=>$tables[$id], 'optstep'=>1);
-                return json(array('tab' => $tab, 'info'=>"正在备份...({$rate}%)", 'status'=>1, 'url'=>''));
+                return json(array('tab' => $tab, 'msg'=>"正在备份...({$rate}%)", 'code'=>1, 'url'=>''));
             }
 
         } else {//出错
-            return json(array('info'=>'参数有误', 'status'=>0, 'url'=>''));
+            return json(array('msg'=>'参数有误', 'tab'=>['speed'=>-1], 'code'=>0, 'url'=>''));
         }
     }
         
@@ -291,6 +296,8 @@ class Tools extends Base {
      */
     public function restoreUpload()
     {
+        $this->error('该功能仅限技术人员使用！');
+        
         $file = request()->file('sqlfile');
         if(empty($file)){
             $this->error('请上传sql文件');
@@ -307,7 +314,6 @@ class Tools extends Base {
             if (file_exists($file_path_full)) {
                 $sqls = Backup::parseSql($file_path_full);
                 if(Backup::install($sqls)){
-//                    array_map("unlink", glob($path));
                     /*清除缓存*/
                     delFile(RUNTIME_PATH);
                     /*--end*/
@@ -413,6 +419,7 @@ class Tools extends Base {
     public function new_import($time = 0)
     {
         function_exists('set_time_limit') && set_time_limit(0);
+        @ini_set('memory_limit','-1');
 
         if(is_numeric($time) && intval($time) > 0){
             //获取备份文件信息

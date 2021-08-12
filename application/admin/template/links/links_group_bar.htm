@@ -1,0 +1,31 @@
+
+{eq name="'Links@index'|is_check_access" value="1"}
+    <div class="sDiv">
+        <div class="fbutton" style="float: none;">
+              <a href="javascript:void(0);" data-href="{:url('LinksGroup/index', ['newframe'=>1])}" onclick="openFullframe(this, '链接分组管理','100%','100%');">
+                  <div class="adds">
+                      <span>分组管理</span>
+                  </div>
+              </a>
+        </div>
+    </div>
+{/eq}
+
+
+<script type="text/javascript">
+    function newframe(obj)
+    {
+        var url = $(obj).data('href');
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: $(obj).val(),
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            maxmin: false, //开启最大化最小化按钮
+            area: ['100%', '100%'],
+            content: url,
+        });
+    }
+</script>

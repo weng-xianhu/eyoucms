@@ -1,5 +1,5 @@
 {include file="public/layout" /}
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; overflow-y: scroll;">
+<body class="bodystyle" style="cursor: default; overflow-y: scroll;">
 <style type="text/css">
   .flexigrid .none{
     display: none;
@@ -25,13 +25,13 @@
     width: 47%;
   }
 </style>
-<div class="page">
+<div class="page" style="box-shadow:none;">
   <form method="post">
     <div class="flexigrid">
       <div class="mDiv none">
         <div class="ftitle">
           <h3>内容列表</h3>
-          <h5>(共{$arctype_list|count}条记录)</h5>
+          <h5>(共{$arctype_list|count}条数据)</h5>
         </div>
         <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
         <div class="fbutton none">
@@ -103,7 +103,7 @@
                   <td>
                       <div class="w160 tr pb0">
                          {if condition="in_array($vo['current_channel'], $allow_release_channel)"}
-                          <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/add',array('typeid'=>$vo['id'], 'tab'=>3))}" class="btn blue"><i class="fa fa-plus"></i>发布</a>
+                          <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/add',array('typeid'=>$vo['id'], 'tab'=>3))}" class="btn blue"><i class="layui-icon layui-icon-addition"></i>发布</a>
                           {/if}
                         {if condition="$vo['current_channel'] == 6" /}
                           <a href="{:url('Arctype/single_edit',array('typeid'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>内容</a>

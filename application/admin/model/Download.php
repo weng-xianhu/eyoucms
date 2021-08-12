@@ -13,6 +13,7 @@
 
 namespace app\admin\model;
 
+use think\Db;
 use think\Model;
 
 /**
@@ -46,20 +47,23 @@ class Download extends Model
         $post['aid'] = $aid;
         $addonFieldExt = !empty($post['addonFieldExt']) ? $post['addonFieldExt'] : array();
         model('Field')->dealChannelPostData($post['channel'], $post, $addonFieldExt);
-        // 自动推送链接给蜘蛛
-        push_zzbaidu($opt, $aid);
 
         // ---------多文件
         model('DownloadFile')->savefile($aid, $post);
         // ---------end
 
         // --处理TAG标签
-        model('Taglist')->savetags($aid, $post['typeid'], $post['tags']);
+        model('Taglist')->savetags($aid, $post['typeid'], $post['tags'], $post['arcrank'], $opt);
 
-        /*清除页面缓存*/
-        // $htmlCacheLogic = new \app\common\logic\HtmlCacheLogic;
-        // $htmlCacheLogic->clear_archives([$aid]);
-        /*--end*/
+        // 处理mysql缓存表数据
+        if (isset($post['arcrank']) && -1 == $post['arcrank'] && -1 == $post['old_arcrank'] && !empty($post['users_id'])) {
+            // 待审核
+            model('SqlCacheTable')->UpdateDraftSqlCacheTable($post, $opt);
+        } else if (isset($post['arcrank'])) {
+            // 已审核
+            $post['old_typeid'] = intval($post['attr']['typeid']);
+            model('SqlCacheTable')->UpdateSqlCacheTable($post, $opt, 'download');
+        }
     }
 
     /**
@@ -70,22 +74,23 @@ class Download extends Model
     {
         $result = array();
         $field = !empty($field) ? $field : '*';
-        $result = db('archives')->field($field)
+        $result = Db::name('archives')->field($field)
             ->where([
                 'aid'   => $aid,
                 'lang'  => get_admin_lang(),
             ])
             ->find();
         if ($isshowbody) {
-            $tableName = M('channeltype')->where('id','eq',$result['channel'])->getField('table');
-            $result['addonFieldExt'] = db($tableName.'_content')->where('aid',$aid)->find();
+            $tableName = Db::name('channeltype')->where('id','eq',$result['channel'])->getField('table');
+            $result['addonFieldExt'] = Db::name($tableName.'_content')->where('aid',$aid)->find();
         }
 
         // 文章TAG标签
         if (!empty($result)) {
             $typeid = isset($result['typeid']) ? $result['typeid'] : 0;
             $tags = model('Taglist')->getListByAid($aid, $typeid);
-            $result['tags'] = $tags;
+            $result['tags'] = $tags['tag_arr'];
+            $result['tag_id'] = $tags['tid_arr'];
         }
 
         return $result;
@@ -116,7 +121,7 @@ class Download extends Model
         }
         $map['a.channel'] = $this->channeltype;
 
-        $result = db('archives')
+        $result = Db::name('archives')
             ->field($field)
             ->alias('a')
             ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
@@ -136,7 +141,7 @@ class Download extends Model
     {
         $map['channel'] = $this->channeltype;
         $map['status'] = 1;
-        $result = db('archives')
+        $result = Db::name('archives')
             ->field($field)
             ->where($map)
             // ->cache(true,EYOUCMS_CACHE_TIME)
@@ -152,7 +157,7 @@ class Download extends Model
      */
     public function getAllCateByTypeid($typeid)
     {
-        $result = M('arctype')->field('id,parent_id,typename')
+        $result = Db::name('arctype')->field('id,parent_id,typename')
             ->where(array('id|parent_id'=>$typeid, 'status'=>1))
             ->order('parent_id asc, sort_order asc')
             ->getAllWithIndex('id');   
@@ -171,14 +176,14 @@ class Download extends Model
             $aidArr = explode(',', $aidArr);
         }
         // 同时删除内容
-        M('download_content')->where(
+        Db::name('download_content')->where(
                 array(
                     'aid'=>array('IN', $aidArr)
                 )
             )
             ->delete();
         // 同时删除软件
-        $result = M('download_file')->field('file_url')
+        $result = Db::name('download_file')->field('file_url')
             ->where(
                 array(
                     'aid'=>array('IN', $aidArr)
@@ -187,16 +192,19 @@ class Download extends Model
             ->select();
         if (!empty($result)) {
             foreach ($result as $key => $val) {
-                if (!is_http_url($val['file_url'])) {
-                    @unlink(ROOT_PATH.trim($val['file_url'], '/'));
+                $file_url = preg_replace('#^(/[/\w]+)?(/public/upload/|/uploads/)#i', '$2', $val['file_url']);
+                if (!is_http_url($file_url) && file_exists('.'.$file_url) && preg_match('#^(/uploads/|/public/upload/)(.*)/([^/]+)\.([a-z]+)$#i', $file_url)) {
+                    @unlink(realpath('.'.$file_url));
                 }
             }
-            M('download_file')->where(
+            $r = Db::name('download_file')->where(
                 array(
                     'aid'=>array('IN', $aidArr)
                 )
-            )
-            ->delete();
+            )->delete();
+            if ($r !== false) {
+                Db::name('download_log')->where(array('aid'=>array('IN', $aidArr)))->delete();
+            }
         }
         // 同时删除TAG标签
         model('Taglist')->delByAids($aidArr);

@@ -1,0 +1,30 @@
+{include file="public/layout" /}
+
+<style type="text/css">
+    .ncap-form-default dl.row {position: unset;}
+</style>
+
+<body class="bodystyle" style="overflow-y: scroll;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="ncap-form-default">
+        <dl class="row">
+            <dt class="tit"> <label for="tpl_name">通知类型</label> </dt>
+            <dd class="opt"> {$find.tpl_name} </dd>
+        </dl>
+
+        <dl class="row">
+            <dt class="tit"> <label for="content_title">通知标题</label> </dt>
+            <dd class="opt"> {$find.content_title} </dd>
+        </dl>
+
+        <dl class="row">
+            <dt class="tit"> <label for="content">通知内容</label> </dt>
+            <dd class="opt"> {$find.content} </dd>
+        </dl>
+    </div>
+</div>
+
+{include file="public/footer" /}

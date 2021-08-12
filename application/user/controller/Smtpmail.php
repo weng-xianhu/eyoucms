@@ -32,12 +32,12 @@ class Smtpmail extends Base
     /**
      * 发送邮件
      */
-    public function send_email($email = '', $title = '', $type = 'reg', $scene = 2)
+    public function send_email($email = '', $title = '', $type = 'reg', $scene = 2, $data = [])
     {
         // 超时后，断掉邮件发送
         function_exists('set_time_limit') && set_time_limit(5);
         
-        $data = $this->smtpmailLogic->send_email($email, $title, $type, $scene);
+        $data = $this->smtpmailLogic->send_email($email, $title, $type, $scene, $data);
         if (1 == $data['code']) {
             $this->success($data['msg']);
         } else {

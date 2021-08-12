@@ -1,5 +1,5 @@
 {include file="public/layout" /}
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
@@ -12,7 +12,7 @@
             <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <div class="sDiv">
                 <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
-                    <input type="button" class="btn" value="支付宝配置" onclick="window.location.href='{:url("member/alipay_set")}';">
+                    <input type="button" class="btn selected" value="支付宝配置" onclick="window.location.href='{:url("member/alipay_set")}';">
                 </div>
             </div>
             <div class="sDiv">

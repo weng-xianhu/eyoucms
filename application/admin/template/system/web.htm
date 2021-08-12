@@ -1,6 +1,6 @@
 {include file="public/layout" /}
 <script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
-<body class="system-web" style="background-color: #FFF; overflow-y: scroll;">
+<body class="system-web" style="overflow-y: scroll;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
@@ -9,14 +9,15 @@
         <div class="ncap-form-default">
             <dl class="row">
                 <dt class="tit">
-                    <label for="site_url">关闭网站</label>
+                    <label for="site_url">网站状态</label>
                 </dt>
                 <dd class="opt">
                     <div class="onoff">
-                        <label for="web_status1" class="cb-enable {if condition='isset($config.web_status) AND $config.web_status eq 1'}selected{/if}">是</label>
-                        <label for="web_status0" class="cb-disable {if condition='!isset($config.web_status) OR empty($config.web_status)'}selected{/if}">否</label>
-                        <input id="web_status1" name="web_status" value="1" type="radio" {if condition="isset($config.web_status) AND $config.web_status eq 1"} checked="checked"{/if}>
+                        <label for="web_status0" class="cb-enable {if condition='!isset($config.web_status) OR empty($config.web_status)'}selected{/if}">开启</label>
+                        <label for="web_status1" class="cb-disable {if condition='isset($config.web_status) AND $config.web_status eq 1'}selected{/if}">关闭</label>
                         <input id="web_status0" name="web_status" value="0" type="radio" {if condition="!isset($config.web_status) OR empty($config.web_status)"} checked="checked"{/if}>
+                        <input id="web_status1" name="web_status" value="1" type="radio" {if condition="isset($config.web_status) AND $config.web_status eq 1"} checked="checked"{/if}>
+                        <input type="hidden" id="old_web_status" value="{$config.web_status|default='0'}">
                     </div>
                     <p class="notic"></p>
                     {eq name="$web_cmsmode" value="2"}
@@ -29,7 +30,7 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="web_name">网站简称</label>
+                    <label for="web_name">网站名称</label>
                 </dt>
                 <dd class="opt ui-web_name ui-text">
                     <input id="web_name" name="web_name" value="{$config.web_name|default=''}" class="input-txt ui-input" type="text" data-num="10" />
@@ -39,7 +40,7 @@
                 {eq name="$web_cmsmode" value="2"}
                 <dd class="variable">
                     <div><p>web_name</p></div>
-                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_name');" class="ui-btn blue web_name" data-clipboard-text="{literal}{eyou:global name='web_name' /}{/literal}">复制标签</a></div>
+                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_name');" class="ui-btn3 blue web_name" data-clipboard-text="{literal}{eyou:global name='web_name' /}{/literal}">复制标签</a></div>
                 </dd>
                 {/eq}
             </dl>
@@ -55,7 +56,7 @@
                             </a>
                         </span>
                         <span class="type-file-box">
-                            <input type="text" id="web_logo_local" name="web_logo_local" value="{$config.web_logo_local|default=''}" class="type-file-text">
+                            <input type="text" id="web_logo_local" name="web_logo_local" value="{$config.web_logo_local|default=''}" class="type-file-text" autocomplete="off">
                             <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
                             <input class="type-file-file" onClick="GetUploadify(1,'','allimg','web_logo_img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
                         </span>
@@ -69,7 +70,7 @@
                 {eq name="$web_cmsmode" value="2"}
                 <dd class="variable">
                     <div><p>web_logo</p></div>
-                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_logo');" class="ui-btn blue web_logo" data-clipboard-text="{literal}{eyou:global name='web_logo' /}{/literal}">复制标签</a></div>
+                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_logo');" class="ui-btn3 blue web_logo" data-clipboard-text="{literal}{eyou:global name='web_logo' /}{/literal}">复制标签</a></div>
                 </dd>
                 {/eq}
             </dl>
@@ -85,7 +86,7 @@
                             </a>
                         </span>
                         <span class="type-file-box">
-                            <input type="text" id="web_ico" name="web_ico" value="{$config.web_ico|default=''}" class="type-file-text">
+                            <input type="text" id="web_ico" name="web_ico" value="{$config.web_ico|default=''}" class="type-file-text" autocomplete="off">
                             <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
                             <input class="type-file-file" onClick="GetUploadify(1,'','allimg','web_ico_img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
                         </span>
@@ -96,7 +97,7 @@
                 {eq name="$web_cmsmode" value="2"}
                 <dd class="variable">
                     <div><p>web_ico</p></div>
-                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_ico');" class="ui-btn blue web_ico" data-clipboard-text="{literal}{eyou:global name='web_ico' /}{/literal}">复制标签</a></div>
+                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_ico');" class="ui-btn3 blue web_ico" data-clipboard-text="{literal}{eyou:global name='web_ico' /}{/literal}">复制标签</a></div>
                 </dd>
                 {/eq}
             </dl>
@@ -105,13 +106,13 @@
                     <label for="web_basehost">网站网址</label>
                 </dt>
                 <dd class="opt">
-                    <input id="web_basehost" name="web_basehost" value="{$config.web_basehost|default=''}" class="input-txt" type="text" />
+                    <input id="web_basehost" name="web_basehost" value="{$config.web_basehost|default=''}" placeholder="{$Request.scheme}://" class="input-txt" type="text" />
                     <p class="notic"></p>
                 </dd>
                 {eq name="$web_cmsmode" value="2"}
                 <dd class="variable">
                     <div><p>web_basehost</p></div>
-                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_basehost');" class="ui-btn blue web_basehost" data-clipboard-text="{literal}{eyou:global name='web_basehost' /}{/literal}">复制标签</a></div>
+                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_basehost');" class="ui-btn3 blue web_basehost" data-clipboard-text="{literal}{eyou:global name='web_basehost' /}{/literal}">复制标签</a></div>
                 </dd>
                 {/eq}
             </dl>
@@ -120,14 +121,14 @@
                     <label for="web_title">首页标题</label>
                 </dt>
                 <dd class="opt ui-web_title ui-text">
-                    <input id="web_title" name="web_title" value="{$config.web_title|default=''}" class="input-txt ui-input" type="text" data-num="100" />
+                    <input id="web_title" name="web_title" value="{$config.web_title|default=''}" class="input-txt ui-input" type="text" data-num="80" />
                     <p class="notic">一般不超过80个字符</p>
                     <p class="ui-big-text none">一般不超过80个字符（<span class="ui-textTips">还可以输入80个字符</span>）</p>
                 </dd>
                 {eq name="$web_cmsmode" value="2"}
                 <dd class="variable">
                     <div><p>web_title</p></div>
-                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_title');" class="ui-btn blue web_title" data-clipboard-text="{literal}{eyou:global name='web_title' /}{/literal}">复制标签</a></div>
+                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_title');" class="ui-btn3 blue web_title" data-clipboard-text="{literal}{eyou:global name='web_title' /}{/literal}">复制标签</a></div>
                 </dd>
                 {/eq}
             </dl>
@@ -139,11 +140,21 @@
                     <input id="web_keywords" name="web_keywords" value="{$config.web_keywords|default=''}" class="input-txt ui-input" type="text" data-num="100" />
                     <p class="notic">一般不超过100个字符</p>
                     <p class="ui-big-text none">一般不超过100个字符（<span class="ui-textTips">还可以输入100个字符</span>）</p>
+
+<!-- 
+                    <input type="text" value="{$config.web_keywords|default=''}" name="web_keywords" id="web_keywords" class="input-txt ui-input" data-num="100">
+                    <input type="hidden" id="web_keywords_1607062084" value="web_keywords">
+                    <script type="text/javascript">
+                        $(function() { $('#web_keywords').tagsInput({width: '450px', height: 'auto'}); });
+                    </script>
+                    <span class="err"></span>
+                    <p class="notic">输入标签结束后可用回车或空格分开</p>
+                     -->
                 </dd>
                 {eq name="$web_cmsmode" value="2"}
                 <dd class="variable">
                     <div><p>web_keywords</p></div>
-                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_keywords');" class="ui-btn blue web_keywords" data-clipboard-text="{literal}{eyou:global name='web_keywords' /}{/literal}">复制标签</a></div>
+                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_keywords');" class="ui-btn3 blue web_keywords" data-clipboard-text="{literal}{eyou:global name='web_keywords' /}{/literal}">复制标签</a></div>
                 </dd>
                 {/eq}
             </dl>
@@ -159,7 +170,7 @@
                 {eq name="$web_cmsmode" value="2"}
                 <dd class="variable">
                     <div><p>web_description</p></div>
-                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_description');" class="ui-btn blue web_description" data-clipboard-text="{literal}{eyou:global name='web_description' /}{/literal}">复制标签</a></div>
+                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_description');" class="ui-btn3 blue web_description" data-clipboard-text="{literal}{eyou:global name='web_description' /}{/literal}">复制标签</a></div>
                 </dd>
                 {/eq}
             </dl>
@@ -168,13 +179,13 @@
                     <label for="web_copyright">版权信息</label>
                 </dt>
                 <dd class="opt">
-                    <textarea rows="5" cols="60" id="web_copyright" name="web_copyright" style="height:80px;">{$config.web_copyright|default=''}</textarea>
+                    <textarea cols="60" id="web_copyright" name="web_copyright" class="h20">{$config.web_copyright|default=''}</textarea>
                     <p class="notic"></p>
                 </dd>
                 {eq name="$web_cmsmode" value="2"}
                 <dd class="variable">
                     <div><p>web_copyright</p></div>
-                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_copyright');" class="ui-btn blue web_copyright" data-clipboard-text="{literal}{eyou:global name='web_copyright' /}{/literal}">复制标签</a></div>
+                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_copyright');" class="ui-btn3 blue web_copyright" data-clipboard-text="{literal}{eyou:global name='web_copyright' /}{/literal}">复制标签</a></div>
                 </dd>
                 {/eq}
             </dl>
@@ -183,23 +194,27 @@
                     <label for="web_recordnum">备案号</label>
                 </dt>
                 <dd class="opt ui-keyword">
-                    <input id="web_recordnum" name="web_recordnum" value="{$config.web_recordnum|default=''}" class="input-txt" type="text" />
+                    {eq name='$config.web_recordnum_mode' value='1'}
+                        <textarea rows="5" cols="60" id="web_recordnum" name="web_recordnum" class="h40">{$config.web_recordnum|default=''}</textarea>
+                    {else /}
+                        <textarea rows="5" cols="60" id="web_recordnum" name="web_recordnum" class="h20">{$config.web_recordnum|htmlspecialchars_decode|strip_tags}</textarea>
+                    {/eq}
+                    <input type="hidden" id="web_recordnum_mode" name="web_recordnum_mode" value="{$config.web_recordnum_mode|default='0'}">
+                    &nbsp;[<a href="javascript:void(0);" onclick="show_recordnum(this);">{eq name='$config.web_recordnum_mode' value='
+                    1'}普通模式{else /}代码模式{/eq}</a>]
                     <p class="notic"></p>
                 </dd>
                 {eq name="$web_cmsmode" value="2"}
                 <dd class="variable">
                     <div><p>web_recordnum</p></div>
-                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_recordnum');" class="ui-btn blue web_recordnum" data-clipboard-text="{literal}{eyou:global name='web_recordnum' /}{/literal}">复制标签</a></div>
+                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_recordnum');" class="ui-btn3 blue web_recordnum" data-clipboard-text="{literal}{eyou:global name='web_recordnum' /}{/literal}">复制标签</a></div>
                 </dd>
                 {/eq}
             </dl>
             <dl class="row">
                 <dt class="tit" style="width: auto">
                     <label><b>自定义变量</b></label>
-                    {eq name='$main_lang' value='$admin_lang'}
-                    &nbsp;&nbsp;<a href="javascript:void(0);" onclick="customvar_add(this);">[新增]</a>
-                    &nbsp;&nbsp;<!-- <a href="javascript:void(0);" onclick="customvar_recycle(this);">[回收站]</a> -->
-                    {/eq}
+                    &nbsp;&nbsp;<a href="javascript:void(0);" onclick="customvar_index(this);">[管理]</a>
                 </dt>
             </dl>
             {volist name="eyou_row" id="vo"}
@@ -223,7 +238,7 @@
                                 </a>
                             </span>
                             <span class="type-file-box">
-                                <input type="text" id="{$vo['attr_var_name']}" name="{$vo['attr_var_name']}" value="{$vo.value|default=''}" class="type-file-text">
+                                <input type="text" id="{$vo['attr_var_name']}" name="{$vo['attr_var_name']}" value="{$vo.value|default=''}" class="type-file-text" autocomplete="off">
                                 <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
                                 <input class="type-file-file" onClick="GetUploadify(1,'','allimg','{$vo['attr_var_name']}_img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
                             </span>
@@ -240,19 +255,11 @@
                         {default /}
                         <input id="{$vo['attr_var_name']}" name="{$vo['attr_var_name']}" value="{$vo.value|default=''}" class="input-txt" type="text" />
                     {/switch}
-                    &nbsp;
-                    <a href="javascript:void(0);" onclick="customvar_edit(this);" data-id="{$vo.id}" class="ui-btn blue">编辑</a>
-                    {eq name='$main_lang' value='$admin_lang'}
-                    <a href="javascript:void(0);" onclick="customvar_del(this);" data-id="{$vo.id}" data-attr_var_name="{$vo['attr_var_name']}" class="ui-btn red">删除</a>
-                    {/eq}
-                    {eq name="$web_cmsmode" value="1"}
-                    <a href="javascript:void(0);" onclick="showtext('{$vo['attr_var_name']}');" class="ui-btn blue {$vo['attr_var_name']}" data-clipboard-text="{{php} echo 'eyou:global name=\'';{/php}{$vo['attr_var_name']}{php} echo '\' /';{/php}}">复制标签</a>
-                    {/eq}
                 </dd>
                 {eq name="$web_cmsmode" value="2"}
                 <dd class="variable">
                     <div><p>{$vo['attr_var_name']}</p></div>
-                    <div class="r"><a href="javascript:void(0);" onclick="showtext('{$vo['attr_var_name']}');" class="ui-btn blue {$vo['attr_var_name']}" data-clipboard-text="{{php} echo 'eyou:global name=\'';{/php}{$vo['attr_var_name']}{php} echo '\' /';{/php}}">复制标签</a></div>
+                    <div class="r"><a href="javascript:void(0);" onclick="showtext('{$vo['attr_var_name']}');" class="ui-btn3 blue {$vo['attr_var_name']}" data-clipboard-text="{{php} echo 'eyou:global name=\'';{/php}{$vo['attr_var_name']}{php} echo '\' /';{/php}}">复制标签</a></div>
                 </dd>
                 {/eq}
             </dl>
@@ -266,6 +273,12 @@
                     <textarea rows="5" cols="60" id="web_thirdcode_pc" name="web_thirdcode_pc" style="height:80px;">{$config.web_thirdcode_pc|default=''}</textarea>
                     <p class="notic">代码会放在 &lt;/body&gt; 标签以上（一般用于放置百度商桥代码、站长统计代码、谷歌翻译代码等）</p>
                 </dd>
+                {eq name="$web_cmsmode" value="2"}
+                <dd class="variable">
+                    <div><p>web_thirdcode_pc</p></div>
+                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_thirdcode_pc');" class="ui-btn3 blue web_thirdcode_pc" data-clipboard-text="{literal}{eyou:global name='web_thirdcode_pc' /}{/literal}">复制标签</a></div>
+                </dd>
+                {/eq}
             </dl>
             <dl class="row">
                 <dt class="tit">
@@ -275,6 +288,12 @@
                     <textarea rows="5" cols="60" id="web_thirdcode_wap" name="web_thirdcode_wap" style="height:80px;">{$config.web_thirdcode_wap|default=''}</textarea>
                     <p class="notic">代码会放在 &lt;/body&gt; 标签以上（一般用于放置百度商桥代码、站长统计代码、谷歌翻译代码等）</p>
                 </dd>
+                {eq name="$web_cmsmode" value="2"}
+                <dd class="variable">
+                    <div><p>web_thirdcode_wap</p></div>
+                    <div class="r"><a href="javascript:void(0);" onclick="showtext('web_thirdcode_wap');" class="ui-btn3 blue web_thirdcode_wap" data-clipboard-text="{literal}{eyou:global name='web_thirdcode_wap' /}{/literal}">复制标签</a></div>
+                </dd>
+                {/eq}
             </dl>
             <div class="bot">
                 <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">确认提交</a>
@@ -286,6 +305,19 @@
 
     $(function(){
         tipsText();
+
+        // 关闭站点
+        $('input[name=web_status]').click(function(){
+            var seo_pseudo = {$seo_pseudo|default=0};
+            var old_web_status = $('#old_web_status').val();
+            if(2 == seo_pseudo && old_web_status == 0 && $(this).val() == 1){
+                layer.msg('关闭网站，系统会切换成动态URL模式！', {
+                    btnAlign: 'c',
+                    time: 20000, //20s后自动关闭
+                    btn: ['知道了']
+                });
+            }
+        });
     });
 
     function adsubmit(){
@@ -307,98 +339,60 @@
         $("#img_i_web_ico").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" width=32 height=32>',this,{tips: [1, '#fff']});");
     }
 
-    function customvar_add(obj)
+    function customvar_index(obj)
     {
-        var url = "{:url('System/customvar_add', array('inc_type'=>'web'))}";
         //iframe窗
-        layer.open({
+        var iframes = layer.open({
             type: 2,
-            title: '自定义变量',
+            title: '自定义变量列表',
             fixed: true, //不固定
             shadeClose: false,
             shade: 0.3,
-            maxmin: false, //开启最大化最小化按钮
-            area: ['100%', '100%'],
-            content: url
+            content: "{:url('System/customvar_index')}",
+            /*end: function(){
+                layer.load();
+                window.location.reload();
+            }*/
         });
+        layer.full(iframes);
     }
-
-    function customvar_edit(obj)
-    {
-        var id = $(obj).attr('data-id');
-        var url = "{:url('System/customvar_edit', array('inc_type'=>'web'))}";
-        if (url.indexOf('?') > -1) {
-            url += '&';
-        } else {
-            url += '?';
-        }
-        url += "id="+id;
-        //iframe窗
-        layer.open({
-            type: 2,
-            title: '自定义变量',
-            fixed: true, //不固定
-            shadeClose: false,
-            shade: 0.3,
-            maxmin: false, //开启最大化最小化按钮
-            area: ['100%', '100%'],
-            content: url
-        });
-    }
-
-    function customvar_del(obj) {
-        layer.confirm('删除到回收站，确认删除？', {
-                title: false,
-                btn: ['确定','取消'] //按钮
-            }, function(){
-                // 确定
-                layer_loading('正在处理');
-                $.ajax({
-                    type : 'post',
-                    url : "{:url('System/customvar_del')}",
-                    data : {del_id:$(obj).attr('data-id')},
-                    dataType : 'json',
-                    success : function(data){
-                        layer.closeAll();
-                        if(data.code == 1){
-                            layer.msg(data.msg, {icon: 1});
-                            window.location.reload();
-                            // $('#dl_'+$(obj).attr('data-attr_var_name')).remove();
-                        }else{
-                            layer.msg(data.msg, {icon: 2,time: 2000});
-                        }
-                    }
-                });
-            }, function(index){
-                layer.close(index);
-                return false;// 取消
-            }
-        );
-    }
-
-    // function customvar_recycle(obj)
-    // {
-    //     var url = "{:url('System/customvar_recycle')}";
-    //     //iframe窗
-    //     layer.open({
-    //         type: 2,
-    //         title: '自定义变量-回收站列表',
-    //         fixed: true, //不固定
-    //         shadeClose: false,
-    //         shade: 0.3,
-    //         maxmin: false, //开启最大化最小化按钮
-    //         area: ['700px', '450px'],
-    //         content: url,
-    //         end: function(){ //结束弹窗之后的处理
-    //             window.location.reload();
-    //         }
-    //     });
-    // }
 
     function showtext(classname){
-        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:2});}); 
+        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:5});}); 
     }
     
+    function show_recordnum(obj)
+    {
+        var recordnumObj = $('#web_recordnum');
+        var value = recordnumObj.val();
+        var valuehtml = "";
+
+        if (value.indexOf('&lt;/a&gt;') == -1) {
+            valuehtml = '<a href="https://beian.miit.gov.cn/" rel="nofollow" target="_blank">'+value+'</a>';
+        }
+
+        var web_recordnum_mode = $('#web_recordnum_mode').val();
+        if (web_recordnum_mode == 0) { // 切换为代码模式
+            $('#web_recordnum_mode').val(1);
+            $(obj).html('普通模式');
+            recordnumObj.css('height', '40px');
+            recordnumObj.val(valuehtml);
+        } else { // 切换为普通模式
+            $('#web_recordnum_mode').val(0);
+            $(obj).html('代码模式');
+            recordnumObj.css('height', '20px');
+            recordnumObj.val(removeHTMLTag(value));
+        }
+    }
+
+    //过滤HTML标签
+    function removeHTMLTag(str) {
+        str = str.replace(/<\/?[^>]*>/g, ''); //去除HTML tag
+        str = str.replace(/[ | ]*\n/g, '\n'); //去除行尾空白
+        str = str.replace(/ /ig, ''); //去掉 
+        return str;
+    }
+
 </script>
 
 {include file="public/footer" /}

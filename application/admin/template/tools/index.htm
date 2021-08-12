@@ -1,5 +1,5 @@
 {include file="public/layout" /}
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
@@ -7,7 +7,7 @@
     <!-- 操作说明 -->
     <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
         <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
-            <h4 title="提示相关设置操作时应注意的要点">操作提示</h4>
+            <h4 title="提示相关设置操作时应注意的要点">提示</h4>
             <span title="收起提示" id="explanationZoom" style="display: block;"></span>
         </div>
         <ul>
@@ -17,11 +17,15 @@
     </div>
     <div class="flexigrid">
         <div class="mDiv">
-            <div class="ftitle">
-                <h3>数据库表列表</h3>
-                <h5>(共{$tableNum}条记录，共计{$total})</h5>
-            </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            {eq name="$Think.const.CONTROLLER_NAME.'@export'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a id="ing_btn">
+                        <div class="add" title="数据备份" onclick="$('.export_btn').trigger('click');">
+                            <span><i class="fa fa-book"></i><span>数据备份</span></span>
+                        </div>
+                    </a>
+                </div>
+            {/eq}
         </div>
         <div class="hDiv">
             <div class="hDivBox">
@@ -29,7 +33,7 @@
                     <thead>
                     <tr>
                         <th class="sign w40" axis="col0">
-                            <div class="tc">选择</div>
+                            <div class="tc"><input type="checkbox" autocomplete="off" onclick="javascript:$('input[name*=tables]').prop('checked',this.checked);" checked="checked"></div>
                         </th>
                         <th abbr="article_title" axis="col3">
                             <div style="padding-left: 10px;" class="">数据库表</div>
@@ -49,7 +53,7 @@
                         <th abbr="article_time" axis="col6" class="w80">
                             <div class="tc">备份状态</div>
                         </th>
-                        <th axis="col1" class="w160">
+                        <th axis="col1" class="w80">
                             <div class="tc">操作</div>
                         </th>
                     </tr>
@@ -72,7 +76,7 @@
                             {foreach name="list" item="vo" key="k" }
                             <tr data-id="{$vo.Name}">
                                 <td class="sign">
-                                    <div class="w40 tc"><input type="checkbox" name="tables[]" value="{$vo.Name}" checked="checked"></div>
+                                    <div class="w40 tc"><input type="checkbox" autocomplete="off" name="tables[]" value="{$vo.Name}" checked="checked"></div>
                                 </td>
                                 <td style="width: 100%">
                                     <div style="padding-left: 10px;">{$vo.Name}</div>
@@ -93,9 +97,9 @@
                                     <div class="info w80 tc">未备份</div>
                                 </td>
                                 <td>
-                                    <div class="w160 tc">
+                                    <div class="w80 tc">
                                         {eq name="$Think.const.CONTROLLER_NAME.'@optimize'|is_check_access" value="1"}
-                                        <a href="{:url('Tools/optimize',array('tablename'=>$vo['Name']))}" class="btn blue"><i class="fa fa-magic"></i>优化</a>
+                                        <!-- <a href="{:url('Tools/optimize',array('tablename'=>$vo['Name']))}" class="btn blue"><i class="fa fa-magic"></i>优化</a> -->
                                         {/eq}
                                         {eq name="$Think.const.CONTROLLER_NAME.'@repair'|is_check_access" value="1"}
                                         <a class="btn green" href="{:url('Tools/repair',array('tablename'=>$vo['Name']))}"><i class="fa fa-wrench"></i>修复</a>
@@ -115,17 +119,20 @@
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
-                    <input type="checkbox" onclick="javascript:$('input[name*=tables]').prop('checked',this.checked);" checked="checked">
+                    <input type="checkbox" autocomplete="off" onclick="javascript:$('input[name*=tables]').prop('checked',this.checked);" checked="checked">
                 </div>
                 {eq name="$Think.const.CONTROLLER_NAME.'@export'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a id="ing_btn">
-                        <div class="add" title="数据备份">
-                            <span><i class="fa fa-book"></i><span id="export">数据备份</span></span>
-                        </div>
+                <div class="fbutton export_btn">
+                    <a id="ing_btn" class="layui-btn layui-btn-primary">
+                        <span>数据备份</span>
                     </a>
                 </div>
                 {/eq}
+				<div class="fbuttonr" style="margin-right: 15px;">
+					<div class="total">
+						 <h5>共{$tableNum}条数据，共计{$total}</h5>
+					</div>
+				</div>
             </div>
             <div style="clear:both"></div>
         </div>
@@ -146,19 +153,19 @@
     });
 
     (function($){
-        var $form = $("#export-form"), $export = $("#export"), tables
+        var $form = $("#export-form"), $export = $(".export_btn"), tables
         $export.click(function(){
             if($("input[name^='tables']:checked").length == 0){
-                layer.alert('请选中要备份的数据表', {icon: 2, title:false});
+                layer.alert('请选中要备份的数据表', {icon: 5, title:false, closeBtn:false});
                 return false;
             }
             $export.addClass("disabled");
-            $export.html("正在发送备份请求...");
+            $export.find('a').html("正在发送备份请求...");
             $.post(
-                $form.attr("action"),
+                "{:url('Tools/export', ['_ajax'=>1])}",
                 $form.serialize(),
                 function(res){
-                    if(res.status){
+                    if(res.code){
                         tables = res.tables;
                         var loading = layer.msg('正在备份表(<font id="upgrade_backup_table">'+res.tab.table+'</font>)……<font id="upgrade_backup_speed">0.01</font>%', 
                         {
@@ -166,13 +173,13 @@
                             time: 3600000, //1小时后后自动关闭
                             shade: [0.2] //0.1透明度的白色背景
                         });
-                        $export.html(res.info + "开始备份，请不要关闭本页面！");
+                        $export.find('a').html(res.msg + "开始备份，请不要关闭本页面！");
                         backup(res.tab);
                         window.onbeforeunload = function(){ return "正在备份数据库，请不要关闭！" }
                     } else {
-                        layer.alert(res.info, {icon: 2, title:false});
+                        layer.alert(res.msg, {icon: 5, title:false, closeBtn:false});
                         $export.removeClass("disabled");
-                        $export.html("立即备份");
+                        $export.find('a').html("立即备份");
                     }
                 },
                 "json"
@@ -182,17 +189,17 @@
 
         function backup(tab, status){
             status && showmsg(tab.id, "开始备份……(0%)");
-            $.post($form.attr("action"), tab, function(data){
-                if(data.status){
+            $.post("{:url('Tools/export', ['_ajax'=>1])}", tab, function(res){
+                if(res.code){
                     if (tab.table) {
-                        showmsg(tab.id, data.info);
+                        showmsg(tab.id, res.msg);
                         $('#upgrade_backup_table').html(tab.table);
                         $('#upgrade_backup_speed').html(tab.speed);
-                        $export.html('初始化成功！正在备份表('+tab.table+')……'+tab.speed+'%，请不要关闭本页面！');
+                        $export.find('a').html('初始化成功！正在备份表('+tab.table+')……'+tab.speed+'%，请不要关闭本页面！');
                     } else {
-                        $export.html('初始化成功！开始备份……，请不要关闭本页面！');
+                        $export.find('a').html('初始化成功！开始备份……，请不要关闭本页面！');
                     }
-                    if(!$.isPlainObject(data.tab)){
+                    if(!$.isPlainObject(res.tab)){
                         var loading = layer.msg('备份完成……100%，请不要关闭本页面！', 
                         {
                             icon: 1,
@@ -200,19 +207,19 @@
                             shade: [0.2] //0.1透明度的白色背景
                         });
                         $export.removeClass("disabled");
-                        $export.html("备份完成……100%，点击重新备份");
+                        $export.find('a').html("备份完成……100%，点击重新备份");
                         setTimeout(function(){
                             layer.closeAll();
-                            layer.alert('备份成功！', {icon: 6, title:false});
+                            layer.alert('备份成功！', {icon: 6, title:false, closeBtn:false});
                         }, 1000);
                         window.onbeforeunload = function(){ return null }
                         return;
                     }
-                    backup(data.tab, tab.id != data.tab.id);
+                    backup(res.tab, tab.id != res.tab.id);
                 } else {
                     layer.closeAll();
                     $export.removeClass("disabled");
-                    $export.html("立即备份");
+                    $export.find('a').html("立即备份");
                 }
             }, "json");
         }

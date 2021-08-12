@@ -45,9 +45,25 @@ class ShopLogic extends Model
         // api_Service_checkVersion
         $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVVwZ3JhZGUmYT1jaGVja1RoZW1lVmVyc2lvbg==';
         $this->service_url = base64_decode($this->service_ey).base64_decode($tmp_str);
-        $this->upgrade_url = $this->service_url . '&domain='.request()->host(true).'&v=' . $this->version.'&type=theme_shop';
-        $this->planPath_pc = 'template/pc/';
-        $this->planPath_m = 'template/mobile/';
+        $this->upgrade_url = $this->service_url . '&domain='.request()->host(true).'&v=' . $this->version.'&type=theme_shop&cms_version='.getVersion().'&ip='.serverIP();
+        $this->planPath_pc = 'template/'.TPL_THEME.'pc/';
+        $this->planPath_m = 'template/'.TPL_THEME.'mobile/';
+    }
+
+    // 过期订单预处理
+    public function OverdueOrderHandle()
+    {
+        $ShopOrder = Db::name('shop_order')->where('order_status', 4)->column('order_id');
+        if (!empty($ShopOrder)) {
+            // 删除条件
+            $where['order_id'] = ['IN', $ShopOrder];
+            // 删除订单主表
+            Db::name('shop_order')->where($where)->delete();
+            // 删除订单副表
+            Db::name('shop_order_details')->where($where)->delete();
+            // 删除订单操作记录表
+            Db::name('shop_order_log')->where($where)->delete();
+        }
     }
 
     /**
@@ -147,8 +163,11 @@ class ShopLogic extends Model
         }
 
         $url = $this->upgrade_url; 
-        $context = stream_context_set_default(array('http' => array('timeout' => 3,'method'=>'GET')));
-        $serviceVersionList = @file_get_contents($url,false,$context);    
+        $serviceVersionList = @httpRequest($url);
+        if (false === $serviceVersionList) {
+            $context = stream_context_set_default(array('http' => array('timeout' => 3,'method'=>'GET')));
+            $serviceVersionList = @file_get_contents($url,false,$context); 
+        }
         $serviceVersionList = json_decode($serviceVersionList,true);
         if(!empty($serviceVersionList))
         {
@@ -210,7 +229,10 @@ class ShopLogic extends Model
             return ['code' => 0, 'msg' => "请联系空间商，开启 php.ini 中的php-zip扩展"];
         }
 
-        $serviceVersionList = @file_get_contents($this->upgrade_url);
+        $serviceVersionList = @httpRequest($this->upgrade_url);
+        if (false === $serviceVersionList) {
+            $serviceVersionList = @file_get_contents($this->upgrade_url); 
+        }
         $serviceVersionList = json_decode($serviceVersionList,true);
         if (empty($serviceVersionList)) {
             if ('v1.0.1' > $this->version) {
@@ -218,6 +240,9 @@ class ShopLogic extends Model
             } else {
                 return ['code' => 0, 'msg' => "没找到升级信息"];
             }
+        } else if (isset($serviceVersionList['code']) && empty($serviceVersionList['code'])) {
+            $icon = !empty($serviceVersionList['icon']) ? $serviceVersionList['icon'] : 2;
+            return ['code' => 0, 'msg' => $serviceVersionList['msg'], 'icon'=>$icon];
         }
         
         clearstatcache(); // 清除文件夹权限缓存
@@ -343,7 +368,13 @@ class ShopLogic extends Model
         while (false !== $file = readdir($dir)) {
             if (($file != '.') && ($file != '..')) {
                 if (is_dir($src . '/' . $file)) {
-                    $this->recurse_copy($src . '/' . $file, $dst . '/' . $file, $folderName);
+                    $needle = '/template/'.TPL_THEME;
+                    $needle = rtrim($needle, '/');
+                    $dstfile = $dst . '/' . $file;
+                    if (!stristr($dstfile, $needle)) {
+                        $dstfile = str_replace('/template', $needle, $dstfile);
+                    }
+                    $this->recurse_copy($src . '/' . $file, $dstfile, $folderName);
                 }
                 else {
                     if (file_exists($src . DIRECTORY_SEPARATOR . $file)) {
@@ -413,14 +444,29 @@ class ShopLogic extends Model
         $downFileName = 'shop-'.end($downFileName);
         $saveDir = $this->data_path.'backup'.DS.'theme'.DS.$downFileName; // 保存目录
         tp_mkdir(dirname($saveDir));
-        if(!file_get_contents($fileUrl, 0, null, 0, 1)){
+        $content = @httpRequest($fileUrl);
+        if (false === $content) {
+            $content = @file_get_contents($fileUrl, 0, null, 0, 1);
+        }
+
+        if(!$content){
             return ['code' => 0, 'msg' => '官方升级包不存在']; // 文件存在直接退出
         }
-        $ch = curl_init($fileUrl);            
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
-        $file = curl_exec ($ch);
-        curl_close ($ch);
+
+        if (!stristr($fileUrl, 'https://service')) {
+            $ch = curl_init($fileUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
+            $file = curl_exec ($ch);
+            curl_close ($ch);
+        } else {
+            $file = httpRequest($fileUrl);
+        }
+
+        if (preg_match('#__HALT_COMPILER()#i', $file)) {
+            return ['code' => 0, 'msg' => '下载包损坏，请联系官方客服！'];
+        }
+ 
         $fp = fopen($saveDir,'w');
         fwrite($fp, $file);
         fclose($fp);
@@ -457,7 +503,7 @@ class ShopLogic extends Model
         // api_Service_upgradeLog
         $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVVwZ3JhZGUmYT11cGdyYWRlTG9nJg==';
         $url = base64_decode($this->service_ey).base64_decode($tmp_str).http_build_query($vaules);
-        @file_get_contents($url);
+        @httpRequest($url);
     }
 
     /**

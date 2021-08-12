@@ -1,16 +1,10 @@
 {include file="public/layout" /}
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;min-width:auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page" style="min-width:auto;">
     <div class="flexigrid">
-        <div class="mDiv">
-            <div class="ftitle">
-                <h3>会员菜单列表</h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
-            </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
-        </div>
+        
         <div class="hDiv">
             <div class="hDivBox">
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
@@ -20,7 +14,10 @@
                             <div class="tc"></div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="">菜单名称</div>
+                            <div class="text-l10">菜单名称</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w60">
+                            <div class="tc">显示</div>
                         </th>
                         <th abbr="article_time" axis="col4" class="w100">
                             <div class="tc">默认会员首页</div>
@@ -56,6 +53,15 @@
                                 </div>
                             </td>
                             <td class="">
+                                <div class="w60 tc">
+                                    {eq name="$vo['status']" value='1'}
+                                        <span class="yes" onClick="changeTableVal('users_menu','id','{$vo.id}','status',this);"><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                        <span class="no" onClick="changeTableVal('users_menu','id','{$vo.id}','status',this);"><i class="fa fa-ban"></i>否</span>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="">
                                 <div class="w100 tc">
                                     {eq name="$vo['is_userpage']" value='1'}
                                         <span class="yes" onClick="changeTableVal('users_menu','id','{$vo.id}','is_userpage',this);"><i class="fa fa-check-circle"></i>是</span>
@@ -74,11 +80,16 @@
                     {/empty}
                     </tbody>
                 </table>
+                
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
-        <!--分页位置-->
-        {$page}
+        <div class="tDiv">
+            <div class="tDiv2">
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
     </div>
 </div>
 <script>

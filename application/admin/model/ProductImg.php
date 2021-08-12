@@ -13,6 +13,7 @@
 
 namespace app\admin\model;
 
+use think\Db;
 use think\Model;
 
 /**
@@ -33,7 +34,7 @@ class ProductImg extends Model
      */
     public function getProImg($aid, $field = '*')
     {
-        $result = db('ProductImg')->field($field)
+        $result = Db::name('ProductImg')->field($field)
             ->where('aid', $aid)
             ->order('sort_order asc')
             ->select();
@@ -50,12 +51,10 @@ class ProductImg extends Model
         if (!is_array($aid)) {
             $aid = array($aid);
         }
-        $result = db('ProductImg')->where(array('aid'=>array('IN', $aid)))->delete();
+        $result = Db::name('ProductImg')->where(array('aid'=>array('IN', $aid)))->delete();
 
         return $result;
     }
-
-
 
     /**
      * 保存产品图片
@@ -64,12 +63,12 @@ class ProductImg extends Model
     public function saveimg($aid, $post = array())
     {
         $proimg = isset($post['proimg']) ? $post['proimg'] : array();
+        $imgintro = isset($post['imgintro']) ? $post['imgintro'] : array();
+
         if (!empty($proimg) && count($proimg) > 1) {
             array_pop($proimg); // 弹出最后一个
-
             // 删除产品图片
             $this->delProImg($aid);
-
              // 添加图片
             $data = array();
             $sort_order = 0;
@@ -92,11 +91,13 @@ class ProductImg extends Model
                 $attr = isset($img_info[3]) ? $img_info[3] : '';
                 $mime = isset($img_info['mime']) ? $img_info['mime'] : '';
                 $title = !empty($post['title']) ? $post['title'] : '';
+                $intro = !empty($imgintro[$key]) ? $imgintro[$key] : '';
                 ++$sort_order;
                 $data[] = array(
                     'aid' => $aid,
                     'title' => $title,
                     'image_url'   => $val,
+                    'intro'   => $intro,
                     'width' => $width,
                     'height' => $height,
                     'filesize'  => $filesize,
@@ -106,13 +107,13 @@ class ProductImg extends Model
                 );
             }
             if (!empty($data)) {
-                M('ProductImg')->insertAll($data);
+                Db::name('ProductImg')->insertAll($data);
 
                 // 没有封面图时，取第一张图作为封面图
                 $litpic = isset($post['litpic']) ? $post['litpic'] : '';
                 if (empty($litpic)) {
                     $litpic = $data[0]['image_url'];
-                    M('archives')->where(array('aid'=>$aid))->update(array('litpic'=>$litpic, 'update_time'=>getTime()));
+                    Db::name('archives')->where(array('aid'=>$aid))->update(array('litpic'=>$litpic, 'update_time'=>getTime()));
                 }
             }
             delFile(UPLOAD_PATH."product/thumb/$aid"); // 删除缩略图

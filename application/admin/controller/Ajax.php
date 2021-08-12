@@ -13,6 +13,8 @@
 
 namespace app\admin\controller;
 use think\Db;
+use think\Session;
+use think\Config;
 use app\admin\logic\AjaxLogic;
 
 /**
@@ -32,6 +34,7 @@ class Ajax extends Base {
      */
     public function welcome_handle()
     {
+        \think\Session::pause(); // 暂停session，防止session阻塞机制
         $this->ajaxLogic->welcome_handle();
     }
 
@@ -40,14 +43,21 @@ class Ajax extends Base {
      */
     public function explanation_welcome()
     {
+        \think\Session::pause(); // 暂停session，防止session阻塞机制
+        $type = input('param.type/d', 0);
+        $tpCacheKey = 'system_explanation_welcome';
+        if (1 < $type) {
+            $tpCacheKey .= '_'.$type;
+        }
+        
         /*多语言*/
         if (is_language()) {
             $langRow = \think\Db::name('language')->field('mark')->order('id asc')->select();
             foreach ($langRow as $key => $val) {
-                tpCache('system', ['system_explanation_welcome'=>1], $val['mark']);
+                tpCache('system', [$tpCacheKey=>1], $val['mark']);
             }
         } else { // 单语言
-            tpCache('system', ['system_explanation_welcome'=>1]);
+            tpCache('system', [$tpCacheKey=>1]);
         }
         /*--end*/
     }
@@ -57,8 +67,58 @@ class Ajax extends Base {
      */
     public function check_upgrade_version()
     {
+        \think\Session::pause(); // 暂停session，防止session阻塞机制
         $upgradeLogic = new \app\admin\logic\UpgradeLogic;
-        $upgradeMsg = $upgradeLogic->checkVersion(); // 升级包消息
+        $security_patch = tpSetting('upgrade.upgrade_security_patch');
+        if (!empty($security_patch) && 1 == $security_patch) {
+            $upgradeMsg = $upgradeLogic->checkSecurityVersion(); // 安全补丁包消息
+        } else {
+            $upgradeMsg = $upgradeLogic->checkVersion(); // 升级包消息
+        }
         $this->success('检测成功', null, $upgradeMsg);  
+    }
+
+    /**
+     * 更新stiemap.xml地图
+     */
+    public function update_sitemap($controller, $action)
+    {
+        if (IS_AJAX_POST) {
+            \think\Session::pause(); // 暂停session，防止session阻塞机制
+            $channeltype_row = \think\Cache::get("extra_global_channeltype");
+            if (empty($channeltype_row)) {
+                $ctlArr = \think\Db::name('channeltype')
+                    ->where('id','NOTIN', [6,8])
+                    ->column('ctl_name');
+            } else {
+                $ctlArr = array();
+                foreach($channeltype_row as $key => $val){
+                    if (!in_array($val['id'], [6,8])) {
+                        $ctlArr[] = $val['ctl_name'];
+                    }
+                }
+            }
+
+            $systemCtl= ['Arctype'];
+            $ctlArr = array_merge($systemCtl, $ctlArr);
+            $actArr = ['add','edit'];
+            if (in_array($controller, $ctlArr) && in_array($action, $actArr)) {
+                Session::pause(); // 暂停session，防止session阻塞机制
+                sitemap_auto();
+                $this->success('更新sitemap成功！');
+            }
+        }
+
+        $this->error('更新sitemap失败！');
+    }
+
+    // 开启\关闭余额支付
+    public function BalancePayOpen()
+    {
+        if (IS_AJAX_POST) {
+            $open_value = input('post.open_value/d');
+            getUsersConfigData('pay', ['pay_balance_open' => $open_value]);
+            $this->success('操作成功');
+        }
     }
 }

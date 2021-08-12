@@ -1,0 +1,264 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit; min-width:400px;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: 400px;">
+    {include file="ask/bar" /}
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th abbr="article_show" axis="col5" class="w10 none">
+                            <div class="tc"></div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="text-l10 ml10">栏目名称</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w150">
+                            <div class="tc">所属栏目</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w160">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <form id="PostForm">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%">
+                        <tbody id='TbodyTemplate'>
+                        {empty name="list"}
+                            <tr>
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                </td>
+                            </tr>
+                        {else/}
+                            {volist name="list" id="vo"}
+                            <tr class="tr">
+                                <td class="sort none">
+                                    <div class="w10 tc">
+                                        <input type="hidden" name="type_id[]" value="{$vo.type_id}">
+                                    </div>
+                                </td>
+                                <td style="width: 100%">
+                                    <div style="" class="ml10">
+                                        {$vo.type_name_input}
+                                    </div>
+                                </td>
+                                <td class="">
+                                    <div class="w150 tc">
+                                        {$vo.parent_name}
+                                        <input type="hidden" name="parent_id[]" value="{$vo.parent_id}">
+                                    </div>
+                                </td>
+                                <td class="operation">
+                                    <div class="w160 tc">
+                                        {eq name="'Ask@ask_type_seo'|is_check_access" value="1"}
+                                            <a class="btn blue hint hint-top" data-hint="可设置seo" href="javascript:void(0);" data-url="{:url('Ask/ask_type_seo', ['type_id'=>$vo.type_id])}" data-title="{$vo['type_name']} - SEO配置" onclick="SeoEdit(this);">编辑</a>
+                                            <i></i>
+                                        {/eq}
+                                        {eq name="'Ask@ask_type_del'|is_check_access" value="1"}
+                                            <a class="btn red" href="javascript:void(0);" data-url="{:url('Ask/ask_type_del')}" onclick="FindDelData(this, '{$vo.type_id}');">删除</a>
+                                        {/eq}
+                                    </div>
+                                </td>
+                                <td class="">
+                                    <div class="w60 tc">
+                                        <input type="text" onChange="changeTableVal('ask_type','type_id','{$vo.type_id}','sort_order',this);" size="4" value="{$vo.sort_order}" class="tc" name="sort_order[]"/>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/volist}
+                        {/empty}
+                        </tbody>
+                    </table>
+                    <div id='Template'></div>
+                </div>
+            </form>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="footer-oper">
+            <div class="fbutton">
+                <a href="javascript:void(0);" data-url="{:url('Encodes/ajax_ask_type_save')}" onclick="saveAskData(this);"  class="layui-btn layui-btn-primary">
+                    <span class="">保存</span>
+                </a>
+            </div>
+            <div class="fbutton">
+                <a onclick="AskType(this);" class="layui-btn layui-btn-primary">
+                    <span class="red">新增栏目</span>
+                </a>
+            </div>
+        </div>
+        <div style="clear:both"></div>
+    </div>
+</div>
+<input type="hidden" id="IsEmpty" value="{$IsEmpty}">
+<script type="text/javascript">
+ 
+    function SeoEdit(obj) {
+        var url = $(obj).data('url');
+        var title = $(obj).data('title');
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: title,
+            fixed: true,
+            shadeClose: false,
+            shade: 0.3,
+            area: ['700px', '430px'],
+            content: url
+        });
+    }
+
+    var SerialNum = $('#TbodyTemplate .tr').length;
+    function AskType(){
+        // tr数,取唯一标识
+        var AddHtml = [];
+        AddHtml += 
+        [
+            '<tr class="tr" id="tr_'+SerialNum+'">'+
+                '<td class="sort none">'+
+                    '<div class="w10 tc"><input type="hidden" name="type_id[]"></div>'+
+                '</td>'+
+
+                '<td style="width: 100%">'+
+                    '<div style="" class="ml10">'+
+                        '<input type="text" name="type_name[]" class="w220">'+
+                    '</div>'+
+                '</td>'+
+
+                '<td>'+
+                    '<div class="w150 tc">'+
+                        '<select name="parent_id[]">'+
+                            '{volist name="$PidData" id="t_vo"}'+
+                                '<option value="{$t_vo.type_id}" >{$t_vo.type_name}</option>'+
+                            '{/volist}'+
+                        '</select>'+
+                    '</div>'+
+                '</td>'+
+
+                '<td class="operation">'+
+                    '<div class="w160 tc">'+
+                        '<a class="btn grey" href="javascript:void(0);">SEO</a>'+
+                        ' <i></i> '+
+                        '<a class="btn red" href="javascript:void(0);" data-id="tr_'+SerialNum+'" onclick="DelHtml(this)">删除</a>'+
+                    '</div>'+
+                '</td>'+
+
+                '<td>'+
+                    '<div class="w60 tc">'+
+                        '<input type="text" name="sort_order[]" class="tc" size="4" value="100">'+
+                    '</div>'+
+                '</td>'+
+            '</tr>'
+        ];
+
+        /*加载方式*/
+        if (1 == $('#IsEmpty').val()) {
+            // 已有栏目数据则执行追加
+            $('#Template').append(AddHtml);
+        }else{
+            if (0 == SerialNum) {
+                // 没有栏目则执行覆盖
+                $('#TbodyTemplate').html(AddHtml);
+            }else{
+                // 已新增过一次则执行追加
+                $('#TbodyTemplate').append(AddHtml);
+            }
+        }
+        /* END */
+
+        SerialNum++;
+    }
+
+    // 删除未保存的级别
+    function DelHtml(obj){
+        $('#'+$(obj).attr('data-id')).remove();
+    }
+
+    // 保存
+    function saveAskData(obj){
+        if ($('input[name*=type_name]').length == 0) {
+            showErrorAlert('至少新增一个栏目！');
+            return false;
+        } else {
+            var is_empty = true;
+            $('input[name*=type_name]').each(function(index, item){
+                if ($.trim($(item).val()) != '') {
+                    is_empty = false;
+                    return false;
+                }
+            });
+            if (true == is_empty) {
+                showErrorAlert('栏目名称不能为空！');
+                return false;
+            }
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : $(obj).attr('data-url'),
+            data : $('#PostForm').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {icon: 1, time:1000},function(){
+                        window.location.reload();
+                    });
+                }else{
+                    showErrorAlert(res.msg);
+                }
+            },
+            error : function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        })
+    }
+
+    /**
+     * 单个删除
+     */
+    function FindDelData(obj, del_id) {
+        layer.confirm('此操作不可恢复，确认删除？', {
+            btn  : ['确定', '取消'],
+            title: false
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                url: $(obj).data('url'),
+                type: 'post',
+                dataType: 'json',
+                data:{del_id:del_id,_ajax:1},
+                success: function(res){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {time: 1000},function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error : function(e) {
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+</script>
+{include file="public/footer" /}

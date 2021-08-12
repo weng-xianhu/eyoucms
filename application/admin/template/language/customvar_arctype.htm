@@ -1,6 +1,6 @@
 {include file="public/layout" /}
 <script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
@@ -9,19 +9,16 @@
         <div class="mDiv">
             <div class="ftitle">
                 <h3>模板变量列表</h3>
-                <h5>(共{$pageObj->totalRows}条记录)</h5>
+                <h5>(共{$pageObj->totalRows}条数据)</h5>
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" action="{:url('Language/customvar_arctype')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
                         <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
                     </div>
-                    <!-- <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Language/customvar_arctype')}';">
-                    </div> -->
                 </div>
             </form>
         </div>
@@ -34,10 +31,10 @@
                             <div class="tc"></div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="">变量说明</div>
+                            <div class="tl text-l10">变量说明</div>
                         </th>
                         <th abbr="article_title" axis="col3" class="w350">
-                            <div class="tc" style="text-align: left;">关联绑定数据</div>
+                            <div class="tl text-l10">关联绑定数据</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w100">
                             <div class="tc">更新时间</div>
@@ -68,12 +65,12 @@
                                 </div>
                             </td>
                             <td style="width: 100%">
-                                <div style="">
+                                <div class="tl text-l10">
                                     {$vo.attr_title}
                                 </div>
                             </td>
                             <td class="">
-                                <div class="w350 tc" style="text-align: left;">
+                                <div class="w350 tl text-l10" >
                                 {eq name="$vo.attr_group" value="arctype"}
                                     {notempty name="$arctypeList"}
                                     <select>
@@ -92,11 +89,12 @@
                                     {$vo.update_time|MyDate='Y-m-d',###}
                                 </div>
                             </td>
-                            <td>
+                            <td class="operation">
                                 <div class="w180 tc">
                                     <a href="javascript:void(0);" onclick="showtext('{$vo['attr_name']}');" class="btn blue {$vo['attr_name']}" data-clipboard-text="${php}echo 'lang.';{/php}{$vo['attr_name']}">复制标签</a>
                                     {neq name="$admin_lang" value="$main_lang"}
-                                    <a class="btn blue" href="javascript:void(0)" data-url="{:url('Language/customvar_bind', ['attr_id'=>$vo.attr_id])}" onClick="customvar_bind(this);"><i class="fa fa-trash-o"></i>关联绑定</a>
+                                    <i></i>
+                                    <a class="btn blue" href="javascript:void(0)" data-url="{:url('Language/customvar_bind', ['attr_id'=>$vo.attr_id])}" onClick="customvar_bind(this);">关联绑定</a>
                                     {/neq}
                                 </div>
                             </td>
@@ -148,7 +146,7 @@
 
     // 复制标签
     function showtext(classname){
-        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:2});}); 
+        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:5});}); 
     }
 </script>
 {include file="public/footer" /}

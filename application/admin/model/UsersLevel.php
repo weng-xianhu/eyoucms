@@ -33,6 +33,7 @@ class UsersLevel extends Model
     public function isRequired($id_name='',$id_value='',$field='',$value='')
     {
         $return = true;
+        if ('ask_is_release' == $field || 'ask_is_review' == $field) return $return;
         $value = trim($value);
         if (!empty($value)) {
             $field == 'level_value' && $value = intval($value);

@@ -1,0 +1,33 @@
+<dl class="row">
+    <div class="tab-pane" id="tab_product_spec">
+        <table class="table table-bordered" width="100%">
+            <tr>
+                <td>
+                    <!-- 操作说明 -->
+                    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+                        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                            <h4 title="提示相关设置操作时应注意的要点">操作提示</h4>
+                            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+                        </div>
+                        <ul>
+                            <li>
+                                {empty name='$typeid'}
+                                请先在【常规选项】里选择产品主栏目，再点击【<a href="{:url('Product/attribute_index', array('typeid'=>$field.typeid))}">参数选项</a>】进行更多操作。
+                                {else /}
+                                如果想对产品参数进行新增、修改、删除等操作，请点击【<a href="{:url('Product/attribute_index', array('typeid'=>$field.typeid))}">参数选项</a>】进行更多操作。
+                                {/empty}
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</dl>
+<dl class="row" style="margin-top: 10px;" id="product_attr_table">
+    {empty name='$canshu'}
+    <div style="color: red;font-size: 12px;text-align: center;">提示：该主栏目还没有参数值，若有需要请点击【<a href="{:url('Product/attribute_index', array('typeid'=>$field.typeid))}">参数选项</a>】进行更多操作。</div>
+    {else /}
+    {$canshu}
+    {/empty}
+</dl> 

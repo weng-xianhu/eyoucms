@@ -1,0 +1,25 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="shop/left" /}
+<div class="page" style="min-width:auto;margin-left:98px;padding: 0;">
+    <div class="on-off_panel" style="margin-bottom: 0;">
+        <div class="title">营销功能</div>
+            <div class="on-off_list">
+                <div class="on-off_list b-icon">
+                    <ul>
+                        {eq name="'Sharp@index'|is_check_access" value="1"}
+                            <li class="more_li"><a href="{:url('Sharp/index')}"><i class="fa fa-bolt"></i><span>整点秒杀</span></a></li>
+                        {/eq}
+
+                        {eq name="'Coupon@water'|is_check_access" value="1"}
+                            <li class="more_li"><a href="{:url('Coupon/index')}"><i class="fa fa-credit-card"></i><span>优惠券</span></a></li>
+                        {/eq}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{include file="public/footer" /}

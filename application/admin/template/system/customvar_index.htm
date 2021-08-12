@@ -1,0 +1,241 @@
+{include file="public/layout" /}
+<script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;">
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w20 none" axis="col0">
+                            <div class="tc"></div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w250">
+                            <div class="tl text-l10">变量名称</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="text-l10">表单类型</div>
+                        </th>
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto; min-height: auto;">
+            <form id="PostForm">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%">
+                        <tbody id="tbody">
+                        {empty name="list"}
+                            <tr>
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的数据
+                                </td>
+                            </tr>
+                        {else/}
+                            {foreach name="list" item="vo" key="k" }
+                            <tr class="tr">
+                                <td class="sign none">
+                                    <div class="w20 tc">
+                                        <input type="hidden" name="attr_id[]" value="{$vo.attr_id}">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="w250 tl">
+                                        <input type="text" name="attr_name[]" value="{$vo.attr_name}" style="width: 200px;" >
+                                    </div>
+                                </td>
+                                <td style="width: 100%">
+                                    <div style="">
+                                        <select name="attr_input_type[]">
+                                            <option value="0" {eq name="$vo.attr_input_type" value="0"}selected{/eq}>单行文本</option>
+                                            <option value="2" {eq name="$vo.attr_input_type" value="2"}selected{/eq}>多行文本</option>
+                                            <option value="3" {eq name="$vo.attr_input_type" value="3"}selected{/eq}>上传图片</option>
+                                        </select>
+                                    </div>
+                                </td>
+                                <td class="">
+                                    <div class="w120 tl">
+                                        {eq name="'System@customvar_del'|is_check_access" value="1"}
+                                            {eq name='$main_lang' value='$admin_lang'}
+                                            <a class="btn red" href="javascript:void(0);" data-id="{$vo.id}" onClick="customvar_del(this);" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}><i class="fa fa-trash-o"></i>删除</a>
+                                            {/eq}
+                                        {/eq}
+                                        <a class="btn blue {$vo['attr_var_name']}" href="javascript:void(0);" onclick="showtext('{$vo['attr_var_name']}');" data-clipboard-text="{{php} echo 'eyou:global name=\'';{/php}{$vo['attr_var_name']}{php} echo '\' /';{/php}}">标签调用</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/foreach}
+                        {/empty}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                {eq name='$main_lang' value='$admin_lang'}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" onclick="customvar_add();">
+                        <div class="add" title="新增">
+                            <span class="red"><i class="fa fa-plus"></i>新增</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-url="{:url('System/customvar_save', ['_ajax'=>1])}" onclick="customvar_save(this);">
+                        <div class="add" title="保存">
+                            <span class=""><i class="fa fa-save"></i>保存</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    function showtext(classname){
+        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:5});}); 
+    }
+
+    function customvar_add(){
+        var line = $('#tbody tr').length + 1;
+        var html = '';
+        html += '<tr class="tr" id="tr_'+line+'">';
+        html += '    <td class="sign none">';
+        html += '      <div class="w20 tc"> ';
+        html += '      </div>';
+        html += '    </td>';
+        html += '    <td>';
+        html += '      <div class="w250 tl"> ';
+        html += '        <input type="text" name="attr_name[]" value="" style="width: 200px;">';
+        html += '      </div>';
+        html += '    </td>';
+        html += '    <td style="width: 100%">';
+        html += '      <div style="">';
+        html += '        <select name="attr_input_type[]">';
+        html += '            <option value="0">单行文本</option>';
+        html += '            <option value="2">多行文本</option>';
+        html += '            <option value="3">上传图片</option>';
+        html += '        </select>';
+        html += '      </div>';
+        html += '    </td>';
+        html += '    <td class="">';
+        html += '       <div class="w120 tl">';
+        html += '          <a href="javascript:void(0);" class="btn red" onclick="$(\'#tr_'+line+'\').remove();"><i class="fa fa-trash-o"></i>删除</a> ';
+        html += '          <a class="btn blue" href="javascript:void(0);" style="color:#ccc;    cursor:not-allowed!important;">标签调用</a>';
+        html += '       </div>';
+        html += '    </td>';
+        html += '</tr>';
+
+        if ($('input[name*=attr_name]').length == 0) {
+            $('#tbody').html(html);
+        } else {
+            $('#tbody').append(html);
+        }
+    }
+
+    // 提交
+    function customvar_save(obj){
+
+        if ($('input[name*=attr_name]').length == 0) {
+            showErrorAlert('至少新增一个自定义变量！');
+            return false;
+        } else {
+            var is_empty = true;
+            $('input[name*=attr_name]').each(function(index, item){
+                if ($.trim($(item).val()) != '') {
+                    is_empty = false;
+                    return false;
+                }
+            });
+            if (true == is_empty) {
+                showErrorAlert('变量名称不能为空！');
+                return false;
+            }
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : $(obj).attr('data-url'),
+            data : $('#PostForm').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {icon: 6, time: 1000}, function(){
+                        parent.gourl(res.url);
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    function customvar_del(obj) {
+        var deltype = $(obj).attr('data-deltype');
+        var confirm_title = '删除到回收站，确认删除？';
+        if ('del' == deltype){
+            confirm_title = '此操作不可恢复，确认删除？';
+        }
+        layer.confirm(confirm_title, {
+                title: false,
+                closeBtn: false,
+                btn: ['确定','取消'] //按钮
+            }, function(){
+                // 确定
+                layer_loading('正在处理');
+                $.ajax({
+                    type : 'post',
+                    url : "{:url('System/customvar_del')}",
+                    data : {del_id:$(obj).attr('data-id'),deltype:deltype,_ajax:1},
+                    dataType : 'json',
+                    success : function(data){
+                        layer.closeAll();
+                        if(data.code == 1){
+                            layer.msg(data.msg, {icon: 6});
+                            window.location.reload();
+                            // $('#dl_'+$(obj).attr('data-attr_var_name')).remove();
+                        }else{
+                            layer.msg(data.msg, {icon: 5,time: 2000});
+                        }
+                    }
+                });
+            }, function(index){
+                layer.close(index);
+                return false;// 取消
+            }
+        );
+    }
+
+</script>
+
+{include file="public/footer" /}

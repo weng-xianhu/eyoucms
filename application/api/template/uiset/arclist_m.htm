@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>可视化编辑</title>
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/bootstrap/css/bootstrap.min.css">
+    {load href="__STATIC__/common/js/jquery.min.js" /}
+    {load href="__PUBLIC__/plugins/layer-v3.1.0/layer.js" /}
+    <style type="text/css">
+        .container-fluid {
+            padding: 10px 10px;
+            overflow: hidden;
+        }
+        .control-group {
+            padding: 5px 0px;
+            
+        }
+        .controls{
+           width: 100%;
+           padding: 4px 0;
+        }
+        .input{
+            width: 92px;
+        }
+        .select {
+            height: 28px;
+            font-size: 12px;
+            border: 1px solid #ddd;
+            border-radius:4px;
+        }
+        .btn{
+             background-color: #4fc0e8;
+            color: #FFF;
+            border-radius: 4px;
+            padding: 6px 20px;
+        }
+        .btn:hover {
+            color: #FFF;
+            background-color: #3aa8cf;
+        }
+        .controls .checkbox{
+            padding-left: 88px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span12">
+                <form class="form-horizontal" id="post_form" onsubmit="return check_submit();">
+                    <div class="control-group">
+                        <div class="controls"><label class="control-label" for="inputEmail">请选择栏目：</label>
+                            <br/>
+                            <select name="typeid" id="typeid" style="width: 350px;" size="22">
+                                {$arctype_html}
+                            </select>
+                        </div>
+                    </div>
+                    <!-- <div class="control-group">
+                        <div class="controls">
+                            <label class="control-label" for="inputPassword">调用条数：</label>
+                            <input type="text" name="row" value="{$field.info.row|default=5}" class="input">
+                        </div>
+                    </div> -->
+                    <div class="control-group">
+                        <div class="controls">
+                            <input type="hidden" name="id" value="{$field.id|default=''}">
+                            <input type="hidden" name="type" value="{$field.type|default=''}">
+                            <input type="hidden" name="page" value="{$field.page|default=''}">
+                            <input type="hidden" name="v" value="{$v|default='pc'}">
+                            <input type="hidden" name="lang" value="{$field.lang|default='cn'}">
+                            <input type="hidden" name="idcode" value="{$field.idcode|default=''}">
+                            <input type="hidden" name="iframe" value="1">
+                            <label class="checkbox"><input type="button" class="btn" value="确认提交" onclick="check_submit();" /></label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        
+        function check_submit()
+        {
+            var current_channel = $('#typeid').find('option:selected').attr('data-current_channel');
+            current_channel = parseInt(current_channel);
+            var js_allow_channel_arr = {$js_allow_channel_arr};
+            if ($.inArray(current_channel, js_allow_channel_arr) == -1) {
+                layer.msg('该栏目没有文档列表！', {icon: 5});
+                return false;
+            }
+
+            parent.eyou_layer_loading('正在处理');
+            var url = "{:url('api/Uiset/submit', ['_ajax'=>1])}";
+            $.ajax({
+                url: url,
+                type: 'POST',
+                dataType: 'JSON',
+                data: $('#post_form').serialize(),
+                success: function(res){
+                    parent.layer.closeAll();
+                    if (res.code == 1) {
+                        $('#workspace', window.parent.document).attr('src', $('#workspace', window.parent.document).attr('src'));
+                        parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000});
+                    } else {
+                        parent.eyou_showErrorAlert(res.msg);
+                    }
+                },
+                error: function(e){
+                    parent.layer.closeAll();
+                    parent.eyou_showErrorAlert(e.responseText);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

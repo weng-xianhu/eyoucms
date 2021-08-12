@@ -1,0 +1,62 @@
+{include file="public/layout" /}
+
+<body style="background-color:#F1F1F1;overflow: auto;min-width: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page ksedit" style="min-width: auto;">
+    <form class="form-horizontal" id="post_form" action="{:url('shopProduct/release')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>发布至</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <select name="typeid" id="typeid" style="width: 300px;" size="22">
+                        {$select_html}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    $(function () {
+        $('#typeid').find('option').click(function(){
+            if (!$('#typeid').val()) {
+                layer.alert('请选择栏目…！', {icon:5, title:false}, function(index){
+                    $('#typeid').val('');
+                    layer.close(index);
+                });
+                return false;
+            }
+
+            var current_channel = $('#typeid').find('option:selected').attr('data-current_channel');
+            current_channel = parseInt(current_channel);
+            if (current_channel != 2) {
+                layer.alert('该栏目模型不允许发布商品！', {icon:5, title:false}, function(index){
+                    $('#typeid').val('');
+                    layer.close(index);
+                });
+                return false;
+            }
+
+            var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+            parent.layer.close(parentObj);
+
+            var url = "//{$Request.host}{$Request.baseFile}?m=admin&c=shopProduct&a=release&lang={$Request.param.lang}";
+            if (url.indexOf('?') > -1) {
+                url += '&';
+            } else {
+                url += '?';
+            }
+            url += 'typeid=' + $('#typeid').val();
+
+            parent.window.location = url;
+        });
+    });
+</script>
+
+{include file="public/footer" /}

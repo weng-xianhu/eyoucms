@@ -1,18 +1,16 @@
 {include file="public/layout" /}
-<body class="rolecss">
+<body class="rolecss bodystyle">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page" style=" min-width: auto;">
-    {lt name="$Request.param.iframe" value="1"}
-    {include file="admin/admin_bar" /}
-    {/lt}
+   
     <form class="form-horizontal" id="postForm" method="post" action="{:url('AuthRole/add')}">
         <div class="ncap-form-default">
-            <dl class="row"><dt class="tit"><label><b>权限组基本信息</b></label></dt></dl>
+            <dl class="row"><dt class="tit"><label><b>角色信息</b></label></dt></dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="name"><em>*</em>组名称</label>
+                    <label for="name"><em>*</em>角色名称</label>
                 </dt>
                 <dd class="opt">
                     <input type="text" name="name" id="name" value="" class="input-txt">
@@ -20,10 +18,10 @@
                     <p class="notic"></p>
                 </dd>
             </dl>
-            <dl class="row"><dt class="tit"><label><b>快捷勾选权限</b></label></dt></dl>
+            
             <dl class="row">
                 <dt class="tit">
-                    <label for="name">参考权限组</label>
+                    <label for="name">角色模板</label>
                 </dt>
                 <dd class="opt">
                     <p><label><input type="radio" name="tmp_role_id" value="-1" />超级管理员</label></p>
@@ -34,7 +32,7 @@
                     {/foreach}
                 </dd>
             </dl>
-            <dl class="row"><dt class="tit"><label><b>权限组权限设置</b></label></dt></dl>
+            <dl class="row"><dt class="tit"><label><b>权限设置</b></label></dt></dl>
             <dl class="row none">
                 <dt class="tit">
                     <label for="name">语言权限</label>
@@ -65,15 +63,26 @@
                     <p class="notic"></p>
                 </dd>
             </dl>
+            <dl class="row" id="dl_check_oneself">
+                <dt class="tit">
+                    <label for="name">文档审核</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="checkbox" name="check_oneself" value="1" checked="checked" />发布文档自动通过审核</label>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
             <dl class="row">
                 <dt class="tit">
                     <label for="name">操作权限</label>
                 </dt>
                 <dd class="opt">
                     <p><label><input type="checkbox" id="select_cud" checked="checked" />完全控制</label></p>
-                    <p><label><input type="checkbox" name="cud[]" value="add" checked="checked" />新增功能</label></p>
-                    <p><label><input type="checkbox" name="cud[]" value="edit" checked="checked" />编辑功能</label></p>
-                    <p><label><input type="checkbox" name="cud[]" value="del" checked="checked" />删除功能</label></p>
+                    <p><label><input type="checkbox" name="cud[]" value="add" checked="checked" />新增信息</label></p>
+                    <p><label><input type="checkbox" name="cud[]" value="edit" checked="checked" />编辑信息</label></p>
+                    <p><label><input type="checkbox" name="cud[]" value="del" checked="checked" />删除信息</label></p>
+                    <p><label><input type="checkbox" name="cud[]" value="changetableval" checked="checked" />审核信息</label></p>
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
@@ -105,7 +114,7 @@
                                             {php}$first_arctype_id = $arctype['id'];{/php}
                                             {/if}
                                         {/if}
-                                        <label><input type="checkbox" class="arctype_cbox arctype_id_{$arctype.id}" name="permission[arctype][]" value="{$arctype.id}" />{$arctype.typename}</label>
+                                        <label><input type="checkbox" class="arctype_cbox arctype_id_{$arctype.id}" value="{$arctype.id}" />{$arctype.typename}</label>
                                     {/foreach}
                                 </p>
                                 
@@ -114,13 +123,13 @@
                                     <div class="arctype_child" id="arctype_child_{$arctype['id']}"{if condition="$first_arctype_id==$arctype['id']"} style="display: block;"{/if}>
                                     {foreach $arctype_array[$arctype['id']] as $item}
                                         <div class="arctype_child1">
-                                            <label><input type="checkbox" class="arctype_cbox arctype_id_{$item.id}" name="permission[arctype][]" value="{$item.id}" data-pid="{$item.parent_id}" />{$item.typename}</label>
+                                            <label><input type="checkbox" class="arctype_cbox arctype_id_{$item.id}" value="{$item.id}" data-pid="{$item.parent_id}" />{$item.typename}</label>
                                         </div>
                                         {if condition="isset($arctype_array[$item['id']])"}
                                         <div class="arctype_child2" id="arctype_child_{$item['id']}">
                                             <span class="button level1 switch center_docu"></span>
                                             {foreach $arctype_array[$item['id']] as $vo}
-                                            <label><input type="checkbox" class="arctype_cbox" name="permission[arctype][]" value="{$vo.id}" data-pid="{$vo.parent_id}" data-tpid="{$item.parent_id}" />{$vo.typename}</label>
+                                            <label><input type="checkbox" class="arctype_cbox" value="{$vo.id}" data-pid="{$vo.parent_id}" data-tpid="{$item.parent_id}" />{$vo.typename}</label>
                                             {/foreach}
                                         </div>
                                         {/if}
@@ -168,7 +177,8 @@
                 </dd>
             </dl>
 
-            <div class="bot">
+            <div class="bot2">
+                <input type="hidden" name="arctype_str" id="arctype_str" value="">
                 <a href="JavaScript:void(0);" onclick="postSubmit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
             </div>
         </div>
@@ -224,18 +234,20 @@
         $('#select_all_permission').bind('click', function(){
             if($(this).attr('checked')){
                 $('#postForm input[name^="permission"]').attr('checked', 'checked');
+                $('#postForm .arctype_cbox').attr('checked', 'checked');
             }else{
                 $('#postForm input[name^="permission"]').removeAttr('checked');
+                $('#postForm .arctype_cbox').removeAttr('checked');
             }
         });
-        $('#postForm input[name^="permission"],#postForm input[name^="cud"]').bind('click', function(){
+        $('#postForm input[name^="permission"],#postForm .arctype_cbox,#postForm input[name^="cud"]').bind('click', function(){
             hasSelectAll();
         });
     });
 
     function hasSelectAll(){
         var c = true;
-        $('#postForm input[name^="permission"]').each(function(idx, ele){
+        $('#postForm input[name^="permission"],#postForm .arctype_cbox').each(function(idx, ele){
             if(! $(ele).attr('checked')){
                 c = false;
                 return;
@@ -287,6 +299,9 @@
                 if(item.only_oneself){
                     $('#postForm input[name="only_oneself"]').attr('checked', 'checked');
                 };
+                if(item.check_oneself){
+                    $('#postForm input[name="check_oneself"]').attr('checked', 'checked');
+                };
                 if(item.cud){
                     item.cud.map(function(row){
                         $('#postForm input[name^="cud"][value="'+row+'"]').attr('checked', 'checked');
@@ -329,7 +344,7 @@
         }
 
         var a = [];
-        $('input[name^=permission]').each(function(i,o){
+        $('input[name^=permission],#postForm .arctype_cbox').each(function(i,o){
             if($(o).is(':checked')){
                 a.push($(o).val());
             }
@@ -339,14 +354,42 @@
             return false;
         }
 
+        var arctype_arr = new Array();
+        $(".arctype_cbox:checked").each(function(i){
+            arctype_arr[i] = $(this).val();
+        });
+        var arctype_str = arctype_arr.join(",");
+        $('#arctype_str').val(arctype_str);
+
         var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
 
         layer_loading('正在处理');
         {lt name="$Request.param.iframe" value="1"}
-            $('#postForm').submit();
+            $.ajax({
+                type : 'post',
+                url : "{:url('AuthRole/add', ['_ajax'=>1])}",
+                data : $('#postForm').serialize(),
+                dataType : 'json',
+                success : function(res){
+                    layer.closeAll();
+                    if(res.code == 1){
+                        var _parent = parent;
+                        _parent.layer.close(parentObj);
+                        _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                            _parent.window.location.reload();
+                        });
+                    }else{
+                        showErrorMsg(res.msg);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    layer.alert(e.responseText, {icon: 5, title:false});
+                }
+            });
         {else /}
             $.ajax({
-                url: $('#postForm').attr('action'),
+                url: "{:url('AuthRole/add', ['_ajax'=>1])}",
                 type: 'POST',
                 dataType: 'JSON',
                 data: $('#postForm').serialize(),

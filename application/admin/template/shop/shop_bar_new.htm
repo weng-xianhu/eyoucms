@@ -1,0 +1,11 @@
+{eq name="'Shop@index'|is_check_access" value="1"}
+<div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
+    <input type="button" class="btn {if condition="!in_array($Request.action, ['index'])"}current{else/}selected{/if}" value="订单列表" onclick="window.location.href='{:url("Shop/index")}';">
+</div>
+{/eq}
+
+{eq name="'Shop@conf'|is_check_access" value="1"}
+<div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
+    <input type="button" class="btn {if condition="!in_array($Request.action, ['conf'])"}current{else/}selected{/if}" value="功能配置" onclick="window.location.href='{:url("Shop/conf")}';">
+</div>
+{/eq}

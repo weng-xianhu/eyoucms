@@ -1,0 +1,272 @@
+{include file="public/layout" /}
+<body class="bodystyle">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <form class="form-horizontal" id="post_form" action="{:url('Sharp/add')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit"><em>*</em>商品信息</dt>
+                <dd class="opt">
+                    <img src="{$info.litpic|get_default_pic=###}" alt="" style="max-width: 70px;">
+                    {$info.title}<br>
+                    商品ID：{$info.aid}
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            {if condition="1 == $shopConfig['shop_open'] "}
+            {if condition="!isset($shopConfig['shop_open_spec']) || 0 == $shopConfig['shop_open_spec']"}
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="limit"><em>*</em>商品售价</label>
+                    </dt>
+                    <dd class="opt">
+                        {$info.users_price}
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="seckill_price"><em>*</em>秒杀价格</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="seckill_price" value="" id="seckill_price" class="input-txt" onkeyup='this.value=this.value.replace(/[^\d.]/g,"");' onpaste='this.value=this.value.replace(/[^\d.]/g,"")'>
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="total_stock"><em>*</em>秒杀库存</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="seckill_stock" value="" id="seckill_stock" class="input-txt" onkeyup='this.value=this.value.replace(/[^\d.]/g,"");' onpaste='this.value=this.value.replace(/[^\d.]/g,"")'>
+                        <span class="err"></span>
+                        <p class="notic">注：秒杀库存为独立库存，与主商品库存不同步</p>
+                    </dd>
+                </dl>
+            {else/}
+            {empty name="$HtmlTable"}
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="limit"><em>*</em>商品售价</label>
+                    </dt>
+                    <dd class="opt">
+                        {$info.users_price}
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="seckill_price"><em>*</em>秒杀价格</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="seckill_price" value="" id="seckill_price" class="input-txt" onkeyup='this.value=this.value.replace(/[^\d.]/g,"");' onpaste='this.value=this.value.replace(/[^\d.]/g,"")'>
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="total_stock"><em>*</em>秒杀库存</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="seckill_stock" value="" id="seckill_stock" class="input-txt" onkeyup='this.value=this.value.replace(/[^\d.]/g,"");' onpaste='this.value=this.value.replace(/[^\d.]/g,"")'>
+                        <span class="err"></span>
+                        <p class="notic">注：秒杀库存为独立库存，与主商品库存不同步</p>
+                    </dd>
+                </dl>
+            {else /}
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="users_price">商品规格 </label>
+                    </dt>
+                    <dd class="opt">
+                        <div id='SpecTempLateDiv'>
+                            {$HtmlTable}
+                        </div>
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <script>
+                    $(function () {
+                        // 合并单元格
+                        MergeCells();
+                    });
+                    // 合并单元格
+                    function MergeCells() {
+                        var tab = document.getElementById("spec_input_tab");
+                        var maxCol = 2, val, count, start;
+                        if (tab != null) {
+                            for (var col = maxCol - 1; col >= 0; col--) {
+                                count = 1;
+                                val = "";
+                                for (var i = 0; i < tab.rows.length; i++) {
+                                    if (val == tab.rows[i].cells[col].innerHTML) {
+                                        count++;
+                                    } else {
+                                        if (count > 1) { //合并
+                                            start = i - count;
+                                            tab.rows[start].cells[col].rowSpan = count;
+                                            for (var j = start + 1; j < i; j++) {
+                                                tab.rows[j].cells[col].style.display = "none";
+                                            }
+                                            count = 1;
+                                        }
+                                        val = tab.rows[i].cells[col].innerHTML;
+                                    }
+                                }
+                                if (count > 1) { //合并，最后几行相同的情况下
+                                    start = i - count;
+                                    tab.rows[start].cells[col].rowSpan = count;
+                                    for (var j = start + 1; j < i; j++) {
+                                        tab.rows[j].cells[col].style.display = "none";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // 批量设置价格
+                    function BulkSetPrice(obj) {
+                        layer.prompt({
+                            title: false,
+                            formType: 3,
+                            id: 'BulkSetPrice',
+                            btn: ['确定', '关闭'],
+                            closeBtn: 0,
+                            success: function(layero, index){
+                                $("#BulkSetPrice").find('input').attr('placeholder', '批量设置秒杀价格');
+                                $("#BulkSetPrice").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                $("#BulkSetPrice").find('input').attr('onpaste', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                            }
+                        }, function(price, index){
+                            layer.close(index);
+                            // 规格中的价格
+                            $('.spec_seckill_price').val(price);
+                        });
+                    }
+                    // 批量设置库存
+                    function BulkSetStock(obj) {
+                        layer.prompt({
+                            title: false,
+                            formType: 3,
+                            id: 'BulkSetStock',
+                            btn: ['确定', '关闭'],
+                            closeBtn: 0,
+                            success: function(layero, index){
+                                $("#BulkSetStock").find('input').attr('placeholder', '批量设置秒杀库存');
+                                $("#BulkSetStock").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                $("#BulkSetStock").find('input').attr('onpaste', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                            }
+                        }, function(stock, index){
+                            layer.close(index);
+                            // 单个库存
+                            $('.spec_seckill_stock').val(stock);
+                            $('.spec_seckill_stock').attr('data-old_stock',stock);
+                        });
+                    }
+                </script>
+            {/empty}
+            {/if}
+            {/if}
+            <dl class="row">
+                <dt class="tit">
+                    <label for="sales"><em>*</em>虚拟销量</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="virtual_sales" value="0" id="virtual_sales" class="input-txt" onkeyup='this.value=this.value.replace(/[^\d.]/g,"");' onpaste='this.value=this.value.replace(/[^\d.]/g,"")'>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="limit"><em>*</em>限购数量</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="limit" value="0" id="limit" class="input-txt" onkeyup='this.value=this.value.replace(/[^\d.]/g,"");' onpaste='this.value=this.value.replace(/[^\d.]/g,"")'>
+                    <span class="err"></span>
+                    <p class="notic">注：每人限制购买的数量，如果填写0则不限购</p>
+                </dd>
+            </dl>
+
+            <div class="bot">
+                <input type="hidden" name="aid" value="{$info.aid}" />
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+    // 判断输入框是否为空
+    function checkForm(){
+        {empty name="$HtmlTable"}
+            if($('input[name=seckill_price]').val() == ''){
+                showErrorMsg('秒杀价格不能为空！');
+                $('input[name=seckill_price]').focus();
+                return false;
+            }
+            if($('input[name=seckill_stock]').val() == ''){
+                showErrorMsg('秒杀库存不能为空！');
+                $('input[name=seckill_stock]').focus();
+                return false;
+            }
+        {else /}
+            var ret = 0;
+            $(".spec_seckill_price").each(function(){
+                if ($(this).val() == '') {
+                    showErrorMsg('秒杀价格不能为空！');
+                    $(this).focus();
+                    ret = 1;
+                    return false;
+                }
+            });
+            if (1 == ret){
+                return false;
+            }
+            $(".spec_seckill_stock").each(function(){
+                if ($(this).val() == '') {
+                    showErrorMsg('秒杀库存不能为空！');
+                    $(this).focus();
+                    ret = 1;
+                    return false;
+                }
+            });
+            if (1 == ret){
+                return false;
+            }
+        {/empty}
+
+        if($('input[name=limit]').val() == ''){
+            showErrorMsg('限购数量！');
+            $('input[name=limit]').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Sharp/add', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

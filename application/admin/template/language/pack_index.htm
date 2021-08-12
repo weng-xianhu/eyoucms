@@ -1,6 +1,6 @@
 {include file="public/layout" /}
 <script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;min-width:auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page" style="min-width:auto;">
@@ -9,9 +9,8 @@
         <div class="mDiv">
             <div class="ftitle">
                 <h3>模板语言变量</h3>
-                <h5>(共{$pageObj->totalRows}条记录)</h5>
+                <h5>(共{$pageObj->totalRows}条数据)</h5>
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" action="{:url('Language/pack_index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
@@ -19,7 +18,7 @@
                     <div class="fbutton" style="float: none;">
                           <a href="{:url("Language/pack_add")}">
                               <div class="add">
-                                  <span><i class="fa fa-plus"></i>新增变量</span>
+                                  <span>新增变量</span>
                               </div>
                           </a>
                     </div>
@@ -36,10 +35,8 @@
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="标题搜索...">
                         <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
                     </div>
-                    <!-- <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Language/pack_index')}';">
-                    </div> -->
                 </div>
             </form>
         </div>
@@ -52,15 +49,15 @@
                             <div class="tc">选择</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w200">
-                            <div class="tl">变量名</div>
+                            <div class="tl text-l10">变量名</div>
                         </th>
                         <th abbr="article_title" axis="col3" class="">
-                            <div style="text-align: left; padding-left: 10px;" class="">变量值</div>
+                            <div class="tl text-l10">变量值</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w100">
                             <div class="tc">更新时间</div>
                         </th>
-                        <th axis="col1" class="w180">
+                        <th axis="col1" class="w160">
                             <div class="tc">操作</div>
                         </th>
                     </tr>
@@ -84,17 +81,17 @@
                             <td class="sign">
                                 <div class="tc w40">
                                     {neq name='$vo.is_syn' value='1'}
-                                    <input type="checkbox" name="ids[]" value="{$vo.id}">
+                                    <input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.id}">
                                     {/neq}
                                 </div>
                             </td>
                             <td class="">
-                                <div class="w200 tl">
+                                <div class="w200 tl text-l10">
                                     <a href="{:url('Language/pack_edit',array('id'=>$vo['id']))}">{$vo.name}</a>
                                 </div>
                             </td>
                             <td class="" style="width: 100%;">
-                                <div class="tl" style="padding-left: 10px;">
+                                <div class="tl text-l10">
                                     {$vo.value|htmlentities=###}
                                 </div>
                             </td>
@@ -103,15 +100,17 @@
                                     {$vo.update_time|date='Y-m-d',###}
                                 </div>
                             </td>
-                            <td class="">
-                                <div class="w180 tc">
+                            <td class="operation">
+                                <div class="w160 tc">
                                     {eq name="'Language@pack_edit'|is_check_access" value="1"}
-                                    <a href="{:url('Language/pack_edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    <a href="{:url('Language/pack_edit',array('id'=>$vo['id']))}" class="btn blue">编辑</a>
+                                    <i></i>
                                     {/eq}
                                     {eq name="'Language@pack_del'|is_check_access" value="1"}
-                                    {neq name='$vo.is_syn' value='1'}
-                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Language/pack_del')}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
-                                    {/neq}
+                                        {neq name='$vo.is_syn' value='1'}
+                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Language/pack_del')}" data-id="{$vo.id}" onClick="delfun(this);">删除</a>
+                                        <i></i>
+                                        {/neq}
                                     {/eq}
                                     <a href="javascript:void(0);" onclick="showtext('{$vo['name']}');" class="btn blue {$vo['name']}" data-clipboard-text="{{php} echo 'eyou:lang name=\'';{/php}{$vo['name']}{php} echo '\' /';{/php}}">复制标签</a>
                                 </div>
@@ -127,13 +126,13 @@
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
-                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                    <input type="checkbox" autocomplete="off" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
                 </div>
                 {eq name="'Language@pack_del'|is_check_access" value="1"}
                 <div class="fbutton">
                     <a onclick="batch_del(this, 'ids');" data-url="{:url('Language/pack_del')}">
                         <div class="add" title="批量删除">
-                            <span><i class="fa fa-close"></i>批量删除</span>
+                            <span>批量删除</span>
                         </div>
                     </a>
                 </div>
@@ -142,7 +141,7 @@
                 <div class="fbutton">
                     <a href="{:url('Language/pack_add')}">
                         <div class="add" title="新增变量">
-                            <span class="red"><i class="fa fa-plus"></i>新增变量</span>
+                            <span class="red">新增变量</span>
                         </div>
                     </a>
                 </div>
@@ -151,7 +150,7 @@
                 <div class="fbutton">
                     <a href="{:url('Language/pack_batch_add')}">
                         <div class="add" title="批量新增变量">
-                            <span class="red"><i class="fa fa-plus"></i>批量新增变量</span>
+                            <span class="red">批量新增变量</span>
                         </div>
                     </a>
                 </div>
@@ -179,7 +178,7 @@
 
     // 复制标签
     function showtext(classname){
-        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:2});}); 
+        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:5});}); 
     }
   
     function delfun(obj){
@@ -193,7 +192,7 @@
           $.ajax({
             type : 'post',
             url : $(obj).attr('data-url'),
-            data : {del_id:$(obj).attr('data-id')},
+            data : {del_id:$(obj).attr('data-id'), _ajax:1},
             dataType : 'json',
             success : function(data){
               layer.closeAll();

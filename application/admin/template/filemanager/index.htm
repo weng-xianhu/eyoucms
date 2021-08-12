@@ -1,18 +1,12 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
     {include file="filemanager/bar" /}
     <div class="flexigrid">
-        <div class="mDiv">
-            <div class="ftitle">
-                <h3>文件列表</h3>
-                <h5>(共{$list|count}条记录)</h5>
-            </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
-        </div>
+        
         <div class="hDiv">
             <div class="hDivBox">
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
@@ -52,14 +46,14 @@
                             <td style="width: 100%">
                                 <div style="text-align: left; padding-left: 15px;">
                                   {if condition="in_array($vo['filetype'], array('dir','dir2'))"}
-                                  <a href="{:url('Filemanager/index', array('activepath'=>replace_path($vo.filepath)))}"><img src="__SKIN__/images/{$vo.icon}" border="0" width="16" height="16" align="absmiddle">&nbsp;{$vo.filename}</a>
+                                  <a href="{:url('Filemanager/index', array('activepath'=>replace_path($vo.filepath)))}"><img src="__SKIN__/images/{$vo.icon}" border="0" width="16" height="16" align="absmiddle" class="flt_u">&nbsp;{$vo.filename}</a>
                                   {else /}
                                     {notempty name="$vo.icon"}
-                                    <img src="__SKIN__/images/{$vo.icon}" border="0" width="16" height="16" align="absmiddle" {if condition="!empty($vo.filepath) AND 'image' == $vo.filemine"}onmouseover="layer_tips=layer.tips('<img src={$vo.filepath}?v={php}echo time();{/php} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/if} onmouseout="layer.close(layer_tips);">
+                                    <img class="flt_u" src="__SKIN__/images/{$vo.icon}" border="0" width="16" height="16" align="absmiddle" {if condition="!empty($vo.filepath) AND 'image' == $vo.filemine"}onmouseover="layer_tips=layer.tips('<img src=__ROOT_DIR__{$vo.filepath}?v={php}echo time();{/php} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/if} onmouseout="layer.close(layer_tips);">
                                     {/notempty}
                                     &nbsp;
                                     {eq name="$vo['filemine']" value='image'}
-                                        <a href="{$vo['filepath']}?v={php}echo time();{/php}" target="_blank">{$vo.filename}</a>
+                                        <a href="__ROOT_DIR__{$vo['filepath']}?v={php}echo time();{/php}" target="_blank">{$vo.filename}</a>
                                     {else /}
                                         <a href="{:url('Filemanager/edit',array('filename'=>$vo['filename'], 'activepath'=>replace_path(dirname($vo['filepath']))))}">{$vo.filename}</a>
                                     {/eq}
@@ -79,18 +73,18 @@
                                   {/notempty}
                                 </div>
                             </td>
-                            <td class="">
+                            <td class="operation">
                                 <div class="w120 tc">
                                   {eq name="$vo['filemine']" value='image'}
                                     {if condition="in_array($vo['filetype'], $replaceImgOpArr)"}
                                         {eq name="$Think.const.CONTROLLER_NAME.'@replace_img'|is_check_access" value="1"}
-                                        <a href="{:url('Filemanager/replace_img',array('filename'=>$vo['filename'], 'activepath'=>replace_path(dirname($vo['filepath']))))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>替换</a>
+                                        <a href="{:url('Filemanager/replace_img',array('filename'=>$vo['filename'], 'activepath'=>replace_path(dirname($vo['filepath']))))}" class="btn blue">替换</a>
                                         {/eq}
                                     {/if}
                                   {else /}
                                     {if condition="in_array($vo['filetype'], $editOpArr)"}
                                         {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
-                                        <a href="{:url('Filemanager/edit',array('filename'=>$vo['filename'], 'activepath'=>replace_path(dirname($vo['filepath']))))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                        <a href="{:url('Filemanager/edit',array('filename'=>$vo['filename'], 'activepath'=>replace_path(dirname($vo['filepath']))))}" class="btn blue">编辑</a>
                                         {/eq}
                                     {/if}
                                   {/eq}
@@ -108,13 +102,16 @@
             <div class="tDiv2">
                 {eq name="'Filemanager@newfile'|is_check_access" value="1"}
                 <div class="fbutton">
-                    <a href="{:url('Filemanager/newfile', array('activepath'=>replace_path($activepath)))}">
-                        <div class="add" title="新建文件">
-                            <span class="red"><i class="fa fa-file"></i>新建文件</span>
-                        </div>
+                    <a href="{:url('Filemanager/newfile', array('activepath'=>replace_path($activepath)))}" class="layui-btn layui-btn-primary">
+                            <span class="red">新建文件</span>
                     </a>
                 </div>
                 {/eq}
+				<div class="fbuttonr" style=" margin-right: 15px; ">
+					<div class="total">
+					   <h5>共有{$list|count}条数据</h5>
+					</div>
+				</div>
             </div>
             <div style="clear:both"></div>
         </div>
@@ -140,7 +137,7 @@
     });
 
     function delfilename(obj, formid) {
-        layer.confirm('此操作不可逆，确认删除？', {
+        layer.confirm('此操作不可恢复，确认删除？', {
                 title: false,
                 btn: ['确定','取消'] //按钮
             }, function(){

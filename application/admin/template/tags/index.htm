@@ -1,27 +1,47 @@
 {include file="public/layout" /}
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit; min-width:400px;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit; min-width:400px;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page" style="min-width: 400px;">
+    <div class="fixed-bar">
+        <div class="item-title">
+            {eq name='$source' value='archives'}
+            <a class="back" href="javascript:void(0);" onclick="closeIframes(this);" title="返回"><i class="fa fa-angle-double-left"></i>返回</a>
+            {else /}
+            <a class="back" href="{:url('Index/switch_map')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            {/eq}
+            <ul class="tab-base nc-row">
+                <li><a href="{:url('Tags/index')}" class="tab current"><span>TAG标签列表</span></a></li>
+            </ul>
+        </div>
+    </div>
     <div class="flexigrid">
         <div class="mDiv">
             <div class="ftitle">
-                <h3>TAG标签列表</h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
+                {eq name="'Tags@batch_add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-href="{:url('Tags/batch_add')}" onclick="openFullframe(this, '批量新增', '600px', '600px');">
+                        <div class="add" title="批量新增">
+                            <span><i class="layui-icon layui-icon-addition"></i>批量新增</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-href="{:url('Tags/edit_index_seo')}" onclick="openFullframe(this, 'Tag主页SEO', '700px', '500px');">
+                        <div class="add" title="Tag主页SEO">
+                            <span>Tag主页SEO</span>
+                        </div>
+                    </a>
+                </div>
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" action="{:url('Tags/index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索名称...">
                         <input type="submit" class="btn" value="搜索">
-                    </div>
-                    <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Tags/index')}';">
-                    </div>
-                    <div class="sDiv2">
-                        <input type="button" class="btn" value="一键清空" onClick="clearall();">
+                        <i class="fa fa-search"></i>
                     </div>
                 </div>
             </form>
@@ -32,15 +52,24 @@
                     <thead>
                     <tr>
                         <th class="sign w40" axis="col0">
-                            <div class="tc">选择</div>
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                         </th>
                         <th abbr="ac_id" axis="col4">
                             <div class="">标签</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">点击</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">文档数</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w80">
+                            <div class="tc">设为常用</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
                             <div class="tc">新增时间</div>
                         </th>
-                        <th axis="col1" class="w120">
+                        <th axis="col1" class="w180">
                             <div class="tc">操作</div>
                         </th>
                     </tr>
@@ -60,13 +89,32 @@
                         </tr>
                     {else/}
                         {foreach name="list" item="vo" key="k" }
-                        <tr>
+                        <tr class="tagTr" data-id="{$vo.id}" data-tag="{$vo.tag}">
                             <td class="sign">
-                                <div class="w40 tc"><input type="checkbox" name="ids[]" value="{$vo.id}"></div>
+                                <div class="w40 tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.id}"></div>
                             </td>
                             <td style="width: 100%">
                                 <div style="">
-                                    {$vo.tag}
+                                    <a href="{$vo['id']|get_tagurl=###}" target="_blank">{$vo.tag}</a>
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    <input style="text-align:center;width: 80px;" type="text" data-inputype="int" onchange="changeTableVal('tagindex','id','{$vo.id}','count',this);" value="{$vo.count}" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')" />
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {$vo.total}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tc w80">
+                                    {if condition="$vo['is_common'] eq 1"}
+                                        <span class="yes" {eq name="'Tags@edit'|is_check_access" value="1"}onClick="changeTableVal('tagindex','id','{$vo.id}','is_common',this);"{/eq}><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                        <span class="no" {eq name="'Tags@edit'|is_check_access" value="1"}onClick="changeTableVal('tagindex','id','{$vo.id}','is_common',this);"{/eq}><i class="fa fa-ban"></i>否</span>
+                                    {/if}
                                 </div>
                             </td>
                             <td class="">
@@ -74,11 +122,20 @@
                                     {$vo.add_time|date='Y-m-d',###}
                                 </div>
                             </td>
-                            <td>
-                                <div class="w120 tc">
-                                    {eq name="'Tags@del'|is_check_access" value="1"}
-                                    <a class="btn red"  href="javascript:void(0)" data-url="{:url('Tags/del')}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                            <td class="operation">
+                                <div class="w180 tc">
+                                    {eq name="'Tags@relation_archives'|is_check_access" value="1"}
+                                    <a class="btn blue" href="javascript:void(0);" data-href="{:url('Tags/relation_archives', ['tid'=>$vo.id])}" data-tid="{$vo.id}" onclick="relation(this, '标签【{$vo.tag}】 - 关联文档');">关联</a>
+                                        <i></i>
                                     {/eq}
+                                    {eq name="'Tags@edit'|is_check_access" value="1"}
+                                        <a class="btn blue hint hint-top" data-hint="可以编辑tag页面seo设置" href="javascript:void(0);" data-href="{:url('Tags/edit', ['id'=>$vo.id])}" onclick="openFullframe(this, 'TAG标签 - 编辑', '100%', '100%');" >编辑</a>
+                                        <i></i>
+                                    {/eq}
+                                    {eq name="'Tags@del'|is_check_access" value="1"}
+                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Tags/del')}" data-id="{$vo.id}" onclick="delfun(this);">删除</a>
+                                    {/eq}
+                                    
                                 </div>
                             </td>
                         </tr>
@@ -92,26 +149,43 @@
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
-                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
                 </div>
                 {eq name="'Tags@del'|is_check_access" value="1"}
                 <div class="fbutton">
-                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Tags/del')}">
-                        <div class="add" title="批量删除">
-                            <span><i class="fa fa-close"></i>批量删除</span>
-                        </div>
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Tags/del')}"class="layui-btn layui-btn-primary">
+                        <span>批量删除</span>
                     </a>
                 </div>
                 {/eq}
-            </div>
+                {eq name="'Tags@clearall'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="clearall();" href="javascript:void(0);" class="layui-btn layui-btn-primary">
+                        <span>一键清空</span>
+                    </a>
+                </div>
+                {/eq}
+				{include file="public/page" /}
+			 </div>
             <div style="clear:both"></div>
         </div>
-        <!--分页位置-->
-        {$page}
     </div>
 </div>
 <script>
-    $(document).ready(function(){
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+
+    $(document).ready(function() {
         // 表格行点击选中切换
         $('#flexigrid > table>tbody >tr').click(function(){
             $(this).toggleClass('trSelected');
@@ -122,11 +196,62 @@
             location.href = location.href;
         });
     });
+	
+	var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
 
-    function clearall()
-    {
-        // 删除按钮
-        layer.confirm('此操作不可逆，确认一键清空？', {
+    //tag关联文档
+    function relation(obj,title) {
+        $.ajax({
+            type : 'POST',
+            url : "{:url('Tags/ajax_recordfile')}",
+            data : {opt:'set', value:'', _ajax:1},
+            dataType : 'json',
+            success : function(res){
+                var url = $(obj).data('href');
+                var iframes = layer.open({
+                    type: 2,
+                    title: title,
+                    id: 'relation_iframes',
+                    fixed: true, //不固定
+                    shadeClose: false,
+                    shade: 0.3,
+                    area: ['90%', '90%'],
+                    content: url,
+                });
+            },
+            error: function(e){
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    /**
+     * 关闭当前弹窗
+     */
+    function closeIframes(obj) {
+        parent.layer.close(parentObj);
+        parent.$('#often_tags').hide();
+    }
+
+    // 编辑TAG标签的SEO优化
+    function SeoEdit(obj) {
+        var url = $(obj).data('href');
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: 'TAG标签 - 编辑',
+            fixed: true,
+            shadeClose: false,
+            shade: 0.3,
+            maxmin: true,
+            area: ['700px', '480px'],
+            content: url
+        });
+    }
+
+    // 一键清空
+    function clearall() {
+        layer.confirm('此操作不可恢复，确认一键清空？', {
             title: false,
             btn: ['确定', '取消'] //按钮
         }, function () {
@@ -134,19 +259,19 @@
             $.ajax({
                 type: "POST",
                 url: "{:url('Tags/clearall')}",
-                data: {1:1},
+                data: {_ajax: 1},
                 dataType: 'json',
                 success: function (res) {
                     layer.closeAll();
-                    if(res.code == 1){
+                    if(res.code == 1) {
                         window.location.reload();
-                    }else{
+                    } else {
                         layer.alert(res.msg, {icon: 2, title:false});
                     }
                 },
-                error:function(){
+                error:function() {
                     layer.closeAll();
-                    layer.alert('网络失败，请刷新页面后重试', {icon: 2, title:false});
+                    layer.alert(ey_unknown_error, {icon: 2, title:false});
                 }
             });
         });

@@ -1,27 +1,67 @@
 <!-- 扩展 -->
-                    {eq name="'Tags@index'|is_check_access" value="1"}
-                        <div class="fbutton" style="float: none; display: none;">
-                              <a href="javascript:void(0);" onClick="tags_list();">
-                                  <div class="add">
-                                      <span><i class="fa fa-tag"></i>TAG标签管理</span>
-                                  </div>
-                              </a>
-                        </div>
-                        <script type="text/javascript">
-                            function tags_list(obj)
-                            {
-                                var url = "{:url('Tags/index')}";
-                                //iframe窗
-                                layer.open({
-                                    type: 2,
-                                    title: 'TAG标签管理',
-                                    fixed: true, //不固定
-                                    shadeClose: false,
-                                    shade: 0.3,
-                                    maxmin: true, //开启最大化最小化按钮
-                                    area: ['80%', '80%'],
-                                    content: url
-                                });
-                            }
-                        </script>
+    {eq name="$Think.const.CONTROLLER_NAME.'@add'|is_check_access" value="1"}
+        <div class="fbutton" style="float: none;">
+            <a href="{gt name="$Request.param.typeid" value="0"}{:url($Think.const.CONTROLLER_NAME.'/add', ['channel'=>$Request.param.channel, 'typeid'=>$Request.param.typeid])}{else /}javascript:quick_release({$is_arctype|default='1'});{/gt}">
+                <div class="add">
+                    {eq name="$Think.const.CONTROLLER_NAME" value="Special"}
+                    <span><i class="layui-icon layui-icon-addition"></i>发布专题</span>
+                    {else /}
+                    <span><i class="layui-icon layui-icon-addition"></i>发布文档</span>
                     {/eq}
+                </div>
+            </a>
+        </div>
+    {/eq}
+
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('#searchForm select[name=flag]').change(function(){
+                $('#searchForm').submit();
+            });
+        });
+
+        function jump_is_release()
+        {
+            var is_release = $('#searchForm input[name=is_release]').val();
+            if (1 == is_release) {
+                $('#searchForm input[name=is_release]').val('');
+            } else {
+                $('#searchForm input[name=is_release]').val('1');
+            }
+            $('#searchForm').submit();
+        }
+
+        function quick_release(is_arctype)
+        {
+            if (is_arctype && 0 < is_arctype) {
+                //iframe窗
+                layer.open({
+                    type: 2,
+                    title: '快捷发布文档',
+                    fixed: true, //不固定
+                    shadeClose: false,
+                    shade: 0.3,
+                    maxmin: true, //开启最大化最小化按钮
+                    area: ['600px', '520px'],
+                    content: "//{$Request.host}{$Request.baseFile}?m=admin&c=Archives&a=release&iframe=2&lang={$Request.param.lang}",
+                    success: function(layero, index){
+                        // var body = layer.getChildFrame('body', index);
+                        // var gourl = $('.curSelectedNode').attr('href');
+                        // if (!$.trim(gourl)) {
+                        //     gourl = "{:url('Archives/index_archives')}";
+                        // }
+                        // body.find('input[name=gourl]').val(gourl);
+                    }
+                });
+            } else {
+                layer.alert('至少要新增一个栏目！', {icon: 5, title: false, btn: ['进入栏目管理']}, function(index){
+                    layer.close(index);
+                    /*左侧菜单焦点定位*/
+                    $('.eycms_cont_left .sub-menu a', window.parent.document).removeClass('on');
+                    $('#Arctype_index', window.parent.document).addClass('on');
+                    /*end*/
+                    window.location.href = "{:url('Arctype/index')}";
+                });
+            }
+        }
+    </script>

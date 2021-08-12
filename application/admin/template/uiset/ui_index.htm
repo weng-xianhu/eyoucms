@@ -1,5 +1,5 @@
 {include file="public/layout" /}
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
@@ -23,7 +23,7 @@
         <div class="mDiv">
             <div class="ftitle">
                 <h3>数据列表</h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
+                <h5>(共{$pager->totalRows}条数据)</h5>
             </div>
             <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" action="{:url('Uiset/ui_index')}" method="get" onsubmit="layer_loading('正在处理');">
@@ -32,10 +32,8 @@
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
                         <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
                     </div>
-                    <!-- <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Uiset/ui_index')}';">
-                    </div> -->
                 </div>
             </form>
         </div>
@@ -82,7 +80,7 @@
                         {foreach name="list" item="vo" key="k" }
                         <tr>
                             <td class="sign w40">
-                                <div class="tc"><input type="checkbox" name="ids[]" value="{$vo.id}"></div>
+                                <div class="tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.id}"></div>
                             </td>
                             <td class="">
                                 <div style=" padding-left: 10px">
@@ -123,7 +121,7 @@
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
-                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                    <input type="checkbox" autocomplete="off" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
                 </div>
                 {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
                 <div class="fbutton">

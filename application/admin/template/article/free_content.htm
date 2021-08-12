@@ -1,0 +1,122 @@
+{include file="public/layout" /}
+{load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+{load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+{load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+
+<body style="background-color: #FFF; overflow: auto;min-width:auto;">
+<div id="toolTipLayer"
+     style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;box-shadow:none;">
+    <form class="form-horizontal" id="post_form" action="{:url('Article/add')}" method="post">
+        <div class="ncap-form-default" style="overflow: unset;">
+            <div id="free_content_dl">
+    <textarea class="span12 ckeditor" id="free_content" data-func="free_content" name="free_content"
+              title="">{$free_content}</textarea>
+                <div class="opt-moreOper" style="margin-top: 20px;">
+                    <p>
+                        <a href="javascript:void(0);" onclick="remote_to_local_free_content();" class="ncap-btn2">远程图片本地化</a>&nbsp;
+                        <a href="javascript:void(0);" onclick="replace_links_free_content();"
+                           class="ncap-btn2">清除非本站链接</a>&nbsp;
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var ue_free_content = UE.getEditor('free_content', {
+                serverUrl: "{:url('Ueditor/index',array('savepath'=>'ueditor'))}",
+                zIndex: 999,
+                initialFrameWidth: "100%", //初化宽度
+                initialFrameHeight: 450, //初化高度
+                focus: false, //初始化时，是否让编辑器获得焦点true或false
+                maximumWords: 99999,
+                removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
+                pasteplain: false, //是否默认为纯文本粘贴。false为不使用纯文本粘贴，true为使用纯文本粘贴
+                autoHeightEnabled: false,
+                toolbars: ueditor_toolbars
+            });
+
+            ue_free_content.ready(function() {
+                ue_free_content.setContent($("#free_content",window.parent.document).val());
+            });
+
+            //必须在提交前渲染编辑器；
+            function free_content() {
+                //判断编辑模式状态:0表示【源代码】HTML视图；1是【设计】视图,即可见即所得；-1表示不可用
+                if (UE.getEditor("free_content").queryCommandState('source') != 0) {
+                    UE.getEditor("free_content").execCommand('source'); //切换到【设计】视图
+                }
+            }
+
+            // 远程图片本地化
+            function remote_to_local_free_content() {
+                var body = UE.getEditor("free_content").getContent();
+                layer_loading('下载中');
+                $.ajax({
+                    type: 'POST',
+                    url: "{:url('Archives/ajax_remote_to_local')}",
+                    data: {body: body, _ajax: 1},
+                    dataType: "JSON",
+                    success: function (res) {
+                        layer.closeAll();
+                        if (res.code == 1) {
+                            UE.getEditor("free_content").setContent(res.data.body);
+                            layer.msg(res.msg, {icon: 1, time: 1000});
+                        } else {
+                            showErrorMsg(res.msg);
+                        }
+                    },
+                    error: function (e) {
+                        layer.closeAll();
+                        showErrorMsg(res.msg);
+                    }
+                });
+            }
+
+            // 清除非本站链接
+            function replace_links_free_content() {
+                var body = UE.getEditor("free_content").getContent();
+                layer_loading('正在处理');
+                $.ajax({
+                    type: 'POST',
+                    url: "{:url('Archives/ajax_replace_links')}",
+                    data: {body: body, _ajax: 1},
+                    dataType: "JSON",
+                    success: function (res) {
+                        layer.closeAll();
+                        if (res.code == 1) {
+                            UE.getEditor("free_content").setContent(res.data.body);
+                            layer.msg(res.msg, {icon: 1, time: 1000});
+                        } else {
+                            showErrorMsg(res.msg);
+                        }
+                    },
+                    error: function (e) {
+                        layer.closeAll();
+                        showErrorMsg(res.msg);
+                    }
+                });
+            }
+        </script>
+        <div class="ncap-form-default">
+            <div>
+                <a href="JavaScript:void(0);" onclick="confirm();" class="ncap-btn-big ncap-btn-green"
+                   id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+    // 判断输入框是否为空
+    function confirm(){
+        var content = ue_free_content.getContent()
+        var parentObj = parent.layer.getFrameIndex(window.name);
+        var _parent = parent;
+        _parent.layer.close(parentObj);
+        $("#free_content",window.parent.document).val(content);
+    }
+</script>
+
+{include file="public/footer" /}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>可视化编辑</title>
+    <script type="text/javascript">
+        var eyou_basefile = "{$Request.baseFile}";
+        var module_name = "{$Think.const.MODULE_NAME}";
+        var GetUploadify_url = "{:url('Uploadify/upload')}";
+        var __root_dir__ = "__ROOT_DIR__";
+        var __lang__ = "{$admin_lang}";
+    </script>  
+    {load href="__STATIC__/common/js/jquery.min.js" /}
+    {load href="__PUBLIC__/plugins/layer-v3.1.0/layer.js" /}
+    <style type="text/css">
+        .ncap-form-default {
+            padding: 10px 0;
+            overflow: hidden;
+        }
+        a {
+            text-decoration: none;
+        }
+        a.ncap-btn-big {
+            font: bold 14px/20px "microsoft yahei", arial;
+            color: #777;
+            background-color: #ECF0F1;
+            text-align: center;
+            vertical-align: middle;
+            display: inline-block;
+            height: 20px;
+            padding: 7px 19px;
+            border: solid 1px #BEC3C7;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        a.ncap-btn-green {
+            background-color: #4fc0e8;
+            color: #FFF;
+            text-shadow: 0 -1px 0 rgba(0,0,0,0.10);
+            border-color: #3aa8cf;
+        }
+        .ckeditor {
+            /*height: auto;*/
+            /*height: 500px;*/
+        }
+        .panel-default {
+            /*height: 510px;*/
+        }
+    </style>
+</head>
+<body>
+    <div class="panel panel-default">
+        <div class="span12 ckeditor">
+            <form class="form-horizontal" id="post_form" onsubmit="return check_submit();">
+                <div class="control-group">
+                    <textarea name="content" id="content" style="width: 100%; height: 500px;"></textarea>
+                </div>
+                <div class="control-group ncap-form-default">
+                    <div class="controls">
+                        <input type="hidden" name="id" value="{$field.id|default=''}">
+                        <input type="hidden" name="type" value="{$field.type|default=''}">
+                        <input type="hidden" name="page" value="{$field.page|default=''}">
+                        <input type="hidden" name="v" value="{$v|default='pc'}">
+                        <input type="hidden" name="lang" value="{$field.lang|default='cn'}">
+                        <input type="hidden" name="idcode" value="{$field.idcode|default=''}">
+                        <input type="hidden" name="iframe" value="1">
+                        <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+
+        $(function(){
+            var oldhtml = parent.eyou_getOldHtml();
+            $('textarea[name=content]').val(oldhtml);
+        });
+
+        var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+        function check_submit()
+        {
+            parent.eyou_layer_loading('正在处理');
+
+            var url = "{:url('api/Uiset/submit', ['_ajax'=>1])}";
+            $.ajax({
+                url: url,
+                type: 'POST',
+                dataType: 'JSON',
+                data: $('#post_form').serialize(),
+                success: function(res){
+                    parent.layer.closeAll();
+                    if (res.code == 1) {
+                        $('#workspace', window.parent.document).attr('src', $('#workspace', window.parent.document).attr('src'));
+                        parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000});
+                    } else {
+                        parent.eyou_showErrorAlert(res.msg);
+                    }
+                },
+                error: function(e){
+                    parent.layer.closeAll();
+                    parent.eyou_showErrorAlert(e.responseText);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

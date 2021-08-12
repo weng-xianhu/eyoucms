@@ -12,6 +12,7 @@
  */
 namespace app\admin\model;
 
+use think\Db;
 use think\Model;
 
 /**
@@ -45,7 +46,7 @@ class Member extends Model
             'is_hidden'   => 0, // 是否隐藏属性，0为否
             'is_required' => 1, // 是否必填属性，1为是
         );
-        $para_data = M('users_parameter')->where($where)->field('title,name')->select();
+        $para_data =Db::name('users_parameter')->where($where)->field('title,name')->select();
 
         // 判断提交的属性中必填项是否为空
         foreach ($para_data as $value) {
@@ -75,7 +76,7 @@ class Member extends Model
             'is_system'=> 1,
             'lang'     => $this->admin_lang,
         ];
-        $users_parameter = M('users_parameter')->where($where_1)->field('para_id,title,name')->getAllWithIndex('name');
+        $users_parameter = Db::name('users_parameter')->where($where_1)->field('para_id,title,name')->getAllWithIndex('name');
 
         // 判断手机和邮箱格式是否正确
         foreach ($post_users as $key => $val) {
@@ -103,7 +104,7 @@ class Member extends Model
                 // 若users_id为空，则清除条件中的users_id条件
                 if (empty($users_id)) { unset($where_2['users_id']); }
 
-                $users_list = M('users_list')->where($where_2)->field('info')->find();
+                $users_list = Db::name('users_list')->where($where_2)->field('info')->find();
                 if (!empty($users_list['info'])) {
                     return $value['title'].'已存在！';
                 }
@@ -126,14 +127,14 @@ class Member extends Model
                 'is_system' => 1,
                 'lang'      => $this->admin_lang,
             ];
-            $paraData = M('users_parameter')->where($parawhere)->field('para_id')->find();
+            $paraData = Db::name('users_parameter')->where($parawhere)->field('para_id')->find();
             $listwhere = [
                 'para_id'   => $paraData['para_id'],
                 'users_id'  => $users_id,
                 'lang'      => $this->admin_lang,
             ];
-            $listData = M('users_list')->where($listwhere)->field('users_id,info')->find();
-            $Data['email'] = $listData['info'];
+            $listData = Db::name('users_list')->where($listwhere)->field('users_id,info')->find();
+            $Data['email'] = !empty($listData['info']) ? $listData['info'] : '';
         }
 
         if ('mobile' == $field || '*' == $field) {
@@ -143,14 +144,14 @@ class Member extends Model
                 'is_system' => 1,
                 'lang'     => $this->admin_lang,
             ];
-            $paraData_1 = M('users_parameter')->where($parawhere_1)->field('para_id')->find();
+            $paraData_1 = Db::name('users_parameter')->where($parawhere_1)->field('para_id')->find();
             $listwhere_1 = [
                 'para_id'   => $paraData_1['para_id'],
                 'users_id'  => $users_id,
                 'lang'     => $this->admin_lang,
             ];
-            $listData_1 = M('users_list')->where($listwhere_1)->field('users_id,info')->find();
-            $Data['mobile'] = $listData_1['info'];
+            $listData_1 = Db::name('users_list')->where($listwhere_1)->field('users_id,info')->find();
+            $Data['mobile'] = !empty($listData_1['info']) ? $listData_1['info'] : '';
         }
 
         return $Data;
@@ -168,7 +169,7 @@ class Member extends Model
             'is_hidden'  => 0, // 是否隐藏属性，0为否
         );
 
-        $row = M('users_parameter')->field('*')
+        $row =Db::name('users_parameter')->field('*')
             ->where($where)
             ->order('sort_order asc,para_id asc')
             ->select();
@@ -188,7 +189,7 @@ class Member extends Model
     public function getDataParaList($users_id)
     {
         // 字段及内容数据处理
-        $row = M('users_parameter')->field('a.*,b.info,b.users_id')
+        $row = Db::name('users_parameter')->field('a.*,b.info,b.users_id')
             ->alias('a')
             ->join('__USERS_LIST__ b', "a.para_id = b.para_id AND b.users_id = {$users_id}", 'LEFT')
             ->where([
@@ -336,7 +337,14 @@ class Member extends Model
                         /*--end*/
                         break;
                     }
-                    
+                    case 'file':
+                    {
+                        $ext = tpCache('basic.file_type');
+                        $val['ext'] = !empty($ext) ? $ext : "zip|gz|rar|iso|doc|xls|ppt|wps";
+                        $val['filesize'] = upload_max_filesize();
+                        break;
+                    }
+
                     default:
                     {
                         $val['dfvalue'] = isset($addonRow[$val['name']]) ? $addonRow[$val['name']] : $val['dfvalue'];

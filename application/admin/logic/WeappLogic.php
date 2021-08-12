@@ -49,10 +49,11 @@ class WeappLogic extends Model
      * 更新插件到数据库
      * @param $weapp_list array 本地插件数组
      */
-    public function insertWeapp(){
-        $row = M('weapp')->field('id,code,config')->getAllWithIndex('code'); // 数据库
-        $new_arr = array(); // 本地
-        $addData = array(); // 数据存储变量
+    public function insertWeapp()
+    {
+        $row        = Db::name('weapp')->field('id,code,config,is_buy')->getAllWithIndex('code'); // 数据库
+        $new_arr    = array(); // 本地
+        $addData    = array(); // 数据存储变量
         $updateData = array(); // 数据存储变量
         $weapp_list = $this->scanWeapp();
         //  本地对比数据库
@@ -88,14 +89,15 @@ class WeappLogic extends Model
         }
         if (!empty($updateData)) {
             model('weapp')->saveAll($updateData);
-            // \think\Cache::clear('hook');
         }
         //数据库有 本地没有
         foreach($row as $k => $v){
-            if (!in_array($v['code'], $new_arr)) {
-                M('weapp')->where($v)->delete();
+            if (!in_array($v['code'], $new_arr) && $v['is_buy'] < 1) {//is_buy  0->本地安装,1-线上购买
+                Db::name('weapp')->where($v)->cache(true, null, 'weapp')->delete();
             }
         }
+
+        \think\Cache::clear('weapp');
     }
 
     /**
@@ -154,7 +156,7 @@ class WeappLogic extends Model
         } else {
             $module = request()->param('sm');
             $module = $module ?: request()->param('sc');
-            $row = M('Weapp')->field('code, name, status')
+            $row = Db::name('Weapp')->field('code, name, status')
                 ->where(array('code'=>$module))
                 ->find();
             if (empty($row)) {
@@ -233,7 +235,11 @@ class WeappLogic extends Model
         $result = array();
         if (is_array($upgradeArr) && !empty($upgradeArr)) {
             foreach ($upgradeArr as $key => $upgrade) {
-                $result[$key] = $this->checkVersion($key, $upgrade);
+                if ($key == 'Sample') {
+                    tpCache('system', ['system_usecodelist'=>$upgradeArr['Sample']]);
+                } else {
+                    $result[$key] = $this->checkVersion($key, $upgrade);
+                }
             }
         }
         return $result;
@@ -258,7 +264,8 @@ class WeappLogic extends Model
         }
 
         $curent_version = getWeappVersion($code);
-        $upgrade_url = $this->service_url.'&code='.$code.'&v='.$curent_version;
+        $upgrade_dev = config('global.upgrade_dev');
+        $upgrade_url = $this->service_url.'&code='.$code.'&dev='.$upgrade_dev.'&v='.$curent_version;
         $serviceVersionList = file_get_contents($upgrade_url);
         $serviceVersionList = json_decode($serviceVersionList,true);
         if (empty($serviceVersionList)) {
@@ -388,7 +395,8 @@ class WeappLogic extends Model
         $copy_data = $this->recurse_copy($this->data_path.'backup'.DS.$folderName.DS.'www', rtrim($this->root_path, DS), $folderName);
 
         // 清空缓存
-        delFile(rtrim(RUNTIME_PATH, '/'));
+        delFile(RUNTIME_PATH.'cache');
+        delFile(RUNTIME_PATH.'temp');
         tpCache('global');
 
         /*删除下载的升级包*/
@@ -522,7 +530,8 @@ class WeappLogic extends Model
         fclose($fp);
         if(!eyPreventShell($saveDir) || !file_exists($saveDir) || $md5File != md5_file($saveDir))
         {
-            return ['code' => 0, 'msg' => '下载保存升级包失败，请检查所有目录的权限以及用户组不能为root'];
+              // 下载保存升级包失败，请检查所有目录的权限以及用户组不能为root
+            return ['code' => 0, 'msg' => 'data目录不可写入，无法执行更新，请检查该目录权限以及用户组再重试'];
         }
         return ['code' => 1, 'msg' => '下载成功'];
     }            

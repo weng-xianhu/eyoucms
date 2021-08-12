@@ -1,0 +1,1316 @@
+{include file="public/layout" /}
+<script type="text/javascript" src="__PUBLIC__/plugins/laydate/laydate.js"></script>
+
+{eq name="$editor.editor_select" value="1"}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+{else/}
+    {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
+{/eq}
+
+<body style="background-color: #FFF; overflow: auto;min-width:auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;box-shadow:none;">
+    <div class="fixed-bar">
+        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            
+            <ul class="tab-base nc-row">
+                <li><a href="javascript:void(0);" data-index='1' class="tab current"><span>常规选项</span></a></li>
+                <li><a href="javascript:void(0);" data-index='2' class="tab"><span>SEO选项</span></a></li>
+                <li><a href="javascript:void(0);" data-index='3' class="tab"><span>其他选项</span></a></li>
+            </ul>
+        </div>
+    </div>
+    <form class="form-horizontal" id="post_form" action="{:url('Media/edit')}" method="post">
+        <!-- 常规信息 -->
+        <div class="ncap-form-default tab_div_1">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>标题</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="title" value="{$field.title}" id="title" class="input-txt" maxlength="100" {eq name="$channelRow.is_repeat_title" value="0"} oninput="check_title_repeat(this,'{$field.aid}');" {/eq}>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>所属栏目</label>
+                </dt>
+                <dd class="opt"> 
+                    <input type="hidden" name="attr[typeid]" id="attr_typeid" value="{$field.typeid}">
+                    <select name="typeid" id="typeid">
+                        {$arctype_html}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic">谨慎切换，自定义字段的内容会随着栏目切换而清空，在保存之前不受影响！</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>文档属性</label>
+                </dt>
+                <dd class="opt">
+                    {volist name="archives_flags" id="vo"}
+                        <input type="hidden" name="attr[{$vo.flag_fieldname}]" {if $field[$vo.flag_fieldname] == 1}value="1"{else/}value="0"{/if}>
+                        <label><input type="checkbox" name="{$vo.flag_fieldname}" value="1" {if $field[$vo.flag_fieldname] == 1}checked{/if}>{$vo.flag_name}[{$vo.flag_attr}]</label>&nbsp;
+                    {/volist}
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row {if condition="$field.is_jump != 1"}none{/if} dl_jump">
+                <dt class="tit">
+                    <label>跳转网址</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$field.jumplinks}" name="jumplinks" id="jumplinks" class="input-txt" placeholder="http://">
+                    <span class="err"></span>
+                    <p class="notic">请输入完整的URL网址（包含http或https），设置后访问该条信息将直接跳转到设置的网址</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>缩略图</label>
+                </dt>
+                <dd class="opt">
+                    <div class="input-file-show div_litpic_local" {neq name="$field.is_remote" value="0"}style="display: none;"{/neq}>
+                        <span class="show">
+                            <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="{$field.litpic_local|default='javascript:void(0);'}">
+                                <i id="img_i" class="fa fa-picture-o" {notempty name="$field.litpic_local"}onmouseover="layer_tips=layer.tips('<img src={$field.litpic_local} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                            </a>
+                        </span>
+                        <span class="type-file-box">
+                            <input type="text" id="litpic_local" name="litpic_local" value="{$field.litpic_local|default=''}" class="type-file-text" autocomplete="off">
+                            <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                            <input class="type-file-file" onClick="GetUploadify(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
+                                   title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                        </span>
+                    </div>
+                    <input type="text" id="litpic_remote" name="litpic_remote" value="{$field.litpic_remote|default=''}" placeholder="http://" class="input-txt" onKeyup="keyupRemote(this, 'litpic');" {neq name="$field.is_remote" value="1"}style="display: none;"{/neq}>
+                    &nbsp;
+                    <label><input type="checkbox" name="is_remote" id="is_remote" value="1" {eq name="$field.is_remote" value="1"}checked="checked"{/eq} onClick="clickRemote(this, 'litpic');">远程图片</label>
+                    <span class="err"></span>
+                    <p class="notic">当没有手动上传图片时候，会自动提取正文的第一张图片作为缩略图</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>视频上传</label>
+                </dt>
+                <dd class="opt">
+                    <a href="javascript:void(0);" onclick="addUrlSys();" class="ncap-btn ncap-btn-green">新增</a>
+                    <a href="javascript:void(0);" onclick="batch_import_url();" class="ncap-btn ncap-btn-green">批量导入</a>
+                    &nbsp;<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=9993','视频模型的模板标签调用')" style="font-size: 12px;">标签教程</a>
+                    <div id="url-box_sys" style="padding: 10px 0">
+
+                    </div>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                  <label>播放限制</label>
+                </dt>
+                <dd class="opt">
+                    <select name="arc_level_id" id="arc_level_id" onchange="Onlevel();">
+                        <option value="0">不限会员</option>
+                        {volist name="users_level" id="vo"}
+                            <option value="{$vo.level_id}" level_value="{$vo.level_value}" {eq name='$vo.level_id' value='$field.arc_level_id'} selected {/eq}>{$vo.level_name}</option>
+                        {/volist}
+                    </select>
+                </dd>
+            </dl>
+            <script type="text/javascript">
+                function Onlevel() {
+                    var users_price = $('#users_price').val();
+                    if (parseFloat(users_price).toString()  == "NaN") {
+                        $('#users_price').val('');
+                        users_price = 0;
+                    }
+                    if (0 < users_price) {
+                        $('#users_free').show();
+                    } else {
+                        $('#users_free').hide();
+                    }
+                }
+            </script>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="users_price">购买价格</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="users_price" id="users_price" value="{$field.users_price}" onkeyup="Onlevel();" class="input-txt">
+                    <label {gt name="$field.users_price" value="0"} style="display: inline-block;" {else/} style="display: none;" {/gt} id="users_free" onselectstart="return false"><input type="checkbox" name="users_free" value="1" {eq name="$field.users_free" value="1"} checked="checked" {/eq}>会员免费</label>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>附件地址</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="addonFieldExt[courseware]" value="{$field['addonFieldExt']['courseware']|default=''}" id="addonFieldExt_courseware" class="input-txt">
+                    <input type="file" id="courseware_file" data-type='local' onchange="upload_file_courseware_1585641738(this)" style="display: none;">
+                    {if isset($channelRow.data.qiniuyun_open) && $channelRow.data.qiniuyun_open == 1}
+                    &nbsp;<a href="javascript:void(0);" class="ncap-btn ncap-btn-green" id="upload_addonFieldExt_courseware_qiniu" onclick="$('#courseware_file').attr('data-type','qiniu').trigger('click');">七牛云上传</a>
+                    {/if}
+
+                    {if isset($channelRow.data.oss_open) && $channelRow.data.oss_open == 1}
+                    &nbsp;<a href="javascript:void(0);" class="ncap-btn ncap-btn-green" id="upload_addonFieldExt_courseware_oss" onclick="$('#courseware_file').attr('data-type','oss').trigger('click');">oss上传</a>
+                    {/if}
+
+                    {if isset($channelRow.data.cos_open) && $channelRow.data.cos_open == 1}
+                    &nbsp;<a href="javascript:void(0);" class="ncap-btn ncap-btn-green" id="upload_addonFieldExt_courseware_cos" onclick="$('#courseware_file').attr('data-type', 'cos').trigger('click');">cos上传</a>
+                    {/if}
+
+                    &nbsp;<a href="javascript:void(0);" class="ncap-btn ncap-btn-green " id="upload_addonFieldExt_courseware_local" onclick="$('#courseware_file').attr('data-type','local').trigger('click');">本地上传</a>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            {include file="archives/get_field_addonextitem" /}
+        </div>
+        <!-- 常规信息 -->
+        <!-- SEO参数 -->
+        <div class="ncap-form-default tab_div_2" style="display:none;">
+            <dl class="row" style="z-index:2;">
+                <dt class="tit">
+                    <label>TAG标签</label>
+                </dt>
+                <dd class="opt">          
+                    <input type="text" value="{$field.tags}" name="tags" id="tags" class="input-txt" placeholder="多个标签之间以逗号隔开" autocomplete="off" oninput="get_common_tagindex_input(this);" onfocus="$('#often_tags').hide();" onkeyup="this.value=this.value.replace(/[\，]/g,',');" onpaste="this.value=this.value.replace(/[\，]/g,',')">&nbsp;
+                    <a href="javascript:void(0);" onclick="get_common_tagindex(this);">显示常用标签</a>&nbsp;<img id="tag_loading" src="__STATIC__/common/images/loading.gif" style="display: none;" />
+                    <div class="often_tags" id="often_tags" style="display: none;"></div>
+                    <div class="often_tags" id="often_tags_input" style="display: none;"></div>
+                    <input type="hidden" id="tags_click_count">
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="seo_title">SEO标题</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$field.seo_title}" name="seo_title" id="seo_title" class="input-txt">
+                    <p class="notic">一般不超过80个字符，为空时系统自动构成，可以到 <a href="{:url('Seo/index', array('inc_type'=>'seo'))}">SEO设置 - SEO基础</a> 中设置构成规则。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>SEO关键词</label>
+                </dt>
+                <dd class="opt">          
+                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:40px;">{$field.seo_keywords}</textarea>
+                    <span class="err"></span>
+                    <p class="notic">一般不超过100个字符，多个关键词请用英文逗号（,）隔开，建议3到5个关键词。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>SEO描述</label>
+                </dt>
+                <dd class="opt">          
+                    <textarea rows="5" cols="60" id="seo_description" name="seo_description" style="height:60px;">{$field.seo_description}</textarea>
+                    <span class="err"></span>
+                    <p class="notic">一般不超过200个字符，不填写时系统自动提取正文的前200个字符</p>
+                </dd>
+            </dl>
+        </div>
+        <!-- SEO参数 -->
+        <!-- 其他参数 -->
+        <div class="ncap-form-default tab_div_3" style="display:none;">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="author">作者</label>
+                </dt>
+                <dd class="opt">
+                    <input type="hidden" value="{$field.users_id}" name="users_id" class="input-txt">
+                    <input type="text" value="{$field.author}" name="author" id="author" class="input-txt">
+                    &nbsp;<a href="javascript:void(0);" onclick="set_author();" class="ncap-btn ncap-btn-green">设置</a>
+                    <p class="notic">设置作者默认名称（将同步至管理员笔名）</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>浏览量</label>
+                </dt>
+                <dd class="opt">    
+                    <input type="text" value="{$field.click}" name="click" id="click" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>阅读权限</label>
+                </dt>
+                <dd class="opt">
+                    <input type="hidden" value="{$field.arcrank}" name="old_arcrank" class="input-txt">
+                    <select name="arcrank" id="arcrank" {if $field.arcrank < 0 && $admin_info.role_id > 0 && $auth_role_info.check_oneself < 1} disabled="disabled" {/if}>
+                        {volist name="arcrank_list" id="vo"}
+                        <option value="{$vo.rank}" {eq name="$vo.rank" value="$field.arcrank"}selected{/eq}>{$vo.name}</option>
+                        {/volist}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="articleForm">发布时间</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" class="input-txt" id="add_time" name="add_time" value="{$field.add_time|date='Y-m-d H:i:s',###}" autocomplete="off">        
+                    <span class="add-on input-group-addon">
+                        <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                    </span> 
+                    <span class="err"></span>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="tempview">文档模板</label>
+                </dt>
+                <dd class="opt">
+                    <select name="tempview" id="tempview">
+                        {volist name='$templateList' id='vo'}
+                        <option value="{$vo}" {eq name='$vo' value='$tempview'}selected{/eq}>{$vo}</option>
+                        {/volist}
+                    </select>
+                    <input type="hidden" name="type_tempview" value="{$tempview}" />
+                    <span class="err"></span>
+                </dd>
+            </dl>
+            <dl class="row" {notin name='$seo_pseudo' value='2'}style="display: none;"{/notin}>
+                <dt class="tit">
+                    <label>自定义文件名</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$field.htmlfilename}" name="htmlfilename" id="htmlfilename" onkeyup="this.value=this.value.replace(/[^\w\-]/g,'-');" onpaste="this.value=this.value.replace(/[^\w\-]/g,'-');" class="input-txt">.html
+                    <span class="err"></span>
+                    <p class="notic">自定义文件名可由字母、数字、下划线(_)、连接符(-)等符号组成，除此之外其他字符将自动转为连接符(-)</p>
+                </dd>
+            </dl>
+        </div>
+        <!-- 其他参数 -->
+        <div class="ncap-form-default">
+            <div class="bot">
+                <input type="hidden" name="gourl" value="{$gourl|default=''}">
+                <input type="hidden" name="aid" value="{$field.aid|default='0'}">
+                <textarea class="none" name="video" id="video" cols="30" rows="10"></textarea>
+                <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div> 
+    </form>
+</div>
+<script type="text/javascript">
+
+    $(function () {
+        $('#add_time').layDate();   
+     
+        //选项卡切换列表
+        $('.tab-base').find('.tab').click(function(){
+            $('.tab-base').find('.tab').each(function(){
+                $(this).removeClass('current');
+            });
+            $(this).addClass('current');
+            var tab_index = $(this).data('index');          
+            $(".tab_div_1, .tab_div_2, .tab_div_3").hide();          
+            $(".tab_div_"+tab_index).show();
+        });
+
+        $('input[name=is_jump]').click(function(){
+            if ($(this).is(':checked')) {
+                $('.dl_jump').show();
+            } else {
+                $('.dl_jump').hide();
+            }
+        });
+
+        var dftypeid = {$field.typeid|default='0'};
+        $('#typeid').change(function(){
+            var current_channel = $(this).find('option:selected').data('current_channel');
+            if (0 < $(this).val() && {$channeltype} != current_channel) {
+                showErrorMsg('请选择对应模型的栏目！');
+                $(this).val(dftypeid);
+            } else if ({$channeltype} == current_channel) {
+                layer.closeAll();
+            }
+            var aid = $("input[name=aid]").val();
+            GetAddonextitem(1, $(this).val(), {$channeltype}, aid, true);
+        });
+
+        var data = '{$video_file|default=""}';
+        var num = 0;
+        data = JSON.parse(data);
+        if(data){
+            data.forEach(function(v){
+                num++;
+                addUrlSys(num,v);
+            });
+        }
+
+        $(document).click(function(){
+            $('#often_tags').hide();
+            $('#often_tags_input').hide();
+            event.stopPropagation();
+        });
+
+        $('#often_tags').click(function(){
+            $('#often_tags').show();
+            event.stopPropagation();
+        });
+    });
+
+    // 判断输入框是否为空
+    function check_submit(){
+        urlToStr();
+        if($.trim($('input[name=title]').val()) == ''){
+            showErrorMsg('标题不能为空！');
+            $('input[name=title]').focus();
+            return false;
+        }
+        if ($('#typeid').val() == 0) {
+            showErrorMsg('请选择栏目…！');
+            $('#typeid').focus();
+            return false;
+        }
+        
+        layer_loading('正在处理');
+        if(!ajax_check_htmlfilename())
+        {
+            layer.closeAll();
+            showErrorMsg('自定义文件名已存在！');
+            $('input[name=htmlfilename]').focus();
+            return false;
+        }
+
+        $('#post_form').submit();
+    }
+
+    function img_call_back(fileurl_tmp)
+    {
+        $("#litpic_local").val(fileurl_tmp);
+        $("#img_a").attr('href', fileurl_tmp);
+        $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+        $("input[name=is_litpic]").attr('checked', true); // 自动勾选属性[图片]
+    }
+
+    function addUrlSys(n,v){
+        var is_show_qiniuyun = {$channelRow.data.qiniuyun_open|default=0};
+        var is_show_oss = {$channelRow.data.oss_open|default=0};
+        var is_show_cos = {$channelRow.data.cos_open|default=0};
+        if (n){
+            var num = n;
+            var html = "";
+            html += "<div id=\"num_upload_box_sys\" class='media_del_1586481014_"+num+"' data-num='"+num+"' style='margin-bottom: 10px;'>\n" +
+                "                            <span>&nbsp;链接地址：</span>\n" +
+                "                            <input type=\"text\" class=\"input-txt\" id=\"video_url_sys_"+num+"\" value=\""+v.file_url+"\" style=\"width: 400px !important;\" >\n" +
+                "                            <span>&nbsp;选集名称：</span>\n" +
+                "                            <input type=\"text\" class=\"input-txt\" id=\"video_title_sys_"+num+"\" value=\""+v.file_title+"\" style=\"width: 200px !important;\">\n" +
+                "                            <span>&nbsp;时长(秒)：</span>\n" +
+                "                            <input type=\"text\" class=\"input-txt\" id=\"video_time_sys_"+num+"\" value=\""+v.file_time+"\" style=\"width: 50px !important;\">\n" +
+                "                            <input type=\"hidden\" class=\"input-txt\" id=\"video_size_sys_"+num+"\" value=\""+v.file_size+"\">" +
+                "                            <input type=\"hidden\" class=\"input-txt\" id=\"video_mime_sys_"+num+"\" value=\""+v.file_mime+"\">" +
+                "                            <input type=\"hidden\" class=\"input-txt\" id=\"video_name_sys_"+num+"\" value=\""+v.file_name+"\">" +
+                "                            <input type=\"hidden\" class=\"input-txt\" id=\"video_file_id_"+num+"\" value=\""+v.file_id+"\">" +
+                "                            <input type=\"file\" class=\"input-txt\" id=\"qiniu_click_sys_"+num+"\" onchange=\"QiniuUpload('"+num+"');\" style=\"display: none;\">\n"+
+                "                            <input type=\"file\" class=\"input-txt\" id=\"oss_click_sys_"+num+"\" onchange=\"OssUpload('"+num+"');\" style=\"display: none;\">\n"+
+                "                            <input type=\"file\" class=\"input-txt\" id=\"cos_click_sys_"+num+"\" onchange=\"CosUpload('"+num+"');\" style=\"display: none;\">\n";
+            if (is_show_qiniuyun == 1) {
+                html += "                    &nbsp;<a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" id=\"qiniu_upload_video_sys_"+num+"\" onclick=\"click_qiniu_sys('"+num+"')\">七牛云上传</a>\n";
+            }
+            if (is_show_oss == 1) {
+                html += "                    &nbsp;<a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" id=\"oss_upload_video_sys_"+num+"\" onclick=\"click_oss_sys('"+num+"')\">oss上传</a>\n";
+            }
+            if (is_show_cos == 1) {
+                html += "                    &nbsp;<a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" id=\"cos_upload_video_sys_"+num+"\" onclick=\"click_cos_sys('"+num+"');\">cos上传</a>\n";
+            }
+            var IsGratis = 1 == v.gratis ? 'checked' : '';
+            html += "                        <a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" id=\"upload_video_sys_"+num+"\" data-num='"+num+"'>本地上传</a>\n" +
+                "                            <a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" onclick=\"media_del('"+num+"')\">删除</a>\n" +
+                "   &nbsp; &nbsp; <label onselectstart='return false'><input type='checkbox' id='video_gratis_sys_"+num+"'  value='1' "+IsGratis+">试看</label>" +
+                "                        </div>";
+            $('#url-box_sys').append(html);
+        } else {
+            var num = $("div [id=num_upload_box_sys]").last().attr("data-num");
+            if (!num){
+                num=0;
+            }
+                num++;
+            var html = "";
+            html += "<div id=\"num_upload_box_sys\" class='media_del_1586481014_"+num+"' data-num='"+num+"'  style='margin-bottom: 10px;'>\n" +
+                "                            <span>&nbsp;链接地址：</span>\n" +
+                "                            <input type=\"text\" class=\"input-txt\" id=\"video_url_sys_" + num + "\" style=\"width: 400px !important;\" >\n" +
+                "                            <span>&nbsp;选集名称：</span>\n" +
+                "                            <input type=\"text\" class=\"input-txt\" id=\"video_title_sys_" + num + "\" style=\"width: 200px !important;\">\n" +
+                "                            <span>&nbsp;时长(秒)：</span>\n" +
+                "                            <input type=\"text\" class=\"input-txt\" id=\"video_time_sys_" + num + "\" style=\"width: 50px !important;\">\n" +
+                "                            <input type=\"hidden\" class=\"input-txt\" id=\"video_size_sys_"+num+"\">" +
+                "                            <input type=\"hidden\" class=\"input-txt\" id=\"video_mime_sys_"+num+"\">" +
+                "                            <input type=\"hidden\" class=\"input-txt\" id=\"video_name_sys_"+num+"\">" +
+                "                            <input type=\"hidden\" class=\"input-txt\" id=\"video_file_id_"+num+"\">" +
+                "                            <input type=\"file\" class=\"input-txt\" id=\"qiniu_click_sys_"+num+"\" onchange=\"QiniuUpload('"+num+"');\" style=\"display: none;\">\n"+
+                "                            <input type=\"file\" class=\"input-txt\" id=\"oss_click_sys_"+num+"\" onchange=\"OssUpload('"+num+"');\" style=\"display: none;\">\n"+
+                "                            <input type=\"file\" class=\"input-txt\" id=\"cos_click_sys_"+num+"\" onchange=\"CosUpload('"+num+"');\" style=\"display: none;\">\n";
+            if (is_show_qiniuyun == 1) {
+                html += "                    &nbsp;<a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" id=\"qiniu_upload_video_sys_" + num + "\" onclick=\"click_qiniu_sys('" + num + "')\">七牛云上传</a>\n";
+            }
+            if (is_show_oss == 1) {
+                html += "                    &nbsp;<a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" id=\"oss_upload_video_sys_" + num + "\" onclick=\"click_oss_sys('" + num + "')\">oss上传</a>\n";
+            }
+            if (is_show_cos == 1) {
+                html += "                    &nbsp;<a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" id=\"cos_upload_video_sys_" + num + "\" onclick=\"click_cos_sys('" + num + "')\">cos上传</a>\n";
+            }
+            html += "                        <a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" id=\"upload_video_sys_" + num + "\" data-num='" + num + "'>本地上传</a>\n" +
+                "                            <a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" onclick=\"media_del('"+num+"')\">删除</a>\n" +
+                "   &nbsp; &nbsp; <label onselectstart='return false'><input type='checkbox' id='video_gratis_sys_"+num+"' value='1'>试看</label>" +
+                "                        </div>";
+            $('#url-box_sys').append(html);
+        }
+
+
+        layui.use('upload', function(){
+            var upload = layui.upload;
+            var xhrOnProgress=function(fun) {
+                xhrOnProgress.onprogress = fun;
+                return function() {
+                    var xhr = $.ajaxSettings.xhr();
+                    if (typeof xhrOnProgress.onprogress !== 'function') {
+                        return xhr;
+                    }
+                    if (xhrOnProgress.onprogress && xhr.upload) {
+                        xhr.upload.onprogress = xhrOnProgress.onprogress;
+                    }
+                    return xhr;
+                }
+            };
+
+            upload.render({
+                elem: "#upload_video_sys_"+num
+                ,url: "{:url('Ueditor/upVideo', ['savepath'=>'media'])}"
+                ,accept: 'video' //视频
+                ,exts: '{$media_type}'
+                ,size: {$upload_max_filesize} //限制文件大小，单位 KB
+                ,before: function(obj){
+                    $("#upload_video_sys_"+num).text('等待中...');
+                }
+                ,xhr:xhrOnProgress
+                ,progress: function(percent) {
+                    $("#upload_video_sys_"+num).text('上传中...'+percent+'%');
+                }
+                ,done: function(res){
+                    if ("SUCCESS" == res.state) {
+                        var n = $(this.item).attr('data-num');
+                        $("#video_url_sys_"+n).val(res.url);
+                        $("#video_time_sys_"+n).val(res.time);
+                        $("#video_size_sys_"+n).val(res.size);
+                        $("#video_mime_sys_"+n).val(res.mime);
+                        $("#video_name_sys_"+n).val(res.title);
+                        $("#upload_video_sys_"+num).text('上传成功');
+                        setTimeout(function(){
+                            $('#upload_video_sys_'+num).text('本地上传');
+                        }, 2000 );
+                    }else {
+                        $("#upload_video_sys_"+num).text('上传失败');
+                        setTimeout(function(){
+                            $('#upload_video_sys_'+num).text('本地上传');
+                        }, 2000 );
+                        layer.msg(res.state,{icon: 2});
+                    }
+                }
+                ,error: function(){
+                    // layer.close(load); //关闭loading
+                }
+            });
+        });
+    }
+    function media_del(num) {
+        $(".media_del_1586481014_"+num).remove();
+    }
+
+    function click_qiniu_sys(num)
+    {
+        $("#qiniu_click_sys_"+num).trigger("click");
+    }
+
+    function QiniuUpload(num)
+    {
+        var file = $("#qiniu_click_sys_"+num)[0].files[0];
+        var fileName = file.name;
+        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
+        var ext = judgeExt(fileExt);
+        if (ext==-1) {
+            showErrorMsg('不支持选中的视频格式,可在附件设置中修改');
+            return false;
+        }
+        var size = "{$upload_max_filesize}";
+        if (file.size > size) {
+            showErrorMsg('视频大小超过限制,可在附件设置中修改');
+            return false;
+        }
+        $.ajax({
+            type: 'POST',
+            url: '__ROOT_DIR__/index.php?m=plugins&c=Qiniuyun&a=qiniu_upload',
+            data: {_ajax:1},
+            dataType: "JSON",
+            success: function(res1){
+                if (1 == res1.code){
+                    var token  = res1.data.token;
+                    var formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('token', token);
+
+                    fileName = res1.data.filePath + fileExt;
+                    formData.append('key', fileName);
+                    $.ajax({
+                        url: res1.data.uphost,
+                        type: 'POST',
+                        dataType: 'JSON',
+                        data: formData,
+                        timeout: 1200000,
+                        cache: false,
+                        processData: false,
+                        contentType: false,
+                        xhr: function () {
+                            myXhr = $.ajaxSettings.xhr();
+                            if (myXhr.upload) {
+                                myXhr.upload.addEventListener('progress', function(e){
+                                    var curr = e.loaded;
+                                    var total = e.total;
+                                    var process = parseInt(curr / total * 100);
+                                    $("#qiniu_upload_video_sys_"+num).text('上传中...'+process+"%");
+                                });
+                            }
+
+                            return myXhr;
+                        },
+                        success: function(res2){
+                            $("#qiniu_upload_video_sys_"+num).text('上传成功');
+                            var video_url = res1.data.domain+"/"+res2.key;
+                            $("#video_url_sys_"+num).val(video_url);
+                            $("#video_mime_sys_"+num).val('');
+                            $("#video_name_sys_"+num).val(res2.key);
+                            setTimeout(function(){
+                                $('#qiniu_upload_video_sys_'+num).text('七牛云上传');
+                            }, 2000 )
+
+                            var rx=/^https?:\/\//i;
+                            if (!rx.test(video_url)) {
+                                video_url = 'http:'+video_url;
+                            }
+                            $.ajax({
+                                type: 'GET',
+                                url: video_url+"?avinfo",
+                                data: {},
+                                dataType: "JSON",
+                                success: function (res3) {
+                                    $("#video_time_sys_"+num).val(parseInt(res3.format.duration));
+                                    $("#video_size_sys_"+num).val(res3.format.size);
+                                }
+                            })
+                        },
+                        error: function(e){
+                            showErrorMsg(e.responseText);
+                            return false;
+                        }
+                    });
+                }else{
+                    $("#qiniu_click_sys_"+num).val('');
+                    if (res1.data.code == -1) {
+                        showErrorMsg(res1.msg);
+                    } else if (res1.data.code == -2) {
+                        layer.alert(res1.msg, {icon: 5, title: false, btn:['启用']}, function(index){
+                            layer.close(index);
+                            layer_loading('正在启用');
+                            $.ajax({
+                                type: 'POST',
+                                url: "{:url('Index/changeTableVal')}",
+                                data: {table:'weapp', id_name:'id', id_value:res1.data.id, field:'status', value:1, _ajax:1},
+                                dataType: "JSON",
+                                success: function (res) {
+                                    layer.closeAll();
+                                    if (res.code == 1) {
+                                        layer.msg(res.msg, {icon: 1, time:1000});
+                                    } else {
+                                        showErrorMsg(res.msg);
+                                    }
+                                }
+                            })
+                        });
+                    } else if (res1.data.code == -3) {
+                        layer.confirm(res1.msg, {
+                            icon: 5,
+                            title: false,
+                            btn: ['立即配置']
+                        }, function () {
+                            layer.closeAll();
+                            //iframe窗
+                            layer.open({
+                                type: 2,
+                                title: false,
+                                fixed: true,
+                                shadeClose: false,
+                                shade: 0.3,
+                                maxmin: false,
+                                area: ['80%', '80%'],
+                                content: "{:weapp_url('Qiniuyun/Qiniuyun/index')}"
+                            });
+                        }, function (index) {
+                            layer.closeAll();
+                        });
+                    } else {
+                        showErrorMsg(res1.msg);
+                    }
+                }
+            },
+            error: function(e){
+                $("#qiniu_click_sys_"+num).val('');
+                showErrorMsg(e.responseText);
+            }
+        });
+    }
+    function click_oss_sys(num)
+    {
+        $("#oss_click_sys_"+num).trigger("click");
+    }
+    function OssUpload(num)
+    {
+        var file = $("#oss_click_sys_"+num)[0].files[0];  //获取文件路径名
+        //获取视频时长start
+        var url = URL.createObjectURL(file);
+        var oVideo = document.createElement('video');
+        var duration = 0;
+        oVideo.setAttribute('src',url);
+        oVideo.oncanplay = ()=>{
+            duration = parseInt(oVideo.duration);
+        }
+        //获取视频时长end
+        var fileName = file.name;
+        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
+        var ext = judgeExt(fileExt);
+        if (ext==-1) {
+            showErrorMsg('不支持选中的视频格式,可在附件设置中修改');
+            return false;
+        }
+        var size = "{$upload_max_filesize}";
+        if (file.size > size) {
+            showErrorMsg('视频大小超过限制,可在附件设置中修改');
+            return false;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: '__ROOT_DIR__/index.php?m=plugins&c=AliyunOss&a=oss_upload',
+            data: {_ajax:1},
+            dataType: "JSON",
+            success: function(res1){
+                if (1 == res1.code){
+                    fileName = res1.data.filePath + fileExt;
+                    //组装发送数据
+                    var request = new FormData();
+                    request.append("OSSAccessKeyId",res1.data.accessid);//Bucket 拥有者的Access Key Id。
+                    request.append("policy",res1.data.policy);//policy规定了请求的表单域的合法性
+                    request.append("Signature",res1.data.signature);//根据Access Key Secret和policy计算的签名信息，OSS验证该签名信息从而验证该Post请求的合法性
+
+                    request.append("key",fileName);//文件名字，可设置路径
+                    request.append("success_action_status",201);// 让服务端返回200,不然，默认会返回204
+                    request.append('file', file);//需要上传的文件 file
+                    $.ajax({
+                        url : res1.data.host,  //上传阿里地址
+                        data : request,
+                        processData: false,
+                        cache: false,
+                        contentType: false,
+                        dataType: 'xml',
+                        type : 'post',
+                        xhr: function () {
+                            myXhr = $.ajaxSettings.xhr();
+                            if (myXhr.upload) {
+                                myXhr.upload.addEventListener('progress', function(e){
+                                    var curr = e.loaded;
+                                    var total = e.total;
+                                    var process = parseInt(curr / total * 100);
+                                    $("#oss_upload_video_sys_"+num).text('上传中...'+process+"%");
+                                });
+                            }
+                            return myXhr;
+                        },
+                        success : function(data) {
+                            var res = $(data).find('PostResponse');
+                            if (res) {
+                                var key =  res.find('Key').text();
+                                $("#oss_upload_video_sys_"+num).text('上传成功');
+                                setTimeout(function(){
+                                    $('#oss_upload_video_sys_'+num).text('oss上传');
+                                }, 2000 )
+                                var video_url = res1.data.domain+"/"+key;
+                                $("#video_url_sys_"+num).val(video_url);
+                                $("#video_mime_sys_"+num).val('');
+                                $("#video_name_sys_"+num).val(key);
+                                $("#video_time_sys_"+num).val(duration);
+                                $("#video_size_sys_"+num).val(file.size);
+                            }else{
+                                $("#oss_upload_video_sys_"+num).text('上传失败');
+                                setTimeout(function(){
+                                    $('#oss_upload_video_sys_'+num).text('oss上传');
+                                }, 2000 )
+                            }
+                        },
+                        error : function(e) {
+                            console.log(e.responseText);
+                        }
+                    });
+                }else{
+                    $("#oss_click_sys_"+num).val('');
+                    showErrorMsg(res1.msg);
+                }
+            },
+            error: function(e){
+                $("#oss_click_sys_"+num).val('');
+                showErrorMsg(e.responseText);
+            }
+        });
+    }
+
+    // 课件地址上传
+    function upload_file_courseware_1585641738(e){
+        var data_type = $(e).attr('data-type');
+        if ('qiniu' == data_type) {
+            upload_addonFieldExt_courseware_qiniu(e); // 七牛云上传
+        } else if ('oss' == data_type) {
+            upload_addonFieldExt_courseware_oss(e); // OSS上传
+        } else if ('cos' == data_type) {
+            upload_addonFieldExt_courseware_cos(e); // COS上传
+        } else {
+            var file = $(e)[0].files[0];
+            if (!file) {
+                return false;
+            }
+            var formData = new FormData();
+            formData.append('file',file);
+            $.ajax({
+                type: 'post',
+                url: "{:url('Ueditor/DownloadUploadFileAjax')}",
+                data: formData,
+                contentType: false,
+                processData: false,
+                dataType: 'json',
+                xhr: function () {
+                    myXhr = $.ajaxSettings.xhr();
+                    if (myXhr.upload) {
+                        myXhr.upload.addEventListener('progress', function(e){
+                            var curr = e.loaded;
+                            var total = e.total;
+                            var process = parseInt(curr / total * 100);
+                            $("#upload_addonFieldExt_courseware_local").html('上传中...'+process+"%");
+                        });
+                    }
+                    return myXhr;
+                },
+                success: function (res) {
+                    $("#upload_addonFieldExt_courseware_local").html('上传成功');
+                    setTimeout(function(){
+                        $('#upload_addonFieldExt_courseware_local').html('本地上传');
+                    }, 2000 );
+                    if (res.code==0){
+                        showErrorMsg(res.msg);
+                    }else {
+                        $("#addonFieldExt_courseware").val(res.file_url);
+                    }
+                }
+            })
+        }
+    }
+
+    function upload_addonFieldExt_courseware_qiniu(obj)
+    {
+        var file = $("#courseware_file")[0].files[0];
+        var fileName = file.name;
+        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
+        var ext = judgeExt(fileExt,1);
+        if (ext==-1) {
+            showErrorMsg('不支持选中的文件格式,可在附件设置中修改');
+            return false;
+        }
+        var size = "{$upload_max_filesize}";
+        if (file.size > size) {
+            showErrorMsg('文件大小超过限制,可在附件设置中修改');
+            return false;
+        }
+        $.ajax({
+            type: 'POST',
+            url: '__ROOT_DIR__/index.php?m=plugins&c=Qiniuyun&a=qiniu_upload',
+            data: {_ajax:1},
+            dataType: "JSON",
+            success: function(res1){
+                if (1 == res1.code){
+                    var token  = res1.data.token;
+                    var formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('token', token);
+
+                    fileName = res1.data.filePath + fileExt;
+                    formData.append('key', fileName);
+                    $.ajax({
+                        url: res1.data.uphost,
+                        type: 'POST',
+                        dataType: 'JSON',
+                        data: formData,
+                        timeout: 1200000,
+                        cache: false,
+                        processData: false,
+                        contentType: false,
+                        xhr: function () {
+                            myXhr = $.ajaxSettings.xhr();
+                            if (myXhr.upload) {
+                                myXhr.upload.addEventListener('progress', function(e){
+                                    var curr = e.loaded;
+                                    var total = e.total;
+                                    var process = parseInt(curr / total * 100);
+                                    $("#upload_addonFieldExt_courseware_qiniu").html('上传中...'+process+"%");
+                                });
+                            }
+                            return myXhr;
+                        },
+                        success: function(res2){
+                            $("#upload_addonFieldExt_courseware_qiniu").html('上传成功');
+                            setTimeout(function(){
+                                $('#upload_addonFieldExt_courseware_qiniu').html('七牛云上传');
+                            }, 2000 );
+                            var video_url = res1.data.domain+"/"+res2.key;
+                            $("#addonFieldExt_courseware").val(video_url);
+                        },
+                        error: function(e){
+                            showErrorMsg(e.responseText);
+                            return false;
+                        }
+                    });
+                }else{
+                    $("#courseware_file").val('');
+                    showErrorMsg(res1.msg);
+                }
+            },
+            error: function(e){
+                $("#courseware_file").val('');
+                showErrorMsg(e.responseText);
+            }
+        });
+    }
+    function upload_addonFieldExt_courseware_oss(obj)
+    {
+        var file = $("#courseware_file")[0].files[0];
+        var fileName = file.name;
+        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
+        var ext = judgeExt(fileExt,1);
+        if (ext==-1) {
+            showErrorMsg('不支持选中的文件格式,可在附件设置中修改');
+            return false;
+        }
+        var size = "{$upload_max_filesize}";
+        if (file.size > size) {
+            showErrorMsg('文件大小超过限制,可在附件设置中修改');
+            return false;
+        }
+        $.ajax({
+            type: 'POST',
+            url: '__ROOT_DIR__/index.php?m=plugins&c=AliyunOss&a=oss_upload',
+            data: {_ajax:1},
+            dataType: "JSON",
+            success: function(res1){
+                if (1 == res1.code){
+                    fileName = res1.data.filePath + fileExt;
+
+                    //组装发送数据
+                    var request = new FormData();
+                    request.append("OSSAccessKeyId",res1.data.accessid);//Bucket 拥有者的Access Key Id。
+                    request.append("policy",res1.data.policy);//policy规定了请求的表单域的合法性
+                    request.append("Signature",res1.data.signature);//根据Access Key Secret和policy计算的签名信息，OSS验证该签名信息从而验证该Post请求的合法性
+
+                    request.append("key",fileName);//文件名字，可设置路径
+                    request.append("success_action_status",201);// 让服务端返回200,不然，默认会返回204
+                    request.append('file', file);//需要上传的文件 file
+
+                    $.ajax({
+                        url : res1.data.host,
+                        data : request,
+                        processData: false,
+                        cache: false,
+                        contentType: false,
+                        dataType: 'xml',
+                        type : 'post',
+                        xhr: function () {
+                            myXhr = $.ajaxSettings.xhr();
+                            if (myXhr.upload) {
+                                myXhr.upload.addEventListener('progress', function(e){
+                                    var curr = e.loaded;
+                                    var total = e.total;
+                                    var process = parseInt(curr / total * 100);
+                                    $("#upload_addonFieldExt_courseware_oss").html('上传中...'+process+"%");
+                                });
+                            }
+                            return myXhr;
+                        },
+                        success: function(res2){
+                            var res = $(res2).find('PostResponse');
+                            if (res) {
+                                var key =  res.find('Key').text();
+                                $("#upload_addonFieldExt_courseware_oss").html('上传成功');
+                                setTimeout(function(){
+                                    $('#upload_addonFieldExt_courseware_oss').html('oss上传');
+                                }, 2000 );
+                                var video_url = res1.data.domain+"/"+key;
+                                $("#addonFieldExt_courseware").val(video_url);
+                            }else{
+                                $("#upload_addonFieldExt_courseware_oss").html('上传失败');
+                                setTimeout(function(){
+                                    $('#upload_addonFieldExt_courseware_oss').html('oss上传');
+                                }, 2000 );
+                            }
+                        },
+                        error: function(e){
+                            showErrorMsg(e.responseText);
+                            return false;
+                        }
+                    });
+                }else{
+                    $("#courseware_file").val('');
+                    showErrorMsg(res1.msg);
+                }
+            },
+            error: function(e){
+                $("#courseware_file").val('');
+                showErrorMsg(e.responseText);
+            }
+        });
+    }
+    function judgeExt(ext,i) {
+        var type = '';
+        if (i==1){
+            type = "{$file_type}";
+        }else{
+            type = "{$media_type}";
+        }
+        var extArr = [];
+        extArr = type.split("|");
+        var ext = ext.replace(".","");
+
+        return extArr.indexOf(ext);
+    }
+
+    //腾讯云COS上传代码-陈风任2021-02-03
+    function click_cos_sys(num) {
+        $("#cos_click_sys_"+num).trigger("click");
+    }
+    // 上传视频
+    function CosUpload(num) {
+        // 获取文件路径名
+        var file = $("#cos_click_sys_"+num)[0].files[0];
+
+        // 获取视频时长start
+        var url = URL.createObjectURL(file);
+        var oVideo = document.createElement('video');
+        var duration = 0;
+        oVideo.setAttribute('src', url);
+        oVideo.oncanplay = ()=>{
+            duration = parseInt(oVideo.duration);
+        }
+        
+        var fileName = file.name;
+        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
+        var ext = judgeExt(fileExt);
+        if (ext == -1) {
+            showErrorMsg('不支持选中的视频格式，可在附件设置中修改');
+            return false;
+        }
+        var size = "{$upload_max_filesize}";
+        if (file.size > size) {
+            showErrorMsg('视频大小超过限制，可在附件设置中修改');
+            return false;
+        }
+        var formData = new FormData();
+            formData.append('file', file);
+            formData.append('file_ext', fileExt);
+        $.ajax({
+            type: 'post',
+            url: '__ROOT_DIR__/index.php?m=plugins&c=Cos&a=cos_upload&_ajax=1',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            xhr: function () {
+                myXhr = $.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    myXhr.upload.addEventListener('progress', function(e){
+                        var curr = e.loaded;
+                        var total = e.total;
+                        process = parseInt(curr / total * 100);
+                        if (100 == process) {
+                            process = 99;
+                            layer_loading('上传腾讯云');
+                        }
+                        $("#cos_upload_video_sys_"+num).text('上传中...'+process+"%");
+                    });
+                }
+                return myXhr;
+            },
+            success: function(res) {
+                layer.closeAll();
+                if (1 == res.code) {
+                    $("#video_url_sys_" + num).val(res.data.url);
+                    $("#video_title_sys_" + num).val(res.data.name);
+                    $("#video_time_sys_" + num).val(duration);
+                    $("#video_size_sys_" + num).val(res.data.size);
+                    $("#cos_upload_video_sys_"+num).text('上传成功');
+                } else {
+                    $("#cos_upload_video_sys_"+num).text('上传失败');
+                }
+                setTimeout(function(){
+                    $('#cos_upload_video_sys_'+num).text('cos上传');
+                }, 2000);
+            },
+            error: function(e){
+                layer.closeAll();
+                $("#cos_click_sys_"+num).val('');
+                showErrorMsg(e.responseText);
+            }
+        });
+    }
+
+    // 上传附件
+    function upload_addonFieldExt_courseware_cos() {
+        var file = $("#courseware_file")[0].files[0];
+        var fileName = file.name;
+        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
+        var ext = judgeExt(fileExt,1);
+        if (ext == -1) {
+            showErrorMsg('不支持选中的文件格式,可在附件设置中修改');
+            return false;
+        }
+        var size = "{$upload_max_filesize}";
+        if (file.size > size) {
+            showErrorMsg('文件大小超过限制,可在附件设置中修改');
+            return false;
+        }
+
+        var formData = new FormData();
+            formData.append('file', file);
+            formData.append('file_ext', fileExt);
+        $.ajax({
+            type: 'post',
+            url: '__ROOT_DIR__/index.php?m=plugins&c=Cos&a=cos_upload&up_type=1&_ajax=1',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            xhr: function () {
+                myXhr = $.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    myXhr.upload.addEventListener('progress', function(e){
+                        var curr = e.loaded;
+                        var total = e.total;
+                        var process = parseInt(curr / total * 100);
+                        if (100 == process) {
+                            process = 99;
+                            layer_loading('上传腾讯云');
+                        }
+                        $("#upload_addonFieldExt_courseware_cos").html('上传中...'+process+"%");
+                    });
+                }
+                return myXhr;
+            },
+            success: function(res) {
+                layer.closeAll();
+                if (1 == res.code) {
+                    $("#upload_addonFieldExt_courseware_cos").html('上传成功');
+                    $("#addonFieldExt_courseware").val(res.data.url);
+                } else {
+                    $("#upload_addonFieldExt_courseware_cos").html('上传失败');
+                }
+                setTimeout(function() {
+                    $('#upload_addonFieldExt_courseware_cos').html('oss上传');
+                }, 2000);
+            },
+            error: function(e){
+                layer.closeAll();
+                $("#courseware_file").val('');
+                showErrorMsg(e.responseText);
+            }
+        });
+    }
+    /* END */
+    
+    //批量导入视频信息
+    function batch_import_url() {
+        layer.prompt({
+            formType: 2,
+            value: '参考格式：链接地址$选集名称$时长(秒)$试看(是/否)\r\n示例如下：\r\nhttp://www.xxx.com/1.mp4$名称1$30$是\r\nhttp://www.xxx.com/2.mp4$名称2$50$否',
+            title: '批量导入视频链接',
+            area: ['800px', '250px'] //自定义文本域宽高
+            ,id: 'ey_batch_links'
+            ,maxlength: 60000
+            ,success: function(layero, index){
+                $("#ey_batch_links").find('textarea').attr('placeholder', '参考格式：链接地址$选集名称$时长(秒)$试看(是/否)\r\n示例如下：\r\nhttp://www.xxx.com/1.mp4$名称1$30$是\r\nhttp://www.xxx.com/2.mp4$名称2$50$否');
+            }
+        }, function(value, index, elem){
+            let code = value.split(/[(\r\n)\r\n]+/); // 根据换行或者回车进行识别
+            code.forEach((item, index) => { // 删除空项
+                if (!item) {
+                    code.splice(index, 1);
+                }else{
+                    code[index] = item.split('$');
+                }
+            })
+            code = Array.from(new Set(code)); // 去重
+            code.forEach((item, index) => { // 删除空项
+                addImportUrlSys(item[0],item[1],item[2],item[3]);
+            })
+            layer.close(index);
+        });
+    }
+
+    function addImportUrlSys(url,name,time,gratis){
+        var first = $('#url-box_sys div:first-child').attr('data-num');
+        if('' == $('#video_url_sys_'+first).val()){
+            $('#url-box_sys div:first-child').remove();
+        }
+        if ('undefined' == name || !name) {
+            name = '';
+        }
+        if ('undefined' == time || !time) {
+            time = '';
+        }
+        if ('是' == gratis){
+            gratis = 'checked';
+        }else{
+            gratis = '';
+        }
+        var is_show_qiniuyun = {$channelRow.data.qiniuyun_open|default=0};
+        var is_show_oss = {$channelRow.data.oss_open|default=0};
+        var is_show_cos = {$channelRow.data.cos_open|default=0};
+        var num = $("div [id=num_upload_box_sys]").last().attr("data-num");
+        if (!num){
+            num=0;
+        }
+        num++;
+
+        var html = "";
+        html += "<div id=\"num_upload_box_sys\"  class='media_del_1586481014_"+num+"' data-num='"+num+"' style='margin-bottom: 10px;'>\n" +
+            "                            <span>&nbsp;链接地址：</span>\n" +
+            "                            <input type=\"text\" class=\"input-txt\" id=\"video_url_sys_"+num+"\" value='"+url+"' style=\"width: 400px !important;\" >\n" +
+            "                            <span>&nbsp;选集名称：</span>\n" +
+            "                            <input type=\"text\" class=\"input-txt\" id=\"video_title_sys_"+num+"\" value='"+name+"' style=\"width: 200px !important;\">\n" +
+            "                            <span>&nbsp;时长(秒)：</span>\n" +
+            "                            <input type=\"text\" class=\"input-txt\" id=\"video_time_sys_"+num+"\" value='"+time+"' style=\"width: 50px !important;\">\n" +
+            "                            <input type=\"hidden\" class=\"input-txt\" id=\"video_size_sys_"+num+"\">" +
+            "                            <input type=\"hidden\" class=\"input-txt\" id=\"video_mime_sys_"+num+"\">" +
+            "                            <input type=\"hidden\" class=\"input-txt\" id=\"video_name_sys_"+num+"\">" +
+            "                            <input type=\"file\" class=\"input-txt\" id=\"qiniu_click_sys_"+num+"\" onchange=\"QiniuUpload('"+num+"');\" style=\"display: none;\">\n"+
+            "                            <input type=\"file\" class=\"input-txt\" id=\"oss_click_sys_"+num+"\" onchange=\"OssUpload('"+num+"');\" style=\"display: none;\">\n"+
+            "                            <input type=\"file\" class=\"input-txt\" id=\"cos_click_sys_"+num+"\" onchange=\"CosUpload('"+num+"');\" style=\"display: none;\">\n";
+        if (is_show_qiniuyun == 1) {
+            html += "                     &nbsp;<a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" id=\"qiniu_upload_video_sys_"+num+"\" onclick=\"click_qiniu_sys('"+num+"');\">七牛云上传</a>\n";
+        }
+        if (is_show_oss == 1) {
+            html += "                     &nbsp;<a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" id=\"oss_upload_video_sys_"+num+"\" onclick=\"click_oss_sys('"+num+"');\">oss上传</a>\n";
+        }
+        if (is_show_cos == 1) {
+            html += "                     &nbsp;<a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" id=\"cos_upload_video_sys_"+num+"\" onclick=\"click_cos_sys('"+num+"');\">cos上传</a>\n";
+        }
+        html += "                         <a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green \" id=\"upload_video_sys_"+num+"\" data-num='"+num+"'>本地上传</a>\n" +
+            "                            <a href=\"javascript:void(0);\" class=\"ncap-btn ncap-btn-green\" onclick=\"media_del('"+num+"');\">删除</a>\n" +
+            "   &nbsp; &nbsp; <label onselectstart='return false'><input type='checkbox' id='video_gratis_sys_"+num+"' value='1' "+gratis+">试看</label>" +
+            "                        </div>";
+
+        $('#url-box_sys').append(html);
+
+
+        layui.use('upload', function(){
+            var upload = layui.upload;
+            var xhrOnProgress=function(fun) {
+                xhrOnProgress.onprogress = fun;
+                return function() {
+                    var xhr = $.ajaxSettings.xhr();
+                    if (typeof xhrOnProgress.onprogress !== 'function') {
+                        return xhr;
+                    }
+                    if (xhrOnProgress.onprogress && xhr.upload) {
+                        xhr.upload.onprogress = xhrOnProgress.onprogress;
+                    }
+                    return xhr;
+                }
+            };
+
+            upload.render({
+                elem: "#upload_video_sys_"+num
+                ,url: "{:url('Ueditor/upVideo', ['savepath'=>'media'])}"
+                ,accept: 'video' //视频
+                ,exts: '{$media_type}'
+                ,size: {$upload_max_filesize} //限制文件大小，单位 KB
+                ,before: function(obj){
+                    $("#upload_video_sys_"+num).text('等待中...');
+                }
+                ,xhr:xhrOnProgress
+                ,progress: function(percent) {
+                    $("#upload_video_sys_"+num).text('上传中...'+percent+'%');
+                }
+                ,done: function(res){
+                    if ("SUCCESS" == res.state) {
+                        var n = $(this.item).attr('data-num');
+                        $("#video_url_sys_"+n).val(res.url);
+                        $("#video_time_sys_"+n).val(res.time);
+                        $("#video_size_sys_"+n).val(res.size);
+                        $("#video_mime_sys_"+n).val(res.mime);
+                        $("#video_name_sys_"+n).val(res.title);
+                        $("#upload_video_sys_"+num).text('上传成功');
+                        setTimeout(function(){
+                            $('#upload_video_sys_'+num).text('本地上传');
+                        }, 2000 )
+                    }else {
+                        $("#upload_video_sys_"+num).text('上传失败');
+                        setTimeout(function(){
+                            $('#upload_video_sys_'+num).text('本地上传');
+                        }, 2000 )
+                        layer.msg(res.state,{icon: 2});
+                    }
+                }
+                ,error: function(){
+                    // layer.close(load); //关闭loading
+                }
+            });
+        });
+    }
+    function urlToStr() {
+        var video = [];
+        $("#url-box_sys div").each(function(){
+            var n = $(this).attr('data-num');
+            var arr ={};
+            arr.file_url = $("#video_url_sys_"+n).val();
+            if (!arr.file_url) {
+                return true
+            }
+            arr.file_title = $("#video_title_sys_"+n).val();
+            arr.file_name = $("#video_name_sys_"+n).val();
+            arr.file_time = $("#video_time_sys_"+n).val();
+            arr.file_size = $("#video_size_sys_"+n).val();
+            arr.file_mime = $("#video_mime_sys_"+n).val();
+            arr.file_id = $("#video_file_id_"+n).val();
+            var gratis_checked = $("#video_gratis_sys_"+n).is(':checked');
+            if (gratis_checked == true){
+                arr.gratis = 1;
+            } else{
+                arr.gratis = 0;
+            }
+            video.push(arr);
+        });
+        video = JSON.stringify(video)
+        $("#video").val(video)
+    }
+</script>
+
+{include file="public/footer" /}

@@ -1,16 +1,15 @@
 {include file="public/layout" /}
 
-<body style="background-color: #FFF; overflow-y: scroll;">
+<body class="bodystyle" style="overflow-y: scroll;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="{$backurl}" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
-            <div class="subject">
-                <h3>会员中心 - 编辑用户</h3>
-                <h5></h5>
-            </div>
+        <div class="item-title"><a class="back" href="{:url('Member/users_index')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            <ul class="tab-base nc-row">
+                <li><a href="javascript:void(0);" class="current"><span>编辑会员</span></a></li>
+            </ul>
         </div>
     </div>
     <form class="form-horizontal" id="postForm" action="{:url('Member/users_edit')}" method="post">
@@ -18,7 +17,7 @@
             <dl class="row"><dt class="tit"><label><b>基本资料</b></label></dt></dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="username">用户头像</label>
+                    <label for="username">会员头像</label>
                 </dt>
                 <dd class="opt">
                     <div class="txpic" onClick="GetUploadify(1,'','allimg','head_pic_call_back');">
@@ -38,7 +37,7 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="nickname">用户昵称</label>
+                    <label for="nickname">会员昵称</label>
                 </dt>
                 <dd class="opt">
                     <input type="text" name="nickname" id="nickname" value="{$info.nickname}" class="input-txt">
@@ -49,16 +48,15 @@
                     <label for="password">登录密码</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="password" id="password" class="input-txt">
-                    <p class="notic">如不修改，请为空</p>
+                    <input type="text" name="password" id="password" autocomplete="off" class="input-txt" placeholder="不修改留空">
                 </dd>
             </dl>
-            <dl class="row">
+            <dl class="row {if condition="empty($userConfig['level_member_upgrade'])"} none {/if} ">
                 <dt class="tit">
-                    <label for="level">用户级别</label>
+                    <label for="level">会员级别</label>
                 </dt>
                 <dd class="opt">
-                    <select name="level" id="level">
+                    <select name="level" id="level" onchange="IsOpenDays(this);">
                         {volist name='$level' id='vo'}
                             <option value="{$vo.level_id}" {eq name="$info.level" value="$vo.level_id"}selected{/eq}>{$vo.level_name}</option>
                         {/volist}
@@ -67,13 +65,41 @@
                     <p class="notic"></p>
                 </dd>
             </dl>
+
+            {if condition="1 == $userConfig.level_member_upgrade"}
+                <dl class="row" {eq name="$info.level" value="1"}style="display: none;"{/eq} id='users_days'>
+                    <dt class="tit">
+                        <label for="users_days"><em>*</em>会员天数</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="level_maturity_days_up" id="level_maturity_days" value="{$info.level_maturity_days_new|default='0'}" onkeyup="this.value=this.value.replace(/[^0-9]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/\[^0-9]/g,''));" maxlength="10">
+                        <span class="err"></span>
+                        <p class="notic">请填写会员有效期天数，不填写则会默认为注册会员！</p>
+                    </dd>
+                </dl>
+                <input type="hidden" name="level_maturity_days_new" value="{$info.level_maturity_days_new}">
+                <input type="hidden" name="level_maturity_days_old" value="{$info.level_maturity_days}">
+            {/if}
+            <input type="hidden" id="level_member_upgrade" value="{$userConfig.level_member_upgrade|default='0'}">
+
             {if condition="1 == $userConfig.pay_open"}
             <dl class="row">
                 <dt class="tit">
                     <label for="users_money">账户余额</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="users_money" id="users_money" value="{$info.users_money|default='0.00'}">&nbsp;元
+                    <input type="text" name="users_money" id="users_money" value="{$info.users_money|default='0.00'}" onkeyup='this.value=this.value.replace(/[^\d.]/g,"");' onpaste='this.value=this.value.replace(/[^\d.]/g,"")' maxlength="10">&nbsp;元
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            {/if}
+            {if condition="$php_servicemeal > 1"}
+            <dl class="row">
+                <dt class="tit">
+                    <label for="coin">会员{$scoreCofing['score_name']|default='积分'}</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="scores" id="scores" value="{$info.scores|default='0'}" onkeyup='this.value=this.value.replace(/[^\d]/g,"");' onpaste='this.value=this.value.replace(/[^\d]/g,"")' maxlength="10">
                     <p class="notic"></p>
                 </dd>
             </dl>
@@ -102,7 +128,7 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="last_login">最后登录日期</label>
+                    <label for="last_login">最后登录</label>
                 </dt>
                 <dd class="opt">
                     {$info.last_login|date='Y-m-d H:i:s',###}
@@ -112,6 +138,14 @@
             <dl class="row"><dt class="tit"><label><b>更多资料</b></label></dt></dl>
             {include file="member/users_field"/}
             {/notempty}
+            <dl class="row">
+                <dt class="tit">
+                    <label for="last_login">快捷操作</label>
+                </dt>
+                <dd class="opt">
+                    <a href="{:url('Member/syn_users_login', ['users_id'=>$info.users_id, 'mca'=>'user/Users/index'])}" target="_blank">登录到此用户会员中心</a>
+                </dd>
+            </dl>
             <div class="bot">
                 <input type="hidden" name="users_id" value="{$info.users_id}">
                 <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
@@ -121,16 +155,50 @@
 </div>
 
 <script type="text/javascript">
+    function IsOpenDays(obj){
+        if (1 == $('#level_member_upgrade').val()) {
+            var level_id = $(obj).val();
+            if (1 == level_id) {
+                $('#users_days').css('display','none');
+            }else{
+                $('#users_days').css('display','');
+                $('#level_maturity_days').css('border-color','red').focus();
+            }
+        }
+    }
+
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     // 判断输入框是否为空
     function checkForm(){
-        if($('input[name=username]').val() == ''){
-            showErrorMsg('用户名不能为空！');
-            $('input[name=username]').focus();
-            return false;
+        if (1 == $('#level_member_upgrade').val()) {
+            if (1 != $('#level').val() && (!$('#level_maturity_days').val() || 0 == $('#level_maturity_days').val())){
+                showErrorMsg('请填写会员有效期天数！');
+                $('#level_maturity_days').focus();
+                return false;
+            }
         }
 
         layer_loading('正在处理');
-        $('#postForm').submit();
+        $.ajax({
+            type : 'post',
+            url : "{:url('Member/users_edit', ['_ajax'=>1])}",
+            data : $('#postForm').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {icon: 1, time:1000},function(){
+                        window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
     }
 
     function head_pic_call_back(fileurl_tmp)

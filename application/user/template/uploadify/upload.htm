@@ -2,8 +2,8 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 <title>文件管理</title>
-<link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/webuploader/webuploader.css">
-<link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/webuploader/css/style.css">
+<link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/webuploader/webuploader.css?v={$version|default='1.2.9'}">
+<link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/webuploader/css/style.css?v={$version|default='1.2.9'}">
 <script type="text/javascript">
     var eyou_basefile = "{$Request.baseFile}";
     var module_name = "{$Think.const.MODULE_NAME}";
@@ -85,10 +85,10 @@
         </div>
     </div>
 </div>
-<script type="text/javascript" src="__STATIC__/common/js/jquery.min.js"></script>
-<script type="text/javascript" src="__PUBLIC__/plugins/webuploader/webuploader.min.js"></script>
-<script type="text/javascript" src="__PUBLIC__/plugins/webuploader/upload.js"></script>
-<script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
+<script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version|default='1.2.9'}"></script>
+<script type="text/javascript" src="__PUBLIC__/plugins/webuploader/webuploader.min.js?v={$version|default='1.2.9'}"></script>
+<script type="text/javascript" src="__PUBLIC__/plugins/webuploader/upload.js?v={$version|default='1.2.9'}"></script>
+<script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js?v={$version|default='1.2.9'}"></script>
 <script type="text/javascript">
 $(function(){
     var config = {
@@ -104,6 +104,7 @@ $(function(){
             "fileVal":"file",
             "auto":true,
             "formData":{},
+            "duplicate": true, // 允许上传重复文件
             // "accept": {
             //     "title": 'Images',
             //     "extensions": '{$info.type}',
@@ -112,9 +113,9 @@ $(function(){
             "pick":{"id":"#filePicker","label":"点击选择图片","name":"file"},
             "thumb":{"width":110,"height":110,"quality":70,"allowMagnify":true,"crop":true,"preserveHeaders":false,"type":"image\/jpeg"},
             "compress": {
-                "width": 3800,
-                "height": 3800,
-                "quality": 90,
+                "width": 380000,
+                "height": 380000,
+                "quality": 100,
                 "allowMagnify": false,
                 "crop": false,
                 "preserveHeaders": true
@@ -182,7 +183,22 @@ $(function(){
         if (urlString != "") {
             var reg = /^((\w)*:)?(\/\/).*$/;
             if(reg.test(urlString)){
-                remsg = '禁止篡改上传图片为远程地址！';
+                $.ajax({
+                    type:'POST',
+                    url:"{:url('api/Ajax/get_third_domain', ['_ajax'=>1])}",
+                    data:{},
+                    success:function(res){
+                        var third_domain = res.data;
+                        if (1 == res.code && third_domain != '') {
+                            var arr = urlString.split('/');
+                            if (arr[2] != third_domain) {
+                                remsg = '禁止篡改上传图片为远程地址！';
+                            }
+                        }else {
+                            remsg = '禁止篡改上传图片为远程地址！';
+                        }
+                    }
+                });
             }
         }
         return remsg;

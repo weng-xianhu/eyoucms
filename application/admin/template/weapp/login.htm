@@ -1,0 +1,63 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit; min-width:400px;">
+
+<div class="page" style="min-width: 300px;">
+    <form class="form-horizontal" id="post_form" action="{:U('Weapp/login')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit" style="padding: 0;width: 50px;">
+                    <label>用户名</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="userid" placeholder="用户名/手机号" id="userid" class="input-txt" style="width: 200px !important;">
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit" style="padding: 0;width: 50px;">
+                    <label>密码</label>
+                </dt>
+                <dd class="opt">
+                    <input type="password" name="pwd" placeholder="密码" id="pwd" class="input-txt" style="width: 200px !important;">
+                </dd>
+            </dl>
+            <div class="bot" style="padding-bottom: 0;"><a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">登录</a></div>
+        </div>
+    </form>
+</div>
+<script>
+function checkForm() {
+    var userid = $('#userid').val()
+    var pwd = $('#pwd').val()
+    if (userid=='') {
+        showErrorMsg('请输入用户名！');
+        $('input[name=userid]').focus();
+        return false;
+    }
+    if (pwd=='') {
+        showErrorMsg('请输入密码！');
+        $('input[name=pwd]').focus();
+        return false;
+    }
+    layer_loading('正在登录');
+    $.ajax({
+        type: 'post',
+        url: "{url('Weapp/login')}",
+        data: {
+            userid: userid,
+            pwd: pwd
+        },
+        success: function (res) {
+            layer.closeAll()
+            if (res.code == 0){
+                showErrorMsg(res.msg);
+            } else {
+                layer.msg(res.msg, {icon: 1});
+                parent.layer.close(parent.layer.index);
+                parent.jump();
+            }
+        }
+    })
+}
+</script>
+
+{include file="public/footer" /}

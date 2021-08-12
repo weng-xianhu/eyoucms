@@ -1,10 +1,10 @@
 {include file="public/layout" /}
-<body style="background-color: #FFF; overflow: auto;">
+<body class="bodystyle">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page atta">
     {include file="seo/bar" /}
-    <form method="post" id="handlepost" action="{:U('Seo/handle')}" enctype="multipart/form-data" name="form1">
+    <form method="post" id="handlepost" action="{:U('Sitemap/index')}" enctype="multipart/form-data" name="form1">
         <div class="ncap-form-default">
             <dl class="row">
                 <dt class="tit">自动生成</dt>
@@ -35,7 +35,7 @@
                 </dt>
                 <dd class="opt">          
                     <label><input type="checkbox" name="sitemap_xml" value="1" {if condition="isset($config.sitemap_xml) && $config.sitemap_xml eq 1"}checked="checked"{/if}>Xml网站地图</label>&nbsp;
-                    <br/>适合谷歌和百度，地图网址 <a href="__SITE_URL____ROOT_DIR__/sitemap.xml" target="_blank">__SITE_URL____ROOT_DIR__/sitemap.xml</a>
+                    <br/><p class="notic2">适合谷歌和百度，地图网址 <a href="__SITE_URL____ROOT_DIR__/sitemap.xml" target="_blank">__SITE_URL____ROOT_DIR__/sitemap.xml</a> &nbsp;&nbsp;<a href="javascript:void(0);" onclick="update_sitemap();" class="ncap-btn ncap-btn-green">更新地图</a></p>
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
@@ -131,23 +131,89 @@
                     <p class="notic">XML地图文件使用，所抓取页面在您网站的重要性，告诉搜索引擎抓取的优先级。数值越大，优先级越高。</p>
                 </dd>
             </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="sitemap_archives_num">生成文档数量</label>
+                </dt>
+                <dd class="opt">
+                    <input id="sitemap_archives_num" name="sitemap_archives_num" value="{$config.sitemap_archives_num|default='100'}" type="text" style="width: 60px;" />&nbsp;篇
+                    <p class="notic">发布/编辑文档时，会同步更新sitemap.xml，包含首页、栏目页、指定数量的最新发布文档。</p>
+                    <p class="{if isset($config.sitemap_archives_num) && $config.sitemap_archives_num <= 100}none{/if} red" id="p_sitemap_archives_num">推荐设置100篇，数量设置越多，会对文档发布/编辑的速度造成一定影响。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="sitemap_tags_num">生成Tag数量</label>
+                </dt>
+                <dd class="opt">
+                    <input id="sitemap_tags_num" name="sitemap_tags_num" value="{$config.sitemap_tags_num|default='100'}" type="text" style="width: 60px;" />&nbsp;篇
+                    <p class="notic">发布/编辑文档时，会同步更新sitemap.xml，包含首页、栏目页、指定数量的最新发布文档。</p>
+                    <p class="{if isset($config.sitemap_tags_num) && $config.sitemap_tags_num <= 100}none{/elt} red" id="p_sitemap_tags_num">推荐设置100篇，数量设置越多，会对文档发布/编辑的速度造成一定影响。</p>
+                </dd>
+            </dl>
             <dl class="row zzbaidu">
                 <dt class="tit">
                     <label for="sitemap_zzbaidutoken">实时推送Url的token</label>
                 </dt>
                 <dd class="opt">
                     <input id="sitemap_zzbaidutoken" name="sitemap_zzbaidutoken" value="{$config.sitemap_zzbaidutoken|default=''}" class="input-txt" type="text" />
-                    <p class="notic">这里填入 <a href="https://ziyuan.baidu.com" target="_blank" style="color: red;">百度搜索资源平台</a> 的准入密钥，才能第一时间推送文章链接给百度蜘蛛。</p>
+                    <p class="notic2">这里填入 <a href="https://ziyuan.baidu.com" target="_blank" style="color: red;">百度搜索资源平台</a> 的准入密钥，才能第一时间推送文章链接给百度蜘蛛。</p>
                 </dd>
             </dl>
             <div class="bot">
-                <input type="hidden" name="inc_type" value="{$inc_type}">
                 <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">确认提交</a>
             </div>
         </div>
     </form>
 </div>
 <script type="text/javascript">
+
+    $(document).ready(function(){
+        // 生成文档数量
+        $('#sitemap_archives_num').keyup(function(){
+            var sitemap_archives_num = parseInt($(this).val());
+            if (sitemap_archives_num > 100) {
+                $('#p_sitemap_archives_num').show();
+            } else {
+                $('#p_sitemap_archives_num').hide();
+            }
+        });
+
+        // 生成Tag数量
+        $('#sitemap_tags_num').keyup(function(){
+            var sitemap_tags_num = parseInt($(this).val());
+            if (sitemap_tags_num > 100) {
+                $('#p_sitemap_tags_num').show();
+            } else {
+                $('#p_sitemap_tags_num').hide();
+            }
+        });
+    });
+
+    function update_sitemap() {
+        layer_loading('正在处理');
+        $.ajax({
+            url: "{:url('Sitemap/ajax_update_sitemap')}",
+            type: "POST",
+            dataType: "json",
+            data: {_ajax:1},
+            success: function(res){
+                layer.closeAll();
+                if (1 == res.code) {
+                    layer.msg(res.msg, {icon: 1, time: 1500}, function(){
+                        window.location.reload();
+                    });
+                } else {
+                    layer.alert(res.data.msg, {icon: 5, title: false});
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
+    }
+
     function adsubmit(){
         layer_loading("正在处理");
         $('#handlepost').submit();

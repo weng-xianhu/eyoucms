@@ -1,0 +1,154 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit; min-width:auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;box-shadow:none;">
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w10" axis="col0">
+                            <div class="tc"></div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">参数名称</div>
+                        </th>
+                        <th axis="col1" class="w80">
+                            <div class="tc">启用</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="w10 tc"></div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                    <input type="text" data-id='{$vo.field_id}' id="{$vo.field_name}" data-name="{$vo.field_name}" onchange="UpFieldTitle(this)" value="{$vo.field_title}">
+                                    {eq name="$vo.field_name" value="server_name"}
+                                    &nbsp;&nbsp;&nbsp;&nbsp;<a href="{:url('Download/set_servername')}" style="color: white;" class="ncap-btn ncap-btn-green" id="submitBtn">设置</a>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w80 tc">
+                                    <label>
+                                        <input type="checkbox" data-id='{$vo.field_id}' data-title="{$vo.field_title}"  onclick="UpFieldUse(this);" data-name='{$vo.field_name}' {eq name='$vo.field_use' value='1'}checked{/eq}>
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    function UpFieldTitle(obj)
+    {
+        // 字段标题
+        var field_title = $(obj).val();
+        // 字段名称
+        var field_name  = $(obj).attr('data-name');
+        // 字段ID
+        var field_id    = $(obj).attr('data-id');
+        // 更改字段
+        parent.$('span.title_'+field_name).html(field_title);
+        //文件上传列表的
+        // 更改字段
+        parent.$('th.th_' + field_name).html(field_title);
+        // 修改数据库中的信息
+        $.ajax({
+            url: "{:url('Download/template_set', ['_ajax'=>1])}",
+            data: {field_id:field_id,field_title:field_title},
+            type:'post',
+            dataType:'json',
+            success: function(res){
+                layer.msg(res.msg, {icon: 1, time:1000});
+            }
+        });
+    }
+
+    function UpFieldUse(obj)
+    {
+        // 字段名称
+        var field_name  = $(obj).attr('data-name');
+        // 字段标题
+        var field_title = $('#'+field_name).val();
+        // 字段ID
+        var field_id    = $(obj).attr('data-id');
+        // 字段是否使用
+        var field_use = '';
+
+        if ($(obj).is(':checked')) {
+            field_use = 1;
+            // 显示远程文件的字段
+            parent.$('.ey_'+field_name).show();
+
+            if (field_name == 'server_name') {
+                //显示文件列表中的字段表头
+                parent.$('.th_' + field_name).show();
+                //显示文件列表中的表格
+                parent.$('#TemplateSet').attr("data-servername_use", field_use);
+            }
+
+        } else {
+            field_use = 0;
+            // 隐藏远程文件的字段
+            parent.$('.ey_'+field_name).hide();
+
+            if (field_name == 'server_name') {
+                //隐藏文件列表中的字段表头
+                parent.$('.th_' + field_name).hide();
+                //隐藏文件列表中的表格
+                parent.$('#TemplateSet').attr("data-servername_use", field_use);
+            }
+
+        }
+        // 修改数据库中的信息
+        $.ajax({
+            url: "{:url('Download/template_set', ['_ajax'=>1])}",
+            data: {field_id:field_id,field_use:field_use},
+            type:'post',
+            dataType:'json',
+            success: function(res){
+
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

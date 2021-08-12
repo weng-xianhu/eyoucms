@@ -22,6 +22,9 @@ return array(
     'common_getEveryTopDirnameList_model'     => array(
         'tag'=>'arctype', 'options'=>array('expire'=>0, 'prefix'=>'')
     ),
+    'common_weapp_getWeappList'     => array(
+        'tag'=>'weapp', 'options'=>array('expire'=>0, 'prefix'=>'')
+    ),
 
     /* -------------------------前台使用------------------------- */
     // 'home_base_global_assign'     => array(

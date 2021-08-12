@@ -1,0 +1,313 @@
+{include file="public/layout" /}
+
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width:400px;">
+<style type="text/css">
+    .dataTables_paginate {
+        padding-top: 10px;
+    }
+</style>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="box-shadow:none;min-width: 400px;padding: 15px 15px 60px 15px;">
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>可选文档列表</h3>
+                <!-- <h5>(共{$pager->totalRows}条数据)</h5> -->
+            </div>
+            <!-- <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div> -->
+            <form class="navbar-form form-inline" id="searchForm" action="{:url('Tags/relation_archives', ['tid'=>$tid])}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">  
+                        <select name="typeid" class="select" style="margin:0px 5px;">
+                            <option value="0">--选择栏目--</option>
+                            {$arctype_html}
+                        </select>
+                    </div>
+                    <div class="sDiv2">
+                        <input type="hidden" name="tid" value="{$tid}">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="请输入标题">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll curpoin"></div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w60">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="">
+                            <div style="text-align: left; padding-left: 10px;" class="">标题</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w150">
+                            <div class="tc">所属栏目</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w150">
+                            <div class="tc">所属模型</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w80">
+                            <div class="tc">浏览量</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">更新时间</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%;">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="tc w40">
+                                    <input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.aid}" id="checkbox_{$vo.aid}" class="curpoin">
+                                </div>
+                            </td>
+                           
+                            <td class="sort">
+                                <div class="tc w60">
+                                    {$vo.aid}
+                                </div>
+                            </td>
+                            <td class="" style="width: 100%;">
+                                <div class="tl" style="padding-left: 10px;">
+                                    <font style="margin-left: 5px;{eq name="vo.is_b" value="1"} font-weight: bold;{/eq}">{$vo.title}</font>
+                                    {assign name='showArcFlagData' value='$vo|showArchivesFlagStr'}
+                                    {volist name='$showArcFlagData' id="vo1"}
+                                        {eq name='$i' value='1'}<span style="color: red;">[{/eq}
+                                        <i style="font-size: 12px;">{$vo1['small_name']}</i>
+                                        {eq name='$i' value='$showArcFlagData|count'}]</span>{/eq}
+                                    {/volist}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w150 tc"><a href="{:url('Tags/relation_archives', array('tid'=>$tid,'typeid'=>$vo['typeid']))}">{$vo.typename|default='<i class="red">数据出错！</i>'}</a></div>
+                            </td>
+                            <td class="">
+                                <div class="w150 tc">{$channeltype_list[$vo['current_channel']]['title']|default=''}</div>
+                            </td>
+                            <td>
+                                <div class="tc w80">
+                                    {$vo.click}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w100 tc">
+                                    {$vo.update_time|date='Y-m-d',###}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <!-- <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                <div class="fbutton">
+                    <a href="javascript:void(0);" onclick="save();">
+                        <div class="add" title="确认关联">
+                            <span><i class="fa fa-save"></i>确认关联</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div style="clear:both"></div>
+        </div> -->
+        <div class="bot2" style="padding-left: 1px;">
+            <div class="fbutton checkboxall" style="margin-top: -6px;">
+                <input type="checkbox" autocomplete="off" class="checkAll curpoin">
+            </div>
+            <div class="fbutton">
+                <a href="javascript:void(0);" onclick="save();">
+                    <div class="add" title="确认关联">
+                        <span><i class="fa fa-save"></i>确认关联</span>
+                    </div>
+                </a>
+            </div>
+            <div class="fbutton" style="margin-top: 8px; font-size: 12px;">
+                已勾选文档共 <span id="relation_count" style="color: red">0</span> 篇
+            </div>
+        </div>
+        <!--分页位置-->
+        {$page}
+    </div>
+</div>
+<script type="text/javascript">
+    var init = true;
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+    $(function(){
+        relation_aids();
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+            relation_aids($(this).val(), $(this).is(":checked"));
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+            var k = 0;
+            var aids = '';
+            $('input[name^=ids]').each(function(i,o){
+                if (k > 0) {
+                    aids += ',';
+                }
+                aids += $(o).val();
+                k++;
+            })
+            relation_aids(aids, $(this).is(":checked"));
+        });
+    });
+    
+    $(document).ready(function(){
+
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        $('#searchForm select[name=typeid]').change(function(){
+            $('#searchForm').submit();
+        });
+    });
+
+    function relation_aids(aids, checked)
+    {
+        if (init == true) {
+            layer_loading('正在加载');
+            init = false;
+        }
+        $.ajax({
+            type : 'GET',
+            url : "{:url('Tags/ajax_recordfile')}",
+            data : {opt:'get', _ajax:1},
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if (res.code == 1) {
+                    var tagaids = res.data;
+                    if (aids) {
+                        if (checked) {
+                            if (tagaids.length > 0) {
+                                tagaids_new = tagaids+','+aids;
+                            } else {
+                                tagaids_new = aids;
+                            }
+                            var tagaids_new_tmp = tagaids_new.split(',');
+                            var new_arr = [];
+                            for(var i = 0; i < tagaids_new_tmp.length; i++) {  
+                                var items = tagaids_new_tmp[i];
+                                //判断元素是否存在于new_arr中，如果不存在则插入到new_ar中
+                                if($.inArray(items, new_arr) == -1) {  
+                                    new_arr.push(items);  
+                                }  
+                            }
+                            tagaids_new = new_arr.join(',');
+                        } else {
+                            var tagaidslist = tagaids.split(',');
+                            var aidslist = aids.split(',');
+                            for (var i = 0; i < aidslist.length; i++) {
+                                if (0 <= $.inArray(aidslist[i], tagaidslist)) {
+                                    tagaidslist.splice($.inArray(aidslist[i], tagaidslist), 1);
+                                }
+                            }
+                            tagaids_new = tagaidslist.join(',');
+                        }
+                        $.ajax({
+                            type : 'POST',
+                            url : "{:url('Tags/ajax_recordfile')}",
+                            data : {opt:'set', value:tagaids_new, _ajax:1},
+                            dataType : 'json',
+                            success : function(res){
+
+                            },
+                            error: function(e){
+                                showErrorAlert(e.responseText);
+                            }
+                        });
+                    } else {
+                        tagaids_new = tagaids;
+                    }
+
+                    if (tagaids_new.length > 0) {
+                        var tagaid_arr = tagaids_new.split(',');
+                        for (var i = 0; i < tagaid_arr.length; i++) {
+                            $('#checkbox_'+tagaid_arr[i]).prop('checked','checked');
+                        }
+                        $('#relation_count').html(tagaid_arr.length);
+                    } else {
+                        $('#relation_count').html(0);
+                    }
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    /**
+     * 确认关联
+     * @returns {Array}
+     */
+    function save() {
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Tags/relation_archives_save', ['tid'=>$tid])}",
+            data : {_ajax:1},
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {icon:1, shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

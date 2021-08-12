@@ -1,6 +1,6 @@
 {include file="public/layout" /}
 
-<body style="background-color: #FFF; overflow: auto; min-width: auto;">
+<body class="bodystyle" style="min-width: auto;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
@@ -38,7 +38,7 @@
 
             layer_loading('正在处理');
             $.ajax({
-                url: "{:url('Language/customvar_bind')}",
+                url: "{:url('Language/customvar_bind', ['_ajax'=>1])}",
                 type: 'POST',
                 dataType: 'JSON',
                 data: $('#post_form').serialize(),

@@ -1,0 +1,96 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit; min-width:400px;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: 400px;">
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="pl10">会员级别名称</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">允许发布</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">需要审核</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <form id="PostForm">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%">
+                        <tbody>
+                        {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                        {else/}
+                        {volist name="list" id="vo"}
+                        <tr>
+                            <td style="width: 100%">
+                                <div style="" class="pl10">
+                                    {$vo.level_name}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {eq name="$vo['ask_is_release']" value='1'}
+                                    <span class="yes" onclick="changeTableVal('users_level','level_id','{$vo.level_id}','ask_is_release',this);">
+                                                <i class="fa fa-check-circle"></i>是
+                                            </span>
+                                    {else /}
+                                    <span class="no" onclick="changeTableVal('users_level','level_id','{$vo.level_id}','ask_is_release',this);">
+                                                <i class="fa fa-ban"></i>否
+                                            </span>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {eq name="$vo['ask_is_review']" value='1'}
+                                    <span class="yes" onclick="changeTableVal('users_level','level_id','{$vo.level_id}','ask_is_review',this);">
+                                                <i class="fa fa-check-circle"></i>是
+                                            </span>
+                                    {else /}
+                                    <span class="no" onclick="changeTableVal('users_level','level_id','{$vo.level_id}','ask_is_review',this);">
+                                                <i class="fa fa-ban"></i>否
+                                            </span>
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/volist}
+                        {/empty}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+
+{include file="public/footer" /}

@@ -3,12 +3,12 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/bootstrap/css/bootstrap.min.css?v={$version}">
-    <script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
-    <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
     <script type="text/javascript">
         var __root_dir__ = "__ROOT_DIR__";
         var __lang__ = "{$admin_lang}";
     </script>
+    <script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
+    <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
 </head>
 <style>
     .gray-bg {
@@ -107,7 +107,7 @@
          dataType:'json',
          data:{_ajax:1},
          success:function(res){
-             fid = res.data.typeid;
+             findex = res.data.typeid;
              achieve = res.data.achievepage;
              allpagetotal = res.data.allpagetotal;
              channelpagetotal = res.data.channelpagetotal;
@@ -126,8 +126,8 @@
                  sendChannel();
              }
          },
-         error:function(){
-             parent.layer.alert('首页生成错误', {icon: 5, title:false});
+         error:function(e){
+            parent.layer.alert(e.responseText, {icon: 5, title:false});
          }
      });
     }
@@ -137,16 +137,16 @@
              url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildChannel&lang="+__lang__,
              type:'POST',
              dataType:'json',
-             data:{'id':0,'fid':articlefid,'achieve':channelachieve,_ajax:1},
+             data:{'id':0,'findex':articlefid,'achieve':channelachieve,_ajax:1},
              beforeSend:function(){
              },
              success:function(res){
-                 articlefid = res.data.fid;
+                 articlefid = res.data.findex;
                  channelachieve = res.data.achievepage;
                  msg += res.msg;
                  progress = (((achieve+channelachieve)/allpagetotal)*100).toFixed(1);
                  $("#title").html('成功创建栏目：');
-                 $(".filepath").html(res.data.fid);
+                 $(".filepath").html(res.data.findex);
                  $(".progress-bar").css('width',progress+'%');
                  $(".percent").text(progress);
                  if (channelachieve === channelpagetotal){
@@ -160,8 +160,8 @@
                  }
                  sendChannel();
              },
-             error:function(){
-                 parent.layer.alert('栏目页生成出错', {icon: 5, title:false});
+             error:function(e){
+                parent.layer.alert(e.responseText, {icon: 5, title:false});
              }
          });
      }
@@ -171,9 +171,9 @@
              url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildArticle&lang="+__lang__,
              type:'POST',
              dataType:'json',
-             data:{'id':0,'fid':channelfid,'achieve':articleachieve,_ajax:1},
+             data:{'id':0,'findex':channelfid,'achieve':articleachieve,_ajax:1},
              success:function(res){
-                 channelfid = res.data.fid;
+                 channelfid = res.data.findex;
                  articleachieve = res.data.achievepage;
                  msg += res.msg;
                  progress = (((achieve+articleachieve)/allpagetotal)*100).toFixed(1);
@@ -198,8 +198,8 @@
                  }
                  sendArticle();
              },
-             error:function(){
-                 parent.layer.alert('文档页生成出错', {icon: 5, title:false});
+             error:function(e){
+                parent.layer.alert(e.responseText, {icon: 5, title:false});
              }
          });
      }

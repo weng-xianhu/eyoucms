@@ -27,6 +27,12 @@
             line-height: 22px;
         }
         #saveBtn{ float: right; }
+		.ui-layout-pane {   
+		     background: #fff;   
+		 } 
+		 .ui-layout-center{
+			 padding:0 15px 60px 15px;
+		 }
     </style>
 
     <script type="text/javascript">
@@ -36,18 +42,29 @@
     </script> 
 </head>
 <body>
-    <div class="ui-layout-west area manage-area" id="manage_area">
-        <div id="tree" class="ztree"></div>
-    </div>
-    <div class="ui-layout-center" >
-        <ul class="tabs">
-            <a href="{:url('Uploadify/upload',['num'=>$info['num'],'input'=>$info['input'],'path'=>$info['path'],'func'=>$info['func'],'lang'=>$Request.param.lang])}"><li>本地上传</li></a>
-            <li class="checked">在线管理</li>
-            <li id="saveBtn">确定使用</li>
-        </ul>
-        <iframe name="content_body" id="content_body" src="{:url('Uploadify/get_images_path',['num'=>$info['num'],'func'=>$info['func']])}" width="100%" height="100%" frameborder="0" style="margin-bottom: 50px;"></iframe>
-    </div>
-
+		
+	<div class="ui-layout-west" >
+		<div class="upload-main-left">
+			<div class="upload-nav">
+				<ul>
+					<li><a href="{:url('Uploadify/upload',['num'=>$info['num'],'input'=>$info['input'],'path'=>$info['path'],'func'=>$info['func'],'lang'=>$Request.param.lang])}">本地上传</a></li>
+					<li> <a class="upload-nav-active" href="javascript:void(0);">在线管理</a></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="ui-layout-center" >
+		<iframe name="content_body" id="content_body" src="{:url('Uploadify/get_images_path',['num'=>$info['num'],'func'=>$info['func']])}" width="100%" height="100%" frameborder="0" style="margin-bottom: 50px;"></iframe>
+        <div class="upload-button">
+			<div id="saveBtn" class="upload-btn">确定使用</div>
+		</div>
+	</div>
+	<div class="ui-layout-east area manage-area" id="manage_area">
+		<div class="ztreeContent">
+			<div id="tree" class="ztree"></div>
+		</div>
+	</div>
+	
     <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js"></script>
     <script src="__STATIC__/admin/js/jquery.layout-latest.min.js"></script>
     <script type="text/javascript" src="__PUBLIC__/plugins/ztree/js/jquery.ztree.core.min.js"></script>
@@ -58,16 +75,18 @@
         jQuery(document).ready(function () {
             myLayout = jQuery("body").layout({
             /*  全局配置 */
-                closable:                   true    /* 是否显示点击关闭隐藏按钮*/
+                closable:                   false    /* 是否显示点击关闭隐藏按钮*/
             ,   resizable:                  true    /* 是否允许拉动*/
             ,   maskContents:               true    /* 加入此参数，框架内容页就可以拖动了*/
             /*  顶部配置 */
             ,   north__spacing_open:        0       /* 顶部边框大小*/
             /*  底部配置 */
             ,   south__spacing_open:        0       /* 底部边框大小*/
+			,   west__spacing_open:         0       /* 左部边框大小*/
+			,   east__spacing_open:         1       /* 右部边框大小*/
             /*  some pane-size settings*/
-            ,   west__minSize:              200     /*左侧最小宽度*/
-            ,   west__maxSize:              500     /*左侧最大宽度*/
+            ,   west__minSize:              140     /*左侧最小宽度*/
+            ,   west__maxSize:              143     /*左侧最大宽度*/
             /*  左侧配置 */
             ,   west__slidable:             false
             ,   west__animatePaneSizing:    false
@@ -76,7 +95,7 @@
             ,   west__fxSettings_open:      { easing: "easeOutBounce" } // 'bounce' effect when opening*/
             ,   west__fxName_close:         "none"  /* NO animation when closing west-pane*/
             ,   stateManagement__enabled:   false   /*是否读取cookies*/
-            ,   showDebugMessages:          false 
+            ,   showDebugMessages:          false ,
             }); 
         });
 
@@ -184,15 +203,23 @@
 
             $.ajax({
                 type:'POST',
-                url:"{:url('Uploadify/update_pic')}",
+                url:"{:url('Uploadify/update_pic', ['_ajax'=>1])}",
                 data:{images_array:images_array},
+                success: function(res) {
+                    
+                }
             });
 
             // 调用父级方法，传入图片数据
             var callback = "{$info.func}";
             var num = {$info.num|default=1};
             if(num > 0){
-                eval('window.parent.'+callback+'(images_array)');
+                if (num == 1) {
+                    fileurl_tmp = images_array[0];
+                } else {
+                    fileurl_tmp = images_array;
+                }
+                eval('window.parent.'+callback+'(fileurl_tmp)');
                 window.parent.layer.closeAll();
             }
         });

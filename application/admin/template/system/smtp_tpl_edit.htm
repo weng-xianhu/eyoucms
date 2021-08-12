@@ -1,5 +1,5 @@
 {include file="public/layout" /}
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit; min-width:400px;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit; min-width:400px;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page" style="min-width: 400px;">
@@ -55,7 +55,7 @@
 
         layer_loading('正在处理');
         $.ajax({
-            url: "{:U('System/smtp_tpl_edit')}",
+            url: "{:url('System/smtp_tpl_edit', ['_ajax'=>1])}",
             type: 'POST',
             dataType: 'JSON',
             data: $('#post_form').serialize(),
@@ -66,12 +66,12 @@
                         window.location.href = res.url;
                     });
                 } else {
-                    layer.alert(res.msg, {icon:2, title:false});
+                    layer.alert(res.msg, {icon:5, title:false});
                 }
             },
             error: function(e){
                 layer.closeAll();
-                layer.alert('网络失败，请刷新页面后重试', {icon:2, title:false});
+                layer.alert(ey_unknown_error, {icon:5, title:false});
             }
         });
 

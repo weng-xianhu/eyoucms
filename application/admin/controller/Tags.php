@@ -13,7 +13,9 @@
 
 namespace app\admin\controller;
 
+use think\Db;
 use think\Page;
+use think\Cache;
 
 class Tags extends Base
 {
@@ -21,49 +23,142 @@ class Tags extends Base
     {
         $list = array();
         $keywords = input('keywords/s');
-
         $condition = array();
         if (!empty($keywords)) {
             $condition['tag'] = array('LIKE', "%{$keywords}%");
         }
-
-        // 多语言
         $condition['lang'] = array('eq', $this->admin_lang);
 
-        $tagsM =  M('tagindex');
-        $count = $tagsM->where($condition)->count('id');// 查询满足要求的总记录数
-        $Page = $pager = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
-        $list = $tagsM->where($condition)->order('id desc')->limit($Page->firstRow.','.$Page->listRows)->select();
+        $tagsM =  Db::name('tagindex');
+        $count = $tagsM->where($condition)->count('id');
+        $Page = $pager = new Page($count, config('paginate.list_rows'));
+        $show = $Page->show();
+        $this->assign('page', $show);
+        $this->assign('pager', $pager);
 
-        $show = $Page->show();// 分页显示输出
-        $this->assign('page',$show);// 赋值分页输出
-        $this->assign('list',$list);// 赋值数据集
-        $this->assign('pager',$pager);// 赋值分页对象
+        // 查询ID数组，用于纠正本页TAG文档书
+        $IndexID = $tagsM->where($condition)->order('id desc')->limit($Page->firstRow.','.$Page->listRows)->column('id');
+
+        // 纠正tags标签的文档数
+        $this->correct($IndexID);
+    
+        $list = $tagsM->where($condition)->order('id desc')->limit($Page->firstRow.','.$Page->listRows)->select();
+        $this->assign('list', $list);
+
+        $source = input('param.source/s');
+        $this->assign('source', $source);
         return $this->fetch();
     }
-    
-    /**
-     * 删除
-     */
+ 
+    public function tag_list()
+    {
+        $condition['lang'] = array('eq', $this->admin_lang);
+        $tagsM =  Db::name('tagindex');
+        $count = $tagsM->where($condition)->count('id');
+        $Page = $pager = new Page($count, 100);
+        $show = $Page->show();
+        $this->assign('page', $show);
+        $this->assign('pager', $pager);
+
+        // 查询ID数组，用于纠正本页TAG文档书
+        $IndexID = $tagsM->where($condition)->order($order)->limit($Page->firstRow.','.$Page->listRows)->column('id');
+
+        // 纠正tags标签的文档数
+        $this->correct($IndexID);
+
+        $order = 'total desc, id desc, monthcc desc, weekcc desc';
+        $list = $tagsM->where($condition)->order($order)->limit($Page->firstRow . ',' . $Page->listRows)->select();
+        
+        $this->assign('list', $list);
+        return $this->fetch();
+    }
+
+    public function edit()
+    {
+        if (IS_POST) {
+            $post = input('post.');
+            if (!empty($post['id'])) {
+                $tag = !empty($post['tag_tag']) ? trim($post['tag_tag']) : '';
+                if (empty($tag)) {
+                    $this->error('标签名称不能为空！');
+                } else {
+                    $row = Db::name('tagindex')->where([
+                            'tag'   => $tag,
+                            'id'    => ['NEQ', $post['id']],
+                            'lang'  => $this->admin_lang,
+                        ])->find();
+                    if (!empty($row)) {
+                        $this->error('标签名称已存在，请更改！');
+                    }
+                }
+
+                $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
+                $litpic = '';
+                if ($is_remote == 1) {
+                    $litpic = $post['litpic_remote'];
+                } else {
+                    $litpic = $post['litpic_local'];
+                }
+                
+                $updata = [
+                    'tag' => $tag,
+                    'litpic' => $litpic,
+                    'seo_title' => !empty($post['tag_seo_title']) ? trim($post['tag_seo_title']) : '',
+                    'seo_keywords' => !empty($post['tag_seo_keywords']) ? trim($post['tag_seo_keywords']) : '',
+                    'seo_description' => !empty($post['tag_seo_description']) ? trim($post['tag_seo_description']) : '',
+                    'update_time' => getTime(),
+                ];
+                $ResultID = Db::name('tagindex')->where('id', $post['id'])->update($updata);
+                if (false !== $ResultID) {
+                    if (trim($post['tag_tag']) != trim($post['tag_tagold'])) {
+                        Db::name('taglist')->where([
+                                'tid'   => $post['id'],
+                            ])->update([
+                                'tag'   => trim($post['tag_tag']),
+                                'update_time'   => getTime(),
+                            ]);
+                    }
+                    $this->success('操作成功');
+                }
+            }
+            $this->error('操作失败');
+        }
+
+        $id = input('id/d');
+        $Result = Db::name('tagindex')->where('id', $id)->find();
+        if (empty($Result)) $this->error('操作异常');
+        if (is_http_url($Result['litpic'])) {
+            $Result['is_remote'] = 1;
+            $Result['litpic_remote'] = handle_subdir_pic($Result['litpic']);
+        } else {
+            $Result['is_remote'] = 0;
+            $Result['litpic_local'] = handle_subdir_pic($Result['litpic']);
+        }
+        $this->assign('tag', $Result);
+
+        $this->assign('backurl', url('Tags/index'));
+        return $this->fetch();
+    }
+
     public function del()
     {
         if (IS_POST) {
             $id_arr = input('del_id/a');
             $id_arr = eyIntval($id_arr);
             if(!empty($id_arr)){
-                $result = M('tagindex')->field('tag')
+                $result = Db::name('tagindex')->field('tag')
                     ->where([
                         'id'    => ['IN', $id_arr],
                         'lang'  => $this->admin_lang,
                     ])->select();
                 $title_list = get_arr_column($result, 'tag');
 
-                $r = M('tagindex')->where([
+                $r = Db::name('tagindex')->where([
                         'id'    => ['IN', $id_arr],
                         'lang'  => $this->admin_lang,
                     ])->delete();
                 if($r){
-                    M('taglist')->where([
+                    Db::name('taglist')->where([
                         'tid'    => ['IN', $id_arr],
                         'lang'  => $this->admin_lang,
                     ])->delete();
@@ -79,16 +174,13 @@ class Tags extends Base
         $this->error('非法访问');
     }
     
-    /**
-     * 清空
-     */
     public function clearall()
     {
-        $r = M('tagindex')->where([
+        $r = Db::name('tagindex')->where([
                 'lang'  => $this->admin_lang,
             ])->delete();
         if(false !== $r){
-            M('taglist')->where([
+            Db::name('taglist')->where([
                 'lang'  => $this->admin_lang,
             ])->delete();
             adminLog('清空Tags标签');
@@ -96,5 +188,402 @@ class Tags extends Base
         }else{
             $this->error('操作失败');
         }
+    }
+
+    /**
+     * 纠正tags文档数
+     */
+    private function correct($IndexID = [])
+    {
+        $where = [
+            'tid' => ['IN', $IndexID],
+            'lang' => $this->admin_lang
+        ];
+        $taglistRow = Db::name('taglist')->field('count(tid) as total, tid, add_time')
+            ->where($where)
+            ->group('tid')
+            ->getAllWithIndex('tid');
+        $updateData = [];
+        $weekup = getTime();
+        foreach ($taglistRow as $key => $val) {
+            $updateData[] = [
+                'id'    => $val['tid'],
+                'total' => $val['total'],
+                'weekup'    => $weekup,
+                'add_time'  => $val['add_time'] + 1,
+            ];
+        }
+        if (!empty($updateData)) {
+            $r = model('Tagindex')->saveAll($updateData);
+            if (false !== $r) {
+                // Db::name('tagindex')->where(['weekup'=>['lt', $weekup],'lang'=>$this->admin_lang])->delete();
+            }
+        }
+    }
+
+    /**
+     * 获取常用标签列表
+     */
+    public function get_common_list()
+    {
+        if (IS_AJAX) {
+            $tags = input('tags/s');
+            $type = input('type/d');
+            if (!empty($tags)){
+                $tagsArr = explode(',',$tags);
+                $tags  = trim(end($tagsArr));
+            }
+
+            /*发布最新文档的tag里前3个*/
+            $newTagList = [];
+            $newtids = [];
+            if (empty($tags)){
+                $taglistRow = Db::name('taglist')->field('tid,tag')->order('aid desc')->limit(20)->select();
+                foreach ($taglistRow as $key => $val) {
+                    if (3 <= count($newTagList)) {
+                        break;
+                    }
+                    if (in_array($val['tid'], $newtids)) {
+                        continue;
+                    }
+                    array_push($newTagList, $val);
+                    array_push($newtids, $val['tid']);
+                }
+            }
+            $list = $newTagList;
+            /*end*/
+
+            /*常用标签*/
+            $where = [];
+            $where['is_common'] = 1;
+            !empty($newtids) && $where['id'] = ['NOTIN', $newtids];
+            $where['lang'] = $this->admin_lang;
+            if (!empty($tags)){
+                $where['tag'] = ['like','%'.$tags."%"];
+            }
+            $num = 20 - count($list);
+            $row = Db::name('tagindex')->field('id as tid,tag')->where($where)
+                ->order('total desc, id desc')
+                ->limit($num)
+                ->select();
+            if (is_array($list) && is_array($row)) {
+                $list = array_merge($list, $row);
+            }
+            /*end*/
+
+            // 不够数量进行补充
+            $surplusNum = $num - count($list);
+            if (0 < $surplusNum) {
+                $ids = get_arr_column($list, 'tid');
+                $condition['lang'] = $this->admin_lang;
+                $condition['id'] = ['NOT IN', $ids];
+                if (!empty($tags)){
+                    $condition['tag'] = ['like','%'.$tags."%"];
+                }
+                $row2 = Db::name('tagindex')->field('id as tid,tag')->where($condition)
+                    ->order('total desc, id desc')
+                    ->limit($surplusNum)
+                    ->select();
+                if (is_array($list) && is_array($row2)) {
+                    $list = array_merge($list, $row2);
+                }
+            }
+            /*end*/
+
+            $html = "";
+            $data = [];
+            if (!empty($list)) {
+                $tags = input('param.tags/s');
+                $tags = str_replace('，', ',', $tags);
+                $tagArr = explode(',', $tags);
+                foreach ($tagArr as $key => $val) {
+                    $tagArr[$key] = trim($val);
+                }
+
+                foreach ($list as $_k1 => $_v1) {
+                    if (!empty($type)){
+                        if (in_array($_v1['tag'], $tagArr)) {
+                            $html .= "<a class='cur' href='javascript:void(0);' onclick='selectArchivesTagInput(this);'>{$_v1['tag']}</a>";
+                        } else {
+                            $html .= "<a href='javascript:void(0);' onclick='selectArchivesTagInput(this);'>{$_v1['tag']}</a>";
+                        }
+                    }else{
+                        if (in_array($_v1['tag'], $tagArr)) {
+                            $html .= "<a class='cur' href='javascript:void(0);' onclick='selectArchivesTag(this);'>{$_v1['tag']}</a>";
+                        } else {
+                            $html .= "<a href='javascript:void(0);' onclick='selectArchivesTag(this);'>{$_v1['tag']}</a>";
+                        }
+                    }
+                }
+            }
+
+            $is_click = input('param.is_click/d');
+            if (!empty($is_click)) {
+                if (empty($html)) {
+                    $html .= "没有找到记录";
+                }
+                $html .= "<a href='javascript:void(0);' onclick='tags_list_1610411887(this);' style='float: right;'>[设置]</a>";
+            }
+            $data['html']   = $html;
+
+            if (!empty($type) && empty($tags)){
+                $data = [];
+            }
+
+            $this->success('请求成功', null, $data);
+        }
+        $this->error('请求失败');
+    }
+
+    public function batch_add()
+    {
+        return $this->fetch();
+    }
+
+    public function edit_index_seo()
+    {
+        if (IS_POST) {
+            $post = input('post.');
+            tpCache('tag', $post);
+            $this->success('操作成功');
+        }
+
+        $data = tpCache('tag');
+        $this->assign('data', $data);
+
+        return $this->fetch();
+    }
+
+    public function relation_archives()
+    {
+        $assign_data = array();
+        $condition = array();
+        // 获取到所有URL参数
+        $param = input('param.');
+        $typeid = input('param.typeid/d');
+        $channels = input('param.channel/s');
+
+        // 应用搜索条件
+        foreach (['keywords','typeid','channel'] as $key) {
+            if ($key == 'keywords' && !empty($param[$key])) {
+                $param[$key] = trim($param[$key]);
+                $condition['a.title'] = array('LIKE', "%{$param[$key]}%");
+            } else if ($key == 'typeid' && !empty($param[$key])) {
+                $typeid = $param[$key];
+                $hasRow = model('Arctype')->getHasChildren($typeid);
+                $typeids = get_arr_column($hasRow, 'id');
+                /*权限控制 by 小虎哥*/
+                $admin_info = session('admin_info');
+                if (0 < intval($admin_info['role_id'])) {
+                    $auth_role_info = $admin_info['auth_role_info'];
+                    if(! empty($auth_role_info)){
+                        if(isset($auth_role_info['only_oneself']) && 1 == $auth_role_info['only_oneself']){
+                            $condition['a.admin_id'] = $admin_info['admin_id'];
+                        }
+                        if(! empty($auth_role_info['permission']['arctype'])){
+                            if (!empty($typeid)) {
+                                $typeids = array_intersect($typeids, $auth_role_info['permission']['arctype']);
+                            }
+                        }
+                    }
+                }
+                /*--end*/
+                $condition['a.typeid'] = array('IN', $typeids);
+            } else if ($key == 'channel') {
+                if (empty($param[$key])) {
+                    $allow_release_channel = config('global.allow_release_channel');
+                    $key_tmp = array_search('7', $allow_release_channel);
+                    if (is_numeric($key_tmp) && 0 <= $key_tmp) {
+                        unset($allow_release_channel[$key_tmp]);
+                    }
+                    $param[$key] = implode(',', $allow_release_channel);
+                }
+                $condition['a.'.$key] = array('in', explode(',', $param[$key]));
+            } else if (!empty($param[$key])) {
+                $condition['a.'.$key] = array('eq', $param[$key]);
+            }
+        }
+
+        $condition['a.arcrank'] = array('gt', -1);
+        $condition['a.lang'] = array('eq', $this->admin_lang);
+        $condition['a.is_del'] = array('eq', 0);
+
+        /**
+         * 数据查询，搜索出主键ID的值
+         */
+        $count = Db::name('archives')->alias('a')->where($condition)->count('aid');// 查询满足要求的总记录数
+        $Page = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
+        $list = Db::name('archives')
+            ->field("a.aid")
+            ->alias('a')
+            ->where($condition)
+            ->order('a.sort_order asc, a.aid desc')
+            ->limit($Page->firstRow.','.$Page->listRows)
+            ->getAllWithIndex('aid');
+
+        /**
+         * 完善数据集信息
+         * 在数据量大的情况下，经过优化的搜索逻辑，先搜索出主键ID，再通过ID将其他信息补充完整；
+         */
+        if ($list) {
+            $aids = array_keys($list);
+            $fields = "b.*, a.*, a.aid as aid";
+            $row = Db::name('archives')
+                ->field($fields)
+                ->alias('a')
+                ->join('__ARCTYPE__ b', 'a.typeid = b.id', 'LEFT')
+                ->where('a.aid', 'in', $aids)
+                ->getAllWithIndex('aid');
+            foreach ($list as $key => $val) {
+                $list[$key] = $row[$val['aid']];
+            }
+        }
+        $show = $Page->show();
+        $assign_data['page'] = $show;
+        $assign_data['list'] = $list;
+        $assign_data['pager'] = $Page;
+
+        /*允许发布文档列表的栏目*/
+        $allow_release_channel = !empty($channels) ? explode(',', $channels) : config('global.allow_release_channel');
+        $key_tmp = array_search('7', $allow_release_channel);
+        if (is_numeric($key_tmp) && 0 <= $key_tmp) {
+            unset($allow_release_channel[$key_tmp]);
+        }
+        $assign_data['arctype_html'] = allow_release_arctype($typeid, $allow_release_channel);
+        /*--end*/
+        
+        // 模型列表
+        $channeltype_list = getChanneltypeList();
+        $this->assign('channeltype_list', $channeltype_list);
+
+        // 当前页已关联的文档
+        $tid = input('param.tid/d');
+        $tagaids_str = $this->readTagaidsFile();
+        if (empty($tagaids_str)) {
+            $tagaids = Db::name('taglist')->where(['tid'=>$tid])->column('aid');
+            $tagaids_str = implode(',', $tagaids);
+            $this->writeTagaidsFile($tagaids_str);
+        }
+        $assign_data['tid'] = $tid;
+
+        $this->assign($assign_data);
+        
+        return $this->fetch();
+    }
+
+    public function relation_archives_save()
+    {
+        if (IS_POST) {
+            $tid = input('param.tid/d');
+            $tagaids = input('post.tagaids/s');
+            if (empty($tagaids)) {
+                $tagaids = $this->readTagaidsFile();
+            }
+            $tagaids = trim($tagaids, ',');
+            $aids_new = [];
+            if (!empty($tagaids)) {
+                $aids_new = explode(',', $tagaids);
+            }
+            if (!empty($tid)) {
+                $tag = Db::name('tagindex')->where(['id'=>$tid])->value('tag');
+                $aids_old = Db::name('taglist')->where(['tid'=>$tid])->column('aid');
+                empty($aids_old) && $aids_old = [];
+
+                // 取消关联文档
+                $delaids = array_diff($aids_old, $aids_new);
+                if (!empty($delaids)) {
+                    Db::name('taglist')->where(['aid'=>['IN', $delaids]])->delete();
+                }
+                // 追加关联的文档ID
+                $addaids = array_diff($aids_new, $aids_old);
+                if (!empty($addaids)) {
+                    $archivesList = Db::name('archives')->field('aid,typeid,arcrank')->where(['aid'=>['in', $addaids]])->select();
+                    $saveData = [];
+                    foreach ($archivesList as $key => $val) {
+                        $saveData[] = [
+                            'tid'   => $tid,
+                            'aid'   => $val['aid'],
+                            'typeid'=> $val['typeid'],
+                            'tag'   => $tag,
+                            'arcrank'=> $val['arcrank'],
+                            'lang'  => $this->admin_lang,
+                            'add_time'=> getTime(),
+                            'update_time'=> getTime(),
+                        ];
+                    }
+                    !empty($saveData) && model('Taglist')->saveAll($saveData);
+                }
+                // 更新文档总数
+                Db::name('tagindex')->where(['id'=>$tid])->update([
+                    'total' => count($aids_new),
+                    'update_time'   => getTime(),
+                ]);
+                Cache::clear('taglist');
+                adminLog('Tag关联文档：'.$tagaids);
+                $this->success('操作成功', url('Tags/relation_archives', ['tid'=>$tid]));
+            }
+            $this->error('操作失败');
+        }
+    }
+
+    /**
+     * 用于Tag关联文档的逻辑
+     * @return [type] [description]
+     */
+    public function ajax_recordfile()
+    {
+        \think\Session::pause(); // 暂停session，防止session阻塞机制
+        if (IS_AJAX) {
+            $opt = input('param.opt/s');
+            $value = input('param.value/s');
+            $filename = ROOT_PATH . 'data/conf/tagaids_1619141574.txt';
+            if ('set' == $opt) {
+                $redata = $this->writeTagaidsFile($value);
+                if (true !== $redata) {
+                    $this->error($redata);
+                }
+                $this->success('写入成功！');
+            }
+            else if ('get' == $opt) {
+                $tagaids = $this->readTagaidsFile();
+                $this->success('读取成功！', null, $tagaids);
+            }
+        }
+    }
+
+    /**
+     * 读取关联tagaids文件 - 应用于tag关联文档
+     * @return [type] [description]
+     */
+    private function readTagaidsFile()
+    {
+        $tagaids = '';
+        $filename = ROOT_PATH . 'data/conf/tagaids_1619141574.txt';
+        if (file_exists($filename)) {
+            $fp      = fopen($filename, 'r');
+            $tagaids = fread($fp, filesize($filename));
+            fclose($fp);
+            $tagaids = $tagaids ? $tagaids : '';
+        }
+        return $tagaids;
+    }
+
+    /**
+     * 写入关联tagaids文件 - 应用于tag关联文档
+     * @return [type] [description]
+     */
+    private function writeTagaidsFile($value = '')
+    {
+        $filename = ROOT_PATH . 'data/conf/tagaids_1619141574.txt';
+        if (!file_exists($filename)) tp_mkdir(dirname($filename));
+        $fp = fopen($filename, "w+");
+        if (empty($fp)) {
+            return "请设置" . $filename . "的权限为744";
+        } else {
+            if (fwrite($fp, $value)) {
+                fclose($fp);
+            }
+        }
+        return true;
     }
 }

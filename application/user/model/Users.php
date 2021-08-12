@@ -12,6 +12,7 @@
  */
 namespace app\user\model;
 
+use think\Db;
 use think\Model;
 use think\Config;
 
@@ -37,7 +38,7 @@ class Users extends Model
     // 传入参数：
     // $post_users ：会员属性信息数组
     // return error：错误提示
-    public function isEmpty($post_users = [])
+    public function isEmpty($post_users = [], $type = '', $return = 'string')
     {
         $error = '';
         // 会员属性
@@ -46,6 +47,9 @@ class Users extends Model
             'is_hidden'   => 0, // 是否隐藏属性，0为否
             'is_required' => 1, // 是否必填属性，1为是
         );
+        if ('reg' == $type) {
+            $where['is_reg'] = 1; // 是否为注册表单
+        }
         $para_data = M('users_parameter')->where($where)->field('title,name')->select();
         // 处理提交的属性中必填项是否为空
         foreach ($para_data as $key => $value) {
@@ -55,7 +59,14 @@ class Users extends Model
                 }
                 $attr_value = trim($post_users[$value['name']]);
                 if (empty($attr_value)) {
-                    return $value['title'].'不能为空！';;
+                    if ('array' === $return) {
+                        return [
+                            'field' => $value['name'],
+                            'msg'   => $value['title'].'不能为空！',
+                        ];
+                    } else {
+                        return $value['title'].'不能为空！';
+                    }
                 }
             }
         }
@@ -66,7 +77,7 @@ class Users extends Model
     // $post_users:会员属性信息数组
     // $users_id:会员ID，注册时不需要传入，修改时需要传入。
     // return error
-    public function isRequired($post_users = [],$users_id='')
+    public function isRequired($post_users = [],$users_id='', $type = '', $return = 'string')
     {
         if (empty($post_users)) {
             return false;
@@ -78,6 +89,9 @@ class Users extends Model
             'is_system'=> 1,
             'lang'     => $this->home_lang,
         ];
+        if ('reg' == $type) {
+            $where_1['is_reg'] = 1; // 是否为注册表单
+        }
         $users_parameter = M('users_parameter')->where($where_1)->field('para_id,title,name')->getAllWithIndex('name');
 
         $email = '';
@@ -87,19 +101,35 @@ class Users extends Model
         /*获取邮箱和手机号码*/
         foreach ($post_users as $key => $val) {
             if (preg_match('/^email_/i', $key)) {
-                if (!preg_match('/_code$/i', $key)) {
+                if (!preg_match('/(_code|_vertify)$/i', $key)) {
                     $email = $val;
                     if (!empty($val) && !check_email($val)) {
-                        return $users_parameter[$key]['title'].'格式不正确！';
+                        if ('array' == $return) {
+                            return [
+                                'code_status'   =>  0,
+                                'field' => $key,
+                                'msg'   => $users_parameter[$key]['title'].'格式不正确！',
+                            ];
+                        } else {
+                            return $users_parameter[$key]['title'].'格式不正确！';
+                        }
                     }
                 } else {
                     $email_code = $val;
                 }
             } else if (preg_match('/^mobile_/i', $key)) {
-                if (!preg_match('/_code$/i', $key)) {
+                if (!preg_match('/(_code|_vertify)$/i', $key)) {
                     $mobile = $val;
                     if (!empty($val) && !check_mobile($val)) {
-                        return $users_parameter[$key]['title'].'格式不正确！';
+                        if ('array' == $return) {
+                            return [
+                                'code_status'   =>  0,
+                                'field' => $key,
+                                'msg'   => $users_parameter[$key]['title'].'格式不正确！',
+                            ];
+                        } else {
+                            return $users_parameter[$key]['title'].'格式不正确！';
+                        }
                     }
                 } else {
                     $mobile_code = $val;
@@ -109,7 +139,7 @@ class Users extends Model
         /*--end*/
 
         $users_verification = getUsersConfigData('users.users_verification');
-        if ('2' == $users_verification) {
+        if (2 == $users_verification) {
             $time = getTime();
             /*处理邮箱验证码逻辑*/
             if (!empty($email)) {
@@ -123,7 +153,15 @@ class Users extends Model
                 if (!empty($record)) {
                     $record['add_time'] += Config::get('global.email_default_time_out');
                     if (1 == $record['status'] || $record['add_time'] <= $time) {
-                        return '邮箱验证码已被使用或超时，请重新发送！';
+                        if ('array' == $return) {
+                            return [
+                                'code_status'   =>  0,
+                                'field' => 'email_1_code',
+                                'msg'   => '邮箱验证码已被使用或超时，请重新发送！',
+                            ];
+                        } else {
+                            return '邮箱验证码已被使用或超时，请重新发送！';
+                        }
                     }else{
                         // 返回后处理邮箱验证码失效操作
                         $data = [
@@ -137,13 +175,88 @@ class Users extends Model
                         // 当会员修改邮箱地址，验证码为空或错误返回
                         $row = $this->getUsersListData('email',$users_id);
                         if ($email != $row['email']) {
-                            return '邮箱验证码不正确，请重新输入！';
+                            if ('array' == $return) {
+                                return [
+                                    'code_status'   =>  0,
+                                    'field' => 'email_1_code',
+                                    'msg'   => '邮箱验证码不正确，请重新输入！',
+                                ];
+                            } else {
+                                return '邮箱验证码不正确，请重新输入！';
+                            }
                         }
                     }else{
                         // 当会员注册时，验证码为空或错误返回
-                        return '邮箱验证码不正确，请重新输入！';
+                        if ('array' == $return) {
+                            return [
+                                'code_status'   =>  0,
+                                'field' => 'email_1_code',
+                                'msg'   => '邮箱验证码不正确，请重新输入！',
+                            ];
+                        } else {
+                            return '邮箱验证码不正确，请重新输入！';
+                        }
                     }
                 }
+            }
+            /*--end*/
+        } else if (3 == $users_verification) {
+            $time = getTime();
+            /*处理短信验证码逻辑*/
+            if (!empty($mobile)) {
+                $where = [
+                    'mobile' => $mobile,
+                    'code' => $mobile_code
+                ];
+                $smslog = Db::name('sms_log')->where($where)->field('is_use, add_time')->order('id desc')->find();
+                if (!empty($smslog)) {
+                    $smslog['add_time'] += Config::get('global.mobile_default_time_out');
+                    if (1 == $smslog['is_use'] || $smslog['add_time'] <= $time) {
+                        if ('array' == $return) {
+                            $data = [
+                                'code_status'   =>  0,
+                                'field' => 'mobile_1_code',
+                                'msg'   => '短信验证码不正确，请重新输入！',
+                            ];
+                        } else {
+                            $data = '短信验证码不正确，请重新输入！';
+                        }
+                    } else {
+                        // 返回后处理短信验证码失效操作
+                        $data = [
+                            'code_status' => 1,// 正确
+                            'mobile' => $mobile
+                        ];
+                    }
+                } else {
+                    if (!empty($users_id)) {
+                        // 当会员修改手机地址，验证码为空或错误返回
+                        $row = $this->getUsersListData('mobile', $users_id);
+                        if ($mobile != $row['mobile']) {
+                            if ('array' == $return) {
+                                $data = [
+                                    'code_status'   =>  0,
+                                    'field' => 'mobile_1_code',
+                                    'msg'   => '短信验证码不正确，请重新输入！',
+                                ];
+                            } else {
+                                $data = '短信验证码不正确，请重新输入！';
+                            }
+                        }
+                    } else {
+                        // 当会员注册时，验证码为空或错误返回
+                        if ('array' == $return) {
+                            $data = [
+                                'code_status'   =>  0,
+                                'field' => 'mobile_1_code',
+                                'msg'   => '短信验证码不正确，请重新输入！',
+                            ];
+                        } else {
+                            $data = '短信验证码不正确，请重新输入！';
+                        }
+                    }
+                }
+                return $data;
             }
             /*--end*/
         }
@@ -162,7 +275,15 @@ class Users extends Model
 
                 $users_list = M('users_list')->where($where_2)->field('info')->find();
                 if (!empty($users_list['info'])) {
-                    return $value['title'].'已存在！';
+                    if ('array' == $return) {
+                        return [
+                            'code_status'   =>  0,
+                            'field' => $key,
+                            'msg'   => $value['title'].'已存在！',
+                        ];
+                    } else {
+                        return $value['title'].'已存在！';
+                    }
                 }
             }
         }
@@ -190,7 +311,7 @@ class Users extends Model
                 'lang'     => $this->home_lang,
             ];
             $listData = M('users_list')->where($listwhere)->field('users_id,info')->find();
-            $Data['email'] = $listData['info'];
+            $Data['email'] = !empty($listData['info']) ? $listData['info'] : '';
         }
 
         if ('mobile' == $field || '*' == $field) {
@@ -207,7 +328,7 @@ class Users extends Model
                 'lang'     => $this->home_lang,
             ];
             $listData_1 = M('users_list')->where($listwhere_1)->field('users_id,info')->find();
-            $Data['mobile'] = $listData_1['info'];
+            $Data['mobile'] = !empty($listData_1['info']) ? $listData_1['info'] : '';
         }
 
         return $Data;
@@ -219,13 +340,14 @@ class Users extends Model
      * @param   用于添加，不携带数据
      * @author  陈风任 by 2019-2-20
      */
-    public function getDataPara()
+    public function getDataPara($source = '')
     {
         // 字段及内容数据处理
         $where = array(
             'lang'       => $this->home_lang,
             'is_hidden'  => 0,
         );
+        'reg' == $source && $where['is_reg'] = 1;
 
         $row = M('users_parameter')->field('*')
             ->where($where)
@@ -378,6 +500,17 @@ class Users extends Model
                             /*--end*/
                             $val[$val['name'].'_eyou_imgupload_list'] = $eyou_imgupload_list;
                         }
+                        break;
+                    }
+
+                    case 'file':
+                    {
+                        if (isset($addonRow[$val['name']])) {
+                            $val[$val['name']] = handle_subdir_pic($addonRow[$val['name']]);
+                        }
+                        $ext = tpCache('basic.file_type');
+                        $val['ext'] = !empty($ext) ? $ext : "zip|gz|rar|iso|doc|xls|ppt|wps";
+                        $val['filesize'] = upload_max_filesize();
                         break;
                     }
 

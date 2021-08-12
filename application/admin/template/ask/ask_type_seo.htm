@@ -1,0 +1,93 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style=" padding:0; overflow: hidden;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <form class="form-horizontal" id="editpostForm">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="seo_title"><em>*</em>栏目名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="type_name" id="type_name" value="{$info['type_name']|default=''}" class="input-txt">
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="seo_title">SEO标题</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="seo_title" id="seo_title" value="{$info['seo_title']|default=''}" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="seo_keywords">SEO关键词</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="60" name="seo_keywords" id="seo_keywords" style="height: 40px;">{$info['seo_keywords']|default=''}</textarea>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            
+            <dl class="row">
+                <dt class="tit">
+                    <label for="seo_description">SEO描述</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="60" name="seo_description" id="seo_description" style="height: 60px;">{$info['seo_description']|default=''}</textarea>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            
+            <div class="bot">
+                <input type="hidden" name="type_id" value="{$info['type_id']|default=''}">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+    // 判断输入框是否为空
+    function checkForm() {
+
+        if($('input[name=type_name]').val() == ''){
+            showErrorMsg('栏目名称不能为空！');
+            $('input[name=type_name]').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            url : "{:url('Ask/ask_type_seo', ['_ajax'=>1])}",
+            data: $('#editpostForm').serialize(),
+            type: 'POST',
+            success:function(res) {
+                layer.closeAll();
+                if (1 == res.code) {
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                } else {
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+       });
+    }
+</script>
+{include file="public/footer" /}

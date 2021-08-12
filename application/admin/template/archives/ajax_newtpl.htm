@@ -1,0 +1,137 @@
+{include file="public/layout" /}
+
+<link rel="stylesheet" type="text/css" href="__SKIN__/js/codemirror/codemirror.css">
+<script type="text/javascript" src="__SKIN__/js/codemirror/codemirror.js"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/xml/xml.js"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/javascript/javascript.js"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/css/css.js"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/php/php.js"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/clike/clike.js"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+
+<body style="background-color: #FFF; overflow: auto;min-width:auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;box-shadow:none;">
+    <form class="form-horizontal" id="post_form" action="{:url('Archives/ajax_newtpl')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">模板目录</dt>
+                <dd class="opt">
+                    /template/{$tpl_theme}<select name="tpldir" id="tpldir" tabindex="1">
+                    {volist name="tpldirList" id="vo"}
+                        <option value="{$vo}">{$vo}</option>
+                    {/volist}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="url">文件名称</label>
+                </dt>
+                <dd class="opt">
+                    {$type}_{$nid}<font id="font_filename"></font><input type="text" name="filename" value="" id="filename" placeholder="自定义" tabindex="2">.htm
+                    <span class="err"></span>
+                    <p class="notic">只允许字母、数字、下划线、连接符的任意组合</p>
+                    <p class="red" id="txt_filename"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="content">HTML代码</label>
+                </dt>
+                <dd class="opt">
+                    <textarea name='content' id="content" style='width:99%;height:500px;background:#ffffff;' tabindex="3">{$content|default=''}</textarea>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <input type="hidden" name="type" id="type" value="{$type}" />
+                <input type="hidden" name="nid" id="nid" value="{$nid}" />
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn" tabindex="4">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    var editor = '';
+
+    $(function(){
+      
+        editor = CodeMirror.fromTextArea(document.getElementById('content'), {
+            lineNumbers: true, // 显示行号
+            lineWrapping: true, // 在行槽中添加行号显示器、折叠器、语法检测器`
+            autofocus:true,  //自动聚焦
+            mode: 'text/html'
+        });
+        editor.setSize('auto','500px');
+
+        $('#filename').keyup(function(){
+            var filename = $(this).val();
+            if (filename) {
+                $('#font_filename').html('_');
+            } else {
+                $('#font_filename').html('');
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "{:url('Archives/ajax_newtpl', ['nosubmit'=>1,'_ajax'=>1])}",
+                data: $('#post_form').serialize(),
+                dataType: 'json',
+                success: function (res) {
+                    if(res.code == 1){
+                        $('#txt_filename').html('');
+                    } else {
+                        $('#txt_filename').html(res.msg);
+                    }
+                }
+            });
+        });
+    });
+
+    // 判断输入框是否为空
+    function checkForm(){
+        if($.trim($('#tpldir').val()) == ''){
+            showErrorMsg('模板目录不能为空！');
+            $('#tpldir').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $.ajax({
+            type: "POST",
+            url: "{:url('Archives/ajax_newtpl', ['_ajax'=>1])}",
+            data: {tpldir:$('#tpldir').val(), filename:$('#filename').val(), content:editor.getValue(), type:$('#type').val(), nid:$('#nid').val()},
+            dataType: 'json',
+            success: function (res) {
+                if(res.code == 1){
+                    parent.layer.closeAll();
+                    if ('lists' == res.data.type) {
+                        var id = 'templist';
+                    } else {
+                        var id = 'tempview';
+                    }
+                    $('#'+id, window.parent.document).append('<option value="'+res.data.filename+'" selected="true">'+res.data.filename+'</option>');
+                    parent.layer.msg(res.msg, {icon: 1, time: 1000});
+                    return false;
+                }else{
+                    layer.closeAll();
+                    if (res.data.focus) {
+                        $('#'+res.data.focus).focus();
+                    }
+                    layer.msg(res.msg, {icon: 2});
+                    return false;
+                }
+            },
+            error:function(){
+                layer.closeAll();
+                layer.alert(ey_unknown_error, {icon: 2, title:false});
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

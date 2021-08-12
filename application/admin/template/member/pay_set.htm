@@ -1,8 +1,8 @@
 {include file="public/layout" /}
-<body style="background-color: rgb(255, 255, 255); overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page" style="min-width: auto;">
     {include file="member/bar" /}
     <div class="flexigrid">
         <div class="mDiv">
@@ -12,7 +12,7 @@
             <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <div class="sDiv">
                 <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
-                    <input type="button" class="btn" value="接口配置" onclick="window.location.href='{:url("Member/pay_set")}';">
+                    <input type="button" class="btn selected" value="接口配置" onclick="window.location.href='{:url("Member/pay_set")}';">
                 </div>
                 <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
                     <input type="button" class="btn current" value="账户充值记录" onclick="window.location.href='{:url("Member/money_index")}';">
@@ -81,24 +81,13 @@
                     </dd>
                 </dl>
                 <dl class="row">
-                    <dt class="tit">
-                        <label for="username"><em>*</em>微信AppSecret</label>
-                    </dt>
-                    <dd class="opt">
-                        <input type="text" name="wechat[appsecret]" id="appsecret" value="{$wechat.appsecret}" class="input-txt">
-                        <p class="notic">请输入您的微信公众平台中的微信AppSecret，用于手机端微信支付。</p>
-                    </dd>
-                </dl>
-                <dl class="row">
                     <div class="bot" style="padding-bottom:0px;">
                         <a href="JavaScript:void(0);" onclick="wechatset();" class="ncap-btn-big ncap-btn-green" id="submitWechatBtn">确认提交</a>
-                        &nbsp;<a href="https://www.eyoucms.com/ask/?ct=question&askaid=202" target="_blank" style="font-size: 12px;padding-left: 10px;position:absolute;top: 30px">不会配置？</a>
+                        &nbsp;<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=8829','微信支付配置教程')" style="font-size: 12px;padding-left: 10px;position:absolute;top: 30px">不会配置？</a>
                     </div>
                 </dl>
             </div>
-        </form>
-
-
+        </form>  
         <form class="form-horizontal" id="postAlipayForm" action="{:url('Member/alipay_set')}" method="post">
             <div class="hDiv">
                 <div class="hDivBox">
@@ -249,14 +238,9 @@
             return false;
         }
 
-        if($('#postWechatForm input[id=appsecret]').val() == ''){
-            layer.alert('微信AppSecret不能为空！', {icon: 2, title:false});
-            return false;
-        }
-
         layer_loading('正在处理');
         $.ajax({
-            url: $('#postWechatForm').attr('action'),
+            url: "{:url('Member/wechat_set', ['_ajax'=>1])}",
             type: 'POST',
             dataType: 'JSON',
             data: $('#postWechatForm').serialize(),
@@ -272,7 +256,7 @@
             },
             error: function(e){
                 layer.closeAll();
-                showErrorMsg('网络失败，请刷新页面后重试');
+                showErrorMsg(ey_unknown_error);
                 return false;
             }
         });
@@ -342,7 +326,7 @@
 
         layer_loading('正在处理');
         $.ajax({
-            url: $('#postAlipayForm').attr('action'),
+            url: "{:url('Member/alipay_set', ['_ajax'=>1])}",
             type: 'POST',
             dataType: 'JSON',
             data: $('#postAlipayForm').serialize(),
@@ -358,7 +342,7 @@
             },
             error: function(e){
                 layer.closeAll();
-                showErrorMsg('网络失败，请刷新页面后重试');
+                showErrorMsg(ey_unknown_error);
                 return false;
             }
         });

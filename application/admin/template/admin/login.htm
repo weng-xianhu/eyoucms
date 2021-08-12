@@ -10,6 +10,10 @@
         <title>后台登录</title>
         <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" media="screen"/>
         <link href="__SKIN__/css/login.css" rel="stylesheet" type="text/css" />
+        <link href="__SKIN__/css/diy_style.css?v={$version}" rel="stylesheet" type="text/css" />
+        <style type="text/css">
+            body {background:#6f8489 url('{$global.web_loginbgimg|handle_subdir_pic=###|default='__SKIN__/loginbg/login-bg-1.png'}') left top no-repeat;}
+        </style>
         <script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
         <script type="text/javascript" src="__SKIN__/js/jquery.SuperSlide.2.1.2.js"></script>
         <script type="text/javascript" src="__SKIN__/js/jquery.validation.min.js"></script>
@@ -27,7 +31,7 @@
                         if ((browser=="Netscape"||browser=="Microsoft Internet Explorer"))
                         {
                             if(trim_Version == 'MSIE8.0' || trim_Version == 'MSIE7.0' || trim_Version == 'MSIE6.0'){
-                                layer.alert('请使用IE9.0版本以上进行访问', {icon:2, title:false});
+                                layer.alert('请使用IE9.0版本以上进行访问', {icon: 5, title:false});
                                 return false;
                             }
                         }
@@ -45,9 +49,9 @@
         <div class="container">
             <div class="logo">
                 {notempty name="$is_eyou_authortoken"}
-                <img src="__SKIN__/images/logo_ey.png?v={php}echo time();{/php}">
+                <img src="{$global.web_loginlogo|handle_subdir_pic=###|default='__SKIN__/images/login-logo_ey.png'}?v={php}echo time();{/php}">
                 {else /}
-                <img src="__SKIN__/images/logo.png?v={php}echo time();{/php}">
+                <img src="{$global.web_loginlogo|handle_subdir_pic=###|default='__SKIN__/images/login-logo.png'}?v={php}echo time();{/php}">
                 {/notempty}
             </div>
             <div class="box">
@@ -63,10 +67,14 @@
                         <img src="{:url('Admin/vertify')}" class="chicuele" id="imgVerify" alt="" onclick="fleshVerify();" style="position:absolute; right: 3px;top: 3px;height: 36px;">
                     </div>
                     {/eq}
-                    <div class="clearfix text-right">
+
+                    <!--点选文字验证码 start-->
+                    <!-- weapp_clicap_input -->
+                    <!--点选文字验证码 end-->
+
+                    <!-- <div class="clearfix text-right">
                         <a href="javascript:void(0);" class="help forget_pwd">忘记密码?</a>
-                    </div>
-                    <input type="hidden" name="__token__" value="{$Request.token}" />
+                    </div> -->
                     <input type="button" name="submit" class="btn btn-lg btn-primary btn-block show-dialog" value="登录">
                 </form>
             </div> 
@@ -84,6 +92,19 @@
                 $(".formText").blur(function(){
                     $(this).prev().hide();
                 });
+
+                clear_session();
+                function clear_session()
+                {
+                    $.ajax({
+                        url: "{:url('api/Ajax/clear_session')}",
+                        type: 'post',
+                        dataType: 'JSON',
+                        data: {_ajax: 1},
+                        success: function(res){
+                        }
+                    });
+                }
             });
 
             $(function(){
@@ -123,7 +144,7 @@
                     {/eq}
 
                     if(vertify && $('#theForm input[name=user_name]').val() != '' && $('#theForm input[name=password]').val() != ''){
-                        var url = "{:url('Admin/login')}";
+                        var url = "{:url('Admin/login', ['_ajax'=>1])}";
                         if (url.indexOf('?') > -1) {
                             url += '&';
                         } else {
@@ -149,18 +170,14 @@
                                     return false;
                                 }
                             },
-                            error : function(XMLHttpRequest, textStatus, errorThrown) {
+                            error : function(e) {
                                 layer.closeAll();
-                                layer.alert('网络失败，请刷新页面后重试', {icon: 5, title:false});
+                                layer.alert(e.responseText, {icon: 5, title:false});
                             }
                         });
                     }else{
                         return false;
                     }
-                });
-
-                $(".forget_pwd").click(function(){
-                    layer.alert('请联系网站管理员！', {icon: 6, title:false});
                 });
             });
             

@@ -1,0 +1,215 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="shop/left" /}
+<div class="page" style="margin-left:98px;">
+    {include file="sharp/bar" /}
+    <div class="flexigrid">
+        <!-- 操作说明 -->
+        <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+            <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+                <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+            </div>
+            <ul>
+                <li style="color: red;">注意：该功能仅限于【可视化微信小程序（商城版）】插件</li>
+            </ul>
+        </div>
+        <div class="mDiv">
+            <div class="ftitle">
+               {eq name="$Think.const.CONTROLLER_NAME.'@add'|is_check_access" value="1"}
+                   <div class="fbutton" style="float: none;">
+                       <a href="javascript:void(0);" data-href="{:url('Sharp/ajax_archives_list')}" onclick="openFullframe(this, '新增秒杀商品');">
+                           <div class="add">
+                               <span><i class="layui-icon layui-icon-addition"></i>新增秒杀商品</span>
+                           </div>
+                       </a>
+                   </div>
+               {/eq}
+            </div>
+            <form class="navbar-form form-inline" action="{:url('Sharp/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2 fl" style="margin-right: 6px;">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索相关数据...">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                        </th>
+                        <th abbr="id" axis="col5" class="w60">
+                            <div class="tc">商品ID</div>
+                        </th>
+                        <th align="center" abbr="article_title" axis="col3" class="w60">
+                            <div class="tc">封面图</div>
+                        </th>
+                        <th align="left" abbr="article_title" axis="col3" class="">
+                            <div style="text-align: left; padding-left: 10px;" class="">商品标题</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4"  class="w100">
+                            <div class="tc">限购数量</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">销量</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">库存</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w50">
+                            <div class="tc">显示</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">更新时间</div>
+                        </th>
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.sharp_goods_id}"></div>
+                            </td>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {$vo.sharp_goods_id}
+                                </div>
+                            </td>
+                            <td class="w60">
+                                <div class="tc">
+                                    <img width="60" height="60" src="{$vo.litpic|get_default_pic=###}">
+                                </div>
+                            </td>
+                            <td class="" style="width: 100%;">
+                                <div class="tl" style="padding-left: 10px;">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
+                                        <a href="{:url('ShopProduct/edit',array('id'=>$vo['aid']))}" style='{eq name=" vo.is_b" value="1" } font-weight: bold;{/eq}'>{$vo.title}</a>
+                                    {else /}
+                                        {$vo.title}
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {$vo.limit}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tc w60">
+                                    {$vo.sales}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w60 tc">
+                                    {$vo.seckill_stock}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w50 tc">
+                                    {if condition="$vo['status'] eq 1"}
+                                    <span class="yes" {eq name="'Sharp@edit'|is_check_access" value="1"}onClick="changeTableVal('sharp_goods','sharp_goods_id','{$vo.sharp_goods_id}','status',this);"{/eq}><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                    <span class="no" {eq name="'Sharp@edit'|is_check_access" value="1"}onClick="changeTableVal('sharp_goods','sharp_goods_id','{$vo.sharp_goods_id}','status',this);"{/eq}><i class="fa fa-ban"></i>否</span>
+                                    {/if}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {$vo.update_time|date='Y-m-d',###}
+                                </div>
+                            </td>
+                            <td class="operation">
+                                <div class="w120 tc">
+                                    {eq name="'Sharp@edit'|is_check_access" value="1"}
+                                    <a href="javascript:void(0);" data-href="{:url('Sharp/edit',array('id'=>$vo['sharp_goods_id']))}" class="btn blue" onclick="openFullframe(this, '编辑秒杀商品', '100%', '100%');">编辑</a>
+                                    {/eq}
+                                    {eq name="'Sharp@del'|is_check_access" value="1"}
+                                    <i></i>
+                                    <a class="btn red"  href="javascript:void(0)" data-url="{:url('Sharp/del')}" data-id="{$vo.sharp_goods_id}" onClick="delfun(this);">删除</a>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {eq name="'Sharp@edit'|is_check_access" value="1"}
+                                    <input style="text-align: left;" type="text" onchange="changeTableVal('sharp_goods','sharp_goods_id','{$vo.sharp_goods_id}','sort_order',this);" size="4"  value="{$vo.sort_order}" />
+                                    {else /}
+                                    {$vo.sort_order}
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                {eq name="'Sharp@del'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Sharp/del')}" class="layui-btn layui-btn-primary">
+                        <span>批量删除</span>
+                    </a>
+                </div>
+                {/eq}
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script>
+    function reback(aid) {
+        layer.closeAll();
+        var url = eyou_basefile+"?m=admin&c=Sharp&a=add&id="+aid;
+        openFullframe(url, '整点秒杀 - 新增活动场次', '100%', '100%');
+    }
+
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+
+{include file="public/footer" /}

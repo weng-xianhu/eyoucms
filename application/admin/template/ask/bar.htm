@@ -1,0 +1,48 @@
+<div class="fixed-bar">
+    <div class="item-title">
+        <div class="subject">
+            <h3>问答中心</h3>
+            <h5></h5>
+        </div>
+        <ul class="tab-base nc-row">
+            <li>
+            {eq name="$Think.const.ACTION_NAME" value="index"}
+                <a href="javascript:void(0);" class="tab current"><span>栏目列表</span></a>
+            {else/}
+                <a href="{:url('Ask/index')}" class="tab"><span>栏目列表</span></a>
+            {/eq}
+            </li>
+
+            <li>
+            {eq name="$Think.const.ACTION_NAME" value="ask_list"}
+                <a href="javascript:void(0);" class="tab current"><span>问题列表</span></a>
+            {else /}
+                <a href="{:url('Ask/ask_list')}" class="tab"><span>问题列表</span></a>
+            {/eq}
+            </li>
+
+            <li>
+            {eq name="$Think.const.ACTION_NAME" value="answer"}
+                <a href="javascript:void(0);" class="tab current"><span>答案列表</span></a>
+            {else /}
+                <a href="{:url('Ask/answer')}" class="tab"><span>答案列表</span></a>
+            {/eq}
+            </li>
+
+            <li>
+                {eq name="$Think.const.ACTION_NAME" value="score_level"}
+                <a href="javascript:void(0);" class="tab current"><span>积分头衔</span></a>
+                {else /}
+                <a href="{:url('Ask/score_level')}" class="tab"><span>积分头衔</span></a>
+                {/eq}
+            </li>
+            <li>
+                {eq name="$Think.const.ACTION_NAME" value="conf"}
+                <a href="javascript:void(0);" class="tab current"><span>功能配置</span></a>
+                {else /}
+                <a href="{:url('Ask/conf')}" class="tab"><span>功能配置</span></a>
+                {/eq}
+            </li>
+        </ul>
+    </div>
+</div>

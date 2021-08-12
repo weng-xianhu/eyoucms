@@ -228,7 +228,7 @@ class File
      * @param string $preg
      * @return array 所有文件路径
      */
-    public static function getFiles($path, &$files = array(), $preg = "/\.(gif|jpeg|jpg|png|bmp)$/i")
+    public static function getFiles($path, &$files = array(), $preg = "/\.(gif|jpeg|jpg|png|bmp|webp)$/i")
     {
         if (!is_dir($path))
             return null;

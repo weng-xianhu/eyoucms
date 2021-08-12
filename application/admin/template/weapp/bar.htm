@@ -1,16 +1,18 @@
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="{:url("Weapp/index")}" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
-            <div class="subject">
-                <h3>插件应用</h3>
-                <h5></h5>
-            </div>
+        <div class="item-title">
             <ul class="tab-base nc-row">
-                {eq name="$Think.const.CONTROLLER_NAME.'@create'|is_check_access" value="1"}
-                <li><a href="{:url("Weapp/create")}" class="tab {if condition="in_array($Request.action, array('create'))"}current{/if}"><span>创建插件</span></a></li>
+                {eq name="$Think.const.CONTROLLER_NAME.'@index'|is_check_access" value="1"}
+                <li><a href="{:url('Weapp/index')}" class="tab {eq name="$Request.action" value="index"}current{/eq}"><span>我的插件</span></a></li>
+                {/eq}
+                
+                {eq name="$Think.const.CONTROLLER_NAME.'@plugin'|is_check_access" value="1"}
+                    {eq name="$weapp_plugin_open" value="1"}
+                    <li><a href="{:url('Weapp/plugin')}" class="tab {eq name="$Request.action" value="plugin"}current{/eq}"><span>云插件库</span></a></li>
+                    {/eq}
                 {/eq}
 
-                {eq name="$Think.const.CONTROLLER_NAME.'@pack'|is_check_access" value="1"}
-                <li><a href="{:url("Weapp/pack")}" class="tab {if condition="in_array($Request.action, array('pack'))"}current{/if}"><span>打包插件</span></a></li>
+                {eq name="$Think.const.CONTROLLER_NAME.'@mybuy'|is_check_access" value="1"}
+                <li><a href="{:url('Weapp/mybuy', ['install'=>0])}" class="tab {eq name="$Request.action" value="mybuy"}current{/eq}"><span>已购买插件</span></a></li>
                 {/eq}
             </ul>
         </div>

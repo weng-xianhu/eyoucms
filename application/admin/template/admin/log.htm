@@ -1,5 +1,5 @@
 {include file="public/layout" /}
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
@@ -15,7 +15,7 @@
         <div class="mDiv">
             <div class="ftitle">
                 <h3>操作日志列表</h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
+                <h5>(共{$pager->totalRows}条数据)</h5>
             </div>
             <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
         </div>

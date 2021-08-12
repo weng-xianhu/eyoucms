@@ -1,7 +1,6 @@
 {include file="public/layout" /}
-<script type="text/javascript" src="__PUBLIC__/plugins/laydate/laydate.js"></script>
 
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page other">
@@ -10,7 +9,7 @@
         <div class="mDiv">
             <div class="ftitle">
                 <h3>广告列表</h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
+                <h5>(共{$pager->totalRows}条数据)</h5>
             </div>
             <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" action="{:U('Other/index')}" method="get" onsubmit="layer_loading('正在处理');">
@@ -28,9 +27,6 @@
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="广告名称搜索...">
                         <input type="submit" class="btn" value="搜索">
                     </div>
-                    <!-- <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:U('Other/index')}';">
-                    </div> -->
                 </div>
             </form>
         </div>
@@ -41,7 +37,7 @@
                     <tr>
                         {eq name='$main_lang' value='$admin_lang'}
                         <th class="sign w40" axis="col0">
-                            <div class="tc">选择</div>
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                         </th>
                         {/eq}
                         <th abbr="article_title" axis="col3" class="w40">
@@ -90,7 +86,7 @@
                             {eq name='$main_lang' value='$admin_lang'}
                             <td class="sign w40">
                                 <div class="tc">
-                                    <input type="checkbox" name="ids[]" value="{$vo.id}"></div>
+                                    <input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.id}"></div>
                             </td>
                             {/eq}
                             <td class="sort w40">
@@ -168,13 +164,13 @@
             <div class="tDiv2">
                 {eq name='$main_lang' value='$admin_lang'}
                 <div class="fbutton checkboxall">
-                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
                 </div>
                 {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
                 <div class="fbutton">
                     <a onclick="batch_del(this, 'ids');" data-url="{:U('Other/del')}">
                         <div class="add" title="批量删除">
-                            <span><i class="fa fa-close"></i>批量删除</span>
+                            <span>批量删除</span>
                         </div>
                     </a>
                 </div>
@@ -183,7 +179,7 @@
                 <div class="fbutton">
                     <a href="{:U('Other/add', array('pid'=>$pid))}">
                         <div class="add" title="新增广告">
-                            <span class="red"><i class="fa fa-plus"></i>新增广告</span>
+                            <span class="red">新增广告</span>
                         </div>
                     </a>
                 </div>
@@ -197,6 +193,19 @@
     </div>
 </div>
 <script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    
     $(document).ready(function(){
 
         // 表格行点击选中切换

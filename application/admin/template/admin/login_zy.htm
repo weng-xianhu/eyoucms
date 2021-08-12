@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" >
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Language" content="zh-cn"/>
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <meta name='robots' content='noindex,nofollow' />
+        <title>后台登录</title>
+        <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" media="screen"/>
+        <link href="__SKIN__/css/login.css" rel="stylesheet" type="text/css" />
+        <link href="__SKIN__/font/css/iconfont.css" rel="stylesheet" type="text/css" />
+        <link href="__SKIN__/css/diy_style.css?v={$version}" rel="stylesheet" type="text/css" />
+        <style type="text/css">
+              body {background:url('{$global.web_loginbgimg|handle_subdir_pic=###|default='__SKIN__/loginbg/login-bg-3.png'}') center center no-repeat;}
+              
+              .input-item{position: relative;}
+              .input-item i{position: absolute;font-size: 20px;color: #999;top: 12px;left: 10px;}
+              .input-item.focus i{color: #3672c8;}
+              .box{background: rgba(255, 255, 255, 1);width:362px;padding:22px 20px;border-radius: 10px;}
+              .container{width: 402px;}
+              .logo{margin-top: 120px;}
+              .logo img {max-width: 402px;}
+              .form-control{width: 316px;height: 36px;line-height: 36px;font-size: 16px;padding-left:34px;border: 1px solid #e9e9e9;box-shadow:none;margin-bottom: 15px;}
+              .btn-lg{width: 100%;margin: 0;background:#3672c8;box-shadow:none;text-shadow:none;border-color:#3672c8;padding: 8px 30px;font-size: 22px;margin-top: 10px;}
+              .btn:hover {background: #1d8def;border-color: #1d8def;}
+              .form-control:focus {border-color: #3672c8;}
+              .chicuele{position:absolute; right: 2px;top: 3px;height: 44px;}
+              @media only screen and (max-width: 768px){
+                .container{width: 360px;}
+                .input-item i{font-size: 16px;}
+                .logo img {max-width: 360px;}
+                .box{width: 320px;padding:20px;}
+                .form-control {width: 272px;height: 28px;line-height: 28px;}
+                .chicuele{height:36px;}
+                .btn-lg{padding: 5px 30px;}
+              }
+        </style>
+        
+        <script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
+        <script type="text/javascript" src="__SKIN__/js/jquery.SuperSlide.2.1.2.js"></script>
+        <script type="text/javascript" src="__SKIN__/js/jquery.validation.min.js"></script>
+        <script type="text/javascript" src="__SKIN__/js/jquery.cookie.js"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
+        <!--[if lte IE 8]>
+            <script type="Text/Javascript" language="JavaScript">
+                function detectBrowser()
+                {
+                    var browser = navigator.appName
+                    if(navigator.userAgent.indexOf("MSIE")>0){ 
+                        var b_version = navigator.appVersion
+                        var version = b_version.split(";");
+                        var trim_Version = version[1].replace(/[ ]/g,"");
+                        if ((browser=="Netscape"||browser=="Microsoft Internet Explorer"))
+                        {
+                            if(trim_Version == 'MSIE8.0' || trim_Version == 'MSIE7.0' || trim_Version == 'MSIE6.0'){
+                                layer.alert('请使用IE9.0版本以上进行访问', {icon: 5, title:false});
+                                return false;
+                            }
+                        }
+                    }
+               }
+               detectBrowser();
+            </script>
+        <![endif]-->
+    </head>
+
+    <body>
+        <div id="container">
+            <div id="anitOut"></div>
+        </div>
+        <div class="container">
+            <div class="logo">
+                {notempty name="$is_eyou_authortoken"}
+                <img src="{$global.web_loginlogo|handle_subdir_pic=###|default='__SKIN__/images/login-logo_ey.png'}?v={php}echo time();{/php}">
+                {else /}
+                <img src="{$global.web_loginlogo|handle_subdir_pic=###|default='__SKIN__/images/login-logo_zy.png'}?v={php}echo time();{/php}">
+                {/notempty}
+            </div>
+            <div class="box">
+                <form action="" name='theForm' id="theForm" method="post">
+                    <div class="input-item">
+                        <i class="iconfont e-yonghu"></i>
+                        <label for="inputEmail" class="sr-only">用户名</label>
+                        <input type="text" name="user_name" autocomplete="off" class="form-control" value="" placeholder="用户名" required autofocus />
+                    </div>
+                    <div class="input-item">
+                        <i class="iconfont e-mima"></i>
+                        <label for="inputPassword" class="sr-only">密码</label>
+                        <input type="password" name="password" autocomplete="off" class="form-control" value="" placeholder="密码" required />
+                    </div>
+                    {eq name="$is_vertify" value="1"}
+                   <div class="input-item">
+                        <i class="iconfont e-yanzhengma"></i>
+                        <input type="text" name="vertify" autocomplete="off" class="form-control" value="" placeholder="验证码" />
+                        <img src="{:url('Admin/vertify')}" class="chicuele" id="imgVerify" alt="" onclick="fleshVerify();" >
+                    </div>
+                    {/eq}
+
+                    <!--点选文字验证码 start-->
+                    <!-- weapp_clicap_input -->
+                    <!--点选文字验证码 end-->
+
+                    <!-- <div class="clearfix text-right">
+                        <a href="javascript:void(0);" class="help forget_pwd">忘记密码?</a>
+                    </div> -->
+                    <input type="button" name="submit" class="btn btn-lg btn-primary btn-block show-dialog" value="登录">
+                </form>
+            </div> 
+        </div> <!-- /container -->
+        <script type="text/javascript">
+            $(function(){
+                $(".form-control").focus(function(){
+                    $(this).parent().addClass("focus");
+                });
+                
+                $(".form-control").blur(function(){
+                    $(this).parent().removeClass("focus");
+                });
+
+                clear_session();
+                function clear_session()
+                {
+                    $.ajax({
+                        url: "{:url('api/Ajax/clear_session')}",
+                        type: 'post',
+                        dataType: 'JSON',
+                        data: {_ajax: 1},
+                        success: function(res){
+                        }
+                    });
+                }
+            });
+
+            $(function(){
+
+                $(document).keydown(function(event){
+                    if(event.keyCode ==13){
+                        $('#theForm input[name=submit]').trigger("click");
+                    }
+                });
+
+                $('#theForm input[name=submit]').on('click',function(){
+                    var user_name=true;
+                    var password=true;
+                    var vertify=true;
+
+                    if($('#theForm input[name=user_name]').val() == ''){
+                        layer.msg('用户名不能为空！', {time: 1000});
+                        $('#theForm input[name=user_name]').focus();
+                        user_name = false;
+                        return false;
+                    }
+
+                    if($('#theForm input[name=password]').val() == ''){
+                        layer.msg('密码不能为空！', {time: 1000});
+                        $('#theForm input[name=password]').focus();
+                        password = false;
+                        return false;
+                    }
+
+                    {eq name="$is_vertify" value="1"}
+                    if($('#theForm input[name=vertify]').val() == ''){
+                        layer.msg('验证码不能为空！', {time: 1000});
+                        $('#theForm input[name=vertify]').focus();
+                        vertify = false;
+                        return false;
+                    }
+                    {/eq}
+
+                    if(vertify && $('#theForm input[name=user_name]').val() != '' && $('#theForm input[name=password]').val() != ''){
+                        var url = "{:url('Admin/login', ['_ajax'=>1])}";
+                        if (url.indexOf('?') > -1) {
+                            url += '&';
+                        } else {
+                            url += '?';
+                        }
+                        url += 't='+Math.random();
+                        layer_loading('准备进入');
+                        $.ajax({
+                            async:false,
+                            url: url,
+                            data: $('#theForm').serialize(),
+                            type:'post',
+                            dataType:'json',
+                            success:function(res){
+                                if(1 == res.code){
+                                    top.location.href = res.url;
+                                }else{
+                                    layer.closeAll();
+                                    fleshVerify();
+                                    user_name=false;
+                                    password=false;
+                                    layer.alert(res.msg, {icon: 5, title:false});
+                                    return false;
+                                }
+                            },
+                            error : function(e) {
+                                layer.closeAll();
+                                layer.alert(e.responseText, {icon: 5, title:false});
+                            }
+                        });
+                    }else{
+                        return false;
+                    }
+                });
+            });
+            
+            function fleshVerify(){
+                var src = "{:url('Admin/vertify')}";
+                if (src.indexOf('?') > -1) {
+                    src += '&';
+                } else {
+                    src += '?';
+                }
+                src += 'r='+Math.floor(Math.random()*100);
+                $('#imgVerify').attr('src', src);//重载验证码
+            }
+
+            /**
+             * 封装的加载层
+             */
+            function layer_loading(msg){
+                var loading = layer.msg(
+                msg+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请勿刷新页面', 
+                {
+                    icon: 1,
+                    time: 3600000, //1小时后后自动关闭
+                    shade: [0.2] //0.1透明度的白色背景
+                });
+                //loading层
+                var index = layer.load(3, {
+                    shade: [0.1,'#fff'] //0.1透明度的白色背景
+                });
+
+                return loading;
+            }
+        </script>
+
+        {include file="public/footer" /}

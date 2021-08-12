@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript">
+        var eyou_basefile = "{$Request.baseFile}";
+        var web_adminbasefile = "{$web_adminbasefile}";
+        var module_name = "{$Think.const.MODULE_NAME}";
+        var GetUploadify_url = "{:url('Uploadify/upload')}";
+        var __root_dir__ = "__ROOT_DIR__";
+        var __lang__ = "{$lang}";
+        var v = "mobile";
+        var __urltypeid__ = {$tid|default='0'};
+        var __urlaid__ = {$aid|default='0'};
+        var __iframe__ = {$iframe|default='1'};
+    </script>  
+</head>
+<body>
+    <style>
+         body{   background-color: #f4f4f4;}
+        .admincp-container {
+            background-color: transparent;
+            height: 100%;
+            position: relative;
+            z-index: 4;
+        }
+        .scroll-wrapper {  
+          margin: 0 auto;
+          width: 373px;
+          height: 100%;
+          /*-webkit-overflow-scrolling: touch;   */
+          overflow-y: auto;  
+        } 
+        .eycms_container_left{ width:450px; position:relative; z-index:99;height:100%;font-size:14px; }
+        .admincp-container-right {
+           position: fixed;
+           z-index: 1;
+           top: 0px;
+           right: 0;
+           bottom: 0;
+           left: 460px;
+           width: 0;
+           height: 100%;
+           overflow: hidden;
+           transition: width 0.2s ease-in;
+        }
+        .admincp-container-right.right-show{
+           width: calc(100% - 460px);
+           
+        }
+        .admincp-container-right .content{
+            box-sizing: content-box;
+            margin: 20px;
+            padding:10px 20px;
+            display: block;
+            background-color: #fff;
+            box-shadow: 0 2px 5px 0 rgba(0,0,0,.1);
+            -webkit-box-shadow: 0 2px 5px 0 rgba(0,0,0,.1);
+            border-radius: 10px;
+        }
+        .phone-box{
+            margin-top: 30px;
+            margin-left: 25px;
+            padding-top: 58px;
+            position: relative;
+            width: 431px;
+            height: 769px;
+            background: url(__STATIC__/common/images/phone_bg.png) no-repeat;
+                     
+        }
+        .phone-box-inner{
+            width: 375px;
+            height: 686px;
+            overflow: hidden;
+        }
+    </style>
+    
+    <div class="admincp-container unfold">
+        <div class="eycms_container_left">
+            <div class="phone-box">
+                <div class="scroll-wrapper">
+                    <iframe src="{$murl}" id="workspace" name="workspace" style="overflow-y: auto; border-radius: 0 0 40px 40px;" frameborder="0" width="100%" height="686" scrolling="yes"></iframe>
+                </div>
+            </div>
+            
+        </div>
+        
+        <div class="admincp-container-right">
+           <div class="content">
+               <iframe src="" id="workspace_right" name="workspace_right" style="overflow-y: auto" frameborder="0" width="100%" height="800" scrolling="yes"></iframe>
+           </div>
+        </div>
+    </div>
+    {load href="__STATIC__/common/js/jquery.min.js" /}
+    {load href="__PUBLIC__/plugins/layer-v3.1.0/layer.js" /}
+    {load href="__STATIC__/common/js/eyou_mobile_tpl.js" /}
+</body>
+</html>

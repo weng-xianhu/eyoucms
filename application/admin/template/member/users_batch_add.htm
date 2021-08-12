@@ -1,18 +1,9 @@
 {include file="public/layout" /}
-
-<body style="background-color: #FFF; overflow-y: scroll;">
+<body class="bodystyle" style="overflow-y: scroll;min-width:auto;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-    <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="{:url('Member/users_index')}" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
-            <div class="subject">
-                <h3>会员中心 - 批量新增用户</h3>
-                <h5></h5>
-            </div>
-        </div>
-    </div>
+<div class="page" style="min-width: auto;box-shadow:none;">
     <form class="form-horizontal" id="postForm" action="{:url('Member/users_batch_add')}" method="post">
         <div class="ncap-form-default">
             <dl class="row">
@@ -23,7 +14,7 @@
                     <textarea style="width:200px; height:250px;" name="username" id="username" placeholder="一行代表一个用户名"></textarea>
                     <span class="err"></span>
                     <p class="notic">只允许汉字、字母、数字和_-@#的字符组合</p>
-                    <p class="">提示：保存时系统自动过滤一些不符合的用户名</p>
+                    <p class="">保存时系统自动过滤一些不符合的用户名</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -37,10 +28,10 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="level">用户级别</label>
+                    <label for="level">会员级别</label>
                 </dt>
                 <dd class="opt">
-                    <select name="level" id="level">
+                    <select name="level" id="level" onchange="IsOpenDays(this);">
                         {volist name='$user_level' id='vo'}
                             <option value="{$vo.level_id}" >{$vo.level_name}</option>
                         {/volist}
@@ -49,11 +40,26 @@
                     <p class="notic"></p>
                 </dd>
             </dl>
+
+            {if condition="1 == $userConfig.level_member_upgrade"}
+                <dl class="row" style="display: none;" id='users_days'>
+                    <dt class="tit">
+                        <label for="users_days"><em>*</em>会员天数</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="level_maturity_days" id="level_maturity_days" placeholder="必填" onkeyup="this.value=this.value.replace(/[^0-9]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/\[^0-9]/g,''));">
+                        <span class="err"></span>
+                        <p class="notic">请填写会员有效期天数，不填写则会默认为注册会员！</p>
+                    </dd>
+                </dl>
+            {/if}
+            <input type="hidden" id="level_member_upgrade" value="{$userConfig.level_member_upgrade|default='0'}">
+
             {notempty name='$users_para'}
             <dl class="row"><dt class="tit"><label><b>更多资料</b></label></dt></dl>
-            <!-- 用户属性 开始 -->
+            <!-- 会员属性 开始 -->
             {include file="member/users_field"/}
-            <!-- 用户属性 结束 -->
+            <!-- 会员属性 结束 -->
             {/notempty}
             <div class="bot">
                 <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
@@ -63,7 +69,28 @@
 </div>
 
 <script type="text/javascript">
+    function IsOpenDays(obj){
+        if (1 == $('#level_member_upgrade').val()) {
+            var level_id = $(obj).val();
+            if (1 == level_id) {
+                $('#users_days').css('display','none');
+            }else{
+                $('#users_days').css('display','');
+                $('#level_maturity_days').css('border-color','red').focus();
+            }
+        }
+    }
+
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     function checkForm(){
+        if (1 == $('#level_member_upgrade').val()) {
+            if (1 != $('#level').val() && (!$('#level_maturity_days').val() || 0 == $('#level_maturity_days').val())){
+                showErrorMsg('请填写会员有效期天数！');
+                $('#level_maturity_days').focus();
+                return false;
+            }
+        }
+
         if($('input[name=username]').val() == ''){
             showErrorMsg('用户名不能为空！');
             $('input[name=username]').focus();
@@ -78,7 +105,28 @@
         }
 
         layer_loading('正在处理');
-        $('#postForm').submit();
+        $.ajax({
+            type : 'post',
+            url : "{:url('Member/users_batch_add', ['_ajax'=>1])}",
+            data : $('#postForm').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
     }
 </script>
 

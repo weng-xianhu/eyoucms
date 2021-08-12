@@ -20,6 +20,8 @@ use think\Session;
 class Base extends Controller {
 
     public $session_id;
+    public $php_servicemeal = 0;
+    public $globalConfig = [];
 
     /**
      * 析构函数
@@ -34,11 +36,9 @@ class Base extends Controller {
 
         $this->global_assign();
 
-        /*---------*/
-        $is_eyou_authortoken = session('web_is_authortoken');
-        $is_eyou_authortoken = !empty($is_eyou_authortoken) ? $is_eyou_authortoken : 0;
-        $this->assign('is_eyou_authortoken', $is_eyou_authortoken);
-        /*--end*/
+        $this->editor = tpSetting('editor');
+        if (empty($this->editor['editor_select'])) $this->editor['editor_select'] = 1;
+        $this->assign('editor', $this->editor);
     }
     
     /*
@@ -51,6 +51,11 @@ class Base extends Controller {
 
         parent::_initialize();
 
+       /*及时更新cookie中的admin_id，用于前台的可视化权限验证*/
+       // $auth_role_info = model('AuthRole')->getRole(array('id' => session('admin_info.role_id')));
+       // session('admin_info.auth_role_info', $auth_role_info);
+       /*--end*/
+
         //过滤不需要登陆的行为
         $ctl_act = CONTROLLER_NAME.'@'.ACTION_NAME;
         $ctl_all = CONTROLLER_NAME.'@*';
@@ -58,38 +63,45 @@ class Base extends Controller {
         if (in_array($ctl_act, $filter_login_action) || in_array($ctl_all, $filter_login_action)) {
             //return;
         }else{
-            $admin_login_expire = session('admin_login_expire'); // 登录有效期
-            if (getTime() - intval($admin_login_expire) < config('login_expire')) {
+            $web_login_expiretime = tpCache('web.web_login_expiretime');
+            empty($web_login_expiretime) && $web_login_expiretime = config('login_expire');
+            $admin_login_expire = session('admin_login_expire'); //最后登录时间
+            if (session('?admin_id') && (getTime() - $admin_login_expire) < $web_login_expiretime) {
                 session('admin_login_expire', getTime()); // 登录有效期
                 $this->check_priv();//检查管理员菜单操作权限
             }else{
                 /*自动退出*/
-                adminLog('自动退出');
+                adminLog('访问后台');
                 session_unset();
                 session::clear();
                 cookie('admin-treeClicked', null); // 清除并恢复栏目列表的展开方式
                 /*--end*/
-                $url = request()->baseFile().'?s=Admin/login';
-                $this->redirect($url);
+                if (IS_AJAX) {
+                    $this->error('登录超时！');
+                } else {
+                    $url = request()->baseFile().'?s=Admin/login';
+                    $this->redirect($url);
+                }
             }
         }
 
         /* 增、改的跳转提示页，只限制于发布文档的模型和自定义模型 */
         $channeltype_list = config('global.channeltype_list');
         $controller_name = $this->request->controller();
-        if (isset($channeltype_list[strtolower($controller_name)])) {
+        $this->assign('controller_name', $controller_name);
+        if (isset($channeltype_list[strtolower($controller_name)]) || 'Custom' == $controller_name) {
             if (in_array($this->request->action(), ['add','edit'])) {
                 \think\Config::set('dispatch_success_tmpl', 'public/dispatch_jump');
                 $id = input('param.id/d', input('param.aid/d'));
                 ('GET' == $this->request->method()) && cookie('ENV_IS_UPHTML', 0);
             } else if (in_array($this->request->action(), ['index'])) {
                 cookie('ENV_GOBACK_URL', $this->request->url());
-                cookie('ENV_LIST_URL', request()->baseFile()."?m=admin&c={$controller_name}&a=index&tab=3&lang=".$this->admin_lang);
+                cookie('ENV_LIST_URL', request()->baseFile()."?m=admin&c={$controller_name}&a=index&lang=".$this->admin_lang);
             }
         }
-        if ('Archives' == $controller_name && in_array($this->request->action(), ['index_archives'])) {
+        if ('Archives' == $controller_name && in_array($this->request->action(), ['index_archives','index_draft'])) {
             cookie('ENV_GOBACK_URL', $this->request->url());
-            cookie('ENV_LIST_URL', request()->baseFile()."?m=admin&c=Archives&a=index_archives&lang=".$this->admin_lang);
+            cookie('ENV_LIST_URL', request()->baseFile()."?m=admin&c=Archives&a=".$this->request->action()."&lang=".$this->admin_lang);
         }
         /* end */
     }
@@ -125,14 +137,26 @@ class Base extends Controller {
                 $this->error('您没有操作权限，请联系超级管理员分配权限');
             }
         }
-    }  
+    }
 
     /**
      * 保存系统设置 
      */
     public function global_assign()
     {
-        $this->assign('global', tpCache('global'));
+        /*随时更新每页记录数*/
+        $pagesize = input('get.pagesize/d');
+        if (!empty($pagesize)) {
+            $system_paginate_pagesize = config('tpcache.system_paginate_pagesize');
+            if ($pagesize != intval($system_paginate_pagesize)) {
+                tpCache('system', ['system_paginate_pagesize'=>$pagesize]);
+            }
+        }
+        /*end*/
+
+        $this->globalConfig = tpCache('global');
+        $this->php_servicemeal = $this->globalConfig['php_servicemeal'];
+        $this->assign('global', $this->globalConfig);
     } 
     
     /**

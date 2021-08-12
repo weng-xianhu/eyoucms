@@ -1,0 +1,301 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+
+    
+    <div class="row-bar clearfix mb10">
+        <div class="row-bar-l fl">
+            <ul class="tab-base nc-row">
+                {eq name="$Think.const.CONTROLLER_NAME.'@index'|is_check_access" value="1"}
+                <li><a href="{:url('Weapp/index')}" class="tab {eq name="$Request.action" value="index"}current{/eq}"><span>我的插件</span></a></li>
+                {/eq}
+                
+                {eq name="$Think.const.CONTROLLER_NAME.'@plugin'|is_check_access" value="1"}
+                    {eq name="$weapp_plugin_open" value="1"}
+                    <li><a href="{:url('Weapp/plugin')}" class="tab {eq name="$Request.action" value="plugin"}current{/eq}"><span>云插件库</span></a></li>
+                    {/eq}
+                {/eq}
+                
+                {eq name="$Think.const.CONTROLLER_NAME.'@mybuy'|is_check_access" value="1"}
+                <li><a href="{:url('Weapp/mybuy', ['install'=>0])}" class="tab {eq name="$Request.action" value="mybuy"}current{/eq}"><span>已购买插件</span></a></li>
+                {/eq}
+            </ul>
+        </div>
+        <div class="flexigrid fr">
+            <form class="navbar-form form-inline" action="{:url('Weapp/mybuy')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="ftitle">
+                    <div class="sDiv2 fl" style="margin-right: 6px;">
+                        <input type="hidden" name="install" value="{$Request.param.install|default=0}">
+                        <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
+                        <input type="submit" class="btn" value="搜索">
+            			<i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="flexigrid">
+
+        <div class="plug-list">
+            {empty name="list"}
+            <div class="bDiv" style="height: auto;">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%">
+                        <tbody>
+                            <tr>
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="iDiv" style="display: none;"></div>
+            </div>
+            {else /}
+                {foreach name="list" item="vo" key="k" }
+                <div class="plug-item-content">
+                    <div class="plug-item-top">
+                        <div class="plug-img">
+                            <a href="{:url('Weapp/execute',array('sm'=>$vo['code'],'sc'=>$vo['code'],'sa'=>'index'))}"><img src="{$vo.config.litpic|get_default_pic=###}?v={$vo.config.version}" ></a>
+                        </div>
+                        <div class="plug-text">
+                            <div class="plug-text-title">
+                                <a href="{:url('Weapp/execute',array('sm'=>$vo['code'],'sc'=>$vo['code'],'sa'=>'index'))}">{$vo.name}</a>
+                            </div>
+                            <div class="plug-text-versions">
+                                <span>版本：{$vo.config.version|default='未知'}</span>
+                            </div>  
+                            <div class="plug-text-des">
+                              {$vo.config.description|default='暂无描述~'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="plug-item-bottm">
+                        {empty name="$vo.status"}
+                            {empty name="$vo.is_buy"}
+                                {eq name="'Weapp@install'|is_check_access" value="1"}
+                                <a href="javascript:void(0);" onclick="install(this);" data-id="{$vo['id']}" class="btn blue">安装</a>
+                                {/eq}
+                                {eq name="'Weapp@del'|is_check_access" value="1"}
+                                <a href="javascript:void(0);" data-url="{:url('Weapp/del')}" data-id="{$vo.id}" data-name="{$vo.name}" onClick="delfun(this);">删除</a>
+                                {/eq}
+                            {else /}
+                                {eq name="'Weapp@install'|is_check_access" value="1"}
+                                <a href="javascript:void(0);" onclick="remoteInstall('{$vo['code']}', '{$vo['min_version']|default=$vo['config']['min_version']}');">安装</a>
+                                {/eq}
+                                {eq name="'Weapp@del_remote'|is_check_access" value="1"}
+                                <a href="javascript:void(0);" data-url="{:url('Weapp/del_remote')}" data-id="{$vo.id}" data-name="{$vo.name}" onClick="del_remote(this);">删除</a>
+                                {/eq}
+                            {/empty}
+                        {else /}
+                            {eq name="'Weapp@execute'|is_check_access" value="1"}
+                                {if condition="empty($vo['config']['management']['href'])"}
+                                <a href="{:url('Weapp/execute',array('sm'=>$vo['code'],'sc'=>$vo['code'],'sa'=>'index'))}">管理</a>
+                                {else /}
+                                <a href="{$vo['config']['management']['href']}" target="{$vo['config']['management']['target']|default='_self'}">管理</a>
+                                {/if}
+                            {/eq}
+                            {eq name="'Weapp@uninstall'|is_check_access" value="1"}
+                                <a href="javascript:void(0);" onclick="uninstall(this);" data-id="{$vo['id']}" data-name="{$vo.name}">卸载</a>
+                            {/eq}
+
+                            <div class="plug-status">
+                                {if condition="$vo['status'] eq 1"}
+                                    <span style="cursor: pointer;" class="yes" {eq name="'Weapp@disable'|is_check_access" value="1"}onClick="changeTableVal('weapp','id','{$vo.id}','status',this);"{/eq} data-value="-1" data-weapp_code="{$vo.code}" data-yestext="<i class='fa fa-check-circle'></i>已启用" data-notext="<i class='fa fa-ban'></i>已禁用"><i class="fa fa-check-circle"></i>已启用</span>
+                                {else /}
+                                    <span style="cursor: pointer;" class="no" {eq name="'Weapp@disable'|is_check_access" value="1"}onClick="changeTableVal('weapp','id','{$vo.id}','status',this);"{/eq} data-value="1" data-weapp_code="{$vo.code}" data-yestext="<i class='fa fa-check-circle'></i>已启用" data-notext="<i class='fa fa-ban'></i>已禁用"><i class="fa fa-ban"></i>已禁用</span>
+                                {/if}
+                                {eq name='$vo.code' value='Diyminipro'}
+                                <script type="text/javascript">
+                                    $(function(){
+                                        var diymimipro_status = "{$vo['status']}";
+                                        if ('1' == diymimipro_status) {
+                                            $('#Diyminipro_theme_index', window.parent.document).show();
+                                        } else {
+                                            $('#Diyminipro_theme_index', window.parent.document).hide();
+                                        }
+                                    });
+                                </script>
+                                {/eq}
+                            </div>
+                        {/empty}
+                    </div>
+                </div>
+                {/foreach}
+            {/empty}
+			<div class="flexigrid">
+			<div class="footer-oper">
+				<div class="fbuttonr">
+				    <div class="pages">
+				       {$page}
+				    </div>
+				</div>
+			    <div style="clear:both"></div>
+			</div>
+			</div>
+        </div>
+        
+    </div>
+</div>
+<form name="form2" id="form2" method="post" action="">
+    <input type="hidden" name="id" value="" />
+    <input type="hidden" name="code" value=""/>
+    <input type="hidden" name="min_version" value=""/>
+    <input type="hidden" name="thorough" value="1" />
+</form>
+<script>
+    $(document).ready(function(){
+
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    function install(obj)
+    {
+        var id = $(obj).attr('data-id');
+        var form2 = $('#form2');
+        form2.find('input[name=id]').val(id);
+        var url = "{:url('Weapp/install')}";
+        form2.attr('action', url);
+        layer_loading('正在处理');
+        form2.submit();
+    }
+
+    function uninstall(obj)
+    {
+        //询问框
+        var confirm = layer.confirm('<font color="red">此操作数据不可恢复</font>，是否卸载移除？', {
+                title: false,
+                btn: ['确定', '取消'] //按钮
+
+            }, function(){
+                layer.close(confirm);
+                uninstall_true(obj);
+            }, function(){
+                layer.close(confirm);
+            }
+        );
+        
+        return false;
+    }
+
+    function uninstall_true(obj)
+    {
+        var id = $(obj).attr('data-id');
+
+        layer_loading('正在处理');
+        // 确定
+        $.ajax({
+            type : 'post',
+            url : "{:url('Weapp/uninstall')}",
+            data : {id:id, thorough:0, _ajax:1},
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {icon: 1, time: 1500}, function(){
+                        window.location.reload();
+                    });
+                }else{
+                    layer.alert(res.msg, {icon: 2, title:false});
+                }
+            },
+            error: function(e) {
+                layer.closeAll();
+                // 处理插件行为app_end影响到的卸载问题
+                if (e.responseText.indexOf("\\behavior\\admin\\") >= 0 && e.responseText.indexOf("not found") >= 0) {
+                    layer.msg('卸载成功', {icon: 1, time: 1000}, function(){
+                        window.location.reload();
+                    });
+                } else {
+                    layer.alert(e.responseText, {icon: 2, title:false});
+                }
+            }
+        });
+    }
+
+    function delfun(obj){
+        var name = $(obj).attr('data-name');
+        layer.confirm('将移除<font color="#ff0000">【'+name+'】</font>，确认移除？', {
+            title: false,//name,
+            btn: ['确定','取消'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id'), _ajax:1},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});  //alert(data);
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }
+
+    function del_remote(obj){
+        var name = $(obj).attr('data-name');
+        layer.confirm('将移除<font color="#ff0000">【'+name+'】</font>，确认移除？', {
+            title: false,//name,
+            btn: ['确定','取消'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id'), _ajax:1},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});  //alert(data);
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }
+
+    function jump() {
+        location.reload()
+    }
+
+    function remoteInstall(code, min_version) {
+        var form2 = $('#form2');
+        form2.find('input[name=code]').val(code);
+        form2.find('input[name=min_version]').val(min_version);
+        var url = "{:url('Weapp/remoteInstall')}";
+        form2.attr('action', url);
+        layer_loading('远程安装');
+        form2.submit();
+    }
+</script>
+
+{include file="public/footer" /}

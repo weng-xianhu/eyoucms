@@ -2,17 +2,9 @@
 
 namespace app\common\behavior;
 
-/**
- * 系统行为扩展：
- */
 class AppInitBehavior {
     protected static $method;
 
-    /**
-     * 构造方法
-     * @param Request $request Request对象
-     * @access public
-     */
     public function __construct()
     {
 
@@ -21,12 +13,11 @@ class AppInitBehavior {
     // 行为扩展的执行入口必须是run
     public function run(&$params){
         self::$method = request()->method();
-        // file_put_contents ( DATA_PATH."log.txt", date ( "Y-m-d H:i:s" ) . "  " . var_export('admin_CoreProgramBehavior',true) . "\r\n", FILE_APPEND );
         $this->_initialize();
     }
 
     private function _initialize() {
-        $this->saveSqlmode(); // 保存mysql的sql-mode模式参数
+        $this->saveSqlmode();
     }
 
     /**
@@ -42,7 +33,7 @@ class AppInitBehavior {
                     return true;
                 session($key, 1);
 
-                $sql_mode = db()->query("SELECT @@global.sql_mode AS sql_mode");
+                $sql_mode = \think\Db::query("SELECT @@global.sql_mode AS sql_mode");
                 $system_sql_mode = isset($sql_mode[0]['sql_mode']) ? $sql_mode[0]['sql_mode'] : '';
                 /*多语言*/
                 if (is_language()) {
@@ -51,7 +42,7 @@ class AppInitBehavior {
                     foreach ($langRow as $key => $val) {
                         tpCache('system', ['system_sql_mode'=>$system_sql_mode], $val['mark']);
                     }
-                } else { // 单语言
+                } else {
                     tpCache('system', ['system_sql_mode'=>$system_sql_mode]);
                 }
                 /*--end*/

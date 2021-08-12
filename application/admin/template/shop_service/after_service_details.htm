@@ -1,0 +1,567 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<style type="text/css">
+    .system_table{ border:1px solid #dcdcdc; width:100%;}
+    .system_table td{ height:40px; line-height:40px; font-size:12px; color:#454545; border-bottom:1px solid #dcdcdc; border-right:1px solid #dcdcdc; width:35%; padding-left:1%;}
+    .system_table td.gray_bg{ background:#f7f7f7; width:15%;}
+</style>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+
+<div class="page">
+    <div class="flexigrid">
+        <form class="form-horizontal" id="postForm">
+            <input type="hidden" name="order_id" value="{$Service.order_id}">
+            <input type="hidden" name="service_id" value="{$Service.service_id}">
+            <input type="hidden" name="order_code" value="{$Service.order_code}">
+            <input type="hidden" name="users_id" value="{$Users.users_id}">
+            <input type="hidden" name="shipping_fee" value="{$Service.shipping_fee}">
+
+            <!-- 会员信息 -->
+            <div class="hDiv htitx">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tl text-l10">会员信息</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <table cellpadding="0" cellspacing="0" class="system_table">
+                    <tbody>
+                        <tr>
+                            <td class="gray_bg">会员名：</td>
+                            <td><a href="{:url('Member/users_edit', ['id'=>$Users.users_id])}">{$Users.nickname}</a></td>
+                            <td class="gray_bg">手机号码：</td>
+                            <td>{$Users.mobile}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END -->
+
+            <!-- 订单信息 -->
+            <div class="hDiv htitx">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tl text-l10">订单信息</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <table cellpadding="0" cellspacing="0" class="system_table">
+                    <tbody>
+                        <tr>
+                            <td class="gray_bg">订单ID：</td>
+                            <td>
+                                <a href="{:url('Shop/order_details', ['order_id'=>$Service.order_id])}">{$Service.order_id}</a>
+                            </td>
+                            <td class="gray_bg">订单编号：</td>
+                            <td>
+                                <a href="{:url('Shop/order_details', ['order_id'=>$Service.order_id])}">{$Service.order_code}</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END -->
+
+            <!-- 商品信息 -->
+            <div class="hDiv htitx">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tl text-l10">商品信息</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <table cellpadding="0" cellspacing="0" class="system_table">
+                    <tbody>
+                        <tr>
+                            <td class="gray_bg">商品ID：</td>
+                            <td>{$Service.product_id}</td>
+                            <td class="gray_bg">退换数量：</td>
+                            <td>{$Service.product_num}</td>
+                        </tr>
+                        <tr>
+                            <td class="gray_bg">商品名称：</td>
+                            <td>
+                                <a href="{$Service.arcurl}" target="_blank">
+                                    <img src="{$Service.product_img}" style="width: 60px;height: 60px;"> {$Service.product_name}
+                                </a>
+                            </td>
+                            <td class="gray_bg">商品规格：</td>
+                            <td>{$Service.product_spec}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END -->
+
+            <!-- 会员收货信息 -->
+            <div class="hDiv htitx">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tl text-l10">会员收货信息</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <table cellpadding="0" cellspacing="0" class="system_table">
+                    <tbody>
+                        <tr>
+                            <td class="gray_bg">会员收货地址：</td>
+                            <td>{$Service.address}</td>
+                            <td class="gray_bg"></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="gray_bg">收货人：</td>
+                            <td>{$Service.consignee}</td>
+                            <td class="gray_bg">收货人手机：</td>
+                            <td>{$Service.mobile}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END -->
+
+            <!-- 服务详情 -->
+            <div class="hDiv htitx">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tl text-l10">服务详情</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <table cellpadding="0" cellspacing="0" class="system_table">
+                    <tbody>
+                        <tr>
+                            <td class="gray_bg">服务类型：</td>
+                            <td>{$Service.TypeName}</td>
+                            <td class="gray_bg">当前状态：</td>
+                            <td>{$Service.StatusName}</td>
+                        </tr>
+                        <tr>
+                            <td class="gray_bg">申请时间：</td>
+                            <td>{$Service.add_time|MyDate='Y-m-d H:i:s',###}</td>
+                            <td class="gray_bg"></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="gray_bg">图片信息：</td>
+                            <td>
+                                {volist name="$Service.upload_img" id="vo"}
+                                    {notempty name="$vo"}<img src="{$vo}" width="60" height="60">{/notempty}
+                                {/volist}
+                            </td>
+                            <td class="gray_bg">问题描述：</td>
+                            <td>{$Service.content}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END -->
+
+            {neq name="$Service.status" value='8'}
+                {notempty name="$Service.users_delivery"}
+                <!-- 会员发货信息 -->
+                <div class="hDiv htitx">
+                    <div class="hDivBox">
+                        <table cellspacing="0" cellpadding="0" style="width: 100%">
+                            <thead>
+                                <tr>
+                                    <th abbr="article_title" axis="col3" class="w10">
+                                        <div class="tl text-l10">会员发货信息</div>
+                                    </th>
+                                    <th abbr="ac_id" axis="col4">
+                                        <div class=""></div>
+                                    </th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="ncap-form-default">
+                    <table cellpadding="0" cellspacing="0" class="system_table">
+                        <tbody>
+                            <tr>
+                                <td class="gray_bg">快递公司：</td>
+                                <td>{$Service.users_delivery.name}</td>
+                                <td class="gray_bg">快递单号：</td>
+                                <td>{$Service.users_delivery.code}</td>
+                            </tr>
+                            <tr>
+                                <td class="gray_bg">快递费用：</td>
+                                <td>
+                                    {$Service.users_delivery.cost}
+                                </td>
+                                <td class="gray_bg">发货时间：</td>
+                                <td>{$Service.users_delivery.time}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- END -->
+                {/notempty}
+
+                {eq name="$Service.service_type" value="2"}
+                <!-- 退款详情 -->
+                <div class="hDiv htitx">
+                    <div class="hDivBox">
+                        <table cellspacing="0" cellpadding="0" style="width: 100%">
+                            <thead>
+                                <tr>
+                                    <th abbr="article_title" axis="col3" class="w10">
+                                        <div class="tl text-l10">退款详情</div>
+                                    </th>
+                                    <th abbr="ac_id" axis="col4">
+                                        <div class=""></div>
+                                    </th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="ncap-form-default">
+                    <table cellpadding="0" cellspacing="0" class="system_table">
+                        <tbody>
+                            <tr>
+                                <td class="gray_bg">需退还金额：</td>
+                                <td>
+                                    <input type="text" name="refund_price" value="{$Service.refund_price}">
+                                    <span style="color: red;">已扣除 {$Service.ShippingFee} 运费</span>
+                                </td>
+                                <td class="gray_bg">退还说明：</td>
+                                <td>
+                                    <a style="color: #3b639f; font-size: 12px;" href="javascript:void(0);" onmouseover="layer_tips = layer.tips($('#Manual').html(), this, {time:100000});" onmouseout="layer.close(layer_tips);"> 查看说明 </a>
+                                    <span style="display: none;" id="Manual">
+                                        <div>
+                                            1.暂时不支持金额原路退还，需自行将<span style="color: red;">需退还金额</span>通过转账方式退还会员后将数据设为<span style="color: red;">0</span>，再进行确认退款
+                                        </div>
+                                        <div>
+                                            2.如不将<span style="color: red;">需退还金额</span>设为<span style="color: red;">0</span>则默认将<span style="color: red;">需退还金额</span>退还到<span style="color: red;">会员余额</span>中
+                                        </div>
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- END -->
+                {/eq}
+
+                <!-- 审核处理 -->
+                <div class="hDiv">
+                    <div class="hDivBox">
+                        <table cellspacing="0" cellpadding="0" style="width: 100%">
+                            <thead>
+                                <tr>
+                                    <th abbr="article_title" axis="col3" class="w10">
+                                        <div class="tl text-l10">审核处理</div>
+                                    </th>
+                                    <th abbr="ac_id" axis="col4">
+                                        <div class=""></div>
+                                    </th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="ncap-form-default">
+                    <table cellpadding="0" cellspacing="0" class="system_table">
+                        <tbody>
+                            {eq name="$Service.status" value='1'}
+                            <tr>
+                                <td class="gray_bg">审核意见：</td>
+                                <td>
+                                    <label><input type="radio" name="status" value="2">审核通过</label>
+                                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                                    <label><input type="radio" name="status" value="3">拒绝通过</label>
+                                </td>
+                                <td class="gray_bg">处理备注：</td>
+                                <td>
+                                    <textarea name="admin_note" style="width:300px; height:60px;" placeholder="管理员描述" class="tarea">{$Service.admin_note}</textarea>
+                                </td>
+                            </tr>
+                            {else/}
+                                {eq name="$Service.status" value='2'}
+                                <tr>
+                                    <td class="gray_bg">可操作</td>
+                                    <td>等待会员发货</td>
+                                {/eq}
+                                {eq name="$Service.status" value='3'}
+                                <tr>
+                                    <td class="gray_bg">可操作</td>
+                                    <td>申请已被拒接</td>
+                                {/eq}
+                                {eq name="$Service.status" value='4'}
+                                <tr>
+                                    <td class="gray_bg">可操作</td>
+                                    <td>
+                                        <input type="hidden" name="status" value="5">
+                                        <a href="JavaScript:;" onclick="ConfirmSubmit('确认收到货物？');" class="ncap-btn-big ncap-btn-green submitBtn">确认收货</a>
+                                    </td>
+                                {/eq}
+                                {eq name="$Service.status" value='5'}
+                                <tr>
+                                    {eq name="$Service.service_type" value="2"}
+                                        <td class="gray_bg">可操作</td>
+                                        <td>
+                                            <input type="hidden" name="status" value="7">
+                                            <a href="JavaScript:;" onclick="ConfirmSubmit('确认退款？');" class="ncap-btn-big ncap-btn-green submitBtn">确认退款</a>
+                                        </td>
+                                    {else/}
+                                        <td class="gray_bg">可操作</td>
+                                        <td>
+                                            <input type="hidden" name="status" value="6">
+                                            <div>快递公司：<input type="text" name="delivery[name]"></div>
+                                            <div>快递单号：<input type="text" name="delivery[code]"></div>
+                                            <a href="JavaScript:;" onclick="ConfirmSubmit('确认发货？');" class="ncap-btn-big ncap-btn-green submitBtn">确认发货</a>
+                                        </td>
+                                    {/eq}
+                                {/eq}
+                                {eq name="$Service.status" value='6'}
+                                <tr>
+                                    <td class="gray_bg">可操作</td>
+                                    <td>换货完成，服务结束</td>
+                                {/eq}
+                                {eq name="$Service.status" value='7'}
+                                <tr>
+                                    <td class="gray_bg">可操作</td>
+                                    <td>退款完成，服务结束</td>
+                                {/eq}
+                                    <td class="gray_bg">处理备注：</td>
+                                    <td>{$Service.admin_note}</td>
+                                </tr>
+                            {/eq}
+                        </tbody>
+                    </table>
+                </div>
+                <!-- END -->
+
+                {eq name="$Service.status" value='6'}
+                <!-- 卖家发货信息 -->
+                <div class="hDiv htitx">
+                    <div class="hDivBox">
+                        <table cellspacing="0" cellpadding="0" style="width: 100%">
+                            <thead>
+                                <tr>
+                                    <th abbr="article_title" axis="col3" class="w10">
+                                        <div class="tl text-l10">卖家发货信息</div>
+                                    </th>
+                                    <th abbr="ac_id" axis="col4">
+                                        <div class=""></div>
+                                    </th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="ncap-form-default">
+                    <table cellpadding="0" cellspacing="0" class="system_table">
+                        <tbody>
+                            <tr>
+                                <td class="gray_bg">快递公司：</td>
+                                <td>{$Service.admin_delivery.name}</td>
+                                <td class="gray_bg">快递单号：</td>
+                                <td>{$Service.admin_delivery.code}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- END -->
+                {/eq}
+
+                <input type="hidden" id="url" value="{:url('ShopService/after_service_deal_with', ['_ajax'=>1])}">
+                {eq name="$Service.status" value='1'}
+                    <div class="bot" style="text-align: center;">
+                        <a href="JavaScript:void(0);" onclick="ConfirmSubmit();" class="ncap-btn-big ncap-btn-green submitBtn">确认提交</a>
+                    </div>
+                {/eq}
+                <br/>
+                <script type="text/javascript">
+                    function ConfirmSubmit(title) {
+                        if (!title) {
+                            // 无需二次确认
+                            Submit();
+                        } else {
+                            // 需要二次确认
+                            layer.confirm(title, {
+                                title:false,
+                                closeBtn: 0
+                            },function(){
+                                Submit();
+                            },function(index){
+                                layer.closeAll(index);
+                            });
+                        }
+                    }
+
+                    function Submit() {
+                        layer_loading('正在处理');
+                        $.ajax({
+                            url: $('#url').val(),
+                            data: $('#postForm').serialize(),
+                            type:'post',
+                            dataType:'json',
+                            success:function(res){
+                                if (1 == res.code) {
+                                    if (7 == res.data.status) res.msg = '退款完成';
+                                    layer.closeAll();
+                                    layer.msg(res.msg, {time: 1500}, function() {
+                                        window.location.reload();
+                                    });
+                                } else {
+                                    layer.closeAll();
+                                    layer.msg(res.msg, {time: 1500});
+                                    if (res.data.id) $("input[name='delivery["+res.data.id+"]']").focus();
+                                }
+                            },
+                            error : function() {
+                                layer.closeAll();
+                                layer.alert('未知错误！', {title:false, icon:5, closeBtn: 0});
+                            }
+                        });
+                    }
+                </script>
+            {/neq}
+
+            <!-- 操作记录 -->
+            <div class="hDiv htitx">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tl text-l10">操作记录</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="hDiv" style="margin-top: 5px;">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign" axis="col0">
+                                <div class="tl text-l10">操作者</div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w210">
+                                <div class="tc">操作时间</div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w300">
+                                <div style="text-align: left; padding-left: 10px;" class="">操作备注</div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="bDiv" style="height: auto;">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%;">
+                        <tbody>
+                        {empty name="Log"}
+                            <tr>
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                </td>
+                            </tr>
+                        {else/}
+                            {volist name="$Log" id="vo"}
+                            <tr>
+                                <td class="sort">
+                                    <div class="tl text-l10">
+                                        {$vo.name}
+                                    </div>
+                                </td>
+                                <td class="sort w210">
+                                    <div class="tc">
+                                        {$vo.add_time|MyDate='Y-m-d H:i:s',###}
+                                    </div>
+                                </td>
+                                <td class="w300">
+                                    <div class="tl" style="padding-left: 10px;">
+                                        {$vo.log_note}
+                                    </div>
+                                </td>
+                            </tr>
+                            {/volist}
+                        {/empty}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="iDiv" style="display: none;"></div>
+            </div>
+            <!-- END -->
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+
+{include file="public/footer" /}

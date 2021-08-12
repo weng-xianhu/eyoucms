@@ -1,0 +1,278 @@
+{include file="public/layout" /}
+
+<body class="bodystyle">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;">
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w20 none" axis="col0">
+                            <div class="tc"></div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="text-l10">产品名称</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w120">
+                            <div class="tc">会员级别</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w100">
+                            <div class="tc">产品价格(元)</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w120">
+                            <div class="tc">会员期限(天)</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w150">
+                            <div class="tc">营销文案</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto; min-height: auto;">
+            <form id="PostForm">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%">
+                        <tbody>
+                        {empty name="users_type"}
+                            <tr>
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                </td>
+                            </tr>
+                        {else/}
+                            {foreach name="users_type" item="vo" key="k" }
+                            <tr class="tr">
+                                <td class="sign none">
+                                    <div class="w20 tc">
+                                        <input type="hidden" name="type_id[]" value="{$vo.type_id}">
+                                    </div>
+                                </td>
+
+                                <td style="width: 100%">
+                                    <div style="">
+                                        <input type="text" name="type_name[]" value="{$vo.type_name}" style="width: 93%;">
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="w120 tc">
+                                        <select name="level_id[]" class="tc w100">
+                                            {volist name="$list" id="level"}
+                                                <option value="{$level.level_id}" {eq name="$level.level_id" value="$vo.level_id"}selected{/eq} >{$level.level_name}</option>
+                                            {/volist}
+                                        </select>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="w100 tc">
+                                        <input type="text" name="price[]" value="{$vo.price}" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'')" onafterpaste="this.value=this.value.replace(/[^0-9\.]/g,'')" class="tc w80">
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="w120 tc">
+                                        <select name="limit_id[]" class="tc w100" >
+                                            {volist name="$member_limit_arr" id="limit"}
+                                                <option value="{$limit.limit_id}" {eq name="$limit.limit_id" value="$vo.limit_id"}selected{/eq} >{$limit.limit_name}</option>
+                                            {/volist}
+                                        </select>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="w150 tc">
+                                        <input class="tc w130" type="text" onchange="changeTableVal('users_type_manage','type_id','{$vo.type_id}','activity',this);" name="activity[]" value="{$vo.activity}" placeholder="比如：限时特价" autocomplete="off" />
+                                    </div>
+                                </td>
+                                <td class="operation">
+                                    <div class="w60 tc">
+                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Level/level_type_del')}" data-name="{$vo.type_name}" data-id="{$vo.type_id}" onclick="LevelTypeDel(this)">删除</a>
+                                    </div>
+                                </td>
+                                <td class="sort">
+                                    <div class="w60 tc">
+                                        <input class="tc" type="text" onchange="changeTableVal('users_type_manage','type_id','{$vo.type_id}','sort_order',this);" name="sort_order[]" size="4" value="{$vo.sort_order}" />
+                                    </div>
+                                </td>
+                            </tr>
+                            {/foreach}
+                        {/empty}
+                        </tbody>
+                    </table>
+                    <div id='Template'></div>
+                </div>
+            </form>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton">
+                    <a href="javascript:void(0);" onclick="AddLevelType();" class="layui-btn layui-btn-primary">
+                        <span class="red">新增会员产品</span>
+                    </a>
+                </div>
+
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-url="{:url('Level/add_level_data', ['_ajax'=>1])}" onclick="AddLevelData(this);" class="layui-btn layui-btn-primary">
+                        <span class="">保存</span>
+                    </a>
+                </div>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$page}
+    </div>
+</div>
+<script type="text/javascript">
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    // 删除
+    function LevelTypeDel(obj){
+        layer.confirm('此操作不可恢复，确认彻底删除<span style="color:red;">'+$(obj).attr('data-name')+'</span>？', {
+            title: false,
+            btn: ['确定','取消']
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {type_id:$(obj).attr('data-id'),_ajax:1},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1, time:1000},function(){
+                            window.location.reload();
+                        });
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+    }
+
+    function AddLevelType(){
+        // tr数,取唯一标识
+        var SerialNum = $('.tr').length;
+        var AddHtml = [];
+        AddHtml += 
+        [
+            '<tr class="tr" id="tr_'+SerialNum+'">'+
+                '<td class="sign none">'+
+                    '<div class="w20 tc"><input type="hidden" name="type_id[]"></div>'+
+                '</td>'+
+
+                '<td style="width: 100%">'+
+                    '<div style="">'+
+                        '<input type="text" name="type_name[]" style="width: 93%;">'+
+                    '</div>'+
+                '</td>'+
+
+                '<td>'+
+                    '<div class="w120 tc">'+
+                        '<select name="level_id[]" class="tc w100">'+
+                            '{volist name="$list" id="level"}'+
+                                '<option value="{$level.level_id}" >{$level.level_name}</option>'+
+                            '{/volist}'+
+                        '</select>'+
+                    '</div>'+
+                '</td>'+
+
+                '<td>'+
+                    '<div class="w100 tc">'+
+                        '<input type="text" name="price[]" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,\'\')" onafterpaste="this.value=this.value.replace(/[^0-9\.]/g,\'\')"  class="tc w80">'+
+                    '</div>'+
+                '</td>'+
+
+                '<td>'+
+                    '<div class="w120 tc">'+
+                        '<select name="limit_id[]" class="tc w100">'+
+                            '{volist name="$member_limit_arr" id="limit"}'+
+                                '<option value="{$limit.limit_id}">{$limit.limit_name}</option>'+
+                            '{/volist}'+
+                        '</select>'+
+                    '</div>'+
+                '</td>'+
+                
+                '<td>'+
+                    '<div class="w150 tc">'+
+                        '<input class="tc w130" type="text"  onchange="changeTableVal(\'users_type_manage\',\'type_id\',\'{$vo.type_id}\',\'activity\',this);" name="activity[]"  placeholder="比如：限时特价" autocomplete="off">'+
+                    '</div>'+
+                '</td>'+
+                
+                '<td class="">'+
+                    '<div class="w60 tc">'+
+                        '<a class="btn red" href="javascript:void(0);" data-id="tr_'+SerialNum+'" onclick="DelHtml(this)"><i class="fa fa-trash-o"></i>删除</a>'+
+                    '</div>'+
+                '</td>'+
+
+                '<td class="sort">'+
+                    '<div class="w60 tc">'+
+                        '<input class="tc" name="sort_order[]" type="text" size="4" value="100" />'+
+                    '</div>'+
+                '</td>'+
+            '</tr>'
+        ];
+        $('#Template').append(AddHtml);
+    }
+
+    // 删除未保存的级别
+    function DelHtml(obj){
+        $('#'+$(obj).attr('data-id')).remove();
+    }
+
+    // 添加新增数据
+    function AddLevelData(obj){
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : $(obj).attr('data-url'),
+            data : $('#PostForm').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000});
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        })
+    }
+</script>
+
+{include file="public/footer" /}

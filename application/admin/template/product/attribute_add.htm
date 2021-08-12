@@ -3,15 +3,7 @@
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-    <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
-            <div class="subject">
-                <h3>新增参数</h3>
-                <h5></h5>
-            </div>
-        </div>
-    </div>
+<div class="page" style="box-shadow:none;">
     <form class="form-horizontal" id="post_form" action="{:U('Product/attribute_add')}" method="post">
         <div class="ncap-form-default">
             <dl class="row">
@@ -70,11 +62,12 @@
                 </dd>
             </dl>
             <div class="bot">
-                <a href="JavaScript:void(0);" onclick="check_submit('post_form','{:U('Product/attribute_add')}');"  class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                <a href="JavaScript:void(0);" onclick="check_submit('post_form');"  class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
         </div>
     </form>
 </div>
 <script type="text/javascript">
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     $(function(){
         $('input[name=attr_input_type]').click(function(){
             var val = $(this).val();
@@ -101,7 +94,7 @@
     * ajax 提交表单 到后台去验证然后回到前台提示错误
     * 验证通过后,再通过 form 自动提交
     */
-    function check_submit(form_id,submit_url)
+    function check_submit(form_id)
     {
         if ($('#typeid').val() == 0) {
             showErrorMsg('请选择栏目…！');
@@ -127,32 +120,40 @@
         layer_loading('正在处理');
         $.ajax({
             type : "POST",
-            url  : submit_url,
+            url  : "{:url('Product/attribute_add', ['_ajax'=>1])}",
             data : $('#'+form_id).serialize(),// 你的formid
             dataType: "JSON",
-            error: function(request) {
+            success: function(res) {
                 layer.closeAll();
-                layer.alert("网络失败，请刷新页面后重试", {icon: 5, title:false});
-                return false;
-            },
-            success: function(v) {
-                layer.closeAll();
-                if(v.status == 1)
-                {                   
-                    if(v.hasOwnProperty('data')){
-                        if(v.data.hasOwnProperty('url')){
-                            location.href = v.data.url;
+                if(res.status == 1)
+                {
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);    
+                    if(res.hasOwnProperty('data')){
+                        if(res.data.hasOwnProperty('url')){
+                            _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                                _parent.gourl(res.data.url);
+                            });
                         }else{
-                            location.href = location.href;
+                            _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                                _parent.window.location.reload();
+                            });
                         }
                     }else{
-                        location.href = location.href;
+                        _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                            _parent.window.location.reload();
+                        });
                     }
                     return true;
                 } else {     
-                    showErrorMsg(v.msg);                       
+                    showErrorMsg(res.msg);                       
                     return false;
                 }
+            },
+            error: function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+                return false;
             }
         });   
     }

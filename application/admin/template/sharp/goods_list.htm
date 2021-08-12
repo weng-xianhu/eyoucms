@@ -1,0 +1,211 @@
+{include file="public/layout" /}
+
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width:400px;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="box-shadow:none;min-width: 400px;">
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>商品列表</h3>
+                <h5>(共{$pager->totalRows}条数据)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+            <form class="navbar-form form-inline" id="searchForm" action="{:url('Sharp/goods_list')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">  
+                        <select name="typeid" class="select" style="margin:0px 5px;">
+                            <option value="0">--选择栏目--</option>
+                            {$arctype_html}
+                        </select>
+                    </div>
+                    <div class="sDiv2">
+                        <input type="hidden" name="channel" id="channel" value="{$Request.param.channel|default=''}">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="标题搜索...">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w50">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th align="center" abbr="article_title" axis="col3" class="w60">
+                            <div class="tc">封面图</div>
+                        </th>
+                        <th align="left" abbr="article_title" axis="col3" class="">
+                            <div style="text-align: left; padding-left: 10px;" class="">商品标题</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">限购数量</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">商品库存总量</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">更新时间</div>
+                        </th>
+
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%;">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="tc w40">
+                                    <input type="checkbox" autocomplete="off" name="infos[]" value='{$vo.json_encode_params}'>
+                                </div>
+                            </td>
+                           
+                            <td class="sort">
+                                <div class="tc w50">
+                                    {$vo.sharp_goods_id}
+                                </div>
+                            </td>
+                            <td class="w60">
+                                <div class="tc">
+                                    <img src="{$vo.litpic|get_default_pic=###}" width="60" height="60">
+                                </div>
+                            </td>
+                            <td class="" style="width: 100%;">
+                                <div class="tl" style="padding-left: 10px;">
+                                   <div class="title">
+                                        {$vo.title}
+                                   </div>
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {eq name="$vo.limit" value="0"}
+                                    不限购
+                                    {else /}
+                                    限购{$vo.limit}件
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {$vo.seckill_stock}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w100 tc">
+                                    {$vo.update_time|date='Y-m-d',###}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                <div class="fbutton">
+                    <a onclick="confirm_choose();" class="layui-btn layui-btn-primary">
+                        <span>确定</span>
+                    </a>
+                </div>
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    
+    function confirm_choose(){
+        var infos = [];
+        $('input[name^=infos]').each(function(){
+            if($(this).is(':checked')){
+                infos.push($(this).val());
+            }
+        })
+        if(infos.length == 0){
+            showErrorAlert('请至少选择一项！');
+            return;
+        }
+
+        window.parent.reback(infos)
+    }
+
+    $(document).ready(function(){
+
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        $('#searchForm select[name=typeid]').change(function(){
+            $('#searchForm').submit();
+        });
+    });
+
+    /**
+     * 获取已选择的数据
+     * @returns {Array}
+     */
+    function getSelectedData() {
+        var data = [];
+        $('input[name^=ids]').each(function(i,o){
+            if($(o).is(':checked')){
+                var params = $('#ids_' + $(o).val()).val();
+                params = $.parseJSON(params);
+                data.push(params);
+            }
+        })
+        if(data.length == 0){
+            showErrorAlert('请至少选择一项！');
+            return;
+        }
+
+        return data;
+    }
+</script>
+
+{include file="public/footer" /}

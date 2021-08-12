@@ -1,0 +1,87 @@
+{include file="public/layout"/}
+<body class="bodystyle" style=" overflow-y: scroll; min-width: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;">
+    {include file="system/bar" /}
+    <div class="flexigrid">
+        <!-- <div class="mDiv">
+            <div class="ftitle">
+                <h3>支付接口列表</h3>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+        </div> -->
+        <div class="plug-list">
+            {empty name="list"}
+                <div class="bDiv" style="height: auto;">
+                    <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                        <table style="width: 100%">
+                            <tbody>
+                                <tr>
+                                    <td class="no-data" align="center" axis="col0" colspan="50">
+                                        <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="iDiv" style="display: none;"></div>
+                </div>
+            {else /}
+                {foreach name="list" item="vo" key="k" }
+                <div class="plug-item-content">
+                    <div class="plug-item-top">
+                        <div class="plug-img">
+                            <a href="JavaScript:void(0);"><img src="{$vo.litpic|get_default_pic=###}"></a>
+                        </div>
+                        <div class="plug-text">
+                            <div class="plug-text-title">
+                                <a href="JavaScript:void(0);">{$vo.pay_name}</a>
+                            </div>
+                            <div class="plug-text-versions">
+                                <span>{eq name="$vo.system_built" value="1"}系统内置{else/}插件应用{/eq}</span>
+                            </div>
+                            <!-- <div class="plug-text-des">暂无描述</div> -->
+                        </div>
+                    </div>
+                    <div class="plug-item-bottm">
+                        <a href="JavaScript:void(0);" onclick="PayApiConfig({$vo.pay_id}, '{$vo.pay_name}');">配置</a>
+                    </div>
+                </div>
+                {/foreach}
+            {/empty}
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    function PayApiConfig(pay_id, title) {
+        if (!pay_id) return false;
+        var url = "{:url('PayApi/open_pay_api_config')}";
+        //iframe窗
+        var iframes = layer.open({
+            type: 2,
+            title: title,
+            fixed: true,
+            shadeClose: false,
+            shade: 0.3,
+            content: url + '&pay_id=' + pay_id
+        });
+        layer.full(iframes);
+    }
+</script>
+
+{include file="public/footer" /}

@@ -1,0 +1,173 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <ul class="tab-base nc-row">
+                {eq name="'UsersNotice@index'|is_check_access" value="1"}
+                <li>
+                    <a href="{:url('UsersNotice/index')}" {if condition="in_array($Think.const.CONTROLLER_NAME, ['UsersNotice'])"}class="current"{/if}>
+                    <span>站内通知</span>
+                    </a>
+                </li>
+                {/eq}
+            </ul>
+        </div>
+    </div>
+    
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                {include file="users_notice/bar" /}
+            </div>
+            <form class="navbar-form form-inline" action="{:url('UsersNotice/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="fl">
+                        <div class="fbutton">
+                            <a href="javascript:void(0);" data-href="{:url('Encodes/users_notice_add')}" onclick="openFullframe(this, '新增通知');">
+                                 <div class="add" title="新增通知">
+                                     <span><i class="layui-icon layui-icon-addition"></i>新增通知</span>
+                                 </div>
+                             </a>
+                        </div>
+                    </div>
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
+                        <input type="submit" class="btn" value="搜索">
+						<i class="fa fa-search"></i>
+                    </div>
+                    <div class="sDiv2" style="margin-right: 6px;font-size: 12px;border: none;">
+                        <a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/doc/label/all/11112.html?1606469785','站内通知标签使用教程')" >
+                            标签教程？
+                        </a>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" >
+                            <div class="text-l10">通知标题</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w160">
+                            <div class="text-l10">通知会员</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w160">
+                            <div class="tc">通知时间</div>
+                        </th>
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {volist name="list" id="vo"}
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.id}"></div>
+                            </td>
+                            <td class="sort">
+                                <div class="w40 tc">
+                                    {$vo.id}
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div class="text-l10">
+                                    <a href="javascript:void(0);" data-href="{:url('UsersNotice/edit',array('id'=>$vo['id']))}" onclick="openFullframe(this, '编辑站内通知');">{$vo.title}</a>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w160 text-l10 wot_z">
+                                    {$vo.usernames}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w160 tc">
+                                    {$vo.add_time|MyDate='Y-m-d H:i:s',###}
+                                </div>
+                            </td>
+                            <td class="operation">
+                                <div class="w120 tc">
+                                    <a href="javascript:void(0);" data-href="{:url('UsersNotice/edit',array('id'=>$vo['id']))}" class="btn blue" onclick="openFullframe(this, '编辑站内通知');">编辑</a>
+                                    <i></i>
+                                    <a class="btn red"  href="javascript:void(0)" data-url="{:url('UsersNotice/del')}" data-id="{$vo.id}" onClick="delfun(this);">删除</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('UsersNotice/del')}" class="layui-btn layui-btn-primary">
+                            <span>批量删除</span>
+                    </a>
+                </div>
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+{include file="public/footer" /}

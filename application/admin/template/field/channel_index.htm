@@ -1,19 +1,30 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
-    {include file="field/channel_bar" /}
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back" href="{:url('Channeltype/index')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            <ul class="tab-base nc-row">
+                <li><a href="javascript:void(0);" class="tab current"><span>{$channeltype_row[$channel_id]['ntitle']|default='无'}字段</span></a></li>
+            </ul>
+        </div>
+    </div>
     <div class="flexigrid">
         <div class="mDiv">
             <div class="ftitle">
-                <h3>
-                    {$channeltype_list[$channel_id]['title']} - 字段列表
-                </h3>
-                <h5>(共{$pager->totalRows}条记录)</h5>
+				{eq name="$Think.const.CONTROLLER_NAME.'@channel_add'|is_check_access" value="1"}
+				<div class="fbutton">
+                    <a href="javascript:void(0);" data-href="{:url('Field/channel_add', array('channel_id'=>$channel_id))}" onclick="openFullframe(this, '新增字段', '100%', '100%');">
+				        <div class="add" title="新增字段">
+				            <span><i class="layui-icon layui-icon-addition"></i>新增字段</span>
+				        </div>
+				    </a>
+				</div>
+				{/eq}
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" action="{:url('Field/channel_index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
@@ -22,10 +33,8 @@
                         <input type="hidden" name="channel_id" id="channel_id" value="{$channel_id|default='1'}">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="字段搜索...">
                         <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
                     </div>
-                    <!-- <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Field/channel_index', array("channel_id"=>$channel_id))}';">
-                    </div> -->
                 </div>
             </form>
         </div>
@@ -38,7 +47,7 @@
                             <div class="tc">ID</div>
                         </th>
                         <th abbr="article_title" axis="col3" class="">
-                            <div class="">字段标题</div>
+                            <div class="text-l10">字段标题</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w160">
                             <div class="tc">字段名称</div>
@@ -82,12 +91,12 @@
                                 </div>
                             </td>
                             <td style="width: 100%">
-                                <div style="">
+                                <div class="text-l10">
                                 {if condition="($vo['ifsystem'] eq 1) OR (1 eq $vo['ifmain'])"}
                                     {$vo.title}
                                 {else /}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@channel_edit'|is_check_access" value="1"}
-                                    <a href="{:url('Field/channel_edit',array('channel_id'=>$channel_id,'id'=>$vo['id']))}">{$vo.title}</a>
+                                    <a href="javascript:void(0);" data-href="{:url('Field/channel_edit',array('channel_id'=>$channel_id,'id'=>$vo['id']))}" onclick="openFullframe(this, '编辑字段', '100%', '100%');">{$vo.title}</a>
                                     {else /}
                                     {$vo.title}
                                     {/eq}
@@ -118,25 +127,34 @@
                                     {$vo.update_time|date='Y-m-d',###}
                                 </div>
                             </td>
-                            <td class="">
+                            <td  class="operation">
                                 <div class="w250 tc">
                                 {eq name="'Field@ajax_channel_show'|is_check_access" value="1"}
                                 {if condition="$vo['ifcontrol'] eq 1"}
-                                ———
+                                <a class="btn grey"  href="javascript:void(0);" data-id="{$vo.id}" data-ifeditable="{eq name='$vo.ifeditable' value='1'}0{else /}1{/eq}">{if condition="$vo['ifeditable'] eq 1"}隐藏{else /}显示{/if}</a>
                                 {else /}
-                                <a class="btn blue"  href="javascript:void(0);" data-url="{:url('Field/ajax_channel_show')}" data-id="{$vo.id}" data-ifeditable="{eq name='$vo.ifeditable' value='1'}0{else /}1{/eq}" onClick="handleShow(this);"><i class="fa fa-trash-o"></i>{if condition="$vo['ifeditable'] eq 1"}隐藏{else /}显示{/if}</a>
+                                <a class="btn blue"  href="javascript:void(0);" data-url="{:url('Field/ajax_channel_show')}" data-id="{$vo.id}" data-ifeditable="{eq name='$vo.ifeditable' value='1'}0{else /}1{/eq}" onClick="handleShow(this);">{if condition="$vo['ifeditable'] eq 1"}隐藏{else /}显示{/if}</a>
                                 {/if}
                                 {/eq}
+								<i></i>
                                 {if condition="($vo['ifsystem'] eq 1) OR (1 eq $vo['ifmain'])"}
-                                    ——————
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@channel_edit'|is_check_access" value="1"}
+                                    <a href="javascript:void(0);" class="btn grey">编辑</a>
+                                    {/eq}
+									<i></i>
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@channel_del'|is_check_access" value="1"}
+                                    <a class="btn grey"  href="javascript:void(0);"  data-id="{$vo.id}">删除</a>
+                                    {/eq}
                                 {else /}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@channel_edit'|is_check_access" value="1"}
-                                    <a href="{:url('Field/channel_edit',array('channel_id'=>$channel_id,'id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    <a href="javascript:void(0);" data-href="{:url('Field/channel_edit',array('channel_id'=>$channel_id,'id'=>$vo['id']))}" class="btn blue" onclick="openFullframe(this, '编辑字段', '100%', '100%');">编辑</a>
                                     {/eq}
+									<i></i>
                                     {eq name="$Think.const.CONTROLLER_NAME.'@channel_del'|is_check_access" value="1"}
-                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Field/channel_del', array('channel_id'=>$channel_id))}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Field/channel_del', array('channel_id'=>$channel_id))}" data-id="{$vo.id}" onClick="delfun(this);">删除</a>
                                     {/eq}
                                 {/if}
+								<i></i>
                                 <a class="btn blue" href="javascript:void(0);" data-name="{$vo.name}" data-channel_id="{$channel_id|default='0'}" data-dtype="{$vo.dtype}" data-ifmain="{$vo.ifmain}" data-is_screening="{$vo.is_screening}" onclick="copyToClipBoard(this)">标签调用</a>
                                 </div>
                             </td>
@@ -164,20 +182,9 @@
         </div>
         <div class="tDiv">
             <div class="tDiv2">
-                {eq name="$Think.const.CONTROLLER_NAME.'@channel_add'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a href="{:url('Field/channel_add', array('channel_id'=>$channel_id))}">
-                        <div class="add" title="新增字段">
-                            <span class="red"><i class="fa fa-plus"></i>新增字段</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
-            </div>
+				{include file="public/page" /}
             <div style="clear:both"></div>
         </div>
-        <!--分页位置-->
-        {$page}
     </div>
 </div>
 <script type="text/javascript">
@@ -220,7 +227,7 @@
           $.ajax({
             type : 'post',
             url : $(obj).attr('data-url'),
-            data : {del_id:$(obj).attr('data-id')},
+            data : {del_id:$(obj).attr('data-id'), _ajax:1},
             dataType : 'json',
             success : function(data){
               layer.closeAll();
@@ -259,10 +266,10 @@
                 case 'imgs':
                     {
                         height = '400px';
-                        var viewstr = "{eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyou.field."+fieldname+"'}\r\n    <img src='{$"+fieldname+".image_url}' />\r\n{/eyou:diyfield";
+                        var viewstr = "{eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyou.field."+fieldname+"'}\r\n    <img src='{$"+fieldname+".image_url}' />\r\n    注释：{$"+fieldname+".intro}\r\n{/eyou:diyfield";
                         contentdiv += '<dd>列表/内容页：</dd>';
-                        contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:60px;">' + viewstr + '}</textarea></dd>';
-                        var liststr = "{eyou:type typeid='栏目ID' id='eyoav' addfields='"+fieldname+"'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        <img src='{$"+fieldname+".image_url}' />\r\n    {/eyou:diyfield"+"}\r\n{/eyou:type";
+                        contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:80px;">' + viewstr + '}</textarea></dd>';
+                        var liststr = "{eyou:type typeid='栏目ID' id='eyoav' addfields='"+fieldname+"'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        <img src='{$"+fieldname+".image_url}' />\r\n        注释：{$"+fieldname+".intro}\r\n    {/eyou:diyfield"+"}\r\n{/eyou:type";
                         contentdiv += '<dd>标签 arclist / list 内调用 <font color="red">(更多简洁调法请参考标签 arclist /list)</font>：</dd>';
                         contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:120px;">' + liststr + '}</textarea></dd>';
                     }
@@ -277,6 +284,16 @@
                         var liststr = "{eyou:type typeid='栏目ID' id='eyoav' addfields='"+fieldname+"'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        {$"+fieldname+".value}\r\n    {/eyou:diyfield"+"}\r\n{/eyou:type";
                         contentdiv += '<dd>标签 arclist / list 内调用 <font color="red">(更多简洁调法请参考标签 arclist /list)</font>：</dd>';
                         contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:120px;">' + liststr + '}</textarea></dd>';
+                    }
+                    break;
+
+                case 'datetime':
+                    {
+                        contentdiv += '<dd>列表/内容页：</dd>';
+                        contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{$'+'eyou.field.'+fieldname+'|MyDate=\'Y-m-d H:i:s\',###}"></dd>';
+                        var liststr = "{eyou:type typeid='栏目ID' addfields='"+fieldname+"'}\r\n    {$"+"field."+fieldname+"|MyDate=\'Y-m-d H:i:s\',###}\r\n{/eyou:type";
+                        contentdiv += '<dd>标签 type 属性 addfields 调用：</dd>';
+                        contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:60px;">' + liststr + '}</textarea></dd>';
                     }
                     break;
 
@@ -297,10 +314,10 @@
                 case 'imgs':
                     {
                         height = '400px';
-                        var viewstr = "{eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyou.field."+fieldname+"'}\r\n    <img src='{$"+fieldname+".image_url}' />\r\n{/eyou:diyfield";
+                        var viewstr = "{eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyou.field."+fieldname+"'}\r\n    <img src='{$"+fieldname+".image_url}' />\r\n    注释：{$"+fieldname+".intro}\r\n{/eyou:diyfield";
                         contentdiv += '<dd>内容页：</dd>';
-                        contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:60px;">' + viewstr + '}</textarea></dd>';
-                        var liststr = "{eyou:arcview aid='$"+"field.aid' id='eyoav' addfields='"+fieldname+"'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        <img src='{$"+fieldname+".image_url}' />\r\n    {/eyou:diyfield"+"}\r\n{/eyou:arcview";
+                        contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:80px;">' + viewstr + '}</textarea></dd>';
+                        var liststr = "{eyou:arcview aid='$"+"field.aid' id='eyoav' addfields='"+fieldname+"'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        <img src='{$"+fieldname+".image_url}' />\r\n        注释：{$"+fieldname+".intro}\r\n    {/eyou:diyfield"+"}\r\n{/eyou:arcview";
                         contentdiv += '<dd>标签 arclist / list 内调用 <font color="red">(更多简洁调法请参考标签 arclist /list)</font>：</dd>';
                         contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:120px;">' + liststr + '}</textarea></dd>';
                     }
@@ -315,6 +332,34 @@
                         var liststr = "{eyou:arcview aid='$"+"field.aid' id='eyoav' addfields='"+fieldname+"'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        {$"+fieldname+".value}\r\n    {/eyou:diyfield"+"}\r\n{/eyou:arcview";
                         contentdiv += '<dd>标签 arclist / list 内调用 <font color="red">(更多简洁调法请参考标签 arclist /list)</font>：</dd>';
                         contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:120px;">' + liststr + '}</textarea></dd>';
+                        if (1 == is_screening) {
+                            contentdiv += '<dd style="color: red;">自定义字段应用于条件筛选，请参考标签用法：<a id="call_tags_help" href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('+"'https://www.eyoucms.com/plus/view.php?aid=7881','筛选标签调用'"+')">查看标签调用</a></dd>';
+                        }
+                    }
+                    break;
+
+                case 'datetime':
+                    {
+                        contentdiv += '<dd>内容页：</dd>';
+                        contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{$'+'eyou.field.'+fieldname+'|MyDate=\'Y-m-d H:i:s\',###}"></dd>';
+                        var liststr = "{eyou:arcview aid='$"+"field.aid' id='eyoav' addfields='"+fieldname+"'}\r\n    {$"+"eyoav."+fieldname+"|MyDate=\'Y-m-d H:i:s\',###}\r\n{/eyou:arcview";
+                        contentdiv += '<dd>标签 arclist / list 内调用 <font color="red">(更多简洁调法请参考标签 arclist /list)</font>：</dd>';
+                        contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:60px;">' + liststr + '}</textarea></dd>';
+                    }
+                    break;
+
+                case 'htmltext':
+                    {
+                        contentdiv += '<dd>内容页：</dd>';
+                        contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{$'+'eyou.field.'+fieldname+'}"></dd>';
+                        if (1 == ifmain) {
+                            contentdiv += '<dd>标签 arclist / list 内调用：</dd>';
+                            contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{$'+'field.'+fieldname+'}"></dd>';
+                        } else {
+                            var liststr = "eyou:field aid='$"+"field.aid' addfields='"+fieldname+"|html_msubstr=###,0,150,true' /";
+                            contentdiv += '<dd>标签 arclist / list 内调用：</dd>';
+                            contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{'+liststr+'}"></dd>';
+                        }
                         if (1 == is_screening) {
                             contentdiv += '<dd style="color: red;">自定义字段应用于条件筛选，请参考标签用法：<a id="call_tags_help" href="https://www.eyoucms.com/plus/view.php?aid=7881" target="_blank">查看标签调用</a></dd>';
                         }
@@ -354,7 +399,7 @@
         $.ajax({
             type : 'post',
             url : $(obj).attr('data-url'),
-            data : {id:$(obj).attr('data-id'),ifeditable:$(obj).attr('data-ifeditable')},
+            data : {id:$(obj).attr('data-id'),ifeditable:$(obj).attr('data-ifeditable'), _ajax:1},
             dataType : 'json',
             success : function(data){
                 layer.closeAll();

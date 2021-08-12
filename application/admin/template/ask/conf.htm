@@ -1,0 +1,188 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;">
+    {include file="ask/bar" /}
+    <form id="post_form" method="post">
+        <div class="flexigrid">
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit"> <label for="smtp_server">会员限制</label> </dt>
+                    <dd class="opt">
+                        [<a href="javascript:void(0);" data-href="{:U('Ask/level_set')}" onclick="openFullframe(this, '会员限制');">配置</a>]
+                        <p class=""></p>
+                    </dd>
+                </dl>
+            </div>
+
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit"> <label>提问步骤</label> </dt>
+                    <dd class="opt">
+                        <textarea rows="5" cols="60" name="ask[ask_ques_steps]" style="height: 200px;">{$askConf.ask_ques_steps|default=''}</textarea>
+                        <p class="notic">展示于发布问题页右侧边</p>
+                    </dd>
+                </dl>
+            </div>
+
+            <div class="hDiv" id="smtp">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div id="anchor-sms" class="tc">QQ群推广</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit" style="padding-left: 10px;">
+                        <label>QQ群号码</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="ask[ask_qq]" value="{$askConf.ask_qq|default=''}" class="input-txt">
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit" style="padding-left: 10px;">
+                        <label>一键加群链接</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="ask[ask_qq_link]" value="{$askConf.ask_qq_link|default=''}" class="input-txt">
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit" style="padding-left: 10px;">
+                        <label>加群推广描述</label>
+                    </dt>
+                    <dd class="opt">
+                        <textarea rows="5" cols="60" name="ask[ask_intro]" style="height:60px;">{$askConf.ask_intro|default=''}</textarea>
+                    </dd>
+                </dl>
+            </div>
+
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">积分管理</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">
+                        <label>问答送积分</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="onoff">
+                            <label for="score_ask_status1" class="cb-enable {if condition='isset($score.score_ask_status) AND $score.score_ask_status eq 1'}selected{/if}" onclick="changeStatus('control_ask_status',1);">开启</label>
+                            <label for="score_ask_status0" class="cb-disable {if condition='!isset($score.score_ask_status) OR empty($score.score_ask_status)'}selected{/if}" onclick="changeStatus('control_ask_status',0);">关闭</label>
+                            <input id="score_ask_status1" name="score[score_ask_status]" value="1" type="radio" {if condition="isset($score.score_ask_status) AND $score.score_ask_status eq 1" } checked="checked" {/if}>
+                            <input id="score_ask_status0" name="score[score_ask_status]" value="0" type="radio" {if condition="!isset($score.score_ask_status) OR empty($score.score_ask_status)" } checked="checked" {/if}>
+                        </div>
+                    </dd>
+                </dl>
+                <div id="control_ask_status" {empty name="$score.score_ask_status"}style="display:none;"{/empty}>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>提问加积分</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="score[score_ask_score]" value="{$score.score_ask_score|default=2}" class="w80">&nbsp;积分/次
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>提问加积分次数</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="score[score_ask_count]" value="{$score.score_ask_count|default=2}" class="w80">&nbsp;次/天 (0为不限次数)
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>回答加积分</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="score[score_reply_score]" value="{$score.score_reply_score|default=2}" class="w80">&nbsp;积分/次
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>回答加积分次数</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="score[score_reply_count]" value="{$score.score_reply_count|default=2}" class="w80">&nbsp;次/天 (0为不限次数)
+                    </dd>
+                </dl>
+            </div>
+
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <div class="bot">
+                        <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green"
+                           id="submitBtn">确认提交</a>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    function check_submit(obj){
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : $(obj).attr('data-url'),
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {icon: 1, time:1000}, function(){
+                        window.location.reload();
+                    });
+                }else{
+                    showErrorAlert(res.msg);
+                }
+            },
+            error : function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        })
+    }
+    function changeStatus(id,val) {
+        if (1 == val) {
+            $("#"+id).show();
+        }else{
+            $("#"+id).hide();
+        }
+    }
+</script>
+{include file="public/footer" /}
+

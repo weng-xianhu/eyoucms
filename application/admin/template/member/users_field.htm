@@ -133,7 +133,7 @@
                                 </a>
                             </span>
                             <span class="type-file-box">
-                                <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}_eyou_local" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_local]" value="{$vo[$vo['name'].'_eyou_local']|default=''}" class="type-file-text">
+                                <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}_eyou_local" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_local]" value="{$vo[$vo['name'].'_eyou_local']|default=''}" class="type-file-text" autocomplete="off">
                                 <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
                                 <input class="type-file-file" onClick="GetUploadify(1,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back')" size="30" hidefocus="true" nc_type="change_site_{$vo.fieldArr}_{$vo.name|default=''}"
                                      title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
@@ -229,7 +229,7 @@
                     {
                         $.ajax({
                             type:'GET',
-                            url:"{:url('Uploadify/delupload')}",
+                            url:"{:url('Uploadify/delupload', ['_ajax'=>1])}",
                             data:{action:"del", filename:path},
                             success:function(){
                                 $(obj).parent().remove(); // 删除完服务器的, 再删除 html上的图片                
@@ -238,7 +238,7 @@
                         // 删除数据库记录
                         $.ajax({
                             type:'GET',
-                            url:"{:url('Field/del_channelimgs')}",
+                            url:"{:url('Field/del_channelimgs', ['_ajax'=>1])}",
                             data:{filename:path,channel:"{$channeltype|default='0'}",fieldname:"{$vo.name}",aid:"{$aid|default='0'}"},
                             success:function(){
                                 //         
@@ -366,33 +366,59 @@
                 <!-- HTML文本 end -->
             {/case}
 
-            {case value="files"}
-                <!-- 多文件 start -->
-<!--                 <dl class="row">
-    <dt class="tit">
-                        <label>{if condition="1 == $vo.is_required"}<em>*</em>{/if}{$vo.title}</label>
-    </dt>
-    <dd class="opt">
-        <div id="uploader" class="wu-example">
-            用来存放文件信息
-            <div id="thelist" class="uploader-list"></div>
-            <div class="btns left">
-                <div id="picker">选择文件</div>
-                <input type="button" id="ctlBtn" class="btn btn-default" value="开始上传" />
-            </div>
-        </div>
-        <span class="err"></span>
-        <p class="notic">只允许上传文件的类型：{$global.file_type|default=''}</p>
-    </dd>
-</dl>
-<link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/webuploader/webuploader.css">
-<script type="text/javascript" src="__PUBLIC__/plugins/webuploader/webuploader.min.js"></script>
-<script type="text/javascript">
-    var uploader_swf = '__PUBLIC__/plugins/webuploader/Uploader.swf';
-    var server_url="{:url('Ueditor/downFileUp',array('savepath'=>'soft'))}";
-</script>
-<script src="__SKIN__/js/getting-started.js"></script> -->
-                <!-- 多文件 end -->
+            {/eyou:case}
+            {case value="file"}
+            <!-- 单个文件 start -->
+            <dl class="row">
+                <dt class="tit">
+                    <label>{if condition="1 == $vo.is_required"}<!-- <em>*</em> -->{/if}{$vo.title}</label>
+                </dt>
+                <dd class="opt">
+                    <a id="download_file_{$vo.fieldArr}_{$vo.name|default=''}" style="margin-right: 30px;text-decoration: underline;{eyou:notempty name='$vo.info' /}display: '';{eyou:else /}display: none;{/eyou:notempty}"
+                       {eyou:notempty name='$vo.info' /} href="{$vo.info|default=''}" download="{$vo.info|get_filename=###}" {/eyou:notempty}>
+                    <img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件</a>
+                    <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.info|default=''}" style="display: none;">
+                    <button type="button" class="layui-btn" id="upload_{$vo.fieldArr}_{$vo.name|default=''}" style="height: 30px;line-height: 30px;padding: 0 5px;background-color: #4fc0e8;">上传文件</button>
+                </dd>
+            </dl>
+            <script type="text/javascript">
+                layui.use('upload', function(){
+                    var upload = layui.upload;
+
+                    //执行实例
+                    upload.render({
+                        elem: '#upload_{$vo.fieldArr}_{$vo.name|default=""}' //绑定元素
+                        ,url: "{:url('Ueditor/DownloadUploadFileAjax')}"
+                        ,accept: 'file' //普通文件
+                        ,exts: '{$vo.ext}'
+                        ,size: {$vo.filesize} //限制文件大小，单位 KB
+                        ,done: function(res){
+                            if (res.code==1){
+                                layer.msg(res.msg);
+                                var  arr = res.file_url.split("/");
+                                var download = arr[arr.length-1];
+                                $("#{$vo.fieldArr}_{$vo.name|default=''}").val(res.file_url);
+                                $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}")
+                                    .show()
+                                    .attr('href',res.file_url)
+                                    .attr('download',download)
+                                    .css('color','#000')
+                                    .html('<img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件');
+                            }else {
+                                $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}")
+                                    .show()
+                                    .css('color','red')
+                                    .text(res.msg)
+                                    .attr('href', 'javascript:void(0);');
+                            }
+                        }
+                        ,error: function(){
+                            //请求异常回调
+                        }
+                    });
+                });
+            </script>
+            <!-- 单个文件 end -->
             {/case}
         {/switch}
 {/volist}

@@ -1,0 +1,94 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="min-width: auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;">
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>会员级别列表</h3>
+                <h5>(共{$LevelCount}条数据)</h5>
+            </div>
+            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
+        </div>
+        <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+            <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+                <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+            </div>
+            <ul>
+                <li>投稿次数限制按天计算</li>
+            </ul>
+        </div>
+        <br/>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w20" axis="col0">
+                            <div class="tc"></div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="">级别名称</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w100">
+                            <div class="tc">投稿次数</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto; min-height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="w20 tc">
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="">
+                                    {$vo.level_name}
+                                </div>
+                            </td>
+                            <td class="sort">
+                                <div class="w100 tc">
+                                    <input type="text" onchange="changeTableVal('users_level','level_id','{$vo.level_id}','posts_count',this);" value="{$vo.posts_count}" class="tc" title="输入次数，点击空白处即可保存！"/> 次
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+
+{include file="public/footer" /}

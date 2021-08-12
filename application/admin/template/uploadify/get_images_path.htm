@@ -76,26 +76,26 @@
     </div>
     <div class="ui-layout-center" id="online">
         <ul id="list" class="tabs">
+            {notempty name="$common_pic"}
+                <div class="heading">
+                  <h2>最近使用</h2>
+                  <hr>
+                </div>
+                {volist name="common_pic" id="pic"}
+                    <li data-url="{$pic.pic_path}" onclick='hover_new(this);'>
+                        <img src="{$pic.pic_path}" />
+                        <span class="icon"></span>
+                    </li>
+                {/volist}
+            {/notempty}
+ 
+            <div class="heading">
+                 <h2>目录图片</h2>
+                 <hr>
+            </div>
             {empty name="$list"}
                 <div class='nonepic'>暂无图片可选择~</div>
             {else/}
-                {notempty name="$common_pic"}
-                    <div class="heading">
-                      <h2>智能推荐</h2>
-                      <hr>
-                    </div>
-                    {volist name="common_pic" id="pic"}
-                        <li data-url="{$pic.pic_path}" onclick='hover_new(this);'>
-                            <img src="{$pic.pic_path}" />
-                            <span class="icon"></span>
-                        </li>
-                    {/volist}
-                {/notempty}
-     
-                <div class="heading">
-                     <h2>目录图片</h2>
-                     <hr>
-                </div>
                 {volist name="list" id="vo"}
                     <li data-url="{$vo.path}" onclick='hover_new(this);'>
                         <img src="{$vo.path}"  />

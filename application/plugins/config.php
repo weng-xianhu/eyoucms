@@ -31,9 +31,9 @@ $plugins_config = array(
     // +----------------------------------------------------------------------
 
     // 异常页面的模板文件 
-    //'exception_tmpl'         => ROOT_PATH.'public/static/errpage/404.html',
+    //'exception_tmpl'         => ROOT_PATH.'public/errpage/404.html',
     // errorpage 错误页面
-    //'error_tmpl'         => ROOT_PATH.'public/static/errpage/404.html',
+    //'error_tmpl'         => ROOT_PATH.'public/errpage/404.html',
     
     /**假设这个访问地址是 www.xxxxx.dev/index/goods/goodsInfo/id/1.html 
      *就保存名字为 index_goods_goodsinfo_1.html     

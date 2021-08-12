@@ -64,10 +64,6 @@ class Upgrade extends Controller {
         $upgradeMsg = $upgradeLogic->checkVersion(); //升级包消息     
         $this->assign('upgradeMsg',$upgradeMsg);
 
-        $is_eyou_authortoken = session('web_is_authortoken');
-        $is_eyou_authortoken = !empty($is_eyou_authortoken) ? $is_eyou_authortoken : 0;
-        $this->assign('is_eyou_authortoken', $is_eyou_authortoken);
-
         $this->assign('web_show_popup_upgrade', $globalTpCache['web.web_show_popup_upgrade']);
 
         $this->assign('global', $globalTpCache);
@@ -94,11 +90,13 @@ class Upgrade extends Controller {
         if (1 <= intval($data['code'])) {
             $this->success($data['msg'], null, ['code'=>$data['code']]);
         } else {
+            $code = 0;
             $msg = '升级异常，请第一时间联系技术支持，排查问题！';
             if (is_array($data)) {
-                $msg = $data['msg'];
+                isset($data['code']) && $code = $data['code'];
+                isset($data['msg']) && $msg = $data['msg'];
             }
-            $this->error($msg);
+            $this->error($msg, null, ['code'=>$code]);
         }
     }
 
@@ -129,7 +127,7 @@ class Upgrade extends Controller {
         {
             $tfilename = $filename;
             $curdir = $this->GetDirName($tfilename);
-            if (empty($curdir)) {
+            if (empty($curdir) || !file_exists($curdir)) {
                 continue;
             }
             if( !isset($dirs[$curdir]) ) 
@@ -179,8 +177,11 @@ class Upgrade extends Controller {
             $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVNlcnZpY2UmYT1nZXRfZGF0YWJhc2VfdHh0';
             $service_url = base64_decode(config('service_ey')).base64_decode($tmp_str);
             $url = $service_url . '&version=' . getCmsVersion();
-            $context = stream_context_set_default(array('http' => array('timeout' => 3,'method'=>'GET')));
-            $response = @file_get_contents($url,false,$context);
+            $response = @httpRequest($url);
+            if (empty($response)) {
+                $context = stream_context_set_default(array('http' => array('timeout' => 3,'method'=>'GET')));
+                $response = @file_get_contents($url,false,$context);
+            }
             $params = json_decode($response,true);
             if (false == $params) {
                 $this->error('连接升级服务器超时，请刷新重试，或者联系技术支持！', null, ['code'=>2]);
@@ -251,7 +252,7 @@ class Upgrade extends Controller {
             if (true == $is_pass) {
                 $this->success($msg);
             } else {
-                $this->error('当前版本数据库结构与官方不一致，请第一时间联系技术支持！', null, ['code'=>2]);
+                $this->error('当前数据库结构与官方不一致，请查看官方解决教程！', null, ['code'=>2]);
             }
             /*------------------end----------------------*/
         } else {
@@ -268,6 +269,7 @@ class Upgrade extends Controller {
     {
         $dirname = preg_replace("#[\\\\\/]{1,}#", '/', $filename);
         $dirname = preg_replace("#([^\/]*)$#", '', $dirname);
+        $dirname = preg_replace('/^data\/backup\/tpl\//i', '', $dirname);
         return $dirname;
     }
 
@@ -299,6 +301,9 @@ class Upgrade extends Controller {
         $tfile = '_eyout.txt';
         $fp = @fopen($d.$tfile,'w');
         if(!$fp) {
+            if (@is_writable($d)) {
+                return true;
+            }
             return false;
         }
         else {

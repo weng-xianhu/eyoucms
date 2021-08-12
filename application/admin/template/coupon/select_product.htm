@@ -1,0 +1,270 @@
+{include file="public/layout" /}
+<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4; padding: 15px; ">
+<style type="text/css">
+    .roundlabel {
+        display: inline-block;
+        border: solid 1px #D02626;
+        color: #D02626;
+        padding: 0px 8px;
+        font-size: 12px;
+        border-radius: 5px;
+    }
+</style>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" >
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                <h3>商品列表</h3>
+                <h5>(共{$pager->totalRows}条数据<span style="display: none;">，已选择<span id="ProductNum"></span>个</span>)</h5>
+            </div>
+            <!-- <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div> -->
+            <form class="navbar-form form-inline" id="postForm" action="{:url('Coupon/select_product')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">  
+                        <select name="typeid" class="select">
+                            <option value="">--所有商品--</option>
+                            {$arctype_html}
+                        </select>
+                    </div>
+                    <div class="sDiv2">
+                        <input type="hidden" name="typeid" id="typeid" value="{$Request.param.typeid|default=''}">
+                        <input type="text" size="50" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索商品名称...">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" class="checkAll" onclick="AllProductSelect(this);"></div>
+                        </th>
+                        <th align="center" abbr="article_title" axis="col3" class="w60">
+                            <div class="tc">封面图</div>
+                        </th>
+                        <th align="left" abbr="article_title" axis="col3" class="">
+                            <div style="text-align: left; padding-left: 10px;" class="">商品标题</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w150">
+                            <div class="tc">商品分类</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w120">
+                            <div class="tc">商品价格(元)</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {volist name="list" id="vo"}
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc">
+                                    <input type="checkbox" name="ids[]" value="{$vo.product_id}" onclick="Select(this);">
+                                </div>
+                            </td>
+                            <td class="w60">
+                                <div class="tc">
+                                    <img width="60" height="60" src="{$vo.litpic|get_default_pic=###}">
+                                </div>
+                            </td>
+                            <td class="" style="width: 100%;">
+                                <div class="tl" style="padding-left: 10px;">
+                                    <a href="{$vo.arcurl}" target="_blank">{$vo.title}</a>
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w150 tc">{$vo.typename}</div>
+                            </td>
+                            <td class="">
+                                <div class="w120 tc">{$vo.users_price}</div>
+                            </td>
+                        </tr>
+                        {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" class="checkAll" onclick="AllProductSelect(this);">
+                </div>
+                <div class="fbutton">
+                    <a onclick="SaveData();" class="layui-btn layui-btn-primary">
+                        <span>选择</span>
+                    </a>
+                </div>
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+    $(document).ready(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+
+        $('#postForm select[name=typeid]').change(function(){
+            $('#postForm').submit();
+        });
+
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 设置已选项
+        var SelectProductID = parent.$('#SelectProductID').val();
+        var TotalRows = {$pager->totalRows|default='0'};
+        if (SelectProductID) {
+            SelectProductID = SelectProductID.split(',');
+            if (SelectProductID) {
+                $('input[name*=ids]').each(function(i, o){
+                    if (($.inArray($(o).val(), SelectProductID) >= 0)) {
+                        $(o).prop('checked', 'checked');
+                    }
+                });
+                if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                    $('.checkAll').prop('checked','checked');
+                } else {
+                    $('.checkAll').prop('checked', false);
+                }
+            }
+        }
+
+        // 设置全选按钮，设置显示已选数量
+        var ProductIdNum = parent.$('#SelectProductID').val();
+        if (ProductIdNum) {
+            ProductIdNum = ProductIdNum.split(',').length;
+        } else {
+            ProductIdNum = 0;
+        }
+        var TotalRows = {$pager->totalRows|default='0'};
+        if (Number(TotalRows) >= Number(ProductIdNum) && 0 != ProductIdNum) {
+            $('#ProductNum').html(ProductIdNum).parent().show();
+        } else if (0 >= ProductIdNum) {
+            $('#ProductNum').html(0).parent().hide();
+        }
+    });
+
+    // 单页单选
+    function Select(obj) {
+        if($(obj).is(':checked')) {
+            var SelectProductID = parent.$('#SelectProductID').val();
+            if (SelectProductID) {
+                SelectProductID = SelectProductID + ',' + $(obj).val();
+            } else {
+                SelectProductID = $(obj).val();
+            }
+            SelectProductID = SelectProductID.split(',');
+            if (0 <= SelectProductID.length) {
+                $('#ProductNum').html(SelectProductID.length).parent().show();
+            } else {
+                $('#ProductNum').html(0).parent().hide();
+            }
+            SelectProductID = SelectProductID.join(",");
+            parent.$('#SelectProductID').val(SelectProductID);
+        } else {
+            var SelectProductID = parent.$('#SelectProductID').val();
+            if (SelectProductID) {
+                SelectProductID = SelectProductID.split(',');
+                for (var i = 0; i < SelectProductID.length; i++) {
+                    if (SelectProductID[i] == $(obj).val()) {
+                        SelectProductID.splice(i, 1);
+                    }
+                }
+                if (0 <= SelectProductID.length) {
+                    $('#ProductNum').html(SelectProductID.length).parent().show();
+                } else {
+                    $('#ProductNum').html(0).parent().hide();
+                }
+                SelectProductID = SelectProductID.join(",");
+                parent.$('#SelectProductID').val(SelectProductID);
+            }
+        }
+    }
+
+    // 全选所有商品
+    function AllProductSelect(obj) {
+        var product_ids = "{$Request.param.product_ids|default=''}";
+        var keywords = "{$Request.param.keywords|default=''}";
+        var typeid = "{$Request.param.typeid|default='0'}";
+
+        $.ajax({
+            url : "{:url('Coupon/ajax_get_product_id')}",
+            data: {_ajax: 1, product_ids: product_ids, keywords: keywords, typeid: typeid},
+            type: "POST",
+            dataType: 'json',
+            success: function (res) {
+                layer.closeAll();
+                if (res.code == 1) {
+                    var TotalRows = {$pager->totalRows|default='0'};
+                    var ProductIdNum = parent.$('#SelectProductID').val();
+                    if (ProductIdNum) {
+                        ProductIdNum = ProductIdNum.split(',').length;
+                    } else {
+                        ProductIdNum = 0;
+                    }
+                    if ('none' == $('#ProductNum').parent().css('display') || TotalRows != ProductIdNum) {
+                        $('#ProductNum').html(res.data.ProductNum).parent().show();
+                        parent.$('#SelectProductID').val(res.data.ProductIDS);
+                    } else {
+                        $('#ProductNum').html(0).parent().hide();
+                        parent.$('#SelectProductID').val('');
+                    }
+                } else {
+                    showErrorAlert(res.msg);
+                }
+            },
+            error:function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    // 选择确认数据
+    function SaveData() {
+        var SelectProductIDNew = parent.$('#SelectProductID').val();
+        parent.$('#product_id').val(SelectProductIDNew);
+        if (SelectProductIDNew) {
+            parent.$('#product_id_num').html(SelectProductIDNew.split(",").length).parent().show();
+        } else {
+            parent.$('#product_id_num').parent().hide();
+        }
+        parent.layer.close(parentObj);
+    }
+</script>
+
+{include file="public/footer" /}

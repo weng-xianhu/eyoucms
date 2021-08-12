@@ -218,7 +218,6 @@ class LanguageAttr extends Model
                                     'attr_value'    => $bind_value,
                                     'attr_group'    => $attr_group,
                                 ])->getField('attr_name');
-                            var_dump($bind_value);exit;
                             $attr_value = Db::name('language_attr')->where([
                                     'attr_name'    => $attr_name,
                                     'lang'  => $main_lang,

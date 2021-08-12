@@ -1,0 +1,107 @@
+{include file="public/layout" /}
+<body class="bodystyle">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;">
+    {include file="member/bar" /}
+    <div class="flexigrid">
+        
+        <form class="form-horizontal" id="post_form" action="{:url('UsersRelease/conf')}" method="post">
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">
+                        <label>投稿自动审核</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="onoff">
+                            <label for="is_automatic_review1" class="cb-enable {if condition='isset($UsersC.is_automatic_review) && $UsersC.is_automatic_review == 1'}selected{/if}">开启</label>
+                            <label for="is_automatic_review0" class="cb-disable {if condition='!isset($UsersC.is_automatic_review) || empty($UsersC.is_automatic_review)'}selected{/if}">关闭</label>
+
+                            <input id="is_automatic_review1" name="users[is_automatic_review]" value="1" type="radio"  {if condition="isset($UsersC.is_automatic_review) && $UsersC.is_automatic_review == 1"} checked="checked"{/if}>
+
+                            <input id="is_automatic_review0" name="users[is_automatic_review]" value="0" type="radio" {if condition="!isset($UsersC.is_automatic_review) || empty($UsersC.is_automatic_review)"} checked="checked" {/if}>
+                        </div>
+                        &nbsp; &nbsp; &nbsp; &nbsp;
+                        <span class="notic2 hui">开启后会员投稿将直接展示到前台文档列表</span>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label>投稿次数限制</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="onoff">
+                            <label for="is_open_posts_count1" class="cb-enable {if condition='isset($UsersC.is_open_posts_count) && $UsersC.is_open_posts_count == 1'}selected{/if}">开启</label>
+                            <label for="is_open_posts_count0" class="cb-disable {if condition='!isset($UsersC.is_open_posts_count) || empty($UsersC.is_open_posts_count)'}selected{/if}">关闭</label>
+
+                            <input id="is_open_posts_count1" name="users[is_open_posts_count]" value="1" type="radio"  {if condition="isset($UsersC.is_open_posts_count) && $UsersC.is_open_posts_count == 1"} checked="checked"{/if}>
+                            <input id="is_open_posts_count0" name="users[is_open_posts_count]" value="0" type="radio" {if condition="!isset($UsersC.is_open_posts_count) || empty($UsersC.is_open_posts_count)"} checked="checked" {/if}>
+                        </div>
+                        
+                        &nbsp; &nbsp; &nbsp; &nbsp;
+                        <a {if condition='!isset($UsersC.is_open_posts_count) || empty($UsersC.is_open_posts_count)'}style="display: none;"{/if} id='UpUsersLevelBout' href="javascript:void(0);" onclick="UpUsersLevelBout();" class="ncap-btn ncap-btn-green">设置次数</a>
+
+                        <span class="notic2 hui">开启后可设置会员每日的投搞数量</span>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="title" id="select_title">投稿栏目选择</label>
+                    </dt>
+                    <dd class="opt">
+                        <select name="typeids[]" id="typeid" style="width: 300px;" size="15" multiple="true">
+                            {$select_html}
+                        </select>
+                        <span class="err"></span>
+                        <p class="notic2 red">(按 Ctrl 可以进行多选)</p>
+                    </dd>
+                </dl>
+            </div>
+
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <div class="bot">
+                        <a href="JavaScript:void(0);" onclick="UsersReleaseConfig();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                    </div>
+                </dl>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function(){
+        $('input[name="users[is_open_posts_count]"]').click(function(){
+            var is_open_posts_count = $(this).val();
+            if (1 == is_open_posts_count) {
+                $('#UpUsersLevelBout').show();
+            } else {
+                $('#UpUsersLevelBout').hide();
+            }
+        });
+    });
+
+    // 判断输入框是否为空
+    function UsersReleaseConfig(){
+        layer_loading('正在处理');
+        $('#post_form').submit();
+    }
+
+    function UpUsersLevelBout()
+    {
+        var url = "{:url('UsersRelease/ajax_users_level_bout')}";
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: '会员投稿次数设置',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            maxmin: true, //开启最大化最小化按钮
+            area: ['50%', '80%'],
+            content: url
+        });
+    }
+</script>
+{include file="public/footer" /}

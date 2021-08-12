@@ -1,0 +1,261 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="shop/left" /}
+<div class="page" style="min-width:auto;margin-left:98px;">
+    {include file="shop/shop_bar" /}
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle"> <h3>售后列表</h3> <h5>(共{$pager->totalRows}条数据)</h5> </div>
+            <form class="navbar-form form-inline" id="postForm" action="{:url('ShopService/after_service')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="50" name="order_code" value="{$Request.param.order_code}" class="qsbox" style="width: 200px;" placeholder="搜索订单号..."> <input type="submit" class="btn" value="搜索"> <i class="fa fa-search"></i>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                        </th>
+                        <th align="center" abbr="article_title" axis="col3" class="w60">
+                            <div class="tc">缩略图</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="">
+                            <div style="text-align: left; padding-left: 10px;" class="">订单号</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">用户名</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">商品金额</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">退还金额</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">售后类型</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">处理状态</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w160">
+                            <div class="tc">申请时间</div>
+                        </th>
+                        <th axis="col1" class="w200">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="Service"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {volist name="Service" id="vo"}
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc"> <input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.service_id}"> </div>
+                            </td>
+
+                            <td class="w60">
+                                <div class="tc">
+                                    <a href="{$vo.arcurl}" target="_blank"><img width="60" height="60" src="{$vo.product_img}"></a>
+                                </div>
+                            </td>
+
+                            <td class="" style="width: 100%;">
+                                <div class="tl" style="padding-left: 10px;">
+                                    <a href="javascript:void(0);" data-href="{:url('Shop/order_details', array('order_id' => $vo['order_id']))}" onclick="openFullframe(this, '订单详情', '100%', '100%');"> {$vo.order_code} </a>
+                                </div>
+                            </td>
+
+                            <td class="">
+                                <div class="w100 tc">
+                                    <a href="javascript:void(0);" data-href="{:url('Member/users_edit', array('id' => $vo['users_id']))}" onclick="openFullframe(this, '用户资料', '100%', '100%');"> {$vo.username} </a>
+                                </div>
+                            </td>
+
+                            <td class="">
+                                {eq name="$vo.service_type" value="1"}￥{$vo.product_total_price}{/eq}
+                                {eq name="$vo.service_type" value="2"}￥{$vo.product_total_price}{/eq}
+                            </td>
+
+                            <td class="">
+                                {eq name="$vo.service_type" value="1"}￥{$vo.refund_price}{/eq}
+                                {eq name="$vo.service_type" value="2"}￥{$vo.refund_price}{/eq}
+                            </td>
+
+                            <td class="">
+                                {eq name="$vo.service_type" value="1"}<div class="w100 tc blue">换货</div>{/eq}
+                                {eq name="$vo.service_type" value="2"}<div class="w100 tc red">退货</div>{/eq}
+                                {eq name="$vo.service_type" value="3"}<div class="w100 tc">维修</div>{/eq}
+                            </td>
+
+                            <td class=""> <div class="w100 tc"> {$ServiceStatus[$vo.status]|default=''} </div> </td>
+
+                            <td class=""> <div class="w160 tc"> {$vo.add_time|MyDate='Y-m-d H:i:s',###} </div> </td>
+
+                            <td>
+                                <div class="w200 tc">
+                                    <a href="javascript:void(0);" data-href="{:url('ShopService/after_service_details', array('service_id' => $vo['service_id']))}" onclick="openFullframe(this, '售后详情', '100%', '100%');" class="btn blue"><i class="fa fa-pencil-square-o"></i> 详情 </a>
+                                    {eq name="$vo.status" value="1"}
+                                    <a href="JavaScript:void(0);" onclick="AuditOpinion('{$vo.service_id}', '{$vo.users_id}', '{$vo.order_id}', '{$vo.service_type}');" class="btn blue"> 审核 </a>
+                                    {/eq}
+                                    {if $vo.service_type == 1 && in_array($vo.status, [2, 4, 5])}
+                                    <a href="JavaScript:void(0);" onclick="CarryOut('{$vo.service_id}', '{$vo.users_id}', '{$vo.order_id}', '{$vo.service_type}');" class="btn blue"> 完成 </a>
+                                    {/if}
+                                    {if $vo.service_type == 2 && in_array($vo.status, [2, 4, 5])}
+                                    <a href="JavaScript:void(0);" onclick="Refund('{$vo.service_id}', '{$vo.users_id}', '{$vo.order_id}', '{$vo.refund_price}');" class="btn blue"> 退款 </a>
+                                    {/if}
+                                    <a href="javascript:void(0);" data-url="{:url('ShopService/after_service_del')}" data-id="{$vo.service_id}" onclick="delfun(this);" class="btn blue"> 删除 </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('ShopService/after_service_del')}" class="layui-btn layui-btn-primary"><span>批量删除</span></a>
+                </div>
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    // 确认审核意见
+    function AuditOpinion(service_id, users_id, order_id, service_type) {
+        var type = 1 == service_type ? "<span style='color: blue;'> 换货 </span>" : "<span style='color: red;'> 退货 </span>";
+        layer.confirm('是否同意'+type+'申请？', {
+            title: false,
+            btn: ['同意', '拒绝'],
+        }, function() {
+            // 同意申请
+            PerformOperation(service_id, users_id, order_id, 2, 0, 0);
+        }, function() {
+            // 拒绝申请
+            PerformOperation(service_id, users_id, order_id, 3, 0, 0);
+        });
+    }
+
+    // 确认完成服务
+    function CarryOut(service_id, users_id, order_id, service_type) {
+        var type = 1 == service_type ? "<span style='color: blue;'> 换货 </span>" : "<span style='color: red;'> 退货 </span>";
+        layer.confirm('确认完成'+type+'服务？', {
+            title: false,
+            btn: ['确认', '取消'],
+        }, function() {
+            // 确认
+            if (1 == service_type) {
+                // 换货结束
+                PerformOperation(service_id, users_id, order_id, 6, 0, 0);
+            } else if (2 == service_type) {
+                // 退货结束
+                PerformOperation(service_id, users_id, order_id, 7, 0, 0);
+            }
+        }, function() {
+
+        });
+    }
+
+    // 确认退款操作
+    function Refund(service_id, users_id, order_id, refund_price) {
+        layer.confirm("请选择<span style='color: red;'> 退货 </span>操作", {
+            title: false,
+            btn: ['退款到余额', '直接完成'],
+        }, function() {
+            // 确认
+            PerformOperation(service_id, users_id, order_id, 7, 1, refund_price);
+        }, function() {
+            PerformOperation(service_id, users_id, order_id, 7, 0, refund_price);
+        });
+    }
+
+    // 执行审核操作
+    function PerformOperation(service_id, users_id, order_id, status, is_refund, refund_price) {
+        layer_loading('正在处理');
+        $.ajax({
+            url: "{:url('ShopService/after_service_deal_with')}",
+            data: {
+                service_id: service_id,
+                users_id: users_id,
+                order_id: order_id,
+                status: status,
+                is_refund: is_refund,
+                refund_price: refund_price,
+                _ajax: 1
+            },
+            type:'post',
+            dataType:'json',
+            success:function(res) {
+                layer.closeAll();
+                if (1 == res.code) {
+                    layer.msg(res.msg, {time: 1500}, function() {
+                        window.location.reload();
+                    });
+                } else {
+                    layer.msg(res.msg, {time: 1500});
+                }
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

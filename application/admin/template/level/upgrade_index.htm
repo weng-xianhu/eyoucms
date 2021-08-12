@@ -1,0 +1,187 @@
+{include file="public/layout" /}
+<body class="bodystyle">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+	{include file="member/bar" /}
+	<div class="flexigrid">
+		<div class="mDiv">
+            <div class="ftitle">
+                {include file="member/order_bar" /}
+            </div>
+			
+			<form class="navbar-form form-inline" action="{:url('Level/upgrade_index')}" method="get" onsubmit="layer_loading('正在处理');">
+				{$searchform.hidden|default=''}
+				<div class="sDiv">
+                    <div class="fl">
+                        <!-- #weapp_ExportOrder_btn# -->
+                    </div>
+					<div class="sDiv2">
+						<input type="text" name="add_time_begin" id="add_time_begin" value="{$Request.param.add_time_begin}" class="qsbox" autocomplete="off" placeholder="起始日期">
+					</div>
+					&nbsp;至&nbsp;
+					<div class="sDiv2">
+						<input type="text" name="add_time_end" id="add_time_end" value="{$Request.param.add_time_end}" class="qsbox" autocomplete="off" placeholder="结束日期">
+					</div>
+					<div class="sDiv2" >
+						<input type="text" size="30" name="order_number" value="{$Request.param.order_number}" class="qsbox" placeholder="搜索订单号...">
+						<input type="submit" class="btn" value="搜索">
+						<i class="fa fa-search"></i>
+					</div>
+					
+				</div>
+			</form>
+		</div>
+		<div class="hDiv" style="height: auto;">
+			<div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead style="background-color: #f7f7f7; height: 40px;line-height: 40px;">
+                    <tr>
+                       <th class="sign w40" axis="col0">
+                           <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                       </th>
+                        <th abbr="article_title" axis="col3" class="">
+                            <div class="text-l10" class="">订单号</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w160">
+                            <div class="tc">产品名称</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">订单金额<span class="hint" data-hint="当前列表订单总金额：￥{$total_money|default='0.00'}"><i class="fa fa-jpy ml5"></i></span></div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">支付方式</div>
+                        </th>
+                        <th axis="col1" class="w100">
+                            <div class="tc">会员</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w160">
+                            <div class="tc">升级时间</div>
+                        </th>
+                        <th axis="col1" class="w100">
+                            <div class="tc">状态</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+                
+                    </div>
+                </div>
+                <div class="bDiv" style="height: auto;">
+                    <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                        <table style="width: 100%">
+                            <tbody>
+					{empty name="list"}
+						<tr>
+							<td class="no-data" align="center" axis="col0" colspan="50">
+								<i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+							</td>
+						</tr>
+					{else/}
+						{foreach name="list" item="vo" key="k" }
+						<tr>
+                            <td class="sign w40">
+                                <div class="tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.moneyid}"></div>
+                            </td>
+                            <td >
+                                <div class="text-l10">
+                                    {$vo.order_number}
+                                </div>
+                            </td>
+							<td class="w160">
+								<div class="tc">
+									{$vo.cause.type_name}
+								</div>
+							</td>
+							
+							<td class="w100">
+								<div class="tc">
+									￥{$vo.money}
+								</div>
+							</td>
+							<td class="w100">
+								<div class="tc">
+								{notempty name="$pay_method_arr[$vo['pay_method']]"}
+									{$pay_method_arr[$vo['pay_method']]}
+								{else /}
+									————
+								{/notempty}
+								</div>
+							</td>
+                            <td class="w100">
+                            	<div class="tc ">
+                            		<a href="{:url('Member/users_edit', ['id'=>$vo.users_id,'from'=>'money_index'])}">{$vo.username}</a>
+                            	</div>
+                            </td>
+                            <td class="sort w160">
+                            	<div class="tc">
+                            		{$vo.add_time|date='Y-m-d H:i:s',###}
+                            	</div>
+                            </td>
+							<td class="w100">
+								<div class="tc">
+								{$pay_status_arr[$vo['status']]}
+								</div>
+							</td>
+							
+						</tr>
+						{/foreach}
+					{/empty}
+					</tbody>
+				</table>
+			</div>
+			<div class="iDiv" style="display: none;"></div>
+		</div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Level/upgrade_del')}" class="layui-btn layui-btn-primary">
+                            <span>批量删除</span>
+                    </a>
+                </div>
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+	</div>
+</div>
+<script>
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#add_time_begin' //指定元素
+        });
+        laydate.render({
+            elem: '#add_time_end' //指定元素
+        });
+    });
+
+	$(document).ready(function(){
+		// 表格行点击选中切换
+		$('#flexigrid > table>tbody >tr').click(function(){
+			$(this).toggleClass('trSelected');
+		});
+		// 点击刷新数据
+		$('.fa-refresh').click(function(){
+			location.href = location.href;
+		});
+	});
+</script>
+{include file="public/footer" /}

@@ -1,0 +1,197 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<style type="text/css">
+    .system_table{ border:1px solid #dcdcdc; width:100%;}
+    .system_table td{ height:40px; line-height:40px; font-size:12px; color:#454545; border-bottom:1px solid #dcdcdc; border-right:1px solid #dcdcdc; width:35%; padding-left:1%;}
+    .system_table td.gray_bg{ background:#f7f7f7; width:15%;}
+</style>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+
+<div class="page">
+    <div class="flexigrid">
+        <form class="form-horizontal" id="postForm">
+            <input type="hidden" name="order_id" value="{$Comment.order_id}">
+            <input type="hidden" name="service_id" value="{$Comment.service_id}">
+            <input type="hidden" name="order_code" value="{$Comment.order_code}">
+            <input type="hidden" name="users_id" value="{$Users.users_id}">
+            <input type="hidden" name="shipping_fee" value="{$Comment.shipping_fee}">
+
+            <!-- 会员信息 -->
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th class="sign w10" axis="col0">
+                                    <div class="tc"></div>
+                                </th>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tc">会员信息</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <table cellpadding="0" cellspacing="0" class="system_table">
+                    <tbody>
+                        <tr>
+                            <td class="gray_bg">会员名：</td>
+                            <td><a href="{:url('Member/users_edit', ['id'=>$Users.users_id])}">{$Users.nickname}</a></td>
+                            <td class="gray_bg">手机号码：</td>
+                            <td>{$Users.mobile}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END -->
+
+            <!-- 订单信息 -->
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th class="sign w10" axis="col0">
+                                    <div class="tc"></div>
+                                </th>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tc">订单信息</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <table cellpadding="0" cellspacing="0" class="system_table">
+                    <tbody>
+                        <tr>
+                            <td class="gray_bg">订单ID：</td>
+                            <td>
+                                <a href="{:url('Shop/order_details', ['order_id'=>$Comment.order_id])}">{$Comment.order_id}</a>
+                            </td>
+                            <td class="gray_bg">订单编号：</td>
+                            <td>
+                                <a href="{:url('Shop/order_details', ['order_id'=>$Comment.order_id])}">{$Comment.order_code}</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END -->
+
+            <!-- 商品信息 -->
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">商品信息</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <table cellpadding="0" cellspacing="0" class="system_table">
+                    <tbody>
+                        <tr>
+                            <td class="gray_bg">商品ID：</td>
+                            <td>{$Comment.product_id}</td>
+                            <td class="gray_bg">购买数量：</td>
+                            <td>{$Comment.product_num}</td>
+                        </tr>
+                        <tr>
+                            <td class="gray_bg">商品名称：</td>
+                            <td>
+                                <a href="{$Comment.arcurl}" target="_blank">
+                                    <img src="{$Comment.product_img}" style="width: 60px;height: 60px;"> {$Comment.product_name}
+                                </a>
+                            </td>
+                            <td class="gray_bg">商品规格：</td>
+                            <td>{$Comment.product_spec}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END -->
+
+            <!-- 服务详情 -->
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th class="sign w10" axis="col0">
+                                    <div class="tc"></div>
+                                </th>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tc">评价详情</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <table cellpadding="0" cellspacing="0" class="system_table">
+                    <tbody>
+                        <tr>
+                            <td class="gray_bg">评价评分：</td>
+                            <td>{$Comment.order_total_score} &nbsp; &nbsp; &nbsp; <i class="z_comment-star z_star{$Comment.total_score}"></i></td>
+                            <td class="gray_bg">评价时间：</td>
+                            <td>{$Comment.add_time|MyDate='Y-m-d H:i:s',###}</td>
+                        </tr>
+                        <tr>
+                            <td class="gray_bg">图片信息：</td>
+                            <td>
+                                {volist name="$Comment.upload_img" id="vo"}
+                                    {notempty name="$vo"}<a href="{$vo}" target="_blank"><img src="{$vo}" width="60" height="60"></a>{/notempty}
+                                {/volist}
+                            </td>
+                            <td class="gray_bg">问题描述：</td>
+                            <td><p style="line-height: 22px;">{$Comment.content}</p></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END -->
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+
+{include file="public/footer" /}

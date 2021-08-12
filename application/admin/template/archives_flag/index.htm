@@ -1,0 +1,92 @@
+{include file="public/layout" /}
+<body class="" style="cursor: default; -moz-user-select: inherit; min-width:400px;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: 400px;">
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        
+                        <th abbr="article_title" axis="col3" class="">
+                            <div class="text-l10">属性名称</div>
+                        </th>
+						<th abbr="article_title" axis="col3" class="w80">
+                            <div class="tc">属性值</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w80">
+                            <div class="tc">显示</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w80">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <tbody>
+                        {empty name="list"}
+                            <tr>
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                </td>
+                            </tr>
+                        {else/}
+                            {foreach name="list" item="vo" key="k" }
+                            <tr>
+                                
+                                <td class="" style="width: 100%;">
+                                    <div class="tl text-l10" >
+                                        {eq name="'Archives@add'|is_check_access" value="1"}
+                                            <input type="text" name="flag_name" value="{$vo.flag_name}" onchange="changeTableVal('archives_flag', 'id', '{$vo.id}', 'flag_name', this);" style="width: 200px;" title="自定义属性名称" placeholder="自定义属性名称">
+                                        {else /}
+                                            {$vo.flag_name}
+                                        {/eq}
+                                    </div>
+                                </td>
+								<td class="">
+                                    <div class="w80 tc">
+                                        {$vo.flag_attr}
+                                    </div>
+                                </td>
+                                <td class="">
+                                    <div class="w80 tc">
+                                        {eq name="$vo.status" value='1'}
+                                            <span class="yes" style="cursor: pointer;" {eq name="'Archives@add'|is_check_access" value="1"} data-id="{$vo.id}" onclick="changeTableVal('archives_flag','id','{$vo.id}','status',this);" {/eq} ><i class="fa fa-check-circle"></i>是</span>
+                                        {else /}
+                                            <span class="no" style="cursor: pointer;" {eq name="'Archives@add'|is_check_access" value="1"} data-id="{$vo.id}" onclick="changeTableVal('archives_flag','id','{$vo.id}','status',this);" {/eq} ><i class="fa fa-ban"></i>否</span>
+                                        {/eq}
+                                    </div>
+                                </td>
+                                <td class="sort">
+                                    <div class="w80 tc">
+                                        <input type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')" onchange="changeTableVal('archives_flag','id','{$vo.id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                    </div>
+                                </td>
+                            </tr>
+                            {/foreach}
+                        {/empty}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+    });
+
+</script>
+
+{include file="public/footer" /}

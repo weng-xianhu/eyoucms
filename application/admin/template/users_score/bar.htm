@@ -1,0 +1,27 @@
+<!--    {eq name="'UsersScore@conf'|is_check_access" value="1"}
+    <div class=" addartbtn fl">
+        <input type="button" class="btn {if condition="!in_array($Request.action, ['conf'])"}current{else/}selected{/if}" value="积分设置" onclick="window.location.href='{:url("UsersScore/conf")}';">
+    </div>
+    {/eq}
+    <div class=" addartbtn fl"><span class="sprt col-padding-1">|</span></div>
+    {eq name="'UsersScore@index'|is_check_access" value="1"}
+    <div class=" addartbtn fl">
+        <input type="button" class="btn {if condition="!in_array($Request.action, ['index'])"}current{else/}selected{/if}" value="积分明细" onclick="window.location.href='{:url("UsersScore/index")}';">
+    </div>
+    {/eq}
+	 -->
+	
+	<div class="member-nav-group">
+		{eq name="'UsersScore@conf'|is_check_access" value="1"}
+			<label class="member-nav-item">
+				<input type="button" class="btn {if condition="!in_array($Request.action, ['conf'])"}current{else/}selected{/if}" value="积分设置" onclick="window.location.href='{:url("UsersScore/conf")}';">
+			</label>
+		{/eq}
+		
+		{eq name="'UsersScore@index'|is_check_access" value="1"}
+			<label class="member-nav-item">
+				<input type="button" class="btn {if condition="!in_array($Request.action, ['index'])"}current{else/}selected{/if}" value="积分明细" onclick="window.location.href='{:url("UsersScore/index")}';">
+			</label>
+		{/eq}	 
+
+	</div>

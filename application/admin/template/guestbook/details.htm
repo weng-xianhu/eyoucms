@@ -1,0 +1,26 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit; min-width:400px;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: 400px;">
+    {foreach name="attr_list" item="vo" key="k" }
+    <div style="display: flex;align-items: center;padding: 15px 0;">
+        <div style="width: 10%;min-width: 60px;"><strong>{$vo.attr_name}</strong></div>
+        <div style="width: 90%;">{$vo.attr_value}</div>
+    </div>
+    {/foreach}
+    <div style="display: flex;align-items: center;padding: 15px 0;">
+        <div style="width: 10%;min-width: 60px;"><strong>IP来源</strong></div>
+        <div style="width: 90%;">{$row.ip} {notempty name='$row.city'}[{$row.city}]{/notempty}</div>
+    </div>
+    <div style="display: flex;align-items: center;padding: 15px 0;">
+        <div style="width: 10%;min-width: 60px;"><strong>提交时间</strong></div>
+        <div style="width: 90%;">{$row.add_time|MyDate='Y-m-d H:i:s',###}</div>
+    </div>
+    <div style="display: flex;align-items: center;padding: 15px 0;">
+        <div style="width: 10%;min-width: 60px;"><strong>查看时间</strong></div>
+        <div style="width: 90%;">{$row.update_time|MyDate='Y-m-d H:i:s',###}</div>
+    </div>
+</div>
+
+{include file="public/footer" /}

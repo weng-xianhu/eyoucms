@@ -1,6 +1,6 @@
 {include file="public/layout" /}
 <script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;min-width:auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page" style="min-width:auto;">
@@ -9,19 +9,16 @@
         <div class="mDiv">
             <div class="ftitle">
                 <h3>官方语言包变量</h3>
-                <h5>(共{$pageObj->totalRows}条记录)</h5>
+                <h5>(共{$pageObj->totalRows}条数据)</h5>
             </div>
-            <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" action="{:url('Language/official_pack_index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="标题搜索...">
                         <input type="submit" class="btn" value="搜索">
+                        <i class="fa fa-search"></i>
                     </div>
-                    <!-- <div class="sDiv2">
-                        <input type="button" class="btn" value="重置" onClick="window.location.href='{:url('Language/official_pack_index')}';">
-                    </div> -->
                 </div>
             </form>
         </div>
@@ -34,15 +31,15 @@
                             <div class="tc"></div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w150">
-                            <div class="tl">变量名</div>
+                            <div class="tl text-l10">变量名</div>
                         </th>
                         <th abbr="article_title" axis="col3" class="">
-                            <div style="text-align: left; padding-left: 10px;" class="">变量值</div>
+                            <div class="tl text-l10">变量值</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w100">
                             <div class="tc">更新时间</div>
                         </th>
-                        <th axis="col1" class="w180">
+                        <th axis="col1" class="w160">
                             <div class="tc">操作</div>
                         </th>
                     </tr>
@@ -68,12 +65,12 @@
                                 </div>
                             </td>
                             <td class="">
-                                <div class="w150 tl">
+                                <div class="w150 tl text-l10">
                                     <a href="{:url('Language/pack_edit',array('id'=>$vo['id']))}">{$vo.name}</a>
                                 </div>
                             </td>
                             <td class="" style="width: 100%;">
-                                <div class="tl" style="padding-left: 10px;">
+                                <div class="tl text-l10" >
                                     {$vo.value|htmlentities=###}
                                 </div>
                             </td>
@@ -82,10 +79,11 @@
                                     {$vo.update_time|date='Y-m-d',###}
                                 </div>
                             </td>
-                            <td class="">
-                                <div class="w180 tc">
+                            <td class="operation">
+                                <div class="w160 tc">
                                     {eq name="'Language@pack_edit'|is_check_access" value="1"}
-                                    <a href="{:url('Language/pack_edit',array('id'=>$vo['id'],'official'=>1))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                    <a href="{:url('Language/pack_edit',array('id'=>$vo['id'],'official'=>1))}" class="btn blue">编辑</a>
+                                    <i></i>
                                     {/eq}
                                     <a href="javascript:void(0);" onclick="showtext('{$vo['name']}');" class="btn blue {$vo['name']}" data-clipboard-text="{{php} echo 'eyou:lang name=\'';{/php}{$vo['name']}{php} echo '\' /';{/php}}">复制标签</a>
                                 </div>
@@ -126,7 +124,7 @@
             $.ajax({
                 type : 'post',
                 url : "{:url('Language/check_pack_syn')}",
-                data : {},
+                data : {_ajax:1},
                 dataType : 'json',
                 success : function(data){
                     if(data.code == 0){
@@ -140,7 +138,7 @@
                             $.ajax({
                                 type : 'post',
                                 url : "{:url('Language/pack_syn')}",
-                                data : {},
+                                data : {_ajax:1},
                                 dataType : 'json',
                                 success : function(res){
                                     layer.closeAll();
@@ -164,7 +162,7 @@
 
     // 复制标签
     function showtext(classname){
-        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:2});}); 
+        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:5});}); 
     } 
 </script>
 

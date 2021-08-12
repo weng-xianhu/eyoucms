@@ -1,0 +1,82 @@
+{include file="public/layout" /}
+
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;">
+    <!-- 操作说明 -->
+    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+        </div>
+        <ul>
+            <li>该SEO针对Tag主页，即前台模板 index_tags.htm</li>
+            <li>如果该模板文件不存在，请自行创建上传到空间服务器。</li>
+        </ul>
+    </div>
+    <form class="form-horizontal" id="editpostForm">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="tag_seo_title">SEO标题</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <input type="text" name="tag_seo_title" id="tag_seo_title" value="{$data.tag_seo_title}" class="input-txt">
+                    <p class="notic">标签调用方法：{literal}{$eyou.field.seo_title}{/literal}</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="tag_seo_keywords">SEO关键词</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <textarea rows="5" cols="60" name="tag_seo_keywords" id="tag_seo_keywords" style="height: 40px;">{$data.tag_seo_keywords}</textarea>
+                    <p class="notic">标签调用方法：{literal}{$eyou.field.seo_keywords}{/literal}</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="tag_seo_description">SEO描述</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <textarea rows="5" cols="60" name="tag_seo_description" id="tag_seo_description" style="height: 60px;">{$data.tag_seo_description}</textarea>
+                    <p class="notic">标签调用方法：{literal}{$eyou.field.seo_description}{/literal}</p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+    // 判断输入框是否为空
+    function checkForm() {
+        layer_loading('正在处理');
+        $.ajax({
+            url : "{:url('Tags/edit_index_seo', ['_ajax'=>1])}",
+            data: $('#editpostForm').serialize(),
+            type: 'POST',
+            success:function(res) {
+                layer.closeAll();
+                if (1 == res.code) {
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000});
+                } else {
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e) {
+                layer.closeAll();
+                showErrorMsg(e.responseText);
+            }
+       });
+    }
+</script>
+</body>
+</html>

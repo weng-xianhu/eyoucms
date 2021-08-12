@@ -1,0 +1,69 @@
+{include file="public/layout"/}
+<body class="bodystyle" style=" overflow-y: scroll;min-width:auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto; ">
+    {include file="system/bar" /}
+    <div class="flexigrid htitx">
+        {eq name="$pay_open" value="1"}
+            <!-- 微信、支付宝支付配置 -->
+            {include file="system/pay_api_list" /}
+            <!-- END -->
+        {/eq}
+
+        <!-- 通知管理 -->
+        {include file="system/notify" /}
+        <!-- END -->
+
+        <!-- 微站点配置 -->
+        {include file="system/microsite" /}
+        <!-- END -->
+    </div>
+</div>
+
+<!--右悬浮配置导航-->
+<div class="floatNav">
+    <div class="floatNav-tit">
+        快捷导航
+    </div>
+    <div class="floatNav-con">
+        <ul>
+            <li>
+                <div class="dot"></div>
+                <div class="event" data-to="alipay_set"><a href="javascript:void(0);">支付接口</a></div>
+            </li>
+            <li>
+                <div class="dot"></div>
+                <div class="event" data-to="notify_list"><a href="javascript:void(0);">消息通知</a></div>
+            </li>
+            <li>
+                <div class="dot"></div>
+                <div class="event" data-to="microsite"><a href="javascript:void(0);">微站点设置</a></div>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function(){
+        var to = "{$Request.param.sys}";
+        if (to) {
+            var div_top = document.getElementById(to).offsetTop;
+            window.scrollTo(0, div_top + 70);
+        }
+        //右侧浮动点击定位到相应模块
+        var lis = document.getElementsByClassName("event");
+        for(var i = 0; i < lis.length; i++) {
+            lis[i].onclick = function() {
+                //获取当前event的data-to属性值，用来匹配目标div
+                var attr = this.getAttribute("data-to");
+                //获取与当前event想匹配的div距离页面顶端的距离
+                var div_top = document.getElementById(attr).offsetTop;
+                window.scrollTo(0, div_top + 70);
+            }
+        }
+    })
+</script>
+
+{include file="public/footer" /}

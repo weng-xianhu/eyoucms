@@ -1,0 +1,62 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<style type="text/css">
+    .system_table{ border: 1px solid #dcdcdc; width: 100%;}
+    .system_table td{ height: 40px; line-height: 40px; font-size: 12px; color: #454545; border-bottom: 1px solid #dcdcdc; border-right: 1px solid #dcdcdc; width: 35%; padding-left: 1%;}
+    .system_table td.gray_bg{ background: #f7f7f7; width: 15%;}
+</style>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="flexigrid">
+        <form class="form-horizontal">
+            <div class="ncap-form-default">
+                <table cellpadding="0" cellspacing="0" class="system_table">
+                    <tbody>
+                        <tr>
+                            <td class="gray_bg">订单ID：</td>
+                            <td>{$OrderData.order_id}</td>
+                            <td class="gray_bg">订单编号：</td>
+                            <td>{$OrderData.order_code}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="gray_bg">用户名：</td>
+                            <td>{$UsersData.username}</td>
+                            <td class="gray_bg">手机号码：</td>
+                            <td>{$UsersData.mobile}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="gray_bg">订单金额：</td>
+                            <td>￥{$OrderData.order_amount}</td>
+                            <td class="gray_bg">订单状态：</td>
+                            <td>{eq name="$OrderData.order_status" value="0"}未付款{else/}已付款{/eq}</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="gray_bg">下单时间：</td>
+                            <td>{$OrderData.add_time|MyDate='Y-m-d H:i:s',###}</td>
+                            <td class="gray_bg">付款时间：</td>
+                            <td>{neq name="$OrderData.pay_time" value="0"}{$OrderData.pay_time|MyDate='Y-m-d H:i:s',###}{/neq}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="gray_bg">商品ID：</td>
+                            <td>{$OrderData.product_id}</td>
+                            <td class="gray_bg">商品名称：</td>
+                            <td>
+                                <a href="{$OrderData.arcurl}" target="_blank">
+                                    <img src="{$OrderData.product_litpic}" style="width: 60px;height: 60px;">
+                                    &nbsp; &nbsp; &nbsp;
+                                    {$OrderData.product_name}
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+</div>
+{include file="public/footer" /}

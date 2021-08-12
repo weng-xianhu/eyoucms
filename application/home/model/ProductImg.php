@@ -13,6 +13,7 @@
 
 namespace app\home\model;
 
+use think\Db;
 use think\Model;
 
 /**
@@ -35,7 +36,7 @@ class ProductImg extends Model
     {
         $where = [];
         !empty($aids) && $where['aid'] = ['IN', $aids];
-        $result = db('ProductImg')->field($field)
+        $result = Db::name('ProductImg')->field($field)
             ->where($where)
             ->order('sort_order asc')
             ->select();

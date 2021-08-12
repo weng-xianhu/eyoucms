@@ -1,0 +1,11 @@
+    <div class="fixed-bar">
+        <div class="item-title">
+        	{in name="$Request.action" value="active_time_index"}
+        		<a class="back" href="{:url('Sharp/active_index')}" title="返回活动"><i class="fa fa-angle-double-left"></i>返回</a>
+        	{/in}
+            <ul class="tab-base nc-row">
+                <li><a href="{:url("Sharp/index")}" class="tab {in name="$Request.action" value="index,add,edit"}current{/in}"><span>秒杀商品</span></a></li>
+                <li><a href="{:url("Sharp/active_index")}" class="tab {in name="$Request.action" value="active_index,active_time_add,active_time_edit,active_add,active_time_index"}current{/in}"><span>活动会场</span></a></li>
+            </ul>
+        </div>
+    </div>

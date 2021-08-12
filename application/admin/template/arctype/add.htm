@@ -1,21 +1,22 @@
 {include file="public/layout" /}
 <script type="text/javascript" src="__PUBLIC__/plugins/laydate/laydate.js"></script>
 
-{load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
-{load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
-{load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+{eq name="$editor.editor_select" value="1"}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+{else/}
+    {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
+{/eq}
 
 <body style="background-color: #FFF; overflow: auto;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page" style="box-shadow:none;">
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-arrow-circle-o-left"></i></a>
-            <div class="subject">
-                <h3>新增栏目</h3>
-                <h5></h5>
-            </div>
+        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            
             <ul class="tab-base nc-row">
                 <li><a href="javascript:void(0);" data-index='1' class="tab current"><span>常规选项</span></a></li>
                 <li><a href="javascript:void(0);" data-index='2' class="tab"><span>高级选项</span></a></li>
@@ -34,14 +35,14 @@
                     <p class="notic">保持唯一性，不可重复</p>
                 </dd>
             </dl>
-            <dl class="row">
+            <dl class="row" id="dl_dirname">
                 <dt class="tit">
                     <label for="dirname">目录名称</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" value="" name="dirname" id="dirname" class="input-txt" onkeyup="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/\[^a-zA-Z0-9_]/g,''));">
+                    <input type="text" value="" name="dirname" id="dirname" class="input-txt" onkeyup="this.value=this.value.replace(/[^a-zA-Z0-9_-]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/\[^a-zA-Z0-9_-]/g,''));">
                     <p class="notic">用于伪静态和静态页面生成！</p>
-                    <p class="">留空系统默认全拼音+随机数，仅支持字母、数字、下划线</p>
+                    <p class="">留空系统默认全拼音+随机数，仅支持字母、数字、下划线、连接符</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -80,15 +81,6 @@
                     <p class="notic">生成的文章HTML页面会存放在该目录下</p>
                 </dd>
             </dl>
-<!--             <dl class="row">
-                <dt class="tit">
-                    <label for="sort_order">排序</label>
-                </dt>
-                <dd class="opt">
-                    <input type="text" value="100" name="sort_order" id="sort_order" class="input-txt">
-                    <p class="notic">越小越靠前</p>
-                </dd>
-            </dl> -->
             <dl class="row">
                 <dt class="tit">
                     <label>隐藏栏目</label>
@@ -108,7 +100,7 @@
         <!-- 常规选项 -->
         <!-- 高级选项 -->
         <div class="ncap-form-default tab_div_2" style="display:none;">
-            <dl class="row">
+            <dl class="row" id="type_attr">
                 <dt class="tit">
                     <label>栏目属性</label>
                 </dt>
@@ -152,7 +144,7 @@
                             </a>
                         </span>
                         <span class="type-file-box">
-                            <input type="text" id="litpic_local" name="litpic_local" value="" class="type-file-text">
+                            <input type="text" id="litpic_local" name="litpic_local" value="" class="type-file-text" autocomplete="off">
                             <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
                             <input class="type-file-file" onClick="GetUploadify(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
                                  title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
@@ -173,7 +165,7 @@
                     <select name="templist" id="templist">
                     </select>
                     <span class="err"></span>
-                    <p class="notic">列表模板命名规则：<br/>lists_<font class="font_nid">模型标识</font>.html<br/>lists_<font class="font_nid">模型标识</font>_自定义.html</p>
+                    <p class="notic">列表模板命名规则：<br/>lists_<font class="font_nid">模型标识</font>.htm<br/>lists_<font class="font_nid">模型标识</font>_自定义.htm</p>
                     &nbsp;<a href="javascript:void(0);" onclick="newtpl('lists');" class="ncap-btn ncap-btn-green">新建模板</a>
                 </dd>
             </dl>
@@ -185,7 +177,7 @@
                     <select name="tempview" id="tempview">
                     </select>
                     <span class="err"></span>
-                    <p class="notic">文档模板命名规则：<br/>view_<font class="font_nid">模型标识</font>.html<br/>view_<font class="font_nid">模型标识</font>_自定义.html</p>
+                    <p class="notic">文档模板命名规则：<br/>view_<font class="font_nid">模型标识</font>.htm<br/>view_<font class="font_nid">模型标识</font>_自定义.htm</p>
                     &nbsp;<a href="javascript:void(0);" onclick="newtpl('view');" class="ncap-btn ncap-btn-green">新建模板</a>
                 </dd>
             </dl>
@@ -262,13 +254,20 @@
         var channel = parseInt($(obj).find('option:selected').val());
         var js_allow_channel_arr = {$js_allow_channel_arr};
         $('#notic_current_channel').html('');
+        if (51 == channel){
+            $("#type_attr").hide();
+            $('#dl_dirname').hide();
+        }else{
+            $("#type_attr").show();
+            $('#dl_dirname').show();
+        }
 
         // 重新定义模板变量，专用于新建模板功能
         $.ajax({
             url: "{:url('Arctype/ajax_getTemplateList')}",
             type: 'GET',
             dataType: 'JSON',
-            data: {},
+            data: {_ajax:1},
             success: function(res){
                 if (res.code == 1) {
                     templateList = res.data.templateList;
@@ -290,6 +289,8 @@
                 $('#dl_templist').find('label[for=templist]').html('<em>*</em>单页模板');
             } else if (channel == 8) {
                 $('#dl_templist').find('label[for=templist]').html('<em>*</em>留言模板');
+            }else if (51 == channel) {
+                $('#dl_templist').hide();
             }
             $('#dl_tempview').hide();
         } else {
@@ -314,7 +315,7 @@
         }
         $(obj).html('正在处理');
         $.ajax({
-            url: "{:url('Arctype/ajax_get_dirpinyin')}",
+            url: "{:url('Arctype/ajax_get_dirpinyin', ['_ajax'=>1])}",
             type: 'POST',
             dataType: 'JSON',
             data: {typename: typename},
@@ -331,7 +332,7 @@
             },
             error: function(e){
                 $(obj).html('获取拼音');
-                showErrorMsg('网络失败，请刷新页面后重试');
+                showErrorMsg(ey_unknown_error);
                 return false;
             }
         });
@@ -341,7 +342,7 @@
         $('#parent_id').html('<option value="">加载中……</option>');
         var channeltype = parseInt($(obj).find("option:selected").val());
         $.ajax({
-            url: "{:url('Arctype/ajax_get_arctype')}",
+            url: "{:url('Arctype/ajax_get_arctype', ['_ajax'=>1])}",
             type: 'POST',
             dataType: 'JSON',
             data: {channeltype:channeltype},
@@ -354,7 +355,7 @@
                 }
             },
             error: function(e){
-                showErrorMsg('网络失败，请刷新页面后重试');
+                showErrorMsg(ey_unknown_error);
                 return false;
             }
         });
@@ -383,11 +384,13 @@
         var dirname = $('input[name="dirname"]').val();
         var patrn = /^\d+$/;
         if (patrn.test(dirname) == true) {
-            showErrorMsg('栏目英文名不能为纯数字！');
+            showErrorMsg('目录名称不能为纯数字！');
             $('input[name=dirname]').focus();
             return false;
         }
-        if($('#templist').val() == ''){
+
+        var channel = parseInt($('#current_channel').find('option:selected').val());
+        if($('#templist').val() == '' && 51 != channel){
             $('.tab-base').find('.tab').each(function(){
                 $(this).removeClass('current');
             });
@@ -399,7 +402,6 @@
             return false;
         }
 
-        var channel = parseInt($('#current_channel').find('option:selected').val());
         var js_allow_channel_arr = {$js_allow_channel_arr};
         if($('#tempview').val() == '' && $.inArray(channel, js_allow_channel_arr) != -1){
             $('.tab-base').find('.tab').each(function(){
@@ -431,7 +433,7 @@
         var flag = false;
         var dirpath = $.trim($('input[name=dirpath]').val());
         $.ajax({
-            url: "{:url('Arctype/ajax_check_dirpath')}",
+            url: "{:url('Arctype/ajax_check_dirpath', ['_ajax'=>1])}",
             type: 'POST',
             async: false,
             dataType: 'JSON',

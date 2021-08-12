@@ -13,6 +13,7 @@
 
 namespace app\common\model;
 
+use think\Db;
 use think\Model;
 
 /**
@@ -33,7 +34,7 @@ class Channelfield extends Model
      */
     public function getInfo($id, $field = '*')
     {
-        $result = db('Channelfield')->field($field)->find($id);
+        $result = Db::name('Channelfield')->field($field)->find($id);
 
         return $result;
     }
@@ -44,7 +45,7 @@ class Channelfield extends Model
      */
     public function getInfoByWhere($where, $field = '*')
     {
-        $result = db('Channelfield')->field($field)->where($where)->cache(true,EYOUCMS_CACHE_TIME,"channelfield")->find();
+        $result = Db::name('Channelfield')->field($field)->where($where)->cache(true,EYOUCMS_CACHE_TIME,"channelfield")->find();
 
         return $result;
     }
@@ -55,7 +56,7 @@ class Channelfield extends Model
      */
     public function getListByWhere($map = array(), $field = '*', $index_key = '')
     {
-        $result = db('Channelfield')->field($field)
+        $result = Db::name('Channelfield')->field($field)
             ->where($map)
             ->order('sort_order asc, channel_id desc, id desc')
             ->select();

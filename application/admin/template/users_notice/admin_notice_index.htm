@@ -1,0 +1,195 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <ul class="tab-base nc-row">
+                {eq name="'UsersNotice@index'|is_check_access" value="1"}
+                <li>
+                    <a href="{:url('UsersNotice/index')}" {if condition="in_array($Think.const.CONTROLLER_NAME, ['UsersNotice'])"}class="current"{/if}>
+                    <span>站内通知</span>
+                    </a>
+                </li>
+                {/eq}
+            </ul>
+        </div>
+    </div>
+
+    <div class="flexigrid">
+        <div class="mDiv">
+            <div class="ftitle">
+                {include file="users_notice/bar" /}
+            </div>
+
+            <form class="navbar-form form-inline" action="{:url('UsersNotice/admin_notice_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
+                        <input type="submit" class="btn" value="搜索">
+						<i class="fa fa-search"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" >
+                            <div class="text-l10">通知标题 [<a href="javascript:void(0);" onclick="signAllRead(this);">全部标记已读</a>]</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w160">
+                            <div class="text-l10">通知类型</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w160">
+                            <div class="tc">通知时间</div>
+                        </th>
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                            </td>
+                        </tr>
+                    {else/}
+                        {volist name="list" id="vo"}
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.content_id}"></div>
+                            </td>
+
+                            <td class="sort">
+                                <div class="w40 tc"> {$vo.content_id} </div>
+                            </td>
+
+                            <td style="width: 100%">
+                                <div class="text-l10">
+                                    <a href="javascript:void(0);" data-href="{:url('UsersNotice/admin_notice_edit',array('content_id'=>$vo['content_id']))}" onclick="OpenNotice('{$vo.content_id}', '{$vo.is_read}', this);">{eq name="$vo.is_read" value="0"}<span style="color: red;" id="content_id_{$vo.content_id}" class="notread1620347507">[未读]</span>{/eq} {$vo.content_title}</a>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="w160 text-l10 wot_z"> {$vo.tpl_name} </div>
+                            </td>
+
+                            <td class="">
+                                <div class="w160 tc"> {$vo.add_time|MyDate='Y-m-d H:i:s',###} </div>
+                            </td>
+
+                            <td class="operation">
+                                <div class="w120 tc">
+                                    <a href="javascript:void(0);" data-href="{:url('UsersNotice/admin_notice_edit',array('content_id'=>$vo['content_id']))}" class="btn blue" onclick="OpenNotice('{$vo.content_id}', '{$vo.is_read}', this);">查看</a>
+                                    <i></i>
+                                    <a class="btn red"  href="javascript:void(0)" data-url="{:url('UsersNotice/admin_notice_del')}" data-id="{$vo.content_id}" onclick="delfun(this);">删除</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('UsersNotice/admin_notice_del')}" class="layui-btn layui-btn-primary"><span>批量删除</span></a>
+                </div>
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    function OpenNotice(ContentID, IsRead, obj) {
+        openFullframe(obj, '查看站内通知');
+        if (0 == IsRead) {
+            var UnreadNotify = $(".UnreadNotify1615518028", window.parent.document).html();
+            UnreadNotify = Number(UnreadNotify) - Number(1);
+            UnreadNotify = 0 >= UnreadNotify ? 0 : UnreadNotify;
+            $(".UnreadNotify1615518028", window.parent.document).html(UnreadNotify);
+            if (0 == UnreadNotify) {
+                $(".UnreadNotify1615518028", window.parent.document).hide();
+            }
+        }
+        $('#content_id_'+ContentID).remove();
+    }
+
+    function signAllRead(obj) {
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('UsersNotice/sign_admin_allread')}",
+            data : {_ajax:1},
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    $(".UnreadNotify1615518028", window.parent.document).html(0);
+                    $(".UnreadNotify1615518028", window.parent.document).hide();
+                    $(".notread1620347507").hide();
+                    layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000});
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

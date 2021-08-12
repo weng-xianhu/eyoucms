@@ -7,14 +7,15 @@
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
  * ============================================================================
- * Author: 小虎哥 <1105415366@qq.com>
- * Date: 2018-4-3
+ * Author: 易而优团队 by 陈风任 <491085389@qq.com>
+ * Date: 2020-04-09
  */
 
 namespace app\common\logic;
 
 use OSS\OssClient;
 use OSS\Core\OssException;
+use think\Db;
 
 require_once './vendor/aliyun-oss-php-sdk/autoload.php';
 
@@ -61,21 +62,24 @@ class OssLogic
     }
     
     static private function initConfig()
-    {
+    { 
         if (self::$initConfigFlag) {
             return;
         }
         
         $c = [];
-        $configItems = 'oss_key_id,oss_key_secret,oss_endpoint,oss_bucket';
-        $config = M('config')->field('name,value')->where('name', 'IN', $configItems)->select();
+        $where = [
+            'name' => ['IN', ['oss_key_id', 'oss_key_secret', 'oss_endpoint','oss_bucket']],
+            'lang' => get_admin_lang()
+        ];
+        $config = Db::name('config')->field('name, value')->where($where)->select();
         foreach ($config as $v) {
             $c[$v['name']] = $v['value'];
         }
-        self::$accessKeyId     = $c['oss_key_id'] ?: '';
-        self::$accessKeySecret = $c['oss_key_secret'] ?: '';
-        self::$endpoint        = $c['oss_endpoint'] ?: '';
-        self::$bucket          = $c['oss_bucket'] ?: '';
+        self::$accessKeyId     = !empty($c['oss_key_id']) ? $c['oss_key_id'] : '';
+        self::$accessKeySecret = !empty($c['oss_key_secret']) ? $c['oss_key_secret'] : '';
+        self::$endpoint        = !empty($c['oss_endpoint']) ? $c['oss_endpoint'] : '';
+        self::$bucket          = !empty($c['oss_bucket']) ? $c['oss_bucket'] : '';
         self::$initConfigFlag  = true;
     }
 

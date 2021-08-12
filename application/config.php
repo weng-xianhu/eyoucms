@@ -20,6 +20,45 @@ if (file_exists($constsant_path)) {
 }
 // end
 
+// 多语言开启\禁用
+$lang_switch_on = false;
+$langnum_file = DATA_PATH.'conf'.DS.'lang_enable_num.txt';
+if (file_exists($langnum_file)) {
+    $langnum = file_get_contents($langnum_file);
+    if (1 < $langnum) {
+        $lang_switch_on = true;
+    }
+}
+
+// session会话设置
+$session_conf = [
+    'id'             => '',
+    // SESSION_ID的提交变量,解决flash上传跨域
+    'var_session_id' => '',
+    // SESSION 前缀
+    'prefix'         => 'think',
+    // 驱动方式 支持redis memcache memcached
+    'type'           => '',
+    // 是否自动开启 SESSION
+    'auto_start'     => true,
+    // 主机
+    // 'host'           => '127.0.0.1',
+    // 端口
+    // 'port'           => 11211,
+    'path'  => 'data/session_'.$serial_number,
+];
+$session_file = APP_PATH.'admin/conf/session_conf.php';
+if (file_exists($session_file)) {
+    require_once($session_file);
+    $session_conf_tmp = EY_SESSION_CONF;
+    if (!empty($session_conf_tmp)) {
+        $session_conf_tmp = json_decode($session_conf_tmp, true);
+        if (!empty($session_conf_tmp) && is_array($session_conf_tmp)) {
+            $session_conf = array_merge($session_conf, $session_conf_tmp);
+        }
+    }
+}
+
 return array(
     // +----------------------------------------------------------------------
     // | 应用设置
@@ -54,7 +93,7 @@ return array(
     // 默认时区
     'default_timezone'       => 'PRC',
     // 是否开启多语言
-    'lang_switch_on'         => true,
+    'lang_switch_on'         => $lang_switch_on,
     // 默认全局过滤方法 用逗号分隔多个
     'default_filter'         => 'strip_sql,htmlspecialchars', // htmlspecialchars
     // 默认语言
@@ -187,11 +226,17 @@ return array(
         // 日志记录方式，内置 file socket 支持扩展
         'type'  => 'File',
         // 日志保存目录
-        'path'  => LOG_PATH,
+        'path'  => DATA_PATH.'logs/',
+        //单个日志文件的大小限制，超过后会自动记录到第二个文件
+        'file_size' =>2097152,
+        //日志的时间格式，默认是` c `
+        'time_format' =>'c',
+        // error和sql日志单独记录
+        'apart_level' => ['error','sql','notice'],
         // 日志记录级别
-        'level' => array('error'),
+        'level' => array('log','info','notice','error','sql'),
         // 日志开关  1 开启 0 关闭
-        'switch' => 0,  
+        'switch' => 0,
     ),
 
     // +----------------------------------------------------------------------
@@ -221,22 +266,7 @@ return array(
     // | 会话设置
     // +----------------------------------------------------------------------
 
-    'session'                => array(
-        'id'             => '',
-        // SESSION_ID的提交变量,解决flash上传跨域
-        'var_session_id' => '',
-        // SESSION 前缀
-        'prefix'         => 'think',
-        // 驱动方式 支持redis memcache memcached
-        'type'           => '',
-        // 是否自动开启 SESSION
-        'auto_start'     => true,
-        // 主机
-        // 'host'           => '127.0.0.1',
-        // 端口
-        // 'port'           => 11211,
-        'path'  => 'data/session_'.$serial_number,
-    ),
+    'session'                => $session_conf,
 
     // +----------------------------------------------------------------------
     // | Cookie设置
@@ -310,9 +340,9 @@ return array(
             'is_on' => 1, // 开关
             'config' => [],
         ],
-        // 表单提交验证码配置
-        'form_submit'   => [
-            'is_on' => 1, // 开关
+        // 留言提交验证码配置
+        'guestbook'   => [
+            'is_on' => 0, // 开关
             'config' => [],
         ],
         // 会员登录验证码配置
@@ -336,10 +366,20 @@ return array(
     // | 404页面跳转
     // +----------------------------------------------------------------------
     'http_exception_template' => array(
-        // 定义404错误的重定向页面地址
-        404 => ROOT_PATH.'public/static/errpage/404.html',
         // 还可以定义其它的HTTP status
-        401 => ROOT_PATH.'public/static/errpage/401.html',
+        400 => ROOT_PATH.'public/errpage/400.html',
+        // 还可以定义其它的HTTP status
+        401 => ROOT_PATH.'public/errpage/401.html',
+        // 还可以定义其它的HTTP
+        403 => ROOT_PATH.'public/errpage/403.html',
+        // 还可以定义其它的HTTP
+        404 => ROOT_PATH.'public/errpage/404.html',
+        // 还可以定义其它的HTTP
+        405 => ROOT_PATH.'public/errpage/405.html',
+        // 还可以定义其它的HTTP
+        500 => ROOT_PATH.'public/errpage/500.html',
+        // 还可以定义其它的HTTP status
+        503 => ROOT_PATH.'public/errpage/503.html',
     ),
 
     /**假设这个访问地址是 www.xxxxx.dev/home/goods/goodsInfo/id/1.html 
@@ -368,6 +408,14 @@ return array(
         'home_Download_index'   => ['filename'=>'channel', 'cache'=>7200],
         'home_Download_lists'   => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
         'home_Download_view'    => ['filename'=>'view', 'p'=>array('dirname','aid'), 'cache'=>7200],
+        // [普通伪静态]视频
+        'home_Media_index'    => ['filename'=>'channel', 'cache'=>7200],
+        'home_Media_lists'    => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
+        'home_Media_view'     => ['filename'=>'view', 'p'=>array('dirname','aid'), 'cache'=>7200],
+        // [普通伪静态]专题
+        'home_Special_index'     => ['filename'=>'channel', 'cache'=>7200],
+        'home_Special_lists'     => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
+        'home_Special_view'      => ['filename'=>'view', 'p'=>array('dirname','aid'), 'cache'=>7200],
         // [普通伪静态]单页
         'home_Single_index'     => ['filename'=>'channel', 'cache'=>7200],
         'home_Single_lists'     => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
@@ -375,20 +423,16 @@ return array(
         'home_Lists_index'      => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
         // [超短伪静态]内容页
         'home_View_index'       => ['filename'=>'view', 'p'=>array('dirname','aid'), 'cache'=>7200],
+        // [标签页伪静态]列表页
+        'home_Tags_index'       => ['filename'=>'tags', 'cache'=>7200],
+        'home_Tags_lists'       => ['filename'=>'tags', 'p'=>array('tagid','page'), 'cache'=>7200],
     ],
 
     // +----------------------------------------------------------------------
     // | 短信设置
     // +----------------------------------------------------------------------
     // 开启调试模式，跳过手机接收短信这一块
-    'sms_debug' => true,
-    //短信使用场景
-    'SEND_SCENE' => array(
-        '1'=>array('用户注册','验证码${code}，您正在注册成为${product}用户，感谢您的支持！','regis_sms_enable'),
-        '2'=>array('用户找回密码','验证码${code}，用于密码找回，如非本人操作，请及时检查账户安全','forget_pwd_sms_enable'),
-        '3'=>array('身份验证','尊敬的用户，您的验证码为${code}, 请勿告诉他人.','bind_mobile_sms_enable'),
-        '4'=>array('消息通知','您有新的消息：${content}，请注意查收！','messages_notice'),
-    ),
+    'sms_debug' => false,
 
     // +----------------------------------------------------------------------
     // | 邮件设置
@@ -399,5 +443,7 @@ return array(
         2   => ['scene'=>2], // 会员注册
         3   => ['scene'=>3], // 绑定邮箱
         4   => ['scene'=>4], // 找回密码
+        5   => ['scene'=>5], // 订单付款
+        6   => ['scene'=>6], // 订单发货
     ],
 );

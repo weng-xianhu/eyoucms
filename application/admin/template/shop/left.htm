@@ -1,0 +1,36 @@
+<div class="sidebar-second ">
+    <ul>
+        <li class="sidebar-second-title">商城中心</li>
+        <li>
+            <a {if condition="'Statistics' == $Think.const.CONTROLLER_NAME"}class="active"{/if} href='{:url("Statistics/index")}'>数据统计</a>
+        </li>
+        <li>
+            <a {if condition="('ShopService' == $Think.const.CONTROLLER_NAME) OR ('Shop' == $Think.const.CONTROLLER_NAME and in_array($Think.const.ACTION_NAME, ['index', 'order_details']))"}class="active"{/if} href='{:url("Shop/index")}'>所有订单</a>
+        </li>
+        <li>
+            <a {if condition="'ShopProduct' == $Think.const.CONTROLLER_NAME and in_array($Think.const.ACTION_NAME, ['index', 'add', 'edit'])"}class="active"{/if} href='{:url("ShopProduct/index")}'>商品管理</a>
+        </li>
+        <li>
+            <a {if condition="'ShopProduct' == $Think.const.CONTROLLER_NAME and in_array($Think.const.ACTION_NAME, ['attrlist_index', 'attribute_index'])"}class="active"{/if} href='{:url("ShopProduct/attrlist_index")}'>商品参数</a>
+        </li>
+        {php}
+            $shop_open_spec = getUsersConfigData('shop.shop_open_spec');
+        {/php}
+        {eq name='$shop_open_spec' value='1'}
+        <li>
+            <a {if condition="'Shop' == $Think.const.CONTROLLER_NAME and in_array($Think.const.ACTION_NAME, ['spec_index'])"}class="active"{/if} href='{:url("Shop/spec_index")}'>商品规格</a>
+        </li>
+        {/eq}
+        <li>
+            <a {if condition="'Shop' == $Think.const.CONTROLLER_NAME and 'conf' == $Think.const.ACTION_NAME"}class="active"{/if} href='{:url("Shop/conf")}'>商城配置</a>
+        </li>
+        {if condition="$php_servicemeal >= 2"}
+        <li>
+            <a {if condition="'ShopComment' == $Think.const.CONTROLLER_NAME"}class="active"{/if} href='{:url("ShopComment/comment_index")}'>商品评价</a>
+        </li>
+        <li>
+            <a {if condition="(in_array($Think.const.CONTROLLER_NAME, ['Sharp','Coupon'])) OR ('Shop' == $Think.const.CONTROLLER_NAME and in_array($Think.const.ACTION_NAME, ['market_index']))"}class="active"{/if} href='{:url("Shop/market_index")}'>营销功能</a>
+        </li>
+        {/if}
+    </ul>
+</div>
