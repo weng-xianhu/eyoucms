@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>我的视频-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/bootstrap.min.css"/}
+    {eyou:static file="users/skin/css/basic.css"/}
+    {eyou:static file="users/skin/css/eyoucms.css"/}
+    {eyou:static file="users/skin/css/shop.css"/}
+    {eyou:static  file="users/skin/css/tb_style.css"/}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+</head>
+
+<body class="centre shop">
+<!-- 头部信息 -->
+<div class="ey-header-status">
+	<div class="header-status-l">
+		<a href="javascript:history.go(-1)"><i class="el-icon-arrow-left"></i></a>
+	</div>
+	<div class="header-status-m">我的视频</div>
+	<div class="header-status-r">
+		<a href="{eyou:url link='user/Users/index' /}"><i class="el-icon-user"></i></a>
+	</div>
+</div>
+<!-- 头部信息结束 -->
+<div class="h50"></div>
+
+
+<div class="ey-container">
+    <div class="ey-con mb10 mt10">
+        <div class="ey-row">
+            <div class="el-col-24 oper-row mb15" >
+                <!-- 导航栏 -->
+                <div class="el-button-group z_roll">
+                    <a class="el-button el-button--default el-button--small {if $Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'media_index'}active{/if}" data-toggle="tab" href="{eyou:url link='user/Users/media_index' /}">
+                        视频订单
+                    </a>
+                    <a class="el-button el-button--default el-button--small {if $Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Media' && $Think.const.ACTION_NAME == 'play_index'}active{/if}" data-toggle="tab" href="{eyou:url link='user/Media/play_index' /}">
+                        播放记录
+                    </a>
+                </div>
+                <!-- 导航栏结束 -->
+            </div>
+        </div>
+    </div>
+	<div class="ey-con">
+		<div class="ey-row">
+			<!-- 中部 -->
+			<div style="overflow-x: scroll;padding: 4px 0;" id="finance-list_wrapper" class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition">
+				<table style="width:100%;">
+					
+					<tbody>
+					{empty name="$eyou.field.data"}
+					<tr>
+						<td valign="top" colspan="50">
+                            <div class="cell pt50 pb50 tc">
+                               <span class="mb10"><img id='litpic_img'  src="__PUBLIC__/static/common/images/null-data.png"/></span>
+                             </div>
+                        </td>
+					</tr>
+					{else/}
+					{eyou:volist name="$eyou.field.data" id="vo"}
+					<tr>
+                        <td>
+                            <a href="{$vo.arcurl}">
+                                <div class="list_z mr10">
+                                    {eyou:empty name='$vo.product_litpic' /}
+                                    <img class="pic" src="__PUBLIC__/static/common/images/not_adv.jpg"> 
+                                    {eyou:else /}
+                                    <img class="pic" src="{$vo.product_litpic}">
+                                    {/eyou:empty}
+                                </div>
+                            </a>
+                        </td>
+                        <td>
+                             <a  href="{$vo.arcurl}">
+                                <div class="list_z">
+                                   {$vo.product_name}
+                                </div>
+                                <div class="list_z"><span class="e_ty">{$vo.typename}</span><span class="e_ty">{$vo.pay_time|date='Y-m-d H:i:s',###}</span></div>
+                             </a>
+                        </td>
+
+						
+						<td >
+							<div class="list_z tc">
+								<a href="{:url('Users/media_order_details',array('order_id'=>$vo['order_id']))}" class="el-button el-button--small iphone_z">订单详情</a>
+							</div>
+						</td>
+					</tr>
+					{/eyou:volist}
+					{/empty}
+					</tbody>
+				</table>
+			</div>
+			<div style="text-align: center;">{$page}</div>
+			<!-- END -->
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+    // 内容查看
+    function ArcUrl(obj) {
+        window.open($(obj).attr('data-arurl'));
+    }
+
+    // 打开订单详情
+    function OpenOrderDetails(obj) {
+        var url = $(obj).attr('data-url');
+
+        // iframe窗
+        var iframes = layer.open({
+            type: 2,
+            title: '订单详情',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            area: ['20%', '20%'],
+            content: url
+        });
+        layer.full(iframes);
+    }
+</script>
+<!-- END -->

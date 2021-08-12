@@ -1,0 +1,181 @@
+{eyou:volist name="$users_para" id="vo"}
+        {eyou:switch name="vo.dtype"}
+            {eyou:case value="hidden"}
+                <!-- 隐藏域 start -->
+                <div class="form-group" style="display: none;">
+                    <div class="row">
+                        <div class="ey-form-file-title col-md-3"></div>
+                        <div class="col-md-9">
+                            <input type="hidden" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">
+                        </div>
+                    </div>
+                </div>
+                <!-- 隐藏域 start -->
+            {/eyou:case}
+
+            {eyou:case value="mobile"}
+                <!-- 手机文本框 start -->
+                {eyou:include file="/public/static/template/users_v2/users_reg_field_mobile_m.htm" /}
+                <!-- 手机文本框 end -->
+            {/eyou:case}
+
+            {eyou:case value="email"}
+                <!-- 邮箱文本框 start -->
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                            <i class="fa fa-envelope-o"></i>
+                        </span>
+                        {eyou:eq name="$vo.is_required" value="1"}<em class="tis">(必填)</em>{/eyou:eq}
+                        <input type="text" class="form-control" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}" >
+                    </div>
+                </div>
+
+                {eyou:if condition="isset($usersConfig['users_verification']) && 2 == $usersConfig['users_verification']"}
+                <div class="form-group">
+                    <div class="input-group btn-direction">
+                        <span class="input-group-addon">
+                            <i class="fa fa-shield"></i>
+                            <!-- <span style="color:red;">*</span> -->
+                        </span>
+                        <input type="text" class="form-control" id="{$vo.fieldArr}_{$vo.name|default=''}_code" name="{$vo.fieldArr}[{$vo.name|default=''}_code]" value="" placeholder="邮箱验证码">
+                        <input type="button" id="{$vo.fieldArr}_{$vo.name|default=''}_button" onclick="get_{$vo.fieldArr}{$vo.name|default=''}_code();" class="btn btn-primary sento" value="点击发送" />
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    function get_{$vo.fieldArr}{$vo.name|default=''}_code(){
+                        var email = $("#{$vo.fieldArr}_{$vo.name|default=''}").val();
+                        var reg = /^[a-z0-9]([a-z0-9\\.]*[-_]{0,4}?[a-z0-9-_\\.]+)*@([a-z0-9]*[-_]?[a-z0-9]+)+([\.][\w_-]+){1,5}$/i;
+                        // 邮箱格式不正确
+                        if(!reg.test(email)){
+                            layer.msg('请正确输入邮箱地址！', {time: 1500});
+                            return false;
+                        }
+
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('发送中…');
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}_button").attr('disabled', 'disabled');
+                        $.ajax({
+                            // async:false,
+                            url: "{eyou:url link='user/Smtpmail/send_email' /}",
+                            data: {type:'reg',email:email,title:'账号注册',scene:2},
+                            type:'post',
+                            dataType:'json',
+                            success:function(res){
+                                if(res.code == 1){
+                                    {$vo.fieldArr}{$vo.name|default=''}_countdown();
+                                    layer.msg(res.msg, {time: 1500});
+                                }else{
+                                    $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('点击发送');
+                                    $("#{$vo.fieldArr}_{$vo.name|default=''}_button").removeAttr("disabled");
+                                    showErrorAlert(res.msg);
+                                }
+                            },
+                            error : function(e) {
+                                $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('点击发送');
+                                $("#{$vo.fieldArr}_{$vo.name|default=''}_button").removeAttr("disabled");
+                                showErrorAlert(e.responseText);
+                            }
+                        });
+                    }
+
+                    function {$vo.fieldArr}{$vo.name|default=''}_countdown(){
+                        // 倒计时
+                        var setTime;
+                        var time = {php}echo config('global.email_send_time');{/php};
+                        setTime = setInterval(function(){
+                            if(0 >= time){
+                                clearInterval(setTime);
+                                return;
+                            }
+                            time--;
+                            $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val(time+'秒');
+                            $("#{$vo.fieldArr}_{$vo.name|default=''}_button").attr('disabled', 'disabled');
+
+                            if(time == 0){
+                                $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('点击发送');
+                                $("#{$vo.fieldArr}_{$vo.name|default=''}_button").removeAttr("disabled");
+                            }
+                        },1000);
+                    }
+                </script>
+                {/eyou:if}
+                <!-- 邮箱文本框 end -->
+            {/eyou:case}
+
+            {eyou:case value="text"}
+                <!-- 单行文本框 start -->
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                            <i class="fa fa-paper-plane-o"></i>
+                        </span>
+                        {eyou:eq name="$vo.is_required" value="1"}<em class="tis">(必填)</em>{/eyou:eq}
+                        <input type="text" class="form-control" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}">
+                    </div>
+                </div>
+                <!-- 单行文本框 end -->
+            {/eyou:case}
+
+            {eyou:case value="multitext"}
+                <!-- 多行文本框 start -->
+                <div class="form-group">
+                    <div class="input-group">
+                        <textarea rows="5" cols="60" class="form-control" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" {eyou:eq name="$vo.is_required" value="1"} placeholder="{$vo.title}（必填)" {eyou:else/} placeholder="{$vo.title}" {/eyou:eq}>{$vo.dfvalue|default=''}</textarea>
+                    </div>
+                </div>
+                <!-- 多行文本框 end -->
+            {/eyou:case}
+
+            {eyou:case value="checkbox"}
+                <!-- 复选框 start -->
+                <div class="form-group">
+                    <fieldset>
+                        <legend>{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</legend>
+                        {eyou:volist name="$vo.dfvalue" id="v2"}
+                            <div class="checkbox-custom checkbox-primary">
+                                <input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/eyou:if}><label>{$v2}</label>
+                            </div>
+                        {/eyou:volist}
+                    </fieldset>
+                </div>
+                <!-- 复选框 end -->
+            {/eyou:case}
+
+            {eyou:case value="radio"}
+                <!-- 单选项 start -->
+                <div class="form-group">
+                    <fieldset>
+                        <legend>{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</legend>
+                            {eyou:volist name="$vo.dfvalue" id="v2"}
+                            <div class="radio-custom radio-primary">
+                                <input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/eyou:if}>
+                                <label>{$v2}</label>
+                            </div>
+                         {/eyou:volist}
+                    </fieldset>
+                </div>
+                <!-- 单选项 end -->
+            {/eyou:case}
+
+            {eyou:case value="select"}
+                <!-- 下拉框 start -->
+                <div class="form-group">
+                    <div class="select">
+                    <div class="dt">{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</div>
+                        <div class="dd">
+                            <select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" class="form-control">
+                                <option value="">请选择</option>
+                                {eyou:volist name="$vo.dfvalue" id="v2"}
+                                    <option value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}selected{/eyou:if}>{$v2}</option>
+                                {/eyou:volist}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <!-- 下拉框 end -->
+            {/eyou:case}
+            <!-- 扩展 start -->
+            {eyou:include file="/public/static/template/users_v2/users_reg_field_extend_m.htm" /}
+            <!-- 扩展 end -->
+        {/eyou:switch}
+{/eyou:volist}

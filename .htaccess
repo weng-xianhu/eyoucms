@@ -1,14 +1,9 @@
 
-<IfModule dir_module>
-    #鐢熸垚闈欐�佹ā寮忎笅锛岃缃粯璁ら椤典负 index.html
-    #DirectoryIndex index.html index.php index.htm
-</IfModule>
-
 <IfModule mod_rewrite.c>
     Options +FollowSymlinks -Multiviews
     RewriteEngine On
 
-    #http璺宠浆鍒癶ttps
+    #http跳转到https
     #RewriteCond %{SERVER_PORT} !^443$
     #RewriteRule ^(.*)$ https://www.xxxxx.com/$1 [L,R=301]
 
@@ -18,6 +13,9 @@
     #RewriteRule ^(.*)$ index.php/$1 [QSA,PT,L]
     #RewriteRule ^(.*)$ index.php?/$1 [QSA,PT,L]
 
+    #禁止指定脚本的运行
     RewriteCond % !^$
-    RewriteRule ^/?(.*)/.*\.sql - [F]
+    RewriteRule data/(.*).(php|php3|php4|php5|php6|php7|pht|phtml|asp|aspx|jsp|exe|js|sql|perl|cgi|asa)$ – [F]
+    RewriteRule template/(.*).(php|php3|php4|php5|php6|php7|pht|phtml|asp|aspx|jsp|exe|perl|cgi|asa)$ – [F]
+    RewriteRule uploads/(.*).(php|php3|php4|php5|php6|php7|pht|phtml|asp|aspx|jsp|exe|js|perl|cgi|asa)$ – [F] 
 </IfModule>

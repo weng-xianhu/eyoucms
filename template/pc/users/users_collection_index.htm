@@ -1,0 +1,218 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>我的收藏-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/bootstrap.min.css"/}
+    {eyou:static file="users/skin/css/basic.css"/}
+    {eyou:static file="users/skin/css/eyoucms.css"/}
+    {eyou:static file="users/skin/css/shop.css"/}
+    {eyou:static  file="users/skin/css/tb_style.css"/}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+</head>
+
+<body class="centre shop">
+<!-- 头部 -->
+{eyou:include file="users/users_header.htm" /}
+<!-- END -->
+<div class="ey-body-bg">
+    <div class="ey-body">
+        <div class="ey-container w1200">
+			<!-- 侧边 -->
+			{eyou:include file="users/users_left.htm" /}
+			<!-- END -->
+			<!-- 中部 -->
+			<div class="ey-con fr" >
+				<div class="el-main main-bg">
+					<!-- 顶部导航栏 -->
+					<div class="column-title mb20">
+						<div class="column-name">我的收藏</div>
+					</div>
+					<!-- END -->
+
+					<div class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition mt20" style="width: 100%;">
+
+						<table >
+							<thead>
+								<tr>
+									<th style="width:40px;">
+										<div class="cell tc">
+											<label class="checkbox-label release-checkbox">
+												<span> &nbsp; </span>
+												<input class="checkbox" type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+												<span class="check-mark"></span>
+											</label>
+										</div>
+									</th>
+									<th style="width:590px ;"><div class="cell">文章标题</div></th>
+									<th style="width: 200px;"><div class="cell tc">所属栏目</div></th>
+									<th style="width: 80px;"><div class="cell tc">操作</div></th>
+								</tr>
+							</thead>
+							<tbody>
+							{empty name="$eyou.field.data"}
+								<tr>
+									<td  align="center" axis="col0" colspan="50">
+                                        <div class="cell pt50 pb50 tc">
+                                           <span class="mb10"><img id='litpic_img'  src="__PUBLIC__/static/common/images/null-data.png"/></span>
+                                         </div>
+									</td>
+								</tr>
+							{else/}
+								{eyou:volist name="$eyou.field.data" id="vo"}
+								<tr>
+									<td>
+										<div class="cell tc">
+											<label class="checkbox-label release-checkbox">
+												<span> &nbsp; </span>
+												<input class="checkbox" type="checkbox" name="ids[]" value="{$vo.id}">
+												<span class="check-mark"></span>
+											</label>
+										</div>
+									</td>
+									<td><div class="cell">
+										<a  href="javascript:void(0);" data-arurl="{$vo.arcurl}" onclick="ArcUrl(this);">
+											{eyou:empty name='$vo.litpic' /}
+											<img src="__PUBLIC__/static/common/images/not_adv.jpg" style="max-height: 25px;max-width: 25px;">
+											{eyou:else /}
+											<img src="{$vo.litpic}" style="max-height: 25px;max-width: 25px;">
+											{/eyou:empty}
+											{$vo.title}
+										</a></div>
+									</td>
+									<td>
+										<div class="cell tc">{$vo.typename}</div>
+									</td>
+									<td>
+										<div class="cell tc">
+											<a href="javascript:void(0);" class="" style="margin-right: 0;" data-id='{$vo.id}' data-url="{$eyou.field.delurl}" onclick="DelData(this);">
+												删除
+											</a>
+										</div>
+									</td>
+								</tr>
+								{/eyou:volist}
+							{/empty}
+								<tr>
+									<td >
+										<label class="checkbox-label release-checkbox ml10">
+											<span> &nbsp; </span>
+											<input class="checkbox" type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+											<span class="check-mark"></span>
+										</label>
+									</td>
+									<td >
+										<a class="el-button el-button--default el-button--small" href="javascript:void(0);" onclick="BatchDelData(this, 'ids');" data-url="{$eyou.field.delurl}">
+											批量删除
+										</a>
+									</td>
+                                    <td></td>
+                                    <td></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div style="text-align: center;">
+						{$page}
+						{eyou:if condition="!empty($pager->totalRows)"}
+						<div class="fytotal">共{$pager->totalRows}条记录</div>
+						{/eyou:if}
+					</div>
+				</div>
+			<!-- END -->
+			</div>
+
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    // 内容查看
+    function ArcUrl(obj) {
+        window.open($(obj).attr('data-arurl'));
+    }
+    // 删除单个收藏
+    function DelData(obj) {
+        layer.confirm('是否删除该收藏？', {
+            title: false,
+            btn: ['是','否'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:$(obj).attr('data-id')},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function(index){
+            layer.close(index);
+        });
+    }
+    // 批量删除收藏
+    function BatchDelData(obj, name) {
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            showErrorAlert('请至少选择一项！');
+            return;
+        }
+        // 删除按钮
+        layer.confirm('确认批量删除收藏？', {
+            title: false,
+            btn: ['确定', '取消'] //按钮
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:a},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+</script>
+{eyou:include file="users/users_footer.htm" /}
+<!-- END -->

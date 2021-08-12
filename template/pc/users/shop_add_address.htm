@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>添加收货地址-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    {eyou:static file="users/skin/css/bootstrap.min.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/shop.css" /}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+
+    {eyou:static file="/public/static/common/js/shop_add_addr_v2.js"/}
+
+</head>
+<body>
+<div class="el-row">
+    <form name='theForm' id="theForm" method="post">
+        <div class="ey-popup">
+            <div class="el-form-item">
+                <div class="el-input">
+                    <input type="text" name="consignee" required class="el-input__inner" placeholder="收货人姓名">
+                </div>
+            </div>
+            <div class="el-form-item">
+                <div class="el-input">
+                    <input type="text" name="mobile" required class="el-input__inner" placeholder="收货人手机">
+                </div>
+            </div>
+            <div class="el-form-item" style="display: none;">
+                <select class="el-input__inner" name="country">
+                    <option value="1">中国</option>
+                </select>
+            </div>
+            <div class="el-form-item">
+                <select class="el-input__inner" name="province" id='province' onchange="GetRegionData(this,'province');">
+                    <option value="0">请选择</option>
+                    {eyou:volist name="$eyou.field.Province" id="P_v"}
+                        <option value="{$P_v.id}">{$P_v.name}</option>
+                    {/eyou:volist}
+                </select>
+            </div>
+            <div class="el-form-item">
+                <select class="el-input__inner" name="city" id='city' onchange="GetRegionData(this,'city');">
+                    <option value="0">请选择</option>
+                </select>
+            </div>
+            <div class="el-form-item">
+                <select class="el-input__inner" name="district" id='district'>
+                    <option value="0">请选择</option>
+                </select>
+            </div>
+            <div class="el-form-item">
+                <textarea class="el-input__inner" style="min-height:50px;" rows="3" name="address" placeholder="收货详情地址"></textarea>
+            </div>
+            <input type="hidden" id="types" value="{$eyou.field.types}">
+            <input type="hidden" id="GetRegionDataS" value="{eyou:url link='user/Shop/get_region_data'/}">
+            <input type="hidden" id="ShopAddAddress" value="{eyou:url link='user/Shop/shop_add_address'/}">
+            <div class="el-form-item">
+                <button type="button" class="el-button el-button--primary" style="width: 100%;" onclick="AddAddress();">确定</button>
+            </div>
+            
+        </div>
+        
+    </form>
+</div>
+
+<!-- 添加收货地址模板,需保留,可自行修改样式 -->
+<div style="display: none" id="divhtml">
+    {eyou:if condition="'order' == $eyou.field.types and empty($eyou.field.addr_num)"}
+        <input type="hidden" name="#name#" id="#id#" value="#value#">
+    {/eyou:if}
+    <div class="el-col el-col-8" id="#ul_li_id#">
+    	<div class="address-item" {eyou:eq name="$eyou.field.types" value="order"} onclick="#selected#" {/eyou:eq}>
+    		<div class="address-main">
+    			<h2 id="#consigneeid#">#consignee#</h2> 
+    			<span id="#mobileid#"> #mobile#</span> 
+    			<span id="#infoid#"> #info#</span> 
+    			<span id="#addressid#">#address#</span>
+    		</div>
+    		<div class="address-oper">
+    			<span onclick="#shopeditaddr#"><i class="el-icon-edit-outline"></i>编辑</span> 
+    			<span onclick="#shopdeladdr#"><i class="el-icon-delete"></i>删除</span>
+    			{eyou:eq name="$eyou.field.types" value="list"}
+    			    <span onclick="#setdefault#">设为默认</span>
+    			{/eyou:eq}
+    		</div>
+    		<i class="el-icon-house" title="默认地址"></i>
+    	</div>	
+    </div>
+</div>
+
+</body>
+</html>

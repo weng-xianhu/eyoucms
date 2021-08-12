@@ -1,98 +1,103 @@
-  <footer class="ey-foot-info p-y-20 border-top1" e-page="footer"> 
-   <div class="langcss text-xs-center p-b-20"> 
-    <div class="container"> 
-     <div class="row mob-masonry"> 
-      <div class="col-lg-2 col-md-3 col-xs-6 list masonry-item foot-nav eyou-edit" e-id="301" e-type="channel" id="testtest"> 
-      {eyou:uichannel e-id="301" typeid="1" e-page="footer"}
-        {eyou:type id="field"}
-       <h4 class="font-size-16 m-t-0"> <a href="{$field.typeurl}" target="_self" title="{$field.typename}">{$field.typename}</a> </h4>
-        {/eyou:type}
-       <ul class="ulstyle m-b-0"> 
-        {eyou:channel type="son" row="3"}
-        <li> <a href="{$field.typeurl}" target="_self" title="{$field.typename}">{$field.typename}</a> </li> 
-        {/eyou:channel}
-       </ul> 
-      {/eyou:uichannel}
-      </div> 
-      <div class="col-lg-2 col-md-3 col-xs-6 list masonry-item foot-nav eyou-edit" e-id="302" e-type="channel"> 
-      {eyou:uichannel e-id="302" typeid="2" e-page="footer"}
-        {eyou:type id="field"}
-        <h4 class="font-size-16 m-t-0"> <a href="{$field.typeurl}" target="_self" title="{$field.typename}">{$field.typename}</a> </h4>
-        {/eyou:type}
-       <ul class="ulstyle m-b-0"> 
-        {eyou:channel type="son" row="3"}
-        <li> <a href="{$field.typeurl}" target="_self" title="{$field.typename}">{$field.typename}</a> </li> 
-        {/eyou:channel}
-       </ul> 
-      {/eyou:uichannel}
-      </div> 
-      <div class="col-lg-2 col-md-3 col-xs-6 list masonry-item foot-nav eyou-edit" e-id="303" e-type="channel"> 
-      {eyou:uichannel e-id="303" typeid="3" e-page="footer"}
-        {eyou:type id="field"}
-       <h4 class="font-size-16 m-t-0"> <a href="{$field.typeurl}" title="{$field.typename}">{$field.typename}</a> </h4> 
-        {/eyou:type}
-       <ul class="ulstyle m-b-0"> 
-        {eyou:channel type="son" row="3"}
-        <li> <a href="{$field.typeurl}" title="{$field.typename}">{$field.typename}</a> </li> 
-        {/eyou:channel}
-       </ul> 
-      {/eyou:uichannel}
-      </div> 
-      <div class="col-lg-3 col-md-12 col-xs-12 info masonry-item font-size-20" m-id="met_contact" m-type="nocontent"> 
-       <p class="font-size-26"><a href="javascript:void(0);" title="" class="eyou-edit" e-id="304" e-type="text">
-        {eyou:uitext e-id='304' e-page="footer"}
-          {$field.value}
-        {eyou:else /}
-          {eyou:lang name='yybl4' /}
-        {/eyou:uitext}
-        </a></p> 
-       <p class="eyou-edit" e-id="web_attr_2" e-type="text">
-        {eyou:uitext e-id='web_attr_2' e-page="footer"}
-          {$field.value}
-        {eyou:else /}
-          {eyou:global name='web_attr_2' /}
-        {/eyou:uitext}
-       </p> 
-       {notempty name="$eyou.global.web_attr_4"}
-       <a class="p-r-5" id="ey-weixin" data-trigger="hover" data-placement="top" data-content="<div class='text-xs-center'><img src='{eyou:global name='web_attr_4' /}' alt='{eyou:global name='web_name' /}' width='150' height='150'></div>"> <i class="fa fa-weixin light-green-700"></i> </a> 
-       {/notempty}
-       {notempty name="$eyou.global.web_attr_3"}
-       <a href="http://wpa.qq.com/msgrd?v=3&amp;uin={eyou:global name='web_attr_3' /}&amp;site=qq&amp;menu=yes" rel="nofollow" target="_blank" class="p-r-5"> <i class="fa fa-qq"></i> </a> 
-       {/notempty}
-       {notempty name="$eyou.global.web_attr_1"}
-       <a href="{eyou:global name='web_attr_1' /}" rel="nofollow" target="_blank" class="p-r-5"> <i class="fa fa-weibo red-600"></i> </a> 
-       {/notempty}
-      </div> 
-     </div> 
-    </div> 
-   </div> 
-   <div class="copy p-y-10 border-top1"> 
-    <div class="container text-xs-center"> 
-     <p>
-      {eyou:flink type='all' titlelen='15'}
-      <a href='{$field.url}' {$field.target}>{$field.title}</a>
-      {/eyou:flink}
-     </p>
-    </div>
-    <div class="container text-xs-center"> 
-     <p class="eyou-edit" e-id="web_copyright" e-type="text">
-        {eyou:uitext e-id='web_copyright' e-page="footer"}
-          {$field.value}
-        {eyou:else /}
-          {eyou:global name='web_copyright' /}
-        {/eyou:uitext}
-     </p>
-     <p>
-        {eyou:global name='web_recordnum' /}
-     </p>
-     <button type="button" class="btn btn-outline btn-default btn-squared btn-lang" id="btn-convert" m-id="lang" m-type="lang">繁體</button> 
-    </div> 
-   </div>  
-   {eyou:global name='web_thirdcode_pc' /}
-  </footer>
-  <input type="hidden" name="met_lazyloadbg" value="{eyou:global name='web_templets_pc' /}/skin/images/loading.gif" /> 
-  {eyou:static file="skin/js/jquery.min.js" /}
-  {eyou:static file="skin/js/common.js" /}
-  <!-- 应用插件标签 start -->
-  {eyou:weapp type='default' /}
-  <!-- 应用插件标签 end -->
+<footer class="bg-main">
+	<div class="container-layout">
+		<ul>
+			{eyou:channel type="top" row="4" id="field"}
+			<li class="float-left item-{$i} hidden-l hidden-s">
+				<h3 class="text-middle margin-big-bottom">{$field.typename}</h3>
+				<ul>
+					{eyou:channel name="$field.children" row="100" id="field2"}
+					<li><a href="{$field2.typeurl}" title="{$field2.typename}">{$field2.typename}</a></li>
+					{/eyou:channel}
+				</ul>
+			</li>
+			 {/eyou:channel}
+			
+			<li class="float-left item-5">
+				{eyou:type typeid='54'}
+				<h3 class="text-middle margin-big-bottom">{$field.typename}</h3>
+				{/eyou:type}
+				<div class="contact">
+					<div class="media media-x margin-big-bottom">
+						<span class="float-left radius-circle bg-yellow text-white text-center">
+							<i class="fa fa-map-marker fa-fw" aria-hidden="true"></i>
+						</span>
+						<div class="media-body">
+							<p>{eyou:global name='web_attr_16' /}<p>
+						</div>
+					</div>				
+					
+					<div class="media media-x margin-big-bottom">
+						<span class="float-left radius-circle bg-yellow text-white text-center">
+							<i class="fa-fw fa fa-phone"></i>
+						</span>
+						<div class="media-body">
+							<p>
+								<a href="tel:{eyou:global name='web_attr_1' /}" class="Conv_DINCondensedC text-large">{eyou:global name='web_attr_1' /}</a>
+							<p>
+						</div>
+					</div>
+					<div class="media media-x margin-big-bottom">
+						<span class="float-left radius-circle bg-yellow text-white text-center">
+							<i class="fa fa-envelope fa-fw"></i>
+						</span>
+						<div class="media-body">
+							<p>
+								<a href="mailto:{eyou:global name='web_attr_15' /}" class="text-middle">{eyou:global name='web_attr_15' /}</a>
+							</p>
+						</div>
+					</div>
+
+				</div>
+			</li>
+			<li class="float-left item-6">
+				<div class="qr padding radius text-center"><img src="{eyou:global name='web_attr_17' /}"><p class="text-gray height-middle">关注我们</p></div>
+			</li>
+		</ul>
+	</div>
+	<div class="blank-middle"></div>
+	<!-- 友情链接 -->
+	<div class="container-layout">
+		<div class="line">	
+			<div class="tab">
+				<div class="tab-head">
+					<ul class="tab-nav">
+						<li class="active"><a href="#friend-1">友情链接</a></li>
+						<!-- <li><a href="#friend-2">友情链接-图片</a> </li> -->
+					</ul>
+				</div>
+				<div class="tab-body">
+					<div class="tab-panel active flink" id="friend-1">
+						{eyou:flink titlelen='45' type='text'}
+							<a href="{$field.url}" {$field.target}>{$field.title} </a>
+						{/eyou:flink}
+					</div>
+					<!-- <div class="tab-panel flink" id="friend-2">
+						{eyou:flink titlelen='45' type='image'}
+							<a href="{$field.url}" {$field.target}><img src="{$field.logo}"> </a>
+						{/eyou:flink}
+					</div> -->
+
+				</div>
+			</div>	
+		</div>	
+	</div>	
+	<!-- 友情链接 end -->
+
+	<div class="container-layout">
+		<div class="line">
+			<div class="copyright height">
+				<div class="x8">
+					{eyou:global name='web_copyright' /}　{eyou:global name='web_recordnum' /}
+				</div>
+				<div class="x4 text-right">
+					<a href="{eyou:global name='web_basehost' /}/sitemap.xml">SiteMap</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<!--底部版权-->
+
+<!-- 应用插件标签 start --> 
+{eyou:weapp type='default' /} 
+<!-- 应用插件标签 end -->

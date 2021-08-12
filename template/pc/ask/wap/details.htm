@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{$eyou.field.info.seo_title}</title>
+        <meta name="description" content="{$eyou.field.info.seo_description}" />
+        <meta name="keywords" content="{$eyou.field.info.seo_keywords}" />
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link href="{eyou:global name='web_cmspath' /}/favicon.ico" rel="shortcut icon" type="image/x-icon" /> 
+        {eyou:static file="ask/skin/css/ey-ask.css"/}
+        {eyou:static file="ask/skin/css/iconfont.css"/}
+        {eyou:static file="ask/skin/css/font-awesome.min.css"/}
+        {eyou:static file="ask/skin/js/jquery.min.js"/}
+        {eyou:static file="ask/skin/js/layer_mobile/layer.js"/}
+        {eyou:static file="ask/skin/js/ask.js"/}
+
+    </head>
+
+    <body>
+        <!-- 头部框 -->
+        {eyou:include file="ask/ask_header.htm" /}
+        <!-- 头部 END -->
+
+        <!-- 主体内容 -->
+        <div class="details-main bg-f bor-tb mt10">
+            <div class="user-info">
+                <a class="user-box" href="javascript:void(0);">
+                    <img src="{$eyou.field.info.head_pic|get_head_pic=###}">
+                    <span class="name">{$eyou.field.info.nickname}</span>
+                </a>
+                <span class="time">发布于 {$eyou.field.info.add_time}</span>
+            </div>
+            <div class="title mt10">
+                <i class="fa {eyou:eq name='$eyou.field.info.status' value='1'}fa-check-circle{eyou:else/}fa-question-circle{/eyou:eq}" aria-hidden="true"></i>
+                <h2>{$eyou.field.info.ask_title}</h2>
+                <div class="reward"> <i class="iconfont icon-hongbao"></i> {$eyou.field.info.money} </div>
+            </div>
+            <div class="txt-con mt10">{$eyou.field.info.content}</div>
+            <div class="tool mt10" onselectstart="return false;">
+                <div class="tool-l">
+                    <span class="btn zan" data-url="{$eyou.field.ClickLikeUrl}" data-is_like='' onclick="ClickLike(this, {$eyou.field.info.ask_id}, 0, 1);"><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>点赞 <em id="AskLikeNum_{$eyou.field.info.ask_id}">{$eyou.field.info.ques_like_count}</em></span>
+                    <span class="btn answer" onclick="SwipeSwitch('ques_answer1616556528');">
+                        <i class="fa fa-commenting-o" aria-hidden="true"></i>回答 {$eyou.field.info.ques_answer_count}
+                    </span>
+                    <span class="btn read"> {$eyou.field.info.click}人阅读 </span>
+                </div>
+                <div class="tool-r">
+                    {eyou:if condition="isset($AdminParentId) AND 0 == $AdminParentId AND 0 == $eyou.field.info.is_review"}
+                        <a href="javascript:void(0);" data-url='{$eyou.field.ReviewAskUrl}' onclick="ReviewAsk(this, {$eyou.field.info.ask_id});" style="color: red;">审核</a>
+                    {/eyou:if}
+                    {eyou:if condition="!empty($users.admin_id) OR !empty($eyou.field.IsUsers)"}
+                        <a href="javascript:void(0);" onclick="Linkjump(this, 2);" data-url="{$eyou.field.EditAskUrl}">编辑</a>
+                        {eyou:notempty name="$users.admin_id"}
+                            <a href="javascript:void(0);" onclick="DataDel(this, 0, 1, 0);" data-url="{$eyou.field.DelAskUrl}" style="color: red;">删除</a>
+                        {/eyou:notempty}
+                    {/eyou:if}
+                </div> 
+            </div>
+        </div>
+        <!-- 主体内容 END -->
+        
+        {eyou:notempty name="$eyou.field.BestAnswer"}
+        <!-- 最佳答案 -->
+        <div class="details-reply bg-f bor-tb mt10">
+           <div class="reply-tit">
+               <div class="reply-tit-l best-col"><i class="fa fa-check" aria-hidden="true"></i> 最佳答案 </div>
+           </div>
+           {eyou:volist name="$eyou.field.BestAnswer" id="vo"}
+               <div class="reply-item"  id="comment_info_div_{$vo.answer_id}">
+                   <div class="user-info">
+                        <a class="user-box" href="javascript:void(0);">
+                            <img src="{$vo.head_pic|get_head_pic=###}"> <span class="name">{$vo.username}</span>
+                        </a>
+                        <span class="time">{$vo.add_time}</span>
+                   </div>
+                   <div class="txt-con mt10">{$vo.content}</div>
+                   <div class="tool mt10" onselectstart="return false;">
+                        <div class="tool-l">
+                            <span class="btn zan" data-url="{$eyou.field.ClickLikeUrl}" data-is_like='' onclick="ClickLike(this, {$eyou.field.info.ask_id}, {$vo.answer_id}, 2);"><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>点赞<em id="CommentLikeNum_{$vo.answer_id}">{$vo.click_like}</em></span>
+                            <span class="btn" onclick="ShowCommentFrame({$vo.answer_id});"><i class="fa fa-comment" aria-hidden="true"></i>评论<em id="comment_reply_num_{$vo.answer_id}">{$vo.CommentReplyNum}</em></span>
+                        </div>
+                        <div class="tool-r">
+                            {if condition="isset($AdminParentId) AND 0 == $AdminParentId AND 0 == $vo.is_review"}
+                                <a href="javascript:void(0);" data-url='{$eyou.field.ReviewCommentUrl}' onclick="Review(this, {$vo.answer_id}, 0);" style="color: red;" title="回答未审核，点击审核，仅创始人可操作">审核</a>
+                            {/if}
+                            {if condition="!empty($users.admin_id) OR $vo.users_id == $users.users_id"}
+                                <a href="javascript:void(0);" onclick="EditAnswer(this, {$vo.answer_id});" data-url="{$eyou.field.EditAnswer}">编辑</a>
+                                <a href="javascript:void(0);" data-url="{$eyou.field.DelAnswerUrl}" onclick="DataDel(this, {$vo.answer_id}, 2, 0);">删除</a>
+                            {/if}
+                        </div>
+                   </div>
+                   <div class="ask-comment mt10">
+                        <div id="comment_answer_div_{$vo.answer_id}">
+                            {eyou:volist name="$vo.AnswerSubData" id="vo_sub"}
+                                <div class="ask-comment-item" id="reply_comment_div_{$vo_sub.answer_id}">
+                                    <div class="user-info">
+                                        <a class="user-box" href="javascript:void(0);">
+                                            <img src="{$vo_sub.head_pic|get_head_pic=###}">
+                                            <span class="name">{$vo_sub.username}</span>
+                                        </a>
+                                        <span class="time">{$vo_sub.add_time}</span>
+                                    </div>
+                                    <div class="txt-con mt10">
+                                        {eyou:empty name="$vo_sub.at_users_id"}
+                                            {$vo_sub.content}
+                                        {eyou:else/}
+                                            回复 @{$vo_sub.at_usersname}: &nbsp; {$vo_sub.content}
+                                        {/eyou:empty}
+                                    </div>
+                                    <div class="tool mt10" onselectstart="return false;">
+                                        <div class="tool-l">
+                                            <span class="btn zan" data-url="{$eyou.field.ClickLikeUrl}" data-is_like='' onclick="ClickLike(this, {$eyou.field.info.ask_id}, {$vo_sub.answer_id}, 3);"><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>点赞 <em id="ReplyLikeNum_{$vo_sub.answer_id}">{$vo_sub.click_like}</em></span>
+                                            <span class="btn btn-reply" id="show_reply_frame_{$vo_sub.answer_id}" onclick="ShowReplyFrame(this, '{$vo_sub.answer_id}');">回复</span>
+                                        </div>
+                                        <div class="tool-r">
+                                            {if condition="isset($AdminParentId) AND 0 == $AdminParentId AND 0 == $vo_sub.is_review"}
+                                                <a href="javascript:void(0);" data-url='{$eyou.field.ReviewCommentUrl}' onclick="Review(this, {$vo_sub.answer_id}, 0);" style="color: red;" title="该回答未审核，可点击审核，仅创始人可操作">审核</a>
+                                            {/if}
+                                            {if condition="!empty($users.admin_id) OR $vo_sub.users_id == $users.users_id"}
+                                                <a href="javascript:void(0);" data-url="{$eyou.field.DelCommentUrl}" onclick="DataDel(this, {$vo_sub.answer_id}, 3, {$vo_sub.answer_pid})" style="cursor: pointer; color:red;">删除</a>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                    <form id="reply_comment_form_{$vo_sub.answer_id}">
+                                        <input type="hidden" name="answer_id" value="{$vo_sub.answer_pid}">
+                                        <input type="hidden" name="type_id" value="{$eyou.field.info.type_id}">
+                                        <input type="hidden" name="at_users_id" value="{$vo_sub.users_id}">
+                                        <input type="hidden" name="at_answer_id" value="{$vo_sub.answer_id}">
+                                        <div class="reply-form CommentReplyBox" id='reply_comment_{$vo_sub.answer_id}'>
+                                            <input type="text" name="content" id='reply_comment_input_{$vo_sub.answer_id}' placeholder="回复用户 {$vo_sub.username} ..." onkeyup="dealInputContentAndSize(this);" maxlength="300">
+                                            <span class="btn-comment" data-url="{$eyou.field.AddAnswerUrl}" onclick="SubmitReplyData(this, {$vo_sub.answer_id});">回复</span>
+                                        </div>
+                                    </form>
+                                </div>
+                            {/eyou:volist}
+                        </div>
+                       {eyou:if condition="$vo.CommentReplyNum > 5"}
+                            <div class="ask-comment-item">
+                                <a href="javascript:void(0);" data-url="{$eyou.field.ShowCommentUrl}" onclick="ShowComment(this, {$vo.answer_id}, 0);" data-firstRow="{$eyou.field.firstRow}" data-listRows="{$eyou.field.listRows}">查看更多</a>
+                            </div>
+                        {/eyou:if}
+                    </div>
+                    <form id="comment_answer_form_{$vo.answer_id}">
+                        <input type="hidden" name="answer_id" value="{$vo.answer_id}">
+                        <input type="hidden" name="type_id" value="{$eyou.field.info.type_id}">
+                        <div class="comment-form mt10 CommentReplyBox" id="comment_answer_{$vo.answer_id}">
+                            <input type="text" name="content" id="comment_answer_input_{$vo.answer_id}" placeholder="评论用户 {$vo.username} ..." onkeyup="dealInputContentAndSize(this);" maxlength="300">
+                            <span class="btn-comment" data-url="{$eyou.field.AddAnswerUrl}" onclick="SubmitCommentData(this, {$vo.answer_id});">评论</span>
+                        </div>
+                    </form>
+               </div>
+            {/eyou:volist}
+        </div>
+        <!-- 最佳答案 END-->
+        {/eyou:notempty}
+        
+        {eyou:notempty name="$eyou.field.AnswerData"}
+        <!-- 回答回复列表 -->
+        <div class="details-reply bg-f bor-tb mt10" id='Comment1616980722'>
+            <div class="reply-tit">
+                <div class="reply-tit-l"> 共 {$eyou.field.AnswerCount} 条回答 </div>
+                <div class="reply-tit-r"> <a href="javascript:void(0);" data-url="{$eyou.field.AnswerLikeNum}" data-sort_order='{$eyou.field.SortOrder}' onclick="AnswerLike(this);">按点赞量排序</a> </div>
+            </div>
+
+            <div class="reply-list">
+                {eyou:volist name="$eyou.field.AnswerData" id="vo"}
+                    <div class="reply-item" id="comment_info_div_{$vo.answer_id}">
+                        <div class="user-info">
+                            <a class="user-box" href="javascript:void(0);">
+                                <img src="{$vo.head_pic|get_head_pic=###}"> <span class="name">{$vo.username}</span>
+                            </a>
+                            <span class="time">{$vo.add_time}</span>
+                        </div>
+                        <div class="txt-con mt10">{$vo.content}</div>
+                        <div class="tool mt10" onselectstart="return false;">
+                            <div class="tool-l">
+                                <span class="btn zan" data-url="{$eyou.field.ClickLikeUrl}" data-is_like='' onclick="ClickLike(this, {$eyou.field.info.ask_id}, {$vo.answer_id}, 2);"><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>点赞 <em id="CommentLikeNum_{$vo.answer_id}">{$vo.click_like}</em></span>
+                                <span class="btn" onclick="ShowCommentFrame({$vo.answer_id})"><i class="fa fa-comment" aria-hidden="true"></i>评论<em id="comment_reply_num_{$vo.answer_id}">{$vo.CommentReplyNum}</em></span>
+                            </div>
+                            <div class="tool-r">
+                                {eyou:if condition="isset($AdminParentId) AND 0 == $AdminParentId AND 0 == $vo.is_review"}
+                                    <a href="javascript:void(0);" data-url='{$eyou.field.ReviewCommentUrl}' onclick="Review(this, {$vo.answer_id}, 1);" style="color: red;" title="该回答未审核，可点击审核，仅创始人可操作">审核</a>
+                                {/eyou:if}
+                                {eyou:if condition="!empty($users.admin_id) OR $vo.users_id == $users.users_id"}
+                                    <a href="javascript:void(0);" onclick="EditAnswer(this, {$vo.answer_id});" data-url="{$eyou.field.EditAnswer}">编辑</a>
+                                    <a href="javascript:void(0);" data-url="{$eyou.field.DelAnswerUrl}" onclick="DataDel(this, {$vo.answer_id}, 2, 0);">删除</a>
+                                {/eyou:if}
+                                {eyou:if condition="!empty($users.admin_id) OR $eyou.field.info.users_id == $users.users_id"}
+                                    <a {eyou:eq name='$vo.is_review' value='0'}style="display: none; color: red;"{eyou:else/}style="color: red"{/eyou:eq} href="javascript:void(0);" data-url="{$eyou.field.BestAnswerUrl}" onclick="BestAnswer(this, {$vo.answer_id}, {$eyou.field.info.users_id});" id="BestAnswer_{$vo.answer_id}">采纳最佳答案</a>
+                                {/eyou:if}
+                            </div>
+                        </div>
+                        <div class="ask-comment mt15">
+                            <div id="comment_answer_div_{$vo.answer_id}">
+                                {eyou:volist name="$vo.AnswerSubData" id="vo_sub"}
+                                    <div class="ask-comment-item" id="reply_comment_div_{$vo_sub.answer_id}">
+                                        <div class="user-info">
+                                            <a class="user-box" href="javascript:void(0);">
+                                                <img src="{$vo_sub.head_pic|get_head_pic=###}">
+                                                <span class="name">{$vo_sub.username}</span>
+                                            </a>
+                                            <span class="time">{$vo_sub.add_time}</span>
+                                        </div>
+                                        <div class="txt-con mt10">
+                                            {eyou:empty name="$vo_sub.at_users_id"}
+                                                {$vo_sub.content}
+                                            {eyou:else/}
+                                                回复 @{$vo_sub.at_usersname}: &nbsp; {$vo_sub.content}
+                                            {/eyou:empty}
+                                        </div>
+                                        <div class="tool mt10" onselectstart="return false;">
+                                           <div class="tool-l">
+                                                <span class="btn zan" data-url="{$eyou.field.ClickLikeUrl}" data-is_like='' onclick="ClickLike(this, {$eyou.field.info.ask_id}, {$vo_sub.answer_id}, 3);"><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>点赞 <em id="ReplyLikeNum_{$vo_sub.answer_id}">{$vo_sub.click_like}</em></span>
+                                                <span class="btn btn-reply" id="show_reply_frame_{$vo_sub.answer_id}" onclick="ShowReplyFrame(this, {$vo_sub.answer_id});">回复</span>
+                                            </div>
+                                            <div class="tool-r">
+                                                {if condition="isset($AdminParentId) AND 0 == $AdminParentId AND 0 == $vo_sub.is_review"}
+                                                    <a href="javascript:void(0);" data-url='{$eyou.field.ReviewCommentUrl}' onclick="Review(this, {$vo_sub.answer_id}, 1);" style="color: red;" title="该回答未审核，可点击审核，仅创始人可操作">审核</a>
+                                                {/if}
+                                                {if condition="!empty($users.admin_id) OR $vo_sub.users_id == $users.users_id"}
+                                                    <a href="javascript:void(0);" data-url="{$eyou.field.DelCommentUrl}" onclick="DataDel(this, {$vo_sub.answer_id}, 3, {$vo_sub.answer_pid})" style="cursor: pointer; color:red;">删除</a>
+                                                {/if}
+                                           </div>
+                                        </div>
+                                        <form id="reply_comment_form_{$vo_sub.answer_id}">
+                                            <input type="hidden" name="answer_id" value="{$vo_sub.answer_pid}">
+                                            <input type="hidden" name="type_id" value="{$eyou.field.info.type_id}">
+                                            <input type="hidden" name="at_users_id" value="{$vo_sub.users_id}">
+                                            <input type="hidden" name="at_answer_id" value="{$vo_sub.answer_id}">
+                                            <div class="reply-form CommentReplyBox" id='reply_comment_{$vo_sub.answer_id}'>
+                                                <input type="text" name="content" id='reply_comment_input_{$vo_sub.answer_id}' placeholder="回复用户 {$vo_sub.username} ...">
+                                                <span class="btn-comment" data-url="{$eyou.field.AddAnswerUrl}" onclick="SubmitReplyData(this, {$vo_sub.answer_id});">回复</span>
+                                            </div>
+                                        </form>
+                                    </div>
+                                {/eyou:volist}
+                            </div>
+                            {eyou:if condition="$vo.CommentReplyNum > 5"}
+                                <div class="ask-comment-item">
+                                    <a href="javascript:void(0);" data-url="{$eyou.field.ShowCommentUrl}" onclick="ShowComment(this, {$vo.answer_id}, 1);" data-firstRow="{$eyou.field.firstRow}" data-listRows="{$eyou.field.listRows}">查看更多</a>
+                                </div>
+                            {/eyou:if}
+                        </div>
+                        <form id="comment_answer_form_{$vo.answer_id}">
+                            <input type="hidden" name="answer_id" value="{$vo.answer_id}">
+                            <input type="hidden" name="type_id" value="{$eyou.field.info.type_id}">
+                            <div class="comment-form mt10 CommentReplyBox" id="comment_answer_{$vo.answer_id}">
+                                <input type="text" name="content" id="comment_answer_input_{$vo.answer_id}" placeholder="评论用户 {$vo.username} ...">
+                                <span class="btn-comment" data-url="{$eyou.field.AddAnswerUrl}" onclick="SubmitCommentData(this, {$vo.answer_id});">评论</span>
+                            </div>
+                        </form>
+                    </div>
+                {/eyou:volist}
+            </div>
+        </div>
+        {/eyou:notempty}
+        <!-- 回答回复列表 END-->
+            
+        {eyou:if condition="empty($eyou.field.BestAnswer) AND empty($eyou.field.AnswerData)"}
+            <!-- 零回复显示 -->
+            <div class="details-reply bg-f bor mt15">
+                <div class="reply-item details-answer no-answer">
+                    <img src="{eyou:static file='ask/skin/images/kong_pic2.png' /}">
+                    <p>暂时还没回答，等你发挥</p>
+                </div>
+            </div>
+            <!-- 零回复显示 END -->
+        {/eyou:if}
+
+        {eyou:empty name="$users_id"}
+            <!-- 未登录 -->
+            <div class="details-reply bg-f bor-tb mt10">
+                <div class="reply-item">
+                    <div class="details-answer-rich">
+                        <div class="details-answer-login">
+                            <span class="info">^-^我来说两句......请先</span>
+                            <span> <a href="{:url('user/Users/login')}">登录</a></span>
+                            <span class="line">|</span>
+                            <span> <a href="{:url('user/Users/reg')}">注册</a></span>
+                        </div>
+                    </div>  
+                </div>
+            </div>
+            <!-- 未登录 END -->
+        {eyou:else /}
+            <!--我要问答 -->
+            <div class="details-reply bg-f bor-tb mt10" id="ques_answer1616556528">
+                <div class="reply-item">
+                    <div class="user-info">
+                        <a class="user-box" href="">
+                            <img src="{$users.head_pic|get_head_pic=###}"> <span class="name">{$users.nickname}</span>
+                        </a>
+                    </div>
+                    <form id="AnswerQuestions1616551871">
+                        <!-- 评论所需隐藏域 -->
+                        <input type="hidden" name="type_id" value="{$eyou.field.info.type_id}">
+                        <!-- 评论所需JS -->
+                        <script type="text/javascript">
+                            window.UEDITOR_HOME_URL = "{eyou:global name='web_cmspath' /}/public/plugins/Ueditor/";
+                        </script> 
+                        {eyou:static file="/public/plugins/Ueditor/ueditor.config.js"/}
+                        {eyou:static file="/public/plugins/Ueditor/ueditor.all.min.js"/}
+                        {eyou:static file="/public/plugins/Ueditor/lang/zh-cn/zh-cn.js"/}
+                        <!-- 评论内容框 -->
+                        <div> <textarea id="ask_content" name="ask_content"></textarea> </div>
+                        <span class="btn-comment" data-url="{$eyou.field.AddAnswerUrl}" onclick="AnswerQuestions(this);" style="width: 100%;">提交</span>
+                        <!-- 评论加载富文本JS -->
+                        <script type="text/javascript">
+                            UE.getEditor('ask_content', {
+                                serverUrl :"{:url('user/Uploadify/index',array('savepath'=>'askpic'))}",
+                                zIndex: 999,
+                                initialFrameWidth: "100%",
+                                initialFrameHeight: 300,
+                                focus: false,
+                                maximumWords: 99999,
+                                removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',
+                                pasteplain:false,
+                                autoHeightEnabled: false,
+                                toolbars: [["forecolor", "backcolor", "removeformat", "|", "simpleupload", "unlink"]],
+                                xssFilterRules: true,
+                                inputXssFilter: true,
+                                outputXssFilter: true
+                            });
+                            // 必须在提交前渲染编辑器
+                            function ask_content() {
+                                // 判断编辑模式状态:0表示【源代码】HTML视图；1是【设计】视图,即可见即所得；-1表示不可用
+                                if (UE.getEditor("ask_content").queryCommandState('source') != 0) {
+                                    UE.getEditor("ask_content").execCommand('source');
+                                }
+                            }
+                        </script>
+                    </form>
+                </div>
+            </div>
+            <!--我要问答 end--> 
+        {/eyou:empty}
+
+        {eyou:if condition="!empty($eyou.field.WeekList)"}
+        <!--热门帖子 -->
+        <div class="bg-f bor-tb mt10">
+            <div class="ask-title">热门帖子</div>
+            <div class="hot-list">
+                {eyou:volist name="$eyou.field.WeekList" id="week"}
+                    <div class="item">
+                        <div class="title"><a href="javascript:void(0);" onclick="Linkjump(this, 2);" data-url="{$week.AskUrl}">{$week.ask_title}</a></div>
+                        <div class="footer mt5">
+                            <a href="javascript:void(0);" onclick="Linkjump(this, 2);" data-url="{$week.type_url}">{$week.type_name}</a> <span> {$week.replies} 个回答</span>
+                        </div>
+                    </div>
+                {/eyou:volist}
+            </div>
+        </div>
+        <!--热门帖子 end--> 
+        {/eyou:if}
+        
+        <!-- 底部 -->
+        {eyou:include file="ask/ask_footer.htm" /}
+        <!-- 底部 END -->
+    </body>
+</html>

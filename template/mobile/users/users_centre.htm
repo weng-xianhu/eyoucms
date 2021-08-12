@@ -1,0 +1,437 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>我的信息-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    <!-- 新样式 2020-12-8 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm" /}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="users/skin/js/bootstrap.min.js"/}
+    {eyou:static file="users/skin/js/global.js"/}
+</head>
+
+<body>
+    {eyou:include file="users/users_header.htm" /}
+    <!-- 头部信息 -->
+    <div class="ey-header-status">
+        <div class="header-status-l">
+            <a href="javascript:history.go(-1)"><i class="el-icon-arrow-left"></i></a>
+        </div> 
+        <div class="header-status-m">个人设置</div> 
+        <div class="header-status-r">
+            <a href="{eyou:url link='user/Users/index' /}"><i class="el-icon-user"></i></a>
+        </div>
+    </div>
+    <!-- 头部信息结束 -->
+    <div class="h50"></div>
+    <div class="ey-container">
+        <div class="item-list">
+            <div class="item">
+                <div class="item-l">
+                    <div class="face">
+                        <div  class="el-upload el-upload--text" onclick="$('#ey_head_pic').trigger('click');">
+                            <img id="ey_head_pic_a" src="{$users.head_pic|get_head_pic=###}"/>
+                            <span title="编辑头像" class="el-icon-edit-outline"></span>
+                        </div>
+                        <input type="file" name="ey_head_pic" id="ey_head_pic" data-max_file_size="2" onchange="upload_head_pic(this)" style="display: none;">
+                    </div>
+                </div> 
+                
+                <div class="item-m fs16">{$nickname}</div> 
+                <div class="item-r"><span class="member fs16">{$users.level_name}</span></div>
+            </div>
+        </div>
+        <div class="ey-con ey-row mt10">
+            <div class="item-from-flex">
+                
+                <div class="item-flex wb25">
+                    <div class="item-tit fs16">
+                        用户名
+                    </div>
+                </div>
+                
+                <div class="item-flex-r flex wb75 fs16 tar_z">
+                    {$users.username}
+                </div>
+                <div class="item-flex-r"></div>
+            </div>
+        </div>
+        <div class="ey-con ey-row mt10">
+            <div class="item-from-flex">
+                    
+                    <div class="item-flex wb25">
+                        <div class="item-tit fs16">
+                            修改密码
+                        </div>
+                    </div>
+                    <div class="item-flex-r flex wb75">
+                        <div class="item-con wb100">
+                            <input type="text" name="password_edit" id="password_edit" autocomplete="off" placeholder="留空时默认不修改密码" class="input-text fs16 tar_z">
+                        </div>
+                    </div>
+                <div class="item-flex-r">
+                    <i class="el-icon-arrow-right"></i>
+                </div>
+            </div>
+        </div>
+        <form name='theForm' id="theForm">
+            <div class="ey-con ey-row mt10">
+                <div class="item-from-flex">
+                    <div class="item-flex wb25">
+                        <div class="item-tit fs16">
+                            我的昵称
+                        </div>
+                    </div>
+                    <div class="item-flex-r flex wb75">
+                        <div class="item-con wb100">
+                            <input type="text" name="nickname" value="{$users.nickname}" class="input-text fs16 tar_z">
+                        </div>
+                    </div>
+                    <div class="item-flex-r">
+                        <i class="el-icon-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+            {eyou:empty name="$users.password"}
+            <div class="ey-con ey-row mt10">
+                <div class="item-from-flex">
+                    <div class="item-flex wb25">
+                        <div class="item-tit fs16">
+                            设置密码
+                        </div>
+                    </div>
+                    <div class="item-flex-r flex wb75">
+                        <div class="item-con wb100">
+                            <input type="text" name="password" id="password" class="input-text tar_z" placeholder="微信注册用户，请设置密码">
+                        </div>
+                    </div>
+                    <div class="item-flex-r">
+                        <i class="el-icon-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+            {/eyou:empty}
+            <!-- 更多资料中的会员属性 -->
+            {eyou:include file="users/users_centre_field.htm" /}
+            <!-- 结束 -->
+            <div class="ey-row">
+                <input type="button" onclick="UpdateUsersData();" class="el-button el-button--primary wb100" value="保存资料"/>
+            </div>
+        </form>
+    </div>
+
+
+    <!-- 手机端 -->
+    {eyou:static file="/public/plugins/layer_mobile/layer.js"/}
+    <!-- 修改密码 -->
+    <div id="users_change_pwd_html" style="display: none;">
+        <div class="changepass">
+            <form name='theForm_mobile_pwd' id="theForm_mobile_pwd" method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <input type="password" name="oldpassword" required class="form-control" placeholder="原密码">
+                    </div>
+                    <br/>
+                    <div class="form-group">
+                        <input type="password" name="password" required class="form-control" placeholder="新密码">
+                    </div>
+                    <br/>
+                    <div class="form-group">
+                        <input type="password" name="password2" required data-password="password" class="form-control" placeholder="确认密码">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="SubmitPwdData();">确定</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var RootDir = '{$RootDir}';
+        // 提示信息，2秒自动关闭
+        function msg_open(msgs){
+            layer.open({
+                content: msgs,
+                skin: 'msg',
+                time: 2,
+            });
+        }
+
+        // 提示信息，估计在底部提示，点击空白处关闭
+        function footer_open(msgs){
+            layer.open({
+                content: msgs,
+                skin: 'footer',
+            });
+        }
+
+        // 提示动画
+        function loa_ding(){
+            var loading = layer.open({
+                type:2,
+                content: '正在处理',
+            });
+            return loading;
+        }
+
+        // 修改密码
+        function ChangePwdMobile()
+        {
+            var content = $('#users_change_pwd_html').html();
+            content = content.replace(/theForm_mobile_pwd/g, 'change_pwd_mobile_2019');
+            layer.open({
+                type: 1,
+                title: '修改密码',
+                style:'position:fixed; bottom:0; left:0; width: 100%; padding:10px 0; border:none;max-width: 100%;',
+                anim:'up',
+                content: content,
+            });
+            
+        }
+
+        // 提交修改密码信息
+        function SubmitPwdData()
+        {
+            var loading = loa_ding();// 正在处理提示动画
+            $.ajax({
+                url: "{eyou:url link='user/Users/change_pwd'/}",
+                data: $('#change_pwd_mobile_2019').serialize(),
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    if(res.code == 1){
+                        layer.closeAll();
+                        msg_open(res.msg);
+                    }else{
+                        layer.close(loading);
+                        msg_open(res.msg);
+                    }
+                },
+                error : function(e) {
+                    layer.close(loading);
+                    footer_open(e.responseText);
+                }
+            });
+        }
+
+        // 修改会员属性信息
+        function UpdateUsersData()
+        {
+            var loading = loa_ding();// 正在处理提示动画
+            $.ajax({
+                url: "{eyou:url link='user/Users/centre_update' /}",
+                data: $('#theForm').serialize(),
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        // 删除密码框
+                        // $('#password').parent().parent().remove();
+                        layer.open({
+                            content: res.msg,
+                            skin: 'msg',
+                            time: 1,
+                            end: function () {
+                                location.reload();
+                            }
+                        });
+                    } else {
+                        msg_open(res.msg);
+                    }
+                },
+                error : function(e) {
+                    layer.closeAll();
+                    footer_open(e.responseText);
+                }
+            });
+        };
+    </script>
+    <!-- 修改密码结束 -->
+
+    <!-- 绑定、更换邮箱 -->
+    <div id="users_bind_email_html" style="display: none;">
+        <div class="el-row">
+            <form name='theForm_mobile_email' id="theForm_mobile_email" method="post">
+                <div class="ey-popup">
+                     <div class="el-form-item">
+                         <div class="el-input">
+                             <input type="text" id="email_mobile_old" name="email" {eq name='$users.is_email' value='0'} value="{$users.email}" {/eq} required class="el-input__inner" placeholder="新的邮箱地址">
+                         </div>
+                     </div>
+                     <div class="el-form-item">
+                         <div class="el-input el-input-group el-input-group--append el-input-group--prepend">
+                             <input type="text" class="el-input__inner" id="email_code_mobile" name="email_code" placeholder="邮箱验证码" style="">
+                              <div class="el-input-group__append">
+                                   <input type="button" id="email_button_mobile" onclick="GetEmailCodeMobile();" class="el-button el-button--default" value="点击发送" />
+                              </div>  
+                         </div>
+                     </div>
+                     <div class="el-form-item">
+                          <div class="el-input">
+                               <button type="button" id="email_button_mobile" onclick="SubmitDataMobile();" class="el-button el-button--primary" style="width:86%;">确定</button>
+                          </div>
+                     </div>
+                     
+                 </div>
+                
+              <!-- <div class="modal-body">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input type="text" id="email_mobile_old" name="email" {eq name='$users.is_email' value='0'} value="{$users.email}" {/eq} required class="form-control" placeholder="新的邮箱地址">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-group" style="position: relative;">
+                            <input type="text" class="form-control" id="email_code_mobile" name="email_code" placeholder="邮箱验证码" style="">
+                            <input type="button" id="email_button_mobile" onclick="GetEmailCodeMobile();" class="btn btn-primary" value="点击发送" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btn_zb" onclick="SubmitDataMobile();">确定</button>
+                </div> -->
+                
+                
+            </form>
+        </div>
+    </div>
+        
+    <script type="text/javascript">
+        // 绑定、更换邮箱
+        function BindEmailMobile(title)
+        {
+            var content = $('#users_bind_email_html').html();
+            content = content.replace(/theForm_mobile_email/g, 'bind_email_mobile_2019');
+            content = content.replace(/email_mobile_old/, 'email_mobile_2019');
+            content = content.replace(/email_code_mobile/, 'email_code_mobile_2019');
+            content = content.replace(/email_button_mobile/, 'email_button_mobile_2019');
+            layer.open({
+                type: 1,
+                title: title,
+                style:'position:fixed; bottom:0; left:0; width: 100%; padding:10px 0; border:none;max-width: 100%;',
+                anim:'up',
+                content: content,
+            });
+        }
+
+        // 获取邮箱验证码
+        function GetEmailCodeMobile()
+        {
+            // 正在处理提示动画
+            var loading = loa_ding();
+            // 标题
+            var title = $('h3').html();
+            // 邮箱地址
+            var email = $("#email_mobile_2019").val();
+            // 验证邮箱格式是否正确
+            var reg = /^[a-z0-9]([a-z0-9\\.]*[-_]{0,4}?[a-z0-9-_\\.]+)*@([a-z0-9]*[-_]?[a-z0-9]+)+([\.][\w_-]+){1,5}$/i;
+            if(!reg.test(email)){
+                layer.close(loading);
+                msg_open('邮箱格式不正确，请正确输入邮箱地址！');
+                return false;
+            }
+
+            $("#email_button_mobile_2019").val('发送中…');
+            $.ajax({
+                url: "{eyou:url link='user/Smtpmail/send_email' /}",
+                data: {email:email,title:title,type:'bind_email',scene:'3'},
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    if(res.code == 1){
+                        layer.close(loading);
+                        CountDown();
+                        msg_open(res.msg);
+                    }else{
+                        $("#email_button_mobile_2019").val('点击发送');
+                        layer.close(loading);
+                        msg_open(res.msg);
+                    }
+                },
+                error : function(e) {
+                    $("#email_button_mobile_2019").val('点击发送');
+                    layer.close(loading);
+                    footer_open(e.responseText);
+                }
+            });
+        }
+
+        // 提交邮箱绑定信息
+        function SubmitDataMobile()
+        {   
+            var loading = loa_ding();// 正在处理提示动画
+
+            // 验证邮箱格式是否正确
+            var email = $("#email_mobile_2019").val();
+            var reg = /^[a-z0-9]([a-z0-9\\.]*[-_]{0,4}?[a-z0-9-_\\.]+)*@([a-z0-9]*[-_]?[a-z0-9]+)+([\.][\w_-]+){1,5}$/i;
+            if(!reg.test(email)){
+                layer.close(loading);
+                msg_open('邮箱格式不正确，请正确输入邮箱地址！');
+                return false;
+            }
+
+            // 邮箱验证码不能为空
+            var email_code = $("#email_code_mobile_2019").val();
+            if(!email_code){
+                layer.close(loading);
+                msg_open('邮箱验证码不能为空，请正确输入！');
+                return false;
+            }
+
+            $.ajax({
+                url: "{eyou:url link='user/Users/bind_email' /}",
+                data: $('#bind_email_mobile_2019').serialize(),
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    if(res.code == 1){
+                        layer.closeAll();
+                        msg_open(res.msg);
+                        location.reload();
+                    }else{
+                        layer.close(loading);
+                        msg_open(res.msg);
+                    }
+                },
+                error : function(e) {
+                    layer.close(loading);
+                    footer_open(e.responseText);
+                }
+            });
+        };
+
+        // 倒计时
+        function CountDown(){
+            var setTime;
+            var time = {php}echo config('global.email_send_time');{/php};
+            setTime = setInterval(function(){
+                if(0 >= time){
+                    clearInterval(setTime);
+                    return;
+                }
+                time--;
+                $("#email_button_mobile_2019").val(time+'秒');
+                $("#email_button_mobile_2019").attr('disabled', 'disabled');
+
+                if(time == 0){
+                    $("#email_button_mobile_2019").val('点击发送');
+                    $("#email_button_mobile_2019").removeAttr("disabled");
+                }
+            },1000);
+        };
+    </script>
+    <!-- 绑定、更换邮箱结束 -->
+    <!-- 手机端结束 -->

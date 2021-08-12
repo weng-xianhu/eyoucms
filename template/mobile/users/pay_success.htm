@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>支付成功-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm" /}
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+</head>
+
+<body>
+{eyou:include file="users/users_header.htm" /}
+<div class="member-profile ey-member">
+    <div class="container">
+        <div class="member-profile-content">
+            <div class="page-content row">
+                <div class="panel">
+                    <div class="panel-body row pay-order-top">
+                        <div class="col-lg-10 col-md-10">
+                                <h1 class="text-xs-center text-md-left">
+                                    <i class="icon wb-check-circle font-size-75 green-400" aria-hidden="true"></i>
+                                    支付成功，<b id="wait">5</b>秒后<a id="href" href="{$url}">跳转</a>到会员中心。
+                                </h1>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    (function(){
+        var wait = document.getElementById('wait'),
+            href = document.getElementById('href').href;
+        var interval = setInterval(function(){
+            var time = --wait.innerHTML;
+            if(time <= 0) {
+                location.href = href;
+                clearInterval(interval);
+            };
+        }, 1000);
+    })();
+</script>
+
+{eyou:include file="users/users_footer.htm" /}

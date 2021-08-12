@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>修改密码-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm" /}
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    <style type="text/css">
+        #theForm_s .form-group{
+            margin:10px 0px;
+        }
+    </style>
+</head>
+<body>
+<div class="changepass">
+    <form name='theForm_s' id="theForm_s" method="post">
+        <div class="modal-body">
+            <div class="form-group">
+                <input type="password" name="oldpassword" required class="form-control" placeholder="原密码">
+            </div>
+            
+            <div class="form-group">
+                <input type="password" name="password" required class="form-control" placeholder="新密码">
+            </div>
+            
+            <div class="form-group">
+                <input type="password" name="password2" required data-password="password" class="form-control" placeholder="确认密码">
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="checkUser();" style="width:100%">确定</button>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    function checkUser(){
+        var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        $.ajax({
+            url: "{eyou:url link='user/Users/change_pwd' /}",
+            data: $('#theForm_s').serialize(),
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                if(res.code == 1){
+                    parent.layer.close(parentObj);
+                    parent.layer.msg(res.msg, {time: 1000});
+                }else{
+                    layer.closeAll();
+                    layer.msg(res.msg, {icon: 5});
+                }
+            },
+            error : function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    };
+</script>
+
+</body>
+</html>

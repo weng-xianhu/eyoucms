@@ -1,106 +1,128 @@
 <!DOCTYPE html>
 <html>
- <head> 
-  <title>{$eyou.field.seo_title}</title> 
-  <meta name="renderer" content="webkit" /> 
-  <meta charset="utf-8" /> 
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=0,minimal-ui" /> 
-  <meta name="description" content="{$eyou.field.seo_description}" /> 
-  <meta name="keywords" content="{$eyou.field.seo_keywords}" />
-  <link href="{eyou:global name='web_cmspath' /}/favicon.ico" rel="shortcut icon" type="image/x-icon" /> 
-  {eyou:static file="skin/css/basic.css" /} 
-  {eyou:static file="skin/css/common.css" /} 
-  <style>
-    body{background-position: center;background-repeat: no-repeat;background-color: ;font-family:;}
-  </style> 
-    <!--[if lte IE 9]>
-    {eyou:static file="skin/js/lteie9.js" /}
-    <![endif]--> 
- </head> 
- <!--[if lte IE 8]>
-    <div class="text-xs-center m-b-0 bg-blue-grey-100 alert">
-    <button type="button" class="close" aria-label="Close" data-dismiss="alert">
-        <span>×</span>
-    </button>
-    你正在使用一个 <strong>过时</strong> 的浏览器。请 <a href=https://browsehappy.com/ target=_blank>升级您的浏览器</a>，以提高您的体验。</div>
-<![endif]--> 
- <body> 
-<!--header-s-->
-    {eyou:include file="header.htm"/}
-<!--header-e-->
-  <div class="ey-banner-ny vertical-align text-center"> 
-   <h1 class="vertical-align-middle">{$eyou.field.typename}</h1> 
-  </div> 
-  <section class="ey-crumbs hidden-sm-down" m-id="met_position" m-type="nocontent"> 
-   <div class="container"> 
-    <div class="row"> 
-     <div class="border-bottom clearfix"> 
-      <ol class="breadcrumb m-b-0 subcolumn-crumbs breadcrumb-arrow"> 
-       <li class="breadcrumb-item"> {eyou:position style="crumb" /} </li> 
-      </ol> 
-     </div> 
-    </div> 
-   </div> 
-  </section> 
-  <section class="ey-message animsition"> 
-   <div class="container"> 
-    <div class="row"> 
-     <div class="col-lg-8 col-md-8 ey-message-body panel panel-body m-b-0" boxmh-mh="" m-id="noset" m-type="message_list"> 
-      <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1525860937458&di=c56221383bb26a3a4a1e91490de7264a&imgtype=0&src=http%3A%2F%2Fpic.58pic.com%2F58pic%2F16%2F70%2F56%2F56n58PICevj_1024.jpg" width="100%" />
-     </div> 
-     <div class="col-lg-4 col-md-4"> 
-      <div class="row"> 
-       <div class="ey-message-submit rightsidebar panel panel-body m-b-0" m-id="message_form" m-type="message_form" boxmh-h=""> 
-        {eyou:guestbookform type='default'}
-          <form method="POST" class="guest-form" enctype="multipart/form-data" action="{$field.action}" onsubmit="return checkForm();">
-              <div class="form-group">
-                <input class="guest-input form-control" id="attr_4" type="text" value="" name="{$field.attr_4}" placeholder="{$field.itemname_4}">
-              </div>
-              <div class="form-group">
-                <input class="guest-input form-control" id="attr_5" type="text" value="" name="{$field.attr_5}" placeholder="{$field.itemname_5}">
-              </div>
-              <div class="form-group">
-                <textarea class="guest-textarea form-control" id="attr_6" cols="40" rows="3" name="{$field.attr_6}" placeholder="{$field.itemname_6}"></textarea>
-              </div>
-              <div class="form-group">
-                <select class="guest-input form-control" name="{$field.attr_7}" id="attr_7">
-                  <option value="无">无</option>
-                  {eyou:volist name='$field.options_7' id='vo'}
-                  <option value="{$vo.value}">{$vo.value}</option>
-                  {/eyou:volist}
-                </select>
-              </div>
-              <div class="div-guest-submit"><input type="submit" class="btn btn-primary btn-block btn-squared" value="提交"></div>
-              {$field.hidden}
-          </form>
-          <script type="text/javascript">
-            function checkForm()
-            {
-              if(document.getElementById('attr_4').value.length == 0)
-              {
-                alert('{$field.itemname_4}不能为空！');
-                return false;
-              }
-              if(document.getElementById('attr_5').value.length == 0)
-              {
-                alert('{$field.itemname_5}不能为空！');
-                return false;
-              }
-              
-              return true;
-            }
-          </script>
-        {/eyou:guestbookform}
-       </div> 
-      </div> 
-     </div> 
-    </div> 
-   </div> 
-  </section> 
-  <!--footer-s-->
-  {eyou:include file="footer.htm" /}
-  <!--footer-e-->
-  {eyou:ui open='off' /}
- </body>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>{$eyou.field.seo_title}</title>
+<meta name="description" content="{$eyou.field.seo_description}" />
+<meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+{eyou:static file="skin/style/pintuer.css" /}
+{eyou:static file="skin/style/header.css" /}
+{eyou:static file="skin/style/style.css" /}
+{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+<!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+</head>
+<body>
+<!--网站公用头部——开始-->
+{eyou:include file="header.htm" /}
+{eyou:include file="banner.htm" /}
+<div class="blank-large"></div>
+<div class="container inside">
+	<div class="line">
+		<div class="x9">
+			<h2>{$eyou.field.typename}</h2>
+			<!-- 地址 -->
+			<p class="height-big text-middle">办公时间：周一到周六，早上9:00到下午6:00</p>
+			<div class="blank-big"></div>
+			<div class="contact">
+				<div class="media media-x">
+					<span class="float-left"><i class="fa fa-map-marker fa-fw text-black"></i></span>
+					<div class="media-body">
+						<p class="text-middle"><strong>地址</strong></p>
+						<p class="text-middle">{eyou:global name='web_attr_16' /}<p>
+					</div>
+				</div>
+
+				<div class="media media-x">
+					<span class="float-left"><i class="fa fa-phone fa-fw text-black"></i></span>
+					<div class="media-body">
+						<p class="text-middle"><strong>电话</strong></p>
+						<p class="text-large Conv_DINCondensedC"><a href="tel:{eyou:global name='web_attr_1' /}">{eyou:global name='web_attr_1' /}</a><p>
+					</div>
+				</div>
+
+				<div class="media media-x">
+					<span class="float-left"><i class="fa fa-envelope fa-fw text-black"></i></span>
+					<div class="media-body">
+						<p class="text-middle"><strong>邮箱</strong></p>
+						<p class="text-middle"><a href="mailto:{eyou:global name='web_attr_15' /}">{eyou:global name='web_attr_15' /}</a></p>
+					</div>
+				</div>
+				<div class="blank-middle"></div>
+			</div>
+		</div>
+		<div class="x3">
+			<div class="blank-big"></div>
+			<div class="wx text-center">
+				<p class="text-middle height-big">公众号</p>
+				<p class="text-middle height-big text-yellow">了解我们的团队日常</p>
+				<img src="{eyou:global name='web_attr_17' /}" alt="{eyou:global name='web_name' /}" class="img-responsive">
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="layout">
+	<div class="line home-contact">
+		<div class="x6">
+			<div class="gb">
+				<div class="guestbook">
+					<div class="title-block-c text-center">
+						<!-- <h5 class="text-white">{$eyou.field.typename}</h5> -->
+						<h2 class="text-white">在线反馈</h2>
+					</div>
+					<div class="blank-middle"></div>
+					{eyou:guestbookform type='default'}
+					<form method="POST" {$field.formhidden} action="{$field.action}" onsubmit="return checkForm();">
+						<!-- 姓名 -->
+						<div class="form-group">
+							<div class="field">
+							<input type='text' id='attr_1' name='{$field.attr_1}' class="input text-main radius-none" placeholder="{$field.itemname_1}" value=""/>
+							</div>
+						</div>
+						<!-- 电话 -->
+						<div class="form-group">
+							<div class="field">
+							<input type='text' id='attr_2' name='{$field.attr_2}' class="input text-main radius-none" placeholder="{$field.itemname_2}" value=""/>
+							</div>
+						</div>
+
+						<!--需求选择 -->
+						<div class="form-group">
+							<div class="field">
+							 <select name="{$field.attr_3}" id="attr_3">
+							   <option value="">请选择{$field.itemname_3}</option>
+							   {eyou:volist name='$field.options_3' id='vo'}
+							   <option value="{$vo.value}">{$vo.value}</option>
+							   {/eyou:volist}
+							 </select>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<div class="field"><textarea class="textarea" id='attr_24' name='{$field.attr_24}' placeholder="{$field.itemname_24}" value="" rows="3" /></textarea> </div>
+						</div>
+						<!-- 提交 -->
+						<div class="blank"></div>
+						<div class="form-button">
+							<input class="button bg-yellow button-large button-block border-none radius-none text-white" type="submit" value="提交"/>
+						</div>
+						{$field.hidden}
+					</form>
+					{/eyou:guestbookform}
+				</div>
+			</div>
+		</div>
+		<div class="x6">
+			<img src="{eyou:global name='web_templets_pc' /}/skin/images/ibkpic.jpg" alt='{$eyou.field.title}' class="img-responsive" />
+		</div>
+	</div>
+</div>
+<!--网站公用底部——开始-->
+{eyou:include file="footer.htm" /}
+<!--网站公用底部——结束-->
+{eyou:static file="skin/js/pintuer.js" /}
+{eyou:static file="skin/js/common.js" /}
+</body>
 </html>

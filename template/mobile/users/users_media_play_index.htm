@@ -1,0 +1,242 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>我的视频-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/bootstrap.min.css"/}
+    {eyou:static file="users/skin/css/basic.css"/}
+    {eyou:static file="users/skin/css/eyoucms.css"/}
+    {eyou:static file="users/skin/css/shop.css"/}
+    {eyou:static  file="users/skin/css/tb_style.css"/}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+    <style>
+        /*VIP会员订单*/
+        .m-kc-operation {
+            background: #fff;
+            margin-bottom: 10px;
+        }
+        .m-kc-operation-dd {
+            overflow: hidden;
+            padding: 0 15px;
+            font-size: 14px;
+            height: 40px;
+            line-height: 40px;
+            border-bottom: 1px solid #f5f5f5;
+            color: #333;
+        }
+        .m-kc-operation a {
+            display: block;
+            padding: 10px 15px;
+        }
+        .m-kc-operation img {
+            width: 98px;
+            height: 65px;
+            float: right;
+            border-radius: 3px;
+        }
+        .m-kc-operation .m-kc-operation-title {
+            padding-right: 105px;
+            height: 65px;
+        }
+        .m-kc-operation-sj {
+            overflow: hidden;
+            margin: 0 15px;
+            font-size: 14px;
+            height: 45px;
+            line-height: 45px;
+            border-top: 1px solid #f5f5f5;
+        }
+        .operation-sj-fl {
+            display: inline-block;
+            color: #999;
+        }
+        /*课程订单*/
+        .m-kc-operation .m-operation-kc-bt {
+            height: 22px;
+            line-height: 22px;
+            font-size: 14px;
+            color: #333;
+            padding-top: 5px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .m-kc-operation .m-operation-kc-sj {
+            line-height: 22px;
+            font-size: 14px;
+            color: #999;
+        }
+        .quxuexi {
+            font-size: 12px;
+            color: #fff;
+            background: #ff700a;
+            line-height: 18px;
+            padding: 2px 10px !important;
+            border-radius: 15px;
+            margin-top: 12px;
+        }
+        .searchbar_index h1 {
+            text-align: left;
+            padding-left: 15px;
+        }
+        /*加载中*/
+        .layui-progress{
+            height: 3px;margin-top: 8px;
+        }
+        .layui-progress-bar{
+            height: 3px;
+        }
+        .layui-progress-text{
+            float: right;color: #999;
+        }
+    </style>
+</head>
+
+<body class="centre shop">
+<!-- 头部信息 -->
+<div class="ey-header-status">
+	<div class="header-status-l">
+		<a href="javascript:history.go(-1)"><i class="el-icon-arrow-left"></i></a>
+	</div>
+	<div class="header-status-m">我的视频</div>
+	<div class="header-status-r">
+		<a href="{eyou:url link='user/Users/index' /}"><i class="el-icon-user"></i></a>
+	</div>
+</div>
+<!-- 头部信息结束 -->
+<div class="h50"></div>
+
+
+<div class="ey-container">
+    <div class="ey-con mb10 mt10">
+        <div class="ey-row">
+            <div class="el-col-24 oper-row mb15" >
+                <!-- 导航栏 -->
+                <div class="el-button-group z_roll">
+                    <a class="el-button el-button--default el-button--small {if $Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'media_index'}active{/if}" data-toggle="tab" href="{eyou:url link='user/Users/media_index' /}">
+                        视频订单
+                    </a>
+                    <a class="el-button el-button--default el-button--small {if $Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Media' && $Think.const.ACTION_NAME == 'play_index'}active{/if}" data-toggle="tab" href="{eyou:url link='user/Media/play_index' /}">
+                        播放记录
+                    </a>
+                    
+                </div>
+                <div class="fr">总播放时长 : {$eyou.field.total_time}</div>
+                <!-- 导航栏结束 -->
+            </div>
+            
+        </div>
+    </div>
+	<div class="ey-con">
+		<div class="ey-row">
+
+			<!-- 中部 -->
+			<div style="overflow-x: scroll;padding: 4px 0;" id="finance-list_wrapper" class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition">
+                <table style="width:100%;">
+                    <tbody>
+                {empty name="$eyou.field.list"}
+                    <tr>
+                    	<td valign="top" colspan="50">
+                            <div class="cell pt50 pb50 tc">
+                               <span class="mb10"><img id='litpic_img'  src="__PUBLIC__/static/common/images/null-data.png"/></span>
+                             </div>
+                        </td>
+                    </tr>
+                {else/}
+                    {eyou:volist name="$eyou.field.list" id="vo"}
+                        
+                        <tr>
+                            <td>
+                                <a href="{$vo.arcurl}">
+                                    <div class="list_z mr10">
+                                        {eyou:empty name='$vo.litpic' /}
+                                        <img class="pic" src="__PUBLIC__/static/common/images/not_adv.jpg"> 
+                                        {eyou:else /}
+                                        <img class="pic" src="{$vo.litpic}">
+                                        {/eyou:empty}
+                                    </div>
+                                </a>
+                            </td>
+                            <td>
+                                 <a  href="{$vo.arcurl}">
+                                    <div class="list_z">
+                                       {$vo.title}
+                                    </div>
+                                    <div class="list_z"><span class="e_ty">总时长:{$vo.sum_file_time}</span><span class="e_ty">已观看:{$vo.sum_play_time}</span></div>
+                                    
+                                    <div class="list_z"><span class="e_ty">上次观看:{$vo.last_update_time}</span></div>
+                                    <div class="list_z">
+                                        {eq name='$vo.process' value='100%'}
+                                        <span class="e_ty">已学完</span>
+                                        {else /}
+                                        <span class="e_ty">已学{$vo.process}</span>
+                                        {/eq}
+                                    </div>
+                                        <div class="layui-progress">
+                                            <div class="layui-progress-bar" lay-percent="{$vo.process}"></div>
+                                            
+                                        </div>
+                                 </a>
+                            </td>
+                        
+                        	
+                        	<td >
+                        		<div class="list_z tc">
+                        			<a href="{$vo.arcurl}" class="el-button el-button--small iphone_z">{eq name='$vo.process' value='100%'}重新学习{else /}继续学习{/eq}</a>
+                        		</div>
+                        	</td>
+                        </tr>
+                    {/eyou:volist}
+                {/empty}
+                	</tbody>
+                </table>
+			</div>
+            <!-- 分页 -->
+            <div style="text-align: center;">{$page}</div>
+            <!-- END -->
+        </div>
+	</div>
+</div>
+{eyou:static file="/public/plugins/layui/css/layui.css"/}
+{eyou:static file="/public/plugins/layui/layui.js"/}
+<script>
+    //注意进度条依赖 element 模块，否则无法进行正常渲染和功能性操作
+    layui.use('element', function(){
+        var element = layui.element;
+    });
+</script>
+<script type="text/javascript">
+    // 内容查看
+    function ArcUrl(obj) {
+        window.open($(obj).attr('data-arurl'));
+    }
+
+    // 打开订单详情
+    function OpenOrderDetails(obj) {
+        var url = $(obj).attr('data-url');
+
+        // iframe窗
+        var iframes = layer.open({
+            type: 2,
+            title: '订单详情',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            area: ['20%', '20%'],
+            content: url
+        });
+        layer.full(iframes);
+    }
+</script>
+<!-- END -->

@@ -1,0 +1,165 @@
+
+<!-- 官方内置样式表，升级会覆盖变动，请勿修改，否则后果自负 -->
+
+<style>
+/*
+{$theme_color}
+{$theme_color|hex2rgba=###,0.8} */
+    .ey-container .ey-nav ul .active a {
+        border-left: {$theme_color} 3px solid;
+        background-color:{$theme_color|hex2rgba=###,0.1};
+        color:{$theme_color};
+    }
+    .ey-container .ey-nav ul li a:hover {
+        color: {$theme_color};
+    }
+    .ey-container .user-box .user-box-text{
+        background-color:{$theme_color};
+    }
+    .ey-container .user-box-r .user-box-top .user-top-r .more {
+        color:{$theme_color};
+    }
+    .ey-container .user-box-r .user-box-bottom .data-info .link a {
+        color: {$theme_color};
+    }
+    .ey-container .column-title .column-name {
+        color: {$theme_color};
+    }
+    a:hover {
+        color: {$theme_color};
+    }
+    .el-button:focus, .el-button:hover {
+        color: {$theme_color};
+        border-color: {$theme_color|hex2rgba=###,0.2};
+        background-color:{$theme_color|hex2rgba=###,0.1};
+    }
+    .el-button--primary {
+        background-color: {$theme_color};
+        border-color: {$theme_color};
+    }
+    .ey-container .item-from-row .err a {
+        color: {$theme_color};
+    }
+    .ey-container .checkbox-label .checkbox:checked+.check-mark {
+        background-color: {$theme_color};
+        border: 1px solid {$theme_color};
+    }
+    .ey-container .checkbox-label .checkbox:checked+.check-mark:after {
+        background:{$theme_color};
+    }
+    .ey-container .radio-label .radio:checked+.check-mark {
+        border: 1px solid {$theme_color};
+        background-color: {$theme_color};
+    }
+    .ey-container .radio-label .radio:checked+.check-mark:after {
+        background: {$theme_color};
+    }
+    .el-button--primary.is-plain {
+        color: {$theme_color};
+        border-color: {$theme_color|hex2rgba=###,0.2};
+        background-color:{$theme_color|hex2rgba=###,0.1};
+    }
+    .el-button--primary.is-plain:focus, .el-button--primary.is-plain:hover {
+        background: {$theme_color};
+        border-color: {$theme_color};
+    }
+    .el-button--primary:hover, .el-button--primary:focus {
+        background: {$theme_color|hex2rgba=###,0.9};
+        border-color: {$theme_color|hex2rgba=###,0.9};
+        color: #fff;
+    }
+    .el-input-number__decrease:hover, .el-input-number__increase:hover {
+        color: {$theme_color};
+    }
+    .el-input-number__decrease:hover:not(.is-disabled)~.el-input .el-input__inner:not(.is-disabled), .el-input-number__increase:hover:not(.is-disabled)~.el-input .el-input__inner:not(.is-disabled) {
+        border-color: {$theme_color};
+    }
+    .ey-container .address-con .address-item.cur {
+        border: 1px solid {$theme_color|hex2rgba=###,0.6};
+    }
+    .ey-container .address-con .address-item.cur:before {
+        color: {$theme_color};
+        border-top: 50px solid {$theme_color};
+    }
+    .ey-container .ey-con .shop-oper .shop-oper-l .el-button.active {
+        color: #FFF;
+        background-color: {$theme_color};
+        border-color: {$theme_color};
+    }
+    .ey-container .goods-con .goods-item .goods-item-r .view a {
+        color: {$theme_color};
+    }
+    .ey-container div.dataTables_paginate .paginate_button.active>a, .ey-containerdiv.dataTables_paginate .paginate_button.active>a:focus, .ey-containerdiv.dataTables_paginate .paginate_button.active>a:hover {
+        background: {$theme_color} !important;
+        border-color: {$theme_color} !important;
+    }
+    .ey-container .pagination>li>a:focus, .ey-container .pagination>li>a:hover, .ey-container .pagination>li>span:focus, .ey-container .pagination>li>span:hover {
+        color:{$theme_color};
+    }
+    .ey-container .pagination>li>a, .ey-container .pagination>li>span {
+        color:{$theme_color};
+    }
+    .el-button--danger {
+        background-color: {$theme_color};
+        border-color: {$theme_color};
+    }
+    .recharge .pc-vip-list.active {
+        border: {$theme_color} 2px solid;
+        /*background-color:{$theme_color|hex2rgba=###,0.1};*/
+    }
+    .recharge .pc-vip-list:hover {
+    	border: {$theme_color} 2px solid;
+    }
+    .recharge .pc-vip-list .icon-recomd {
+    	background: {$theme_color};
+    }
+    .el-input.is-active .el-input__inner, .el-input__inner:focus {
+        border-color: {$theme_color};
+    }
+    .ey-container .address-con .selected .address-item:before {
+        color:{$theme_color};
+        border-top: 50px solid {$theme_color};
+    }
+    .ey-container .address-con .selected .address-item {
+        border: 1px solid {$theme_color|hex2rgba=###,0.4};
+    }
+    .ey-container .pay-type .payTag a {
+        color: {$theme_color};
+        border-bottom: 1px solid {$theme_color};
+    }
+    .ey-container .pay-type .pay-con .pay-type-item.active {
+        border-color: {$theme_color|hex2rgba=###,0.4};
+    }
+    .ey-container .pay-type .pay-con .pay-type-item.active:before {
+        color: {$theme_color};
+        border-bottom: 30px solid {$theme_color};
+    }
+    .ey-header-nav .nav li ul li a:hover {
+        background: {$theme_color};
+    }
+    .btn-primary {
+        background-color: {$theme_color};
+    }
+    .btn-primary.focus, .btn-primary:focus, .btn-primary:hover {
+        border-color: {$theme_color};
+        background-color: {$theme_color};
+    }
+    .btn-primary.active.focus, .btn-primary.active:focus, .btn-primary.active:hover, .btn-primary:active.focus, .btn-primary:active:focus, .btn-primary:active:hover, .open>.btn-primary.dropdown-toggle.focus, .open>.btn-primary.dropdown-toggle:focus, .open>.btn-primary.dropdown-toggle:hover {
+    	border-color:{$theme_color};
+    	background-color:{$theme_color};
+    }
+    .login-link a {
+        color: {$theme_color};
+    }
+    .register_index .login_link .login_link_register {
+        color: {$theme_color};
+    }
+
+</style>
+
+<script type="text/javascript">
+    var __root_dir__ = "__ROOT_DIR__";
+    var __version__ = "{$version}";
+    var __lang__ = "{$home_lang}";
+    var eyou_basefile = "{$Request.baseFile}";
+</script>

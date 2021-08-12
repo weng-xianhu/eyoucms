@@ -1,0 +1,5 @@
+<div class="el-row">
+	{eyou:eq name='$is_release' value='1'}
+	<a href="{eyou:url link='user/UsersRelease/article_add'/}" class="el-button el-button--medium el-button--primary {if condition="in_array($Think.const.ACTION_NAME, ['article_add','article_edit'])"} hide {/if}" >发布</a>
+	{/eyou:eq}
+</div>

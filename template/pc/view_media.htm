@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>{$eyou.field.seo_title}</title>
+<meta name="description" content="{$eyou.field.seo_description}" />
+<meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+{eyou:static file="skin/style/pintuer.css" /}
+{eyou:static file="skin/style/header.css" /}
+{eyou:static file="skin/style/style.css" /}
+{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+<!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+</head>
+<body>
+<!--网站公用头部——开始-->
+{eyou:include file="header.htm" /}
+<div class="layout bg-black">
+    <div class="container">
+        <div class="line">
+            <div class="xl12 xs12 xm12 xb12">
+                <div class="nav-bread">
+                    <i class="fa fa-home margin-small-right" aria-hidden="true"></i>{eyou:position/}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="line bg-main">
+            <div class="xl12 xs12 xm9 bm9">
+                <div class="jw-video">
+                    <!--  视频 begin-->
+                    {eyou:videoplay aid='$eyou.field.aid' autoplay='off' id='video'}
+                        <video {$video.id} loop='loop' width="100%" controls='true' preload="auto" controlslist='nodownload' ref='video' oncontextmenu="return false">
+                            <source src="{$video.file_url}" type="video/mp4">
+                        </video>
+                        {$video.hidden}
+                    {/eyou:videoplay}
+                    <!--  视频 end-->
+                </div>
+                <!-- 播放权限遮罩 begin -->
+                <div class="jw-video-expense text-center" id="VideoDiv13579" style="display: none;">
+                    <div class="apply text-center">
+                        <p class="text-middle text-white" id="MsgTitle13579"></p>
+                        <div class="blank-middle"></div>
+                        <div class="button button-big bg-yellow text-center radius-rounded text-middle" id="MsgOnclick13579"></div>
+                    </div>
+                </div>
+                <!-- 播放权限遮罩 end -->
+            </div>
+            <div class="xl12 xs12 xm3 bm3">
+                <div class="video-period-title height-big">
+                    <span class="text-middle text-white">视频选集</span>
+                    <span class="margin-left margin-right text-gray">{$eyou.field.total_video}课时</span>
+                    <span class="text-gray">总时长：{$eyou.field.total_duration}</span>
+                </div>
+                <!-- 课程目录 -->
+                <ul class="video-period-list">
+                {eyou:videolist aid='$eyou.field.aid' id='video'}
+                <li>
+                    <a href="javascript:;" {$video.onclick}>
+                        <p title="{$video.file_title}">{$i}.{$video.file_title}</p>
+                        <div class="video-info">
+                            时长：{$video.file_time}
+                            <span>
+                                {eyou:eq name="video.gratis" value="1"}
+                                    <span class="text-white">试看</span>
+                                {eyou:else/}
+                                    <span class="text-gray VideoButton13579"></span>
+                                {/eyou:eq}
+                            </span>
+                        </div>
+                    </a>
+                </li>
+                {$video.hidden}
+                {/eyou:videolist}
+                </ul>
+                <!-- 课程目录 end -->
+            </div>
+        </div>
+        <div class="blank-small"></div>
+        <div class="line">
+            <div class="xl12 xs12 xm9 bm9">
+                <div class="video-title">
+                    <h1 class="text-white">{$eyou.field.title}</h1>
+                    <!-- 课程目录<span>{$eyou.field.total_video}课时</span>  -->
+                    <!-- <p class="video-catalogue text-gray"><i class="fa fa-clock margin-small-right"></i>时长<span class="total-time">{$eyou.field.total_duration}</span></p> -->
+                    <div class="blank"></div>
+                    <p class="video-catalogue text-gray hidden-l"><i class="fa fa-clock margin-small-right"></i>发布时间：<span class="total-time">{$eyou.field.add_time|MyDate='y-m-d',###}</span></p>
+                    <div class="blank hidden-l"></div>
+                    <p class="hidden-l">
+                    {eyou:notempty name='$eyou.field.courseware' /}<a href="{$eyou.field.courseware}" target="_blank" class="button radius button-small bg-yellow border-none margin-right"><i class="fa fa-cloud-download margin-small-right"></i>本课素材</a>{eyou:else /}{/eyou:notempty}
+                    </p>
+                </div>
+                <div class="blank"></div>
+            </div>
+            <div class="xl12 xs12 xm3 bm3">
+                <!-- 价格 -->
+                <div class="video-period" id="video-period-20190425">
+                {eyou:gt name="$eyou.field.users_price" value="0"}
+                    <div class="price Conv_DINCondensedC text-white float-left">￥{$eyou.field.users_price}</div>
+                    <div class="video-buy-now button button-big bg-yellow text-center radius-rounded text-middle" style="display:none;" id="BuyOnclick13579"></div>
+                {eyou:else/}
+					{eyou:gt name="$eyou.field.arc_level_id" value="0"}
+					<div class="video-free-now button button-big bg-yellow text-center radius-rounded text-middle">VIP</div>
+					{eyou:else/}
+					<div class="video-free-now button button-big bg-yellow text-center radius-rounded text-middle">免费</div>
+					{/eyou:gt}
+				{/eyou:gt}
+                </div>
+                <!-- 价格 end-->
+            </div>
+        </div>
+    </div>
+    <div class="blank-middle"></div>
+</div>
+
+<div class="layout bg-gray">
+    <div class="blank-middle"></div>
+    <div class="container">
+        <div class="line">
+            <div class="xl12 xs12 xm9 xb9">
+                <div class="sidebar-l">
+                    <div class="bg-white radius">
+                    <!-- 详细内容 -->
+                    <div class="video-detail">
+                        <div class="tab">
+                            <div class="tab-head">
+                                <ul class="tab-nav">
+                                    <li class="active"><a href="#overview">课程介绍</a></li>
+                                    <!-- <li><a href="#comment">课程交流</a> </li> -->
+                                </ul>
+                            </div>
+                            <div class="tab-body">
+                                <div class="tab-panel active" id="overview">
+                                    <div class="article">
+                                        <div class="post">
+                                            {$eyou.field.content}
+                                        </div>
+                                    </div><!-- post  -->
+                                </div>
+                                <!-- <div class="tab-panel" id="comment">
+                                    <div class="video-comment">
+                                    </div>
+                                </div> -->
+
+                            </div>
+
+                        </div>
+                    </div>
+                    <!-- 详细内容 end-->
+                    </div>
+                    <div class="blank-small"></div>
+
+                    <!-- 上下篇 begin -->
+                    <div class="prenext-text bg-white padding-big-left padding-big-right padding-top padding-bottom radius">
+                        <div class="line">
+                            <div class="xl12 xs12 xm6 xb6 text-l">
+                                {eyou:prenext get='pre' titlelen='30'}
+                                    <span class="text-gray">上一篇：</span>
+                                    <a href="{$field.arcurl}" class="text-main" title="{$field.title}">{$field.title}</a>
+                                {eyou:else /}
+                                    <a class="text-gray" >上一篇：到头啦！</a>
+                                {/eyou:prenext}
+                            </div>
+                            <div class="xl12 xs12 xm6 xb6 text-r">
+                                {eyou:prenext get='next' titlelen='30'}
+                                    <span class="text-gray">下一篇：</span>
+                                    <a href="{$field.arcurl}" class="text-main" title="{$field.title}">{$field.title}</a>
+                                {eyou:else /}
+                                    <a class="text-gray">下一篇：真没啦！</a>
+                                {/eyou:prenext}
+                            </div>
+                       </div>
+                    </div>
+                    <!-- 上下篇 end -->
+                    <div class="blank-small"></div>
+
+                </div>
+            </div><!-- sidebar-l -->
+
+            <div class="xl12 xs12 xm3 xb3">
+                <div class="sidebar-r">
+                    <div class="title-l">
+                        <h2>热门课程</h2>
+                    </div>
+                    <div class="blank-small"></div>
+                    <div class="list-post-x">
+                        {eyou:arclist row='5' orderby='rand'}
+                            <div class="media media-x">
+                                {eyou:eq name='$field.is_litpic' value='1'}
+                                <div class="thumb-md float-left radius">
+                                    <a href="{$field.arcurl}" title="{$field.title}"><img src="{$field.litpic}" class="img-responsive" alt="{$field.title}"></a>
+                                    <div class="playicon border-none text-center radius text-white text-small" href="{$field.arcurl}"><i class="fa fa-play"></i></div>
+                                    <div class="playtime radius-rounded text-center text-white text-small">{$field.total_duration}</div>
+                                </div>
+                                {/eyou:eq}
+                                <div class="media-body">
+                                    <h3><a href="{$field.arcurl}" class="text-middle">{$field.title}</a></h3>
+                                </div>
+                            </div>
+                        {/eyou:arclist}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="blank-large"></div>
+</div>
+<!--网站公用底部——开始-->
+{eyou:include file="footer.htm" /}
+<!--网站公用底部——结束-->
+{eyou:static file="skin/js/pintuer.js" /}
+{eyou:static file="skin/js/common.js" /}
+</body>
+</html>

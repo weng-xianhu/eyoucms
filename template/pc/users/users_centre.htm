@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>我的信息-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm" /}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="users/skin/js/bootstrap.min.js"/}
+    {eyou:static file="users/skin/js/global.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+</head>
+
+<body class="centre">
+<!-- 头部 -->
+{eyou:include file="users/users_header.htm" /}
+<!-- 头部结束 -->
+
+<div class="ey-body-bg">
+    <div class="ey-body">
+        <div class="ey-container w1200">
+            <!-- 侧边 -->
+            {eyou:include file="users/users_left.htm" /}
+            <!-- 侧边结束 -->
+            <!-- 中部 -->
+            <div class="ey-con fr" >
+                <div class="el-main main-bg">
+                    <div class="column-title mb20">
+                        <div class="column-name">{$eyou.field.title}</div>
+                    </div>
+                    <div class="user-info">
+                        <div class="face fl">
+                            <div tabindex="0" class="el-upload el-upload--text" onclick="$('#ey_head_pic').trigger('click');">
+                                <img id="ey_head_pic_a" class="img-fluid rounded-circle" src="{$users.head_pic|get_head_pic=###}"/>
+                                <span title="编辑头像" class="el-icon-edit-outline"></span>
+                            </div>
+                            <input type="file" name="ey_head_pic" id="ey_head_pic" data-max_file_size="2" onchange="upload_head_pic(this)" style="display: none;">
+                        </div> 
+                        <div class="info fr">
+                            <div class="item-from-row">
+                                <div class="from-row-l">
+                                    用户名：
+                                </div>
+                                <div class="from-row-r">
+                                    {$users.username}
+                                </div>
+                            </div>
+                            <form name='theForm' id="theForm">
+                                {empty name='$users.thirdparty'}
+                                <div class="item-from-row">
+                                    <div class="from-row-l">
+                                        修改密码：
+                                    </div>
+                                    <div class="from-row-r">
+                                        <input type="text" name="password_edit" id="password_edit" autocomplete="off" class="el-input__inner w300" placeholder="留空时默认不修改密码">
+                                    </div>
+                                </div>
+                                {/empty}
+                                {eyou:empty name="$users.password"}
+                                <div class="item-from-row">
+                                    <div class="from-row-l">
+                                        设置密码：
+                                    </div>
+                                    <div class="from-row-r">
+                                        <input type="text" name="password" id="password" autocomplete="off" class="el-input__inner w300"> 微信注册用户，请设置密码。
+                                    </div>
+                                </div>
+                                {/eyou:empty}
+                                <div class="item-from-row">
+                                    <div class="from-row-l">
+                                        昵称：
+                                    </div>
+                                    <div class="from-row-r">
+                                         <input type="text" name="nickname" value="{$users.nickname}" autocomplete="off" class="el-input__inner w300">
+                                    </div>
+                                </div>
+                                
+                                <div class="item-from-row">
+                                    <div class="from-row-l">
+                                        会员等级：
+                                    </div>
+                                    <div class="from-row-r">
+                                        {$users.level_name}
+                                         
+                                    </div>
+                                </div>
+                                
+                                <!-- 更多资料中的会员属性 -->
+                                {eyou:include file="users/users_centre_field.htm" /}
+                                <!-- 结束 -->
+                                <div class="item-from-row">
+                                    <div class="from-row-l">
+                                        &nbsp;
+                                    </div>
+                                    <div class="from-row-r">
+                                        <input type="button" onclick="UpdateUsersData();" class="el-button el-button--primary el-button--medium" value="保存资料"/>
+                                    </div>
+                                </div>
+                            </form>
+                            
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            <!-- 中部结束 -->
+        </div>
+    </div>
+</div>
+
+{eyou:static file="users/skin/js/users_centre.js"/}
+
+{eyou:include file="users/users_footer.htm" /}

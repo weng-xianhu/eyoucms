@@ -1,0 +1,60 @@
+<strong></strong><div id="bg" ></div>
+<div id="show">
+	<!--报名弹出框--start-->
+	<div id="yingpin-popup">
+		<div class="job-popup">
+	      <div class="tit">在线应聘</div>
+	      {eyou:guestbookform typeid='6' type='default'}
+         <form method="POST" class="am-form am-form-horizontal form-add" action="{$field.action}" {$field.formhidden} onsubmit="{$field.submit}">
+		  <dl>
+			<dt>{$field.itemname_4}</dt>
+			<dd><input type="text" value="{$field.itemname_4}" name="{$field.attr_4}" id="attr_4"></dd>
+		  </dl>
+		   <dl>
+			<dt>{$field.itemname_5}</dt>
+			<dd><input type="text" value="" name="{$field.attr_5}" id="attr_5"></dd>
+		  </dl>
+		  <dl>
+			<dt>{$field.itemname_6}</dt>
+			<dd>
+             <select name="{$field.attr_6}" id="attr_6">
+               <option value="">请选择性别</option>
+               {eyou:volist name='$field.options_6' id='vo'}
+               <option value="{$vo.value}">{$vo.value}</option>
+			   {/eyou:volist}
+             </select>
+            </dd>
+		  </dl>
+
+		  <dl>
+			<dt>{$field.itemname_16}</dt>
+			<dd><input type="text" value="" name="{$field.attr_16}" id="attr_16"></dd>
+		  </dl>
+		  
+		  <dl>
+			<dt>{$field.itemname_20}</dt>
+			<dd><textarea name="{$field.attr_20}" id="attr_20" rows="3" cols="50"></textarea></dd>
+		  </dl>
+		  
+		  <dl>
+			<dt></dt>
+			<dd><button type="submit" class="bt">提交</button></dd>
+		  </dl>
+		  {$field.hidden}
+		</form>
+       {/eyou:guestbookform} 
+		</div>
+	</div>
+	<!--招聘弹出框 end-->
+</div>
+<script type="text/javascript">
+  //招聘弹出框 
+  function showdiv() {            
+		document.getElementById("bg").style.display ="block";
+		document.getElementById("show").style.display ="block";
+	}
+  function hidediv() {
+		document.getElementById("bg").style.display ='none';
+		document.getElementById("show").style.display ='none';
+	}
+</script>

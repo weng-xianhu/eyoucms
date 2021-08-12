@@ -1,0 +1,241 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>选择支付方式-{eyou:global name='web_name' /}</title>
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+<link href="{eyou:global name='web_cmspath' /}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm" /}
+    
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+</head>
+
+<body class="reg">
+<div class="register_index ey-member">
+    <div class="container">
+        <input type="hidden" id="unified_id" value='{$eyou.field.unified_id}'>
+        <input type="hidden" id="unified_number" value='{$eyou.field.unified_number}'>
+        <input type="hidden" id="transaction_type" value='{$eyou.field.transaction_type}'>
+        <input type="hidden" id="order_source" value="{$eyou.field.order_source}">
+        商品价格：{$eyou.field.order_total_amount} &nbsp; &nbsp; &nbsp; &nbsp; 余额：{$users.users_money}
+        {eyou:notempty name='$users.open_id'}
+            <button class="btn btn-lg btn-primary btn-block"  style="width: 100%;" onclick="WeChatInternal(this);" >
+                微信支付
+            </button>
+        {/eyou:notempty}
+        <br/>
+        <button class="btn btn-lg btn-primary btn-block" style="width: 100%;" id="BalancePayment" onclick="BalancePayment(this);">
+            余额支付
+        </button>
+    </div>
+</div>
+
+<script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
+<script type="text/javascript">
+    $(function(){
+        wx.miniProgram.getEnv( function(res) {
+            if(res.miniprogram) {
+                // 小程序
+                var i = 0;
+                i = setInterval('AppletsPay()', 1000);
+            }
+        });
+    });
+
+    // 小程序后查询
+    function AppletsPay(){
+        var unified_id       = $('#unified_id').val();
+        var unified_number   = $('#unified_number').val();
+        var transaction_type = $('#transaction_type').val();
+        if (unified_id && unified_number && transaction_type) {
+            $.ajax({
+                url: "{eyou:url link='user/Pay/ajax_applets_pay'/}",
+                data: {unified_id:unified_id, unified_number:unified_number, transaction_type:transaction_type},
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    if (1 == res.code) {
+                        if (!res.data.mobile && !res.data.email) window.location.href = res.url;
+                        if (res.data.mobile) SendMobile(res.data.mobile);
+                        if (res.data.email) SendEmail(res.data.email);
+                        window.location.href = res.url;
+                    }
+                }
+            });    
+        }
+    }
+
+    // 微信内部中进行支付
+    function WeChatInternal()
+    {
+        var unified_id       = $('#unified_id').val();
+        var unified_number   = $('#unified_number').val();
+        var transaction_type = $('#transaction_type').val();
+        wx.miniProgram.getEnv( function(res) {
+            if(res.miniprogram) {
+                // 小程序
+                wx.miniProgram.navigateTo({
+                    url: '/pages/pay/pay?unified_id='+ unified_id +'&unified_number=' + unified_number + '&type=' + transaction_type
+                });
+            } else {
+                $.ajax({
+                    url: "{eyou:url link='user/Pay/wechat_pay'/}",
+                    data: {unified_id:unified_id,unified_number:unified_number,transaction_type:transaction_type},
+                    type:'post',
+                    dataType:'json',
+                    success:function(res){
+                        if (1 == res.code) {
+                            callpay(res.msg);
+                        }else{
+                            showErrorAlert(res.msg);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    //调用微信JS api 支付
+    function jsApiCall(data)
+    {
+        WeixinJSBridge.invoke(
+            'getBrandWCPayRequest',data,
+            function(res){
+                if(res.err_msg == "get_brand_wcpay_request:ok"){  
+                    layer.msg('微信支付完成！', {time: 1000}, function(){
+                        pay_deal_with();
+                    });
+                }else if(res.err_msg == "get_brand_wcpay_request:cancel"){
+                    var order_source = $('#order_source').val();
+                    if (2 == order_source) {
+                        showErrorAlert('用户取消支付，请选择支付方式！');
+                    }else{
+                        layer.alert('用户取消支付，跳转至订单列表！', {icon:5, title: false, closeBtn: false},function(){
+                            var OrderUrl = "{eyou:url link='user/Shop/shop_centre'/}";
+                            window.location.href = OrderUrl;
+                        });
+                    }
+                }else{
+                    showErrorAlert('支付失败');
+                }  
+            }
+        );
+    }
+    
+    // 微信内部支付时，先进行数据判断
+    function callpay(data)
+    {
+        if (typeof WeixinJSBridge == "undefined"){
+            if( document.addEventListener ){
+                document.addEventListener('WeixinJSBridgeReady', jsApiCall, false);
+            }else if (document.attachEvent){
+                document.attachEvent('WeixinJSBridgeReady', jsApiCall); 
+                document.attachEvent('onWeixinJSBridgeReady', jsApiCall);
+            }
+        }else{
+            jsApiCall(data);
+        }
+    }
+
+    // 余额支付，仅用于购买商品时支付
+    function BalancePayment(){
+        var unified_id     = $('#unified_id').val();
+        var unified_number = $('#unified_number').val();
+        // 禁止再次点击余额支付
+        $('#BalancePayment').prop("disabled",true).css("pointer-events","none");
+        $.ajax({
+            url: "{eyou:url link='user/Pay/balance_payment'/}",
+            data: {unified_id:unified_id,unified_number:unified_number},
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                if (1 == res.code) {
+                    layer.msg(res.msg, {time: 2000}, function(){
+                        window.location.href = res.url;
+                    });
+                }else{
+                    IsRecharge(res.msg,res.url);
+                }
+            }
+        });
+    }
+
+    // 是否要去充值
+    function IsRecharge(msg='',url=''){
+        layer.confirm(msg, {
+            title:false,
+            btn: ['去充值','其他方式支付'],
+            cancel: function(index, layero){ 
+                $('#BalancePayment').prop("disabled",false).css("pointer-events","");
+            }
+        }, function(){
+            window.location.href = url;
+            // layer.confirm('充值成功，是否立即支付？', {
+            //     title:false,
+            //     btn: ['立即支付','其他方式支付']
+            // },function(){
+            //     BalancePayment();
+            // },function(index){
+            //     // 选择其他方式支付时，恢复禁用的余额支付按钮
+            //     $('#BalancePayment').prop("disabled",false).css("pointer-events","");
+            //     layer.closeAll(index);
+            // });
+        }, function(index){
+            // 选择其他方式支付时，恢复禁用的余额支付按钮
+            $('#BalancePayment').prop("disabled",false).css("pointer-events","");
+            layer.closeAll(index);
+        });
+    }
+
+    // 支付后跳转
+    function pay_deal_with(){
+        var unified_number   = $('#unified_number').val();
+        var transaction_type = $('#transaction_type').val();
+        $.ajax({
+            url: "{eyou:url link='user/Pay/pay_deal_with'/}",
+            data: {unified_number:unified_number,transaction_type:transaction_type},
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                if (1 == res.data.status) {
+                    if (!res.data.mobile && !res.data.email) window.location.href = res.url;
+                    if (res.data.mobile) SendMobile(res.data.mobile);
+                    if (res.data.email) SendEmail(res.data.email);
+                    window.location.href = res.url;
+                }
+            }
+        });
+    }
+
+    // 发送短信
+    function SendMobile(result) {
+        if (result) {
+            $.ajax({
+                url: result.url,
+                data: result.data,
+                type:'post',
+                dataType:'json'
+            });
+        }
+    }
+
+    // 发送邮件
+    function SendEmail(result) {
+        if (result) {
+            $.ajax({
+                url: result.url,
+                data: result.data,
+                type:'post',
+                dataType:'json'
+            });
+        }
+    }
+</script>
+</body>
+</html>

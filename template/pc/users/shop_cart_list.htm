@@ -1,0 +1,263 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>购物车-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/bootstrap.min.css"/}
+    {eyou:static file="users/skin/css/basic.css"/}
+    {eyou:static file="users/skin/css/eyoucms.css"/}
+    {eyou:static file="users/skin/css/shop.css"/}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+    <!-- 新增购物车热门产品 20210122 -->
+    {eyou:static file="users/skin/js/scroll.1.3.js" /}
+</head>
+
+<body class="centre">
+    <!-- 头部开始 -->
+    {eyou:include file="users/users_header.htm" /}
+    <!-- 头部结束 -->
+
+    <div class="ey-body-bg">
+        <div class="ey-body">
+            <div class="ey-container w1200">
+                <!-- 中部开始 -->
+                <div class="ey-con wb100 fr">
+                    <div class="el-main main-bg">
+                        <div class="column-title mb20"> <div class="column-name">购物车</div> </div>
+                        {eyou:spcart id="field" pagesize="5"}
+                            <div class="shop-car">
+                                <div id="finance-list_wrapper" class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition"
+                                    style="width: 100%;">
+                                    <table class="el-table__body">
+                                        <thead>
+                                            <tr class="el-table__row">
+                                                <th style="width: 45px;">
+                                                    <div class="cell">
+                                                        <label class="checkbox-label table-checkbox">
+                                                            <input type="checkbox" class="checkbox"
+                                                                {$field.InputChecked}>
+                                                            <span class="check-mark"></span>
+                                                        </label>
+                                                        {$field.InputHidden}
+                                                    </div>
+                                                </th>
+                                                <th style="width:375px;"> <div class="cell">商品</div> </th>
+                                                <th style="width:30px;" > <div class="cell"></div> </th>
+                                                <th style="width:120px;"> <div class="cell tc">单价</div> </th>
+                                                <th style="width:150px;"> <div class="cell tc">数量</div> </th>
+                                                <th style="width:120px;"> <div class="cell tc">小计</div> </th>
+                                                <th style="width:100px;"> <div class="cell tc">操作</div> </th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            {eyou:spordergoods id="field2"}
+                                            <tr {$field2.ProductId}>
+                                                <td>
+                                                    <div class="cell">
+                                                        <label class="checkbox-label table-checkbox">
+                                                            <input type="checkbox" class="checkbox" {$field2.CartChecked}>
+                                                            <span class="check-mark"></span>
+                                                        </label>
+                                                    </div>
+                                                    {$field2.hidden}
+                                                </td>
+
+                                                <td>
+                                                    <div class="goods-item">
+                                                        <div class="goods-item-l fl">
+                                                            <a target="_blank" href="{$field2.arcurl}">
+                                                                <img class="img-responsive" src="{$field2.litpic}" alt="商品图">
+                                                            </a>
+                                                        </div>
+                                                        <div class="goods-item-r fl dpf">
+                                                            <div class="cell asc">
+                                                                <a target="_blank" href="{$field2.arcurl}">
+                                                                    {$field2.title} <span style="color: red;">{$field2.StatusMark}</span>
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="cell tc">
+                                                        <div class="el-table__expand-icon specshow"><i class="el-icon-arrow-down"></i></div>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="cell tc">￥ <span {$field2.UsersPriceId}>{$field2.users_price}</span></div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="cell tc">
+                                                        <div class="el-input-number el-input-number--mini w100">
+                                                            <span role="button" class="el-input-number__decrease" {$field2.ReduceQuantity}>
+                                                                <i class="el-icon-minus"></i>
+                                                            </span>
+                                                            <span role="button" class="el-input-number__increase" {$field2.IncreaseQuantity}>
+                                                                <i class="el-icon-plus"></i>
+                                                            </span>
+                                                            <div class="el-input el-input--mini">
+                                                                <input type="text" class="el-input__inner" {$field2.UpdateQuantity}>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="cell tc red">￥<span {$field2.SubTotalId}>{$field2.subtotal}</span></div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="cell tc">
+                                                        <a {$field2.CartDel} class="">删除</a><br />
+                                                        <a {$field2.MoveToCollection}>移入收藏</a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+
+                                            <tr {$field2.ProductSpecId} class="specBox" style="display: none;">
+                                                <td colspan="7" class="el-table__expanded-cell">
+                                                    <div class="shopcar-table-expand">
+                                                        <!-- 商品规格 -->
+                                                        {eyou:volist name='$field2.product_spec_list' id='spec'}
+                                                        <div class="el-form-item">
+                                                            <label class="el-form-item__label">{$spec.name}：</label>
+                                                            <div class="el-form-item__content"><span>{$spec.value}</span></div>
+                                                        </div>
+                                                        {/eyou:volist}
+                                                        <!-- 商品规格 END-->
+
+                                                        <!-- 商品参数 -->
+                                                        {eyou:attribute type='newattr' aid='$field2.aid'
+                                                        attrid='$field2.attrlist_id'}
+                                                        <div class="el-form-item">
+                                                            <label class="el-form-item__label">{$attr.name}：</label>
+                                                            <div class="el-form-item__content"><span>{$attr.value}</span></div>
+                                                        </div>
+                                                        {/eyou:attribute}
+                                                        <!-- 商品新参数 END-->
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {/eyou:spordergoods}
+                                        </tbody>
+                                    </table>
+
+                                    <div>
+                                        <div class="el-row">
+                                            <div class="mt10 shopcar-footer">
+                                                <div class="shopcar-footer-l"></div>
+                                                <div class="shopcar-footer-r">
+                                                    已选：<span class="red" {$field.TotalNumberId}>{$field.TotalNumber}</span>件商品　
+                                                    共计：￥<span class="red mr20" {$field.TotalAmountId}>{$field.TotalAmount}</span>
+                                                    <a href="JavaScript:void(0);" {$field.SubmitOrder} class="el-button el-button--primary el-button--medium">去结算</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 中部结束 -->
+                                </div>
+                            </div>
+                            {$field.hidden}
+                        {eyou:else /}
+                            <div>
+                                <div class="ey-con-inside">
+                                    <div class="el-row tc pt100 pb100">
+                                        <p class="mb10"><img id='litpic_img' src="__PUBLIC__/static/common/images/null-data.png" /></p>
+                                        <a href="{eyou:global name='web_cmsurl' /}" class="el-button el-button--default">马上去购物</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {/eyou:spcart}
+                    </div>
+                    <script type="text/javascript">
+                        //规格显示、隐藏
+                        $(".specshow").click(function() {
+                            var p_id = $(this).parent().parent().parent('tr').attr("id");
+                            var this_icon = $(this).children('i');
+
+                            if ($(this_icon).hasClass('el-icon-arrow-down')) {
+                                $(this_icon).removeClass('el-icon-arrow-down').addClass('el-icon-arrow-up');
+                            } else {
+                                $(this_icon).removeClass('el-icon-arrow-up').addClass('el-icon-arrow-down');
+                            }
+
+                            $('#' + p_id).next('.specBox').toggle();
+                        });
+                    </script>
+                    <!-- 中部结束 -->
+
+                    <!-- 推广位开始 -->
+                    <div class="wc1200 row rowE">
+                        <div class="hd clearfix">
+                            <div class="fl">
+                                <h2 class="title">猜你喜欢</h2>
+                            </div>
+                            <div class="fr">
+                                <ul id="tabT04" class="tab-T-3 mt20 clearfix">
+                                    <li class="cur"></li>
+                                    <li></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="bd mt20">
+                            <div id="sca1" class="warp-pic-list">
+                                <div id="wrapBox1" class="wrapBox">
+                                    <ul id="count1" class="count clearfix">
+                                        {eyou:arclist row="8" orderby="click" channelid="2"}
+                                        <li>
+                                            <a href="{$field.arcurl}" class="img_wrap"><img src="{$field.litpic}"
+                                                    border="0"></a>
+                                            <div class="text-area">
+                                                <p>{$field.title}</p>
+                                                <div class="br-price"><strong><em>￥</em><i>{$field.users_price}</i></strong></div>
+                                                <!-- <div class="br-product-btn"><a href="#none" class="product-btn reco-add-cart"><i></i>加入购物车</a></div> -->
+                                            </div>
+                                        </li>
+                                        {/eyou:arclist}
+                                    </ul>
+                                </div>
+                                <a id="right1" class="prev"></a>
+                                <a id="left1" class="next"></a>
+                            </div>
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        $(document).ready(function() {
+                            $("#count1").dayuwscroll({
+                                parent_ele: '#wrapBox1',
+                                list_btn: '#tabT04',
+                                pre_btn: '#left1',
+                                next_btn: '#right1',
+                                path: 'left',
+                                auto: true,
+                                time: 5000,
+                                num: 4,
+                                gd_num: 4,
+                                waite_time: 2000
+                            });
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部开始 -->
+    {eyou:include file="users/users_footer.htm" /}
+    <!-- 底部结束 -->

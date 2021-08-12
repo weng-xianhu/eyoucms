@@ -1,0 +1,660 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>文章投稿-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/bootstrap.min.css"/}
+    {eyou:static file="users/skin/css/basic.css"/}
+    {eyou:static file="users/skin/css/eyoucms.css"/}
+    {eyou:static file="users/skin/css/shop.css"/}
+    {eyou:static  file="users/skin/css/tb_style.css"/}
+	<!-- 新样式 2020-12-8 -->
+	{eyou:static file="users/skin/css/element/index.css" /}
+	{eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+	
+	{eyou:static file="/public/plugins/laydate/laydate.js"/}
+	{eyou:static file="/public/plugins/layui/layui.js" /}
+</head>
+<body>
+	<!-- 头部 --> 
+	{eyou:include file="users/users_header.htm" /} 
+	<!-- 头部结束 --> 
+	<script type="text/javascript">
+        var eyou_basefile = "{$Request.baseFile}";
+		window.UEDITOR_HOME_URL = "__ROOT_DIR__/public/plugins/Ueditor/";
+        var type20210507 = '';//下载模型的上传类型
+        var default_servername20210507 = '';//下载模型的default_servername
+        var attr_field20210507 = '';//下载模型的attr_field
+        var servername_use20210507 = '';//下载模型的servername_use
+	</script> 
+	{eyou:static file="/public/plugins/Ueditor/ueditor.config.js"/}
+	{eyou:static file="/public/plugins/Ueditor/ueditor.all.min.js"/}
+	{eyou:static file="/public/plugins/Ueditor/lang/zh-cn/zh-cn.js"/}
+	<!-- 头部信息 -->
+	<div class="ey-header-status">
+		<div class="header-status-l">
+			<a href="javascript:history.go(-1)"><i class="el-icon-arrow-left"></i></a>
+		</div> 
+		<div class="header-status-m">{$MenuTitle}</div> 
+		<div class="header-status-r">
+			<a href="{eyou:url link='user/Users/index' /}"><i class="el-icon-user"></i></a>
+		</div>
+	</div>
+	<!-- 头部信息结束 -->
+	<div class="h50"></div>
+	
+	<div class="ey-container">
+    
+        <form  id="post_form">
+            <input type="hidden" name="aid" value="{$ArchivesData.aid}">
+            <input type="hidden" name="channel" value="{$channel_id}">
+            <input type="hidden" name="old_typeid" value="{$ArchivesData.typeid}">
+            <div class="ey-con ey-row mt10">
+            	<div class="item-from-flex">
+            		<div class="item-flex-l">
+            			<div class="item-tit">
+            				文章标题 <span class="red">*</span>
+            			</div>
+            			<div class="item-con">
+            				<input type="text" name="title" value="{$ArchivesData.title}" id="title" class="input-text" maxlength="100" placeholder="请输入文章标题">
+            			</div>
+            		</div>
+            		<div class="item-flex-r">
+            			<i class="el-icon-arrow-right"></i>
+            		</div>
+            	</div>
+            </div>
+            
+            <div class="ey-con ey-row mt10">
+            	<div class="item-from-flex">
+            		<div class="item-flex-l">
+            			<div class="item-tit">
+            				所属栏目 <span class="red">*</span>
+            			</div>
+                        <div class="item-con">
+                        <div class="select">
+                        	{$arctype_html}
+                        </div>
+                        </div>
+            		</div>
+            		
+            	</div>
+            </div>
+            <div class="ey-con ey-row mt10">
+            	<div class="item-from-flex">
+            		<div class="item-flex-l">
+            			<div class="item-tit">
+            				TAG标签
+            			</div>
+            			<div class="item-con">
+            				<input type="text" value="{$ArchivesData.tags}" name="tags" id="tags" class="input-text" placeholder="多个标签之间用逗号隔开">
+            			</div>
+            		</div>
+            		<div class="item-flex-r">
+            			<i class="el-icon-arrow-right"></i>
+            		</div>
+            	</div>
+            </div>
+            <div class="ey-con ey-row mt10">
+            	{eq name='$is_litpic_users_release' value='1'}
+				<!-- 单张图 start -->
+				<div class="item-from-flex">
+                    <div class="item-flex wb25">
+                    	<div class="item-tit">
+                    		缩略图：
+                    	</div>
+                    </div>
+                    <div class="item-flex-r wb75">
+                        <div class="item-flex-img">
+                            <img id="single_img_litpic_inpiut" class="img-fluid img1_litpic_inpiut"  src="{notempty name='$ArchivesData.litpic'}{$ArchivesData.litpic}{else/}__PUBLIC__/static/common/images/not_upload_pic.png{/notempty}"    onclick="$('#upload_single_pic_litpic_inpiut').trigger('click');" style="cursor: pointer;"/>
+                            <input type="file" name="litpic_inpiut_file" id="upload_single_pic_litpic_inpiut" onchange="upload_single_pic_1609837252(this,'litpic_inpiut')" style="display: none;">
+                            <input type="hidden" name="litpic_inpiut" id="single_pic_input_litpic_inpiut" value="{$ArchivesData.litpic}">
+                            <span id="litpic_inpiut_txt_20200109" style="cursor: pointer; display: none;" onclick="$('#upload_single_pic_litpic_inpiut').trigger('click');">点击修改</span>
+                        </div>
+                    </div>
+					
+					<div class="item-flex-r">
+						<i class="el-icon-arrow-right"></i>
+					</div>
+				</div>
+				<!-- 单张图 end -->
+            	{/eq}
+            </div>
+			{eyou:include file="users/article_download_edit.htm" /}
+
+			<div class="ey-con ey-row mt10" style="display:none;" id="tupianji">
+           	<div class="item-from-flex" >
+           		<div class="item-flex wb25">
+           			<div class="item-tit">
+           				图片集：
+           			</div>
+           		</div>
+           		<div class="item-flex-r wb75">
+           			<!-- 上传图片显示的样板 start -->
+           			<div class="images_upload_main" id="tab_imgupload">
+                         <a href="javascript:void(0);" {eyou:eq name='is_mobile' value='1'} onClick="Get_mobile_imguploads(1,'','图片集');" {eyou:else/} onClick="GetUploadify(30,'','allimg','imgupload_call_back');" {/eyou:eq} class="el-button el-button--primary is-plain el-button--small" title="拖动修改排序">
+                             <i class="fa fa-photo"></i>上传图片
+                         </a>
+           			</div>
+           		</div>
+           		<div class="item-flex-r">
+           			<i class="el-icon-arrow-right"></i>
+           		</div>
+           	</div>
+            <div class="item-from-flex" >
+            	<div class="item-flex wb25">
+            	</div>
+            	<div class="item-flex-r wb75" style="margin-left: 1px;">
+            		<!-- 上传图片显示的样板 start -->
+            		<div class="images_upload_main" id="tab_imgupload">
+                        <div class="sort-list">
+                           {volist name="imgupload_list" id="vo" key="k"}
+                              <div class="images_upload">
+                                  <div class="images_upload_item">
+                                      <input type="hidden" name="imgupload[]" value="{$vo['image_url']}">
+                                      <a href="{$vo['image_url']}" onclick="" target="_blank" title="拖动修改排序">
+                                        <img src="{$vo['image_url']}" width="120" height="120">
+                                      </a>
+                                      <a href="javascript:void(0)" onclick="ClearPicArr2(this,'{$vo['image_url']}')" class="delete">删除</a>
+                                  </div>
+                                <textarea rows="5" cols="60" name="imgintro[]" style="height:28px; width: 70px;" placeholder="图片注释" title="标签调用：{literal}{$field.intro}{/literal}">{$vo.intro}</textarea>
+                              </div>
+                           {/volist}
+                        </div>
+            		</div>
+            		<!-- 上传图片显示的样板 start -->
+            		<div class="images_upload_tpl" style="display:none;">
+                         <div class="images_upload">
+                            <div class="images_upload_item">
+                                 <input type="hidden" name="imgupload[]" value=""  />
+                                 <a href="javascript:void(0);" onClick="" title="拖动修改排序">
+                                     <img src="__STATIC__/admin/images/add-button.jpg" width="70" height="70" />
+                                 </a>
+                                 <a href="javascript:void(0)" class="delete">&nbsp;&nbsp;</a>
+                             </div>
+                             <textarea rows="5" cols="60" name="imgintro[]" style="height:28px; width: 70px;" placeholder="图片注释" ></textarea>
+                         </div>
+            		 </div>
+            		<!-- 上传图片显示的样板 end -->
+            	</div>
+            </div>
+           	
+           </div>
+            
+              <script type="text/javascript">
+
+                  // 单图上传  2021.01.05
+                  function upload_single_pic_1609837252(e,input_id){
+                      var file = $(e)[0].files[0];
+                      if (!file) {
+                          return false;
+                      }
+                      var formData = new FormData();
+                      formData.append('file',file);
+                      formData.append('_ajax',1);
+                      layer_loading('正在处理');
+                      $.ajax({
+                          type: 'post',
+                          url: eyou_basefile + "?m=user&c=Uploadify&a=imageUp",
+                          data: formData,
+                          contentType: false,
+                          processData: false,
+                          dataType: 'json',
+                          success: function (res) {
+                              if (res.state == 'SUCCESS') {
+                                  $("#single_pic_input_"+input_id).val(res.url)
+                                  $(".img1_"+input_id).attr('src',res.url);
+                                  $('#litpic_inpiut_txt_20200109').show();
+                                  layer.closeAll();
+                              } else {
+                                  layer.closeAll();
+                                  showErrorAlert(res.state);
+                              }
+                          },
+                          error : function(e) {
+                              layer.closeAll();
+                              showErrorAlert(e.responseText);
+                          }
+                      })
+                  }
+
+
+                  function img_call_back(fileurl_tmp)
+                  {
+                      $("#litpic_local").val(fileurl_tmp);
+                      $("#img_a").attr('href', fileurl_tmp);
+                      $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+                      $("input[name=is_litpic]").attr('checked', true); // 自动勾选属性[图片]
+                  }
+                  // 手机端上传单张图
+                  function Get_mobile_imguploads(num, url, title)
+                  {
+                      var scriptUrl = '/public/plugins/layer_mobile/layer.js';
+                      // 支持子目录
+                      if (typeof __root_dir__ != "undefined") {
+                          scriptUrl = __root_dir__ + scriptUrl;
+                      }
+                      if (typeof __version__ != "undefined") {
+                          scriptUrl = scriptUrl + '?v=' + __version__;
+                      }
+                      // end
+                      $.getScript(scriptUrl, function(){
+
+                          if (num > 0) {
+                              if (!url) {
+                                  url = GetUploadify_url;
+                              }
+
+                              if (url.indexOf('?') > -1) {
+                                  url += '&';
+                              } else {
+                                  url += '?';
+                              }
+
+                              var content = $('#update_mobile_file').html();
+                              content = content.replace(/up_f/g, 'upfile');
+                              content = content.replace(/form1/g,'theForm_imguploads');
+                              content = content.replace(/MobileHeadPic/g,"changeImgMobileUpload_imguploads");
+
+                              if (!title) {
+                                  title = '上传';
+                              }
+                              layer_GetUploadify = layer.open({
+                                  type:1,
+                                  title:title,
+                                  anim:'up',
+                                  style:'position:fixed; bottom:0; left:0; width: 100%; padding:10px 0; border:none;max-width: 100%;',
+                                  content:content,
+                              });
+                          } else {
+                              layer.open({
+                                  content: '允许上传0张图片',
+                                  skin: 'footer',
+                              });
+                              return false;
+                          }
+                      });
+                  }
+
+                  function changeImgMobileUpload_imguploads(){
+
+                      $.getScript('__ROOT_DIR__/public/plugins/layer_mobile/layer.js?v={$version}', function(){
+                          // 提示信息，2秒自动关闭
+                          function MsgOpen(msgs){
+                              layer.open({
+                                  content: msgs,
+                                  skin: 'msg',
+                                  time: 2,
+                              });
+                          }
+
+                          // 提示信息，估计在底部提示，点击空白处关闭
+                          function FooterOpen(msgs){
+                              layer.open({
+                                  content: msgs,
+                                  skin: 'footer',
+                              });
+                          }
+
+                          // 提示动画
+                          function LoaDing(){
+                              var loading = layer.open({
+                                  type:2,
+                                  content: '正在处理',
+                              });
+                              return loading;
+                          }
+
+                          UpdateImgMobileHeadPic_imguploads();
+
+                          // 移动端更换头像
+                          function UpdateImgMobileHeadPic_imguploads()
+                          {
+                              // 正在处理提示动画
+                              var loading = LoaDing();
+                              // 获取表单对象
+
+                              var data = new FormData($('#theForm_imguploads')[0]);
+
+                              $.ajax({
+                                  url: "{eyou:url link='user/Uploadify/imageUp' vars='savepath=allimg&pictitle=banner&dir=images'/}",
+                                  type: 'post',
+                                  data: data,
+                                  dataType: 'json',
+                                  cache: false,
+                                  processData: false,
+                                  contentType: false,
+                                  success:function(res){
+                                      if (res.state == 'SUCCESS') {
+                                          layer.closeAll();
+                                          MsgOpen('上传成功！');
+                                          imgupload_call_back(res.url);
+                                      }else{
+                                          layer.close(loading);
+                                          MsgOpen(res.state);
+                                      }
+                                  },
+                                  error : function(e) {
+                                      layer.close(loading);
+                                      FooterOpen(e.responseText);
+                                  }
+                              });
+                          };
+                      })
+                  }
+
+                  // 上传图集相册回调函数
+                  function imgupload_call_back(paths){
+                      var  last_div = $(".images_upload_tpl").html();
+                      $(".images_upload:eq(0)").before(last_div);  // 插入一个 新图片
+                      $(".images_upload:eq(0)").find('a:eq(0)').attr('href',paths).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+                      $(".images_upload:eq(0)").find('img').attr('src',paths);// 修改他的图片路径
+                      $(".images_upload:eq(0)").find('a:eq(1)').attr('onclick',"ClearPicArr2(this,'"+paths+"')").text('删除');
+                      $(".images_upload:eq(0)").find('input').val(paths); // 设置隐藏域 要提交的值
+                  }
+                  /*
+                   * 上传之后删除组图input
+                   * @access   public
+                   * @val      string  删除的图片input
+                   */
+                  function ClearPicArr2(obj,path)
+                  {
+                      // 删除数据库记录
+                      $.ajax({
+                          type:'POST',
+                          url:"{:url('user/UsersRelease/del_channelimgs', ['_ajax'=>1])}",
+                          data:{filename:path},
+                          success:function(){
+                              $(obj).parent().parent().remove(); // 删除完服务器的, 再删除 html上的图片
+                              $.ajax({
+                                  type:'POST',
+                                  url:"{:url('Uploadify/delupload', ['_ajax'=>1])}",
+                                  data:{action:"del", filename:path},
+                                  success:function(){}
+                              });
+                          }
+                      });
+                  }
+              </script>
+            <span id="FieldAddonextitem"></span>
+            <script type="text/javascript">
+                $(function() {
+                    var typeidNew = {$ArchivesData.typeid|default='0'};
+                    var aidNew = {$ArchivesData.aid|default='0'};
+                    GetAddonextitem(0, typeidNew, aidNew, false);
+
+                    $('#typeid').change(function() {
+                        GetAddonextitem(1, $(this).val(), aidNew, true);
+                    });
+                });
+
+                function GetAddonextitem(init, typeidNew, aidNew, is_destroy) {
+                    var channel = $("#typeid option:selected").attr('data-channel');
+                    $("input[name='channel']").val(channel)
+                    if (channel == 3){
+                        $("#tupianji").show()
+                    }else{
+                        $("#tupianji").hide()
+                    }
+                    if (channel == 4){
+                    //     $("#xiazai").show()
+                    // }else{
+                        $("#xiazai").hide()
+                    }
+                    var loadingTxt = '正在加载';
+                    if (1 == init) {
+                        loadingTxt = '正在切换';
+                    }
+                    layer_loading(loadingTxt);
+
+                    $.ajax({
+                        url: "{:url('user/UsersRelease/get_addonextitem')}",
+                        data: {typeid: typeidNew, aid: aidNew, _ajax:1},
+                        type:'post',
+                        success:function(res) {
+                            layer.closeAll();
+                            if (res.code == 0) {
+                                showErrorAlert(res.msg);
+                            } else {
+                                $('#FieldAddonextitem').empty().html(res.data.html);
+                                if (1 == init) {
+                                    $.each(res.data.htmltextField, function (index, value) {
+                                        showEditor_1597892187('addonFieldExt_'+value);
+                                    });
+                                }
+                                if (channel == 4) {
+                                    var download = res.data.download;
+                                    var users_level_html = '<option value="0" selected>不限会员</option>';
+                                    $.each(download.users_level, function (index, value) {
+                                        if ('{$ArchivesData.arc_level_id}' == value.level_id) {
+                                            users_level_html += '<option value="'+value.level_id+'" selected>'+value.level_name+'</option>\n';
+                                        }else{
+                                            users_level_html += '<option value="'+value.level_id+'">'+value.level_name+'</option>\n';
+                                        }
+                                    });
+                                    $('#arc_level_id').html(users_level_html);
+
+                                    if('local' != download.upload_flag){
+                                        //第三方
+                                        var upload_button_html = '<button type="button" class="layui-btn layui-btn-normal" style="position: relative;z-index: 1;">\n' +download.upload_flag+'选择多文件\n' +
+                                            '                       <input type="file" name="file" id="'+download.upload_flag+'File" multiple="multiple" onchange="'+download.upload_flag+'_download__upload(this);" style="position: absolute;top: 0;right: 0;opacity: 0;width: 110px;height: 30px;"/>\n' +
+                                            '                  </button>';
+                                        $('#download-layui-upload').prepend(upload_button_html);
+                                    }else{
+                                        $("#buttonList").show();
+                                    }
+                                    $('#download-layui-upload').attr('data-type',download.upload_flag);
+                                    if (1 == download.servername_use){
+                                        $(".th_server_name").show();
+                                    }
+                                    type20210507 = download.basic.file_type;
+                                    default_servername20210507 = download.default_servername;
+                                    attr_field20210507 = download.attr_field;
+                                    servername_use20210507 = download.servername_use;
+
+                                    if ("{$is_remote_file}" == 1){
+                                        $("#remote-file-checkbox").prop("checked",true);
+                                        var downfile_list = '{$downfile_list}';
+                                        downfile_list = JSON.parse(downfile_list);
+                                        console.log(downfile_list);
+                                        var template_div_remote20210507_html = '';
+                                        var demoList_html = '';
+                                        var i = 1;
+                                        var n = 1;
+                                        $.each(downfile_list, function (index, v) {
+                                            if (1 == v.is_remote) {
+                                                template_div_remote20210507_html += '<div class="template_div20210507">远程地址'+i+'：<input type="text" name="remote_file[]" value="'+v.file_url+'" placeholder="http://" style="width: 50%;">\n' ;
+                                                $.each(attr_field20210507, function (index, value) {
+                                                    var field_use_style = '';
+                                                    if(1 != value.field_use){
+                                                        field_use_style = ' style="display: none;" ';
+                                                    }
+                                                    if('server_name' == value.field_name){
+                                                        template_div_remote20210507_html += '<span class="ey_'+value.field_name+'" '+field_use_style+'>\n' +
+                                                            '<span class="title_'+value.field_name+'">'+value.field_title+'</span>：' +
+                                                            '<input type="text" name="'+value.field_name+'[]" id="'+value.field_name+'_remote_'+i+'" style="width: 7%;" onclick="searchServername(this);" autocomplete="off" value="'+v[value.field_name]+'" >\n' +
+                                                            '<div class="help-hot-list remote-hot-list" style="display: none;" data-test_val="5434" id="search_keywords_list_'+value.field_name+'_remote_'+i+'"></div>\n' +
+                                                            '</span>\n' ;
+                                                    }else{
+                                                        template_div_remote20210507_html += '<span class="ey_'+value.field_name+'" '+field_use_style+'>\n' +
+                                                            '<span class="title_'+value.field_name+'">'+value.field_title+'</span>：' +
+                                                            '<input type="text" name="'+value.field_name+'[]" id="'+value.field_name+'_remote_'+i+'" style="width: 7%;"  value="'+v[value.field_name]+'"></span>\n' ;
+                                                    }
+                                                });
+                                                template_div_remote20210507_html += '</div>';
+                                                i++;
+                                            }else{
+                                                var servername_html = '';
+                                                if (servername_use20210507 != 1) {
+                                                    servername_html = " style=\"display: none;\" ";
+                                                }
+                                                demoList_html += '<tr><td><a href="'+v.file_url+'" target="_blank">'+v.file_name+'</a></td>\n' +
+                                                    '    <td  class="th_server_name" '+servername_html+'>\n' +
+                                                    '    <input type="text" name="fileupload[server_name][]" value="'+v.server_name+'" id="servername_local_'+n+'" onclick="searchServername(this);" autocomplete="off">\n' +
+                                                    '         <div class="help-hot-list" style="display: none;" id="search_keywords_list_servername_local_'+n+'"></div>\n' +
+                                                    '    </td>\n' +
+                                                    '    <td>'+v.file_size+'</td>\n' +
+                                                    '    <td><span style="color: #5FB878;">上传成功</span></td>\n' +
+                                                    '    <td>\n' +
+                                                    '          <span class="layui-btn layui-btn-xs layui-btn-danger" style="line-height:unset;height: unset;" onclick="DeleteFile(this)">移除</span>\n' +
+                                                    '          <input type="hidden" name="fileupload[file_url][]" value="'+v.file_url+'">\n' +
+                                                    '          <input type="hidden" name="fileupload[file_mime][]" value="'+v.file_mime+'">\n' +
+                                                    '          <input type="hidden" name="fileupload[file_name][]" value="'+v.file_name+'">\n' +
+                                                    '          <input type="hidden" name="fileupload[file_ext][]" value="'+v.file_ext+'">\n' +
+                                                    '          <input type="hidden" name="fileupload[file_size][]" value="'+v.file_size+'">\n' +
+                                                    '          <input type="hidden" name="fileupload[uhash][]" value="'+v.uhash+'}">\n' +
+                                                    '          <input type="hidden" name="fileupload[md5file][]" value="'+v.md5file+'">\n' +
+                                                    '     </td></tr>'
+                                                n++;
+                                            }
+                                        });
+                                        $("#Template20210507").html(template_div_remote20210507_html);
+                                        $("#demoList").html(demoList_html);
+                                        $('#ClickRemoteFile').show();
+                                    }
+                                }
+                            }
+                        },
+                        error: function(e){
+                            layer.closeAll();
+                            showErrorAlert(e.responseText);
+                        }
+                    });
+                }
+            </script>
+            <div class="ey-row">
+                <input type="button" data-url="{:url('UsersRelease/article_edit')}" onclick="EditArticle(this);" class="el-button el-button--primary wb100" value="确认提交"/>
+            </div>
+            <!-- 表单验证 --> 
+            {$TokenValue}
+        </form>
+
+    </div>
+<script type="text/javascript">
+    // 去除 select中值相同的option(去重)，配合{$arctype_html}使用
+    $(function(){
+        var channel = $("#typeid option:selected").attr('data-channel');
+        if (channel == 3){
+            $("#tupianji").show()
+        }
+        $("#typeid option").each(function() {
+            var val = $(this).val();
+            if ($("#typeid option[value='" + val + "']").length > 1){
+                $("#typeid option[value='" + val + "']:eq(0)").remove();
+            }
+        });
+    });
+
+    function MobileAddArticle(url = null){
+        $.getScript('__ROOT_DIR__/public/plugins/layer_mobile/layer.js?v={$version}', function(){
+            // 提示信息，2秒自动关闭
+            function MsgOpen(msgs){
+                layer.open({
+                    content: msgs,
+                    skin: 'msg',
+                    time: 2,
+                });
+            }
+            // 提示动画
+            function LoaDing(){
+                var loading = layer.open({
+                    type:2,
+                    content: '正在处理',
+                });
+                return loading;
+            }
+
+            OnMobileAddArticle();
+            function OnMobileAddArticle(){
+                if (!$('#title').val()) {
+                    MsgOpen('请填写文章标题！');
+                    $('#title').focus();
+                    return false;
+                }
+
+                if (0 == $('#typeid').val()) {
+                    MsgOpen('请选择所属栏目！');
+                    $('#typeid').focus();
+                    return false;
+                }
+                LoaDing();
+                $.ajax({
+                    url: url,
+                    data: $('#post_form').serialize(),
+                    type:'post',
+                    dataType:'json',
+                    success:function(res){
+                        layer.closeAll();
+                        if (1 == res.code) {
+                            MsgOpen(res.msg);
+                            window.location.href = res.url;
+                        } else {
+                            MsgOpen(res.msg);
+                            if (res.data) $('#'+res.data).focus(); 
+                        }
+                    }
+                });
+            }
+        })
+    }
+
+    function EditArticle(obj){
+        var url = $(obj).attr('data-url');
+        if ('1' == '{$is_mobile}' && ($('#litpic_inpiut').val() || $('#imgupload20200628').val()) ) {
+            MobileAddArticle(url);return false;
+        }
+
+        if (!$('#title').val()) {
+            layer.msg('请填写文章标题！', {time: 1500, icon: 5});
+            $('#title').focus();
+            return false;
+        }
+        if (0 == $('#typeid').val()) {
+            layer.msg('请选择所属栏目！', {time: 1500, icon: 5});
+            $('#typeid').focus();
+            return false;
+        }
+     
+        layer_loading('正在处理');
+        $.ajax({
+            url: url,
+            data: $('#post_form').serialize(),
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                layer.closeAll();
+                if (1 == res.code) {
+                    layer.msg(res.msg, {time: 1000},function(){
+                        window.location.href = res.url;
+                    });
+                } else {
+                    layer.msg(res.msg, {time: 1500, icon: 5});
+                    if (res.data) $('#'+res.data).focus(); 
+                }
+            },
+            error : function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+
+    }
+
+    function litpic_call_back(fileurl_tmp)
+    {
+        $("#litpic_inpiut").val(fileurl_tmp);
+        $("#litpic_img").attr('src', fileurl_tmp);
+    }
+
+</script> 
+
+<!-- 底部结束 --> 

@@ -1,0 +1,164 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>{$eyou.field.title}-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/bootstrap.min.css"/}
+    {eyou:static file="users/skin/css/basic.css"/}
+    {eyou:static file="users/skin/css/eyoucms.css"/}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+    
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+    {eyou:static file="users/skin/js/level_centre.js" /}
+    
+    <style type="text/css">
+        @media (max-width: 640px){
+            .panel-body {
+                 padding:18px; 
+            }
+            /*.centre .panel-body {
+                padding: 18px;
+            }*/
+        }
+    </style>
+</head>
+
+<body class="pay shop">
+<!-- 头部 -->
+{eyou:include file="users/users_header.htm" /}
+<!-- 头部结束 -->
+
+<div class="ey-body-bg">
+    <div class="ey-body">
+        <div class="ey-container w1200">
+            
+            <!-- 侧边 -->
+            {eyou:include file="users/users_left.htm" /}
+            <!-- 侧边结束 -->
+
+            <!-- 中部 -->
+            <div class="ey-con fr">
+                <div class="el-main main-bg">
+                    <div class="column-title mb20">
+                        <div class="column-name">{$eyou.field.title}</div>
+                    </div>
+                    
+                    <div class="ey-con-inside">
+                        <!-- 用户信息 -->
+                        <div class="cash-info">
+                            <img class="info-pic" src="{$users.head_pic|get_head_pic=###}">
+                            <div class="info-user-wrap">
+                                <div class="user-info">
+                                    <span class="user-name">{$users.nickname}</span>
+                                    {switch name="$users.level" }
+                                        {case value="1"} <img src="{eyou:static file='users/skin/images/person-vip1.png' /}"> {/case}
+                                        {case value="2"} <img src="{eyou:static file='users/skin/images/person-vip2.png' /}"> {/case}
+                                        {case value="3"} <img src="{eyou:static file='users/skin/images/person-vip3.png' /}">  {/case}
+                                    {/switch}
+                                    
+                                </div>
+                                <div class="user-tips">{$users.level_name}&emsp;&emsp;{eyou:neq name='$users.level' value='1'} 剩余会员天数：<span class="red">{$users.maturity_date}</span> {/eyou:neq}</div>
+                            </div>
+                        </div>
+                        <form name='theForm' id="theForm">
+                            {eyou:empty name="users_type"}
+                                <div>当前没有会员升级产品</div>
+                            {eyou:else/}
+                            <div class="postForm" >
+                                <div class="recharge">
+                                    <div class="sel-vip clearfix">
+                                        {eyou:volist name="users_type" id="vo"}
+                                        <div class="pc-vip-list fl {eyou:eq name='$key' value='0'} active {/eyou:eq}">
+                                            {notempty name='$vo.activity'}
+                                            <i class="icon-recomd">{$vo.activity}</i>
+                                            {/notempty}
+                                            <input type="radio" style="display: none;" {eyou:eq name='$key' value='0'} checked {/eyou:eq} name="type_id" value="{$vo.type_id}"/>
+                                            <div class="pc-vip-name">{$vo.type_name}</div>
+                                            <div class="money">
+                                                {$vo.price}<em class="money-rmb-yj">元</em>
+                                                <span class="money-rmb-yj">/ {$member_limit_arr[$vo['limit_id']]|default=''}</span>
+                                            </div>
+                                        </div>
+                                        {/eyou:volist}
+                                    </div>
+                                </div>
+                            </div>
+                            {/eyou:empty}
+                            <div class="el-row mt40 pl20" id="div_zhifufangshi">
+                                <div class="el-form level-row">
+                                    <!-- 支付API列表，套板请务必将整块代码一起复制，包含隐藏域 -->
+                                    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
+                                    {eyou:sppayapilist id='vo'}
+                                        {eyou:notempty name="$vo.pay_id"}
+                                            {neq name="$vo.pay_mark" value="Hupijiaopay"}
+                                                <label class="radio-label">
+                                                    {eyou:php}$pay_mark_vars = "users/skin/images/".$vo['pay_mark'].".png";{/eyou:php}
+                                                    <span><img src="{eyou:empty name='$vo.pay_img'}{eyou:static file='$pay_mark_vars' /}{eyou:else/}{$vo.pay_img}{/eyou:empty}" alt="{$vo.pay_name}"></span>
+                                                    <input class="radio" type="radio" name='pay_id' value="{$vo.pay_id}" {eyou:eq name="$key" value="0"} checked {/eyou:eq}>
+                                                    <span class="check-mark"></span>
+                                                    <input type="hidden" name='pay_mark[{$vo.pay_id}]' value="{$vo.pay_mark}">
+                                                </label>
+                                            {/neq}
+                                        {/eyou:notempty}
+                                        {$vo.hidden}
+                                    {/eyou:sppayapilist}
+                                    <input type="hidden" id="PayID">
+                                    <input type="hidden" id="PayMark">
+                                    <input type="hidden" id="PayType">
+                                    <!-- END -->
+                                    {eyou:eq name="$eyou.field.pay_balance_open" value="1"}
+                                        <label class="radio-label">
+                                            <span class="hint hint-top" data-hint="拥有余额：￥{$users.users_money}"><img src="{eyou:static file='users/skin/images/pay_yiyou.png' /}" alt="余额支付"></span>
+                                            <input class="radio" type="radio" name='pay_id' value="0" id="balance_pay_id">
+                                            <span class="check-mark"></span>
+                                            <input type="hidden" name='pay_mark[0]' value="balance">
+                                        </label>
+                                    {/eyou:eq}
+                                </div>
+                            </div>
+                            <div class="el-row mt20 ">
+                                <input type="hidden" name='referurl' value="{$referurl|default=''}">
+                                <input type="hidden" name='order_number' id="UnifiedNumber" value="{$OrderNumber}">
+                                <a href="JavaScript:void(0);" id='Pay' onclick="UsersUpgradePay(this);" class="button2 el-button--primary">
+                                    立即支付
+                                </a>
+                            </div>
+                        </form>
+                        <!-- 开通注意事项 -->
+                        <div class="vip-zyxs-box">
+                            <h3>会员服务声明：</h3> 
+                            <p><strong>1.</strong>会员服务为虚拟产品，购买后不支持退款，请您理解。</p>
+                            <p><strong>2.</strong>在会员有效期内，用户可以免费下载VIP对应级别产品。</p>
+                            <p><strong>3.</strong>重复购买会员服务，会员有效期将在原有基础上顺延。</p>
+                            <p><strong>4.</strong>禁止用户使用任何方式，利用本站资源，为他人提供有偿服务，一经发现，本站有权查封该账号，并追究法律责任。</p>
+                        </div>
+                        <!-- 开通注意事项 End --> 
+                    </div>
+                </div>
+            </div>
+            <!-- 中部结束 -->
+           
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function(){
+        // 默认支付方式
+        var default_pay_id = $('#div_zhifufangshi').find('input[name=pay_id]:checked').length;
+        if (default_pay_id == 0) {
+            $('#balance_pay_id').attr("checked","checked");
+        }
+    });
+</script>
+
+{eyou:include file="users/users_footer.htm" /}

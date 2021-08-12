@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>{$score_name}明细-{eyou:global name='web_name' /}</title>
+		<meta name="renderer" content="webkit">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+		<link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+		{eyou:static file="users/skin/css/basic.css" /}
+		{eyou:static file="users/skin/css/eyoucms.css" /}
+		<!-- 新样式 2020-11-25 -->
+		{eyou:static file="users/skin/css/element/index.css" /}
+		{eyou:static file="users/skin/css/e-user.css" /}
+		{eyou:include file="users/skin/css/diy_css.htm" /}
+
+		{eyou:static file="/public/static/common/js/jquery.min.js"/}
+		{eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+		{eyou:static file="users/skin/js/global.js"/}
+	</head>
+
+	<body>
+		<!-- 头部 -->
+		{eyou:include file="users/users_header.htm" /}
+		<!-- 头部结束 -->
+
+		<!-- 头部信息 -->
+		<div class="ey-header-status">
+			<div class="header-status-l">
+				<a href="javascript:history.go(-1)"><i class="el-icon-arrow-left"></i></a>
+			</div>
+			<div class="header-status-m">{$score_name}明细</div>
+			<div class="header-status-r">
+				<a href="{eyou:url link='user/Users/index' /}"><i class="el-icon-user"></i></a>
+			</div>
+		</div>
+		<!-- 头部信息结束 -->
+		<div class="h50"></div>
+
+        <div class="ey-container">
+            <div class="ey-con">
+                <div class="ey-row">
+                    <div class="ey-row-box">
+                        <div class="box-l">我的{$score_name} ：<span class="red f16">{$users.scores}</span></div>
+                        <div class="box-r">
+
+                        </div>
+                    </div>
+                    <!-- 中部 -->
+                    <div style="overflow-x: scroll;padding: 4px 0;" id="finance-list_wrapper" class="mt20 el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition">
+                        <table style="100%">
+                            <thead>
+                            <tr>
+                                <th style="width: 15rem"><div class="cell tc">{$score_name}</div></th>
+                                <th style="width: 15rem"><div class="cell tc">获得途径</div></th>
+                                <th style="width: 30rem"><div class="cell tc">时间</div></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {empty name="$eyou.field.data"}
+                                <tr>
+                                    <td valign="top" colspan="50"><div class="cell tc pt50 pb50"><i class="el-icon-warning red"></i>没有符合条件的记录</div></td>
+                                </tr>
+                            {else/}
+                                {eyou:volist name="$eyou.field.data" id="vo"}
+                                    <tr>
+                                        <td><div class="cell tc red">{$vo.score}</div></td>
+                                        <td><div class="cell tc">{$score_type_arr[$vo['type']]|default=''}</div></td>
+                                        <td ><div class="cell tc">{$vo.add_time|date='Y-m-d H:i:s',###}</div></td>
+                                    </tr>
+                                {/eyou:volist}
+                            {/empty}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="text-align: center;">{$page}</div>
+                    <!-- END -->
+                </div>
+            </div>
+        </div>
+

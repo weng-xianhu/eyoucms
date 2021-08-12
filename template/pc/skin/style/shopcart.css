@@ -1,0 +1,109 @@
+@charset "utf-8";
+.ey-price {
+	font-size:36px;
+}
+.ey-number {
+	padding: 12px 0px;
+	position: relative;
+}
+.ey-number .btn-input {
+	border: 1px solid #CCC;
+	display: inline-block;
+	vertical-align: middle;
+	position: relative;
+	font-size: 0px;
+}
+.ey-number .btn-input button {
+	width: 38px;
+	height: 38px;
+	font-size:20px;
+	line-height:38px;
+	padding: 0;
+	border: none;
+	background-color: #fff;
+	color: #6e6e6e;
+	outline: none;
+}
+.ey-number .btn-input input {
+	font-size:16px;
+	height: 38px;
+	padding: 0;
+	display: inline-block;
+	vertical-align: top;
+	width: 38px;
+	text-align: center;
+	border: none;
+	border-left: 1px solid #cacaca;
+	border-right: 1px solid #cacaca;
+	border-radius: 0;
+	outline: none;
+	color: #6e6e6e;
+}
+.ey-buyaction a {
+	display: inline-block;
+	padding: 15px 30px;
+	cursor: pointer;
+	text-align: center;
+	vertical-align: middle;
+}
+.ey-buyaction a:hover {
+	text-decoration: none
+}
+.ey-joinin {
+	margin-right:10px;
+	color: #fff;
+	background-color: #00A67C;
+}
+.ey-joinin:hover, .ey-joinin:focus {
+	color: #fff;
+	background-color: #2EAE00;
+}
+.ey-joinbuy {
+	color: #fff;
+	background-color: #ff9e00;
+}
+.ey-joinbuy:hover, .ey-joinbuy:focus {
+	color: #fff;
+	background-color: #FFD100
+}
+.btn {
+  display: inline-block;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.42857143;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background-image: none;
+  border: 1px solid transparent;
+}
+
+/*首页产品规格选项样式覆盖*/
+.btn-selected {
+	background-color:#FFF;
+	color: #6e6e6e;
+	border-color: #CACACA;
+}
+.btn-selected.btn-danger {
+	color: #FF9E00;
+	background-color:#FFF;
+	border-color: #FF9E00;
+}
+.btn-selected.btn-danger:hover {
+	color: #FFD100;
+	background-color: transparent;
+	border-color: #FFD100;
+}
+.btn-selected:hover, .btn-selected:focus {
+	color: #FFD100;
+	background-color: transparent;
+	border-color: #FFD100;
+}

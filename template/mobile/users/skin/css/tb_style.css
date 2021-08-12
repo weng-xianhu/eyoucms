@@ -1,0 +1,243 @@
+@charset "utf-8";
+
+.tb-body{
+	margin:0 auto;
+	position: relative;
+	padding: 0 10px;
+}
+.tb-nav{
+	position: relative;
+	padding: 0;
+	margin: 30px auto 14px;
+	height: 36px;
+
+}
+.tb-body .crud a{
+	margin-right: 6px;
+	display:inline;
+}
+.tb-nav li{
+	list-style:none;
+	float: left;
+	margin: 0 0 10px 10px ;
+}
+.tb-nav li a{
+	display: block;
+	color: #4d4d4d ;
+	padding: 0 20px;
+	height: 36px;
+	line-height: 36px;
+    background-color: #eee ;
+    border-radius: 4px;
+    cursor: pointer;
+
+	
+}
+.tb-nav a.current, .tb-nav a:hover.current {
+    border-radius: 4px;
+	background-color: #ff6565 ;
+    cursor: default !important;
+	color: #fff;
+	
+}
+.tb-body table,.tb-body table thead th{
+	text-align: center;
+}
+
+.table>tbody>tr>td{
+	line-height: 36px;
+	color: #666;
+	border-bottom: 1px solid #eee;
+}
+.table>thead>tr>th {
+    border-bottom: 1px solid #ddd;
+}
+.tb-body .del td{
+	line-height: 24px;
+	color: #fff;
+	border-bottom: 0px solid #eee;
+}
+.tb-body .del .crud{
+	text-align: left;
+}
+.table .txt a{
+	color: #666;
+}
+.table .txt a:hover{
+		text-decoration: underline;
+}
+.tb-body .dels{
+		text-align: left;
+		
+	}
+.table .tl{
+	text-align: left;
+}
+.table .no-data{
+	font-size: 14px;
+    color: #999;
+    width: 100% !important;
+    height: 24px;
+    border: 0 none !important;
+    text-align: center;
+    padding: 100px 0;
+}
+.table .no-data i{
+	    font-size: 18px;
+    margin-right: 6px;
+    color: #FC0;
+}
+.input-file-show{
+	position: relative;
+    width: 137px;
+    height: 137px;
+    overflow: hidden;
+}
+.input-file-show img {
+    position: absolute;
+    width: 137px;
+    height: 137px;
+}
+.input-file-show span {
+    position: absolute;
+    bottom: 0;
+    width: 137px;
+    height: 26px;
+    line-height: 26px;
+    text-align: center;
+    background-color: rgba(0,0,0,0.6);
+    color: #fff;
+    z-index: 2;
+}
+.heading-bt{
+	float: right;
+	border-radius: 4px;
+}
+@media (max-width: 767px){
+	.tb-body .tb-nav li{
+		margin: 0 0 10px 10px ;
+     }
+
+   .tb-body .tb-nav{
+	border:none;
+	margin: 20px auto;
+    }
+	.tb-body .tb-nav li a{
+		padding: 0 6px;
+		height: 30px;
+		line-height:26px;
+		border: 2px solid #eee;
+		border-radius: 4px 4px 4px 4px !important;
+	}
+	.tb-body .tb-nav a.current, .tb-body .tb-nav a:hover.current {
+		border: 2px solid #ff6565;
+       border-radius: 4px 4px 4px 4px !important;
+	
+    }
+	.table>tbody>tr>td{
+	  line-height: 20px;
+    }
+	.tb-body table thead{
+		display: none;
+	}
+	.tb-body td{
+		text-align: left;
+	}
+	.tb-body .del{
+		text-align: left;
+		
+	}
+	.tb-body .td-cate{
+		text-align: center;
+		color: #999;
+	}
+	.tb-body .td-state-m{
+		color: #999;
+	}
+	.tb-body .td-state,.tb-body .crud{
+		display: none;
+	}
+	.tb-body .wap a{
+		margin-right: 6px;
+	}
+	.tb-body .tc{
+		text-align: center;
+	}
+	.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
+  
+     border-top: 0px solid #ddd;
+    }
+	.table>tbody>tr>td {
+
+     border-bottom: 0px solid #eee; 
+   }
+	.tb-body .wap{
+		border-bottom: 1px solid #eee;
+	}
+
+}
+@media (min-width: 768px){
+	.tb-body .wap{
+		display: none;
+	}
+	
+}
+
+/*自定义多图上传样式*/
+.none {
+    display: none;
+}
+a.imgupload {
+    display: inline-block;
+    padding: .5em 1em;
+    vertical-align: middle;
+    font-size: 1.0rem;
+    font-weight: 400;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    border-radius: 0;
+    cursor: pointer;
+    outline: 0;
+    -webkit-transition: background-color .3s ease-out,border-color .3s ease-out;
+    transition: background-color .3s ease-out,border-color .3s ease-out;
+    color: #fff;
+    background-color: #ff6565;
+    border-color: #ff6565;
+}
+.tab-pane table>tbody>tr>td {
+	padding: 0;
+    border: 1px solid #fff;
+}
+.tab-pane .fieldext_upload{
+	float: left;
+    margin-top: 15px;
+	width: 136px;
+	height: 136px;
+	margin-right: 2%;
+    display: inline-block;
+	position: relative;
+    overflow: hidden;	
+}
+.tab-pane .upimg{
+    height: 136px;
+    background: #fafafa;
+    overflow: hidden;
+    text-align: center;
+    position: relative;
+    display: block;
+}
+
+.tab-pane .fieldext_upload .delect {
+    text-align: center;
+    display: block;
+    background: #fafafa;
+    position: absolute;
+    bottom:0;
+    left: 0;
+    color: #fff;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 2;
+    width: 100%;
+	line-height: 26px;
+}

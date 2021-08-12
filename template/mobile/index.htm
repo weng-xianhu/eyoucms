@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>{eyou:global name='web_title' /}_{eyou:global name='web_name' /}</title>
+<meta name="description" content="{eyou:global name='web_description' /}" />
+<meta name="keywords" content="{eyou:global name='web_keywords' /}" />
+<link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+{eyou:static file="skin/style/pintuer.css" /}
+{eyou:static file="skin/style/header.css" /}
+{eyou:static file="skin/style/style.css" /}
+{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+<!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /}<![endif]-->
+</head>
+<body>
+<div id="mobile-mask">
+	<!--header——开始-->
+	{eyou:include file="header.htm" /}
+	<!-- 轮播广告 -->
+	<div class="layout bg-gray">
+		<div class="line">
+			<div class="xl12 xs12">
+				<div class="slides owl-carousel dot-center slides-arrow">
+				{eyou:adv pid='3'}
+					<div class="item">
+						<a href='{$field.links}' {$field.target}><img src="{$field.litpic}" class="img-responsive"></a>
+					</div>
+				{/eyou:adv}
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 轮播广告 -->
+
+	<!-- 产品推荐 -->
+	<div class="layout bg-gray">
+		<div class="line">
+			<div class="title-c text-center">
+				<h3>产品推荐</h3>
+			</div>
+		</div>
+		<div class="container-layout tab-normal">
+			<div class="line tab">
+				{eyou:channelartlist typeid='3'}
+				<div class="tab-head text-center">
+					<ul class="tab-nav">
+						{eyou:channel type="son"}
+						<li {eyou:eq name='$i' value='1'}class="active"{/eyou:eq}><a href="#tab-{$i}">{$field.typename}</a> </li>
+						{/eyou:channel}
+					</ul>
+				</div>
+				<div class="blank-middle"></div>
+				<div class="tab-body">
+					{eyou:channel type="son"}
+					<div class="tab-panel {eyou:eq name='$i' value='1'}active{/eyou:eq}" id="tab-{$i}">
+						<div class="line">
+							<div class="owl-carousel dot-center carousel-pro">
+							{eyou:arclist typeid='$field.typeid' titlelen='20' infolen='60' row='12'}
+								<div class="item media media-y bg-white">
+									<div class="padding">
+										<a href="{$field.arcurl}" title="{$field.title}"><img src="{$field.litpic}" class="img-responsive"></a>
+										<div class="media-body text-center">
+											<h2><a href="{$field.arcurl}" class="height-middle text-main text-middle">{$field.title}</a></h2>
+											<div class="margin-big-top margin-bottom">
+												<a href="{$field.arcurl}" class="button border-none radius-rounded text-center text-white">More<i class="fa fa-angle-right margin-small-left"></i></a>
+											</div>
+										</div>
+									</div>
+								</div>
+							{/eyou:arclist}
+							</div>
+						</div>
+					</div>
+					{/eyou:channel}
+				</div>
+				{/eyou:channelartlist}
+			</div>
+		</div>
+		<div class="blank-big"></div>
+	</div>
+	<!-- 产品推荐 -->
+
+	<!-- 关于我们begin	 -->
+	<div class="layout home-about" style="background-image:url({eyou:global name='web_templets_m' /}/skin/images/indpic.jpg)">
+		{eyou:type typeid='8'}
+		<div class="blank-small"></div>
+		<div class="title-c text-center">
+			<h3 class="text-white">{$field.typename}</h3>
+		</div>
+		{/eyou:type}
+		<div class="container-layout">
+		<div class="line bg-white">
+			<div class="xl12 xs12">
+				<div class="padding-large">
+					<!--公司简介——开始-->
+					<h2 class="text-main">{eyou:global name='web_name' /}</h2>
+					<p class="text-sub text-middle height-big">
+					{eyou:type typeid='8' addtable='single_content'}{$field.content|html_msubstr=###,0,200}...{/eyou:type}</p>
+					<div class="blank-small"></div>
+					{eyou:channelartlist typeid='1'}
+					<a href="{eyou:field name='typeurl' /}" class="button radius-rounded bg-yellow">查看更多<i class="fa fa-angle-right margin-small-left"></i></a>
+					{/eyou:channelartlist}
+					<!--公司简介——结束-->
+				</div>
+			</div>
+			<div class="xl12 xs12">
+			  <img src="{eyou:global name='web_templets_pc' /}/skin/images/aboutpic.jpg" class="img-responsive">
+			</div>
+		</div>
+		</div>
+		<div class="blank"></div>
+	</div>
+	<!-- 关于我们end -->
+
+	<!-- 解决方案 begin-->
+    {eyou:channelartlist typeid='4'}
+	<div class="layout bg-white">
+		<div class="container-layout">
+			<div class="line-small">
+					<div class="blank-small"></div>
+					<div class="title-c text-center">
+						<h3>{eyou:field name='typename' /}</h3>
+					</div>
+				<div class="solution">
+					{eyou:arclist titlelen='20' row='9' infolen='100'}
+					<div class="xl6 xs6">
+						<div class="media-img margin-little-bottom">
+							<a href="{$field.arcurl}" target="_blank">
+								<img src="{$field.litpic}" alt="{$field.title}" class="img-responsive">
+								<div class="linear-link">
+								<div class="subtitle">
+									<h3 class="text-white text-middle margin-small-bottom">{$field.title}</h3>
+									<p class="text-white">{$field.seo_keywords}</p>
+								</div>
+								</div>
+							</a>
+						</div>
+					</div>
+					{/eyou:arclist}
+				</div>
+			</div>
+		</div>
+		<div class="blank-large"></div>
+	</div>
+    {/eyou:channelartlist}
+	<!-- 解决方案 end-->
+
+	<!-- 新闻动态 -->
+    {eyou:channelartlist typeid='2'}
+	<div class="layout bg-gray">
+		<div class="container-layout">
+			<div class="line">
+				<div class="blank-small"></div>
+				<div class="title-c text-center">
+                    <h3>{eyou:field name='typename' /}</h3>
+				</div>
+				<div class="xl12 xs12">
+					{eyou:arclist limit='0,1' titlelen='30'}
+					<div class="home-news-h">
+						<div class="media-img">
+							<img src="{$field.litpic}" alt="{$field.title}" class="img-responsive">
+							<div class="post-title">
+								<h3><a href="{$field.arcurl}" target="_blank">{$field.title}</a></h3>
+								<p class="padding-top text-gray">{$field.add_time|MyDate='Y-m-d',###}</p>
+								<a href="{$field.arcurl}" class="button radius-none border-none text-center hidden-l"><i class="fa fa-long-arrow-right"></i></a>
+							</div>
+						</div>
+					</div>
+					{/eyou:arclist}
+				</div>
+				<div class="blank"></div>
+				<div class="xl12 xs12">
+					{eyou:arclist limit='1,5' titlelen='20'}
+						<div class="line home-news-c margin-bottom bg-white">
+							<div class="xl5 xs6">
+								<a href="{$field.arcurl}" title="{$field.title}"><img src="{$field.litpic}" class="img-responsive" alt="{$field.title}"></a>
+							</div>
+							<div class="xl7 xs6">
+								<div class="news-title">
+									<h2><a href="{$field.arcurl}" class="text-main">{$field.title}</a></h2>
+									<p class="text-gray">{$field.add_time|MyDate='Y-m-d',###}</p>
+								</div>
+							</div>
+						</div>
+					{/eyou:arclist}
+				</div>
+			</div>
+		</div>
+		<div class="blank"></div>
+	</div>
+    {/eyou:channelartlist}
+	<!-- 新闻动态 end-->
+	{eyou:include file="footer.htm" /}
+</div>
+<!-- id="mobile-mask" -->
+{eyou:static file="skin/js/jquery.min.js" /}
+{eyou:static file="skin/js/pintuer.js" /}
+{eyou:static file="skin/js/common.js" /}
+{eyou:static file="skin/js/mobile.js" /}
+<!-- Owl Carousel -->
+{eyou:static file="skin/Lib/OwlCarousel2.21/owl.carousel.min.css" /}
+{eyou:static file="skin/Lib/OwlCarousel2.21/owl.carousel.min.js" /}
+{eyou:static file="skin/Lib/OwlCarousel2.21/custom.js" /}
+</body>
+</html>

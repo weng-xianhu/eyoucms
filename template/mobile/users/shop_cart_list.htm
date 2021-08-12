@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>购物车-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/bootstrap.min.css"/}
+    {eyou:static file="users/skin/css/basic.css"/}
+    {eyou:static file="users/skin/css/eyoucms.css"/}
+    {eyou:static file="users/skin/css/shop.css"/}
+	<!-- 新样式 2020-12-8 -->
+	{eyou:static file="users/skin/css/element/index.css" /}
+	{eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+</head>
+
+<body>
+{eyou:include file="users/users_header.htm" /}
+	<!-- 头部信息 -->
+	<div class="ey-header-status">
+		<div class="header-status-l">
+			<a href="javascript:history.go(-1)"><i class="el-icon-arrow-left"></i></a>
+		</div> 
+		<div class="header-status-m">购物车</div> 
+		<div class="header-status-r">
+			<a href="{eyou:url link='user/Users/index' /}"><i class="el-icon-user"></i></a>
+		</div>
+	</div>
+	<!-- 头部信息结束 -->
+
+	<div class="h50"></div>
+	<div class="ey-container">
+		<div class="el-row">
+			<!-- 中部 -->
+			<div class="goods-con">
+				{eyou:spcart id="field" pagesize="5"}
+					<!-- 获取订单数据列表 -->
+				    {eyou:spordergoods id="field2"}
+					<div class="goods-item" {$field2.ProductId}>
+						<div class="item-top">
+							<div class="item-top-l">
+								<label class="checkbox-label car-checkbox">
+									<span>选择</span>
+									<input class="checkbox" type="checkbox" {$field2.CartChecked}>
+									<span class="check-mark"></span>
+								</label>
+								{$field2.hidden}
+							</div>
+							<div class="item-top-r red">
+								<a class="el-button el-button--default el-button--mini" {$field2.CartDel}>删除</a>
+							</div>
+						</div>
+
+						<div class="item-main">
+							<!-- 获取订单商品 -->
+							<div class="item-con">
+							    <div class="item-con-l">
+									<a target="_blank" href="{$field2.arcurl}"><img src="{$field2.litpic}" alt="商品图"></a>
+								</div>
+								<div class="item-con-m">
+									<a target="_blank" href="{$field2.arcurl}">
+										{$field2.title} <span style="color: red;">{$field2.StatusMark}</span>
+									</a>
+								</div>
+								<div class="item-con-r">
+									<span class="price_flag">￥</span><span {$field2.UsersPriceId}>{$field2.users_price}</span>
+								</div>
+							</div>
+						</div>
+
+						<div class="item-bottom">
+							<div class="item-bottom-l">
+								<div class="el-input-number el-input-number--mini">
+									<span role="button" class="el-input-number__decrease" {$field2.ReduceQuantity}>
+										<i class="el-icon-minus"></i>
+									</span>
+									<span role="button" class="el-input-number__increase" {$field2.IncreaseQuantity}>
+										<i class="el-icon-plus"></i>
+									</span>
+									<div class="el-input el-input--mini">
+										<input type="text"  class="el-input__inner" {$field2.UpdateQuantity}>
+									</div>
+								</div>
+							</div>
+							<div class="item-bottom-r">
+								小计：<span class="price_flag">￥</span><span class="red" {$field2.SubTotalId}>{$field2.subtotal}</span>
+							</div>				
+						</div>
+					</div>
+					{/eyou:spordergoods}
+					
+					<div class="shopcar-footer">
+						<div class="shopcar-footer-l">
+							<label class="checkbox-label car-checkbox2">
+								<span>全选</span>
+								<input class="checkbox" type="checkbox" {$field.InputChecked}>
+								<span class="check-mark"></span>
+							</label>
+							{$field.InputHidden}
+						</div>
+						<div class="shopcar-footer-r">
+							<span class="freight">不含运费</span>
+							<span class="price">合计:<i>￥</i><em {$field.TotalAmountId}>{$field.TotalAmount}</em></span>
+							<a class="el-button el-button--primary el-button--medium" href="JavaScript:void(0);" {$field.SubmitOrder}>结算( <span {$field.TotalNumberId}>{$field.TotalNumber}</span>)</a>
+						</div>
+					</div>
+					{$field.hidden}
+				{eyou:else /}
+					<!-- 订单数据为空 -->
+					<div class="el-row tc pt100 pb100 bgfff">
+						<p class="mb10"><img id='litpic_img'  src="__PUBLIC__/static/common/images/null-data.png"/></p>
+						<a href="{eyou:global name='web_cmsurl' /}" class="el-button el-button--default"><i class="el-icon-shopping-cart-full"></i> 马上去购物</a>
+					</div>
+		        {/eyou:spcart}
+	            <div class="h50"></div>
+            </div>
+			<!-- 中部结束 -->
+		</div>
+	</div>
+</body>
+</html>

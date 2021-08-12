@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>修改收货地址-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    {eyou:static file="users/skin/css/bootstrap.min.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/shop.css" /}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+
+    {eyou:static file="/public/static/common/js/shop_edit_addr_v2.js"/}
+    <style type="text/css">
+        #theForm .form-group{
+            margin:10px 0px;
+        }
+    </style>
+</head>
+<body>
+<div class="el-row">
+    <form name='theForm' id="theForm" method="post">
+        <div class="ey-popup">
+            <input type="hidden" name="addr_id" value="{$eyou.field.addr_id}">
+            
+            <div class="el-form-item">
+                <div class="el-input">
+                    <input type="text" value="{$eyou.field.consignee}" name="consignee" required class="el-input__inner" placeholder="收货人姓名">
+                </div>
+            </div>
+            
+            <div class="el-form-item">
+                <div class="el-input">
+                    <input type="text" value="{$eyou.field.mobile}" name="mobile" required class="el-input__inner" placeholder="收货人手机">
+                </div>    
+            </div>
+            
+            <div class="el-form-item" style="display: none;">
+                <select class="el-input__inner" name="country">
+                    <option value="{$eyou.field.country}">{$eyou.field.country}</option>
+                </select>
+            </div>
+
+            <div class="el-form-item">
+                <select class="el-input__inner" name="province" id='province' onChange="GetRegionData(this,'province')">
+                    {eyou:volist name="$eyou.field.Province" id="P_v"}
+                        <option {if condition="$P_v.id == $eyou.field.province"} selected {/if} value="{$P_v.id}">{$P_v.name}</option>
+                    {/eyou:volist}
+                </select>
+            </div>
+
+            <div class="el-form-item">
+                <select class="el-input__inner" name="city" id='city' onChange="GetRegionData(this,'city')">
+                    {eyou:volist name="$eyou.field.City" id="C_v"}
+                        <option {if condition="$C_v.id == $eyou.field.city"} selected {/if} value="{$C_v.id}">{$C_v.name}</option>
+                    {/eyou:volist}
+                </select>
+            </div>
+
+            <div class="el-form-item">
+                <select class="el-input__inner" name="district" id='district'>
+                    {eyou:volist name="$eyou.field.District" id="D_v"}
+                        <option {if condition="$D_v.id == $eyou.field.district"} selected {/if} value="{$D_v.id}">{$D_v.name}</option>
+                    {/eyou:volist}
+                </select>
+            </div>
+
+            <div class="el-form-item">
+                <textarea class="el-input__inner" style="min-height:50px;" rows="3" name="address" placeholder="收货详情地址">{$eyou.field.address}</textarea>
+            </div>
+            <input type="hidden" id="GetRegionDataS" value="{eyou:url link='user/Shop/get_region_data'/}">
+            <input type="hidden" id="ShopEditAddress" value="{eyou:url link='user/Shop/shop_edit_address'/}">
+            <div class="el-form-item">
+                <button type="button" class="el-button el-button--primary" style="width: 100%;" onclick="EditAddress();">确定</button>
+            </div>
+        </div>
+       
+    </form>
+</div>
+</body>
+</html>

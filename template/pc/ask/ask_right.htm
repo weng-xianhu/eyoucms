@@ -1,0 +1,146 @@
+<div class="ask-right">
+    <!-- 个人信息 -->
+    {eyou:empty name="$users_id"}
+        <!-- 未登录 -->
+        <div class="user-logout bg-f bor mb15" onclick="Linkjump(this);" data-url="{eyou:Diyurl type='login' /}">
+            <a href="javascript:void(0);">登录</a>查看更多我的问答信息
+        </div>
+        <!-- 未登录 END -->
+    {eyou:else/}
+        <!-- 已登录 -->
+        <div class="bg-f bor">
+            <div class="ask-title"> 我的问答 </div>
+            <div class="user-box bg-f ">
+                <div class="user-login">
+                    <a href="javascript:void(0);" class="item" onclick="Linkjump(this);" data-url="{eyou:Diyurl link='user/Ask/ask_index' /}">
+                        <span>我的提问</span> <p>{$eyou.field.CountUsersAsk.CountAsk}</p>
+                    </a>
+                    <a href="javascript:void(0);" class="item" onclick="Linkjump(this);" data-url="{eyou:Diyurl link='user/Ask/answer_index' /}">
+                        <span>我的回答</span> <p>{$eyou.field.CountUsersAsk.CountAnswer}</p>
+                    </a>
+                </div>
+                <div class="user-login">
+                    <a href="javascript:void(0);" class="item">
+                        <span>被评论</span> <p>{$eyou.field.CountUsersAsk.CountBeAnswer}</p>
+                    </a>
+                    <a href="javascript:void(0);" class="item">
+                        <span>被点赞</span> <p>{$eyou.field.CountUsersAsk.CountBeLike}</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- 已登录 END -->
+    {/eyou:empty}
+    <!-- 个人信息 END -->
+    
+    {eyou:notempty name="$eyou.field.ask_ques_steps"}
+    <!--提问步骤-->
+    <div class="bg-f bor mt15">
+        <div class="ask-title"> 提问步骤 </div>
+        <div class="user-box bg-f">
+            <ul class="ask-about">{$eyou.field.ask_ques_steps}</ul>
+        </div>
+    </div>
+    <!--提问步骤 END-->
+    {/eyou:notempty}
+
+    {eyou:notempty name="$eyou.field.ScoreList"}
+    <!-- 问答贡献 -->
+    <div class="bg-f bor mt15">
+        <div class="ask-title"> 问答贡献 </div>
+        <div class="ask-rank bg-f ">
+            {eyou:volist name="$eyou.field.ScoreList" id="week"}
+                <div class="item">
+                    <span class="rank">{$i}</span>
+                    <img src="{$week.head_pic|get_head_pic=###}">
+                    <span class="name"><a href="javascript:void(0);">{$week.nickname}</a></span>
+                    <span class="num">+{$week.scores} {$eyou.field.score_name}</span>
+                </div>
+            {/eyou:volist}
+        </div>
+    </div>
+    <!-- 问答贡献 END -->
+    {/eyou:notempty}
+        
+    {eyou:if condition="!empty($eyou.field.WeekList) AND !empty($eyou.field.TotalList)"}
+    <!-- 热门帖子 -->
+    <div class="bg-f bor mt15">
+        <div class="ask-title tags-cut">
+            <span class="tit"> 热门帖子 </span>
+            <ul id="Tags">
+                <li class="Tag"><a href="javascript:void(0)" onmouseover="Tag('tagContent0', this)">周榜</a></li>
+                <li><a href="javascript:void(0)" onmouseover="Tag('tagContent1', this)">总榜</a></li>
+            </ul>
+        </div>
+        <div class="ask-pay bg-f">
+            <div id="tagContent0" style="display: block;"> 
+                {eyou:volist name="$eyou.field.WeekList" id="week"}
+                    <div class="item">
+                        <span class="rank">{$i}</span>
+                        <a class="pay-tit" href="javascript:void(0);" onclick="Linkjump(this);" data-url="{$week.AskUrl}">{$week.ask_title}</a>
+                    </div>
+                {/eyou:volist}
+           </div>
+           <div id="tagContent1" style="display: none;"> 
+                {eyou:volist name="$eyou.field.TotalList" id="total"}
+                    <div class="item">
+                       <span class="rank">{$i}</span>
+                       <a class="pay-tit" href="javascript:void(0);" onclick="Linkjump(this);" data-url="{$total.AskUrl}">{$total.ask_title}</a>
+                    </div>
+                {/eyou:volist}
+           </div>
+        </div>
+    </div>
+    <!-- 热门帖子 END-->
+    {/eyou:if}
+
+    {eyou:notempty name="$eyou.field.UrgentAsk"}
+    <!-- 加急问题 -->
+    <div class="bg-f bor mt15">
+        <div class="ask-title"> 加急问题 </div>
+        <div class="ask-pay bg-f">
+            {eyou:volist name="$eyou.field.UrgentAsk" id="urgent"}
+            <div class="item">
+                <span class="pay"> <i class="iconfont icon-hongbao"></i> {$urgent.money} </span>
+                <a class="pay-tit" href="{$urgent.AskUrl}"> {$urgent.ask_title} </a>
+            </div>
+            {/eyou:volist}
+        </div>
+    </div>
+    <!-- 加急问题 END -->
+    {/eyou:notempty}
+
+    {eyou:notempty name="$eyou.field.Qq.ask_qq"}
+    <!-- 加入群 -->
+        <div class="user-logout bg-f bor mt15">
+            {eyou:notempty name="$eyou.field.Qq.ask_qq_link"}
+                <a href="javascript:void(0);" onclick="window.open('{$eyou.field.Qq.ask_qq_link}')">加入群</a>
+            {/eyou:notempty}
+            {eyou:empty name="$eyou.field.Qq.ask_intro"}
+                加入交流QQ群，与更多用户一起讨论，共同成长~！
+            {eyou:else/}
+                {$eyou.field.Qq.ask_intro}
+            {/eyou:empty}
+            <div class=""> QQ群： {$eyou.field.Qq.ask_qq} </div>
+        </div>
+    <!-- 加入群 END -->
+    {/eyou:notempty}
+</div>
+
+<script type="text/javascript">
+    //热门帖子切换
+    function Tag(showContent, selfObj) {
+        // 操作标签
+        var tag = document.getElementById("Tags").getElementsByTagName("li");
+        var taglength = tag.length;
+        for (i = 0; i < taglength; i++) {
+            tag[i].className = "";
+        }
+        selfObj.parentNode.className = "Tag";
+        // 操作内容
+        for (i = 0; j = document.getElementById("tagContent"+i); i++) {
+            j.style.display = "none";
+        }
+        document.getElementById(showContent).style.display = "block";   
+    }
+</script>

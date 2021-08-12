@@ -1,0 +1,62 @@
+<!-- 头部信息 -->
+<div class="ey-header">
+    <div class="ey-logo">
+        <a href="{eyou:global name='web_cmsurl' /}"><img src="{eyou:global name='web_logo'/}" /></a>
+    </div>
+    <div class="ey-header-nav w1200">
+        <ul class="nav nav-menu nav-inline">
+            <li><a href="{eyou:global name='web_cmsurl' /}"> 首页 </a></li>
+            {eyou:channel type="top" row="60" id="field"}
+            <li>
+                <a href="{$field.typeurl}"> {$field.typename} {eyou:notempty name="$field.children"}<i class="fa fa-angle-down margin-small-left"></i>{/eyou:notempty}</a>
+                {eyou:notempty name="$field.children"}
+                <ul class="drop-menu">
+                    {eyou:channel name="$field.children" id="field2"}
+                    <li><a href="{$field2.typeurl}">{$field2.typename}</a></li>
+                    {/eyou:channel}
+                </ul>
+                {/eyou:notempty}
+            
+            </li>
+            {/eyou:channel}
+         </ul>
+    </div>
+    <div class="ey-header-r">
+        {egt name='$php_servicemeal' value='1'}
+        <div class="right-item user-news">
+            <a href="{:url('user/UsersNotice/index')}">
+                {gt name="$unread_num" value="0"}
+                <span class="num" id="users_unread_num">{$unread_num}</span>
+                {/gt}
+                <span class="icon"><i class="el-icon-bell"></i></span>
+            </a>
+        </div>
+        {/egt}
+        <div class="right-item user-photo">
+            <img src="{$users.head_pic|get_head_pic=###}"/>
+            <div class="user-drop">
+                <ul>
+                    <li><a href="{eyou:Diyurl link='user/Users/index' /}">个人中心</a></li>
+                    {eyou:if condition="getUsersConfigData('shop.shop_open') == 1"}
+                    <li><a href="{eyou:Diyurl link='user/Shop/shop_centre' /}">我的订单</a></li>
+                    {/eyou:if}
+                    <li><a href="{eyou:Diyurl link='user/Users/collection_index' /}">我的收藏</a></li>
+                    <li><a href="{eyou:Diyurl link='user/Users/logout' /}">安全退出</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 头部信息结束 -->
+
+<script type="text/javascript">
+    //头像下拉
+    $(".user-photo").mouseover(function(){
+       $(".user-drop").show();
+    });
+    $(".user-photo").mouseout(function(){
+       $(".user-drop").hide();
+    });
+
+    var GetUploadify_url = "{:url('Uploadify/upload')}";
+</script>

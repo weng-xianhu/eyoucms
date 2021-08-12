@@ -1,0 +1,6 @@
+<div class="el-row">
+	<a href="{:url($params.barurl)}" class="el-button {if !isset($params.channel_id)||empty($params.channel_id)} el-button--primary {/if}" >全部</a>
+	{eyou:volist name='$allow_release_channel_list' id='vo'}
+	<a href="{:url($params.barurl, ['channel_id'=>$vo.id])}" class="el-button {if isset($params.channel_id)&&$params.channel_id==$vo.id} el-button--primary {/if}" >{$vo.ntitle}</a>
+	{/eyou:volist}
+</div>

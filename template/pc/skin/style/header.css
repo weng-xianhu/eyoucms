@@ -1,0 +1,66 @@
+/* PC导航 */
+#pc-header .logo{padding:20px 0;}
+#pc-header .logo img{max-width:none;max-height:50px;}
+#pc-header .navbar{background:#FFF;-webkit-box-shadow:0px 1px 1px rgba(0, 0, 0, 0.03); box-shadow:0px 1px 1px rgba(0, 0, 0, 0.03);z-index:9}
+#pc-header .nav li.active ul li a {color:#3e3e3e;}
+#pc-header .nav li a{color:#3e3e3e;line-height:90px;position:relative;padding:0 16px;font-size:16px;font-weight:400}
+/* #pc-header .nav li:last-child a{padding:0 0 0 20px;} */
+#pc-header .nav li ul {top:90px;padding:0;}
+#pc-header .nav li.active a,#pc-header .nav li a:hover,#pc-header .nav li:hover a.first-level{color:#ff9600;}
+#pc-header .nav li ul{background:#FFF;border-top-left-radius:0px;border-top-right-radius:0px;transition: 0.3s;}
+#pc-header .nav li ul li a {background:#FFF;line-height:42px;color:#3e3e3e;font-size:14px;font-weight:normal;display:block;width:100%;text-align:left;}
+#pc-header .nav li ul li a:hover{background:#ff9600;color:#fff;}
+
+/* pc搜索图标 */
+#pc-header .searchBar{position:absolute;top:37px;right:120px}
+#pc-header a.search-ico i{font-size:18px;color:#6E6E6E;}
+
+/* 购物车图标 */
+#pc-header .shopBar{position:absolute;top:37px;right:80px}
+#pc-header a.shop-ico i{font-size:18px;color:#6E6E6E;}
+
+/* 登入后状态 */
+.log-in{position:absolute;top:29px;right:5px}
+.log-in .drop-menu {margin:12px 0 0;min-width:100px;border-radius:5px;-webkit-box-shadow:0 6px 12px rgba(0,0,0,.075); box-shadow:0 6px 12px rgba(0,0,0,.075) }
+.log-in .drop-menu li{padding: 0 10px;height: 32px;text-align: center;}
+.log-in .drop-menu li a{position: relative;height: 32px;line-height: 32px;}
+.log-in .drop-menu li a:hover,.drop-menu a:focus {color:#2D2D2D;background: unset;}
+.log-in .button-group span {display:inline-block;line-height:24px;height:24px;width:24px}
+.log-in .button-group ul:before {position:absolute;top:-8px;left:50px;display:inline-block;border-right:8px solid transparent;border-bottom:8px solid #fff;border-left:8px solid transparent;content:'';}
+.log-in .button-group ul:after {position:absolute;top:-8px;left:50px;display:inline-block;border-right:8px solid transparent;border-bottom:8px solid #e9e8e8;border-left:8px solid transparent;content:'';}
+.log-in .button-group .button {padding:0;line-height:18px;font-size:20px}
+.log-in .button-group .drop-menu {padding: 10px 0; left: -40px;border-top:0px solid #ff0000;-webkit-box-shadow: 0px 0px 0px rgba(0,0,0,.075);box-shadow: 0px 8px 10px rgba(0,0,0,.05);border-radius:4px;}
+.log-in a.user-ico{width:32px;height:32px;line-height:32px;background:#ECEFF5;display:block;}
+.log-in a.user-head{width:32px;height:32px;overflow:hidden;display:block;}
+.log-in a.user-head img{width:32px;height:32px;}
+/* 登入后状态 end*/
+
+/* 注册登录切换 */
+.register .tab{font-size:0}
+.register .tab li{cursor:pointer;display:inline-block;position:relative;font-size:20px;width:60px;color:#666;margin:0 0 40px 0}
+.register .tab li::before{background:#ccc;content:'';position:absolute;bottom:-10px;left:0;width:100%;height:3px;border-radius:3px;transition:transform .3s;}
+.register .tab li.cur{color:#ff9600}
+.register .tab li.cur::before{background:#ff9600;content:'';position:absolute;bottom:-10px;left:0;width:100%;height:3px;border-radius:3px;transition:transform .3s;}
+
+.register .line{margin:0px;padding:0;position: relative; text-align: center;}
+.register .line span{display: inline-block; padding: 0 20px; position: relative; z-index: 200;}
+.register .line hr{-moz-border-bottom-colors: none; -moz-border-left-colors: none; -moz-border-right-colors: none; -moz-border-top-colors: none; border-color: #E2E2E2 -moz-use-text-color -moz-use-text-color; border-image: none; border-style: solid none none; margin-top:10px; position: absolute; top:0; width: 100%;}
+
+.register .bnt-login{margin:0 auto;text-align:center}
+.register .bnt-login a{display:inline-block;color:#fff;font-size:22px;width:48px;height:48px;text-align:center;line-height:48px;margin-right:10px;border-radius:30px}
+.register .bnt-login a:hover{opacity:0.8}
+.register .bnt-login a.weixin{background:#38B624}
+.register .bnt-login a.qq{background:#1F92DF}
+.register .bnt-login a.weibo{background:#FF6000}
+/* 注册登录切换 end*/
+
+/* 弹出搜索 begin */
+.searchBar-m {display:none;width:100%;height:100%;position:fixed;top:0px;z-index:9999;text-align:center}
+.searchBar-m .mask {position:absolute;left:0;right:0;width:100%;height:100%;background:#000;opacity:0.8;}
+.searchBar-m a {display:block;position:absolute;right:5%;top:5%;width:60px;height:60px;line-height:56px;font-size:48px;z-index:9999;color:#fff;}
+.searchBar-m a:hover{color:#ff9600}
+.searchBar-m .form-group {width:70%;max-width:720px;position:absolute;left:50%;top:40%;transform:translate(-50%,-200%);}
+.searchBar-m .input{width:88%;background:transparent;border:0;border-bottom:2px solid #f2f2f2;color:#6E6E6E;height:60px;line-height:60px;float:left;padding:0}
+.searchBar-m .button {width:8%;height:60px;line-height:60px;border-bottom:2px solid #f2f2f2;display:block;float:left;background:url(../images/ico-search-button.png) no-repeat center 50%;text-indent:-2000px}
+.searchBar-m .button:hover{background:url(../images/ico-search-button.png) no-repeat center 50%;}
+/* 弹出搜索 end */

@@ -1,0 +1,272 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>账户充值-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm" /}
+    
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="users/skin/js/global.js"/}
+</head>
+
+<body>
+    <!-- 头部信息 -->
+    <div class="ey-header-status">
+        <div class="header-status-l">
+            <a href="javascript:history.go(-1)"><i class="el-icon-arrow-left"></i></a>
+        </div> 
+        <div class="header-status-m">账户充值</div> 
+        <div class="header-status-r">
+            <a href="{eyou:url link='user/Users/index' /}"><i class="el-icon-user"></i></a>
+        </div>
+    </div>
+    <!-- 头部信息结束 -->
+    <div class="h50"></div>
+    <div class="ey-container">
+        <div class="ey-con">
+            <div class="ey-row">
+                <!-- 中部 -->
+                <form id="postForm" action="{eyou:url link='user/Pay/pay_account_recharge' /}" method="post">
+                    <div class="item-from-row">
+                        <div class="from-row-l">账户余额 ：</div>
+                        <div class="from-row-r">￥<span class="red f16">{$users.users_money}</span>元</div> 
+                    </div>
+                    <div class="item-from-row">
+                        <div class="from-row-l">充值金额 ：</div>
+                        <div class="from-row-r">￥ <input type="text" class="el-input__inner w100" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'')" onafterpaste="this.value=this.value.replace(/[^0-9\.]/g,'')" name="money" value="{$money}"> 元</div> 
+                    </div>
+                    <div class="item-from-row" id="div_zhifufangshi" style="display: none;">
+                        <div class="from-row-l">支付方式 ：</div>
+                        <div class="from-row-r">
+                            <!-- 支付API列表，套板请务必将整块代码一起复制，包含隐藏域 -->
+                            <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
+                            {eyou:sppayapilist id='vo'}
+                                {eyou:notempty name="$vo.pay_id"}
+                                    {neq name="$vo.pay_mark" value="Hupijiaopay"}
+                                        <label class="radio-label pl0 e-label {eq name='$key' value='0'} active {/eq}" data-type="zxzf_{$vo.pay_mark}">
+                                            {eyou:php}$pay_mark_vars = "users/skin/images/".$vo['pay_mark'].".png";{/eyou:php}
+                                            <span><img class="pay_img" src="{eyou:empty name='$vo.pay_img'}{eyou:static file='$pay_mark_vars' /}{eyou:else/}{$vo.pay_img}{/eyou:empty}" alt="{$vo.pay_name}">{$vo.pay_name} </span>
+                                            <input class="radio" type="radio" name='pay_id' value="{$vo.pay_id}" {eq name='$key' value='0'} checked="checked" {/eq}>
+                                            <span class="check-mark ri0"></span>
+                                            <input type="hidden" name='pay_mark[{$vo.pay_id}]' value="{$vo.pay_mark}">
+                                        </label>
+                                    {/neq}
+                                {/eyou:notempty}
+                                {$vo.hidden}
+                            {/eyou:sppayapilist}
+                            <input type="hidden" id="PayID">
+                            <input type="hidden" id="PayMark">
+                            <!-- END -->
+
+                            <script type="text/javascript">
+                                $(function(){
+                                    if ($('#div_zhifufangshi').find('.radio-label').length > 0) {
+                                        $('#div_zhifufangshi').show();
+                                    }
+                                });
+                            </script>
+                        </div>
+                    </div>
+                    <div class="item-from-row">
+                        <div class="from-row-l">&nbsp;</div>
+                        <div class="from-row-r">
+                            <input type="hidden" name="payment_type" value="zxzf_wechat">
+                            <input type="hidden" name="unified_number" value="{$unified_number}">
+                            <a href="JavaScript:void(0);" id="pay_btn" onclick="pay_money();" class="el-button el-button--primary el-button--medium">
+                                立即支付
+                            </a>
+                        </div> 
+                    </div>
+                </form>
+                <!-- 中部结束 -->
+            </div>
+        </div>
+        <input type="hidden" id="unified_id">
+        <input type="hidden" id="unified_number">
+        <input type="hidden" id="transaction_type">
+    </div>
+
+<script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
+<script type="text/javascript">
+    $(document).keydown(function(event){
+        if(event.keyCode ==13){
+            pay_money();
+            return false;
+        }
+    });
+    
+    $(function(){
+        $('input[name=money]').focus();
+        // 默认支付方式
+        var default_payment_type = $('#div_zhifufangshi .radio-label').attr('data-type');
+        $('input[name=payment_type]').val(default_payment_type);
+        // 支付类型选择
+        $('#div_zhifufangshi .radio-label').click(function(){
+            $('input[name=payment_type]').val($(this).data('type'));
+        });
+
+        wx.miniProgram.getEnv( function(res) {
+            if(res.miniprogram) {
+                // 小程序
+                var i = 0;
+                i = setInterval('AppletsPay()', 1000);
+            }
+        });
+    });
+
+    // 小程序后查询
+    function AppletsPay(){
+        var unified_id       = $('#unified_id').val();
+        var unified_number   = $('#unified_number').val();
+        var transaction_type = $('#transaction_type').val();
+        if (unified_id && unified_number && transaction_type) {
+            $.ajax({
+                url: "{eyou:url link='user/Pay/ajax_applets_pay'/}",
+                data: {unified_id:unified_id, unified_number:unified_number, transaction_type:transaction_type},
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    if (1 == res.code) {
+                        window.location.href = res.url;
+                    }
+                }
+            });    
+        }
+    }
+
+    function pay_money(){
+        var money = $('input[name=money]');
+        if($.trim(money.val()) == ''){
+            layer.msg('充值金额不能为空！', {icon: 5, time: 1000});
+            money.focus();
+            return false;
+        } else if(isNaN($.trim(money.val()))){
+            layer.msg('请输入正确的充值金额！', {icon: 5, time: 1000});
+            money.focus();
+            return false;
+        }
+
+        if($('input[name=payment_type]').val() == ''){
+            layer.msg('请选择支付方式！', {icon: 5, time: 1000});
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            url: "{:url('user/Pay/pay_account_recharge', ['version'=>'v2', '_ajax'=>1])}",
+            data: $('#postForm').serialize(),
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                layer.closeAll();
+                if (res.code == 1) {
+                    if (0 == res.data.is_gourl) {
+                        $('#unified_id').val(res.data.unified_id);
+                        $('#unified_number').val(res.data.unified_number);
+                        $('#transaction_type').val(res.data.transaction_type);
+                        WeChatInternal(res.data);
+                    }else{
+                        SelectPayMethod_2(res.data.pay_id, res.data.pay_mark, res.data.unified_id, res.data.unified_number, res.data.transaction_type);
+                    }
+                }else{
+                    layer.closeAll();
+                    showErrorAlert(res.msg);
+                }
+            },
+            error : function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    // 微信内部中进行支付
+    function WeChatInternal(wechatdata)
+    {   
+        wx.miniProgram.getEnv( function(res) {
+            if(res.miniprogram) {
+                // 小程序
+                wx.miniProgram.navigateTo({
+                    url: '/pages/pay/pay?unified_id='+ wechatdata['unified_id'] +'&unified_number=' + wechatdata['unified_number'] + '&type=' + wechatdata['transaction_type']
+                });
+            } else {
+                // 微信端
+                $.ajax({
+                    url: "{eyou:url link='user/Pay/wechat_pay'/}",
+                    data: wechatdata,
+                    type:'post',
+                    dataType:'json',
+                    success:function(res){
+                        if (1 == res.code) {
+                            callpay(res.msg);
+                        }else{
+                            showErrorAlert(res.msg, 0);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    //调用微信JS api 支付
+    function jsApiCall(data)
+    {
+        WeixinJSBridge.invoke(
+            'getBrandWCPayRequest',data,
+            function(res){
+                if(res.err_msg == "get_brand_wcpay_request:ok"){  
+                    layer.msg('微信支付完成！', {time: 1000}, function(){
+                        pay_deal_with();
+                    });
+                }else if(res.err_msg == "get_brand_wcpay_request:cancel"){
+                    layer.msg('用户取消支付！', {time: 1000}, function(){
+                        window.location.reload();
+                    });
+                }else{
+                    showErrorAlert('支付失败！', 0);
+                }  
+            }
+        );
+    }
+    
+    // 微信内部支付时，先进行数据判断
+    function callpay(data)
+    {
+        if (typeof WeixinJSBridge == "undefined"){
+            if( document.addEventListener ){
+                document.addEventListener('WeixinJSBridgeReady', jsApiCall, false);
+            }else if (document.attachEvent){
+                document.attachEvent('WeixinJSBridgeReady', jsApiCall); 
+                document.attachEvent('onWeixinJSBridgeReady', jsApiCall);
+            }
+        }else{
+            jsApiCall(data);
+        }
+    }
+
+    function pay_deal_with(){
+        var unified_number   = $('#unified_number').val();
+        var transaction_type = $('#transaction_type').val();
+        $.ajax({
+            url: "{eyou:url link='user/Pay/pay_deal_with'/}",
+            data: {unified_number:unified_number,transaction_type:transaction_type},
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                if (1 == res.data.status) {
+                    window.location.href = res.url;
+                }
+            }
+        });
+    }
+</script>

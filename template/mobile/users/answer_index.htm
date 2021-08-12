@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>我的回答-{eyou:global name='web_name' /}</title>
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+	<link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+	{eyou:static file="users/skin/css/bootstrap.min.css"/}
+	{eyou:static file="users/skin/css/basic.css"/}
+	{eyou:static file="users/skin/css/eyoucms.css"/}
+	{eyou:static file="users/skin/css/shop.css"/}
+	{eyou:static  file="users/skin/css/tb_style.css"/}
+	<!-- 新样式 2020-11-25 -->
+	{eyou:static file="users/skin/css/element/index.css" /}
+	{eyou:static file="users/skin/css/e-user.css" /}
+	{eyou:include file="users/skin/css/diy_css.htm"/}
+
+	{eyou:static file="/public/static/common/js/jquery.min.js"/}
+	{eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+	{eyou:static file="/public/static/common/js/tag_global.js"/}
+</head>
+
+<body class="centre shop">
+<!-- 头部 -->
+{eyou:include file="users/users_header.htm" /}
+
+<!-- 头部信息 -->
+<div class="ey-header-status">
+	<div class="header-status-l">
+		<a href="javascript:history.go(-1)"><i class="el-icon-arrow-left"></i></a>
+	</div>
+	<div class="header-status-m">我的回答</div>
+	<div class="header-status-r">
+		<a href="{eyou:url link='user/Users/index' /}"><i class="el-icon-user"></i></a>
+	</div>
+</div>
+<!-- 头部信息结束 -->
+<div class="h50"></div>
+
+<div class="ey-container">
+	<div class="ey-con mb10 mt10">
+		<div class="ey-row">
+            <div class="el-col-24 oper-row mb15" >
+               <!-- 导航栏 -->
+               <div class="el-button-group z_roll">
+            	   <a class="el-button el-button--default el-button--small {if $Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Ask' && $Think.const.ACTION_NAME == 'ask_index'}active{/if}" data-toggle="tab" href="{eyou:url link='user/Ask/ask_index' vars='select_status=dzf'/}/}">
+            		我的提问
+            	   </a>
+            	  <a class="el-button el-button--default el-button--small {if $Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Ask' && $Think.const.ACTION_NAME == 'answer_index'}active{/if}" data-toggle="tab" href="{eyou:url link='user/Ask/answer_index' /}">
+            		我的回答
+            	  </a>
+               </div>
+               <!-- 导航栏结束 -->
+            </div>
+        </div>
+    </div>
+    <div class="ey-con">
+        <div class="ey-row">
+			<!-- 中部 -->
+			<div style="overflow-x: scroll;padding: 4px 0;" id="finance-list_wrapper" class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition">
+				<table style="width: 100%;">
+					<tbody>
+					{empty name="$list"}
+					<tr>
+						<td valign="top" colspan="50">
+							<div class="cell pt50 pb50 tc">
+								<span class="mb10"><img id='litpic_img'  src="__PUBLIC__/static/common/images/null-data.png"/></span>
+							</div>
+						</td>
+					</tr>
+					{else/}
+					{eyou:volist name="$list" id="vo"}
+					<tr>
+						<td>
+							<a  href="{$vo.AskUrl}">
+								<div class="list_z">
+									{$vo.content}
+								</div>
+								<div class="list_z">
+									所属问题: {$vo.ask_title}
+								</div>
+								<div class="list_z">
+									<span class="e_ty">{eyou:eq name="$vo.is_review" value="1"}
+									已审核
+									{eyou:else/}
+									未审核
+									{/eyou:eq}</span>
+								</div>
+
+							</a>
+						</td>
+					</tr>
+					{/eyou:volist}
+					{/empty}
+					</tbody>
+				</table>
+			</div>
+			<div style="text-align: center;">{$page}</div>
+			<!-- END -->
+		</div>
+	</div>
+</div>
+<!-- END -->

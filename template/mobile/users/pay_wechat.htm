@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>微信支付-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm" /}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="users/skin/js/global.js" /}
+</head>
+<body>
+    <div class="container" style="text-align: center;">
+        <img alt="二维码" src="{eyou:url link='user/Pay/pay_wechat_png' vars='unified_number=$unified_number&transaction_type=$transaction_type' /}" style="width:250px;height:250px;"/>
+        <br/>
+        支付提示:<span id="query_result" style="color: red">请扫码二维码进行支付...</span>
+    </div>
+    <input id="unified_number" type="hidden" value="{$unified_number}">
+    <input id="transaction_type" type="hidden" value="{$transaction_type}">
+    <input id="WeChatUrl" type="hidden" value="{$WeChatUrl}">
+
+    <script type="text/javascript">
+        var t1;
+        var sum = 0;
+        $(document).ready(function () {
+            var WeChatUrl = $('#WeChatUrl').val();
+            if (WeChatUrl) {
+                t1 = setInterval("ajaxstatus()", 1500);
+            }else{
+                t1 = setInterval("ajaxstatus()", 3000);
+            }
+        });
+        function ajaxstatus() {
+            sum++;
+            if(sum > 600){ 
+            	window.clearInterval(t1);
+            	return false;
+            }
+            if(sum > 180){
+                m = sum % 10;
+                if(m != 0){
+                	return false;
+                }
+            }
+            var unified_number = $("#unified_number").val();
+            var transaction_type = $('#transaction_type').val();
+            var WeChatUrl = $('#WeChatUrl').val();
+            if (!WeChatUrl) {
+                WeChatUrl = "{eyou:url link='user/Pay/pay_deal_with' vars='_ajax=1'/}";
+            }
+            if (unified_number != 0) {
+            	$.ajax({
+    				url: WeChatUrl,
+    				data: {unified_number:unified_number,transaction_type:transaction_type},
+    				type:'post',
+    				dataType:'json',
+    				success:function(res){
+    					if (0 == res.data.status) {
+    	                    $("#query_result").html(res.msg);
+    	                } else if (1 == res.data.status) {
+    	                    $("#query_result").html(res.msg);
+                            layer.msg(res.msg, {time: 1000}, function(){
+                                top.location.href = res.url;
+                            });
+    	                } else if (2 == res.data.status) {
+    	                    $("#query_result").html(res.msg);
+    	                }
+    				}
+    			});
+            }
+        }
+    </script>
+</body>
+</html>

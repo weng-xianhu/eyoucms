@@ -1,0 +1,217 @@
+$(".slides-arrow").owlCarousel({
+	loop:true,
+	autoplay:true,
+	autoplayTimeout:6000,
+	autoplayHoverPause:true,
+	nav:true,
+	margin:0,
+	dots:true,
+	mouseDrag:true,
+	slideSpeed:800,
+	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	items : 1,
+});
+$(".history").owlCarousel({
+	loop:false,
+	autoplay:true,
+	autoplayTimeout:4000,
+	autoplayHoverPause:true,
+	nav:true,
+	margin:30,
+	dots:false,
+	mouseDrag:true,
+	slideSpeed:500,
+	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	items : 1,
+	responsive:{
+		0:{
+			items:1,
+			margin:10
+		},
+		480:{
+			items:1,
+			margin:10
+		},
+		768:{
+			items:2,
+			margin:20
+		},
+		1000:{
+			items:4,
+			margin:40
+		},
+	}
+});
+
+$(".honour").owlCarousel({
+	loop:false,
+	autoplay:true,
+	autoplayTimeout:4000,
+	autoplayHoverPause:true,
+	nav:true,
+	margin:30,
+	dots:true,
+	mouseDrag:true,
+	slideSpeed:500,
+	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	items : 1,
+	responsive:{
+		0:{
+			items:2,
+			margin:10
+		},
+		480:{
+			items:2,
+			margin:10
+		},
+		768:{
+			items:3,
+			margin:20
+		},
+		1000:{
+			items:4,
+			margin:30
+		}		
+	}
+});
+$(".owl-album").owlCarousel({
+	loop:false,
+	autoplay:true,
+	autoplayTimeout:3000,
+	autoplayHoverPause:true,
+	nav:true,
+	margin:0,
+	dots:true,
+	mouseDrag:true,
+	slideSpeed:500,
+	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	items : 1,
+	responsive:{
+		0:{
+			items:1
+		},
+		480:{
+			items:1
+		},
+		768:{
+			items:1,
+			mouseDrag:true,
+		}
+	}
+});
+$(".carousel-news").owlCarousel({
+	loop:false,
+	autoplay:true,
+	autoplayTimeout:3000,
+	autoplayHoverPause:true,
+	nav:true,
+	margin:30,
+	dots:true,
+	mouseDrag:true,
+	slideSpeed:800,
+	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	items : 2,
+	responsive:{
+		0:{
+			items:1,
+			margin:10
+		},
+		480:{
+			items:2,
+			margin:10
+		},
+		768:{
+			items:3,
+			margin:20
+		},
+		1000:{
+			items:3,
+			margin:30
+		}
+	}
+});
+$(".carousel-pro").owlCarousel({
+	loop:false,
+	autoplay:true,
+	autoplayTimeout:5000,
+	autoplayHoverPause:true,
+	nav:false,
+	margin:20,
+	dots:true,
+	mouseDrag:true,
+	slideSpeed:800,
+	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	items : 2,
+	responsive:{
+		0:{
+			items:2,
+			margin:10
+		},
+		480:{
+			items:2,
+			margin:10
+		},
+		768:{
+			items:3,
+			margin:20,
+		},
+	}
+});
+$(".product-list").owlCarousel({
+	loop:false,
+	autoplay:true,
+	autoplayTimeout:4000,
+	autoplayHoverPause:true,
+	nav:true,
+	margin:30,
+	dots:true,
+	mouseDrag:true,
+	slideSpeed:800,
+	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	items : 2,
+	responsive:{
+		0:{
+			items:2,
+			margin:10
+		},
+		480:{
+			items:2,
+			margin:10
+		},
+		768:{
+			items:3,
+			margin:10
+		},
+		1000:{
+			items:3,
+			margin:20
+		}	
+	}
+});
+$(".pro-thumb").owlCarousel({
+	loop:false,
+	autoplay:true,
+	autoplayTimeout:3000,
+	autoplayHoverPause:true,
+	nav:true,
+	margin:10,
+	dots:false,
+	mouseDrag:true,
+	slideSpeed:800,
+	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	items : 2,
+	responsive:{
+		0:{
+			items:3,
+		},
+		480:{
+			items:2
+		},
+		768:{
+			items:3,
+		},
+		1000:{
+			items:4,
+		}	
+	}
+});

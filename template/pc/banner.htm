@@ -1,0 +1,10 @@
+<!-- 频道banner,可在栏目图片里编辑 -->
+<div class="channel-banner" {eyou:notempty name='$eyou.field.typelitpic'} style="background-image: url({$eyou.field.typelitpic})" {eyou:else /} style="background-image: url({$eyou.field.typeid|gettoptype=###,'litpic'})" {/eyou:notempty}> 
+	<div class="banner-info">
+		<div class="container text-center">
+			<h3 class="text-white">{$eyou.field.typename}</h3>
+			<p class="Conv_DINCondensedC text-white">{$eyou.field.englist_name}</p>
+		</div>
+	</div>
+</div>
+<!-- 频道banner end -->	

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>{$eyou.field.seo_title}</title>
+        <meta name="description" content="{$eyou.field.seo_description}" />
+        <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+        <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="skin/style/pintuer.css" /}
+        {eyou:static file="skin/style/header.css" /}
+        {eyou:static file="skin/style/style.css" /}
+        {eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+        <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+    </head>
+    <body>
+        <div id="mobile-mask">
+            <!--网站公用头部——开始-->
+            {eyou:include file="header.htm" /}
+            {eyou:include file="banner.htm" /}
+            <!-- 横向栏目样式 begin -->
+            <div class="nav-x">
+                <div class="container-layout">
+                    <div class="menu-toggle">
+                        <button class="button icon-navicon" data-target="#subnav">
+                            <span>
+                                <i class="fa fa-reorder margin-small-right"></i>
+                                {eyou:type typeid='$eyou.field.parent_id' }{$field.typename}{/eyou:type} 
+                                <!-- 上一级栏目名称 -->
+                            </span>
+                        </button>
+                        <h3>{$eyou.field.typename}</h3>
+                        <!-- 当前栏目名称 -->
+                        <ul class="nav-navicon text-center" id="subnav">
+                            {eyou:channel type="first" id="field2" currentstyle="active"}
+                            <li>
+                                <a href="{$field2.typeurl}" class="{$field2.currentstyle}">{$field2.typename}</a>
+                            </li>
+                            {/eyou:channel}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- 横向栏目样式 end -->
+            <div class="layout bg-gray">
+                <!--当前位置调用-->
+                <div class="container-layout hidden-l">
+                    <div class="line">
+                        <div class="nav-bread">
+                            <i class="fa fa-home margin-small-right" aria-hidden="true"></i>{eyou:position/}
+                        </div>
+                    </div>
+                </div>
+                <!--当前位置调用 end-->
+                <div class="blank"></div>
+                <div class="container-layout">
+                    <div id='block001'>
+                        {eyou:arclist row='10' tagid='block001' infolen='50'}
+                        <div class="line bg-white list-news">
+                            <div class="xl5 xs5">
+                                <div class="media-img">
+                                    <a href="{$field.arcurl}" title="{$field.title}"><img src="{$field.litpic}" class="img-responsive"
+                                            alt="{$field.title}"></a>
+                                </div>
+                            </div>
+                            <div class="xl7 xs7">
+                                <div class="news margin-top">
+                                    <h3><a href="{$field.arcurl}">{$field.title}</a></h3>
+                                    <p class="text-gray">{$field.add_time|MyDate='Y-m-d',###}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {/eyou:arclist}
+                    </div>
+
+                    <!-- 瀑布流分页 -->
+                    <div class="blank"></div>
+                    <div class="line">
+                        <div class="xl12 xs12 xb12 xm12">
+                            <div class="text-center">
+                                {eyou:arcpagelist tagid='block001' pagesize='3' tips='没有了呢！'}
+                                <a href="javascript:void(0);" class="button bg-yellow radius-none text-center letter-spacing"
+                                    {$field.onclick}>点击浏览更多<i class="fa fa-long-arrow-right text-big margin-big-left"></i></a>
+                                {/eyou:arcpagelist}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="blank-small"></div>
+                    <!-- 瀑布流分页 -->
+                </div>
+            </div>
+            {eyou:include file="footer.htm" /}
+        </div><!-- id="mobile-mask" -->
+        {eyou:static file="skin/js/jquery.min.js" /}
+        {eyou:static file="skin/js/pintuer.js" /}
+        {eyou:static file="skin/js/common.js" /}
+        {eyou:static file="skin/js/mobile.js" /}
+    </body>
+</html>

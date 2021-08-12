@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>{$eyou.field.seo_title}</title>
+<meta name="description" content="{$eyou.field.seo_description}" />
+<meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+{eyou:static file="skin/style/pintuer.css" /}
+{eyou:static file="skin/style/header.css" /}
+{eyou:static file="skin/style/style.css" /}
+{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+<!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+</head>
+<body>
+<!--网站公用头部——开始-->
+{eyou:include file="header.htm" /}
+{eyou:include file="banner.htm" /}
+<!-- 横向栏目样式 begin -->
+<div class="nav-x">
+	<div class="container">
+		<ul class="nav-navicon text-center" id="subnav">
+			{eyou:channel type="first" id="field2" currentstyle="active"}
+			<li class="col-2">
+				<a href="{$field2.typeurl}" class="{$field2.currentstyle}">{$field2.typename}</a>
+			</li>
+			{/eyou:channel}
+		</ul>
+	</div>
+</div>
+<!-- 横向栏目样式 end -->
+
+<div class="layout bg-gray">
+	<div class="blank-middle"></div>
+	<div class="container">
+		<div class="line nav-bread">
+			<div class="x6">
+				<h2 class="text-main">{$eyou.field.typename}</h2>
+			</div>
+			<div class="x6 text-right">
+				{eyou:position/}
+			</div>
+		</div>
+	</div>		
+	<div class="container">
+		<div class="blank"></div>
+		<div class="line-large">
+			<div class="video-list">
+				{eyou:list pagesize='9' mod='3'}
+				<div class="x4">
+					<div class="media bg-white radius">
+						<div class="media-img">
+							<a class="play border-none text-center radius-circle text-white text-middle" href="{$field.arcurl}"><i class="fa fa-play"></i></a>
+							<div class="playtime radius-rounded text-center text-white text-small">{$field.total_duration}</div>						
+							<a href="{$field.arcurl}" title="{$field.title}"><img src="{$field.litpic}" class="img-responsive"></a>
+						</div>
+						<div class="media-body text-left">
+							<div class="padding-big">
+								<h2><a href="{$field.arcurl}" class="text-main text-middle">{$field.title}</a></h2>
+								<div class="price-info height">
+									<ul>
+										<li class="v2-1 text-yellow float-left">
+											{eyou:gt name="$field.users_price" value="0"}
+												<span class="Conv_DINCondensedC text-big">￥{$field.users_price}</span>
+											{eyou:else/}
+												{eyou:eq name="$field.arc_level_id" value="0"}
+													免费
+												{eyou:else/}
+													VIP
+												{/eyou:eq}
+											{/eyou:gt}
+											<!-- {$field.users_free} -->
+										</li>
+										<li class="v2-2 text-gray text-right float-right">
+											<!-- <i class="fa fa-cloud-download margin-small-right"></i>{$field.downcount} -->
+											<i class="fa fa-eye margin-small-right margin-left"></i>{$field.click}
+										</li>
+										<div class="clearfix"></div>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+                {eyou:eq name='$mod' value='0'}<div style="clear:both"></div>{/eyou:eq}
+				{/eyou:list}
+			</div>
+
+			<!-- 分页 -->
+			<div class="blank-middle"></div>
+			<div class="text-center">
+				<ul class="pagination">
+				   {eyou:pagelist listitem='pre,pageno,next' listsize='9' /}
+				</ul>
+			</div>
+			<!-- 分页 -->
+		</div>
+	</div>
+	<div class="blank-big"></div>
+</div>
+<!--网站公用底部——开始-->
+{eyou:include file="footer.htm" /}
+<!--网站公用底部——结束-->
+{eyou:static file="skin/js/pintuer.js" /}
+{eyou:static file="skin/js/common.js" /}
+<!-- 菜单 -->
+<script type="text/javascript">
+$(document).ready(function(){
+	$('.nav-tree li').hover(function(){
+	$(this).children('ul').show();
+	$(this).focus().addClass('focusa')	
+	},function(){
+	$(this).children('ul').hide();
+	$(this).focus().removeClass('focusa')	
+		});	
+	});
+</script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{$eyou.field.seo_title}</title>
+        <meta name="description" content="{$eyou.field.seo_description}" />
+        <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+        <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="skin/style/pintuer.css" /}
+        {eyou:static file="skin/style/header.css" /}
+        {eyou:static file="skin/style/style.css" /}
+        {eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+        <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+    </head>
+    <body>
+        <div id="mobile-mask">
+            <!--网站公用头部——开始-->
+            {eyou:include file="header.htm" /}
+            <div class="layout bg-gray">
+                <div class="container-layout">
+                    <div class="line">
+                        <div class="xl12 xs12 xm12 xb12">
+                            <div class="nav-bread">
+                                <i class="fa fa-home margin-small-right" aria-hidden="true"></i>{eyou:position/}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="container-layout">
+                    <div class="line">
+                        <div class="xl12 xs12">
+                            <!--内容 begin-->
+                            <div class="article">
+                                <div class="padding-large bg-white">
+                                    <div class="post">
+                                        <h1>{$eyou.field.title}</h1>
+                                        <div class="blank"></div>
+                                    </div>
+                                    <div class="line">
+                                        <div class="xl12 xs12">
+                                            <div class="text-gray text-default height-big">
+                                                <span class="margin-right">作者：{$eyou.field.author}</span>
+                                                <span class="margin-right">发布时间：{$eyou.field.add_time|MyDate='Y-m-d',###}</span>
+                                                <span class="margin-right">点击数：{eyou:arcclick /}</span>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <hr class="bg-gray">
+                                    <div class="blank"></div>
+                                    <div class="content">
+                                        {$eyou.field.content}
+                                    </div>
+                                    <div class="blank-small"></div>
+                                    <div class="text-center">
+                                        <!-- 收藏代码开始  -->
+                                        {eyou:collect cancel="<i class='fa fa-heart margin-small-right' style='color: #999;'></i>加入收藏" collect="<i class='fa fa-heart margin-small-right'></i>已收藏" }
+                                        <a class="button text-center bg-gray border-none radius-rounded text-center text-main" {$field.onclick}>{$field.cancel}</a>
+                                        {$field.hidden}
+                                        {/eyou:collect}
+                                        <!--  收藏代码结束 -->
+                                    </div>
+
+                                    <!--tag-->
+                                    <div class="blank-middle"></div>
+                                    {eyou:notempty name='$eyou.field.tags'}
+                                    <span>Tag：</span>
+                                    {eyou:tag getall='0'}
+                                    <a href="{$field.link}" class="tag tags bg-yellow radius-rounded text-white margin-small-bottom padding-small"
+                                        {$field.target}>{$field.tag}</a>
+                                    {/eyou:tag}
+                                    {/eyou:notempty}
+                                    <div class="blank-small"></div>
+                                    <!--tag end-->
+                                </div>
+                            </div>
+                            <div class="blank"></div>
+                        </div>
+                        <div class="xl12 xs12">
+                            <div class="bg-white padding-big">
+                                <div class="title-l">
+                                    <h2>随便看看</h2>
+                                </div>
+                                <ul class="list-post-text">
+                                    <!-- orderby='rand'随机 -->
+                                    {eyou:arclist row='10' orderby='rand'}
+                                    <li class="dot"><a href="{$field.arcurl}" title="{$field.title}" class="height">{$field.title}</a></li>
+                                    {/eyou:arclist}
+                                </ul>
+                            </div>
+                            <div class="blank"></div>
+                            <div class="bg-white padding-big">
+                                <div class="title-l">
+                                    <h2>产品推荐</h2>
+                                </div>
+                                <div class="list-post-x">
+                                    <!-- flag='h' -->
+                                    {eyou:arclist typeid='3' row='5'}
+                                    <div class="media media-x margin-bottom">
+                                        {eyou:eq name='$field.is_litpic' value='1'}
+                                        <div class="thumb-md float-left radius">
+                                            <a href="{$field.arcurl}" title="{$field.title}"><img src="{$field.litpic}" class="img-responsive" alt="{$field.title}"></a>
+                                        </div>
+                                        {/eyou:eq}
+                                        <div class="media-body">
+                                            <h3><a href="{$field.arcurl}" class="text-middle">{$field.title}</a></h3>
+                                        </div>
+                                    </div>
+                                    {/eyou:arclist}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--line end-->
+                </div>
+                <div class="blank"></div>
+                <div class="container-layout">
+                    <div class="line">
+                        <div class="xl12 xs12 xm12 xb12">
+                            <!-- 上下篇 begin -->
+                            <div class="prenext-pro">
+                                <div class="line">
+                                    <div class="xl5 xs5 xm5 xb5">
+                                        {eyou:prenext get='next' titlelen='30'}
+                                        <a href="{$field.arcurl}" class="button button-block bg-white border radius-none text-main text-middle text-center" title="上一篇:{$field.title}"><i class="margin-right fa fa-long-arrow-left"></i>上一篇</a>
+                                        {eyou:else /}
+                                        <a class="button button-block bg-white border radius-none text-gray text-middle text-center"><i class="margin-right fa fa-long-arrow-left"></i>没有了</a>
+                                        {/eyou:prenext}
+                                    </div>
+
+                                    <div class="xl2 xs2 xm2 xb2 text-center">
+                                        {eyou:type typeid="$eyou.field.parent_id"}
+                                        <a href="{$field.typeurl}" class="button radius-none border button-block bg-white text-main text-middle text-center"><i class="fa fa-align-justify margin-right"></i><span class="hidden-l">返回</span></a>
+                                        {/eyou:type}
+                                    </div>
+
+                                    <div class="xl5 xs5 xm5 xb5">
+                                        {eyou:prenext get='pre' titlelen='30'}
+                                        <a href="{$field.arcurl}" class="button border button-block bg-white radius-none text-main text-middle text-center float-right" title="下一篇:{$field.title}">下一篇<i class="margin-left fa fa-long-arrow-right"></i></a>
+                                        {eyou:else /}
+                                        <a class="button button-block bg-white border radius-none text-gray text-middle text-center">没有了<i class="margin-left fa fa-long-arrow-right"></i></a>
+                                        {/eyou:prenext}
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 上下篇 end -->
+                        </div>
+                    </div>
+                    <!--line end-->
+                </div>
+                <div class="blank-small"></div>
+            </div>
+            <!-- 页脚开始 -->
+            {eyou:include file="footer.htm" /}
+        </div><!-- id="mobile-mask" -->
+        {eyou:static file="skin/js/jquery.min.js" /}
+        {eyou:static file="skin/js/pintuer.js" /}
+        {eyou:static file="skin/js/common.js" /}
+        {eyou:static file="skin/js/mobile.js" /}
+    </body>
+</html>

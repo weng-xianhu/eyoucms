@@ -1,0 +1,263 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>申请售后-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/bootstrap.min.css"/}
+        {eyou:static file="users/skin/css/basic.css"/}
+        {eyou:static file="users/skin/css/eyoucms.css"/}
+        {eyou:static file="users/skin/css/shop.css"/}
+        {eyou:static  file="users/skin/css/tb_style.css"/}
+        <!-- 新样式 2020-12-8 -->
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/tag_global.js"/}
+    </head>
+
+    <body>
+        <!-- 头部信息 -->
+        <div class="ey-header-status">
+            <div class="header-status-l">
+                <a href="javascript:history.go(-1)"><i class="el-icon-arrow-left"></i></a>
+            </div> 
+            <div class="header-status-m">申请售后</div> 
+            <div class="header-status-r">
+                <a href="{eyou:url link='user/Users/index' /}"><i class="el-icon-user"></i></a>
+            </div>
+        </div>
+        <!-- 头部信息结束 -->
+
+        <div class="h50"></div>
+        <div class="ey-container">
+            <form id="post_form">
+                <input type="hidden" name="order_id" value="{$eyou.field.order_id}" />
+                <input type="hidden" name="details_id" value="{$eyou.field.details_id}" />
+                <input type="hidden" name="order_code" value="{$eyou.field.order_code}" />
+                <input type="hidden" name="product_id" value="{$eyou.field.product_id}" />
+                <input type="hidden" name="product_name" value="{$eyou.field.product_name}" />
+                <input type="hidden" name="product_num" value="{$eyou.field.num}" />
+                <input type="hidden" name="product_img" value="{$eyou.field.litpic}" />
+                <input type="hidden" name="product_spec" value="{$eyou.field.spec_value}" />
+                <input type="hidden" name="refund_price" value="{$eyou.field.product_price}" />
+
+                <div class="el-row p10 bgfff mt10">
+                    <div class="column-title">
+                        <div class="column-title-l">售后商品信息</div>
+                        <div class="column-title-r">订单号：{$eyou.field.order_code}</div> 
+                    </div>
+                    <div class="mt20 mb10 order-goods goods-con">
+                        <div class="goods-item">
+                            <div class="item-main">
+                                <div class="item-con">
+                                    <div class="item-con-l">
+                                        <a href="{$eyou.field.arcurl}"><img src="{$eyou.field.litpic}"></a>
+                                    </div>
+                                    <div class="item-con-m">
+                                        <a href="{$eyou.field.arcurl}"> {$eyou.field.product_name} </a>
+                                        <div class="info mt5"> {$eyou.field.spec_value} </div>
+                                    </div>
+                                    <div class="item-con-r">
+                                        <span class="price_flag">￥</span><span>{$eyou.field.product_price}</span>
+                                        <p class="number">x{$eyou.field.num}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="el-row p10 bgfff mt10">
+                    <div class="column-title"><div class="column-title-l">申请单填写</div> <div class="column-title-r"></div></div>
+                    <div class="mt20 mb10 order-goods goods-con">
+                        <div class="item-from-flex">
+                            <div class="item-tit ">服务类型：</div>
+                            <div class="item-con ">
+                                <label class="radio-label">
+                                    <input type="radio" class="radio" id="service_type" name="service_type" value="1" checked="checked"><span class="check-mark"></span><span class="text">我要换货</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" class="radio" id="service_type" name="service_type" value="2"><span class="check-mark"></span><span class="text">我要退货</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="item-from-flex">
+                            <div class="item-tit ">问题描述：</div>
+                            <div class="item-con ">
+                                <textarea rows="5" cols="35" name="content" class="fs16" style="height: 100px; width: 100%; font-size: 16px;"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="item-from-flex">
+                             <div class="item-tit">图片说明：</div> 
+                            <div class="item-con ">
+                                <div class="images_upload_main" id="tab_dl_upload_img">
+                                    <a href="javascript:void(0);" onclick="GetUploadify(6, '', 'allimg', 'UploadImgCallBack', '', '图片说明', 1);" class="el-button el-button--primary is-plain el-button--small">
+                                       <i class="el-icon-picture"></i>上传图片</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="item-from-flex" id="dl_upload_img" data-numlimit="6">
+                            <div class="item-flex wb25"></div>
+                            <div class="item-flex-r wb75 " style="margin-left: 1px;">
+                                <div class="images_upload_main" id="tab_dl_upload_img">
+                                    <div class="sort-list ui-sortable">
+                                        <div class="fieldext_upload ui-sortable-handle" style="display: none;"></div>
+                                    </div>
+                                </div>
+                                <!-- 上传图片显示的样板 start -->
+                                <div class="upload_img_upload_tpl" style="display: none;">
+                                    <div class="fieldext_upload">
+                                        <div class="images_upload_item">
+                                            <input type="hidden" name="upload_img[]">
+                                            <a href="javascript:void(0);">
+                                                <img src="/public/static/admin/images/add-button.jpg" width="70" height="70">
+                                            </a>
+                                            <a class="delete" href="javascript:void(0)">&nbsp;&nbsp;</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 上传图片显示的样板 end -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="el-row p10 bgfff mt10">
+                    <div class="column-title"> <div class="column-title-l">商家收货地址</div> </div>
+                    <div class="order-progress-con">
+                        <div class="span-row">
+                            <div class="span-row-l"> 联系人： </div>
+                            <div class="span-row-r"> {$eyou.maddr.addr_contact_person} </div>
+                        </div>
+                        <div class="span-row">
+                            <div class="span-row-l"> 联系号码： </div>
+                            <div class="span-row-r"> {$eyou.maddr.addr_contact_phone} </div>
+                        </div>
+                        <div class="span-row">
+                            <div class="span-row-l"> 商家地址： </div>
+                            <div class="span-row-r"> {$eyou.maddr.addr_shipping_addr} </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="el-row p10 bgfff mt10">
+                    <div class="column-title"> <div class="column-title-l">会员收货地址</div> </div>
+                    <div class="order-progress-con">
+                        <div class="span-row">
+                            <div class="span-row-l" style="line-height: 35px; height: 35px;"> 联系人： </div>
+                            <div class="span-row-r"> <input type="text" name="consignee" value="{$eyou.field.consignee}" id="consignee" class="el-input__inner w200"> </div>
+                        </div>
+                        <div class="span-row">
+                            <div class="span-row-l" style="line-height: 35px; height: 35px;"> 联系号码： </div>
+                            <div class="span-row-r"> <input type="text" name="mobile" value="{$eyou.field.mobile}" id="mobile" class="el-input__inner w200"> </div>
+                        </div>
+                        <div class="span-row">
+                            <input type="hidden" name="addrinfo" value="{$eyou.field.province} {$eyou.field.city} {$eyou.field.district}">
+                            <div class="span-row-l" style="line-height: 35px; height: 35px;"> 商家地址： </div>
+                            <div class="span-row-r" style="line-height: 35px;"> {$eyou.field.province} {$eyou.field.city} {$eyou.field.district} <input type="text" name="address" value="{$eyou.field.address}" id="address" class="el-input__inner w150"> </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ey-row">
+                    <input type="button" onclick="SubmitData(this);" data-url="{$eyou.url}" class="el-button el-button--primary wb100" value="立即发布"/>
+                </div>
+            </form>
+        </div>
+    </body>
+</html>
+
+<script type="text/javascript">
+    // 上传图片路径
+    var GetUploadify_url = "{:url('Uploadify/upload')}";
+    
+    // 上传多图回调函数
+    function UploadImgCallBack(paths) {
+        var last_div = $(".upload_img_upload_tpl").html();
+        var obj = $('#dl_upload_img');
+        for (var i = 0; i < paths.length; i++) {
+            // 若可上传数量为0则执行返回
+            var num = obj.attr('data-numlimit');
+            if (0 == num) return false;
+            num = Number(num) - 1;
+            obj.attr('data-numlimit', num);
+
+            obj.find(".fieldext_upload:eq(0)").before(last_div);
+            obj.find(".fieldext_upload:eq(0)").find('input').val(paths[i]);
+            obj.find(".fieldext_upload:eq(0)").find('a:eq(0)').attr('href', paths[i]).attr('target', "_blank");
+            obj.find(".fieldext_upload:eq(0)").find('img').attr('src', paths[i]);
+            obj.find(".fieldext_upload:eq(0)").find('a:eq(1)').attr('onclick', "UploadImgDel(this, '"+paths[i]+"')").text('删除');
+        }             
+    }
+
+    // 上传之后删除组图input
+    function UploadImgDel(obj,path) {
+        $(obj).parent().remove();
+        $.ajax({
+            type: 'POST',
+            url : GetUploadify_url,
+            data: {action:"del", filename:path, '_ajax':1},
+            success:function(){
+                var img_obj = $('#dl_upload_img');
+                var num = img_obj.attr('data-numlimit');
+                num = Number(num) + 1;
+                img_obj.attr('data-numlimit', num);
+            }
+        });  
+    }
+
+    // 提交申请
+    function SubmitData(obj) {
+        if ($("#service_type").val()=='') {
+            layer.msg('请选择服务类型！');
+            return false;
+        } else if ($.trim($("[name='content']").val())=='') {
+            $("[name='content']").focus();
+            layer.msg('请填写问题描述！');
+            return false;
+        } else if ($("#address").val()=='') {
+            $("[name='address']").focus();
+            layer.msg('请填写您的收货地址！');
+            return false;
+        } else if ($("#consignee").val()=='') {
+            $("[name='consignee']").focus();
+            layer.msg('请填写您的姓名！');
+            return false;
+        } else if ($("#mobile").val()=='') {
+            $("[name='mobile']").focus();
+            layer.msg('请填写您的手机号码！');
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            url: $(obj).data('url'),
+            data: $('#post_form').serialize(),
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                layer.closeAll();
+                if (1 == res.code) {
+                    layer.msg(res.msg, {time: 1500}, function() {
+                        window.location = res.url;
+                    });
+                } else {
+                    layer.msg(res.msg);
+                }
+            },
+            error : function() {
+                layer.closeAll();
+                layer.alert('未知错误！', {title:false, icon:5, closeBtn: 0});
+            }
+        });
+    }
+</script>

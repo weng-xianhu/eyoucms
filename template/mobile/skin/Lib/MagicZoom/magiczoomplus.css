@@ -1,0 +1,22 @@
+/* CSS class for zoomed area */
+.MagicZoomBigImageCont{overflow:hidden;background-color:#FFF;border-radius:0px}
+/* .MagicZoomBigImageCont img{width:800px;height:800px;} */
+.MagicZoomBigImageCont iframe{width:300px;height:300px;}
+.MagicZoomHeader{color:#fff;text-align:center !important}
+.MagicZoomPup{border:1px solid #000;background:#fff;cursor:hand;left:0}
+.MagicZoomLoading{text-align:center;background:#fff;color:#444;opacity:0.8;padding:3px 3px 3px 3px !important;display:none}
+.MagicZoomLoading img{padding-top:3px !important}
+.MagicThumb{cursor:url(cursor/zoomin.cur), pointer;outline:none}
+.MagicThumb-zoomed{cursor:default}
+.MagicThumb span{display:none}
+.MagicThumb-image{outline:none;background-color:#FFF;box-shadow:0 0px 30px rgba(0,0,0,.1);}/* 放大背景 */
+.MagicThumb-image-zoomed{cursor:url(cursor/zoomout.cur), pointer}
+.MagicThumb-caption{color:#333333;background-color:#F0F0F0;border:1px solid #DDD;border-top:none;font-family:Verdana, Helvetica;font-size:11px;padding:8px 16px}
+.MagicThumb-controlbar{display:block;height:18px}
+.MagicThumb-controlbar a{display:block;width:180px;height:180px;margin:0px 1px;outline:none;float:left;overflow:hidden}
+.MagicThumb-controlbar a span{display:block;width:1000px;height:1000px;background:transparent url(graphics/controlbar.png) no-repeat 0 0;outline:none;position:absolute;left:0px;top:0px}
+.MagicThumb-loading{border:1px solid #000;background:#fff url(graphics/loader.gif) no-repeat 2px 50%;padding:2px 2px 2px 22px;margin:0;text-decoration:none;text-align:left;font-size:8pt;font-family:sans-serif;}
+
+@media screen and (max-width:760px){
+	.MagicZoomBigImageCont{ display:none}
+}

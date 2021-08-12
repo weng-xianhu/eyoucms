@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>{$eyou.field.seo_title}</title>
+<meta name="description" content="{$eyou.field.seo_description}" />
+<meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+{eyou:static file="skin/style/pintuer.css" /}
+{eyou:static file="skin/style/header.css" /}
+{eyou:static file="skin/style/style.css" /}
+{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+<!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+</head>
+<body>
+<div id="mobile-mask">
+<!--网站公用头部——开始-->
+{eyou:include file="header.htm" /}
+{eyou:include file="banner.htm" /}
+<div class="layout bg-white">
+	<div class="container">
+		<div class="line nav-bread">
+			<div class="x6">
+				<h2 class="text-main">{$eyou.field.typename}</h2>
+			</div>
+			<div class="x6 text-right">
+				{eyou:position/}
+			</div>
+		</div>
+	</div>
+</div>
+<div class="layout bg-gray">
+	<div class="blank-big"></div>
+	<div class="container">
+		<div class="line-big">
+			{eyou:list titlelen='30' pagesize='10' addfields='gzdd,zprs,xzdy'}
+			<div class="x4">
+				<a href="{$field.arcurl}">
+				<dl class="job-list bg-white padding-large margin-big-bottom">
+					<dt>
+						<p class="text-gray">{$field.add_time|MyDate='Y-m-d',###}</p>
+						<h2 class="text-main margin-small-top">{$field.title}</h2>
+					</dt>
+					<hr class="bg-gray">
+					<dd class="text-gray margin-top height-big">
+						<p>工作地点：{$field.gzdd}</p>
+						<p>招聘人数：{$field.zprs}</p>
+						<p>薪资待遇：{$field.xzdy}</p>
+						<p class="text-right"><span class="button button-small bg-yellow">详细</span></p>
+					</dd>
+				</dl>
+				</a>
+			</div>
+			{/eyou:list}
+		</div>
+	</div>
+	<div class="blank-large"></div>
+</div>
+<!-- 页脚开始 -->
+{eyou:include file="footer.htm" /}
+</div><!-- id="mobile-mask" -->
+{eyou:static file="skin/js/pintuer.js" /}
+{eyou:static file="skin/js/common.js" /}
+</body>
+</html>

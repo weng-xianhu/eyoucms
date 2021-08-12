@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>售后服务-{eyou:global name='web_name' /}</title>
+		<meta name="renderer" content="webkit">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+		<link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+		{eyou:static file="users/skin/css/bootstrap.min.css"/}
+		{eyou:static file="users/skin/css/basic.css"/}
+		{eyou:static file="users/skin/css/eyoucms.css"/}
+		{eyou:static file="users/skin/css/shop.css"/}
+		<!-- 新样式 2020-11-25 -->
+		{eyou:static file="users/skin/css/element/index.css" /}
+		{eyou:static file="users/skin/css/e-user.css" /}
+		{eyou:include file="users/skin/css/diy_css.htm"/}
+
+		{eyou:static file="/public/static/common/js/jquery.min.js"/}
+		{eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+		{eyou:static file="/public/static/common/js/tag_global.js"/}
+	</head>
+
+	<body class="centre shop">
+	<!-- 头部 -->
+	{eyou:include file="users/users_header.htm" /}
+	<!-- 头部结束 -->
+
+	<div class="ey-body-bg">
+		<div class="ey-body">
+			<div class="ey-container w1200">
+				<!-- 侧边 -->
+				{eyou:include file="users/users_left.htm" /}
+				<!-- 侧边结束 -->
+				<!-- 中部 -->
+				<div class="ey-con fr">
+					<div class="el-main main-bg">
+						<div class="el-row shop-oper">
+						   	<div class="el-col-17 shop-oper-l">
+							   	<!-- 订单导航栏 -->
+							   	{eyou:spstatus id="field3"}
+							   	<div class="el-button-group">
+								   	<a class="el-button el-button--default {if empty($field3.select_status) && $field3.access_action == 'shop_centre'}active{/if}" data-toggle="tab" href="{eyou:url link='user/Shop/shop_centre'/}"> 全部订单{eyou:if condition="0 != $field3.All"} <em>({$field3.All})</em> {/eyou:if} </a>
+
+								  	<a class="el-button el-button--default {eq name='$field3.select_status' value='dzf'}active{/eq}" data-toggle="tab" href="{eyou:url link='user/Shop/shop_centre' vars='select_status=dzf'/}"> 待付款{eyou:if condition="0 != $field3.PendingPayment"} <em>({$field3.PendingPayment})</em> {/eyou:if} </a>
+
+								  	<a class="el-button el-button--default {eq name='$field3.select_status' value='2'}active{/eq}" data-toggle="tab" href="{eyou:url link='user/Shop/shop_centre' vars='select_status=2'/}"> 待收货{eyou:if condition="0 != $field3.PendingReceipt"} <em>({$field3.PendingReceipt})</em> {/eyou:if} </a>
+
+								   	<a class="el-button el-button--default {eq name='$field3.select_status' value='3'}active{/eq}" data-toggle="tab" href="{eyou:url link='user/Shop/shop_centre' vars='select_status=3'/}"> 已完成{eyou:if condition="0 != $field3.Completed"} <em>({$field3.Completed})</em> {/eyou:if}</a>
+
+								   	{gt name='$php_servicemeal' value='1'}
+								   		<a class="el-button el-button--default {if empty($field3.select_status) && $field3.access_action == 'after_service'} active {/if}" data-toggle="tab" href="{eyou:url link='user/Shop/after_service'/}"> 售后{eyou:if condition="0 != $field3.AfterService"} <em>({$field3.AfterService})</em> {/eyou:if}</a>
+								   	{/gt}
+							   	</div>
+							   	{/eyou:spstatus}
+							   	<!-- 订单导航栏结束 -->
+						   	</div>
+
+						   	<div class="el-col-7 shop-oper-r">
+							   <!-- 查询栏 -->
+							   {eyou:spsearch id="search"}
+							   <form action="{$search.action}" method="get" >
+								   {$search.hidden}
+								   <div class="input-with-select el-input el-input-group el-input-group--append">
+									   <input type="text" class="el-input__inner" name="order_code" value="{$Request.param.order_code}" placeholder="订单号查询...">
+									   <div class="el-input-group__append">
+										   <button type="submit" class="el-button el-button--default">
+										   	<i class="el-icon-search" aria-hidden="true"></i>
+										   </button>
+									   </div>
+									</div>
+								</form>
+								{/eyou:spsearch}
+							    <!-- 查询栏结束 -->	
+						   	</div>
+						</div>
+
+						{eyou:empty name="$eyou.field.service"}
+						<!-- 订单数据为空 -->
+						<div class="ey-con-inside">
+							<div class="el-row tc pt100 pb100 bgfff">
+								<p class="mb10"><img id='litpic_img' src="__PUBLIC__/static/common/images/null-data.png"/></p>
+							</div>
+						</div>
+						{eyou:else/}
+						<div class="goods-con mt30">
+							<!-- 售后服务订单列表 -->
+							{eyou:volist name="eyou.field.service" id="field"}
+								<div class="goods-item" >
+									<div class="goods-item-top">
+										<div class="goods-item-l">
+											<span class="date">{$field.add_time|date='Y-m-d H:i:s',###}</span>
+											<span class="orderid">订单号：<a href="{$field.OrDetailsUrl}" target="_blank">{$field.order_code}</a></span>
+											<span class="price tc">单价</span>
+											<span class="num tc">数量</span>
+										</div>
+										<div class="goods-item-r">
+											<span>售后类型</span>
+											<span class="view"><a>{$field.status}</a></span>
+										</div>
+									</div>
+
+									<div class="goods-item-bottom">
+										<div class="goods-item-l">
+											<div class="goods-items dpf">
+												<span class="pic"><img src="{$field.product_img}"></span>
+												<span class="name asc"><a href="{$field.ArchivesUrl}" target="_blank">{$field.product_name}</a></span>
+												<span class="price tc asc">{$field.refund_price}</span>
+												<span class="num tc asc">{$field.product_num}</span>
+											</div>
+										</div>
+
+										<div class="goods-item-r">
+                                            <div class="goods-items dpf">
+                                                <span class="pay-oper asc"> {$field.service_type} </span>
+                                                <span class="pay-oper asc">
+                                                    <a href="{$field.SeDetailsUrl}" class="el-button el-button--primary el-button--small">查看详情</a>
+                                                </span>
+                                            </div>
+										</div>
+									</div>
+								</div>
+							{/eyou:volist}
+							<!-- 售后服务订单列表结束 -->
+
+							<!-- 分页输出 -->
+							<div class="dataTables_paginate"><ul class="pagination">{$eyou.field.pageStr}</ul></div>
+							<!-- 分页输出结束 -->
+						</div>
+						{/eyou:empty}
+                	</div>
+            	</div>
+				<!-- 中部结束 -->
+			</div>
+		</div>
+	</div>
+	{eyou:include file="users/users_footer.htm" /}

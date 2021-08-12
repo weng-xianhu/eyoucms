@@ -1,122 +1,129 @@
 <!DOCTYPE html>
 <html>
- <head> 
-  <title>{$eyou.field.seo_title}</title> 
-  <meta name="renderer" content="webkit" /> 
-  <meta charset="utf-8" /> 
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=0,minimal-ui" /> 
-  <meta name="description" content="{$eyou.field.seo_description}" /> 
-  <meta name="keywords" content="{$eyou.field.seo_keywords}" />
-  <link href="{eyou:global name='web_cmspath' /}/favicon.ico" rel="shortcut icon" type="image/x-icon" /> 
-  {eyou:static file="skin/css/basic.css" /} 
-  {eyou:static file="skin/css/common.css" /} 
-    <!--[if lte IE 9]>
-    {eyou:static file="skin/js/lteie9.js" /}
-    <![endif]--> 
- </head> 
- <!--[if lte IE 8]>
-    <div class="text-xs-center m-b-0 bg-blue-grey-100 alert">
-    <button type="button" class="close" aria-label="Close" data-dismiss="alert">
-        <span>×</span>
-    </button>
-    你正在使用一个 <strong>过时</strong> 的浏览器。请 <a href=https://browsehappy.com/ target=_blank>升级您的浏览器</a>，以提高您的体验。</div>
-<![endif]--> 
- <body> 
-<!--header-s-->
-    {eyou:include file="header.htm"/}
-<!--header-e-->
-  <div class="ey-banner-ny vertical-align text-center"> 
-   <h1 class="vertical-align-middle">{$eyou.field.typename}</h1> 
-  </div> 
-  <section class="ey-crumbs hidden-sm-down"> 
-   <div class="container"> 
-    <div class="row"> 
-     <div class="border-bottom clearfix"> 
-      <ol class="breadcrumb m-b-0 subcolumn-crumbs breadcrumb-arrow"> 
-       <li class="breadcrumb-item"> {eyou:lang name='yybl5' /}：{eyou:position style="crumb" /} </li> 
-      </ol> 
-     </div> 
-    </div> 
-   </div> 
-  </section> 
-  <div class="ey-showimg"> 
-   <div class="container"> 
-    <div class="row"> 
-     <div class="ey-showimg-body col-md-9" m-id="noset"> 
-      <div class="row"> 
-       <section class="details-title border-bottom1"> 
-        <h1 class="m-t-10 m-b-5">{$eyou.field.title}</h1> 
-        <div class="info"> 
-         <span>{$eyou.field.add_time|MyDate='Y-m-d H:i:s',###}</span> 
-         <span></span> 
-         <span> <i class="icon fa-eye m-r-5"></i> {eyou:arcclick /} </span> 
-        </div> 
-       </section> 
-       <section class="ey-showimg-con"> 
-        <div class="ey-showimg-list fngallery cover text-xs-center" id="ey-imgs-slick"> 
-         {eyou:volist name="$eyou.field.image_list" id="field"}
-         <div class="slick-slide"> 
-          <a href="{$field.image_url}" class="lg-item-box"  data-exthumbimage="{$field.image_url}"> <img src="{$field.image_url}" class="img-fluid" alt="{$field.title}" /> </a> 
-         </div> 
-         {/eyou:volist}
-        </div> 
-       </section> 
-       <section class="ey-editor clearfix m-t-20"></section> 
-       <div class="ey-page ey-shownews-footer border-top1"> 
-        <ul class="pagination block blocks-2"> 
-          <li class="page-item m-b-0 ">
-            {eyou:prenext get='pre'}
-             <a href="{$field.arcurl}" title="{$field.title}" class="page-link text-truncate"> {eyou:lang name='sys11' /} <span class="hidden-xs-down">: {$field.title}</span> </a>  
-            {eyou:else /}
-            <a class="page-link text-truncate">{eyou:lang name='sys11' /}：{eyou:lang name='sys10' /}</a>
-            {/eyou:prenext}
-            </li>
-            <li class="page-item m-b-0 ">
-            {eyou:prenext get='next'}
-              <a href="{$field.arcurl}" title="{$field.title}" class="page-link pull-xs-right text-truncate"> {eyou:lang name='sys12' /} <span class="hidden-xs-down">: {$field.title}</span> </a>
-             {eyou:else /} 
-              <a class="page-link pull-xs-right text-truncate">{eyou:lang name='sys12' /}：{eyou:lang name='sys10' /}</a>
-            {/eyou:prenext}
-            </li>
-        </ul> 
-       </div> 
-      </div> 
-     </div> 
-     <div class="col-md-3"> 
-      <div class="row"> 
-       <div class="ey-bar"> 
-        {eyou:searchform type='default'}
-        <form class="sidebar-search" method="get" action="{$field.action}">
-          {$field.hidden}
-         <div class="form-group"> 
-          <div class="input-search"> 
-           <button type="submit" class="input-search-btn"> <i class="icon fa-search"></i> </button> 
-           <input type="text" class="form-control" name="keywords" placeholder="{eyou:lang name='yybl6' /}" /> 
-          </div> 
-         </div> 
-        </form> 
-        {/eyou:searchform}
-        <div class="sidebar-news-list recommend"> 
-         <h3 class="m-0">{eyou:lang name='yybl7' /}</h3> 
-         <ul class="list-icons list-group-bordered m-t-10 m-b-0"> 
-         <!-- 循环输出指定最顶级栏目ID的文档列表，并按随机排序 start -->
-         {eyou:arclist limit="0,5" titlelen="30" orderby='rand'}
-         <li> <a href="{$field.arcurl}" title="{$field.title}">{$field.title}</a> </li> 
-         {/eyou:arclist}
-         <!-- 循环输出指定最顶级栏目ID的文档列表，并按随机排序 end -->
-         </ul> 
-        </div> 
-       </div> 
-      </div> 
-     </div> 
-    </div> 
-   </div> 
-  </div> 
-  <!--footer-s-->
-  {eyou:include file="footer.htm" /}
-  <!--footer-e-->
-  {eyou:static file="skin/js/PhotoSwipe.js" /}
-  {eyou:ui open='off' /}
- </body>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>{$eyou.field.seo_title}</title>
+<meta name="description" content="{$eyou.field.seo_description}" />
+<meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+{eyou:static file="skin/style/pintuer.css" /}
+{eyou:static file="skin/style/header.css" /}
+{eyou:static file="skin/style/style.css" /}
+{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+<!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+</head>
+<body>
+<!--网站公用头部——开始-->
+{eyou:include file="header.htm" /}
+<!-- 频道banner,可在栏目图片里编辑 -->
+
+<!-- 频道banner end -->
+<div class="layout bg-gray">
+	<div class="container">
+		<div class="line">
+			<div class="nav-bread">
+				<i class="fa fa-home margin-small-right"></i>{eyou:position/}
+			</div>
+		</div>
+	</div>
+	<div class="container">
+		<div class="line">
+			<div class="x12">
+				<!--内容 begin-->
+				<div class="article bg-white">
+					<div class="padding-large">
+						<div class="post margin-big-bottom">
+							<h1>{$eyou.field.title}</h1>
+							<div class="blank"></div>
+							<div class="text-gray padding-big-bottom text-default">
+								<span class="margin-right">作者：{$eyou.field.author}</span>
+								<span class="margin-right">发布时间：{$eyou.field.add_time|MyDate='Y-m-d',###}</span>
+								<span class="margin-right">点击数：{eyou:arcclick /}</span>
+							</div>
+							<hr class="bg-gray">
+						</div>
+						<div class="blank"></div>
+						<!-- 相册begin -->
+							<ul class="pgwSlideshow">
+							{eyou:volist name="$eyou.field.image_list"}
+							<li>
+							<img src="{$field.image_url}" class="img-responsive radius-middle" title="{$field.title}"/>
+							</li>
+							{/eyou:volist}
+							</ul>
+						<!-- 相册end -->
+						<div class="blank-small"></div>
+						<div class="post">
+							{$eyou.field.content}
+						</div>		
+						<!--tag-->
+						<div class="blank-middle"></div>
+						{eyou:notempty name='$eyou.field.tags'}
+							<span>Tag：</span>
+							{eyou:tag getall='0'}
+							<a href="{$field.link}" class="tag tags bg-yellow radius-rounded text-white margin-small-bottom padding-small" {$field.target}>{$field.tag}</a>
+							{/eyou:tag}
+						{/eyou:notempty}
+						<div class="blank-small"></div>
+						<!--tag end-->						
+					</div>
+				</div>
+			</div>
+		</div><!--line end-->
+	</div>
+	<div class="blank-middle"></div>
+	<div class="container">
+		<div class="line">
+			<div class="xl12 xs12 xm12 xb12">
+				<!-- 上下篇 begin -->
+				<div class="prenext-pro">
+					<div class="line">
+						<div class="x5">
+							{eyou:prenext get='next' titlelen='30'}
+							<a href="{$field.arcurl}" class="button button-block bg-white border radius-none text-main text-middle text-center" title="{eyou:lang name='sys10' /}{$field.title}"><i class="margin-right fa fa-long-arrow-left"></i>{$field.title}</a>
+							{eyou:else /}
+							<a class="button button-block bg-white border radius-none text-gray text-middle text-center" title="{eyou:lang name='sys10' /}"><i class="margin-right fa fa-long-arrow-left"></i>没有了</a>
+							{/eyou:prenext}
+						</div>
+
+						<div class="x2 text-center">
+							{eyou:type typeid="$eyou.field.parent_id"}
+							<a href="{$field.typeurl}" class="button radius-none border button-block bg-white text-main text-middle text-center"><i class="fa fa-align-justify margin-right"></i><span class="hidden-l">返回列表</span></a>
+							<!-- {$field.typename} -->
+							{/eyou:type}
+						</div>
+
+						<div class="x5">
+							{eyou:prenext get='pre' titlelen='30'}
+							<a href="{$field.arcurl}" class="button border button-block bg-white radius-none text-main text-middle text-center float-right" title="{$field.title}">{$field.title}<i class="margin-left fa fa-long-arrow-right"></i></a>
+							{eyou:else /}
+                            <a class="button button-block bg-white border radius-none text-gray text-middle text-center"><i class="margin-left fa fa-long-arrow-right"></i>没有了</a>
+							{/eyou:prenext}
+						</div>
+				   </div>
+				</div>
+				<!-- 上下篇 end -->
+			</div>
+		</div><!--line end-->
+	</div>
+	<div class="blank-big"></div>
+</div>
+<!--网站公用底部——开始-->
+{eyou:include file="footer.htm" /}
+<!--网站公用底部——结束-->
+{eyou:static file="skin/js/pintuer.js" /}
+{eyou:static file="skin/js/common.js" /}
+{eyou:static file="skin/Lib/PgwSlideshow/css/pgwslideshow.css" /}
+{eyou:static file="skin/Lib/PgwSlideshow/js/pgwslideshow.min.js" /}
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('.pgwSlideshow').pgwSlideshow({
+			transitionEffect:'sliding',      //轮播图切换时动画效果，有两个选项sliding（滑动效果）、fading（渐隐效果）
+			autoSlide: false,                //是否允许轮播图自动按照时间间隔轮播 false/true
+			transitionDuration: 500,         //图片自动轮播时，图片切换的时间，单位毫秒
+			intervalDuration: 5000           //显示下一张图片之前的间隔时间单位毫秒，该参数需要autoSlide为true
+		});
+	});
+</script></body>
 </html>

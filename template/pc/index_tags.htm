@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>{$eyou.field.seo_title}</title>
+<meta name="description" content="{$eyou.field.seo_description}" />
+<meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+{eyou:static file="skin/style/pintuer.css" /}
+{eyou:static file="skin/style/header.css" /}
+{eyou:static file="skin/style/style.css" /}
+{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+<!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+</head>
+<body>
+{eyou:include file="header.htm" /}
+<div class="layout bg-white">
+	<div class="container">
+		<div class="line nav-bread">
+			<div class="x12">
+				<h2 class="text-main">标签</h2>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="layout bg-gray">
+	<div class="container">
+		<!--最新标签tag-->
+		<div class="line">
+			<div class="x12">
+				<div class="blank-big"></div>
+				<div class="title-l">
+					<h2>最新标签</h2>
+				</div>
+				<div class="blank"></div>
+				{eyou:tag getall='0' sort='new'}
+				<a href="{$field.link}" class="tag tags bg-yellow radius-rounded text-white margin-bottom padding" {$field.target}>{$field.tag}</a>
+				{/eyou:tag}
+				<div class="blank-small"></div>
+			</div>
+		</div>
+		<!--最新标签tag end-->
+		
+		<!--当月热门标签tag-->
+		<div class="line">
+			<div class="x12">
+				<div class="blank-small"></div>
+				<div class="title-l">
+					<h2>当月热门标签</h2>
+				</div>
+				<div class="blank"></div>
+				{eyou:tag getall='0' sort='month'}
+				<a href="{$field.link}" class="tag tags bg-yellow radius-rounded text-white margin-bottom padding" {$field.target}>{$field.tag}</a>
+				{/eyou:tag}
+				<div class="blank-small"></div>
+			</div>
+		</div>
+		<!--当月热门标签tag end-->	
+		
+		<!--本周热门标签tag-->
+		<div class="line">
+			<div class="x12">
+				<div class="blank-small"></div>
+				<div class="title-l">
+					<h2>本周热门标签</h2>
+				</div>
+				<div class="blank"></div>
+				{eyou:tag getall='0' sort='week'}
+				<a href="{$field.link}" class="tag tags bg-yellow radius-rounded text-white margin-bottom padding" {$field.target}>{$field.tag}</a>
+				{/eyou:tag}
+				<div class="blank-small"></div>
+			</div>
+		</div>
+		<!--本周热门标签tag end-->	
+		
+		<div class="blank-big"></div>
+	</div>
+</div>
+{eyou:include file="footer.htm" /}
+{eyou:static file="skin/js/pintuer.js" /}
+{eyou:static file="skin/js/common.js" /}
+</body>
+</html>

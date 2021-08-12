@@ -27,8 +27,14 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE);//报告运行时错误
 
 // 检测是否已安装EyouCMS系统
 if(file_exists("./install/") && !file_exists("./install/install.lock")){
-    header('Location:./install/index.php');
-    exit(); 
+    if (preg_match('/^s=\/(.+)/i', $_SERVER['QUERY_STRING'])) {
+        $url = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'];
+        header('Location:'.$url);
+        exit();
+    } else {
+        header('Location:./install/index.php');
+        exit();
+    }
 }
 
 // 绑定当前访问到admin模块

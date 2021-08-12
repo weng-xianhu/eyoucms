@@ -1,0 +1,37 @@
+<footer class="bg-main">
+	<div class="container-layout">
+		<div class="line">
+			<div class="copyright height text-center text-gray">
+				<div class="xl12 xs12 flz12">
+					{eyou:global name='web_copyright' /}</br>　{eyou:global name='web_recordnum' /}
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<!--底部版权-->
+
+<!-- 移动端快捷菜单 -->
+<div id="m-b-bar" class="layout text-center bg-yellow">
+	<div class="x3">
+		<a href="{eyou:global name='web_basehost' /}"><i class="fa fa-home"></i>首页</a>
+	</div>
+	<div class="x3">
+	{eyou:type typeid='3'}
+		<a href="{$field.typeurl}"><i class="fa fa-cube"></i>产品</a>
+	{/eyou:type}
+	</div>
+	<div class="x3">
+	{eyou:type typeid='4'}
+		<a href="{$field.typeurl}"><i class="fa fa-cog"></i>方案</a>
+	{/eyou:type}
+	</div>		
+	<div class="x3">
+		<a href="tel:{eyou:global name='web_attr_1' /}"><i class="fa fa-phone"></i>电话</a>
+	</div>
+</div>
+<!-- 移动端快捷菜单 end -->
+
+<!-- 应用插件标签 start --> 
+{eyou:weapp type='default' /} 
+<!-- 应用插件标签 end -->

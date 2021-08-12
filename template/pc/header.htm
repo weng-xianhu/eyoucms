@@ -1,79 +1,221 @@
-  <header class="ey-head"> 
-   <nav class="navbar navbar-default box-shadow-none ey-nav"> 
-    <div class="container"> 
-     <div class="row"> 
-      <h1 hidden="">{eyou:global name="web_name" /}</h1> 
-      <div class="navbar-header pull-xs-left"> 
-       <a href="{eyou:global name='web_cmsurl' /}/" class="navbar-logo vertical-align block pull-xs-left" title="{eyou:global name='web_name' /}"> 
-        <div class="vertical-align-middle"> 
-         <img src="{eyou:global name='web_logo' /}" alt="{eyou:global name='web_name' /}" /> 
-        </div> </a> 
-      </div>
-     
-      <button type="button" class="navbar-toggler hamburger hamburger-close collapsed p-x-5 ey-nav-toggler" data-target="#ey-nav-collapse" data-toggle="collapse">
-        <span class="sr-only"></span>
-        <span class="hamburger-bar"></span>
-      </button> 
-      <div class="collapse navbar-collapse navbar-collapse-toolbar pull-md-right p-0" id="ey-nav-collapse"> 
-       <ul class="nav navbar-nav navlist"> 
-        <li class="nav-item"> <a href="{eyou:global name='web_cmsurl' /}" title="{eyou:lang name='yybl1' /}" class="nav-link {eyou:eq name='$Request.param.m' value='Index'}active{/eyou:eq}">{eyou:lang name='yybl1' /}</a> </li> 
+{eyou:static file="skin/js/jquery.min.js" /}
+<!-- 友好的弹出提示框 -->
+{eyou:static file="/public/plugins/layer-v3.1.0/layer.js" /}
+<!-- 支持子目录 -->
+{eyou:global name='ey_common_hidden' /}
 
-        {eyou:channel type="top" row="60" id="field" currentstyle="active"}
-        <li class="nav-item dropdown m-l-10"> <a href="{$field.typeurl}" class="nav-link dropdown-toggle {$field.currentstyle}" {eyou:notempty name="$field.children"}data-toggle="dropdown"{/eyou:notempty} data-hover="dropdown" aria-haspopup="true" aria-expanded="false"> {$field.typename}{eyou:notempty name="$field.children"}<span class="fa fa-angle-down p-l-5"></span>{/eyou:notempty}</a> 
-         {eyou:notempty name="$field.children"}
-         <div class="dropdown-menu dropdown-menu-right dropdown-menu-bullet"> 
-          {eyou:channel name="$field.children" row="100" id="field2"}
-          <div class="dropdown-item dropdown-submenu"> 
-           <a href="{$field2.typeurl}" class="dropdown-item ">{$field2.typename}</a> 
-           {eyou:notempty name="$field2.children"}
-           <div class="dropdown-menu animate"> 
-            {eyou:channel name="$field2.children" row="100" id="field3"}
-            <a href="{$field3.typeurl}" class="dropdown-item ">{$field3.typename}</a> 
-            {/eyou:channel}
-           </div> 
-           {/eyou:notempty}
-          </div> 
-          {/eyou:channel}
-         </div>
-         {/eyou:notempty}
-        </li> 
-        {/eyou:channel}
+<div id="log">
+    <div class="dialog">
+        <div class="dialog-head">
+            <span class="dialog-close close rotate-hover"></span>
+        </div>
+        <div class="dialog-body">
+            <div class="register">
+                <div class="blank-middle"></div>
+                <div class="tab text-center">
+                  <ul>
+                    <li id="signtab1" onclick="setTab('signtab',1,2)" class="cur">登录</li>
+                    <!-- <li id="signtab2" onclick="setTab('signtab',2,2)">注册</li> -->
+                  </ul>
+                </div>
+                <!-- 登录开始 -->
+                <div id="con_signtab_1">
+                    <form method="post" id="popup_login_submit">
+                        <!-- 用户名 -->
+                        <div class="form-group">
+                            <div class="field field-icon">
+                                <input type='text' name='username' id='username' class="input text-main radius-none" value="" data-validate="required:必填" placeholder="用户名">
+                                <span class="icon fa fa-user text-gray"></span>
+                            </div>
+                        </div>
+                        <!-- 密码 -->
+                        <div class="form-group">
+                            <div class="field field-icon">
+                                <input type='password'  name='password' id="password" class="input text-main radius-none" placeholder="密码" value=""/>
+                                <span class="icon fa fa-key text-gray"></span>
+                            </div>
+                        </div>
+                        <!-- 验证码包括手机验证码专用样式input-group-->
+                        <div class="form-group" id="ey_login_vertify">
+                            <div class="field field-icon">
+                                <div class="input-group">
+                                    <input type='text'  name='vertify' autocomplete="off" class="input text-main radius-none" placeholder="图形验证码" value=""/>
+                                    <span class="addon"><img src="{eyou:url link='api/Ajax/vertify' vars='type=users_login' /}" class="chicuele" id="imgVerifys" onclick="ey_fleshVerify();" title="看不清？点击更换验证码" align="absmiddle"></span>
+                                    <span class="icon fa fa-key text-gray"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 提交 -->
+                        <div class="form-button">
+                            <input type="hidden" name="referurl" value=""/>
+                            <input type="hidden" name="website" value="website"/>
+                            <input type="button" name="submit" onclick="popup_login_submit();" class="button bg-yellow button-large button-block border-none radius-none text-white" value="提交"/>
+                        </div>
+                    </form>
+                    <p class="margin-top text-right">
+                        <a href="{:url('user/Users/reg')}">注册账号</a>&nbsp;|&nbsp;
+                        <a href="{:url('user/Users/retrieve_password')}">忘记密码</a>
+                    </p>
+                </div>
+                <!-- 登录end -->
 
-        {notempty name="$eyou.global.web_language_switch"}
-        <li class="nav-item dropdown m-l-10 ey-langlist">
-          <a href="{eyou:lang const='url' /}" class="nav-link dropdown-toggle " data-toggle="dropdown" data-hover="dropdown" aria-haspopup="true" aria-expanded="false"><img src="{eyou:lang const='logo' /}" alt="{eyou:lang const='title' /}" width="20" />{eyou:lang const='title' /}<span class="fa fa-angle-down p-l-5"></span></a> 
-          <div class="dropdown-menu dropdown-menu-right dropdown-menu-bullet"> 
-            {eyou:language type='default'}
-            <div class="dropdown-item dropdown-submenu ey-langlist"> 
-              <a href="{$field.url}" class="dropdown-item "><img src="{$field.logo}" alt="{$field.title}" width="20" />{$field.title}</a> 
-            </div> 
-            {/eyou:language}
-         </div>
-        </li>
-        {/notempty}
+                <!-- 注册开始 -->
+                <div id="con_signtab_2" style="display:none;">
+                    <form method="post">
+                        <!-- 用户名 -->
+                        <div class="form-group">
+                            <div class="field field-icon">
+                                <input type='text' name='username' class="input text-main radius-none" value="" data-validate="required:必填" placeholder="手机/邮箱/账号">
+                                <span class="icon fa fa-user text-gray"></span>
+                            </div>
+                        </div>
 
-        {eyou:user type='open'}
-          <li class="nav-item m-l-10 ey-login">
-            {eyou:user type='login'}
-              <a href="{$field.url}" id="{$field.id}" class="navlog">登录</a><span>|</span>
-              {$field.hidden}
-            {/eyou:user}
-          
-            {eyou:user type='reg'}
-              <a href="{$field.url}" id="{$field.id}" class="navreg">注册</a>
-              {$field.hidden}
-            {/eyou:user}
+                        <!-- 密码 -->
+                        <div class="form-group">
+                            <div class="field field-icon">
+                                <input type='password' name='password' class="input text-main radius-none" value="" data-validate="required:必填" placeholder="密码" />
+                                <span class="icon fa fa-key text-gray"></span>
+                            </div>
+                        </div>
 
-            {eyou:user type='logout'}
-              <a href="{$field.url}" id="{$field.id}" class="navreg">退出</a>
-              {$field.hidden}
-            {/eyou:user}
-          </li>
-        {/eyou:user}
+                        <!-- 手机 -->
+                        <div class="form-group">
+                            <div class="field field-icon">
+                                <input type='text' name='username' class="input text-main radius-none" value="" data-validate="required:必填" placeholder="请输入手机号">
+                                <span class="icon fa fa-phone text-gray"></span>
+                            </div>
+                        </div>
 
-       </ul> 
-      </div> 
-     </div> 
-    </div> 
-   </nav> 
-  </header> 
+                        <!-- 验证码包括手机验证码专用样式input-group-->
+                        <div class="form-group">
+                            <div class="field field-icon">
+                                <div class="input-group">
+                                    <input type='text' name='phone' class="input text-main radius-none" placeholder="请输入短信验证码" value=""/>
+                                    <span class="addon"><img src="{eyou:url link='api/Ajax/vertify' vars='type=users_login' /}" class="chicuele" id="imgVerifys" onclick="ey_fleshVerify();" title="看不清？点击更换验证码" align="absmiddle"></span>
+                                    <span class="icon fa fa-phone text-gray"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 提交 -->
+                        <div class="form-button">
+                            <input type="submit" class="button bg-yellow button-large button-block border-none radius-none text-white" value="提交"/>
+                        </div>
+                    </form>
+                </div>
+                <!-- 注册end -->
+
+                <!-- 第三方账号登录 -->
+                <div id="ey_third_party_login">
+                    <div class="blank-middle"></div>
+                    <div class="line"><span class="text-gray bg-white text-default">社交账号登录</span><hr></div>
+                    <div class="blank-small"></div>
+                    <div class="bnt-login">
+                        <a title="QQ登录" href="{eyou:url link='plugins/QqLogin/login' seo_pseudo='1' seo_inlet='0' /}" class="qq"><i class="fa fa-qq"></i></a>
+                        <a title="微信登录" href="{eyou:url link='plugins/WxLogin/login' seo_pseudo='1' seo_inlet='0' /}" class="weixin"><i class="fa fa-weixin"></i></a>
+                        <a title="微博登录" href="{eyou:url link='plugins/Wblogin/login' seo_pseudo='1' seo_inlet='0' /}" class="weibo"><i class="fa fa-weibo"></i></a>
+                    </div>
+                </div>
+                <!-- 第三方账号登录 -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 登录弹窗 end -->
+
+<header id="pc-header">
+    <div class="layout fixed navbar">
+        <div class="container-layout">
+            <div class="line">
+                <div class="x2 logo">
+                    <a href="{eyou:global name='web_basehost' /}"><img src="{eyou:global name='web_logo' /}" alt="{eyou:global name='web_name' /}" class="img-responsive"/></a>
+                </div>
+                <div class="x9 text-center">
+                <ul class="nav nav-menu nav-inline" >
+                 <li{eyou:eq name='$Request.param.m' value='Index'} class="active"{/eyou:eq}><a href="{eyou:global name='web_cmsurl' /}" title="首页">首页</a></li>
+                {eyou:channel type="top" id="field" currentstyle="active"}
+                <li class="{$field.currentstyle}">
+                    <a href="{$field.typeurl}" class="first-level">
+                    {$field.typename}
+                    {eyou:notempty name="$field.children"}<i class="fa fa-angle-down margin-small-left"></i>{/eyou:notempty}</a>
+                    {eyou:notempty name="$field.children"}
+                    <ul class="drop-menu">{eyou:channel name="$field.children" id="field2"}
+                        <li><a href="{$field2.typeurl}">{$field2.typename}</a></li>{/eyou:channel}
+                    </ul>
+                    {/eyou:notempty}
+                    </a>
+                </li>
+                {/eyou:channel}
+              </ul>
+                </div>
+                <div class="x1">
+                    <!-- 登录后的效果：文件模板存放在 system/users_info.htm ，具体更多写法请熟悉 ey_users 表字段 -->
+                    {eyou:user type='open'}
+                        {eyou:user type='userinfo'}
+                        <div id="{$field.htmlid}">
+                            <!-- 登录前 start -->
+                            <div class="log-in">
+                                <div class="button-group">
+                                    <a href="javascript:;" {$field.loginPopupId} data-target="#log" data-width="22%" data-toggle="click" data-mask="1" class="dialogs user-ico radius-circle dropdown-toggle text-center text-big">
+                                    <i class="fa fa-user"></i></a>
+                                </div>
+                            </div>
+                            {eyou:if condition="getUsersConfigData('shop.shop_open') == 1"}
+                            <div class="shopBar badge-corner">
+                                <a href="{eyou:Diyurl link='user/Shop/shop_cart_list' /}" class="shop-ico">
+                                    <!-- <span class="badge bg-yellow">0</span> -->
+                                    <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                            {/eyou:if}
+                            <!-- 登录前 end-->      
+                        </div> 
+                        {$field.hidden}
+                        {/eyou:user}
+                    {/eyou:user}
+                    <span class="searchBar" {eyou:if condition="getUsersConfigData('shop.shop_open') == 0"}style="right: 60px;"{/eyou:if}><a href="#none" class="search-ico"><i class="fa fa-search" aria-hidden="true"></i></a></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!--弹出搜索 -->
+<div class="searchBar-m">
+    <div class="mask"></div>
+    <a href="javascript:void(0)"><i class="fa fa-times"></i></a>
+    <div class="form-group">
+    {eyou:searchform type='default'}
+        <form method="get" action="{$field.action}" onsubmit="return searchForm();">
+            <input type="text" name="keywords" id="keywords" class="input radius-none text-middle" value="{eyou:lang name='yybl6' /}" onFocus="this.value=''" onBlur="if(!value){value=defaultValue}"/>
+            <button type="submit" name="submit" class="button radius-none border-none" value="Search"/></button>
+            {$field.hidden}
+        </form>
+    {/eyou:searchform}
+    </div>
+</div>
+<!-- 弹出搜索 -->
+<div class="clearfix"></div>
+
+
+
+
+<script type="text/javascript">
+    //头像下拉
+    function head_nav_a()
+    {
+        $("#user_nav_z").show();
+    }
+    function head_nav_b()
+    {
+        $("#user_nav_z").hide();
+    }
+
+    var GetUploadify_url = "{:url('Uploadify/upload')}";
+</script>
+
+<!-- <script type="text/javascript">
+    function logins_drop_menu()
+    {
+        $('#ul_logins_drop-menu').toggle();
+    }
+</script> -->

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>物流查询-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    {eyou:static file="users/skin/css/bootstrap.min.css"/}
+    {eyou:static file="users/skin/css/eyoucms.css"/}
+    {eyou:static file="users/skin/css/basic.css"/}
+    {eyou:static file="users/skin/css/shop.css"/}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="users/skin/js/global.js"/}
+    <style type="text/css">
+        #theForm .form-group{
+            margin:10px 0px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="col-xs-12 col-sm-10 ey-member-index">
+    <div class="panel panel-default m-b-0" style="min-height: 486px;">
+        <div class="panel-body shop-finance">
+            <div class="row">
+                <div id="finance-list_wrapper" class="dataTables_wrapper form-inline dt-bootstrap no-footer clearfix">
+                    <table class="dataTable table table-bordered table-hover table-striped w-full m-t-10 no-footer dtr-inline" cellspacing="0" id="finance-list" data-table-ajaxurl="" data-table-pagelength="20" data-plugin="selectable" role="grid" aria-describedby="finance-list_info" >
+                        <thead>
+                            <tr role="row">
+                                <th style="width: 262px;">时间</th>
+                                <th style="width: 243px;">物流跟踪情况</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {eyou:empty name="ExpressData"}
+                                <tr class="odd">
+                                    <td valign="top" colspan="6" class="dataTables_empty">暂无物流信息</td>
+                                </tr>
+                            {eyou:else/}
+                                {eyou:volist name="ExpressData" id="vo"}
+                                    <tr class="odd">
+                                        <td>{$vo.time}</td>
+                                        <td>{$vo.context}</td>
+                                    </tr>
+                                {/eyou:volist}
+                            {/eyou:empty}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>订单详情-{eyou:global name='web_name' /}</title>
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+	<link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+	{eyou:static file="users/skin/css/bootstrap.min.css" /}
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    {eyou:static file="users/skin/css/shop.css" /}
+	<!-- 新样式 2020-11-25 -->
+	{eyou:static file="users/skin/css/element/index.css" /}
+	{eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+	{eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+</head>
+
+<body class="centre">
+<!-- 头部 -->
+{eyou:include file="users/users_header.htm" /}
+<!-- 头部结束 -->
+
+<div class="ey-body-bg">
+    <div class="ey-body">
+        <div class="ey-container w1200">
+			<!-- 侧边 -->
+			{eyou:include file="users/users_left.htm" /}
+			<!-- 侧边结束 -->
+
+			{eyou:sporder id="field"}
+			<!-- 中部 -->
+			<div class="ey-con fr" >
+				<div class="el-main main-bg">
+					<div class="order-progress">
+						<div class="order-progress-tit">
+							<div class="order-progress-titL">
+								<span class="fc9">您的订单号：</span>{$field.order_code} <span class="el-tag el-tag--danger el-tag--light">{$field.order_status_name}</span>
+							</div> 
+							<div class="order-progress-titR">
+								{eyou:eq name='$field.order_status' value='0'}
+									{eyou:eq name="is_wechat" value='2'}
+										<a href="{$field.PaymentUrl}" target="_blank" class="el-button el-button--primary el-button--medium">
+											立即付款
+										</a>
+									{eyou:else/}
+										<a href="JavaScript:void(0);" onclick="UpdatePayMethod('{$field.order_id}','{$field.order_code}');" class="el-button el-button--primary el-button--medium">
+											立即付款
+										</a>
+									{/eyou:eq}
+									<a href="JavaScript:void(0);" class="el-button el-button--default el-button--medium" {$field.CancelOrder}>取消订单</a>							
+								{/eyou:eq}
+							</div>
+						</div>
+
+					   <div class="order-progress-con">
+							{eyou:if condition="-1 != $field.order_status && 4 != $field.order_status"}
+							    <div class="order-status pt50 pb50">
+									{eyou:empty name="$field.add_time"}
+										<div class="status-item disabled">
+											<div class="status-icon">
+												<i class="el-icon-s-order"></i>
+											</div>
+											<div class="status-title">
+												<span class="text">下单</span>
+												<span class="time"></span>
+											</div>
+										</div>
+									{eyou:else/}
+										<div class="status-item current">
+											<div class="status-icon">
+												<i class="el-icon-s-order"></i>
+											</div>
+											<div class="status-title">
+												<span class="text">下单</span>
+												<span class="time">{$field.add_time|date='Y-m-d H:i:s',###}</span>
+											</div>
+										</div>
+									{/eyou:empty}
+									
+									{eyou:empty name="$field.pay_time"}
+										<div class="status-item disabled">
+											<div class="status-icon">
+												<i class="el-icon-s-finance"></i>
+											</div>
+											<div class="status-title">
+												<span class="text">付款</span>
+												<span class="time"></span>
+											</div>
+										</div>
+									{eyou:else/}
+										<div class="status-item current">
+											<div class="status-icon">
+												<i class="el-icon-s-finance"></i>
+											</div>
+											<div class="status-title">
+												<span class="text">付款</span>
+												<span class="time">{$field.pay_time|date='Y-m-d H:i:s',###}</span>
+											</div>
+										</div>
+									{/eyou:empty}
+									
+									{eyou:empty name="$field.express_time"}
+										<div class="status-item disabled">
+											<div class="status-icon">
+												<i class="el-icon-location"></i>
+											</div>
+											<div class="status-title">
+												<span class="text">发货</span>
+												<span class="time"></span>
+											</div>
+										</div>
+									{eyou:else/}
+										<div class="status-item current">
+											<div class="status-icon">
+												<i class="el-icon-location"></i>
+											</div>
+											<div class="status-title">
+												<span class="text">发货</span>
+												<span class="time">{$field.express_time|date='Y-m-d H:i:s',###}</span>
+											</div>
+										</div>
+									{/eyou:empty}
+
+									{eyou:empty name="$field.confirm_time"}
+										<div class="status-item disabled">
+											<div class="status-icon">
+												<i class="el-icon-success"></i>
+											</div>
+											<div class="status-title">
+												<span class="text">完成</span>
+												<span class="time"></span>
+											</div>
+										</div>
+									{eyou:else/}
+										<div class="status-item current">
+											<div class="status-icon">
+												<i class="el-icon-success"></i>
+											</div>
+											<div class="status-title">
+												<span class="text">完成</span>
+												<span class="time">{$field.confirm_time|date='Y-m-d H:i:s',###}</span>
+											</div>
+										</div>
+									{/eyou:empty}
+								</div>  
+							{/eyou:if}
+						</div>
+						<div class="order-progress-tit2">
+							<div class="order-progress-titL">商品明细</div>
+						</div>
+						<div class="order-progress-con">
+							<div class="el-row mb30 shop-car">
+								<div class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition" style="width: 100%;border-bottom: 1px solid #eee;">
+									<table>
+										<thead>
+											<tr>
+												<th style="width:590px;"><div class="cell">商品名称</div></th>
+												<th style="width:140px;"><div class="cell tc">单价</div></th>
+												<th style="width:60px;"><div class="cell tc">数量</div></th>
+												<th style="width:150px;"><div class="cell tc">小计</div></th>
+											</tr>
+										</thead>
+									
+										<tbody>
+											{eyou:spordergoods id="field2"}
+												<tr>
+													<td>
+														<div class="cell">
+															<div class="goods-item">
+																<div class="goods-item-l fl">
+																	<a target="_blank" href="{$field2.arcurl}" title="{$field2.product_name}">
+																		<img class="img-responsive" src="{$field2.litpic}" alt="商品图">
+																	</a>
+																</div>
+																<div class="goods-item-r fl">
+																	<div class="cell">
+																		<a class="fc3" target="_blank" href="{$field2.arcurl}" title="{$field2.product_name}">
+																			{$field2.product_name}
+																			{eyou:eq name="$field2.has_deleted" value="1"}
+																				<span style="color: red;">{$field2.msg_deleted}</span>
+																			{/eyou:eq}
+																		</a>
+																		<div class="info mt5">
+																			<!-- 商品参数 -->
+																			{$field2.new_data}
+																			<!-- 商品新参数 END-->
+																		</div>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</td>
+													<td><div class="cell tc">{$field2.product_price}</div></td>
+													<td><div class="cell tc">{$field2.num}</div></td>
+													<td><div class="cell tc">{$field2.subtotal}</div></td>
+												</tr>
+											{/eyou:spordergoods}
+										</tbody>
+									</table>
+								</div>
+								<div class="mt30">
+									<span class="span-row">支付方式：{$field.pay_name}</span>
+									<span class="span-row">运费：￥{$field.shipping_fee}元</span>
+									<span class="span-row">订单金额：￥{$field.TotalAmount}元</span>
+									<span class="span-row">实付金额：￥{$field.order_amount}元</span>
+								</div>
+							</div>	
+						</div>
+						<div class="order-progress-tit2">
+							<div class="order-progress-titL">收货信息</div>
+						</div>
+						<div class="order-progress-con">
+							{eyou:empty name="$field.prom_type"}
+							<span class="span-row">配送方式：快递配送</span>
+							<span class="span-row">收货信息：{$field.ConsigneeInfo}</span>
+							{/eyou:empty}
+							<span class="span-row">买家留言：{$field.user_note}</span>
+							{eyou:eq name="$field.prom_type" value="0"}
+								<!-- 订单类型判断，普通订单可查看物流，虚拟订单无需查看物流 -->
+								<span class="span-row">快递公司：{$field.express_name}</span>
+								<span class="span-row">物流单号：
+									{$field.express_order}
+									{eyou:if condition="'2' == $field.order_status or '3' == $field.order_status"}
+										{eyou:eq name="$is_wechat" value="1"}
+											<a href="{$field.MobileExpressUrl}">物流查询</a>
+										{eyou:else/}
+											<a href="JavaScript:void(0);" {$field.LogisticsInquiry}>（ 物流查询 ）</a>
+										{/eyou:eq}
+									{/eyou:if}
+								</span>
+								<!-- 订单类型判断结束 -->
+								{eyou:else/}
+								<span class="span-row">商家回复：{$field.virtual_delivery}</span>
+							{/eyou:eq}
+						</div>	
+				    </div>
+				
+				</div>
+			</div>
+			{$field.hidden}
+			<!-- 中部结束 -->
+			{/eyou:sporder}
+			
+		</div>
+	</div>
+
+    <input type="hidden" id="unified_id">
+	<input type="hidden" id="unified_number">
+    <input type="hidden" id="transaction_type">
+</div>
+
+<script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
+<script type="text/javascript">
+    $(function(){
+        wx.miniProgram.getEnv( function(res) {
+            if(res.miniprogram) {
+                // 小程序
+                var i = 0;
+                i = setInterval('AppletsPay()', 1000);
+            }
+        });
+    });
+
+    // 小程序后查询
+    function AppletsPay(){
+        var unified_id       = $('#unified_id').val();
+        var unified_number   = $('#unified_number').val();
+        var transaction_type = $('#transaction_type').val();
+        if (unified_id && unified_number && transaction_type) {
+            $.ajax({
+                url: "{eyou:url link='user/Pay/ajax_applets_pay'/}",
+                data: {unified_id:unified_id, unified_number:unified_number, transaction_type:transaction_type},
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    if (1 == res.code) {
+                        if (!res.data.mobile && !res.data.email) window.location.href = res.url;
+                        if (res.data.mobile) SendMobile(res.data.mobile);
+                        if (res.data.email) SendEmail(res.data.email);
+                        window.location.href = res.url;
+                    }
+                }
+            });    
+        }
+    }
+
+	// 判断支付类型是否一致并且更新支付方式
+    function UpdatePayMethod(unified_id,unified_number,transaction_type='2'){
+    	layer_loading('正在处理');
+        $.ajax({
+            url: "{eyou:url link='user/Pay/update_pay_method'/}",
+            data: {unified_id:unified_id,unified_number:unified_number,pay_method:'WeChatInternal',transaction_type:transaction_type,order_source:2},
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                layer.closeAll();
+                if (0 == res.code) {
+                	showErrorAlert(res.msg);
+                }else{
+                    if (1 == res.data.is_gourl) {
+                        window.location.href = res.url;
+                    }else{
+                        $('#unified_id').val(unified_id);
+                        $('#unified_number').val(unified_number);
+                        $('#transaction_type').val(transaction_type);
+                        WeChatInternal(unified_id,unified_number,transaction_type);
+                    }
+                }
+            }
+        });
+    }
+
+	// 微信内部中进行支付
+    function WeChatInternal(unified_id,unified_number,transaction_type)
+    {
+        wx.miniProgram.getEnv( function(res) {
+            if(res.miniprogram) {
+                // 小程序
+                wx.miniProgram.navigateTo({
+                    url: '/pages/pay/pay?unified_id='+ unified_id +'&unified_number=' + unified_number + '&type=' + transaction_type
+                });
+            } else {
+                $.ajax({
+                    url: "{eyou:url link='user/Pay/wechat_pay'/}",
+                    data: {unified_id:unified_id,unified_number:unified_number,transaction_type:transaction_type},
+                    type:'post',
+                    dataType:'json',
+                    success:function(res){
+                        layer.closeAll();
+                        if (1 == res.code) {
+                            callpay(res.msg);
+                        }else{
+                        	showErrorAlert(res.msg);
+                        }
+                    }
+                });
+            }
+        });
+
+    }
+
+    //调用微信JS api 支付
+    function jsApiCall(data)
+    {
+        WeixinJSBridge.invoke(
+            'getBrandWCPayRequest',data,
+            function(res){
+                if(res.err_msg == "get_brand_wcpay_request:ok"){  
+                    layer.msg('微信支付完成！', {time: 1000}, function(){
+                        pay_deal_with();
+                    });
+                }else if(res.err_msg == "get_brand_wcpay_request:cancel"){
+                	showErrorAlert('用户取消支付！');
+                }else{
+                	showErrorAlert('支付失败！');
+                }  
+            }
+        );
+    }
+    
+    // 微信内部支付时，先进行数据判断
+    function callpay(data)
+    {
+        if (typeof WeixinJSBridge == "undefined"){
+            if( document.addEventListener ){
+                document.addEventListener('WeixinJSBridgeReady', jsApiCall, false);
+            }else if (document.attachEvent){
+                document.attachEvent('WeixinJSBridgeReady', jsApiCall); 
+                document.attachEvent('onWeixinJSBridgeReady', jsApiCall);
+            }
+        }else{
+            jsApiCall(data);
+        }
+    }
+
+    function pay_deal_with(){
+        var unified_number   = $('#unified_number').val();
+        var transaction_type = $('#transaction_type').val();
+        $.ajax({
+            url: "{eyou:url link='user/Pay/pay_deal_with'/}",
+            data: {unified_number:unified_number,transaction_type:transaction_type},
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                if (1 == res.data.status) {
+                    if (!res.data.mobile && !res.data.email) window.location.href = res.url;
+                    if (res.data.mobile) SendMobile(res.data.mobile);
+                    if (res.data.email) SendEmail(res.data.email);
+                    window.location.href = res.url;
+                }
+            }
+        });
+    }
+
+    // 发送短信
+    function SendMobile(result) {
+        if (result) {
+            $.ajax({
+                url: result.url,
+                data: result.data,
+                type:'post',
+                dataType:'json'
+            });
+        }
+    }
+
+    // 发送邮件
+    function SendEmail(result) {
+        if (result) {
+            $.ajax({
+                url: result.url,
+                data: result.data,
+                type:'post',
+                dataType:'json'
+            });
+        }
+    }
+</script>
+{eyou:include file="users/users_footer.htm" /}
+

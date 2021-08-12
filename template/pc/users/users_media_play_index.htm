@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>我的视频-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/bootstrap.min.css"/}
+    {eyou:static file="users/skin/css/basic.css"/}
+    {eyou:static file="users/skin/css/eyoucms.css"/}
+    {eyou:static file="users/skin/css/shop.css"/}
+    {eyou:static  file="users/skin/css/tb_style.css"/}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+</head>
+
+<body class="centre shop">
+<!-- 头部 -->
+{eyou:include file="users/users_header.htm" /}
+<!-- END -->
+<div class="ey-body-bg">
+    <div class="ey-body">
+        <div class="ey-container w1200">
+			<!-- 侧边 -->
+			{eyou:include file="users/users_left.htm" /}
+			<!-- END -->
+			<!-- 中部 -->
+			<div class="ey-con fr" >
+				<div class="el-main main-bg">
+					<!-- 顶部导航栏 -->
+					<div class="column-title mb20">
+						<div class="column-name">我的视频</div>
+						<div class="column-right">
+							<a class="el-button el-button--primary is-plain el-button--small" href="{:url('user/Users/index')}">
+								返回
+							</a>
+						</div>
+					</div>
+					<!-- END -->
+					<div class="el-row oper-row">
+						<div class="el-col-12 oper-row-l">
+							<div class="el-button-group">
+								<a href="{:url('user/Users/media_index')}" class="cursor-pointer el-button {if $Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'media_index'} el-button--primary {/if}" >视频订单</a>
+								<a href="{:url('user/Media/play_index')}" class="cursor-pointer el-button {if $Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Media' && $Think.const.ACTION_NAME == 'play_index'} el-button--primary {/if}" >播放记录</a>
+							</div>
+						</div>
+						<div class="el-col-12 oper-row-r">总播放时长 : {$eyou.field.total_time}</div>
+
+					</div>
+					<div class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition mt20" style="width: 100%;">
+
+						<table >
+							<thead>
+									<th style="width:320px"><div class="cell"> 文章标题</div></th>
+                                    <th style="width:120px"><div class="cell tc"> 缩略图</div></th>
+									<th style="width:120px ;"><div class="cell tc">总时长</div></th>
+									<th style="width:120px; ;"><div class="cell tc">已观看</div></th>
+									<th style="width: 80px;"><div class="cell tc">进度</div></th>
+									<th style="width: 250px;"><div class="cell tc">上次观看</div></th>
+									<th style="width: 120px;"><div class="cell tc">操作</div></th>
+								</tr>
+							</thead>
+							<tbody>
+							{empty name="$eyou.field.list"}
+								<tr>
+									<td  align="center" axis="col0" colspan="50">
+										<div class="cell pt50 pb50 tc">
+										   <span class="mb10"><img id='litpic_img'  src="__PUBLIC__/static/common/images/null-data.png"/></span>
+										 </div>
+									</td>
+								</tr>
+							{else/}
+								{eyou:volist name="$eyou.field.list" id="vo"}
+								<tr>
+									<td>
+										<div class="cell">{$vo.title}</div>
+									</td>
+									<td>
+										<div class="cell tc"><a href="javascript:void(0);" data-arurl="{$vo.arcurl}" onclick="ArcUrl(this);">
+												<img class="media-object" src="{$vo.litpic}" alt="商品名称">
+											</a></div>
+									</td>
+									<td>
+										<div class="cell tc"> {$vo.sum_file_time} </div>
+									</td>
+									<td>
+										<div class="cell tc">{$vo.sum_play_time}</div>
+									</td>
+									<td>
+										<div class="cell tc">{$vo.process}</div>
+									</td>
+									<td>
+										<div class="cell tc">{$vo.last_update_time}</div>
+									</td>
+                                    <td>
+                                    	<div class="cell tc"><a class="el-button el-button--primary el-button--small" href="{$vo.arcurl}">{eq name='$vo.process' value='100%'}重新学习{else /}继续学习{/eq}</a></div>
+                                    </td>
+								</tr>
+								{/eyou:volist}
+							{/empty}
+							</tbody>
+						</table>
+					</div>
+					<div style="text-align: center;">
+						{$page}
+						{eyou:if condition="!empty($pager->totalRows)"}
+						<div class="fytotal">共{$pager->totalRows}条记录</div>
+						{/eyou:if}
+					</div>
+				</div>
+			<!-- END -->
+			</div>
+
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    // 内容查看
+    function ArcUrl(obj) {
+        window.open($(obj).attr('data-arurl'));
+    }
+
+    // 打开订单详情
+    function OpenOrderDetails(obj) {
+        var url = $(obj).attr('data-url');
+
+        // iframe窗
+        var iframes = layer.open({
+            type: 2,
+            title: '订单详情',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: 0.3,
+            area: ['20%', '20%'],
+            content: url
+        });
+        layer.full(iframes);
+    }
+</script>
+{eyou:include file="users/users_footer.htm" /}
+<!-- END -->

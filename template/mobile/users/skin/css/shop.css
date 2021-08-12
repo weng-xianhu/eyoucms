@@ -1,0 +1,162 @@
+/*商城 2019.4.15*/
+.m-t-20 {
+    margin-top: 20px!important;
+}
+.clearfix{ clear: both; }
+.shop .serbox{ position: absolute; right: 0px; z-index:3; }
+
+.shop .shop-order-item{ margin-top: 10px; }
+
+.shop .ey-member input.form-control{ height: auto; }
+.shop .nav-tabs{ border-bottom: none; }
+.shop .shop-order-item{border: 1px solid #e8e8e8;}
+
+.shop .shop-order-top{padding-top: 20px;border-bottom: 1px dashed #f1f1f1; width:98%; margin: 0 auto;}
+.shop .shop-order-top .ting {
+    padding-bottom: 20px;
+}
+.shop .shop-order-top .ting .info {
+    margin-right: 10px;
+}
+@media (min-width: 992px){
+.shop .shop-order-top {
+    margin-bottom: 20px;
+}
+}
+.shop .shop-order-top .ting .price {
+    font-size: 26px;
+}
+.shop .shop-order-top .ting h4 {
+    font-size: 22px;
+    text-shadow: none;
+}
+
+.red-600 {
+    color: #f96868!important;
+}
+
+.shop .shop-order-bottom{ padding:10px 0px 0px; }
+.shop .shop-order-bottom .media-xs{ padding-bottom: 10px; }
+ @media (max-width:640px) {
+
+.shop .serbox{ position: relative; }
+.shop .shop-order-bottom .col-sm-6{ width:50%; float: left; }
+.shop .shop-order-bottom .text-xs-right{ margin-bottom:10px;  }
+ }
+
+ .shop .topsub li.nav-item em {
+    position: relative;
+    display: inline-block;
+    *display: inline;
+    *zoom: 1;
+    height: 15px;
+    line-height: 15px;
+    font-family: arial;
+    top: -5px;
+    padding: 0 4px;
+    background: #e4393c;
+    border-radius: 15px;
+    color: #fff;
+    font-size: 10px;
+    margin: 0 0 0 2px;
+    _position: static;
+}
+ .shop .nav-tabs-line .nav-link {padding: .715rem .429rem;}
+ .shop .media-body h4 a{font-size: 1.1rem; color: #333}
+
+ .shop .panel-heading span{ float: right; }
+
+.shop-address li{
+    display: inline-block;
+    font-size: 1rem;
+    vertical-align: top;
+    margin-bottom: 1.075rem;
+    padding-left: .5375rem;
+    padding-right: .5375rem;
+    width: 50%;
+    overflow: hidden;
+    
+}
+
+ @media (max-width:640px) {
+.shop-address li{width: 100%;}
+
+ }
+.shop-address li a.addr-list{border: 1px solid #E4EAEC;}
+.shop-address li .list-group-item-text{line-height: 1.5;}
+.list-group-item .icon{ margin: 0px; }
+
+
+.cartlist {
+    margin-right: 8px;
+    background-image: url('../images/cartlist_hei.png');
+    background-size: 16px; 
+}
+.active .cartlist {
+    background-image: url('../images/cartlist.png');
+}
+
+
+
+.cart-list .table-striped th{ background:#f5f5f5 ;border-bottom: 1px solid #ddd; font-weight:normal !important; }
+
+.checkbox-danger input[type=radio]:checked+label::before, .checkbox-danger input[type=checkbox]:checked+label::before {
+    background-color: #fff;
+    border-color: #ddd;
+    border-width: 1px;
+}
+.checkbox-danger input[type=radio]:checked+label::after, .checkbox-danger input[type=checkbox]:checked+label::after {
+    color: #ff0000;
+}
+
+.buynum input.form-control{ height: 2.288rem; }
+
+.cart-list table td a.avatar {
+    width: 80px;
+}
+.cart-list table td a.avatar img {border-radius: 0px;}
+.cart-list .table td,.cart-list .table th{ vertical-align: middle; }
+
+
+.cart-total .col-sm-2{ width:16.666667% !important; }
+.cart-total .col-lg-10{ padding: .715rem 1.286rem;}
+.cart-total .newbtn{ width:100%; }
+
+@media (max-width: 767px){
+.table-responsive {margin-bottom:0;}
+.table-responsive .media-body .m-b-0{ display: none; }
+.table a {
+    font-size: 1.1rem;
+}
+.cart-list table td a.avatar {
+    width: 60px;
+}
+
+.tot2 .col-lg-9,.tot2 .col-lg-3{ width:100%; }
+.tot2 .col-lg-3{ margin-top: 10px; }
+}
+.cart-list table td .cart-remove {
+    font-size: 20px;
+    color: #CCD5DB;
+}
+.cart-list h4{ font-size: 1.186rem }
+.cart-list .table>tbody>tr>td{ padding:15px 8px; }
+.blankgray{ height: 1px; background: #f7f7f7 }
+.cart-not { margin-bottom:0px; }
+.cart-not .container{ padding:58px 30px; }
+
+.djtip{ color: #ff6600; font-size: 16px; padding:12px; background: #f9f9f9; }
+.addadr{ font-size: 16px;}
+.alpays span,.psfs span{ font-size: 16px; line-height: 36px }
+.alpays span,.alpays a{ float: left; }
+.nav-tabs .nav-link.active{ color: #333; font-weight: bold; }
+.nav-tabs .nav-link.active,.nav-tabs-line .nav-link{ border-bottom: none;  }
+.nav-tabs .nav-link.active:hover{ border-bottom: none; }
+
+.btn-primary{ width:auto;color: #fff; }
+.btn-primary:hover{color: #fff }
+a.btn-info i{ display: none; }
+a.btn-info.btn-primary i{display:inline-block;}
+
+.order-goods .table th{ background: none; border-width: 1px; }
+.panel-heading span.fr a{ margin-left: 8px; color: #333 !important }

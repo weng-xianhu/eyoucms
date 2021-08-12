@@ -1,0 +1,50 @@
+{eyou:eq name='is_mobile' value='2'}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    <script type="text/javascript">
+        // 头像加载
+        function head_pic_call_back(fileurl_tmp)
+        {
+            $("#head_pic").val(fileurl_tmp);
+            $("#head_pic_a").attr('src', fileurl_tmp);
+            layer_loading('正在处理');
+            $.ajax({
+                url: "{eyou:url link='user/Users/edit_users_head_pic'/}",
+                data: {filename:fileurl_tmp},
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {icon:6, time:1500});
+                    } else {
+                        layer.closeAll();
+                        showErrorAlert(res.msg);
+                    }
+                }
+            });
+        }
+    </script>
+
+    <div class="col-sm-2 sidebar panel" >
+        <div class="sidebar-box">
+              <div class="sidebar-header d-flex align-items-center">
+                <div class="avatar">
+                    <a href="javascript:void(0);">
+                        <img id="head_pic_a" class="img-fluid rounded-circle" style="width: 100%;" src="{$users.head_pic|get_head_pic=###}" {eyou:eq name='is_mobile' value='1'} onClick="GetUploadify_mobile(1)" {eyou:else/} onClick="GetUploadify(1,'','allimg','head_pic_call_back')" {/eyou:eq}/>
+                    </a>
+                    <input type="hidden" name="head_pic" id="head_pic" value="{$users.head_pic}">
+                </div>
+                <div class="title">
+                  <h1 class="h4">{$nickname}</h1>
+                  <p>{$users.level_name}</p>
+                </div>
+              </div>
+              
+            <div class="list-group">
+                <!-- 扩展菜单 -->
+                {eyou:include file="/public/static/template/users/users_leftmenu.htm" /}
+                <!-- 扩展菜单 -->
+            </div>
+        </div>
+    </div>
+{/eyou:eq}
+

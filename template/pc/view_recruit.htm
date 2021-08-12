@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>{$eyou.field.seo_title}</title>
+<meta name="description" content="{$eyou.field.seo_description}" />
+<meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+{eyou:static file="skin/style/pintuer.css" /}
+{eyou:static file="skin/style/header.css" /}
+{eyou:static file="skin/style/style.css" /}
+{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+<!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+</head>
+<body>
+<!--网站公用头部——开始-->
+{eyou:include file="header.htm" /}
+<div class="layout bg-gray">
+	<div class="container">
+		<div class="line">
+			<div class="nav-bread">
+				<i class="fa fa-home margin-small-right"></i>{eyou:position/}
+			</div>
+		</div>
+	</div>
+	<div class="container">
+		<div class="line">
+			<div class="xl12 xs12 xm12 xb12">
+					<!--内容 begin-->
+					<div class="article bg-white">
+						<div class="padding-large">
+						<div class="post margin-big-bottom">
+							<h1>{$eyou.field.title}</h1>
+							<div class="blank"></div>
+							<div class="text-gray padding-big-bottom text-default">
+								<span>发布时间：{$eyou.field.add_time|MyDate='Y-m-d',###}</span>
+								<span class="margin-left">点击数：{eyou:arcclick /}</span>
+							</div>
+							<div class="blank"></div>
+							<hr class="bg-gray">
+							<ul>
+								<li>工作地点：{$eyou.field.gzdd}</li>
+								<li>工作性质：{$eyou.field.gzxz}</li>
+								<li>学历要求：{$eyou.field.xlyq}</li>
+								<li>工作年限：{$eyou.field.gznx}</li>
+								<li>薪资待遇：{$eyou.field.xzdy}</li>
+								<li>招聘人数：{$eyou.field.zprs}</li>
+								<li>发布日期：{$eyou.field.add_time|MyDate='Y-m-d',###}</li>
+								<li class="margin-big-top">{$eyou.field.nnxq}</li>
+							</ul>
+						</div>
+						
+						<div class="text-center">
+							<a href="javascript:;" data-target="#job_dialog" data-width="30%" data-toggle="click" data-mask="1" class="dialogs button button-large radius-rounded bg-yellow border-none">在线应聘</a>
+						</div>
+						<!-- 留言弹窗 -->
+						<div id="job_dialog">
+							<div class="dialog job">
+								<div class="dialog-head">
+									<span class="dialog-close close rotate-hover"></span>
+								</div>
+								<div class="dialog-body">
+									<h3 class="text-center text-big">在线应聘</h3>
+									<p class="text-center text-gray">请留下您的联系方式，我们将在一个工作日内与您联系</p>
+									<div class="blank-small"></div>
+									{eyou:guestbookform type='default' typeid='6'}
+									<form method="POST" {$field.formhidden} action="{$field.action}" onsubmit="return checkForm();">
+										<!-- 申请职位 -->
+										<div class="form-group">
+											<div class="field">
+											<input type='text' id='attr_4' name='{$field.attr_4}' class="input text-main" placeholder="{$field.itemname_4}" value="{$eyou.field.title}"/>
+											</div>
+										</div>
+										<!-- 姓名 -->
+										<div class="form-group">
+											<div class="field">
+											<input type='text' id='attr_5' name='{$field.attr_5}' class="input text-main" placeholder="{$field.itemname_5}" value=""/>
+											</div>
+										</div>
+
+										<!--行业 -->
+										<div class="form-group">
+											<div class="field">
+											 <select name="{$field.attr_6}" id="attr_6">
+											   <option value="">请选择{$field.itemname_6}</option>
+											   {eyou:volist name='$field.options_6' id='vo'}
+											   <option value="{$vo.value}">{$vo.value}</option>
+											   {/eyou:volist}
+											 </select>
+											</div>
+										</div>
+										<!-- 行业 -->
+
+										<!-- 手机 -->
+										<div class="form-group">
+											<div class="field">
+											<input type='text' id='attr_16' name='{$field.attr_16}' class="input" placeholder="{$field.itemname_16}" value=""/>
+											</div>
+										</div>
+
+										<div class="form-group">
+											<div class="field"><textarea class="textarea" id='attr_20' name='{$field.attr_20}' placeholder="{$field.itemname_20}" value="" rows="3" /></textarea> </div>
+										</div>
+										<!-- 提交 -->
+										<div class="blank"></div>
+										<div class="form-button">
+											<input class="button bg-yellow button-large button-block border-none radius-none text-white" type="submit" value="提交"/>
+										</div>
+										{$field.hidden}
+									</form>
+									<script type="text/javascript">
+										function checkForm()
+										{
+										  if(document.getElementById('attr_5').value.length == 0)
+										  {
+											alert('{$field.itemname_5}需要填写！');
+											return false;
+										  }
+										  if(document.getElementById('attr_6').value.length == 0)
+										  {
+											alert('请选择您的{$field.itemname_6}！');
+											return false;
+										  }
+
+										  if(document.getElementById('attr_16').value.length == 0)
+										  {
+											alert('{$field.itemname_16}需要填写！');
+											return false;
+										  }
+
+										  if(document.getElementById('attr_20').value.length == 0)
+										  {
+											alert('{$field.itemname_20}需要填写！');
+											return false;
+										  }
+
+										}
+									</script>
+									{/eyou:guestbookform}
+								</div>
+							</div>
+						</div>
+						<!-- 留言弹窗 end -->
+
+						</div><!-- content	 -->
+						<!--tag-->
+						{eyou:notempty name='$eyou.field.tags'}
+							<span>Tag：</span>
+							{eyou:tag getall='0'}
+							<a href="{$field.link}" class="tag tags bg-yellow radius text-white margin-small-bottom" {$field.target}>{$field.tag}</a>
+							{/eyou:tag}
+						{/eyou:notempty}
+						<!--tag end-->
+						<div class="blank-big"></div>
+					</div>
+			</div>
+		</div><!--line end-->
+	</div>
+	<div class="blank-middle"></div>
+	<div class="container">
+		<div class="line">
+			<div class="xl12 xs12 xm12 xb12">
+				<!-- 上下篇 begin -->
+				<div class="prenext-pro">
+					<div class="line">
+						<div class="xl5 xs5 xm5 xb5">
+							{eyou:prenext get='next' titlelen='30'}
+							<a href="{$field.arcurl}" class="button button-block bg-white border radius-none text-main text-middle text-center" title="上一篇:{$field.title}"><i class="margin-right fa fa-long-arrow-left"></i>{$field.title}</a>
+							{eyou:else /}
+                            <a class="button button-block bg-white border radius-none text-gray text-middle text-center" title="{eyou:lang name='sys10' /}"><i class="margin-right fa fa-long-arrow-left"></i>没有了</a>
+							
+							{/eyou:prenext}
+						</div>
+
+						<div class="xl2 xs2 xm2 xb2 text-center">
+							{eyou:type typeid="$eyou.field.parent_id"}
+							<a href="{$field.typeurl}" class="button radius-none border button-block bg-white text-main text-middle text-center"><i class="fa fa-align-justify margin-right"></i><span class="hidden-l">返回列表</span></a>
+							<!-- {$field.typename} -->
+							{/eyou:type}
+						</div>
+
+						<div class="xl5 xs5 xm5 xb5">
+							{eyou:prenext get='pre' titlelen='30'}
+							<a href="{$field.arcurl}" class="button border button-block bg-white radius-none text-main text-middle text-center float-right" title="下一篇:{$field.title}">{$field.title}<i class="margin-left fa fa-long-arrow-right"></i></a>
+							{eyou:else /}
+							<a class="button button-block bg-white border radius-none text-gray text-middle text-center"><i class="margin-left fa fa-long-arrow-right"></i>没有了</a>
+							{/eyou:prenext}
+						</div>
+				   </div>
+				</div>
+				<!-- 上下篇 end -->
+			</div>
+		</div><!--line end-->
+	</div>
+	<div class="blank-big"></div>
+</div>
+<!--网站公用底部——开始-->
+{eyou:include file="footer.htm" /}
+<!--网站公用底部——结束-->
+{eyou:static file="skin/js/pintuer.js" /}
+{eyou:static file="skin/js/common.js" /}
+</body>
+</html>

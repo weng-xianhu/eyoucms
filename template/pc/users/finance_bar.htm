@@ -1,0 +1,6 @@
+<div class="el-button-group">
+    <a href="{:url('user/Pay/pay_consumer_details')}" class="cursor-pointer el-button {if $Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Pay' && $Think.const.ACTION_NAME == 'pay_consumer_details'} el-button--primary {/if}" >余额明细</a>
+    {egt name='$php_servicemeal' value='2'}
+    <a href="{:url('user/Users/score_index')}" class="cursor-pointer el-button {if $Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'score_index'} el-button--primary {/if}" >{$score_name}明细</a>
+    {/egt}
+</div>

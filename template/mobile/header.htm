@@ -1,0 +1,81 @@
+{eyou:static file="skin/js/jquery.min.js" /}
+<!-- 友好的弹出提示框 -->
+{eyou:static file="/public/plugins/layer-v3.1.0/layer.js" /}
+<!-- 支持子目录 -->
+{eyou:global name='ey_common_hidden' /}
+
+<header id="pc-header">
+	<div class="layout fixed navbar">
+		<div class="container-layout">
+			<div class="line">
+				<div class="xl8 xs9 logo">
+					<a href="{eyou:global name='web_basehost' /}"><img src="{eyou:global name='web_attr_13' /}" alt="{eyou:global name='web_name' /}" class="img-responsive"/></a>
+				</div>
+				<div class="text-center">
+					<ul class="nav nav-menu nav-inline nav-navicon" >
+					<li{eyou:eq name='$Request.param.m' value='Index'} class="active"{/eyou:eq}><a href="{eyou:global name='web_cmsurl' /}" title="{eyou:lang name='sys1' /}">{eyou:lang name='sys1' /}</a></li>
+					{eyou:channel type="top" id="field" currentstyle="active"}
+					<li class="{$field.currentstyle}">
+						{eyou:notempty name="$field.children"}
+							<a href="javascript:;" class="first-level">{$field.typename}<i class="fa fa-angle-down margin-small-left"></i></a>
+						{eyou:else /}
+							<a href="{$field.typeurl}" class="first-level">{$field.typename}</a>
+						{/eyou:notempty}
+						{eyou:notempty name="$field.children"}
+						<ul class="drop-menu">{eyou:channel name="$field.children" id="field2"}
+							<li><a href="{$field2.typeurl}">{$field2.typename}</a></li>{/eyou:channel}
+						</ul>
+						{/eyou:notempty}
+						</a>
+					</li>
+					{/eyou:channel}
+					</ul>
+				</div>
+				<div class="xl4 xs3">
+                    <!-- 登录后的效果：文件模板存放在 system/users_info.htm ，具体更多写法请熟悉 ey_users 表字段 -->
+					{eyou:user type='open'}
+	                    {eyou:user type='userinfo'}
+	                    <div id="{$field.htmlid}">
+	                        <!-- 登录前 start -->
+							<div class="log-in">
+								<div class="button-group">
+									<a href="{eyou:Diyurl link='user/Users/login' /}" class="dialogs user-ico radius-circle dropdown-toggle text-center text-big">
+									<i class="fa fa-user"></i></a>
+								</div>
+							</div>
+							{eyou:if condition="getUsersConfigData('shop.shop_open') == 1"}
+							<div class="shopBar badge-corner">
+								<a href="{eyou:Diyurl link='user/Shop/shop_cart_list' /}" class="shop-ico">
+								<!-- <span class="badge bg-yellow">0</span> -->
+								<i class="fa fa-shopping-cart" aria-hidden="true"></i>
+								</a>
+							</div>
+							{/eyou:if}
+							<!-- 登录前 end-->
+						</div>		
+						{$field.hidden}
+						{/eyou:user}
+					{/eyou:user}		
+					<span class="searchBar" {eyou:if condition="getUsersConfigData('shop.shop_open') == 0"}style="right: 100px;"{/eyou:if}><a href="#none" class="search-ico"><i class="fa fa-search" aria-hidden="true"></i></a></span>		
+				</div>
+			</div>
+		</div>
+	</div>
+</header>
+<!--弹出搜索 -->
+<div class="searchBar-m">
+	<div class="mask"></div>
+	<a href="javascript:void(0)"><i class="fa fa-times"></i></a>
+	<div class="form-group">
+	{eyou:searchform type='default'}
+		<form method="get" action="{$field.action}" onsubmit="return searchForm();">
+			<input type="text" name="keywords" id="keywords" class="input radius-none text-middle" value="{eyou:lang name='yybl6' /}" onFocus="this.value=''" onBlur="if(!value){value=defaultValue}"/>
+			<button type="submit" name="submit" class="button radius-none border-none" value="Search"/></button>
+			{$field.hidden}
+		</form>
+	{/eyou:searchform}
+	</div>
+</div>
+<!-- 弹出搜索 -->
+
+<div class="clearfix"></div>

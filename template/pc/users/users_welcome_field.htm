@@ -1,0 +1,134 @@
+{eyou:volist name="$users_para" id="vo"}
+    {eyou:switch name="vo.dtype"}
+        {eyou:case value="mobile"}
+            <!-- 手机文本框 start -->
+            <li>
+                {eyou:eq name='$users.is_mobile' value='1'}
+                    <em>{$vo.title}：</em><span>{$vo.dfvalue|default=''}</span>
+                {eyou:else/}
+                    <em>{$vo.title}：</em><span><a href="JavaScript:void(0);" onclick="get_{$vo.fieldArr}{$vo.name|default=''}_mobile_code('绑定手机');">（绑定手机）</a></span>
+                    <script type="text/javascript">
+                        function get_{$vo.fieldArr}{$vo.name|default=''}_mobile_code(title) {
+                            var url = '{$RootDir}/index.php?m=user&c=Users&a=bind_mobile';
+                            if (url.indexOf('?') > -1) {
+                                url += '&';
+                            } else {
+                                url += '?';
+                            }
+                            url += 'title=' + title;
+                            //iframe窗
+                            layer.open({
+                                type: 2,
+                                title: title,
+                                shadeClose: false,
+                                maxmin: false, //开启最大化最小化按钮
+                                area: ['350px', '300px'],
+                                content: url
+                            });
+                        }
+                    </script>
+                {/eyou:eq}
+            </li>
+            <!-- 手机文本框 end -->
+        {/eyou:case}
+
+        {eyou:case value="email"}
+            <!-- 邮箱文本框 start -->
+            <li>
+                {eyou:eq name='$users.is_email' value='1'}
+                    <em>{$vo.title}：</em><span>{$vo.dfvalue|default=''}</span>
+                {eyou:else/}
+                    <em>{$vo.title}：</em><span><a href="JavaScript:void(0);" onclick="get_{$vo.fieldArr}{$vo.name|default=''}_email_code('绑定邮箱');">（绑定邮箱）</a></span>
+                    <script type="text/javascript">
+                        function get_{$vo.fieldArr}{$vo.name|default=''}_email_code(title)
+                        {
+                            var url = "{eyou:url link='user/Users/bind_email'/}";
+                            if (url.indexOf('?') > -1) {
+                                url += '&';
+                            } else {
+                                url += '?';
+                            }
+                            url += 'title='+title;
+                            //iframe窗
+                            layer.open({
+                                type: 2,
+                                title: title,
+                                shadeClose: false,
+                                maxmin: false, //开启最大化最小化按钮
+                                area: ['350px', '300px'],
+                                content: url
+                            });
+                        }
+                    </script>
+                {/eyou:eq}
+            </li>
+            <!-- 邮箱文本框 end -->
+        {/eyou:case}
+
+        {eyou:case value="text"}
+            <!-- 单行文本框 start -->
+            <!-- <li><em>{$vo.title}：</em><span>{$vo.dfvalue|default=''}</span></li> -->
+            <!-- 单行文本框 end -->
+        {/eyou:case}
+
+        {eyou:case value="multitext"}
+            <!-- 多行文本框 start -->
+            <!-- <li><em>{$vo.title}：</em><span>{$vo.dfvalue|default=''}</span></li> -->
+            <!-- 多行文本框 end -->
+        {/eyou:case}
+
+        {eyou:case value="checkbox"}
+            <!-- 复选框 start -->
+            <!-- <li>
+                <em>{$vo.title}：</em><span>
+                    {eyou:volist name="$vo.trueValue" id="v2" key='k2'}
+                        {$v2}{if condition="$k2 < count($vo['trueValue'])"}、{/if}
+                    {/eyou:volist}
+                </span>
+            </li> -->
+            <!-- 复选框 end -->
+        {/eyou:case}
+
+        {eyou:case value="radio"}
+            <!-- 单选项 start -->
+            <!-- <li>
+                <em>{$vo.title}：</em><span>
+                    {eyou:volist name="$vo.trueValue" id="v2" key='k2'}
+                        {$v2}
+                    {/eyou:volist}
+                </span>
+            </li> -->
+            <!-- 单选项 end -->
+        {/eyou:case}
+
+        {eyou:case value="select"}
+            <!-- 下拉框 start -->
+            <!-- <li>
+                <em>{$vo.title}：</em><span>
+                    {eyou:volist name="$vo.trueValue" id="v2" key='k2'}
+                        {$v2}
+                    {/eyou:volist}
+                </span>
+            </li> -->
+            <!-- 下拉框 end -->
+        {/eyou:case}
+
+        {eyou:case value="img"}
+            <!-- 单张图 start -->
+            <!-- {eyou:notempty name='$vo.info' /}
+            <li><em>{$vo.title}：</em><span><img src="{$vo.info|default=''}"/></span></li>
+            {/eyou:notempty} -->
+            <!-- 单张图 end -->
+        {/eyou:case}
+
+        {eyou:case value="file"}
+            <!-- 单个文件 start -->
+            <!-- {eyou:notempty name='$vo.info' /}
+            <li><em>{$vo.title}：</em><span><a href="{$vo.info|default=''}" download="{$vo.info|get_filename=###}">[点击下载]</a></span></li>
+            {/eyou:notempty} -->
+            <!-- 单个文件 end -->
+        {/eyou:case}
+        
+        {eyou:include file="/public/static/template/users_v2/users_welcome_field_extend.htm" /}
+    {/eyou:switch}
+{/eyou:volist}

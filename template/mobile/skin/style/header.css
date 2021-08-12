@@ -1,0 +1,91 @@
+/* 导航 */
+.nav-navicon {display:none}
+#pc-header .logo{padding:15px 0;}
+#pc-header .logo img{max-width:100%;height:30px;}
+#pc-header .navbar{background:#FFF;-webkit-box-shadow:0px 1px 1px rgba(0, 0, 0, 0.03); box-shadow:0px 1px 1px rgba(0, 0, 0, 0.03);z-index:9}
+#pc-header .nav li.active ul li a {color:#3e3e3e;}
+#pc-header .nav li a{line-height:60px;color:#3e3e3e;position:relative;padding:0 18px;font-size:16px;font-weight:400}
+#pc-header .nav li ul {top:60px;padding:0;}
+#pc-header .nav li.active a,#pc-header .nav li a:hover,#pc-header .nav li:hover a.first-level{color:#ff9600;}
+#pc-header .nav li ul{background:#FFF;border-top-left-radius:0px;border-top-right-radius:0px;transition: 0.3s;}
+#pc-header .nav li ul li a {background:#FFF;line-height:42px;color:#3e3e3e;font-size:14px;font-weight:normal;display:block;width:100%;text-align:left;}
+#pc-header .nav li ul li a:hover{background:#ff9600;color:#fff;}
+
+#pc-header .searchBar{position:absolute;top:21px;right:150px}
+#pc-header a.search-ico i{font-size:18px;color:#6E6E6E;}
+/* 购物车图标 */
+#pc-header .shopBar{position:absolute;top:21px;right:110px}
+#pc-header a.shop-ico i{font-size:18px;color:#6E6E6E;}
+
+/* 登入后状态 */
+.log-in{position:absolute;top:14px;right:50px}
+.log-in .drop-menu {margin:12px 0 0;min-width:100px;border-radius:5px;-webkit-box-shadow:0 6px 12px rgba(0,0,0,.075); box-shadow:0 6px 12px rgba(0,0,0,.075) }
+.log-in .drop-menu a{padding:10px 20px;line-height:20px}
+.log-in .drop-menu a:hover,.drop-menu a:focus {background:#f8f8f8;color:#2D2D2D}
+.log-in .button-group span {display:inline-block;line-height:24px;height:24px;width:24px}
+.log-in .button-group ul:before {position:absolute;top:-8px;left:40px;display:inline-block;border-right:8px solid transparent;border-bottom:8px solid #fff;border-left:8px solid transparent;content:'';}
+.log-in .button-group ul:after {position:absolute;top:-8px;left:40px;display:inline-block;border-right:8px solid transparent;border-bottom:8px solid #fff;border-left:8px solid transparent;content:'';}
+.log-in .button-group .button {padding:0;line-height:18px;font-size:20px}
+.log-in .button-group .drop-menu { left: -30px;border-top:0px solid #ff0000;-webkit-box-shadow: 0px 0px 0px rgba(0,0,0,.075);box-shadow: 0px 8px 10px rgba(0,0,0,.05);border-radius:4px;}
+.log-in a.user-ico{width:32px;height:32px;line-height:32px;background:#ECEFF5;display:block;}
+.log-in a.user-head{width:32px;height:32px;overflow:hidden;display:block;}
+.log-in a.user-head img{width:32px;height:32px;}
+/* 登入后状态 end*/
+
+/* 注册登录切换 */
+.register .tab{font-size:0}
+.register .tab li{cursor:pointer;display:inline-block;position:relative;font-size:20px;width:60px;color:#666;margin:0 0 40px 0}
+.register .tab li::before{background:#ccc;content:'';position:absolute;bottom:-10px;left:0;width:100%;height:3px;border-radius:3px;transition:transform .3s;}
+.register .tab li.cur{color:#ff9600}
+.register .tab li.cur::before{background:#ff9600;content:'';position:absolute;bottom:-10px;left:0;width:100%;height:3px;border-radius:3px;transition:transform .3s;}
+
+.register .line{margin:0px;padding:0;position: relative; text-align: center;}
+.register .line span{display: inline-block; padding: 0 20px; position: relative; z-index: 200;}
+.register .line hr{-moz-border-bottom-colors: none; -moz-border-left-colors: none; -moz-border-right-colors: none; -moz-border-top-colors: none; border-color: #E2E2E2 -moz-use-text-color -moz-use-text-color; border-image: none; border-style: solid none none; margin-top:10px; position: absolute; top:0; width: 100%;}
+
+.register .bnt-login{margin:0 auto;text-align:center}
+.register .bnt-login a{display:inline-block;color:#fff;font-size:22px;width:48px;height:48px;text-align:center;line-height:48px;margin-right:10px;border-radius:30px}
+.register .bnt-login a:hover{opacity:0.8}
+.register .bnt-login a.weixin{background:#38B624}
+.register .bnt-login a.qq{background:#1F92DF}
+.register .bnt-login a.weibo{background:#FF6000}
+/* 注册登录切换 end*/
+
+/*手机导航 begin */
+#mobile-mask{position:relative;z-index:1;background:#FFF;overflow-x:hidden;overflow-y:hidden;}
+.offcanvas-visible #mobile-mask {-moz-transform:translateX(-275px);-webkit-transform:translateX(-275px);-ms-transform:translateX(-275px);-o-transform:translateX(-275px);transform:translateX(-275px);}
+#m-header .nav {display:block;}
+#m-header {background:#383838;display:none;height:100%;right:0;overflow-y:auto;position:relative;position:fixed;z-index:1;top:0;width:275px;border:0;}
+#m-header ul li{width:100%}
+#m-header ul li:hover,#m-header ul li.current {background:#383838}
+#m-header ul li a {line-height:49px;border-bottom:1px solid #404040;font-size:18px;color:#F2F2F2;font-weight:normal;display:block;position:relative;padding:0px 0 0 50px;}
+#m-header ul li a:hover,#m-header ul li.current a {color:#F2F2F2;}
+#m-header ul li ul {padding:0;z-index:1999;position:relative;width:100%;}
+#m-header ul li ul li a,#m-header ul li.current ul li a {background:#ff9600;border-bottom:1px solid #FFB133;color:#FFF;font-size:16px;line-height:40px;padding:5px 50px;text-align:left;display:block;}
+#m-header ul li ul li a:hover {background:#ff9600;color:#FFF;border-bottom:1px solid #ff9600;}
+#m-header ul li ul li a::before,#m-header ul li ul li a::after {background:none;height:0;padding:0}
+.offcanvas-visible #m-header{display: block}
+/* 手机导航面包ico begin */
+.m-toggle {position:relative;cursor:pointer;text-decoration:none;position:absolute;top:50%;right:20px;z-index:99999;display:block;margin:-11px auto 0;cursor:pointer;}
+.m-toggle.active i::before,.m-toggle.active i::after {}
+.m-toggle:hover,.m-toggle:focus,.m-toggle:active {outline:none;border-bottom:none !important;}
+.m-toggle i {position:relative;top:-1px;display:-moz-inline-stack;width:24px;height:2px;display:inline-block;zoom:1;*display:inline;color:#fff;text-transform:uppercase;text-indent:-55px;transition:all .2s ease-out;}
+.m-toggle i::before,.m-toggle i::after {content:'';width:24px;height:2px;position:absolute;left:0;-webkit-transition:0.2s;-o-transition:0.2s;transition:0.2s;}
+.m-toggle i::before {top:-9px;}
+.m-toggle i::after {bottom:-9px;}
+.m-toggle.active i {background:transparent;}
+.m-toggle.active i::before {top:0;-webkit-transform:rotateZ(45deg);-o-transform:rotateZ(45deg);transform:rotateZ(45deg);}
+.m-toggle.active i::after {bottom:0;-webkit-transform:rotateZ(-45deg);transform:rotateZ(-45deg);}
+.m-toggle i,.m-toggle i::before, .m-toggle i::after,.m-toggle.active i::before, .m-toggle.active i::after{background: #818181;}
+/*手机导航面包ico end */
+
+/* 弹出搜索 begin */
+.searchBar-m {display:none;width:100%;height:100%;position:fixed;top:60px;z-index:9;text-align:center}
+.searchBar-m .mask {position:absolute;left:0;right:0;width:100%;height:100%;background:#000;opacity:0.8;}
+.searchBar-m a{display:none;position:absolute;right:5%;top:5%;width:50px;height:50px;line-height:46px;font-size:36px;z-index:9999;color:#fff;}
+.searchBar-m a:hover{color:#ff9600}
+.searchBar-m .form-group {width:100%;position:absolute;left:50%;top:120px;transform:translate(-50%,-200%);}
+.searchBar-m .input{width:88%;background:transparent;border:0;border-bottom:2px solid #fff;color:#9c9c9c;height:50px;line-height:50px;float:left;padding:0 0 0 20px}
+.searchBar-m .button {width:8%;height:50px;line-height:60px;border-bottom:2px solid #fff;display:block;float:left;background:url(../images/ico-search-button.png) no-repeat center 50%;text-indent:-2000px}
+.searchBar-m .button:hover{background:url(../images/ico-search-button.png) no-repeat center 50%;}
+/* 弹出搜索 end */

@@ -1,0 +1,371 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>站内通知-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/bootstrap.min.css"/}
+    {eyou:static file="users/skin/css/basic.css"/}
+    {eyou:static file="users/skin/css/eyoucms.css"/}
+    {eyou:static file="users/skin/css/shop.css"/}
+    {eyou:static  file="users/skin/css/tb_style.css"/}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+</head>
+
+<body class="centre shop">
+<!-- 头部 -->
+{eyou:include file="users/users_header.htm" /}
+<!-- END -->
+
+<div class="ey-body-bg">
+    <div class="ey-body">
+        <div class="ey-container w1200">
+			<!-- 侧边 -->
+			{eyou:include file="users/users_left.htm" /}
+			<!-- END -->
+			<!-- 中部 -->
+			<div class="ey-con fr" >
+				<div class="el-main main-bg">
+					<!-- 顶部导航栏 -->
+					<div class="column-title mb20">
+						<div class="column-name">站内通知</div>
+					</div>
+					<!-- END -->
+
+					<div class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition mt20" style="width: 100%;">
+
+						<table >
+							<thead>
+								<tr>
+									<th style="width:30px;">
+                                        <div class="cell">
+                                            <label class="checkbox-label release-checkbox">
+                                                <span> &nbsp; </span>
+                                                <input class="checkbox" type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                                                <span class="check-mark"></span>
+                                            </label>
+                                        </div>
+                                    </th>
+									<th style="width:710px ;"><div class="cell">标题</div></th>
+									<th style="width: 200px;"><div class="cell tc">发送时间</div></th>
+								</tr>
+							</thead>
+							<tbody>
+							{empty name="$eyou.field.data"}
+								<tr>
+									<td  align="center" axis="col0" colspan="50">
+										<div class="cell pt50 pb50 tc">
+										   <span class="mb10"><img id='litpic_img'  src="__PUBLIC__/static/common/images/null-data.png"/></span>
+										 </div>
+									</td>
+								</tr>
+							{else/}
+								{eyou:volist name="$eyou.field.data" id="vo"}
+								<tr>
+									<td>
+										<div class="cell tc">
+											<label class="checkbox-label release-checkbox">
+												<span> &nbsp; </span>
+												<input class="checkbox" type="checkbox" name="ids[]" value="{$vo.id}">
+												<span class="check-mark"></span>
+											</label>
+
+										</div>
+									</td>
+									<td>
+										<div class="cell">
+                                            {neq name="$vo.is_read" value="1"}<span class="read-state unread_state_{$vo.id}"></span>{/neq}
+											<a href="javascript:void(0);" data-id="{$vo.id}" data-title="{$vo.title}" data-content="{$vo.remark}" onclick="read_notice(this);">
+												{$vo.title}
+											</a>
+										</div>
+									</td>
+									<td>
+										<div class="cell tc fc9 f12">{$vo.add_time|date='Y-m-d H:i:s',###}</div>
+									</td>
+								</tr>
+								{/eyou:volist}
+							{/empty}
+							<tr>
+								<td>
+									<label class="checkbox-label release-checkbox ml10">
+										<span> &nbsp; </span>
+										<input class="checkbox" type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+										<span class="check-mark"></span>
+									</label>
+								</td>
+								<td>
+                                    <a id="del_btn" class="el-button el-button--default is-disabled el-button--small" data-disabled='1' href="javascript:void(0);" onclick="BatchDelData(this, 'ids');" data-url="{$eyou.field.delurl}">
+                                        删除
+                                    </a>
+                                    <a id="signRead_btn" class="el-button el-button--default is-disabled el-button--small" data-disabled='1' href="javascript:void(0);" onclick="BatchReadData(this, 'ids');">
+                                        标记已读
+                                    </a>
+                                    <a class="el-button el-button--default el-button--small" data-disabled='0' href="javascript:void(0);" onclick="ReadAllData(this, 'ids');">
+                                      	全部标记
+                                    </a>
+                                    <a class="el-button el-button--default el-button--small" data-disabled='0' href="javascript:void(0);" onclick="DelAllData(this, 'ids');">
+                                      	全部删除
+                                    </a>
+								</td>
+							</tr>
+							</tbody>
+						</table>
+					</div>
+					<div style="text-align: center;">
+						{$page}
+						{eyou:if condition="!empty($pager->totalRows)"}
+						<div class="fytotal">共{$pager->totalRows}条记录</div>
+						{/eyou:if}
+					</div>
+				</div>
+			<!-- END -->
+			</div>
+
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function(){
+        $('input[type=checkbox]').click(function(){
+            if ($('input[name*=ids]:checked').length > 0) {
+                $('#del_btn').removeClass('is-disabled').attr('data-disabled', 0);
+                $('#signRead_btn').removeClass('is-disabled').attr('data-disabled', 0);
+            } else {
+                $('#del_btn').addClass('is-disabled').attr('data-disabled', 1);
+                $('#signRead_btn').addClass('is-disabled').attr('data-disabled', 1);
+            }
+        });
+    });
+
+    function read_notice(obj){
+        var id=$(obj).attr('data-id');
+
+        $.ajax({
+            url: "{eyou:url link='api/Ajax/notice_read'/}",
+            data: {id:id,_ajax:1},
+            type:'get',
+            dataType:'json',
+            success:function(res){
+                if(res.code == 1) {
+                    $('.unread_state_' + id).remove();
+                    if (res.data.unread_num < 1) {
+                        $("#users_unread_num").remove();
+                    }else{
+                        $("#users_unread_num").html(res.data.unread_num);
+					}
+                }
+            }
+        });
+        layer.open({
+            title:$(obj).attr('data-title'),
+            type: 1,
+            skin: 'z_pl', //文本样式优化
+            // skin: 'layui-layer-rim', //加上边框
+            area: ['30%', '40%'], //宽高
+            content: $(obj).attr('data-content')
+        });
+    }
+
+    // 删除单个通知
+    function DelData(obj) {
+        layer.confirm('是否删除该消息？', {
+            title: false,
+            btn: ['是','否'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:$(obj).attr('data-id'),_ajax:1},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 6,time:1500});
+                        window.location.reload();
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function(index){
+            layer.close(index);
+        });
+    }
+    // 批量删除通知
+    function BatchDelData(obj, name) {
+        var data_disabled = $(obj).attr('data-disabled');
+        if (1 == data_disabled) {
+            return false;
+        }
+        
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            showErrorAlert('请至少选择一项！');
+            return;
+        }
+        // 删除按钮
+        layer.confirm('确认批量删除消息？', {
+            title: false,
+            btn: ['确定', '取消'] //按钮
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:a,_ajax:1},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 6,time:1500});
+                        window.location.reload();
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+
+    // 批量已读
+    function BatchReadData(obj, name) {
+        var data_disabled = $(obj).attr('data-disabled');
+        if (1 == data_disabled) {
+            return false;
+        }
+        
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            showErrorAlert('请至少选择一项！');
+            return;
+        }
+
+        layer.confirm('确认批量标记已读？', {
+            title: false,
+            btn: ['确定', '取消'] //按钮
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: "{eyou:url link='user/UsersNotice/batch_read'/}",
+                data: {del_id:a,_ajax:1},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 6,time:1500});
+                        window.location.reload();
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+
+
+    // 所有已读
+    function ReadAllData(obj, name) {
+        layer.confirm('确认全部标记已读？', {
+            title: false,
+            btn: ['确定', '取消'] //按钮
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: "{eyou:url link='user/UsersNotice/batch_read_all'/}",
+                data: {_ajax:1},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 6,time:1500});
+                        window.location.reload();
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+
+    // 删除所有通知
+    function DelAllData(obj, name) {
+        // 删除按钮
+        layer.confirm('确认删除所有消息？', {
+            title: false,
+            btn: ['确定', '取消'] //按钮
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: "{eyou:url link='user/UsersNotice/del_all'/}",
+                data: {_ajax:1},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 6,time:1500});
+                        window.location.reload();
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+</script>
+{eyou:include file="users/users_footer.htm" /}
+<!-- END -->

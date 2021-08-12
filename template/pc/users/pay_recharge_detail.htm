@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>订单支付-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+	<!-- 新样式 2020-11-25 -->
+	{eyou:static file="users/skin/css/element/index.css" /}
+	{eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm" /}
+	
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="users/skin/js/global.js" /}
+</head>
+
+<body>
+{eyou:include file="users/users_header.htm" /}
+
+<div class="ey-body-bg">
+    <div class="ey-body">
+        <div class="ey-container w1200">
+            <div class="el-main main-bg">
+				<div class="order-row pt50 pb50">
+					<div class="order-row-l">
+						<div class="order-row-lt">
+							<i class="el-icon-success"></i>订单提交成功！去付款咯~
+						</div> 
+						<div class="order-row-lb">
+							订单号： <span class="red">{$data.unified_number}</span> 
+							商品名称：<span class="red">{$data.cause}</span>
+						</div>
+					</div> 
+					<div class="order-row-r">
+						应付总额：￥<span class="red">{$data.unified_amount}</span>元
+					    {eyou:eq name="$data.transaction_type" value="1"}
+							<a class="el-button el-button--primary el-button--small is-plain ml10" href="{:url('user/Pay/pay_account_recharge', ['unified_number'=>$data['unified_number'],'money'=>$data['unified_amount']])}">更改</a>
+						{/eyou:eq}
+					</div>
+				</div>
+								
+            </div>
+        </div>
+		
+		<div class="ey-container w1200">
+		    <div class="el-main main-bg">
+				<div class="el-form-item">
+					<label class="el-form-item__label">选择支付方式:</label>
+					<div class="el-form-item__content pay-type-select">
+						<!-- 支付方式 -->
+						{eyou:include file="/public/static/template/users_v2/pay_recharge_type.htm" /}
+						<!-- 支付方式 -->
+					</div>
+				</div>
+		    </div>
+		</div>
+    </div>
+</div>
+
+{eyou:include file="users/users_footer.htm" /}

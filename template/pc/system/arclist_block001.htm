@@ -1,0 +1,22 @@
+<div class="line bg-white list-news">
+	<div class="x4">
+		<div class="media-img">
+			<a href="{$field.arcurl}" title="{$field.title}"><img src="{$field.litpic}" class="img-responsive" alt="{$field.title}"></a>
+		</div>
+	</div>
+	<div class="x1 text-center">
+		<div class="time text-center">
+			<p class="text-large Conv_DINCondensedC">{$field.add_time|MyDate='d',###}</p>
+			<p class="Conv_DINCondensedC text-middle text-gray">{$field.add_time|MyDate='Y-m',###}</p>
+		</div>
+	</div>
+	<div class="x6">
+		<div class="news margin-top">
+			<h3><a href="{$field.arcurl}">{$field.title}</a></h3>
+			<p class="text-gray hidden-l">{$field.seo_description}</p>
+		</div>
+	</div>
+	<div class="x1">
+		<a href="{$field.arcurl}" class="button radius-none text-center"><i class="fa fa-long-arrow-right"></i></a>
+	</div>
+</div>

@@ -1,0 +1,49 @@
+/*列表布局*/
+.gallery{
+  display: flex;
+  flex-wrap: wrap;
+  margin-left:-1px;
+   &::after {//处理最后一行
+      content: '';
+      flex-grow: 999999999;
+    }
+}
+.gallery li{flex-grow: 1;margin:0 1px 1px 0;height:250px;position: relative;overflow:hidden}
+.gallery li img{height:250px; object-fit: cover; max-width: 100%;min-width: 100%;vertical-align: bottom;transition:transform 1s ease 0s;transform: scale(1);}
+.gallery li:hover img{transition: transform 1s ease 0s;transform: scale(1.1);}
+.gallery li .overlay{width:100%;height:100%;-webkit-transition: 0.3s; -o-transition: 0.3s; transition: 0.3s; position:absolute; bottom: 0; top: 0;left:0;right:0;background:#000;z-index:1;opacity:0;filter(alpha=0)}
+.gallery li:hover .overlay{opacity:0.6;filter(alpha=60); -webkit-transition: 0.3s; -o-transition: 0.3s; transition: 0.3s;}
+.gallery li .text-overlay{padding:0 0 0 10px;-webkit-transition:.9s;transition:.9s;opacity:1;position:absolute;bottom:0px;z-index:99;}
+.gallery li .text-overlay h2{font-size:14px;opacity:0;transition: 0.3s;}
+.gallery li:hover .text-overlay{visibility:visible;opacity:1;bottom:30px;}
+.gallery li:hover .text-overlay h2{opacity:1;transition: 0.3s;}
+/*结束*/
+.pressing{
+    text-align: center;
+    position: fixed;
+    bottom: 78px;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    width: 51%;
+    border: 2px solid #fff;
+    border-radius: 50px;
+    padding: 7px;
+    margin: 0 auto;
+}
+.pressing p{
+    font-size: 1.4rem;
+    color:#fff;
+}
+#goTopBtn{position:fixed;line-height: 38px;width: 46px;bottom: 47px;height: 46px;border-radius:50px;cursor:pointer;display:none;background:#000;-moz-opacity:0.5;-khtml-opacity:0.5;opacity:0.5;color:#FFFFFF;text-align:center;font-size: 5rem;z-index: 990;}
+@font-face{font-weight:400;font-style:normal;font-family:SinaHomeFont;src:url(HomeFont.eot);src:url(HomeFont.eot) format('embedded-opentype'),url(HomeFont.woff) format('woff'),url(HomeFont.ttf) format('truetype');}
+[class*=" icon_"],[class^=icon_]{text-transform:none;font-weight:400;font-style:normal;font-variant:normal;font-family:SinaHomeFont;line-height:1;speak:none;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+
+@media screen and (max-width:768px) {
+.gallery li{
+  height:150px;
+}
+.gallery li img{
+  height:150px;
+}
+}

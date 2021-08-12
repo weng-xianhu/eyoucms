@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>{$eyou.field.seo_title}</title>
+        <meta name="description" content="{$eyou.field.seo_description}" />
+        <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+		<meta name="renderer" content="webkit">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link href="{eyou:global name='web_cmspath' /}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="ask/skin/css/ey-ask.css"/}
+        {eyou:static file="ask/skin/css/iconfont.css"/}
+        {eyou:static file="ask/skin/css/font-awesome.min.css"/}
+        {eyou:static file="ask/skin/js/jquery.min.js"/}
+        {eyou:static file="ask/skin/js/layer_mobile/layer.js"/}
+        {eyou:static file="ask/skin/js/ask.js"/}
+
+	</head>
+
+	<body>
+        <!-- 头部框 -->
+        {eyou:include file="ask/ask_header.htm" /}
+        <!-- 头部 END -->
+        <!--- 板块、搜索 -->
+        <div class="select-main mt10">
+            <!-- 板块筛选 -->
+            <div class="select-main-t">
+                <div class="select-main-l">
+                    <div class="cate-select">
+                        <select class="select-inner" onchange="Linkjump(this, 1);">
+                            <option value="{$eyou.field.NewDateUrl}">全部板块</option>
+                            {eyou:volist name="$eyou.field.TypeData" id="vo"}
+                                <option value="{$vo.Url}" {eq name='$vo.type_id' value='$eyou.field.TypeId'}selected="true"{/eq}>{$vo.type_name}</option>
+                                {eyou:volist name="$vo.SubType" id="vo2"}
+                                    <option value="{$vo2.Url}" {eq name='$vo2.type_id' value='$eyou.field.TypeId'}selected="true"{/eq}> &nbsp;&nbsp;&nbsp; {$vo2.type_name}</option>
+                                {/eyou:volist}
+                            {/eyou:volist}
+                        </select>
+                    </div>
+                </div>
+                <div class="select-main-r ml5"> <div class="search-btn">搜索<i class="fa fa-angle-down"></i></div> </div>
+            </div>
+            <!-- 板块筛选 END -->
+
+            <!-- 搜索问题 -->
+            <form method="get" name="search" id="search" onsubmit="return formSubmit('{$eyou.field.NewDateUrl}');">
+                <input type="hidden" name="ct" value="search">
+                <div class="select-main-b mt10">
+                    <input type="text" class="search-text" name="q" autocomplete="off" value="{$eyou.field.SearchName}" placeholder="搜索问题" />
+                    <button type="submit" class="search-button" title="搜索"><i class="fa fa-search"></i></button>
+                </div>
+            </form>
+            <!-- 搜索问题 END -->
+        </div>
+        <!--- 板块、搜索 END -->
+        <!-- 最新、推荐、悬赏选择 -->
+        <div class="nav-cate bg-f mt10">
+            {eyou:empty name="$eyou.field.SearchName"}
+                {eyou:empty name='$eyou.field.TypeId'}
+                    <div class="nav-cate-item">
+                        <a {eyou:eq name="$eyou.field.IsRecom" value="0"}class="cur"{/eyou:eq} href="javascript:void(0);" onclick="Linkjump(this, 2);" data-url="{$eyou.field.NewDateUrl}"><i class="fa fa-refresh"></i>最新</a>
+                    </div>
+                    <div class="nav-cate-item">
+                        <a {eyou:eq name="$eyou.field.IsRecom" value="1"}class="cur"{/eyou:eq} href="javascript:void(0);" onclick="Linkjump(this, 2);" data-url="{$eyou.field.RecomDateUrl}"><i class="fa fa-thumbs-o-up"></i>推荐</a>
+                    </div>
+                    <div class="nav-cate-item">
+                        <a {eyou:eq name="$eyou.field.IsRecom" value="3"}class="cur"{/eyou:eq} href="javascript:void(0);" onclick="Linkjump(this, 2);" data-url="{$eyou.field.RewardUrl}"><i class="iconfont icon-hongbao"></i>悬赏</a>
+                    </div>
+                {eyou:else/}
+                    <div class="nav-cate-item"> <a class="cur" href="javascript:void(0);">{$eyou.field.TypeName}</a> </div>
+                {/eyou:empty}    
+            {eyou:else/}
+                <div class="nav-cate-item"> <a class="cur" href="javascript:void(0);">{$eyou.field.SearchNameRed}</a> </div>
+            {/eyou:empty}
+        </div>
+        <!-- 最新、推荐、悬赏选择 END -->
+        <!-- 问题列表 -->
+        <div class="ask-list bg-f mt15">
+            {eyou:volist name="$eyou.field.AskData" id="vo"}
+                <div class="ask-item">
+                    <div class="ask-item-l"> <div class="num"> {$vo.replies} </div> <div class="label">回答</div> </div>
+                    <div class="ask-item-r">
+                        <div class="question-title">
+                            <a href="{$vo.AskUrl}"> {eyou:eq name="$eyou.field.IsRecom" value="3"}<div class="reward"><i class="iconfont icon-hongbao"></i>{$vo.money}</div>{/eyou:eq} {$vo.ask_title}</a>
+                        </div>
+                        <div class="question-foot">
+                            <div class="tags">
+                                <ul>
+                                    {eyou:volist name="$vo.HeadPic" id="pic"}
+                                        <li><a href="javascript:void(0);"><img src="{$pic.head_pic|get_head_pic=###}"></a></li>
+                                    {/eyou:volist}
+                                </ul>
+                                <span> {$vo.UsersConut} </span>
+                            </div>
+                            <div class="user-box">
+                                <div class="name"> {$vo.nickname} </div>
+                                <div class="data"> {$vo.add_time} </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {/eyou:volist}
+        </div>
+        <!-- 问题列表 END-->
+        <!-- 分页输出 -->{$eyou.field.pageStr}<!-- 分页输出 END -->
+        <!-- 底部 -->
+        {eyou:include file="ask/ask_footer.htm" /}
+        <!-- 底部 END -->
+        <!-- 发布问题按钮 -->
+        <a href="javascript:void(0);" onclick="Linkjump(this, 2);" data-url="{$eyou.field.AddAskUrl}" class="ask-float-btn">
+            <i class="fa fa-pencil-square" aria-hidden="true"></i> <span>提问</span>
+        </a>
+        <!-- 发布问题按钮 END -->
+        <script type="text/javascript">
+            $(document).ready(function(){
+                // 搜索框显示、隐藏
+                $(".search-btn").click(function() {
+                    var _this = $(".select-main-b");   
+                    var display = $(".select-main-b").css('display'); 
+                    if (display == 'none') {
+                        $(_this).css('display','flex'); 
+                        $(_this).children('input').focus();
+                        $(this).children('i').attr('class','fa fa-angle-up');
+                    } else if (display == 'flex') {
+                        $(_this).css('display','none');
+                        $(this).children('i').attr('class','fa fa-angle-down');
+                    }
+                });
+            });
+        </script>
+	</body>
+</html>
+
+  

@@ -1,0 +1,63 @@
+<div class="ask-header">
+    <div class="ask-header-main">
+        <a class="logo fl" href="{eyou:global name='web_cmsurl' /}"><img src="{eyou:global name='web_logo'/}" /></a>
+        <span class="tips ml15 fl">易优问答 有问有答</span>
+        <div class="fr">
+            <a class="ask-btn fl" href="javascript:void(0);" onclick="Linkjump(this);" data-url="{$eyou.field.AddAskUrl}">
+                <i class="fa fa-pencil-square-o" aria-hidden="true"></i>提问题
+            </a>
+            <form class="fl" method="get" name="search" id="search" onsubmit="return formSubmit();">
+                <input type="hidden" name="ct" value="search">
+                <div class="site-search ml20">
+                    <input class="search-text" name="q" placeholder="搜索问题" autocomplete="off" value="{$eyou.field.SearchName}">
+                    <button type="submit" class="search-bt" title="搜索"><i class="fa fa-search" aria-hidden="true"></i></button>
+                </div>
+            </form>
+            <a class="user-box fl ml30">
+                {eyou:empty name="$users_id"}
+                    <!-- 未登录 -->
+                    <div onclick="Linkjump(this);" data-url="{eyou:Diyurl type='login' /}">
+                        <div class="user-img"> <img src="{$users.head_pic|get_head_pic=###}"> </div>
+                        <div class="user-name"> 登录 </div>
+                    </div>
+                    <!-- 未登录 END -->
+                {eyou:else/}
+                    <!-- 已登录 -->
+                    <div onclick="Linkjump(this);" data-url="{eyou:Diyurl link='user/Users/index' /}">
+                        <div class="user-img"> <img src="{$users.head_pic|get_head_pic=###}"> </div>
+                        <div class="user-name"> {$nickname} </div>
+                    </div>
+                    <!-- 已登录 END -->
+                {/eyou:empty}
+            </a>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    // 跳转指定链接
+    function Linkjump(obj, is_switch) {
+        if (is_switch) {
+            $(is_switch).removeClass('cur');
+            $(obj).addClass('cur');
+        }
+        if ($(obj).data('url')) {
+            window.location.href = $(obj).data('url');
+        } else {
+            layer.msg('跳转链接不存在', {time: 1500});
+        }
+    }
+
+    // 搜索提交
+    function formSubmit() {
+        var q = $('#search input[name=q]').val();
+        var url = '{$eyou.field.NewDateUrl}';
+        if (url.indexOf('?') > -1) {
+            url += '&';
+        } else {
+            url += '?';
+        }
+        url += 'search_name=' + q;
+        window.location.href = url;
+        return false;
+    }
+</script>

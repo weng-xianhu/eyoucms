@@ -1,4 +1,1 @@
 User-agent: *
-Disallow: /install_*/
-Disallow: /core/
-Disallow: /application/

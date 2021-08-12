@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>订单支付-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+	<!-- 新样式 2020-12-8 -->
+	{eyou:static file="users/skin/css/element/index.css" /}
+	{eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm" /}
+	
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="users/skin/js/global.js" /}
+</head>
+
+<body>
+{eyou:include file="users/users_header.htm" /}
+	<!-- 头部信息 -->
+	<div class="ey-header-status">
+		<div class="header-status-l">
+			<a href="javascript:history.go(-1)"><i class="el-icon-arrow-left"></i></a>
+		</div> 
+		<div class="header-status-m">订单支付</div> 
+		<div class="header-status-r">
+			<a href="{eyou:url link='user/Users/index' /}"><i class="el-icon-user"></i></a>
+		</div>
+	</div>
+	<!-- 头部信息结束 -->
+	<div class="h50"></div>
+
+	<div class="ey-container">
+
+		<div class="el-row p10 bgfff">
+			 <div class="order-row tc ">
+				   <i class="el-icon-success"></i>
+			 </div>
+			 <div class="order-row tc">
+				  <span class="info">订单提交成功！去付款咯~</span>
+			 </div>
+			 <div class="order-row">
+				  订单号 ：<span class="red">{$data.unified_number}</span>
+			 </div>
+			 <div class="order-row">
+				  商品名称：<span class="red">{$data.cause}</span>
+			 </div>
+			 <div class="order-row">
+				  应付总额：<span class="red">￥{$data.unified_amount}元</span>
+				  {eyou:eq name="$data.transaction_type" value="1"}
+					<a href="{:url('user/Pay/pay_account_recharge', ['unified_number'=>$data['unified_number'],'money'=>$data['unified_amount']])}">(更改)</a>
+				  {/eyou:eq}
+			 </div>
+		</div>
+		<div class="el-row p10 bgfff mt10">
+			<div class="column-title">
+				<div class="column-name">选择支付方式</div>  
+			</div>
+			<div class="mt20 pay-type-select">
+				<!-- 支付方式 -->
+				{eyou:include file="/public/static/template/users_v2/pay_recharge_type_m.htm" /}
+				<!-- 支付方式 -->
+			</div>
+		</div>		
+	
+	</div>

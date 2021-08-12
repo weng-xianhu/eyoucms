@@ -1,132 +1,179 @@
 <!DOCTYPE html>
 <html>
- <head> 
-  <title>{$eyou.field.seo_title}</title> 
-  <meta name="renderer" content="webkit" /> 
-  <meta charset="utf-8" /> 
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=0,minimal-ui" /> 
-  <meta name="description" content="{$eyou.field.seo_description}" /> 
-  <meta name="keywords" content="{$eyou.field.seo_keywords}" />
-  <link href="{eyou:global name='web_cmspath' /}/favicon.ico" rel="shortcut icon" type="image/x-icon" /> 
-  {eyou:static file="skin/css/basic.css" /} 
-  {eyou:static file="skin/css/common.css" /} 
-  <style>
-    body{background-position: center;background-repeat: no-repeat;background-color: ;font-family:;}
-  </style> 
-    <!--[if lte IE 9]>
-    {eyou:static file="skin/js/lteie9.js" /}
-    <![endif]--> 
- </head> 
- <!--[if lte IE 8]>
-    <div class="text-xs-center m-b-0 bg-blue-grey-100 alert">
-    <button type="button" class="close" aria-label="Close" data-dismiss="alert">
-        <span>×</span>
-    </button>
-    你正在使用一个 <strong>过时</strong> 的浏览器。请 <a href=https://browsehappy.com/ target=_blank>升级您的浏览器</a>，以提高您的体验。</div>
-<![endif]--> 
- <body> 
-<!--header-s-->
-    {eyou:include file="header.htm"/}
-<!--header-e-->
-<main e-page="view_download">
-  <div class="ey-banner-ny vertical-align text-center"> 
-   <h1 class="vertical-align-middle">{$eyou.field.typename}</h1> 
-  </div> 
-  <section class="ey-crumbs hidden-sm-down" m-id="met_position" m-type="nocontent"> 
-   <div class="container"> 
-    <div class="row"> 
-     <div class="border-bottom clearfix"> 
-      <ol class="breadcrumb m-b-0 subcolumn-crumbs breadcrumb-arrow"> 
-       <li class="breadcrumb-item"> {eyou:lang name='yybl5' /}：{eyou:position style="crumb" /} </li> 
-      </ol> 
-     </div> 
-    </div> 
-   </div> 
-  </section> 
-  <div> 
-   <section class="ey-showdownload animsition"> 
-    <div class="container"> 
-     <div class="row"> 
-      <div class="col-md-9 ey-showdownload-body" m-id="noset"> 
-       <div class="row"> 
-        <section class="details-title"> 
-         <h1 class="m-t-10 m-b-5">{$eyou.field.title}</h1> 
-         <div class="info"> 
-          <span>{$eyou.field.add_time|MyDate='Y-m-d H:i:s',###}</span> 
-          <span>{$eyou.field.author}</span> 
-          <span> <i class="icon fa-eye m-r-5"></i> {eyou:arcclick /} </span> 
-         </div> 
-        </section> 
-        <section class="download-paralist"> 
-         <dl class="dl-horizontal clearfix blocks font-size-16"> 
-          <dt class="font-weight-300">
-           <span>{eyou:lang name='yybl11' /}</span> :
-           <span class="p-x-10"></span>
-          </dt> 
-         </dl> 
-         {eyou:volist name="$eyou.field.file_list" id="field"}
-         <a class="btn btn-outline btn-primary btn-squared ey-showdownload-btn m-t-20" href="{$field.downurl}" title="{$field.title}">{eyou:lang name='yybl10' /}（{$i}）</a> 
-         {/eyou:volist}
-        </section> 
-        <section class="ey-editor clearfix"> 
-         {$eyou.field.content}
-        </section> 
-         <div class="ey-page ey-shownews-footer"> 
-          <ul class="pagination block blocks-2"> 
-            <li class="page-item m-b-0 ">
-            {eyou:prenext get='pre'}
-             <a href="{$field.arcurl}" title="{$field.title}" class="page-link text-truncate"> {eyou:lang name='sys11' /} <span class="hidden-xs-down">: {$field.title}</span> </a>  
-            {eyou:else /}
-            <a class="page-link text-truncate">{eyou:lang name='sys11' /}：{eyou:lang name='sys10' /}</a>
-            {/eyou:prenext}
-            </li>
-            <li class="page-item m-b-0 ">
-            {eyou:prenext get='next'}
-              <a href="{$field.arcurl}" title="{$field.title}" class="page-link pull-xs-right text-truncate"> {eyou:lang name='sys12' /} <span class="hidden-xs-down">: {$field.title}</span> </a>
-             {eyou:else /} 
-              <a class="page-link pull-xs-right text-truncate">{eyou:lang name='sys12' /}：{eyou:lang name='sys10' /}</a>
-            {/eyou:prenext}
-            </li>
-          </ul> 
-         </div> 
-       </div> 
-      </div> 
-      <div class="col-md-3"> 
-       <div class="row"> 
-        <div class="ey-bar"> 
-        {eyou:searchform type='default'}
-        <form class="sidebar-search" method="get" action="{$field.action}">
-          {$field.hidden}
-          <div class="form-group"> 
-           <div class="input-search"> 
-            <button type="submit" class="input-search-btn"> <i class="icon fa-search"></i> </button> 
-            <input type="text" class="form-control" name="keywords" placeholder="{eyou:lang name='yybl6' /}" /> 
-           </div> 
-          </div> 
-         </form> 
-        {/eyou:searchform}
-         <div class="sidebar-news-list recommend"> 
-          <h3 class="m-0">{eyou:lang name='yybl7' /}</h3> 
-          <ul class="list-icons list-group-bordered m-t-10 m-b-0"> 
-         <!-- 循环输出指定最顶级栏目ID的文档列表，并按随机排序 start -->
-         {eyou:arclist limit="0,5" titlelen="30" orderby='rand'}
-         <li> <a href="{$field.arcurl}" title="{$field.title}">{$field.title}</a> </li> 
-         {/eyou:arclist}
-         <!-- 循环输出指定最顶级栏目ID的文档列表，并按随机排序 end -->
-          </ul> 
-         </div> 
-        </div> 
-       </div> 
-      </div> 
-     </div> 
-    </div> 
-   </section> 
-  </div> 
-</main>
-  <!--footer-s-->
-  {eyou:include file="footer.htm" /}
-  <!--footer-e-->
-  {eyou:ui open='off' /}
- </body>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>{$eyou.field.seo_title}</title>
+<meta name="description" content="{$eyou.field.seo_description}" />
+<meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+{eyou:static file="skin/style/pintuer.css" /}
+{eyou:static file="skin/style/header.css" /}
+{eyou:static file="skin/style/style.css" /}
+{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+<!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+</head>
+<body>
+<!--网站公用头部——开始-->
+{eyou:include file="header.htm" /}
+<div class="layout bg-gray">
+    <div class="container hidden-l">
+        <div class="line">
+            <div class="nav-bread">
+                <i class="fa fa-home margin-small-right text-gray" aria-hidden="true"></i>{eyou:position/}
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="line">
+            <div class="x9">
+                <div class="sidebar-l">
+                    <!--内容 begin-->
+                    <div class="bg-white padding-large radius-middle">
+                        <div class="article">
+                            <div class="post">
+                                <h1>{$eyou.field.title}</h1>
+                                <div class="blank-small"></div>
+                            </div>
+                            <div class="line">
+                                <div class="xl12 xs10 xm10 xb10">
+                                    <div class="text-gray text-default height-big">
+                                       <span class="margin-right">作者：{$eyou.field.author}</span>
+                                       <span class="margin-right">发布时间：{$eyou.field.add_time|MyDate='Y-m-d',###}</span>
+                                    </div>
+                                    
+                                </div>
+                                
+                            </div>
+                            <div class="blank-middle"></div>
+                            <div class="post">
+                                {$eyou.field.content}
+                            </div>
+                        </div><!-- article   -->
+                        <div class="blank-small"></div>
+                        <div class="text-center">
+                            <!-- 收藏代码开始  -->
+                            {eyou:collect cancel="<i class='fa fa-heart margin-small-right'></i>加入收藏" collect="<i class='fa fa-heart margin-small-right'></i>已收藏" }
+                                <a class="button hidden-l bg-gray border-none radius-rounded text-center text-main" {$field.onclick}>{$field.cancel}</a>
+                                {$field.hidden}
+                            {/eyou:collect}
+                            <!--  收藏代码结束 -->
+                        </div>
+                        <div class="blank-middle"></div>
+                        <!--tag-->
+                        {eyou:notempty name='$eyou.field.tags'}
+                            <span class="text-main padding-right">Tag:</span>
+                            {eyou:tag getall='0'}
+                            <a href="{$field.link}" class="tag tags bg-yellow radius-rounded height text-white margin-small-bottom padding-small" {$field.target}>{$field.tag}</a>
+                            {/eyou:tag}
+                        {/eyou:notempty}
+                        <!--tag end-->
+
+                        <!-- 上下篇 -->
+                        <div class="blank-small"></div>
+                        <div class="padding-big-top border-top height">
+                            <div class="line">
+                                <div class="x12 xs10 xm10">
+                                    {eyou:prenext get='pre' titlelen='30'}
+                                    {eyou:lang name='sys11' /}：<a href="{$field.arcurl}" class="text-gray" title="{eyou:lang name='sys11' /}：{$field.title}">{$field.title}</a>
+                                    {eyou:else /}
+                                        {eyou:lang name='sys11' /}：{eyou:lang name='sys10' /}
+                                    {/eyou:prenext}
+                                    <div class="blank"></div>
+                                    {eyou:prenext get='next' titlelen='30'}
+                                    {eyou:lang name='sys12' /}：<a href="{$field.arcurl}" class="text-gray" title="{eyou:lang name='sys12' /}：{$field.title}">{$field.title}</a>
+                                    {eyou:else /}
+                                        {eyou:lang name='sys12' /}：{eyou:lang name='sys10' /}
+                                    {/eyou:prenext}
+                                </div>
+                                <div class="x12 xs2 xm2 text-center">
+                                    {eyou:type typeid="$eyou.field.parent_id"}
+                                    <a href="{$field.typeurl}" class="button button-big button-block bg-yellow margin-top radius-rounded border-none text-default"><i class="fa fa-mail-reply margin-small-right"></i>返回列表</a>
+                                    <!-- {$field.typename} -->
+                                    {/eyou:type}
+                                </div>
+                           </div>
+                        </div>
+                        <!-- 上下篇 -->
+                    </div>
+                    <div class="blank-big"></div>
+                </div><!-- sidebar-l -->
+            </div>
+            <div class="xl12 xs12 xm3 xb3">
+                <div class="sidebar-r">
+                    <div class="download-detail bg-white radius-middle">
+                        <div class="padding-big">
+                            {eyou:volist name="$eyou.field.file_list" id="field"}
+                                <!-- {$field.file_url} -->
+                                <a href="{$field.downurl}" {eyou:if condition="$field.extract_code !=''"}data-clipboard-text="{$field.extract_code}"{/eyou:if} class="btn button button-big button-block text-center bg-yellow border-none radius-big margin-top"><i class="fa fa-arrow-alt-to-bottom margin-right"></i>{$field.server_name}</a>
+                                {eyou:if condition="$field.extract_code !=''"}
+                                    <div class="text-center text-gray margin-small-top">
+                                        提取码：{$field.extract_code}<!-- 有提取码则显示 -->
+                                    </div>
+                                {/eyou:if}
+                            {/eyou:volist}
+                            <div class="blank-middle"></div>
+                            <div class="text-center">
+                                <div class="xl4 xs4 xb4 xm4">
+                                    <span class="text-gray text-default">
+                                    <i class="fa fa-eye margin-small-right"></i>
+                                    {eyou:arcclick /}
+                                    </span>
+                                </div>
+                                <div class="xl4 xs4 xb4 xm4">
+                                    <span class="text-gray text-middle">
+                                    <i class="fa fa-cloud-download margin-small-right"></i>
+                                    {eyou:downcount /}
+                                    </span>
+                                </div>
+                                <div class="xl4 xs4 xb4 xm4">
+                                    <span class="text-gray text-middle">
+                                        <i class="fa fa-heart margin-small-right"></i>
+                                        <span>{eyou:collectnum /}</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                        <div class="blank-small"></div>
+                        </div>
+                    </div>
+                    <div class="blank-small"></div>
+                    <div class="padding-big bg-white radius-middle hidden-l">
+                        <div class="title-l">
+                            <h2>标签</h2>
+                        </div>
+                        <div class="blank-small"></div>
+                        {eyou:tag getall='1' row='20' }
+                            <a href="{$field.link}" class="tag tags bg-white border radius-rounded text-gray margin-bottom margin-small-right padding " {$field.target}>{$field.tag}</a>
+                        {/eyou:tag}
+                    </div>
+
+                    <div class="blank"></div>
+
+                    {eyou:adv pid='29'}
+                        <a href='{$field.links}' {$field.target}><img src="{$field.litpic}" class="img-responsive radius-middle" alt="{$field.title}"></a>
+                        <div class="blank"></div>
+                    {/eyou:adv}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="blank-big"></div>
+</div>
+<!--网站公用底部——开始-->
+{eyou:include file="footer.htm" /}
+<!--网站公用底部——结束-->
+{eyou:static file="skin/js/pintuer.js" /}
+{eyou:static file="skin/js/common.js" /}
+{eyou:static file="skin/Lib/clipboard/clipboard.min.js" /}
+<script>
+    var clipboard = new ClipboardJS('.btn'); //先实例化
+    clipboard.on('success', function(e) {
+        alert('提取码复制成功，确定后转到下载地址！'); // 复制成功的事件
+    });
+    clipboard.on('error', function(e) {
+        alert('复制失败'); // 复制失败的事件
+    });
+</script>
+</body>
 </html>

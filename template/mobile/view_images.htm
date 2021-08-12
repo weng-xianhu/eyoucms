@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{$eyou.field.seo_title}</title>
+        <meta name="description" content="{$eyou.field.seo_description}" />
+        <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+        <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="skin/style/pintuer.css" /}
+        {eyou:static file="skin/style/header.css" /}
+        {eyou:static file="skin/style/style.css" /}
+        {eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+        <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+    </head>
+    <body>
+        <div id="mobile-mask">
+            <!--网站公用头部——开始-->
+            {eyou:include file="header.htm" /}
+            {eyou:include file="banner.htm" /}
+            <div class="layout bg-gray">
+                <div class="container-layout">
+                    <div class="line">
+                        <div class="nav-bread">
+                            <i class="fa fa-home margin-small-right"></i>{eyou:position/}
+                        </div>
+                    </div>
+                </div>
+                <div class="container-layout">
+                    <div class="line">
+                        <div class="xl12 xs12">
+                            <!--内容 begin-->
+                            <div class="article bg-white">
+                                <div class="padding-big">
+                                    <div class="post margin-bottom">
+                                        <h1>{$eyou.field.title}</h1>
+                                        <div class="blank"></div>
+                                        <div class="text-gray padding-bottom text-default">
+                                            <span class="margin-right">作者：{$eyou.field.author}</span>
+                                            <span class="margin-right">发布时间：{$eyou.field.add_time|MyDate='Y-m-d',###}</span>
+                                            <span class="margin-right">点击数：{eyou:arcclick /}</span>
+                                        </div>
+                                        <hr class="bg-gray">
+                                    </div>
+                                    <div class="blank"></div>
+
+                                    <!-- 相册begin -->
+                                    <ul class="pgwSlideshow">
+                                        {eyou:volist name="$eyou.field.image_list"}
+                                        <li>
+                                            <img src="{$field.image_url}" class="img-responsive radius-middle" title="{$field.title}" />
+                                        </li>
+                                        {/eyou:volist}
+                                    </ul>
+                                    <!-- 相册end -->
+
+                                    <div class="blank-small"></div>
+                                    <div class="post">
+                                        {$eyou.field.content}
+                                    </div>
+                                    <div class="blank-small"></div>
+                                    <div class="text-center">
+                                        <!-- 收藏代码开始  -->
+                                        {eyou:collect cancel="<i class='fa fa-heart margin-small-right' style='color: #999;'></i>加入收藏" collect="<i class='fa fa-heart margin-small-right'></i>已收藏" }
+                                        <a class="button text-center bg-gray border-none radius-rounded text-center text-main" {$field.onclick}>{$field.cancel}</a>
+                                        {$field.hidden}
+                                        {/eyou:collect}
+                                        <!--  收藏代码结束 -->
+                                    </div>
+                                    <!--tag-->
+                                    <div class="blank-small"></div>
+                                    {eyou:notempty name='$eyou.field.tags'}
+                                    <span>Tag：</span>
+                                    {eyou:tag getall='0'}
+                                    <a href="{$field.link}" class="tag tags bg-yellow radius-rounded text-white margin-bottom padding" {$field.target}>{$field.tag}</a>
+                                    {/eyou:tag}
+                                    {/eyou:notempty}
+                                    <div class="blank-small"></div>
+                                    <!--tag end-->
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--line end-->
+                </div>
+                <div class="blank"></div>
+                <div class="container-layout">
+                    <div class="line">
+                        <div class="xl12 xs12">
+                            <!-- 上下篇 begin -->
+                            <div class="prenext-pro">
+                                <div class="line">
+                                    <div class="xl4 xs4">
+                                        {eyou:prenext get='next' titlelen='30'}
+                                        <a href="{$field.arcurl}" class="button button-block bg-white border radius-none text-main text-default text-center" title="上一篇:{$field.title}"><i class="margin-right fa fa-long-arrow-left"></i>上一篇</a>
+                                        {eyou:else /}
+                                        <a class="button button-block bg-white border radius-none text-gray text-default text-center"><i class="margin-right fa fa-long-arrow-left"></i>没有了</a>
+                                        {/eyou:prenext}
+                                    </div>
+
+                                    <div class="xl4 xs4 text-center">
+                                        {eyou:type typeid="$eyou.field.parent_id"}
+                                        <a href="{$field.typeurl}" class="button radius-none border button-block bg-white text-main text-default text-center"><i class="fa fa-align-justify margin-right"></i><span>返回</span></a>
+                                        {/eyou:type}
+                                    </div>
+
+                                    <div class="xl4 xs4">
+                                        {eyou:prenext get='pre' titlelen='30'}
+                                        <a href="{$field.arcurl}" class="button border button-block bg-white radius-none text-main text-default text-center float-right" title="下一篇:{$field.title}">下一篇<i class="margin-left fa fa-long-arrow-right"></i></a>
+                                        {eyou:else /}
+                                        <a class="button button-block bg-white border radius-none text-gray text-default text-center">没有了<i class="margin-left fa fa-long-arrow-right"></i></a>
+                                        {/eyou:prenext}
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 上下篇 end -->
+                        </div>
+                    </div>
+                    <!--line end-->
+                </div>
+                <div class="blank-small"></div>
+            </div>
+            <!-- 页脚开始 -->
+            {eyou:include file="footer.htm" /}
+        </div><!-- id="mobile-mask" -->
+        {eyou:static file="skin/js/jquery.min.js" /}
+        {eyou:static file="skin/js/pintuer.js" /}
+        {eyou:static file="skin/js/common.js" /}
+        {eyou:static file="skin/js/mobile.js" /}
+        {eyou:static file="skin/Lib/PgwSlideshow/css/pgwslideshow.css" /}
+        {eyou:static file="skin/Lib/PgwSlideshow/js/pgwslideshow.min.js" /}
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $('.pgwSlideshow').pgwSlideshow({
+                    transitionEffect: 'sliding', //轮播图切换时动画效果，有两个选项sliding（滑动效果）、fading（渐隐效果）
+                    autoSlide: false, //是否允许轮播图自动按照时间间隔轮播 false/true
+                    transitionDuration: 500, //图片自动轮播时，图片切换的时间，单位毫秒
+                    intervalDuration: 5000 //显示下一张图片之前的间隔时间单位毫秒，该参数需要autoSlide为true
+                });
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,111 @@
+    <!-- 头像上传 -->
+    <div id="update_mobile_file" style="display: none;">
+        <form id="form1" style="text-align: center;" >
+            <input type="button" value="点击上传" onclick="up_f.click();" class="btn btn-primary"/><br>
+            <p><input type="file" id="up_f" name="up_f" onchange="MobileHeadPic();" style="display:none"/></p>
+        </form>
+    </div>
+
+    <script type="text/javascript">
+        function MobileHeadPic(){
+            $.getScript('__ROOT_DIR__/public/plugins/layer_mobile/layer.js?v={$version}', function(){
+                // 提示信息，2秒自动关闭
+                function MsgOpen(msgs){
+                    layer.open({
+                        content: msgs,
+                        skin: 'msg',
+                        time: 2,
+                    });
+                }
+
+                // 提示信息，估计在底部提示，点击空白处关闭
+                function FooterOpen(msgs){
+                    layer.open({
+                        content: msgs,
+                        skin: 'footer',
+                    });
+                }
+
+                // 提示动画
+                function LoaDing(){
+                    var loading = layer.open({
+                        type:2,
+                        content: '正在处理',
+                    });
+                    return loading;
+                }
+
+                UpdateMobileHeadPic();
+
+                // 移动端更换头像
+                function UpdateMobileHeadPic()
+                {
+                    // 正在处理提示动画
+                    var loading = LoaDing();
+                    // 获取表单对象
+                    var data = new FormData($('#form2')[0]);
+                    // 上传类型
+                    var UpFileType = $('#UpFileType').val();
+                    $.ajax({
+                        url: "{eyou:url link='user/Uploadify/imageUp' vars='savepath=allimg&pictitle=head_pic&dir=images'/}", 
+                        type: 'post',  
+                        data: data,  
+                        dataType: 'json',
+                        cache: false,  
+                        processData: false,  
+                        contentType: false,
+                        success:function(res){
+                            if (res.state == 'SUCCESS') {
+                                layer.closeAll();
+                                MsgOpen('上传成功！');
+                                if (1 == UpFileType) {
+                                    parent.$("#litpic_inpiut").val(res.url);
+                                    parent.$("#litpic_img").attr('src', res.url);
+                                }else{
+                                    MobileHeadPic(res.url);
+                                }
+                            }else{
+                                layer.close(loading);
+                                MsgOpen(res.state);
+                            }
+                        },
+                        error : function(e) {
+                            layer.close(loading);
+                            FooterOpen(e.responseText);
+                        }
+                    });
+                };
+
+                // 上传头像成功后加载到页面
+                function MobileHeadPic(fileurl_tmp)
+                {
+                    $("#head_pic").val(fileurl_tmp);
+                    $("#head_pic_a").attr('src', fileurl_tmp);
+                    // 正在处理提示动画
+                    var loading = LoaDing();
+                    $.ajax({
+                        url: "{eyou:url link='user/Users/edit_users_head_pic'/}",
+                        data: {filename:fileurl_tmp},
+                        type:'post',
+                        dataType:'json',
+                        success:function(res){
+                            if (1 == res.code) {
+                                layer.closeAll();
+                                MsgOpen(res.msg);
+                            } else {
+                                layer.close(loading);
+                                MsgOpen(res.msg);
+                            }
+                        }
+                    });
+                }
+            })
+        }
+    </script>
+    <!-- 头像上传结束 -->
+
+<!-- 头像默认更换路径 -->
+<script type="text/javascript">
+    var GetUploadify_url = "{eyou:url link='user/Uploadify/upload' /}";
+</script>
+

@@ -1,0 +1,293 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>站内通知-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/bootstrap.min.css"/}
+    {eyou:static file="users/skin/css/basic.css"/}
+    {eyou:static file="users/skin/css/eyoucms.css"/}
+    {eyou:static file="users/skin/css/shop.css"/}
+    {eyou:static  file="users/skin/css/tb_style.css"/}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+</head>
+
+<body class="centre shop">
+<!-- 头部 -->
+{eyou:include file="users/users_header.htm" /}
+<!-- END -->
+
+<!-- 头部信息 -->
+<div class="ey-header-status">
+	<div class="header-status-l">
+		<a href="javascript:history.go(-1)"><i class="el-icon-arrow-left"></i></a>
+	</div>
+	<div class="header-status-m">消息通知</div>
+	<div class="header-status-r">
+		<a href="{eyou:url link='user/Users/index' /}"><i class="el-icon-user"></i></a>
+	</div>
+</div>
+<!-- 头部信息结束 -->
+<div class="h50"></div>
+<style>
+    .z_pl .layui-layer-content{
+        padding: 10px;
+    }
+</style>
+<div class="ey-container">
+    <div class="ey-con">
+        <div class="ey-row">
+            <!-- 中部 -->
+            <div style="overflow-x: scroll;padding: 4px 0;" id="finance-list_wrapper" class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition">
+                <table style="100%">
+                    
+                    <tbody>
+                    {empty name="$eyou.field.data"}
+                        <tr>
+                            <td  align="center" axis="col0" colspan="50">
+                                <div class="cell pt50 pb50 tc">
+                                    <span class="mb10"><img id='litpic_img'  src="__PUBLIC__/static/common/images/null-data.png"/></span>
+                                </div>
+                            </td>
+                        </tr>
+                    {else/}
+                        {eyou:volist name="$eyou.field.data" id="vo"}
+                        <tr>
+                            <td>
+                                <div class="list_z">
+                                    <label class="checkbox-label release-checkbox checkbox_z">
+                                        <span> &nbsp; </span>
+                                        <input class="checkbox" type="checkbox" name="ids[]" value="{$vo.id}">
+                                        <span class="check-mark"></span>
+                                    </label>
+                                </div>
+                            </td>
+
+                            <td >
+                                <a href="javascript:void(0);" data-id="{$vo.id}" data-title="{$vo.title}" data-content="{$vo.remark}" onclick="read_notice(this);">
+                                <div class="list_z">
+                                    {$vo.title}
+                                </div>
+                                <div class="list_z">
+                                    <span class="e_ty">{$vo.add_time|date='Y-m-d H:i:s',###}</span>
+                                </div>
+                                </a>
+                            </td>
+                            
+
+                            <td >
+                                <div class="list_z fr">{neq name="$vo.is_read" value="1"}<span class="unread_{$vo.id}" style="color: red;">[未读]</span>{else/}<span class="unread_{$vo.id}">[已读]</span>{/neq}</div>
+                            </td>
+                        </tr>
+                        {/eyou:volist}
+                    {/empty}
+                    <tr>
+                        <td class="border-b-n">
+                            <div class="list_z">
+                                <label class="checkbox-label release-checkbox checkbox_z">
+                                    <span> &nbsp; </span>
+                                    <input class="checkbox" type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                                    <span class="check-mark"></span>
+                                </label>
+                            </div>
+                        </td>
+                        <td class="border-b-n wb75">
+                            <div class="list_z">
+                                <a id="del_btn" class="el-button el-button--default is-disabled el-button--small" data-disabled='1' href="javascript:void(0);" onclick="BatchDelData(this, 'ids');" data-url="{$eyou.field.delurl}">
+                                    删除
+                                </a>
+                                <a id="signRead_btn" class="el-button el-button--default is-disabled el-button--small" data-disabled='1' href="javascript:void(0);" onclick="BatchReadData(this, 'ids');">
+                                    标记已读
+                                </a>
+                            </div>
+                        </td>
+                        <td class="border-b-n wb25">
+                           
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="text-align: center;">{$page}</div>
+            <!-- END -->
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function(){
+        $('input[type=checkbox]').click(function(){
+            if ($('input[name*=ids]:checked').length > 0) {
+                $('#del_btn').removeClass('is-disabled').attr('data-disabled', 0);
+                $('#signRead_btn').removeClass('is-disabled').attr('data-disabled', 0);
+            } else {
+                $('#del_btn').addClass('is-disabled').attr('data-disabled', 1);
+                $('#signRead_btn').addClass('is-disabled').attr('data-disabled', 1);
+            }
+        });
+    });
+
+    function read_notice(obj){
+        var id=$(obj).attr('data-id');
+        $.ajax({
+            url: "{eyou:url link='api/Ajax/notice_read'/}",
+            data: {id:id},
+            type:'get',
+            dataType:'json',
+            success:function(res){
+                if(res.code == 1) {
+                    $('span[class=unread_' + id + ']').removeAttr('style');
+                    $('span[class=unread_' + id + ']').html('[已读]');
+                    if (res.data.unread_num < 1) {
+                        $("#users_unread_num").remove();
+                    }else{
+                        $("#users_unread_num").html(res.data.unread_num);
+					}
+                }
+            }
+        });
+        layer.open({
+            title:$(obj).attr('data-title'),
+            type: 1,
+            skin: 'z_pl', //加上边框
+            area: ['80%', '80%'], //宽高
+            content: $(obj).attr('data-content')
+        });
+    }
+
+    // 删除单个通知
+    function DelData(obj) {
+        layer.confirm('是否删除该消息？', {
+            title: false,
+            btn: ['是','否'] //按钮
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:$(obj).attr('data-id'),_ajax:1},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 6,time:1500});
+                        window.location.reload();
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function(index){
+            layer.close(index);
+        });
+    }
+    // 批量删除通知
+    function BatchDelData(obj, name) {
+        var data_disabled = $(obj).attr('data-disabled');
+        if (1 == data_disabled) {
+            return false;
+        }
+
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            showErrorAlert('请至少选择一项！');
+            return;
+        }
+        // 删除按钮
+        layer.confirm('确认批量删除消息？', {
+            title: false,
+            btn: ['确定', '取消'] //按钮
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: $(obj).attr('data-url'),
+                data: {del_id:a},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 6,time:1500});
+                        window.location.reload();
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+
+    // 批量已读
+    function BatchReadData(obj, name) {
+        var data_disabled = $(obj).attr('data-disabled');
+        if (1 == data_disabled) {
+            return false;
+        }
+        
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            showErrorAlert('请至少选择一项！');
+            return;
+        }
+        // 删除按钮
+        layer.confirm('确认批量标记已读？', {
+            title: false,
+            btn: ['确定', '取消'] //按钮
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: "{eyou:url link='user/UsersNotice/batch_read'/}",
+                data: {del_id:a},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 6,time:1500});
+                        window.location.reload();
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+</script>
+<!-- END -->

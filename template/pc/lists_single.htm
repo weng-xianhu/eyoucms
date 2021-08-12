@@ -1,70 +1,59 @@
 <!DOCTYPE html>
 <html>
- <head> 
-  <title>{$eyou.field.seo_title}</title> 
-  <meta name="renderer" content="webkit" /> 
-  <meta charset="utf-8" /> 
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=0,minimal-ui" /> 
-  <meta name="description" content="{$eyou.field.seo_description}" /> 
-  <meta name="keywords" content="{$eyou.field.seo_keywords}" /> 
-  <link href="{eyou:global name='web_cmspath' /}/favicon.ico" rel="shortcut icon" type="image/x-icon" /> 
-  {eyou:static file="skin/css/basic.css" /} 
-  {eyou:static file="skin/css/common.css" /} 
-  <style>
-    body{background-position: center;background-repeat: no-repeat;background-color: ;font-family:;}
-  </style> 
-    <!--[if lte IE 9]>
-    {eyou:static file="skin/js/lteie9.js" /}
-    <![endif]--> 
- </head> 
- <!--[if lte IE 8]>
-    <div class="text-xs-center m-b-0 bg-blue-grey-100 alert">
-    <button type="button" class="close" aria-label="Close" data-dismiss="alert">
-        <span>×</span>
-    </button>
-    你正在使用一个 <strong>过时</strong> 的浏览器。请 <a href=https://browsehappy.com/ target=_blank>升级您的浏览器</a>，以提高您的体验。</div>
-<![endif]--> 
- <body> 
-<!--header-s-->
-    {eyou:include file="header.htm"/}
-<!--header-e-->
-  <div class="ey-banner-ny vertical-align text-center"> 
-   <h1 class="vertical-align-middle">{$eyou.field.typename}</h1> 
-  </div> 
-  <section class="ey-crumbs hidden-sm-down" m-id="met_position" m-type="nocontent"> 
-   <div class="container"> 
-    <div class="row"> 
-     <div class="border-bottom clearfix"> 
-      <ol class="breadcrumb m-b-0 subcolumn-crumbs breadcrumb-arrow"> 
-       <li class="breadcrumb-item"> {eyou:lang name='yybl5' /}：{eyou:position style="crumb" /} </li>
-      </ol> 
-     </div> 
-    </div> 
-   </div> 
-  </section> 
-  <section class="ey-column-nav" m-id="subcolumn_nav" m-type="nocontent"> 
-   <div class="container"> 
-    <div class="row"> 
-     <ul class="clearfix ey-column-nav-ul"> 
-      <li> <a href="{$eyou.field.ptypeurl}" title="{eyou:lang name='yybl2' /}" {eyou:gt name="$eyou.field.has_children" value="0"}class="active"{/eyou:gt}>{eyou:lang name='yybl2' /}</a> </li> 
-      {eyou:channel type="sonself" currentstyle="active"}
-      <li> <a href="{$field.typeurl}" title="{$field.typename}" class="{$field.currentstyle}">{$field.typename}</a> </li>
-      {/eyou:channel}
-     </ul> 
-    </div> 
-   </div> 
-  </section> 
-  <section class="ey-show-body" m-id="noset"> 
-   <div class="container"> 
-    <div class="ey-editor clearfix"> 
-      {$eyou.field.content}
-    </div> 
-   </div> 
-  </section> 
-  <!--footer-s-->
-  {eyou:include file="footer.htm" /}
-  <!--footer-e-->
-  {eyou:ui open='off' /}
- </body>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>{$eyou.field.seo_title}</title>
+<meta name="description" content="{$eyou.field.seo_description}" />
+<meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+{eyou:static file="skin/style/pintuer.css" /}
+{eyou:static file="skin/style/header.css" /}
+{eyou:static file="skin/style/style.css" /}
+{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+<!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+</head>
+<body>
+<!--网站公用头部——开始-->
+{eyou:include file="header.htm" /}
+{eyou:include file="banner.htm" /}
+<!-- 横向栏目样式 begin -->
+<div class="nav-x">
+	<div class="container">
+		<ul class="nav-navicon text-center" id="subnav">
+			{eyou:channel type="first" id="field2" currentstyle="active"}
+			<li class="col-2">
+				<a href="{$field2.typeurl}" class="{$field2.currentstyle}">{$field2.typename}</a>
+			</li>
+			{/eyou:channel}
+		</ul>
+	</div>
+</div>
+<!-- 横向栏目样式 end -->
+<div class="layout bg-gray">
+<div class="blank-big"></div>
+<div class="container">
+	<div class="line">
+		<div class="x12">
+			<div class="article bg-white">
+				<div class="padding-large">
+				<div class="post">
+					<h1>{$eyou.field.typename}</h1>
+					<div class="blank"></div>
+					{$eyou.field.content}
+				</div>
+				<div class="blank-big"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="blank-big"></div>
+</div>
+<!--网站公用底部——开始-->
+{eyou:include file="footer.htm" /}
+<!--网站公用底部——结束-->
+{eyou:static file="skin/js/pintuer.js" /}
+{eyou:static file="skin/js/common.js" /}
+</body>
 </html>

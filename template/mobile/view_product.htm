@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{$eyou.field.seo_title}</title>
+        <meta name="description" content="{$eyou.field.seo_description}" />
+        <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+        <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="skin/style/pintuer.css" /}
+        {eyou:static file="skin/style/header.css" /}
+        {eyou:static file="skin/style/style.css" /}
+        {eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+
+        {eyou:static file="skin/js/jquery.min.js" /}
+        <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+    </head>
+    <body>
+        <div id="mobile-mask">
+            <!--header-->
+            {eyou:include file="header.htm" /}
+            <div class="layout bg-gray">
+                <div class="container-layout">
+                    <div class="line">
+                        <div class="nav-bread">
+                            <i class="fa fa-home-alt margin-small-right" aria-hidden="true"></i>{eyou:position/}
+                        </div>
+                    </div>
+                </div>
+                <div class="container-layout product-description">
+                    <div class="line">
+                        <div class="xl12 xs12">
+                            {eyou:notempty name='$eyou.field.image_list' /}
+                            {eyou:volist name="$eyou.field.image_list" limit='0,1'}
+                            <a href="{$field.image_url}" id="zoom1" class="MagicZoom ">
+                                <img src="{$field.image_url}" class="img-responsive" alt="{$field.intro}" />
+                            </a>
+                            {/eyou:volist}
+                            {eyou:else /}
+                            <a href="{$eyou.field.litpic}" id="zoom1" class="MagicZoom MagicThumb">
+                                <img src="{$eyou.field.litpic}" class="img-responsive" id="zoomimg" alt="{$eyou.field.title}" />
+                            </a>
+                            {/eyou:notempty}
+                            <div class="blank"></div>
+                            <div class="owl-carousel arrow-style pro-thumb">
+                                {eyou:notempty name='$eyou.field.image_list' /}
+                                {eyou:volist name="$eyou.field.image_list"}
+                                <a href="{$field.image_url}" rel="zoom1" rev="{$field.image_url}">
+                                    <div class="item bg-white"><img src="{$field.image_url}" alt="{$field.intro}" /></div>
+                                </a>
+                                {/eyou:volist}
+                                {eyou:else /}
+                                <a href="{$eyou.field.litpic}" rel="zoom1" rev="{$eyou.field.litpic}">
+                                    <div class="item bg-white"><img src="{$eyou.field.litpic}" class="img-responsive"
+                                            alt="{$eyou.field.title}" /></div>
+                                </a>
+                                {/eyou:notempty}
+                            </div>
+                        </div>
+                        <div class="blank"></div>
+                        <div class="xl12 xs12">
+                            <div class="padding">
+                                <div class="article">
+                                    <div class="post">
+                                        <h1>{$eyou.field.title}</h1>
+                                        <div class="blank"></div>
+                                        <p class="text-gray text-default">{$eyou.field.seo_description}</p>
+                                        <div class="blank-small"></div>
+                                    </div>
+                                    <!-- 价格 标签开始 -->
+                                    <div class="ey-price text-large text-yellow Conv_DINCondensedC">￥{$eyou.field.users_price}</div>
+                                    <!-- 价格 标签结束 -->
+
+                                    <!--购物车组件start-->
+                                    {eyou:sppurchase id='field' currentstyle='btn-danger'}
+
+                                    <div class="blank-middle"></div>
+
+                                    <!-- 规格 标签开始 -->
+                                    {eyou:volist name="$field.ReturnData" id='field2'}
+                                    <div class="line mb5">
+                                        <span class="text-sub">{$field2.spec_name}：</span>
+                                        {eyou:volist name="$field2.spec_value" id='field3'}
+                                        <a href="JavaScript:void(0);" {$field3.SpecData} class="btn btn-default btn-selected mb5 {$field3.SpecClass}">{$field3.spec_value}</a>
+                                        {/eyou:volist}
+                                    </div>
+                                    {/eyou:volist}
+
+                                    <!-- 规格 标签结束 -->
+
+                                    <div class="blank"></div>
+
+                                    <!-- 数量操作 标签开始 -->
+                                    <div class="ey-number">
+                                        <span class="text-sub">数量：</span>
+                                        <div class="btn-input">
+                                            <button class="text-main" {$field.ReduceQuantity}>-</button>
+                                            <input type="text" class="layui-input" {$field.UpdateQuantity}>
+                                            <button class="layui-btn" {$field.IncreaseQuantity}>+</button>
+                                        </div>
+                                    </div>
+                                    <!-- 数量操作 标签结束 -->
+
+                                    <div class="blank"></div>
+
+                                    <!-- 库存量 标签开始 -->
+                                    <span class="text-sub" {$field.stock_show}>库存：{$field.stock_count} 件</span>
+                                    <!-- 库存量 标签结束 -->
+
+                                    <div class="blank"></div>
+
+                                    <!-- 购买按钮 标签开始 -->
+                                    <div class="ey-buyaction">
+                                        <a class="ey-joinin" href="JavaScript:void(0);" {$field.ShopAddCart}><i class="fa fa-shopping-basket margin-small-right"></i>加入购物车</a>
+                                        <a class="ey-joinbuy" href="JavaScript:void(0);" {$field.BuyNow}><i class="fa fa-shopping-cart margin-small-right"></i>立即购买</a>
+                                    </div>
+                                    <!-- 购买按钮 标签结束 -->
+
+                                    {$field.hidden}
+                                    {/eyou:sppurchase}
+                                    <!--购物车组件end-->
+
+                                    {eyou:static file="skin/style/shopcart.css" /}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="blank-big"></div>
+            </div>
+
+            <!-- 详细内容 -->
+            <div class="layout">
+                <div class="product-overview">
+                    <div class="tab">
+                        <div class="layout bg-white tab-head">
+                            <div class="container-layout">
+                                <div class="line">
+                                    <ul class="tab-nav">
+                                        <li class="active"><a href="#overview">商品介绍</a></li>
+                                        <!-- <li><a href="#specification">商品参数</a> </li> -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layout bg-white">
+                            
+                            <div class="container-layout">
+                                <div class="line">
+                                    <div class="tab-body">
+                                        <div class="padding">
+                                            <div class="tab-panel active" id="overview">
+                                                <div class="content overflow-x">
+                                                    <div class="blank-middle"></div>
+                                                    <!--产品详情-->
+                                                    {$eyou.field.content}
+                                                </div>
+                                            </div>
+                                            <!--产品参数调用自动——开始-->
+                                            <!-- <div class="tab-panel" id="specification">
+                                                <div class="content overflow-x">
+                                                    <div class="blank-middle"></div>
+                                                    <ul class="attribute">
+                                                        {eyou:attribute type='newattr'
+                                                        attrid='$eyou.field.attrlist_id'}
+                                                        <li><span>{$attr.name}：</span>{$attr.value} </li>
+                                                        {/eyou:attribute}
+                                                    </ul>
+                                                </div>
+                                            </div> -->
+                                            <!--产品参数调用——结束-->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="blank-big"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Related Products -->
+            <div class="layout bg-gray">
+                <div class="blank-small"></div>
+                <div class="container-layout">
+                    <div class="title-l">
+                        <h2>产品推荐</h2>
+                    </div>
+                    <div class="blank"></div>
+                    <div class="line">
+                        <div class="owl-carousel dot-center carousel-pro">
+                            {eyou:arclist flag='c' orderby='now' titlelen='30' row='9' typeid='3'}
+                            <div class="item media media-y bg-white">
+                                <div class="padding">
+                                    <a href="{$field.arcurl}" title="{$field.title}"><img src="{$field.litpic}" class="img-responsive"></a>
+                                    <div class="media-body text-left">
+                                        <h2><a href="{$field.arcurl}" class="text-middle">{$field.title}</a></h2>
+                                        <div class="price-info height margin-top">
+                                            <ul>
+                                                <li class="v2-1 text-yellow float-left">
+                                                    <span class="Conv_DINCondensedC text-middle">￥{$field.users_price}</span>
+                                                </li>
+                                                <li class="v2-2 text-gray text-right float-right text-small">
+                                                    <i class="fa fa-eye margin-small-right margin-left"></i>{$field.click}
+                                                </li>
+                                                <div class="clearfix"></div>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {/eyou:arclist}
+                        </div>
+                    </div>
+                </div>
+                <div class="blank-small"></div>
+            </div>
+            <!-- Related Products end -->
+
+            <!--footer-->
+            {eyou:include file="footer.htm" /}
+        </div><!-- id="mobile-mask" -->
+
+        {eyou:static file="skin/js/pintuer.js" /}
+        {eyou:static file="skin/js/common.js" /}
+        {eyou:static file="skin/js/mobile.js" /}
+        <!-- 放大镜 begin-->
+        {eyou:static file="skin/Lib/MagicZoom/mzp-packed.js" /}
+        <!-- Owl Carousel -->
+        {eyou:static file="skin/Lib/OwlCarousel2.21/owl.carousel.min.css" /}
+        {eyou:static file="skin/Lib/OwlCarousel2.21/owl.carousel.min.js" /}
+        {eyou:static file="skin/Lib/OwlCarousel2.21/custom.js" /}
+        <!-- 放大镜 end-->
+    </body>
+</html>

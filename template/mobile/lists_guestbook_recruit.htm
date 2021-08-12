@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="renderer" content="webkit">
+<meta http-equiv="Cache-Control" content="no-siteapp"/>
+<title>{$eyou.field.seo_title}</title>
+<meta name="description" content="{$eyou.field.seo_description}" />
+<meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+{eyou:static file="skin/css/amazeui.min.css" /}
+{eyou:static file="skin/css/app.css" /}
+{eyou:static file="skin/js/ueditor.config.js" /}
+{eyou:static file="skin/js/ueditor.all.min.js" /}
+{eyou:static file="skin/js/jquery.min.js" /}
+{eyou:static file="skin/js/amazeui.min.js" /}
+{eyou:static file="skin/js/app.js" /}
+</head>
+<body>
+<!--网站公用头部——开始-->
+{eyou:include file="header.htm" /}
+<!--网站公用头部——结束-->
+<article>
+  <section>
+    <div class="subject"> 
+    {eyou:gt name='$eyou.field.grade' value='0'}
+    	<span class="more"><a href="javascript:;" class="am-icon-bars am-icon-sm" data-am-offcanvas="{target:'#nav'}"></a></span>
+    {eyou:else /}
+		{eyou:notempty name="$eyou.field.has_children"}
+		<span class="more"><a href="javascript:;" class="am-icon-bars am-icon-sm" data-am-offcanvas="{target:'#nav'}"></a></span>
+		{/eyou:notempty}
+    {/eyou:gt}
+    <b>{$eyou.field.typename}</b> </div>
+    <div class="clear"></div>
+    <div class="am-padding"></div>
+    {eyou:guestbookform type='default'}
+    <form method="POST" class="am-form am-form-horizontal form-add" action="{$field.action}" {$field.formhidden} onsubmit="{$field.submit}">
+      <div class="am-form-group">
+        <label class="am-u-sm-3 am-form-label">{$field.itemname_4}</label>
+        <div class="am-u-sm-9">
+          <input type="text" name="{$field.attr_4}" id="attr_4" size="20" value="">
+          <span for="my_title" class="msg-box"></span> </div>
+      </div>
+      <div class="am-form-group">
+        <label class="am-u-sm-3 am-form-label">{$field.itemname_5}</label>
+        <div class="am-u-sm-9">
+          <input type="text" name="{$field.attr_5}" id="attr_5" size="20" maxlength="20" value="">
+          <span for="my_truename" class="msg-box"></span> </div>
+      </div>
+      <div class="am-form-group">
+        <label class="am-u-sm-3 am-form-label">{$field.itemname_6}</label>
+        <div class="am-u-sm-9">
+          <select name="{$field.attr_6}" id="attr_6" class="w420">
+            <option value="">请选择性别</option>
+            {eyou:volist name='$field.options_6' id='vo'}
+            <option value="{$vo.value}">{$vo.value}</option>
+            {/eyou:volist}
+          </select>
+          <span for="my_sex" class="msg-box"></span> </div>
+      </div>
+      <div class="am-form-group">
+        <label class="am-u-sm-3 am-form-label">{$field.itemname_7}</label>
+        <div class="am-u-sm-9">
+          <input type="text" name="{$field.attr_7}" id="attr_7" size="20" maxlength="2" value="">
+          <span for="my_age" class="msg-box"></span> </div>
+      </div>
+      <div class="am-form-group">
+        <label class="am-u-sm-3 am-form-label">{$field.itemname_16}</label>
+        <div class="am-u-sm-9">
+          <input type="text" name="{$field.attr_16}" id="attr_16" size="20" maxlength="11" value="">
+          <span for="my_mobile" class="msg-box"></span> </div>
+      </div>
+      <div class="am-form-group">
+        <label class="am-u-sm-3 am-form-label">{$field.itemname_18}</label>
+        <div class="am-u-sm-9">
+          <select name="{$field.attr_18}" id="attr_18" class="w420">
+            <option value="">请选择学历</option>
+            {eyou:volist name='$field.options_18' id='vo'}
+            <option value="{$vo.value}">{$vo.value}</option>
+            {/eyou:volist}
+          </select>
+          <span for="my_education" class="msg-box"></span> </div>
+      </div>
+      <div class="am-form-group">
+        <label class="am-u-sm-3 am-form-label">{$field.itemname_20}</label>
+        <div class="am-u-sm-9">
+          <textarea name="{$field.attr_20}" id="attr_20" rows="3" cols="22"></textarea>
+          <span for="my_work_exp" class="msg-box"></span> </div>
+      </div>
+      <div class="am-form-group">
+        <label class="am-u-sm-3 am-form-label">{$field.itemname_22}</label>
+        <div class="am-u-sm-9">
+          <textarea name="{$field.attr_22}" id="attr_22" rows="3" cols="22"></textarea>
+          <span for="my_intro" class="msg-box"></span> </div>
+      </div>
+      <div class="am-form-group">
+        <div class="am-u-sm-9 am-u-sm-offset-3">
+          <button type="submit" class="am-btn am-btn-primary am-radius">提交</button>
+        </div>
+      </div>
+    {$field.hidden}
+  </form>
+{/eyou:guestbookform}
+  </section>
+</article>
+<!--网站公用底部——开始-->
+{eyou:include file="footer.htm" /}
+<!--网站公用底部——结束-->
+
+{eyou:static file="skin/css/toastr.css" /} 
+{eyou:static file="skin/js/dropzone.js" /} 
+{eyou:static file="skin/js/toastr.min.js" /} 
+{eyou:static file="skin/js/jquery.validator.min.js" /} 
+	
+</body>
+</html>

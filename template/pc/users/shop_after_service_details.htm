@@ -1,0 +1,280 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>售后服务详情-{eyou:global name='web_name' /}</title>
+		<meta name="renderer" content="webkit">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+		<link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+		{eyou:static file="users/skin/css/bootstrap.min.css" /}
+	    {eyou:static file="users/skin/css/basic.css" /}
+	    {eyou:static file="users/skin/css/eyoucms.css" /}
+	    {eyou:static file="users/skin/css/shop.css" /}
+		<!-- 新样式 2020-11-25 -->
+		{eyou:static file="users/skin/css/element/index.css" /}
+		{eyou:static file="users/skin/css/e-user.css" /}
+	    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+		{eyou:static file="/public/static/common/js/jquery.min.js"/}
+	    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+	    {eyou:static file="/public/static/common/js/tag_global.js"/}
+	    {eyou:static file="/public/plugins/laydate/laydate.js"/}
+	</head>
+
+	<body class="centre shop">
+	<!-- 头部 -->
+	{eyou:include file="users/users_header.htm" /}
+	<!-- 头部结束 -->
+
+	<div class="ey-body-bg">
+	    <div class="ey-body">
+	        <div class="ey-container w1200">
+				<!-- 侧边 -->
+				{eyou:include file="users/users_left.htm" /}
+				<!-- 侧边结束 -->
+
+				<!-- 中部 -->
+				<div class="ey-con fr" >
+					<div class="el-main main-bg">
+						<div class="order-progress">
+							{eyou:eq name="$eyou.field.status" value="6"}
+			                <div class="order-progress-tit2"> <div class="order-progress-titL">商家发货物流</div> </div>
+	                        <div class="order-progress-con">
+	                            <div class="item-from-row" style="color: red;">
+	                                <div class="from-row-l" style="width: 9%;"> 温馨提示：</div>
+	                                <div class="from-row-r"> 卖家已为你重新发货，详情如下 </div>
+	                            </div>
+	                            <div class="item-from-row">
+	                                <div class="from-row-l" style="width: 9%;"> 快递公司：</div>
+	                                <div class="from-row-r"> {$eyou.field.admin_delivery.name} </div>
+	                            </div>
+	                            <div class="item-from-row">
+	                                <div class="from-row-l" style="width: 9%;"> 快递单号：</div>
+	                                <div class="from-row-r"> {$eyou.field.admin_delivery.code} </div>
+	                            </div>
+	                        </div>
+			                {/eyou:eq}
+
+							{eyou:eq name="$eyou.field.status" value="2"}
+			                <div class="order-progress-tit2"> <div class="order-progress-titL">会员退货信息</div> </div>
+		                 	<form id="postForm">
+		                        <input type="hidden" name="service_id" value="{$eyou.field.service_id}">
+		                        <input type="hidden" name="order_id" value="{$eyou.field.order_id}">
+		                        <input type="hidden" name="status" value="4">
+		                        <div class="order-progress-con">
+		                            <div class="item-from-row">
+		                                <div class="from-row-l" style="width: 9%;"> 快递公司：</div>
+		                                <div class="from-row-r"> <input type="text" name="delivery[name]" class="el-input__inner w500" placeholder="请输入快递公司"> </div>
+		                            </div>
+		                            <div class="item-from-row">
+		                                <div class="from-row-l" style="width: 9%;"> 快递费用：</div>
+		                                <div class="from-row-r"> <input type="text" name="delivery[cost]" class="el-input__inner w500" placeholder="请输入快递费用"> </div>
+		                            </div>
+		                            <div class="item-from-row">
+		                                <div class="from-row-l" style="width: 9%;"> 快递单号：</div>
+		                                <div class="from-row-r"> <input type="text" name="delivery[code]" class="el-input__inner w500" placeholder="请输入快递单号"> </div>
+		                            </div>
+		                            <div class="item-from-row">
+		                                <div class="from-row-l" style="width: 9%;"> 发货时间：</div>
+		                                <div class="from-row-r"> <input type="text" name="delivery[time]" id="add_time" class="el-input__inner w500" placeholder="请输入选择发货时间"> </div>
+		                            </div>
+		                        	<div class="item-from-row">
+	                                    <div class="from-row-l" style="width: 9%;"> 联系人：</div>
+	                                    <div class="from-row-r"> {$eyou.maddr.addr_contact_person} </div>
+	                                </div>
+	                                <div class="item-from-row">
+	                                    <div class="from-row-l" style="width: 9%;"> 联系号码：</div>
+	                                    <div class="from-row-r"> {$eyou.maddr.addr_contact_phone} </div>
+	                                </div>
+	                                <div class="item-from-row">
+	                                    <div class="from-row-l" style="width: 9%;"> 商家地址：</div>
+	                                    <div class="from-row-r"> {$eyou.maddr.addr_shipping_addr} </div>
+	                                </div>
+		                        	<div>
+		                        		<a href="JavaScript:void(0);" class="el-button el-button--primary el-button--medium" data-url="{$eyou.ServiceUrl}" onclick="Submit(this);">确认提交</a> <span style="color: red;">提示：{$eyou.field.service_type}申请已审核通过，请尽快将货物寄回给卖家</span>
+		                        	</div>
+		                        </div>
+		                    </form>
+		                    <script type="text/javascript">
+		                        $(function () {
+		                            $('#add_time').layDate(); 
+		                        });
+		                        function Submit(obj) {
+								    var name = $("input[name='delivery[name]']");
+								    if (!name.val()) {
+								        layer.msg('请填写快递公司');
+								        name.focus();
+								        return false;
+								    }
+								    // var cost = $("input[name='delivery[cost]']");
+								    // if (!cost.val()) {
+								    //     layer.msg('请填写快递费用');
+								    //     cost.focus();
+								    //     return false;
+								    // }
+								    var code = $("input[name='delivery[code]']");
+								    if (!code.val()) {
+								        layer.msg('请填写快递单号');
+								        code.focus();
+								        return false;
+								    }
+								    var time = $("input[name='delivery[time]']");
+								    if (!time.val()) {
+								        $('#add_time').click();
+								        return false;
+								    }
+								    $.ajax({
+								        url: $(obj).data('url'),
+								        data: $('#postForm').serialize(),
+								        type:'post',
+								        dataType:'json',
+								        success:function(res) {
+								            layer.closeAll();
+								            if (1 == res.code) {
+								                layer.msg(res.msg, {time: 1500}, function(){
+								                    window.location.reload();
+								                });
+								            } else {
+								                layer.msg(res.msg);
+								            }
+								        },
+								        error : function() {
+								            layer.closeAll();
+								            layer.alert('未知错误！', {title:false, icon:5, closeBtn: 0});
+								        }
+								    });
+								}
+		                    </script>
+			                {/eyou:eq}
+
+							<div class="order-progress-tit">
+								<div class="order-progress-titL">售后服务信息</div>
+								<div class="order-progress-titR">
+									{eyou:if condition="!in_array($eyou.field.status, $eyou.StatusArr)"}
+									<a href="JavaScript:void(0);" class="el-button el-button--primary el-button--medium" data-url="{$eyou.field.CancelUrl}" data-id="{$eyou.field.service_id}" onclick="CancelService(this);">取消售后</a>
+									{/eyou:if}
+								</div>
+							</div>
+						   	<div class="order-progress-con">
+						   		<div style="width: 100%; border-bottom: 1px solid #eee;">
+									<span class="span-row">申请单号：{$eyou.field.refund_code}</span>
+									<span class="span-row">申请类型：{$eyou.field.service_type}</span>
+									<span class="span-row">申请时间：{$eyou.field.add_time|date='Y-m-d H:i:s',###}</span>
+									<span class="span-row">当前状态：{$eyou.field.StatusName}</span>
+								</div>
+
+								<div style="width: 100%; border-bottom: 1px solid #eee;">
+									<span class="span-row">您的姓名：{$eyou.field.consignee}</span>
+									<span class="span-row">您的手机：{$eyou.field.mobile}</span>
+									<span class="span-row">收货地址：{$eyou.field.address}</span>
+								</div>
+
+								<div>
+									<span class="span-row">问题描述：{$eyou.field.content}</span>
+									<span class="span-row">
+										{eyou:volist name='$eyou.field.upload_img' id='vo'}
+				                            {eyou:notempty name="$vo"}
+				                                <a href="{$vo}" target="_blank"><img src="{$vo}" width="80" height="80"/></a>
+				                            {/eyou:notempty}
+				                        {/eyou:volist}
+									</span>
+								</div>
+							</div>
+
+							<div class="order-progress-tit2"> <div class="order-progress-titL">售后商品信息</div> </div>
+							<div class="order-progress-con">
+								<div class="el-row shop-car">
+									<div class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition" style="width: 100%; border-bottom: 1px solid #eee;">
+										<table>
+											<thead>
+												<tr>
+													<th style="width:590px;"><div class="cell">商品名称</div></th>
+													<th style="width:120px;"><div class="cell tc">单价</div></th>
+													<th style="width:60px;"><div class="cell tc">数量</div></th>
+													<th style="width:120px;"><div class="cell tc">小计</div></th>
+													{eq name="$eyou.field.service_type_old" value="2"}
+													<th style="width:120px;"><div class="cell tc">退还余额</div></th>
+													{/eq}
+												</tr>
+											</thead>
+										
+											<tbody>
+												<tr>
+													<td>
+														<div class="cell">
+															<div class="goods-item">
+																<div class="goods-item-l fl">
+																	<a target="_blank" href="{$eyou.field.arcurl}" title="{$eyou.field.product_name}"><img class="img-responsive" src="{$eyou.field.product_img}" alt="商品图"></a>
+																</div>
+																<div class="goods-item-r fl">
+																	<div class="cell">
+																		<a target="_blank" href="{$eyou.field.arcurl}" class="fc3">{$eyou.field.product_name}</a>
+																		<div class="info mt5">{$eyou.field.product_spec}</div>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</td>
+													<td><div class="cell tc">{$eyou.field.refund_price}</div></td>
+													<td><div class="cell tc">{$eyou.field.product_num}</div></td>
+													<td><div class="cell tc">{$eyou.field.product_total}</div></td>
+													{eq name="$eyou.field.service_type_old" value="2"}
+													<td><div class="cell tc">{$eyou.field.refund_total_price}<br/>(减<span style="color: red;">{$eyou.field.ShippingFee}</span>运费)</div></td>
+													{/eq}
+												</tr>
+											</tbody>
+										</table>
+									</div>
+								</div>	
+							</div>
+
+							<div class="order-progress-tit2"> <div class="order-progress-titL">售后服务流程</div> </div>
+							<div class="order-progress-con">
+								{eyou:volist name="$eyou.StatusLog" id="vo"}
+									<span class="span-row">
+										<span>操作者：{$vo.name}</span> &nbsp; &nbsp; &nbsp; &nbsp; 
+										<span>操作时间：{$vo.add_time|date='Y-m-d H:i:s',###}</span> &nbsp; &nbsp; &nbsp; &nbsp; 
+										<span>操作备注：{$vo.log_note}</span>
+									</span>
+		                    	{/eyou:volist}
+							</div>	
+					    </div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+	    // 取消服务单
+	    function CancelService(obj) {
+	        layer.confirm('确定要取消服务单？', {
+	            btn: ['确认', '取消'],
+	            title: false,
+	            closeBtn: 0
+	        }, function () {
+	            $.ajax({
+	                url: $(obj).data('url'),
+	                data: {service_id: $(obj).data('id')},
+	                type:'post',
+	                dataType:'json',
+	                success:function(res) {
+	                    layer.closeAll();
+	                    if (1 == res.code) {
+	                    	layer.msg(res.msg, {time: 1500},function(){
+		                        location.reload();
+		                    });
+	                    } else {
+	                        layer.msg(res.msg, {time: 2000});
+	                    }
+	                },
+	                error : function() {
+	                    layer.closeAll();
+	                    layer.alert('未知错误，无法继续！', {title: false, closeBtn: 0, icon: 5});
+	                }
+	            });
+	        });
+	    }
+	</script>
+	{eyou:include file="users/users_footer.htm" /}

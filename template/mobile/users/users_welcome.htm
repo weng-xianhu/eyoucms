@@ -1,0 +1,273 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>会员中心-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+
+        <!-- 新样式 2020-12-8 -->
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/userfont/iconfont.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="users/skin/js/bootstrap.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="users/skin/js/global.js"/}
+
+    </head>
+    <body>
+        <div class="ey-container">
+            <div class="ey-header">
+                <div class="ey-header-top">
+                    <div class="user-info">
+                        <div class="user-info-top">
+                            <div class="user-info-l face"><a href="{eyou:url link='user/Users/info' /}"><img id="head_pic_a" src="{$users.head_pic|get_head_pic=###}"/></a></div>
+                            <div class="user-info-m">
+                                <div class="name">{$users.username}{switch name="$users.level" }
+                        {case value="1"} <span class="yey-user-list-vip1"></span> {/case}
+                        {case value="2"} <span class="yey-user-list-vip2"></span> {/case}
+                        {case value="3"} <span class="yey-user-list-vip3"></span>  {/case}
+                    {/switch}</div>
+                                <div class="level">
+                                        <span>{$users.level_name}</span>&emsp;&emsp;{eyou:neq name='$users.level' value='1'} 剩余会员天数：<span class="red">{$users.maturity_date}</span> {/eyou:neq}
+                                </div>
+                            </div>
+                            <div class="user-info-r"></div>
+                        </div>
+                        <!-- 信息统计 start -->
+                        <div class="user-info-bottom">
+                            <a href="{eyou:url link='user/Users/score_index' /}" class="user-info-item">
+                                <span id="users_scores">{$users.scores}</span>
+                                <span>{$score_name}</span>
+                            </a>
+                            <a href="{eyou:url link='user/Pay/pay_consumer_details' /}" class="user-info-item">
+                                <span>{$users.users_money}</span>
+                                <span>余额</span>
+                            </a>
+                            {egt name='$php_servicemeal' value='1'}
+                            <a href="{eyou:url link='user/UsersNotice/index' /}" class="user-info-item">
+                                <span>{$allNotice_num}{gt name="$unread_num" value="0"}<i class="badge"></i>{/gt}</span>
+                                <span>消息</span>
+                            </a>
+                            {/egt}
+                            <a href="{eyou:url link='user/Users/footprint_index' /}" class="user-info-item">
+                                <span>{$others.footprint_num}</span>
+                                <span>足迹</span>
+                            </a>
+                        </div>
+                        <!-- 信息统计 end -->
+                    </div>
+                </div>
+            </div>  
+                
+            <div class="nav-row mt15">
+                <div class="goods-nav-main">
+                    <div class="goods-nav">
+                        {if 1 < $php_servicemeal && isset($others.signin_conf) && isset($others.signin_conf.score_signin_status) && $others.signin_conf.score_signin_status == 1}
+                            {if !$others.signin_info}
+                            <span class="nav-item" id="user_signin_ahref" {if !$others.signin_info} data-url="{:url('api/Ajax/signin_save')}" onclick="userSignin(this);" {/if}>
+                                <span class="nav-item-icon">
+                                    <i class="iconfont icon-qiandao" style="color:#35dabb;"></i>
+                                </span>
+                                <span class="link" id="user_signin">
+                                    签到
+                                </span>
+                            </span>
+                            {else/}
+                            <span class="nav-item">
+                                <span class="nav-item-icon">
+                                        <i class="iconfont icon-qiandao" style="color:#35dabb;"></i>
+                                </span>
+                                <span class="link">
+                                    已签到
+                                </span>
+                            </span>
+                            {/if}
+                        {/if}
+                        {if isset($usersConfig['level_member_upgrade']) && $usersConfig['level_member_upgrade'] == 1}
+                        <a href="{eyou:url link='user/Level/level_centre'/}" class="nav-item">
+                            <span class="nav-item-icon">
+                                <i class="iconfont icon-huiyuanshengji" style="color:#ffc107;"></i>
+                            </span>
+                            {eyou:gt name='$users.level' value='1'}
+                                <span>升级会员</span>
+                            {eyou:else /}
+                                <span>开通会员</span>
+                            {/eyou:gt}
+                        </a>
+                        {/if}
+                        <a href="{eyou:url link='user/Users/collection_index' /}" class="nav-item">
+                            <span class="nav-item-icon">
+                                <i class="iconfont icon-shoucang" style="color:#ffc107;"></i>
+                            </span>
+                            <span>收藏</span>
+                        </a>
+                        <a href="{eyou:url link='user/Pay/pay_account_recharge'/}" class="nav-item">
+                            <span class="nav-item-icon">
+                                <i class="iconfont icon-yue" style="color:#fe755b;"></i>
+                            </span>
+                            <span>账户充值</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- 商城导航 start -->
+            {if isset($usersConfig['shop_open']) && $usersConfig['shop_open'] == 1 && $php_servicemeal > 1}
+            <div class="nav-row mt15">
+                <div class="goods-nav-main">
+                    <div class="column-title">
+                        <div class="column-title-l">我的订单</div>
+                         <div class="column-title-r"><a href="{eyou:url link='user/Shop/shop_centre'/}">更多</a></div>  
+                    </div>
+                    <div class="goods-nav mt10">
+                        <a href="{eyou:url link='user/Shop/shop_centre'/}" class="nav-item">
+                            <span class="nav-item-icon2">
+                                <i class="iconfont icon-dingdan"></i>
+                            </span>
+                            <span>全部订单</span>
+                        </a>
+                        <a href="{:url('user/Shop/shop_centre', ['select_status'=>'dzf'])}" class="nav-item">
+                            <span class="nav-item-icon2">
+                                <i class="iconfont icon-daifukuan"></i>
+                            </span>
+                            <span>待付款</span>
+                        </a>
+                        <a href="{:url('user/Shop/shop_centre', ['select_status'=>2])}" class="nav-item">
+                            <span class="nav-item-icon2">
+                                <i class="iconfont icon-daishouhuo"></i>
+                            </span>
+                            <span>待收货</span>
+                        </a>
+                        <a href="{:url('user/Shop/shop_centre', ['select_status'=>3])}" class="nav-item">
+                            <span class="nav-item-icon2">
+                                <i class="iconfont icon-wancheng"></i>
+                            </span>
+                            <span>已完成</span>
+                        </a>
+                        {gt name='$php_servicemeal' value='1'}
+                        <a href="{:url('user/Shop/after_service')}" class="nav-item">
+                            <span class="nav-item-icon2">
+                                <i class="iconfont icon-shouhou"></i>
+                            </span>
+                            <span>售后</span>
+                        </a>
+                        {/gt}
+                    </div>
+                </div>
+            </div>
+            {/if}
+            <!-- 商城导航 end -->
+            <!-- 导航列表 start -->
+            <div class="ey-row">
+                <div class="item-list">
+                    <a href="{eyou:url link='user/Users/info' /}" class="item">
+                        <div class="item-l">个人信息</div> 
+                        <div class="item-m tr"></div> 
+                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
+                    </a> 
+                    {if isset($usersConfig['shop_open']) && $usersConfig['shop_open'] == 1}
+                    <a href="{eyou:url link='user/Shop/shop_address_list'/}" class="item">
+                        <div class="item-l">收货地址</div> 
+                        <div class="item-m tr"></div> 
+                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
+                    </a>
+                    {/if}
+                    {if isset($usersConfig['users_open_release']) && $usersConfig['users_open_release'] == 1}
+                    <a href="{:url('user/UsersRelease/release_centre', ['list'=>1])}"  class="item">
+                        <div class="item-l">投稿中心</div> 
+                        <div class="item-m tr"></div> 
+                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
+                    </a>
+                    {/if}
+                    {if isset($part_channel['download']['status']) && $part_channel['download']['status'] == 1}
+                    <a href="{eyou:url link='user/Download/index'/}" class="item">
+                        <div class="item-l">我的下载</div>
+                        <div class="item-m tr"></div> 
+                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
+                    </a>
+                    {/if}
+                    {if isset($part_channel['article']['data']['is_article_pay']) && $part_channel['article']['data']['is_article_pay'] == 1}
+                    <a href="{eyou:url link='user/Users/article_index'/}" class="item">
+                        <div class="item-l">我的文章</div>
+                        <div class="item-m tr"></div>
+                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
+                    </a>
+                    {/if}
+                    {if isset($part_channel['media']['status']) && $part_channel['media']['status'] == 1 && $php_servicemeal > 1}
+                    <a href="{eyou:url link='user/Users/media_index' /}" class="item">
+                        <div class="item-l">我的视频</div>
+                        <div class="item-m tr"></div> 
+                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
+                    </a>
+                    {/if}
+                    {if isset($usersConfig['shop_open']) && $usersConfig['shop_open'] == 1 && $php_servicemeal >= 2}
+                    <a href="{eyou:url link='user/ShopComment/index'/}" class="item">
+                        <div class="item-l">我的评价</div>
+                        <div class="item-m tr"></div> 
+                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
+                    </a>
+                    {/if}
+                    {if isset($part_channel['ask']['status']) && $part_channel['ask']['status'] == 1 && $php_servicemeal >= 2}
+                    <a href="{eyou:url link='user/Ask/ask_index' /}" class="item">
+                        <div class="item-l">我的问答</div>
+                        <div class="item-m tr"></div>
+                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
+                    </a>
+                    {/if}
+                </div>
+            </div>
+            
+            <!-- 导航列表 end -->
+            <div class="user-logout mb10">
+                <a class="el-button el-button--primary el-button--medium" href="{eyou:url link='user/Users/logout' /}">退出登录</a>
+            </div>
+                       
+            <!-- 底部导航 start -->
+            <div class="h50"></div>
+            <div class="footer-nav">
+				{eyou:volist name="$bottom_menu_list" id="vo"}
+				<a href="{:url($vo.mca)}" class="nav-item">
+					<div class="nav-item-t"><i class="iconfont icon-{$vo.icon}"></i></div>
+					<div class="nav-item-b">{$vo.title}</div>
+				</a>
+				{/eyou:volist}
+            </div>
+            <!-- 底部导航 end -->
+        </div>
+
+        <script type="text/javascript">
+            // 签到
+            function userSignin(obj) {
+                layer_loading('正在处理');
+                $.ajax({
+                    type: "POST",
+                    url: $(obj).attr('data-url'),
+                    data: {_ajax:1},
+                    dataType: 'json',
+                    success: function (res) {
+                        layer.closeAll();
+                        if(res.code == 1){
+                            layer.msg(res.msg, {icon: 6, time:1500});
+                            $("#user_signin").html("已签到");
+                            $("#user_signin_ahref").removeAttr("onclick");
+                            $("#user_signin_ahref").removeAttr("data-url");
+                            $("#users_scores").html(res.data.scores);
+                        }else{
+                            showErrorAlert(res.msg);
+                        }
+                    },
+                    error:function(e){
+                        layer.closeAll();
+                        showErrorAlert(e.responseText);
+                    }
+                });
+            }
+        </script>
+
+    </body>
+</html>

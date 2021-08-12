@@ -1,0 +1,267 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>下单页-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/bootstrap.min.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/shop.css" /}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm"/}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/tag_global.js"/}
+</head>
+
+<body>
+{eyou:include file="users/users_header.htm" /}
+
+<div class="ey-body-bg">
+    <div class="ey-body">
+        <div class="ey-container w1200">
+            <div class="el-main main-bg" data-plugin="selectable" data-selectable="selectable" >
+                <form action="" name='theForm' id="theForm" method="post">
+                    {eyou:spsubmitorder id="field"}
+                    <div class="ey-con-inside">
+                        <div class="column-title line30 mb20">
+                            <div class="column-name mb10"><a href="JavaScript:void(0);" {$field.ShopAddAddr} class="el-button el-button--primary el-button--small">添加收货地址</a></div> 
+                            <div class="column-bt"> <a href="{:url('user/Shop/shop_address_list')}">管理收货地址</a> </div>
+                        </div>
+                        
+                        <!-- 判断是否填写商城配置中的温馨提示信息 -->
+                        {eyou:notempty name="$field.shop_prompt"}
+                        <div class="el-row"> <div class="mb20 red"> 温馨提示：{$field.shop_prompt} </div> </div>
+                        {/eyou:notempty}
+                        
+                        <!-- 判断是否属于实体产品，虚拟产品不需要收货地址 -->
+                        <div class="el-row" >
+                        {eyou:empty name="$field.PromType"}
+                            <ul class="address-con" {$field.UlHtmlId}>
+                                {eyou:spaddress id="addr_field"}
+                                    {$addr_field.DefaultHidden}
+                                    <li class="el-col el-col-8" {$addr_field.ul_il_id}>
+                                        <div class="address-item address-cursor" {$addr_field.SelectEd}>
+                                            <div class="address-main" >
+                                                <h2 {$addr_field.ConsigneeId}>{$addr_field.consignee}</h2> 
+                                                <span {$addr_field.MobileId}>{$addr_field.mobile}</span> 
+                                                <span {$addr_field.InfoId}>{$addr_field.Info}</span> 
+                                                <span {$addr_field.AddressId}>{$addr_field.address}</span>
+                                            </div>
+                                            <div class="address-oper">
+                                                <span {$addr_field.ShopEditAddr}><i class="el-icon-edit-outline"></i>编辑</span> 
+                                                <span {$addr_field.ShopDelAddr}><i class="el-icon-delete"></i>删除</span>
+                                            </div>
+                                            <i class="el-icon-house" title="默认地址"></i>
+                                        </div>  
+                                    </li>
+                                {/eyou:spaddress}
+                            </ul>   
+                        {eyou:else/}
+                            <div class="el-row">
+                            <!-- 虚拟产品输出信息,可根据自身需求更改 -->
+                                <div class="mb20 red">
+                                    该产品为虚拟产品，仅支持在线支付且无需选择收货地址及运费计算。<br/>
+                                    若产品是充值类产品，请将您的手机号或需充值的卡号填入留言中。
+                                </div>
+                            </div>
+                        {/eyou:empty}
+                        </div>
+
+                        <div class="column-title line30"> 
+                            <div class="column-name mb10">{eyou:eq name="$field.use_pay_type" value="0"}未开启支付方式{eyou:else/}支付方式{/eyou:eq}</div> 
+                        </div>
+                        <div class="el-row mb10">
+                            {$field.PayTypeHidden}
+                            <div class="pay-type">
+                                <div class="li_div">
+                                    <div class="pay-con" style="overflow: hidden;padding: 20px 20px 10px 20px;">
+                                        <!-- 支付API列表，套板请务必将整块代码一起复制，包含隐藏域 -->
+                                        <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
+                                        {eyou:sppayapilist id='vo'}
+                                            {eyou:notempty name="$vo.pay_id"}
+                                                {neq name="$vo.pay_mark" value="Hupijiaopay"}
+                                                    {eyou:php}$pay_mark_vars = "users/skin/images/pay_".$vo['pay_mark'].".png";{/eyou:php}
+                                                    <div class="pay-type-item" data-type="zxzf_{$vo.pay_mark}" onclick="payTag2(this)">
+                                                        <img src="{eyou:empty name='$vo.pay_img'}{eyou:static file='$pay_mark_vars' /}{eyou:else/}{$vo.pay_img}{/eyou:empty}" alt="{$vo.pay_name}"> <i class="el-icon-check"></i>
+                                                    </div>
+                                                {/neq}
+                                            {/eyou:notempty}
+                                            {$vo.hidden}
+                                        {/eyou:sppayapilist}
+                                        <input type="hidden" id="PayID">
+                                        <input type="hidden" id="PayMark">
+                                        <input type="hidden" id="PayType">
+                                        <!-- END -->
+
+                                        {eyou:eq name="$field.pay_balance_open" value="1"}
+                                        <div class="pay-type-item" data-type="yezf_balance" onclick="payTag2(this)">
+                                            <img src="{eyou:static file='users/skin/images/pay_yiyou2.png' /}" alt="余额支付">
+                                            <i class="el-icon-check"></i>
+                                        </div>
+                                        {/eyou:eq}
+
+                                        {eyou:if condition="empty($field.shop_open_offline) && empty($field.PromType)"}
+                                        <!-- 判断是否开启商城配置中的货到付款开关 并且 判断是否属于实体产品，虚拟产品不支付货到付款 -->
+                                        <div class="pay-type-item" data-type="hdfk_payOnDelivery" onclick="payTag2(this)">
+                                            <img src="{eyou:static file='users/skin/images/pay_hdfk.png' /}" alt="货到付款">
+                                            <i class="el-icon-check"></i>
+                                        </div>
+                                        {/eyou:if}
+                                    </div>
+                                    <div class="pay-inner-con" id="yezf_balance_tips" style="display: none;">
+                                        <div class="pay-item-row">
+                                            <div class="pay-item-l w150">应付金额：</div>
+                                            <div class="pay-item-r"> <span class="red f16" {$field.PayTotalAmountID}>{$field.TotalAmount}</span> 元</div>
+                                        </div>
+                                        <div class="pay-item-row">
+                                            <div class="pay-item-l w150">可用余额：</div>
+                                            <div class="pay-item-r"> 
+                                                <span class="green f16">{$field.UsersMoney}</span> 元
+                                                <span class="red ml10" >
+                                                    {lt name='$field.UsersSurplusMoney' value='0'}
+                                                    余额不足<a href="{:url('user/Pay/pay_account_recharge')}" target="_blank">[充值]</a>
+                                                    {/lt}
+                                                </span> 
+                                            </div>
+                                        </div>
+                                        <div class="pay-item-row" {lt name='$field.UsersSurplusMoney' value='0'}style="display: none;"{/lt}>
+                                            <div class="pay-item-l w150">支付结余：</div>
+                                            <div class="pay-item-r"> <span class="fb" {$field.UsersSurplusMoneyID}>{$field.UsersSurplusMoney}</span> 元</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 判断是否属于实体产品,虚拟产品不支付配送方式 -->
+                        {eyou:empty name="$field.PromType"}
+                        <div class="column-title line30 mb20"> <div class="column-name mb10">配送方式</div> </div>
+                        <div class="el-row mb30 pl20 pr20"> <span>快递配送 ( {$field.Shipping} )</span> </div>
+                        {/eyou:empty}
+                        
+                        <div class="column-title line30 mb20"> <div class="column-name mb10">商品信息</div> </div>
+                        <div class="el-row mb30 shop-car">
+                            <div class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition" style="width: 100%;">
+                                <table class="el-table__body">
+                                    <thead>
+                                        <tr>
+                                            <th><div class="cell">商品</div></th>
+                                            <th style="width: 140px;"><div class="cell tc">单价</div></th>
+                                            <th style="width: 60px;"><div class="cell tc">数量</div></th>
+                                            <th style="width: 200px;"><div class="cell tc">小计</div></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {eyou:spordergoods id="shop_field"}
+                                        <tr>
+                                            <td >
+                                                <div class="cell">
+                                                    <div class="goods-item">
+                                                        <div class="goods-item-l fl">
+                                                            <a target="_blank" href="{$shop_field.arcurl}">
+                                                                <img class="img-responsive" src="{$shop_field.litpic}" alt="商品图">
+                                                            </a>
+                                                        </div>
+                                                        <div class="goods-item-r fl">
+                                                            <div class="cell">
+                                                                <a class="fc3" target="_blank" href="{$shop_field.arcurl}">
+                                                                    {$shop_field.title}
+                                                                </a>
+                                                                <div class="info mt5">
+                                                                    <!-- 商品规格 -->
+                                                                    {$shop_field.product_spec}
+                                                                    <!-- 商品规格 END-->
+
+                                                                    <!-- 商品参数 -->
+                                                                    {eyou:attribute type='newattr' aid='$shop_field.aid' attrid='$shop_field.attrlist_id'}
+                                                                        <div>{$attr.name}：{$attr.value}</div>
+                                                                    {/eyou:attribute}
+                                                                    <!-- 商品新参数 END-->
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td> <div class="cell tc">￥{$shop_field.users_price}元</div> </td>
+                                            <td> <div class="cell tc">{$shop_field.product_num}</div> </td>
+                                            <td> <div class="cell tc red">￥{$shop_field.subtotal}元</div> </td>
+                                        </tr>
+                                        {$shop_field.ProductHidden}
+                                        {/eyou:spordergoods}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="column-title line30 mb20"> <div class="column-name mb10">留言备注</div> </div>
+                        <div class="el-row mb30 pl20 pr20">
+                            <div class="mt30 order-footer">
+                                <div class="order-footer-l">
+                                    <div class="el-form-item w400">
+                                        <label class="el-form-item__label" style="width: 80px;">我要留言</label>
+                                        <div class="el-form-item__content" style="margin-left: 80px;">
+                                            <textarea class="form-control" rows="3" name="message" placeholder="给商家留言，选填"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="order-footer-r2">
+                                    {$field.TotalAmountOld}
+                                    <div class="el-form-item">
+                                        <label class="el-form-item__label" style="width: 80px;">数量:</label>
+                                        <div class="el-form-item__content " style="margin-left: 80px;"><span class="red fb">{$field.TotalNumber}</span> 件</div>
+                                    </div>
+                                    <div class="el-form-item">
+                                        <label class="el-form-item__label" style="width: 80px;">合计:</label>
+                                        <div class="el-form-item__content " style="margin-left: 80px;">￥<span {$field.TotalAmountId} class="red fb">{$field.TotalAmount}</span> 元</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="order-footer">
+                                <div class="order-footer-l"></div>
+                                <div class="order-footer-r">
+                                    <!-- 判断是否由购物车提交过来 -->
+                                    {eyou:eq name="$field.submit_order_type" value="0"}
+                                        <a href="{$field.ReturnCartUrl}" class="el-button el-button--default el-button--medium">返回购物车</a>
+                                    {/eyou:eq}
+                                    {eyou:eq name="is_wechat" value='2'}
+                                        <input type="button" name="submit" value="提交订单" class="el-button el-button--primary el-button--medium" {$field.ShopPaymentPage} >
+                                    {eyou:else/}
+                                        <input type="button" name="submit" value="提交订单" class="el-button el-button--primary el-button--medium" onclick="WeChatPayment();" >
+                                    {/eyou:eq}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {$field.TokenValue}
+                    {$field.hidden}
+                    {/eyou:spsubmitorder}
+                </form>
+            </div>
+        </div>
+    </div>  
+    <input type="hidden" id="unified_id">
+    <input type="hidden" id="unified_number">
+    <input type="hidden" id="transaction_type">
+</div>
+<script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
+{eyou:static file="users/skin/js/shop_under_order.js"/}
+
+<script type="text/javascript">
+    $(function(){
+        // 默认支付方式
+        $($('.pay-type-item')[0]).trigger("click");
+    });
+</script>
+
+{eyou:include file="users/users_footer.htm" /}
