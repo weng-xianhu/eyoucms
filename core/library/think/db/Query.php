@@ -388,7 +388,7 @@ class Query
                         $seq = (ord(substr($type($value), 0, 1)) % $rule['num']) + 1;
                     } else {
                         // 按照字段的首字母的值分表
-                        $seq = (ord($value{0}) % $rule['num']) + 1;
+                        $seq = (ord($value[0]) % $rule['num']) + 1;
                     }
             }
             return $this->getTable() . '_' . $seq;
@@ -3252,7 +3252,7 @@ class Query
     }
 
     /**
-     * 批量更新数据[此方法废弃，建议使用模型中的 saveAll 方法]
+     * 批量更新数据[此方法已废弃，不支持mysql 8.0，谁用谁得前列腺，建议使用模型中的 saveAll 方法]
      *
      * @author 小虎哥
      * @created to 2013-05-27
@@ -3260,7 +3260,7 @@ class Query
      * @param string $index_key 主键值的字段名
      * @return void
      */
-    public function updateAll($set, $index_key)
+/*    public function updateAll($set, $index_key)
     {
         if (empty($set)) {
             return '';
@@ -3271,5 +3271,5 @@ class Query
         $result = $this->execute($sql);
         
         return $result;
-    }
+    }*/
 }

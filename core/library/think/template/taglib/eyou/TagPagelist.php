@@ -38,11 +38,6 @@ class TagPagelist extends Base
         $listitem = !empty($listitem) ? $listitem : 'info,index,end,pre,next,pageno';
         $listsize = !empty($listsize) ? $listsize : '3';
 
-        if ($this->home_lang != $this->main_lang) {
-            // $listitem = str_replace('info', ',', $listitem);
-            // $listitem = str_replace(',,', ',', $listitem);
-        }
-
         $value = $pages->render($listitem, $listsize);
 
         return $value;

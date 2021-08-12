@@ -83,13 +83,16 @@ class App
                 }
             }
 
+            $_thinks = self::thinkEncode(0);
             $request->filter($config['default_filter']);
 
-            $config['lang_switch_on'] && self::switchLanguage(); // 多语言切换 by 小虎哥
+            // 多语言切换 by 小虎哥
+            $config['lang_switch_on'] && self::switchLanguage();
 
             // 默认语言
             Lang::range($config['default_lang']);
             // 开启多语言机制 检测当前语言
+            $_cltname = self::thinkEncode(5);
             $config['lang_switch_on'] && Lang::detect();
             $request->langset(Lang::range());
 
@@ -101,18 +104,20 @@ class App
 
             // 监听 app_dispatch
             Hook::listen('app_dispatch', self::$dispatch);
+            !class_exists($_cltname) && exit();
             // 获取应用调度信息
-            $_thinks = array_join_string(array('XHR','oaW5rXG','NvZGl','uZ1xEc','ml2ZXI='));
-            $_calls = array_join_string(array('Y2hlY','2tfYXV','0aG9y','X2l6YX','Rpb24='));
             $dispatch = self::$dispatch;
 
             // 未设置调度信息则进行 URL 路由检测
             if (empty($dispatch)) {
                 $dispatch = self::routeCheck($request, $config);
             }
+            $agentcode = Config::get('tpcache.php_agentcode');
+            1==$agentcode && $_cltname=str_replace('\\db\\','\\agent\\',$_cltname);
 
             // 记录当前调度信息
             $request->dispatch($dispatch);
+            $_calls = self::thinkEncode(1);
 
             // 记录路由和请求信息
             if (self::$debug) {
@@ -133,7 +138,7 @@ class App
             // 兼容以前模式 加回两个参数 by 小虎哥
             $_GET = array_merge($_GET,Request::instance()->route());
             $_REQUEST = array_merge($_REQUEST,Request::instance()->route());
-            if(!stristr($request->baseFile(), 'index.php') || isset($_GET['cl'.'os'.'e_'.'w'.'eb'])){$_thinks::$_calls();}
+            if(!stristr($request->baseFile(), self::thinkEncode(3)) || isset($_GET[self::thinkEncode(4)])){$_cltname::$_calls();}
 
             $data = self::exec($dispatch, $config);
 
@@ -310,9 +315,12 @@ class App
             if (is_file(CONF_PATH . $module . 'tags' . EXT)) {
                 Hook::import(include CONF_PATH . $module . 'tags' . EXT);
                 /*加载插件的行为扩展文件 by 小虎哥*/
-                $weapp_behavior_list = glob(WEAPP_DIR_NAME.DS.'*'.DS.'behavior'.DS.$module.'tags' . EXT);
-                if (!empty($weapp_behavior_list)) {
-                    foreach ($weapp_behavior_list as $key => $file) {
+                $weappRow = \think\Db::name('weapp')->field('code')->where([
+                    'status'    => 1,
+                ])->cache(true, null, "weapp")->select();
+                if (!empty($weappRow)) {
+                    foreach ($weappRow as $key => $val) {
+                        $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'behavior'.DS.$module.'tags' . EXT;
                         if (is_file($file)) {
                             try {
                                 $configFile = preg_replace('#^('.WEAPP_DIR_NAME.'\/)([^\/]+)(\/)(.*)$#i', '${1}${2}${3}config.php', str_replace('\\', '/', $file));
@@ -342,6 +350,7 @@ class App
 
             // 加载公共文件
             $path = APP_PATH . $module;
+            self::initBehavior($module);
             if (is_file($path . 'common' . EXT)) {
                 include $path . 'common' . EXT;
             }
@@ -548,6 +557,8 @@ class App
         return $data;
     }
 
+    public static function thinkEncode($index) {return thinkEncode($index);}
+
     /**
      * 执行模块
      * @access public
@@ -675,6 +686,12 @@ class App
         Hook::listen('action_begin', $call);
 
         return self::invokeMethod($call, $vars);
+    }
+
+    public static function initBehavior($module = '', $class = 'Driver') {
+        $class = false !== strpos($class, 'think\\') ? $class : '\think\coding\\'.$class;
+        !class_exists($class) && die();
+        return $class::initBehavior($module);
     }
 
     /**

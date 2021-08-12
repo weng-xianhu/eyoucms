@@ -32,25 +32,78 @@ class TagUsermenu extends Base
      */
     public function getUsermenu($currentstyle = '', $limit = '')
     {
+        if (getUsersTplVersion() == 'v2') {
+            return $this->get_usermenu_v2($currentstyle, $limit);
+        } else {
+            return $this->get_usermenu_v1($currentstyle, $limit);
+        }
+    }
+
+    /**
+     * 获取会员菜单
+     * @author wengxianhu by 2018-4-20
+     */
+    private function get_usermenu_v1($currentstyle = '', $limit = '')
+    {
         $map = array();
         $map['status'] = 1;
         $map['lang'] = $this->home_lang;
+        $map['version'] = ['IN', ['weapp','v1']];
 
         $menuRow = Db::name("users_menu")->where($map)
-            ->order('sort_order asc')
+            ->order('sort_order asc,id ASC')
             ->limit($limit)
             ->select();
         $result = [];
         foreach ($menuRow as $key => $val) {
             $val['url'] = url($val['mca']);
+            if ('Users' == CONTROLLER_NAME){
+                if (preg_match('/^'.MODULE_NAME.'\/'.CONTROLLER_NAME.'\/'.ACTION_NAME.'/i', $val['mca'])) {
+                    $val['currentstyle'] = $currentstyle;
+                } else {
+                    $val['currentstyle'] = '';
+                }
+            }else{
+                /*标记被选中效果*/
+                if (preg_match('/^'.MODULE_NAME.'\/'.CONTROLLER_NAME.'\//i', $val['mca'])) {
+                    $val['currentstyle'] = $currentstyle;
+                } else {
+                    $val['currentstyle'] = '';
+                }
+                /*--end*/
+            }
 
-            /*标记被选中效果*/
-            if (preg_match('/^'.MODULE_NAME.'\/'.CONTROLLER_NAME.'\//i', $val['mca'])) {
+            $result[] = $val;
+        }
+
+        return $result;
+    }
+
+    /**
+     * 获取会员菜单
+     * @author wengxianhu by 2018-4-20
+     */
+    private function get_usermenu_v2($currentstyle = '', $limit = '')
+    {
+        $map = array();
+        $map['status'] = 1;
+        $map['lang'] = $this->home_lang;
+        $map['version'] = ['IN', ['v2']];
+
+        $menuRow = Db::name("users_menu")->where($map)
+            ->order('sort_order asc,id ASC')
+            ->limit($limit)
+            ->select();
+        $result = [];
+        foreach ($menuRow as $key => $val) {
+            $val['url'] = url($val['mca']);
+            if ($val['active_url']) $val['active_url'] = explode('|', $val['active_url']);
+
+            if (in_array(MODULE_NAME.'/'.CONTROLLER_NAME.'/'.ACTION_NAME,$val['active_url'])) {
                 $val['currentstyle'] = $currentstyle;
-            } else {
+            }else{
                 $val['currentstyle'] = '';
             }
-            /*--end*/
 
             $result[] = $val;
         }

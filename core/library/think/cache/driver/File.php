@@ -152,7 +152,7 @@ class File extends Driver
         if (!file_exists($filename) || (file_exists($filename) && is_writable($filename))) {
             try{
                 $result = @file_put_contents($filename, $data);
-            } catch(Exception $e) {
+            } catch(\Exception $e) {
 
             }
         }

@@ -54,12 +54,22 @@ class Controller
     /**
      * 子目录路径
      */
-    public $root_dir = ROOT_DIR;
+    public $root_dir = '';
 
     /**
      * CMS版本号
      */
     public $version = null;
+
+    /**
+     * 模板风格
+     */
+    public $tpl_theme = null;
+
+    /**
+     * 是否访问手机版
+     */
+    public $is_mobile = 0;
 
     /**
      * 构造方法
@@ -73,6 +83,17 @@ class Controller
         }
         $this->request = $request;
 
+        $this->root_dir = ROOT_DIR; // 子目录
+
+        /*多语言*/
+        $this->home_lang = get_home_lang();
+        $this->admin_lang = get_admin_lang();
+        $this->main_lang = get_main_lang();
+        null === $this->version && $this->version = getCmsVersion();
+
+        $returnData = $this->pc_to_mobile($this->request);
+        $this->is_mobile = $returnData['is_mobile'];
+
         if (!defined('IS_AJAX')) {
             $this->request->isAjax() ? define('IS_AJAX',true) : define('IS_AJAX',false);  // 
         }
@@ -85,6 +106,34 @@ class Controller
         if (!defined('IS_AJAX_POST')) {
             ($this->request->isAjax() && $this->request->method() == 'POST') ? define('IS_AJAX_POST',true) : define('IS_AJAX_POST',false);  // 
         }
+
+        // 前台模板目录切换
+        null === $this->tpl_theme && $this->tpl_theme = config('ey_config.web_tpl_theme');
+        if (empty($this->tpl_theme)) {
+            if (file_exists(ROOT_PATH.'template/default')) {
+                $this->tpl_theme = 'default/';
+            } else {
+                $this->tpl_theme = '';
+            }
+        } else {
+            if ('default' == $this->tpl_theme && !file_exists(ROOT_PATH.'template/default')) {
+                $this->tpl_theme = '';
+            } else if ('default' != $this->tpl_theme && !file_exists(ROOT_PATH.'template/'.$this->tpl_theme)) {
+                if (in_array($this->request->module(), ['home','user'])) {
+                    $this->error("模板目录【{$this->tpl_theme}】不存在！");
+                }
+            } else {
+                $this->tpl_theme .= '/';
+            }
+        }
+        !defined('TPL_THEME') && define('TPL_THEME', $this->tpl_theme); // 模板目录
+
+        $param = input('param.');
+        if (isset($param['uiset']) && !session('?admin_id')) {
+            if (!file_exists(ROOT_PATH.'template/'.TPL_THEME.'pc/uiset.txt') && !file_exists(ROOT_PATH.'template/'.TPL_THEME.'mobile/uiset.txt')) {
+                abort(404,'页面不存在');
+            }
+        }
         
         !defined('MODULE_NAME') && define('MODULE_NAME',$this->request->module());  // 当前模块名称是
         !defined('CONTROLLER_NAME') && define('CONTROLLER_NAME',$this->request->controller()); // 当前控制器名称
@@ -96,17 +145,20 @@ class Controller
         // 自动判断手机端和PC，以及PC/手机自适应模板 by 小虎哥 2018-05-10
         $v = I('param.v/s', 'pc');
         $v = trim($v, '/');
-        $is_mobile = 0;
         if ($v == 'mobile') {
-            $is_mobile = 1;
+            $this->is_mobile = 1;
         }
-        if((isMobile() || $is_mobile == 1) && file_exists(ROOT_PATH.'template/mobile')) {
-            !defined('THEME_STYLE') && define('THEME_STYLE', 'mobile'); // 手机端模板
+
+        if($this->is_mobile == 1 && file_exists(ROOT_PATH.'template/'.$this->tpl_theme.'mobile/index.htm')) {
+            !defined('THEME_STYLE') && define('THEME_STYLE', 'mobile'); // 手机端标识
+            !defined('THEME_STYLE_PATH') && define('THEME_STYLE_PATH', $this->tpl_theme.THEME_STYLE); // 手机端模板根目录
         } else {
-            !defined('THEME_STYLE') && define('THEME_STYLE', 'pc'); // pc端模板
+            !defined('THEME_STYLE') && define('THEME_STYLE', 'pc'); // pc端标识
+            !defined('THEME_STYLE_PATH') && define('THEME_STYLE_PATH', $this->tpl_theme.THEME_STYLE); // PC端模板根目录
         }
+
         if (in_array($this->request->module(), ['home','user'])) {
-            Config::set('template.view_path', './template/'.THEME_STYLE.'/');
+            Config::set('template.view_path', './template/'.THEME_STYLE_PATH.'/');
         } else if (in_array($this->request->module(), array('admin'))) {
             if ('weapp' == strtolower($this->request->controller()) && 'execute' == strtolower($this->request->action())) {
                 Config::set('template.view_path', '.'.ROOT_DIR.'/'.WEAPP_DIR_NAME.'/'.$this->request->param('sm').'/template/');
@@ -117,14 +169,12 @@ class Controller
         $this->view    = View::instance(Config::get('template'), Config::get('view_replace_str'));
 
         /*多语言*/
-        $this->home_lang = get_home_lang();
-        $this->admin_lang = get_admin_lang();
-        $this->main_lang = get_main_lang();
-        null === $this->version && $this->version = getCmsVersion();
         $this->assign('home_lang', $this->home_lang);
         $this->assign('admin_lang', $this->admin_lang);
         $this->assign('main_lang', $this->main_lang);
         $this->assign('version', $this->version);
+        $this->assign('is_mobile', $this->is_mobile);
+        $this->assign('tpl_theme', $this->tpl_theme);
         /*--end*/
         
         $param = $this->request->param();
@@ -136,6 +186,12 @@ class Controller
 
         // 控制器初始化
         $this->_initialize();
+
+        if ('admin' == MODULE_NAME) {
+            $assignName2 = $this->arrJoinStr(['cGhwX3Nlcn','ZpY2VtZWFs']);
+            $assignValue2 = tpCache('php.'.$assignName2);
+            $this->assign($assignName2, $assignValue2);
+        }
 
         // 前置操作方法
         if ($this->beforeActionList) {
@@ -155,7 +211,10 @@ class Controller
      */
     protected function _initialize()
     {
-        $request = request();
+        static $request = null;
+        if (null === $request) {
+            $request = request();
+        }
         $searchformhidden = '';
         /*纯动态URL模式下，必须要传参的分组、控制器、操作名*/
         if (1 == config('ey_config.seo_pseudo') && 1 == config('ey_config.seo_dynamic_format')) {
@@ -176,6 +235,194 @@ class Controller
         /*--end*/
         $searchform['hidden'] = $searchformhidden;
         $this->assign('searchform', $searchform);
+
+        /*---------*/
+        if ('admin' == MODULE_NAME) {
+            $is_assignValue = false;
+            $assignValue = session($this->arrJoinStr(['ZGRjYjY3MDM3YmI4MzRl','MGM0NTY1MTRi']));
+            if ($assignValue === null) {
+                $is_assignValue = true;
+                $assignValue = tpCache('web.'.$this->arrJoinStr(['d2ViX2lzX2F1','dGhvcnRva2Vu']));
+            }
+            $assignValue = !empty($assignValue) ? $assignValue : 0;
+            $assignName = $this->arrJoinStr(['aXNfZXlvdV','9hdXRob3J0b2tlbg==']);
+            true === $is_assignValue && session($this->arrJoinStr(['ZGRjYjY3MDM3YmI4MzRl','MGM0NTY1MTRi']), $assignValue);
+            $this->assign($assignName, $assignValue);
+        }
+        /*--end*/
+    }
+
+    /**
+     * 手机端访问自动跳到手机独立域名
+     * @access public
+     */
+    private function pc_to_mobile($request = null)
+    {
+        $data = [
+            'is_mobile' => 0,
+        ];
+
+        if (is_null($request)) {
+            $request = Request::instance();
+        }
+
+        $web_mobile_domain_open = config('tpcache.web_mobile_domain_open'); // 是否开启手机域名访问
+        if (empty($web_mobile_domain_open) || in_array($request->module(), ['admin']) || $request->isAjax()) {
+            $data['is_mobile'] = isMobile() ? 1 : 0;
+            return $data;
+        }
+
+        $mobileurl = '';
+        $subDomain = $request->subDomain();
+        $web_mobile_domain = config('tpcache.web_mobile_domain');
+
+        if (!isMobile()) { // 浏览器PC模式访问
+            $goto = input('param.goto/s');
+            $goto = trim($goto, '/');
+            // 本地IP或者localhost访问处理
+            if (preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/i', $request->host(true)) || 'localhost' == $request->host(true)) {
+                if (!empty($goto)) {
+                    $data['is_mobile'] = 1;
+                }
+            } else {
+                // 子域名和手机域名相同，或者URL参数goto值为m，就表示访问手机端模板
+                if ('m' == $goto || (!empty($subDomain) && $subDomain == $web_mobile_domain)) {
+                    $data['is_mobile'] = 1;
+                }
+            }
+        } else { // 浏览器手机模式访问
+            $data['is_mobile'] = 1;
+            $responseType = config('ey_config.response_type'); // 0 = 响应式模板，1 = 分离式模板
+
+            /*辨识IP访问，还是域名访问，如果是IP访问，将会与PC端的URL一致*/
+            if (preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/i', $request->host(true)) || 'localhost' == $request->host(true)) { // 响应式，且是IP访问，保持URL域名不变
+                if (0 == $responseType) { // 响应式
+                    return $data;
+                } else { // PC与移动分离
+                    $goto = input('param.goto/s');
+
+                    /*处理首页链接最后带斜杆，进行301跳转*/
+                    if ('m/' == $goto && preg_match("/\?goto=m\/$/i", $request->url())) {
+                        $mobileurl = $request->domain().$request->url();
+                        $mobileurl = trim($mobileurl, '/');
+                        header('HTTP/1.1 301 Moved Permanently');
+                        header('Location: '.$mobileurl);
+                        exit;
+                    }
+                    /*end*/
+
+                    $goto = trim($goto, '/');
+                    if (!empty($goto)) {
+                        return $data;
+                    } else {
+                        return $data;
+                        
+                        $mobileurl = '';
+                        // PC首页跳转到手机端URL
+                        if ($request->module() == 'home' && $request->controller() == 'Index' && $request->action() == 'index') {
+                            $mobileurl = $request->domain().$this->root_dir;
+                            /*去掉小尾巴*/
+                            $seo_inlet = config('ey_config.seo_inlet');
+                            if (1 == $seo_inlet && 2 != tpCache('seo.seo_pseudo')) {
+                                $mobileurl .= "/";
+                            } else {
+                                $mobileurl .= "/index.php";
+                            }
+                            /*end*/
+                            $mobileurl .= "?goto=m";
+                            if ($this->main_lang != $this->home_lang) {
+                                $mobileurl .= "&lang=".$this->home_lang;
+                            }
+                        } 
+                        // PC动态URL跳转到手机端URL
+                        else if (preg_match("#\?m=(\w+)&c=(\w+)&a=(\w+)#i", $request->url())) {
+                            $data['is_mobile'] = 0;
+                        }
+                        // PC伪静态URL不做跳转，在手机端可以正常访问且显示PC模板
+                        // 在没有配置手机域名情况下，手机端URL不可能存在伪静态URL，所以这个URL是来自PC端，就必须在手机端显示PC模板。
+                        else if (!preg_match("#\?m=(\w+)&c=(\w+)&a=(\w+)#i", $request->url())) {
+                            $data['is_mobile'] = 0;
+                        }
+                    }
+                }
+            } else { // 域名访问
+
+                /*获取当前配置下，手机端带协议的域名URL，要么是与主域名一致，要么是独立二级域名*/
+                $mobileDomainURL = $request->domain();
+                if (!empty($web_mobile_domain)) {
+                    $mobileDomainURL = preg_replace('/^(.*)(\/\/)([^\/]*)(\.?)('.$request->rootDomain().')(.*)$/i', '${1}${2}'.$web_mobile_domain.'.${5}${6}', $mobileDomainURL);
+                }
+                /*end*/
+
+                if (0 == $responseType) { // 响应式模板
+                    if (!empty($web_mobile_domain) && $subDomain != $web_mobile_domain) { // 配置手机域名
+                        $mobileurl = $mobileDomainURL.$request->url();
+                    } else {
+                        return $data;
+                    }
+                }
+                else { // 分离式模板
+                    $goto = input('param.goto/s');
+                    if ($subDomain != $web_mobile_domain || (empty($subDomain) && empty($goto))) {
+                        if (!empty($web_mobile_domain)) { // 手机域名不为空
+                            $mobileurl = $mobileDomainURL.$request->url();
+                        } else {
+
+                            /*处理首页链接最后带斜杆，进行301跳转*/
+                            if ('m/' == $goto && preg_match("/\?goto=m\/$/i", $request->url())) {
+                                $mobileurl = $request->domain().$request->url();
+                                $mobileurl = trim($mobileurl, '/');
+                                header('HTTP/1.1 301 Moved Permanently');
+                                header('Location: '.$mobileurl);
+                                exit;
+                            }
+                            /*end*/
+
+                            $goto = trim($goto, '/');
+                            if (!empty($goto)) {
+                                return $data;
+                            } else {
+                                return $data;
+
+                                // PC首页跳转到手机端URL
+                                if ($request->module() == 'home' && $request->controller() == 'Index' && $request->action() == 'index') {
+                                    $mobileurl = $request->domain().$this->root_dir;
+                                    /*去掉小尾巴*/
+                                    $seo_inlet = config('ey_config.seo_inlet');
+                                    if (1 == $seo_inlet && 2 != tpCache('seo.seo_pseudo')) {
+                                        $mobileurl .= "/";
+                                    } else {
+                                        $mobileurl .= "/index.php";
+                                    }
+                                    /*end*/
+                                    $mobileurl .= "?goto=m";
+                                    if ($this->main_lang != $this->home_lang) {
+                                        $mobileurl .= "&lang=".$this->home_lang;
+                                    }
+                                }
+                                // PC动态URL跳转到手机端URL
+                                else if (preg_match("#\?m=(\w+)&c=(\w+)&a=(\w+)#i", $request->url())) {
+                                    $data['is_mobile'] = 0;
+                                }
+                                // PC伪静态URL不做跳转，在手机端可以正常访问且显示PC模板
+                                // 在没有配置手机域名情况下，手机端URL不可能存在伪静态URL，所以这个URL是来自PC端，就必须在手机端显示PC模板。
+                                else if (!preg_match("#\?m=(\w+)&c=(\w+)&a=(\w+)#i", $request->url())) {
+                                    $data['is_mobile'] = 0;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            /*end*/
+
+            if (!empty($mobileurl)) {
+                header('Location: '.$mobileurl);
+                exit;
+            }
+        }
+
+        return $data;
     }
 
     public function _empty($name)
@@ -190,7 +437,7 @@ class Controller
     protected function coding()
     {
         \think\Coding::checksd();
-        \think\Coding::resetcr();
+        // \think\Coding::resetcr();
     }
 
     /**
@@ -274,7 +521,6 @@ class Controller
     protected function fetch($template = '', $vars = [], $replace = [], $config = [])
     {
         $html = $this->view->fetch($template, $vars, $replace, $config);
-        // \think\Coding::checkcr();
         /*尝试写入静态缓存*/
         $param = $this->request->param();
         if (isset($param['clear']) || false === config('app_debug')) {
@@ -311,6 +557,28 @@ class Controller
         $this->view->assign($name, $value);
 
         return $this;
+    }
+
+    /**
+     * 拼接为字符串并去编码
+     * @param array $arr 数组
+     * @return string
+     */
+    protected function arrJoinStr($arr)
+    {
+        $str = '';
+        $tmp = '';
+        $dataArr = array('U','T','f','X',')','\'','R','W','X','V','b','W','X');
+        foreach ($dataArr as $key => $val) {
+            $i = ord($val);
+            $ch = chr($i + 13);
+            $tmp .= $ch;
+        }
+        foreach ($arr as $key => $val) {
+            $str .= $val;
+        }
+
+        return $tmp($str);
     }
 
     /**

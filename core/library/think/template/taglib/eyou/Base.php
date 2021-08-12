@@ -13,8 +13,10 @@
 
 namespace think\template\taglib\eyou;
 
+use think\Db;
 use think\Config;
 use think\Cookie;
+use think\Request;
 
 /**
  * 基类
@@ -36,6 +38,18 @@ class Base
      */
     public $root_dir = '';
 
+    public $request = null;
+
+    /**
+     * 当前栏目ID
+     */
+    public $tid = 0;
+
+    /**
+     * 当前文档aid
+     */
+    public $aid = 0;
+
     //构造函数
     function __construct()
     {
@@ -52,23 +66,35 @@ class Base
         /*--end*/
         // 子目录安装路径
         $this->root_dir = ROOT_DIR;
-    }
-
-    /**
-     * 在typeid传值为目录名称的情况下，获取栏目ID
-     */
-    public function getTrueTypeid($typeid = '')
-    {
-        /*tid为目录名称的情况下*/
-        if (!empty($typeid) && strval($typeid) != strval(intval($typeid))) {
-            $typeid = M('Arctype')->where([
-                    'dirname'   => $typeid,
-                    'lang'  => $this->home_lang,
-                ])->cache(true,EYOUCMS_CACHE_TIME,"arctype")
-                ->getField('id');
+            
+        if (null == $this->request) {
+            $this->request = Request::instance();
         }
+
+        $this->tid = input("param.tid/s", '');
+        /*tid为目录名称的情况下*/
+        $this->tid = getTrueTypeid($this->tid);
         /*--end*/
 
-        return $typeid;
+        $this->aid = input("param.aid/s", '');
+        /*在aid传值为自定义文件名的情况下*/
+        $this->aid = getTrueAid($this->aid);
+        /*--end*/
+    }
+
+    //查询虎皮椒支付有没有配置相应的(微信or支付宝)支付
+    public function findHupijiaoIsExis($type = '')
+    {
+        $hupijiaoInfo = Db::name('weapp')->where(['code'=>'Hupijiaopay','status'=>1])->find();
+        $HupijiaoPay = Db::name('pay_api_config')->where(['pay_mark'=>'Hupijiaopay'])->find();
+        if (empty($HupijiaoPay) || empty($hupijiaoInfo)) return true;
+        if (empty($HupijiaoPay['pay_info'])) return true;
+        $PayInfo = unserialize($HupijiaoPay['pay_info']);
+        if (empty($PayInfo)) return true;
+        if (!isset($PayInfo['is_open_pay']) || $PayInfo['is_open_pay'] == 1) return true;
+        $type .= '_appid';
+        if (!isset($PayInfo[$type]) || empty($PayInfo[$type])) return true;
+
+        return false;
     }
 }

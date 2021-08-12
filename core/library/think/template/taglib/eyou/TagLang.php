@@ -90,8 +90,6 @@ class TagLang extends Base
             $constArr[$home_lang] = array_merge($constArr[$home_lang], $data[$home_lang]);
         }
 
-        // file_put_contents ( DATA_PATH."/log.txt", date ( "Y-m-d H:i:s" ) . "  " . var_export($constArr,true) . "\r\n", FILE_APPEND );
-
         $value = !empty($constArr[$home_lang][$const]) ? $constArr[$home_lang][$const] : '';
         return $value;
     }

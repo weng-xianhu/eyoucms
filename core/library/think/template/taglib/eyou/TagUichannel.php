@@ -13,7 +13,6 @@
 
 namespace think\template\taglib\eyou;
 
-
 /**
  * 栏目列表编辑
  */
@@ -49,11 +48,10 @@ class TagUichannel extends Base
             $info = $data['info'];
         } else {
             if (!empty($typeid)) {
-                $new_typeid = model('LanguageAttr')->getBindValue($typeid, 'arctype'); // 多语言
+                $new_typeid = model('LanguageAttr')->getBindValue($typeid, 'arctype');
                 !empty($new_typeid) && $typeid = $new_typeid;
             }
             $info['typeid'] = $typeid;
-            // $info['row'] = "";
         }
 
         $result = array(

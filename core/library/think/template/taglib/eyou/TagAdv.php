@@ -13,7 +13,6 @@
 
 namespace think\template\taglib\eyou;
 
-
 /**
  * 广告
  */
@@ -46,50 +45,97 @@ class TagAdv extends Base
 
         $uiset = I('param.uiset/s', 'off');
         $uiset = trim($uiset, '/');
+
         $times = time();
-        if (empty($where)) {
-            $where = "pid={$pid} and start_time < {$times} and (end_time > {$times} OR end_time = 0) and status = 1";
-        }
+        if (empty($where)) { // 新逻辑
+            // 排序
+            switch ($orderby) {
+                case 'hot':
+                case 'click':
+                    $orderby = 'a.click desc';
+                    break;
 
-        // 排序
-        switch ($orderby) {
-            case 'hot':
-            case 'click':
-                $orderby = 'click desc';
-                break;
+                case 'now':
+                case 'new': // 兼容织梦的写法
+                    $orderby = 'a.add_time desc';
+                    break;
+                    
+                case 'id':
+                    $orderby = 'a.id desc';
+                    break;
 
-            case 'now':
-            case 'new': // 兼容织梦的写法
-                $orderby = 'add_time desc';
-                break;
+                case 'sort_order':
+                    $orderby = 'a.sort_order asc';
+                    break;
+
+                case 'rand':
+                    $orderby = 'rand()';
+                    break;
                 
-            case 'id':
-                $orderby = 'id desc';
-                break;
+                default:
+                    if (empty($orderby)) {
+                        $orderby = 'a.sort_order asc, a.id desc';
+                    }
+                    break;
+            }
+            $where = "b.status = 1 AND a.pid={$pid} and a.start_time < {$times} and (a.end_time > {$times} OR a.end_time = 0) and a.status = 1";
+            $result = M("ad")->alias('a')
+                ->field("a.*")
+                ->join('__AD_POSITION__ b', 'b.id = a.pid', 'LEFT')
+                ->where($where)
+                ->where('b.lang', $this->home_lang)
+                ->orderRaw($orderby)
+                ->cache(true,EYOUCMS_CACHE_TIME,"ad")
+                ->select();
+        } else {
+            // 排序
+            switch ($orderby) {
+                case 'hot':
+                case 'click':
+                    $orderby = 'click desc';
+                    break;
 
-            case 'sort_order':
-                $orderby = 'sort_order asc';
-                break;
+                case 'now':
+                case 'new': // 兼容织梦的写法
+                    $orderby = 'add_time desc';
+                    break;
+                    
+                case 'id':
+                    $orderby = 'id desc';
+                    break;
 
-            case 'rand':
-                $orderby = 'rand()';
-                break;
-            
-            default:
-                if (empty($orderby)) {
-                    $orderby = 'sort_order asc, id desc';
-                }
-                break;
+                case 'sort_order':
+                    $orderby = 'sort_order asc';
+                    break;
+
+                case 'rand':
+                    $orderby = 'rand()';
+                    break;
+                
+                default:
+                    if (empty($orderby)) {
+                        $orderby = 'sort_order asc, id desc';
+                    }
+                    break;
+            }
+            $result = M("ad")->field("*")
+                ->where($where)
+                ->where('lang', $this->home_lang)
+                ->orderRaw($orderby)
+                ->cache(true,EYOUCMS_CACHE_TIME,"ad")
+                ->select();
+            $adpRow = M("ad_position")->where(['id'=>$pid, 'status'=>1])->count();
+            if (empty($adpRow)) {
+                return false;
+            }
         }
-
-        $result = M("ad")->field("*")
-            ->where($where)
-            ->where('lang', $this->home_lang)
-            ->orderRaw($orderby)
-            ->cache(true,EYOUCMS_CACHE_TIME,"ad")
-            ->select();
+        
         foreach ($result as $key => $val) {
-            $val['litpic'] = handle_subdir_pic(get_default_pic($val['litpic'])); // 默认无图封面
+            if (1 == $val['media_type']) {
+                $val['litpic'] = handle_subdir_pic(get_default_pic($val['litpic'])); // 默认无图封面
+            } else if (2 == $val['media_type']) {
+                $val['litpic'] = handle_subdir_pic($val['litpic'], 'media');
+            }
             $val['target'] = ($val['target'] == 1) ? 'target="_blank"' : 'target="_self"';
             $val['intro'] = htmlspecialchars_decode($val['intro']);
             /*支持子目录*/

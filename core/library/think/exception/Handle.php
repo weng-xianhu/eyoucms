@@ -162,12 +162,13 @@ class Handle
         
         $data['copyright'] = '';
 
-/*        $tmpkey = 'w'.'eb'.'_i'.'s'.'_'.'a'.'ut'.'ho'.'rt'.'o'.'k'.'e'.'n';
-        $is_authoer = tpCache('web.'.$tmpkey);
-        if (-1 == $is_authoer) {
-            $tmp_str = 'Q29weXJpZ2h0IMKpIDIwMTItMjAxOCDmmJPkvJhDTVMg54mI5p2D5omA5pyJLiANCiAgICAgICAgPHNwYW4+IDxhIHRpdGxlPSLmmJPkvJhDTVMiIGhyZWY9Imh0dHA6Ly93d3cuZXlvdWNtcy5jb20iPlBvd2VyZWQgYnkgRXlvdUNtczwvYT4gPC9zcGFuPg==';
-            $data['copyright'] = base64_decode($tmp_str);
-        }*/
+        /*提高错误提示的友好性 by 小虎哥*/
+        $exceptioncode = Config::get('error_code.exception');
+        if (!empty($exceptioncode[$data['code']])) {
+            $data['message'] = $exceptioncode[$data['code']];
+            $data['code'] = 'eyou';
+        }
+        /*end*/
 
         //保留一层
         while (ob_get_level() > 1) {

@@ -2,16 +2,20 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
     <title>跳转提示</title>
     <style type="text/css">
         *{ padding: 0; margin: 0; }
         body{ background: #fff; font-family: '微软雅黑'; color: #CCC; font-size: 16px; }
-        .system-message{ padding: 24px 48px; margin:auto; border: #CCC 3px solid; top:50%; width:500px; border-radius:10px;
+        .system-message{ padding: 24px 48px; margin:auto; box-shadow: 0px 0px 10px rgba(0,0,0,.2)!important; top:50%; width:500px; border-radius:2px;
             -moz-border-radius:10px; /* Old Firefox */}
-        .system-message h1{ font-size: 100px; font-weight: normal; line-height: 120px; margin-bottom: 5px; }
-        .system-message .jump{ padding-top: 10px; color: #999;}
-        .system-message .success,.system-message .error{ line-height: 1.8em;  color: #999; font-size: 36px; font-family: '黑体'; }
+        .system-message .jump{ padding-top: 10px; color: #999;text-align: center;}
+        .system-message .success,.system-message .error{ line-height: 1.8em;  color: #000; font-size: 18px;font-weight: bold; text-align: center;}
         .system-message .detail{ font-size: 12px; line-height: 20px; margin-top: 12px; display:none}
+		.status-ico{margin: 20px auto;width: 73px;height: 76px;display: block;background: url(__STATIC__/admin/images/ico_right_wrong.png) no-repeat}
+		.status-ico-ok{background-position: 0 0}
+		.status-ico-error{background-position: -97px 0}
+        @media (max-width: 767px) {.system-message{width: 90%;box-shadow:none!important;}}
     </style>
     <script type="text/javascript" src="__STATIC__/common/js/jquery.tools.min.js"></script>
     <script type="text/javascript">
@@ -28,15 +32,14 @@
     <div class="system-message">
         {switch name="$code"}
             {case value="1"}
-            <h1 class="glyphicon glyphicon-ok-circle" style="color:#09F"></h1>
+            <div class="status-ico status-ico-ok"></div>
             <p class="success">{$msg|strip_tags=###}</p>
             {/case}
             {case value="0"}
-            <h1 class="glyphicon glyphicon-exclamation-sign" style="color:#F33"></h1>
+            <div class="status-ico status-ico-error"></div>
             <p class="error">{$msg|strip_tags=###}</p>
             {/case}
         {/switch}
-        <p class="detail"></p>
         <p class="jump">页面自动 <a id="href" href="{$url}" target="{empty name='$target'}_self{else /}{$target}{/empty}">跳转</a> 等待时间：<b id="wait">{$wait}</b>
         </p>
     </div>

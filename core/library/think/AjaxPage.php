@@ -89,48 +89,49 @@ class AjaxPage{
 		$now_cool_page_ceil = ceil($now_cool_page);
 		$this->lastSuffix && $this->config['last'] = $this->totalPages;
         $this->config['last'] = '尾页';
-        //上一页
-        $up_row  = $this->nowPage - 1;
-        $up_page = $up_row > 0 ? '<li id="example1_previous" class="paginate_button previous disabled"><a class="prev" data-p="'.$up_row.'" href="javascript:void(0)">' . $this->config['prev'] . '</a></li>' : '';
+        
+        $up_page = $down_page = $the_first = $the_end = $link_page = "";
+        if ($this->totalPages > 1) {
+            //上一页
+            $up_row  = $this->nowPage - 1;
+            $up_page = $up_row > 0 ? '<li id="example1_previous" class="paginate_button prev"><a class="prev" data-p="'.$up_row.'" href="javascript:void(0)">' . $this->config['prev'] . '</a></li>' : '<li id="example1_previous" class="paginate_button previous disabled"><a class="first" data-p="1" href="javascript:void(0)">' . $this->config['prev'] . '</a></li>';
 
-        //下一页
-        $down_row  = $this->nowPage + 1;
-        $down_page = ($down_row <= $this->totalPages) ? '<li id="example1_next" class="paginate_button next"><a class="next" data-p="'.$down_row.'" href="javascript:void(0)">' . $this->config['next'] . '</a></li>' : '';
+            //下一页
+            $down_row  = $this->nowPage + 1;
+            $down_page = ($down_row <= $this->totalPages) ? '<li id="example1_next" class="paginate_button next"><a class="next" data-p="'.$down_row.'" href="javascript:void(0)">' . $this->config['next'] . '</a></li>' : '<li id="example1_previous" class="paginate_button previous disabled"><a class="end" data-p="'.$this->totalPages.'" href="javascript:void(0)">' . $this->config['next'] . '</a></li>';
 
-        //第一页
-        $the_first = '';
-        if($this->totalPages > $this->rollPage && ($this->nowPage - $now_cool_page) >= 1){
-            $the_first = '<li id="example1_previous" class="paginate_button previous disabled"><a class="first" data-p="1" href="javascript:void(0)">' . $this->config['first'] . '</a></li>';
-        }
+            //第一页
+            $the_first = '';
+            if($this->totalPages > $this->rollPage && ($this->nowPage - $now_cool_page) >= 1){
+                $the_first = '<li id="example1_previous" class="paginate_button previous disabled"><a class="first" data-p="1" href="javascript:void(0)">' . $this->config['first'] . '</a></li>';
+            }
 
-        //最后一页
-        $the_end = '';
-        if($this->totalPages > $this->rollPage && ($this->nowPage + $now_cool_page) < $this->totalPages){
-            $the_end = '<li id="example1_previous" class="paginate_button previous disabled"><a class="end" data-p="'.$this->totalPages.'" href="javascript:void(0)">' . $this->config['last'] . '</a></li>';
-        }
+            //最后一页
+            $the_end = '';
+            if($this->totalPages > $this->rollPage && ($this->nowPage + $now_cool_page) < $this->totalPages){
+                $the_end = '<li id="example1_previous" class="paginate_button previous disabled"><a class="end" data-p="'.$this->totalPages.'" href="javascript:void(0)">' . $this->config['last'] . '</a></li>';
+            }
 
-        //数字连接
-        $link_page = "";
-        for($i = 1; $i <= $this->rollPage; $i++){
-			if(($this->nowPage - $now_cool_page) <= 0 ){
-				$page = $i;
-			}elseif(($this->nowPage + $now_cool_page - 1) >= $this->totalPages){
-				$page = $this->totalPages - $this->rollPage + $i;
-			}else{
-				$page = $this->nowPage - $now_cool_page_ceil + $i;
-			}
-            if($page > 0 && $page != $this->nowPage){
-
-                if($page <= $this->totalPages){
-                    $link_page .= '<li class="paginate_button"><a class="num" data-p="'.$page.'" href="javascript:void(0)">' . $page . '</a></li>';
+            //数字连接
+            for($i = 1; $i <= $this->rollPage; $i++){
+                if(($this->nowPage - $now_cool_page) <= 0 ){
+                    $page = $i;
+                }elseif(($this->nowPage + $now_cool_page - 1) >= $this->totalPages){
+                    $page = $this->totalPages - $this->rollPage + $i;
                 }else{
-                    break;
+                    $page = $this->nowPage - $now_cool_page_ceil + $i;
                 }
-            }else{
-                if($page > 0 && $this->totalPages != 1){
-//                    $link_page .= '<span class="current">' . $page . '</span>';
-                    $link_page .= '<li class="paginate_button active"><a tabindex="0" data-dt-idx="1" aria-controls="example1" data-p="'.$page.'" href="javascript:void(0)">' . $page . '</a></li>';
-
+                if($page > 0 && $page != $this->nowPage){
+                    if($page <= $this->totalPages){
+                        $link_page .= '<li class="paginate_button"><a class="num" data-p="'.$page.'" href="javascript:void(0)">' . $page . '</a></li>';
+                    }else{
+                        break;
+                    }
+                }else{
+                    if($page > 0 && $this->totalPages != 1){
+                        // $link_page .= '<span class="current">' . $page . '</span>';
+                        $link_page .= '<li class="paginate_button active"><a tabindex="0" data-dt-idx="1" aria-controls="example1" data-p="'.$page.'" href="javascript:void(0);">' . $page . '</a></li>';
+                    }
                 }
             }
         }

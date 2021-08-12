@@ -652,8 +652,8 @@ class Validate
                 $result = $value instanceof File;
                 break;
             case 'image':
-                $result = $value instanceof File && in_array($this->getImageType($value->ey_getFilename()), [1, 2, 3, 6]); // by 小虎哥
-                // $result = $value instanceof File && in_array($this->getImageType($value->getRealPath()), [1, 2, 3, 6]);
+                $result = $value instanceof File && in_array($this->getImageType($value->ey_getFilename()), [1, 2, 3, 6, 15, 18]); // by 小虎哥
+                // $result = $value instanceof File && in_array($this->getImageType($value->getRealPath()), [1, 2, 3, 6, 15]);
                 break;
             case 'token':
                 $result = $this->token($value, '__token__', $data);
@@ -813,8 +813,8 @@ class Validate
             list($w, $h) = $rule;
             return $w == $width && $h == $height;
         } else {
-            return in_array($this->getImageType($file->ey_getFilename()), [1, 2, 3, 6]); // by 小虎哥
-            // return in_array($this->getImageType($file->getRealPath()), [1, 2, 3, 6]);
+            return in_array($this->getImageType($file->ey_getFilename()), [1, 2, 3, 6, 15, 18]); // by 小虎哥
+            // return in_array($this->getImageType($file->getRealPath()), [1, 2, 3, 6, 15]);
         }
     }
 

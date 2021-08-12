@@ -20,13 +20,10 @@ use think\Request;
  */
 class TagPrenext extends Base
 {
-    public $aid = 0;
-    
     //初始化
     protected function _initialize()
     {
         parent::_initialize();
-        $this->aid = I("param.aid/d", 0);
     }
 
     /**

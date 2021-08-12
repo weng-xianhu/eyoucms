@@ -13,7 +13,6 @@
 
 namespace think\template\taglib\eyou;
 
-
 /**
  * 上传图片
  */
@@ -53,9 +52,7 @@ class TagUiupload extends Base
         if (is_array($info) && !empty($info)) {
             $value .= isset($info['value']) ? $info['value'] : '';
             $value = htmlspecialchars_decode($value);
-            /*支持子目录*/
             $value = handle_subdir_pic($value, 'html');
-            /*--end*/
         }
 
         $result = array(

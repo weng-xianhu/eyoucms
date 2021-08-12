@@ -31,14 +31,16 @@ class TagScreening extends Base
     }
 
     // URL中隐藏index.php入口文件，此方法仅此控制器使用到
-    private function auto_hide_index($url = '')
+    private function auto_hide_index($url = '', $seo_pseudo = 1)
     {
-        if (empty($url)) return false;
-        // 是否开启去除index.php文件
-        $seo_inlet = null;
-        $seo_inlet === null && $seo_inlet = config('ey_config.seo_inlet');
-        if (1 == $seo_inlet) {
-            $url = str_replace('/index.php', '/', $url);
+        if (2 != $seo_pseudo) {
+            if (empty($url)) return false;
+            // 是否开启去除index.php文件
+            $seo_inlet = null;
+            $seo_inlet === null && $seo_inlet = config('ey_config.seo_inlet');
+            if (1 == $seo_inlet) {
+                $url = str_replace('/index.php', '/', $url);
+            }
         }
         return $url;
     }
@@ -46,7 +48,7 @@ class TagScreening extends Base
     /**
      * 获取搜索表单
      */
-    public function getScreening($currentstyle='', $addfields='', $addfieldids='', $alltxt='')
+    public function getScreening($currentstyle='', $addfields='', $addfieldids='', $alltxt='', $typeid='')
     {
         if ($this->home_lang != $this->main_lang) {
             return false;
@@ -68,7 +70,9 @@ class TagScreening extends Base
         }else{
             $this->tid = input('param.tid/d');
         }
-
+        if (!empty($typeid)) {
+            $this->tid = $typeid;
+        }
         // 查询数据条件
         $where = [
             'a.is_screening' => 1,
@@ -91,6 +95,7 @@ class TagScreening extends Base
             ->alias('a')
             ->join('__CHANNELFIELD_BIND__ b', 'b.field_id = a.id', 'LEFT')
             ->where($where)
+            ->order('a.sort_order asc, a.id asc')
             ->select();
 
         // Onclick点击事件方法名称加密，防止冲突
@@ -108,7 +113,6 @@ class TagScreening extends Base
             // 封装onchange事件
             $row[$key]['onChange'] = "onChange='{$OnchangeScreening}(this);'";
             // 在伪静态下拼装控制器方式参数名
-            $seo_pseudo  = config('ey_config.seo_pseudo');
             if (!isset($param[$url_screen_var]) && 3 == $seo_pseudo) {
                 $param_query = [];
                 $param_query['m'] = 'home';
@@ -128,8 +132,15 @@ class TagScreening extends Base
                 $param_query['c'] = 'Lists';
                 $param_query['a'] = 'index';
                 unset($param_query['_ajax']);
+                unset($param_query['id']);
+                unset($param_query['fid']);
+                unset($param_query['lang']);
             }
             /* end */
+
+            /*筛选时，去掉url上的页码page参数*/
+            unset($param_query['page']);
+            /*end*/
             
             // 筛选值处理
             if ('region' == $value['dtype']) {
@@ -154,6 +165,12 @@ class TagScreening extends Base
                 }else{
                     $is_data = $alltxt;
                 }
+
+                /*参数值含有单引号、双引号、分号，直接跳转404*/
+                if (preg_match('#(\'|\"|;)#', $is_data)) {
+                    abort(404,'页面不存在');
+                }
+                /*end*/
 
                 // 处理后台添加的区域数据
                 $RegionData = [];
@@ -180,13 +197,26 @@ class TagScreening extends Base
                     }else{
                         unset($param_query[$name]);
                     }
+                    unset($param_query['s']);
                     /* 筛选标识始终追加在最后 */
                     unset($param_query[$url_screen_var]);
                     $param_query[$url_screen_var] = 1;
                     /* end */
-                    $url = ROOT_DIR.'/index.php?'.http_build_query($param_query);
+                    if (!empty($typeid)) {
+                        // 存在typeid表示在首页展示
+                        unset($param_query['m']);
+                        unset($param_query['c']);
+                        unset($param_query['a']);
+                        unset($param_query['tid']);
+                        if (empty($param_query['page'])) {
+                            $param_query['page'] = 1;
+                        }
+                        $url = ROOT_DIR.'/index.php?m=home&c=Lists&a=index&tid='.$typeid.'&'.urlencode(http_build_query($param_query));
+                    }else{
+                        $url = ROOT_DIR.'/index.php?'.urlencode(http_build_query($param_query));
+                    }
                     $url = urldecode($url);
-                    $url = $this->auto_hide_index($url);
+                    $url = $this->auto_hide_index($url, $seo_pseudo);
                     // 拼装onClick事件
                     $RegionData[$kk]['onClick'] = $row[$key]['onClick']." data-url='{$url}'";
                     // 拼装onchange参数
@@ -227,12 +257,21 @@ class TagScreening extends Base
                 }else{
                     $is_data = $alltxt;
                 }
+
+                /*参数值含有单引号、双引号、分号，直接跳转404*/
+                if (preg_match('#(\'|\"|;)#', $is_data)) {
+                    abort(404,'页面不存在');
+                }
+                /*end*/
                 
                 // 合并数组
                 $dfvalue  = array_merge($all,$dfvalue);
                 // 处理参数输出
                 $data_new = [];
                 foreach ($dfvalue as $kk => $vv) {
+                    if ('off' == $alltxt && empty($vv)) {
+                        continue;
+                    }
                     $param_query[$name]    = $vv;
                     $data_new[$kk]['id']           = $vv;
                     $data_new[$kk]['name']         = "{$vv}";
@@ -267,14 +306,27 @@ class TagScreening extends Base
                         // 等于多选类型，则拼装上-号，用于搜索时分割，可匹配数据
                         $param_query[$name] = $vv.'|';
                     }
+                    unset($param_query['s']);
                     /* 筛选标识始终追加在最后 */
                     unset($param_query[$url_screen_var]);
                     $param_query[$url_screen_var] = 1;
                     /* end */
                     // 参数拼装URL
-                    $url = ROOT_DIR.'/index.php?'.http_build_query($param_query);
+                    if (!empty($typeid)) {
+                        // 存在typeid表示在首页展示
+                        unset($param_query['m']);
+                        unset($param_query['c']);
+                        unset($param_query['a']);
+                        unset($param_query['tid']);
+                        if (empty($param_query['page'])) {
+                            $param_query['page'] = 1;
+                        }
+                        $url = ROOT_DIR.'/index.php?m=home&c=Lists&a=index&tid='.$typeid.'&'.urlencode(http_build_query($param_query));
+                    }else{
+                        $url = ROOT_DIR.'/index.php?'.urlencode(http_build_query($param_query));
+                    }
                     $url = urldecode($url);
-                    $url = $this->auto_hide_index($url);
+                    $url = $this->auto_hide_index($url, $seo_pseudo);
                     // 封装onClick
                     $data_new[$kk]['onClick'] = $row[$key]['onClick']." data-url='{$url}'";
                     // 封装onchange事件
@@ -291,20 +343,20 @@ class TagScreening extends Base
         $hidden .= <<<EOF
 <script type="text/javascript">
     function {$OnclickScreening}(obj) {
-        var dataurl = $(obj).attr('data-url');
+        var dataurl = obj.getAttribute("data-url");
         if (dataurl) {
             window.location.href = dataurl;
-        }else{
-            layer.msg(res.msg, {time: 2000, icon: 2});
+        } else {
+            alert('没有选择筛选项');
         }
     }
 
     function {$OnchangeScreening}(obj) {
-        var dataurl = $(obj).find("option:selected").attr('data-url');
+        var dataurl = obj.options[obj.selectedIndex].getAttribute("data-url");
         if (dataurl) {
             window.location.href = dataurl;
-        }else{
-            layer.msg(res.msg, {time: 2000, icon: 2});
+        } else {
+            alert('没有选择筛选项');
         }
     }
 </script>

@@ -13,7 +13,6 @@
 
 namespace think\template\taglib\eyou;
 
-
 /**
  * 自定义字段
  */
@@ -37,8 +36,8 @@ class TagDiyfield extends Base
                     {
                         $list = [];
                         foreach ($data as $key => $val) {
-                            $list[$key]['image_url'] = handle_subdir_pic($val);
-                            $list[$key]['title'] = '';
+                            $val['image_url'] = handle_subdir_pic($val['image_url']);
+                            $list[$key] = $val;
                         }
                         $data = $list;
                     }

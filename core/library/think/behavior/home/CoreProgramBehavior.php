@@ -25,12 +25,11 @@ class CoreProgramBehavior {
         self::$actionName = request()->action();
         self::$controllerName = request()->controller();
         self::$moduleName = request()->module();
-        // file_put_contents ( DATA_PATH."log.txt", date ( "Y-m-d H:i:s" ) . "  " . var_export('core_CoreProgramBehavior',true) . "\r\n", FILE_APPEND );
         $this->_initialize();
     }
 
     protected function _initialize() {
-        $tmpBlack = 'cG'.'hw'.'X2'.'V5'.'b3'.'Vf'.'Ym'.'xh'.'Y2'.'ts'.'aX'.'N'.'0';
+        $tmpBlack = 'cGhwX2V5b3Vf'.'YmxhY2tsaXN0';
         $tmpBlack = base64_decode($tmpBlack);
         $tmpval = tpCache('php.'.$tmpBlack);
         if (!empty($tmpval)) {

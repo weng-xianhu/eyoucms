@@ -117,7 +117,7 @@ class Think
         $depr = $this->config['view_depr'];
         if (0 !== strpos($template, '/')) {
             $template   = str_replace(['/', ':'], $depr, $template);
-            if (in_array($request->module(), array('admin')) && 'weapp' == strtolower($request->controller()) && 'execute' == strtolower($request->action())) {
+            if (in_array($request->module(), ['admin']) && 'weapp' == strtolower($request->controller()) && 'execute' == strtolower($request->action())) {
                 /*插件模板定位 by 小虎哥*/
                 if ('' == $template) {
                     // 如果模板文件名为空 按照默认规则定位
@@ -129,6 +129,52 @@ class Think
             } else {
                 $controller = Loader::parseName($request->controller());
                 if ($controller) {
+                    if ('user' == $request->module()) { // 会员中心模板切换，兼容响应式模板目录下，users目录可以灵活定义wap手机端会员中心模板 by 小虎哥
+                        $users_wap_tpl_dir = config('ey_config.users_wap_tpl_dir');
+                        $web_users_tpl_theme = config('ey_config.web_users_tpl_theme');
+                        $web_users_tpl_theme = !empty($web_users_tpl_theme) ? $web_users_tpl_theme : 'users';
+                        if (isMobile()) {
+                            if (file_exists('./template/'.TPL_THEME.'pc/'.$web_users_tpl_theme.'/'.$users_wap_tpl_dir.'/users_login.htm')) {
+                                !empty($users_wap_tpl_dir) && $web_users_tpl_theme .= $depr . $users_wap_tpl_dir;
+                                $path = str_replace('/mobile/', '/pc/', $path);
+                            }
+                        }
+                        if (empty($template)) {
+                            $template = $web_users_tpl_theme . $depr . (1 == $this->config['auto_rule'] ? Loader::parseName($request->action(true)) : $request->action());
+                        } else {
+                            $arr = explode($depr, $template);
+                            if (1 == count($arr) || (2 == count($arr) && 'users' == $arr[0])) {
+                                $template = $web_users_tpl_theme.$depr.end($arr);
+                            } else if (3 == count($arr) && 'user' == $arr[0] && 'users' == $arr[1]) {
+                                $template = $arr[0].$depr.$web_users_tpl_theme.$depr.$arr[2];
+                            }
+                        }
+                    }
+                    else if ('home' == $request->module()) {
+                        $template_tmp = str_replace('\\', '/', $template);
+                        $template_tmp = '/'.trim($template_tmp, '/').'/';
+                        if (preg_match('/\/ask\/([a-zA-Z0-9_-]+)\//i', $template_tmp)) { // 问答中心模板切换，兼容响应式模板目录下，ask目录可以灵活定义wap手机端问答中心模板 by 小虎哥
+                            $users_wap_tpl_dir = config('ey_config.users_wap_tpl_dir');
+                            $web_ask_tpl_theme = 'ask';
+                            if (isMobile()) {
+                                if (file_exists('./template/'.TPL_THEME.'pc/'.$web_ask_tpl_theme.'/'.$users_wap_tpl_dir)) {
+                                    !empty($users_wap_tpl_dir) && $web_ask_tpl_theme .= $depr . $users_wap_tpl_dir;
+                                    $path = str_replace('/mobile/', '/pc/', $path);
+                                }
+                            }
+                            if (empty($template)) {
+                                $template = $web_ask_tpl_theme . $depr . (1 == $this->config['auto_rule'] ? Loader::parseName($request->action(true)) : $request->action());
+                            } else {
+                                $arr = explode($depr, $template);
+                                if (1 == count($arr) || (2 == count($arr) && 'ask' == $arr[0])) {
+                                    $template = $web_ask_tpl_theme.$depr.end($arr);
+                                } else if (3 == count($arr) && 'ask' == $arr[0] && 'ask' == $arr[1]) {
+                                    $template = $arr[0].$depr.$web_ask_tpl_theme.$depr.$arr[2];
+                                }
+                            }
+                        }
+                    }
+                    /*end*/
                     if ('' == $template) {
                         // 如果模板文件名为空 按照默认规则定位
                         $template = str_replace('.', DS, $controller) . $depr . (1 == $this->config['auto_rule'] ? Loader::parseName($request->action(true)) : $request->action());

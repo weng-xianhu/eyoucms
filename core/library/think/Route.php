@@ -57,7 +57,7 @@ class Route
     private static $option = [];
 
     /**
-     * 注册变量规则
+     * 注册变量规则 
      * @access public
      * @param string|array $name 变量名
      * @param string       $rule 变量规则
@@ -1314,9 +1314,11 @@ class Route
                 foreach ($matches[1] as $name) {
                     if (strpos($name, '?')) {
                         $name      = substr($name, 0, -1);
-                        $replace[] = '(' . (isset($pattern[$name]) ? $pattern[$name] : '\w+') . ')?';
+                        $replace[] = '(' . (isset($pattern[$name]) ? $pattern[$name] : '[A-Za-z0-9_-]+') . ')?'; // by 小虎哥
+                        // $replace[] = '(' . (isset($pattern[$name]) ? $pattern[$name] : '\w+') . ')?';
                     } else {
-                        $replace[] = '(' . (isset($pattern[$name]) ? $pattern[$name] : '\w+') . ')';
+                        $replace[] = '(' . (isset($pattern[$name]) ? $pattern[$name] : '[A-Za-z0-9_-]+') . ')'; // by 小虎哥
+                        // $replace[] = '(' . (isset($pattern[$name]) ? $pattern[$name] : '\w+') . ')';
                     }
                     $value[] = $name;
                 }

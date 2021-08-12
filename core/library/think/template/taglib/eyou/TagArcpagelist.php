@@ -35,7 +35,7 @@ class TagArcpagelist extends Base
      * @param     string  $pagesize  分页显示条数
      * @return    array
      */
-    public function getArcpagelist($tagid = '', $pagesize = 0, $tips = '', $loading = '')
+    public function getArcpagelist($tagid = '', $pagesize = 0, $tips = '', $loading = '', $callback = '', $arclistTag = [])
     {
         if (empty($tagid)) {
             return '标签arcpagelist报错：缺少属性 tagid 。';
@@ -43,14 +43,16 @@ class TagArcpagelist extends Base
 
         empty($tips) && $tips = '没有数据了';
 
+        $tagidmd5 = $tagid.'_'.md5(serialize($arclistTag));
+
         if (empty($pagesize)) {
             $arcmulti_db = Db::name('arcmulti');
-            $arcmultiRow = $arcmulti_db->field('pagesize')->where(['tagid'=>$tagid])->find();
+            $arcmultiRow = $arcmulti_db->field('pagesize')->where(['tagid'=>$tagidmd5])->find();
             $pagesize = $arcmultiRow['pagesize'];
         }
 
         $arcmulti_db = Db::name('arcmulti');
-        $arcmultiRow = $arcmulti_db->field('attstr,querysql')->where(['tagid'=>$tagid])->find();
+        $arcmultiRow = $arcmulti_db->field('attstr,querysql')->where(['tagid'=>$tagidmd5])->find();
         if (empty($arcmultiRow)) {
             return false;
         } else {
@@ -66,8 +68,9 @@ class TagArcpagelist extends Base
             }
         }
 
+        $result = [];
         $version = getCmsVersion();
-        $result['onclick'] = ' data-page="1" data-tips="'.$tips.'" data-loading="'.$loading.'" data-root_dir="'.$this->root_dir.'" onClick="tag_arcpagelist_multi(this,\''.$tagid.'\','.intval($pagesize).');" ';
+        $result['onclick'] = ' data-page="1" data-tips="'.$tips.'" data-loading="'.$loading.'" data-root_dir="'.$this->root_dir.'" data-tagidmd5="'.$tagidmd5.'" data-lang="'.$this->home_lang.'"  onClick="tag_arcpagelist_multi(this,\''.$tagid.'\','.intval($pagesize).',\''.$callback.'\');" ';
         $result['js'] = <<<EOF
 <script type="text/javascript" src="{$this->root_dir}/public/static/common/js/tag_arcpagelist.js?v={$version}"></script>
 EOF;

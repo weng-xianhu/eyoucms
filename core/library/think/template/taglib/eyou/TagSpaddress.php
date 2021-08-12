@@ -34,27 +34,22 @@ class TagSpaddress extends Base
     {
         if ($type == 'add') {
             $UlHtmlId = 'UlHtml';
-            // 封装删除收货地址JS
-            $AddressData[0]['ShopAddAddr'] = " onclick=\"ShopAddAddress();\" ";
+            // 封装添加收货地址JS
             $AddressData[0]['UlHtmlId']    = " id=\"{$UlHtmlId}\" ";
+            $AddressData[0]['ShopAddAddr'] = " onclick=\"ShopAddAddress(this);\" ";
+
             // 传入JS参数
-            $shop_get_wechat_addr_url = '';
-            if (isMobile() && isWeixin()) {
-                // 用于获取微信收货地址
-                $shop_get_wechat_addr_url  = url('user/Shop/shop_get_wechat_addr');
-            }
             $data['UlHtmlId']  = $UlHtmlId;
-            $data['shop_get_wechat_addr_url'] = $shop_get_wechat_addr_url;
+            $data['shop_get_wechat_addr_url'] = isMobile() && isWeixin() ? url('user/Shop/shop_get_wechat_addr') : '';
             $data['shop_add_address']  = url('user/Shop/shop_add_address');
             $data['shop_edit_address'] = url('user/Shop/shop_edit_address');
             $data['shop_del_address']  = url('user/Shop/shop_del_address');
             $data['shop_set_default']  = url('user/Shop/shop_set_default_address');
+            $data['addr_width']  = '350px';
+            $data['addr_height'] = '480px';
             if (isWeixin() || isMobile()) {
                 $data['addr_width']  = '100%';
                 $data['addr_height'] = '100%';
-            }else{
-                $data['addr_width']  = '350px';
-                $data['addr_height'] = '550px';
             }
             $data_json = json_encode($data);
             $version   = getCmsVersion();
@@ -66,7 +61,7 @@ class TagSpaddress extends Base
 <script type="text/javascript" src="{$this->root_dir}/public/static/common/js/tag_spaddress.js?v={$version}"></script>
 EOF;
             return $AddressData;
-            exit;    
+            exit;
         }
 
         // 查询条件
@@ -74,11 +69,8 @@ EOF;
             'users_id' => session('users_id'),
             'lang'     => $this->home_lang,
         ];
-
-        $AddressData = Db::name("shop_address")->where($AddressWhere)->order('is_default desc')->select();
-        if (empty($AddressData)) {
-            return false;
-        }
+        $AddressData = Db::name("shop_address")->where($AddressWhere)->order('is_default desc, addr_id asc')->select();
+        if (empty($AddressData)) return false;
 
         // 根据地址ID查询相应的中文名字
         foreach ($AddressData as $key => $value) {
@@ -93,11 +85,17 @@ EOF;
             $AddressData[$key]['city']     = get_city_name($value['city']);
             $AddressData[$key]['district'] = get_area_name($value['district']);
 
-            // 封装Ul的ID
-            $AddressData[$key]['ul_il_id'] = " id=\"{$value['addr_id']}_ul_li\" ";
+            // 会员模板版本号
+            if (getUsersTplVersion() != 'v1' && isMobile()) {
+                // 封装Ul的ID
+                $AddressData[$key]['ul_il_id'] = " id=\"{$value['addr_id']}_ul_li\" onclick=\"selectAddress_1610201146({$value['addr_id']}, this)\" ";
+            } else {
+                // 封装Ul的ID
+                $AddressData[$key]['ul_il_id'] = " id=\"{$value['addr_id']}_ul_li\" ";
+            }
 
             // 封装设置默认JS
-            $AddressData[$key]['SetDefault'] = " onclick=\"SetDefault(this, '{$value['addr_id']}');\" data-is_default=\"{$value['is_default']}\" id=\"{$value['addr_id']}_color\" ";
+            $AddressData[$key]['SetDefault'] = " onclick=\"SetDefault(this, '{$value['addr_id']}');\" data-is_default=\"{$value['is_default']}\" id=\"{$value['addr_id']}_color\" data-setbtn=\"1\" data-attr_id=\"{$value['addr_id']}\" ";
 
             // 封装修改收货地址JS
             $AddressData[$key]['ShopEditAddr'] = " onclick=\"ShopEditAddress('{$value['addr_id']}');\" ";
@@ -131,7 +129,7 @@ EOF;
 
         if (!empty($AddressData)) {
             return $AddressData;
-        }else{
+        } else {
             return false;
         }
     }

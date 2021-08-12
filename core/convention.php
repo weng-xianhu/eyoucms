@@ -308,6 +308,13 @@ return [
         'home_lang' => 'cn', // 前台当前语言
         'system_langnum' => 1, // 多语言数量
         'system_home_default_lang'  => 'cn', // 前台默认语言
+        'web_mobile_domain'     => 'm', // 手机域名配置
+        'response_type'  => 0, // 0 = 响应式模板，1 = 分离式模板
+        'separate_mobile' => 0, // 0 = 响应式手机端，1 = 分离式手机端
+        'web_tpl_theme'  => '', // 前台模板风格
+        'web_users_tpl_theme'  => 'users', // 会员中心模板风格
+        'users_wap_tpl_dir'    => 'wap', // 会员中心模板的手机模板目录
     ],
+    'tpcache'   => [],
 
 ];

@@ -43,6 +43,21 @@ class TagStatic extends Base
         }
         /*--end*/
 
+        static $web_users_tpl_theme = null;
+        if (null == $web_users_tpl_theme) {
+            $web_users_tpl_theme = config('ey_config.web_users_tpl_theme');
+        }
+
+        static $users_wap_tpl_dir = null;
+        if (null == $users_wap_tpl_dir) {
+            $users_wap_tpl_dir = config('ey_config.users_wap_tpl_dir');
+        }
+
+        static $is_mobile = null;
+        if (null == $is_mobile) {
+            $is_mobile = isMobile();
+        }
+
         $file = !empty($href) ? $href : $file;
 
         static $request = null;
@@ -72,18 +87,51 @@ class TagStatic extends Base
                         if (!file_exists(realpath(ltrim($filename, '/')))) {
                             continue;
                         }
-                        $http_url = $file = $request->domain().$filename;
+                        $file = $request->domain().$filename;
                     }
                 } else { // 不是本地文件禁止使用该方法
                     return $this->toHtml($file);
                 }
-                
+
+                $update_time = getTime();
+
             } else {
                 if (!preg_match('/^\//i',$file)) {
+                    if (!empty($is_mobile)) {
+                        if (file_exists('./template/'.TPL_THEME.'pc/'.$web_users_tpl_theme.'/'.$users_wap_tpl_dir.'/users_login.htm') && preg_match('/^users(_([^\/]*))?\//i', $file)) {
+                            $file = str_ireplace("{$web_users_tpl_theme}/", "{$web_users_tpl_theme}/{$users_wap_tpl_dir}/", $file);
+                        }
+                        else if (file_exists('./template/'.TPL_THEME.'pc/ask/'.$users_wap_tpl_dir) && preg_match('/^ask(_([^\/]*))?\//i', $file)) {
+                            $file = str_ireplace("ask/", "ask/{$users_wap_tpl_dir}/", $file);
+                        }
+                    }
+                    $file = preg_replace('/^users(_([^\/]*))?\//', $web_users_tpl_theme.'/', $file); // 支持会员中心模板切换
                     if (empty($code)) {
-                        $file = '/template/'.THEME_STYLE.'/'.$file;
+                        if (!empty($is_mobile) && preg_match('/^([a-zA-Z0-9_-]+)\/'.$users_wap_tpl_dir.'\//i', $file)) {
+                            $file = '/template/'.TPL_THEME.'pc/'.$file;
+                        } else {
+                            $file = '/template/'.THEME_STYLE_PATH.'/'.$file;
+                        }
                     } else {
                         $file = '/template/plugins/'.$code.'/'.THEME_STYLE.'/'.$file;
+                    }
+                } else {
+/*
+                    if (!empty($is_mobile)) {
+                        if (file_exists('./template/'.TPL_THEME.'pc/'.$web_users_tpl_theme.'/'.$users_wap_tpl_dir.'/users_login.htm') && preg_match('/\/users(_([^\/]*))?\//i', $file)) {
+                            $file = str_ireplace("{$web_users_tpl_theme}/", "{$web_users_tpl_theme}/{$users_wap_tpl_dir}/", $file);
+                        }
+                        else if (file_exists('./template/'.TPL_THEME.'pc/ask/'.$users_wap_tpl_dir) && preg_match('/\/ask(_([^\/]*))?\//i', $file)) {
+                            $file = str_ireplace("ask/", "ask/{$users_wap_tpl_dir}/", $file);
+                        }
+                    }
+                    */
+                    if (empty($code)) {
+                        $tpl_theme = trim(TPL_THEME, '/');
+                        // 支持前台模板切换
+                        $file = preg_replace('/^\/template\/(pc|mobile)\//', '/template/'.$tpl_theme.'/${1}/', $file);
+                        // 支持会员中心模板切换
+                        $file = preg_replace('/^\/template\/'.$tpl_theme.'\/(pc|mobile)\/users(_([^\/]*))?\//', '/template/'.$tpl_theme.'/${1}/'.$web_users_tpl_theme.'/', $file);
                     }
                 }
                 /*多语言内置静态资源文件名*/
@@ -97,12 +145,16 @@ class TagStatic extends Base
                 if (!file_exists(ltrim($file, '/'))) {
                     continue;
                 }
-                $http_url = $request->domain().$this->root_dir.$file; // 支持子目录
+
+                try{
+                    $fileStat = stat(ROOT_PATH . ltrim($file, '/'));
+                    $update_time = !empty($fileStat['mtime']) ? $fileStat['mtime'] : getTime();
+                } catch (\Exception $e) {
+                    $update_time = getTime();
+                }
             }
             // -------------end---------------
 
-            $headInf = @get_headers($http_url,1); 
-            $update_time = !empty($headInf['Last-Modified']) ? strtotime($headInf['Last-Modified']) : '';
             $parseStr .= $this->toHtml($file, $update_time);
         }
 
@@ -118,7 +170,9 @@ class TagStatic extends Base
     private function toHtml($file = '', $update_time = '')
     {
         $parseStr = '';
-        $file = $this->root_dir.$file; // 支持子目录
+        if (!is_http_url($file)) {
+            $file = $this->root_dir.$file; // 支持子目录
+        }
         $update_time_str = !empty($update_time) ? '?t='.$update_time : '';
         $type = strtolower(substr(strrchr($file, '.'), 1));
         switch ($type) {
@@ -135,7 +189,7 @@ class TagStatic extends Base
             case 'bmp':
             case 'gif':
             case 'webp':
-                $parseStr .= '<img src="' . $file . $update_time_str.'" width="" height="" alt="" title="" class="" id="" style="" />';
+                $parseStr .= $file . $update_time_str;
                 break;
             case 'php':
                 $parseStr .= '<?php include "' . $file . '"; ?>';

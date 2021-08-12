@@ -13,7 +13,6 @@
 
 namespace think\template\taglib\eyou;
 
-
 /**
  * 纯文本编辑
  */
@@ -53,6 +52,7 @@ class TagUitext extends Base
         if (is_array($info) && !empty($info)) {
             $value .= isset($info['value']) ? $info['value'] : '';
             $value = htmlspecialchars_decode($value);
+            $value = filter_line_return($value, '<br/>');
         }
 
         $result = array(

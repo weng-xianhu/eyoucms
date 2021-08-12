@@ -5,9 +5,7 @@ return array(
     // 模块初始化
     'module_init'  => array(),
     // 操作开始执行
-    'action_begin' => array(
-        'think\\behavior\\user\\ActionBeginBehavior',
-    ),
+    'action_begin' => array(),
     // 视图内容过滤
     'view_filter'  => array(),
     // 日志写入

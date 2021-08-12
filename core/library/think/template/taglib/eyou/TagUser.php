@@ -31,14 +31,14 @@ class TagUser extends Base
         parent::_initialize();
         // 会员信息
         $this->users_id = session('users_id');
-        $this->users_id = !empty($this->users_id) ? $this->users_id : 0;
+        $this->users_id = !empty($this->users_id) ? intval($this->users_id) : 0;
     }
 
     /**
      * 会员中心
      * @author wengxianhu by 2018-4-20
      */
-    public function getUser($type = 'default', $img = '', $currentstyle = '', $txt = '', $txtid = '')
+    public function getUser($type = 'default', $img = '', $currentstyle = '', $txt = '', $txtid = '', $afterhtml = '')
     {
         $result = false;
 
@@ -69,9 +69,13 @@ class TagUser extends Base
                             $shop_open = getUsersConfigData('shop.shop_open');
                             if (empty($shop_open)) return false; // 关闭商城中心，同时隐藏购物车入口
                             $url = url('user/Shop/shop_cart_list');
+                        } else if ('reg' == $type) {
+                            $users_open_reg = getUsersConfigData('users.users_open_reg');
+                            if (isset($users_open_reg) && 1 == $users_open_reg) return false;
+                            $url = url('user/Users/'.$type);
                         } else {
                             $url = url('user/Users/'.$type);
-                        }
+                        } 
 
                         $t_uniqid = md5(getTime().uniqid(mt_rand(), TRUE));
                         // A标签ID
@@ -80,6 +84,8 @@ class TagUser extends Base
                         $result['txtid'] = !empty($txtid) ? md5($txtid) : md5("ey_{$type}_txt_{$this->users_id}_{$t_uniqid}");
                         // 文字文案
                         $result['txt'] = $txt;
+                        // 购物车的数量ID
+                        $result['cartid'] = md5("ey_{$type}_cartid_{$this->users_id}_{$t_uniqid}");
                         // IMG标签里的ID
                         // $result['imgid'] = md5("ey_{$type}_img_{$this->users_id}_{$t_uniqid}");
                         // 图片文案
@@ -90,6 +96,8 @@ class TagUser extends Base
                         $result['type'] = $type;
                         // 图片样式类
                         $result['currentstyle'] = $currentstyle;
+                        // 登陆后显示的Html代码
+                        $result['afterhtml'] = $afterhtml;
                         break;
 
                     case 'info':
@@ -101,6 +109,20 @@ class TagUser extends Base
                         }
                         $result['t_uniqid'] = $t_uniqid;
                         $result['id'] = $t_uniqid;
+                        break;
+
+                    case 'userinfo':
+                        {
+                            $t_uniqid = md5(getTime().uniqid(mt_rand(), TRUE).rand(0, 1000));
+                            $result['carturl'] = url('user/Shop/shop_cart_list');
+                            $result['userurl'] = url('user/Users/index');
+                            $result['regurl'] = url('user/Users/reg');
+                            $result['loginurl'] = url('user/Users/login');
+                            // html元素标签ID
+                            $result['htmlid'] = 'ey_'.md5("{$this->users_id}_{$t_uniqid}");
+                            // 登录按钮的事件
+                            $result['loginPopupId'] = " id='ey_login_id_1609665117' ";
+                        }
                         break;
 
                     case 'open':
@@ -129,6 +151,7 @@ class TagUser extends Base
                     case 'login':
                     case 'reg':
                     case 'logout':
+                    case 'cart':
                         $hidden = <<<EOF
 <script type="text/javascript" src="{$this->root_dir}/public/static/common/js/tag_user.js?v={$version}"></script>
 <script type="text/javascript">
@@ -144,6 +167,16 @@ EOF;
 <script type="text/javascript">
     var tag_user_result_json = {$result_json};
     tag_user_info(tag_user_result_json);
+</script>
+EOF;
+                        break;
+
+                    case 'userinfo':
+                        $hidden = <<<EOF
+<script type="text/javascript" src="{$this->root_dir}/public/static/common/js/tag_userinfo.js?v={$version}"></script>
+<script type="text/javascript">
+    var tag_user_result_json = {$result_json};
+    tag_userinfo_1608459452(tag_user_result_json);
 </script>
 EOF;
                         break;

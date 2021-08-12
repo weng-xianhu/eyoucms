@@ -13,6 +13,7 @@
 
 namespace think\template\taglib\eyou;
 
+use think\Db;
 use app\home\logic\FieldLogic;
 
 /**
@@ -20,7 +21,6 @@ use app\home\logic\FieldLogic;
  */
 class TagType extends Base
 {
-    public $tid = '';
     public $fieldLogic;
     
     //初始化
@@ -28,15 +28,10 @@ class TagType extends Base
     {
         parent::_initialize();
         $this->fieldLogic = new FieldLogic();
-        $this->tid = I("param.tid/s", ''); // 应用于栏目列表
         /*应用于文档列表*/
-        $aid = I('param.aid/d', 0);
-        if ($aid > 0) {
-            $this->tid = M('archives')->where('aid', $aid)->getField('typeid');
+        if ($this->aid > 0) {
+            $this->tid = Db::name('archives')->where('aid', $this->aid)->getField('typeid');
         }
-        /*--end*/
-        /*typeid|tid为目录名称的情况下*/
-        $this->tid = $this->getTrueTypeid($this->tid);
         /*--end*/
     }
 
@@ -79,7 +74,7 @@ class TagType extends Base
             $addfields = str_replace('single_content', 'content', $addfields); // 兼容1.0.9之前的版本
             $addfields = str_replace('，', ',', $addfields); // 替换中文逗号
             $addfields = trim($addfields, ',');
-            $row = M('single_content')->field($addfields)->where('typeid',$result['id'])->find();
+            $row = Db::name('single_content')->field($addfields)->where('typeid',$result['id'])->find();
             $row = $this->fieldLogic->getChannelFieldList($row, $result['current_channel']);
             $result = array_merge($row, $result);
         }

@@ -32,6 +32,14 @@ class View
         if ('' != $root) {
             $root = '/' . ltrim($root, '/');
         }
+        /*兼容个别环境取不到子目录路径的情况 by 小虎哥*/
+        if (empty($root) && defined('ROOT_DIR')) {
+            $root = ROOT_DIR;
+            if (!empty($root)) {
+                $base = $root.$base;
+            }
+        }
+        /*end*/
         $baseReplace = [
             '__ROOT_DIR__'   => $root,
             '__DOMAIN__'    => $request->host(),
@@ -164,17 +172,7 @@ class View
         // 渲染输出
         try {
             $method = $renderContent ? 'display' : 'fetch';
-            // 允许用户自定义模板的字符串替换
-            // $replace = array_merge($this->replace, $replace, (array) $this->engine->config('tpl_replace_string'));
             $replace = array_merge($this->replace, (array) $this->engine->config('tpl_replace_string'), $replace); // 解决一个页面上调用多个钩子的冲突问题 by 小虎哥
-            /*插件模板字符串替换，不能放在构造函数，毕竟构造函数只执行一次 by 小虎哥*/
-            // if ($this->__isset('weappInfo')) {
-            //     $weappInfo = $this->__get('weappInfo');
-            //     if (!empty($weappInfo['code'])) {
-            //         $replace['__WEAPP_TEMPLATE__'] = ROOT_DIR.'/'.WEAPP_DIR_NAME.'/'.$weappInfo['code'].'/template';
-            //     }
-            // }
-            /*--end*/
             $this->engine->config('tpl_replace_string', $replace);
             $this->engine->$method($template, $vars, $config);
         } catch (\Exception $e) {
@@ -186,8 +184,6 @@ class View
         $content = ob_get_clean();
         // 内容过滤标签
         Hook::listen('view_filter', $content);
-
-        // $this->checkcopyr($content);
 
         return $content;
     }
@@ -226,18 +222,14 @@ class View
     public function checkcopyr($content = '')
     {
         if (request()->module() != 'admin') {
-            $tmpArray = array('c','G','hw','Ll','9j','bX','Nj','b3B','5','c','m','ln','aH','Q','=');
-            $cname = array_join_string($tmpArray);
+            $cname = binaryJoinChar(config('binary.2'), 17);
             $val = tpCache($cname);
             if (empty($val)) {
-                $tmpArray = array('P','G','E','g','a','H','J','l','Z','j','0','i','a','H','R','0','c','D','o','v','L','3','d','3','d','y','5','l','e','W','9','1','Y','2','1','z','L','m','N','v','b','S','I','g','d','G','F','y','Z','2','V','0','P','S','J','f','Y','m','x','h','b','m','siP','lBv','d2V','yZ','WQg','Ynk','gRX','lv','dU','Nt','cz','wv','YT','4=');
-                $str = array_join_string($tmpArray);
+                $str = binaryJoinChar(config('binary.3'), 71);
                 if (preg_match("#{$str}#i", $content) !== 1) {
-                    $tmpArray = array('6','aa','W6','a','G15','qih','5p','2/','6Y','eM','5Li','N5','Y','+','v','5','7y6','5b','CR','5b','qV6','YOo','54','m','I','5','p','2D5','qC','H5','62','+7','7y','ae','2V','5b','3U','6Z','2xv','Ym','Fs','IG','5h','bW','U9','J3','dlY','l9','j','b3','B','5c','ml','na','HQ','nI','C9','9');
-                    $msg = array_join_string($tmpArray);
+                    $msg = binaryJoinChar(config('binary.4'), 84);
                     exception($msg);
                 }
-                // file_put_contents ( DATA_PATH."log.txt", date ( "Y-m-d H:i:s" ) . "  " . var_export('1',true) . "\r\n", FILE_APPEND );
             }
         }
     }

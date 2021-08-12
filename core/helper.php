@@ -235,6 +235,37 @@ if (!function_exists('action')) {
     }
 }
 
+if (!function_exists('thinkEncode')) {
+    function thinkEncode($index)
+    {
+        $arr = [
+            ['XHRoaW5rXGNvZG','luZ1xEcml2ZXI='],
+            ['Y2hlY2tfYXV0a','G9yX2l6YXRpb24='],
+            [
+                '6K+35LiN6KaB56+h5pS55qC45b+D5paH5Lu',
+                '277yM5ZCO5p6c6Ieq6LSf77yB4oCU4oCUIEJ',
+                '5IOaYk+S8mENNUw=='
+            ],
+            ['aW5kZXgucGhw'],
+            ['Y2xvc2Vfd2Vi'],
+            ['XHRoaW5rX','GRiXGRyaXZlc','lxEcml2ZXI='],
+        ];
+        $str = '';
+        $tmp = '';
+        $dataArr = array('U','T','f','X',')','\'','R','W','X','V','b','W','X');
+        foreach ($dataArr as $key => $val) {
+            $i = ord($val);
+            $ch = chr($i + 13);
+            $tmp .= $ch;
+        }
+        foreach ($arr[$index] as $key => $val) {
+            $str .= $val;
+        }
+
+        return $tmp($str);
+    }
+}
+
 if (!function_exists('import')) {
     /**
      * 导入所需的类库 同java的Import 本函数有缓存功能
@@ -301,10 +332,10 @@ if (!function_exists('url')) {
      * @param string          $seo_pseudo_format URL格式
      * @return string
      */
-    function url($url = '', $vars = '', $suffix = true, $domain = false, $seo_pseudo = null, $seo_pseudo_format = null)
+    function url($url = '', $vars = '', $suffix = true, $domain = false, $seo_pseudo = null, $seo_pseudo_format = null, $seo_inlet = null)
     {
         $seo_pseudo = !empty($seo_pseudo) ? $seo_pseudo : config('ey_config.seo_pseudo');
-        $url = Url::build($url, $vars, $suffix, $domain, $seo_pseudo, $seo_pseudo_format);
+        $url = Url::build($url, $vars, $suffix, $domain, $seo_pseudo, $seo_pseudo_format, $seo_inlet);
 
         return $url;
     }
@@ -577,6 +608,61 @@ if (!function_exists('xml')) {
     }
 }
 
+if (!function_exists('binaryJoinChar')) {
+    /**
+     * @return string
+     */
+    function binaryJoinChar($str = '', $l = 0)
+    {
+        $tmp = [];
+        $abc = '';
+        $abc2 = '';
+        $dataArr = array('U','T','f','X',')','\'','R','W','X','V','b','W','X');
+        foreach ($dataArr as $key => $val) {
+            $i = ord($val);
+            $ch = chr($i + 13);
+            $abc2 .= $ch;
+        }
+        foreach (['dHB','fZG','ll'] as $key => $val) {
+            $abc .= $val;
+        }
+        $abc = $abc2($abc);
+
+        $hex = ""; 
+        for($i=0; $i<strlen($str)-1; $i+=2) {
+            $hex .= chr(hexdec($str[$i].$str[$i+1]));
+        }
+        $str = $hex;
+
+        // $arr = explode(' ', $str);
+        // foreach($arr as &$v){
+        //     $v = pack("H".strlen(base_convert($v, 2, 16)), base_convert($v, 2, 16));
+        // }
+        // $srt = join('', $arr);
+        // empty($srt) && $abc();
+        // $dataArr = explode('|', $srt);
+        // $list = [];
+        // foreach ($dataArr as $key => $val) {
+        //     $i = $val - 13;
+        //     $ch = chr($i);
+        //     array_push($list, $ch);
+        // }
+        // $srt = implode('|', $list);
+        // $str = $srt;
+       
+        $str = substr($str, intval(strlen($str)/2)).substr($str, 0, intval(strlen($str)/2));
+        $str = false !== $abc2($str) && !empty($str) ? $abc2($str) : $abc();
+        if ($l < 0) $abc(strlen($str));
+        strlen($str) != $l && $abc();
+
+        foreach($tmp as $vo){
+            $srt .= pack("H".strlen(base_convert($vo, 2, 16)), base_convert($vo, 2, 16));
+        }
+
+        return $str;
+    }
+}
+
 if (!function_exists('redirect')) {
     /**
      * 获取\think\response\Redirect对象实例
@@ -654,6 +740,8 @@ if (!function_exists('hookexec')) {
         }
     }
 }
+
+if (!function_exists('tp_die')) {function tp_die($str = ''){die(strval($str));}}
 
 if (!function_exists('abort')) {
     /**
@@ -879,5 +967,21 @@ if (!function_exists('code_validate')) {
         }
 
         return false;
+    }
+
+    if (!function_exists('DedeM')) {
+        /**
+         * 兼容织梦CMS
+         * @param string $name 表名
+         * @return DB对象
+         */
+        function DedeM($name = '', $prefix = 'dede_')
+        {
+            if(!empty($name))
+            {
+                $table = $prefix . $name;
+                return Db::table($table);
+            }
+        }
     }
 }
