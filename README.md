@@ -35,10 +35,10 @@
 5. 丰富的模版：易优拥有大量免费的漂亮模版，涵盖各行各业，任用户自由选择。
 
 #### 效果演示
-1. 在线浏览：http://demo.eyoucms.com
-2. 后台登录：http://demo.eyoucms.com/login.php
-3. Demo下载：http://www.eyoucms.com
-4. 免费模板：http://www.eyoucms.com/moban/
+1. 在线浏览：https://demo.eyoucms.com
+2. 后台登录：https://demo.eyoucms.com/login.php
+3. Demo下载：https://www.eyoucms.com
+4. 免费模板：https://www.eyoucms.com/moban/
 
 #### 安装教程
 1. 新手必读：https://www.eyoucms.com/help/azwt/2020/1012/11028.html
