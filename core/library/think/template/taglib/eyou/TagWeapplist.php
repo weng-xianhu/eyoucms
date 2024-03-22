@@ -32,7 +32,7 @@ class TagWeapplist extends Base
      * 页面上展示网站应用插件
      * @author wengxianhu by 2018-4-20
      */
-    public function getWeapplist($type = 'usersmenu', $currentstyle = '')
+    public function getWeapplist($type = 'usersmenu', $currentclass = '')
     {
         $row = false;
         $map = array(
@@ -42,7 +42,6 @@ class TagWeapplist extends Base
         );
         $result = M('weapp')->field('name,code,config')
             ->where($map)
-            // ->cache(true, EYOUCMS_CACHE_TIME, 'hooks')
             ->select();
         foreach ($result as $key => $val) {
             $config = json_decode($val['config'], true);
@@ -59,9 +58,9 @@ class TagWeapplist extends Base
 
             /*标记被选中效果*/
             if (stristr($link, MODULE_NAME.'/'.CONTROLLER_NAME.'/')) {
-                $tmp_currentstyle = $currentstyle;
+                $tmp_currentclass = $currentclass;
             } else {
-                $tmp_currentstyle = '';
+                $tmp_currentclass = '';
             }
             /*--end*/
 
@@ -69,7 +68,8 @@ class TagWeapplist extends Base
                 'code'  => $code,
                 'href'  => $href,
                 'title' => $menutitle,
-                'currentstyle'  => $tmp_currentstyle,
+                'currentclass'  => $tmp_currentclass,
+                'currentstyle'  => $tmp_currentclass,
             ];
         }
         return $row;

@@ -74,6 +74,27 @@
                     <p class="notic">建议尺寸 88 * 31 (像素) 的gif或jpg文件</p>
                 </dd>
             </dl>
+            <dl class="row {empty name="$global.web_citysite_open"} none {/empty} ">
+                <dt class="tit">
+                    <label for="title">所属区域</label>
+                </dt>
+                <dd class="opt"> 
+                    <select name="province_id" id="province_id" onchange="set_city_list(0);">
+                        <option value="0">全国</option>
+                        {volist name=':get_site_province_list()' id='vo'}
+                        <option value="{$vo.id}" {eq name="$Request.param.province_id" value="$vo.id" } selected="true" {/eq}>{$vo.name}</option>
+                        {/volist}
+                    </select>
+                    <select name="city_id" id="city_id" class="none ml5" onchange="set_area_list(0);">
+                        <option value="">--请选择--</option>
+                    </select>
+                    <select name="area_id" id="area_id" class="none ml5">
+                        <option value="">--请选择--</option>
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
             <dl class="row">
                 <dt class="tit">
                     <label for="sort_order">排序</label>
@@ -104,29 +125,12 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label>新窗口打开</label>
+                    <label>链接属性</label>
                 </dt>
                 <dd class="opt">
-                    <div class="onoff">
-                        <label for="target1" class="cb-enable selected">是</label>
-                        <label for="target0" class="cb-disable ">否</label>
-                        <input id="target1" name="target" value="1" type="radio" checked="checked">
-                        <input id="target0" name="target" value="0" type="radio">
-                    </div>
-                    <p class="notic"></p>
-                </dd>
-            </dl>
-            <dl class="row">
-                <dt class="tit">
-                    <label>nofollow</label>
-                </dt>
-                <dd class="opt">
-                    <div class="onoff">
-                        <label for="nofollow1" class="cb-enable">是</label>
-                        <label for="nofollow0" class="cb-disable selected">否</label>
-                        <input id="nofollow1" name="nofollow" value="1" type="radio">
-                        <input id="nofollow0" name="nofollow" value="0" type="radio" checked="checked">
-                    </div>
+                    <label><input type="checkbox" name="target" value="1">新窗口打开</label>&nbsp;&nbsp;
+                    <label><input type="checkbox" name="nofollow" value="1">nofollow</label>&nbsp;&nbsp;
+                    <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
             </dl>
@@ -135,6 +139,21 @@
     </form>
 </div>
 <script type="text/javascript">
+
+    $(function () {
+        try {
+            var web_citysite_open = {$global['web_citysite_open']|default=0};
+            var site_province_id = {$site_province_id|default=0};
+            var site_city_id = {$site_city_id|default=0};
+            var site_area_id = {$site_area_id|default=0};
+            if (web_citysite_open > 0 && site_province_id > 0) {
+                $('select[name=province_id]').val(site_province_id);
+                set_city_list(site_city_id);
+                set_area_list(site_area_id);
+            }
+        }catch(e){}
+    });
+    
 	var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     // 判断输入框是否为空
     function checkForm(){
@@ -179,7 +198,7 @@
                 if(res.code == 1){
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                         _parent.window.location.reload();
                     });
                 }else{

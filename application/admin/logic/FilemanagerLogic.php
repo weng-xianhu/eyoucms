@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -14,7 +14,7 @@
 namespace app\admin\logic;
 
 use think\Model;
-use think\db;
+use think\Db;
 /**
  * 文件管理逻辑定义
  * Class CatsLogic
@@ -67,6 +67,24 @@ class FilemanagerLogic extends Model
      */
     public function editFile($filename, $activepath = '', $content = '')
     {
+        $security = tpSetting('security');
+        if (empty($security['security_ask_open']) || empty($security['security_answer'])) {
+            return '需要开启密保问题设置';
+        } else {
+            $admin_id = session('?admin_id') ? (int)session('admin_id') : 0;
+            $admin_info = Db::name('admin')->field('admin_id,last_ip')->where(['admin_id'=>$admin_id])->find();
+            // 当前管理员二次安全验证过的IP地址
+            $security_answerverify_ip = !empty($security['security_answerverify_ip']) ? $security['security_answerverify_ip'] : '-1';
+            // 同IP不验证
+            if (empty($admin_info) || $admin_info['last_ip'] != $security_answerverify_ip) {
+                return '出于安全考虑，请勿非法越过密保答案验证';
+            }  
+        }
+
+        if (!filename_preg_match()) {
+            return '文件名称含有非法入侵字符！';
+        }
+
         $fileinfo = pathinfo($filename);
         $ext = strtolower($fileinfo['extension']);
         $filename = trim($fileinfo['filename'], '.').'.'.$fileinfo['extension'];
@@ -90,7 +108,7 @@ class FilemanagerLogic extends Model
         }
         if ('htm' == $ext) {
             $content = htmlspecialchars_decode($content, ENT_QUOTES);
-            if (preg_match('#<([^?]*)\?php#i', $content) || preg_match('#<\?\=(\s+)#i', $content) || preg_match('#\{eyou\:php([^\}]*)\}#i', $content) || preg_match('#\{php([^\}]*)\}#i', $content)) {
+            if (preg_match('#<([^?]*)\?php#i', $content) || preg_match('#<\?(\s*)=#i', $content) || (preg_match('#<\?#i', $content) && preg_match('#\?>#i', $content)) || preg_match('#\{eyou\:php([^\}]*)\}#i', $content) || preg_match('#\{php([^\}]*)\}#i', $content) || preg_match('#(\s+)language(\s*)=(\s*)("|\')?php("|\')?#i', $content)) {
                 return "模板里不允许有php语法，为了安全考虑，请通过FTP工具进行编辑上传。";
             }
             foreach ($this->disableFuns as $key => $val) {
@@ -391,6 +409,9 @@ class FilemanagerLogic extends Model
      */
     public function replace_path($activepath, $replacement = ':', $is_back = false)
     {
-        return replace_path($activepath, $replacement, $is_back);
+        $activepath = replace_path($activepath, $replacement, $is_back);
+        $activepath = preg_replace('/<(\w+)([^\>]*)>([^<]*)<\/(\w+)>/i', '', $activepath);
+        $activepath = preg_replace('/(<|>|;|\(|\)|\!)/i', '', $activepath);
+        return $activepath;
     }
 }

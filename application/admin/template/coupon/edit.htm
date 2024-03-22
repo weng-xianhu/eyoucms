@@ -1,5 +1,4 @@
 {include file="public/layout" /}
-<script type="text/javascript" src="__PUBLIC__/plugins/laydate/laydate.js"></script>
 <script type="text/javascript" src="__PUBLIC__/plugins/colpick/js/colpick.js"></script>
 <link href="__PUBLIC__/plugins/colpick/css/colpick.css" rel="stylesheet" type="text/css"/>
 <style type="text/css">
@@ -17,9 +16,9 @@
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 {include file="shop/left" /}
-<div class="page" style="margin-left:98px;">
+<div class="page" >
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="{:url('Coupon/index')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+        <div class="item-title"><a class="back_xin" href="{:url('Coupon/index')}" title="返回"><i class="iconfont e-fanhui"></i></a>
             <ul class="tab-base nc-row">
                 <li><a href="javascript:void(0);" class="tab current"><span>编辑优惠券</span></a></li>
             </ul>
@@ -33,7 +32,7 @@
                     <label for="coupon_name"><em>*</em>优惠券名称</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="coupon_name" id="coupon_name" value="{$info.coupon_name}" class="input-txt">
+                    <input type="text" name="coupon_name" id="coupon_name" value="{$info.coupon_name}" class="input-txt" autocomplete="off">
                     <p class="notic"></p>
                 </dd>
             </dl>
@@ -90,7 +89,8 @@
                             type: 2,
                             title: '已选商品列表',
                             shadeClose: false,
-                            shade: 0.3,
+                            shade: layer_shade,
+                            closeBtn: 3,
                             area: ['80%', '90%'],
                             content: url
                         });
@@ -104,7 +104,8 @@
                         type: 2,
                         title: '请选择商品',
                         shadeClose: false,
-                        shade: 0.3,
+                        shade: layer_shade,
+                        closeBtn: 3,
                         area: ['80%', '90%'],
                         content: url
                     });
@@ -119,37 +120,40 @@
                     <a href="JavaScript:void(0);" onclick="Arctype();" class="ncap-btn ncap-btn-green">选择分类</a>
                     <input type="hidden" name="arctype_id" id="arctype_id" value="{$info.arctype_id}">
                     <input type="hidden" id="SelectArctypeID" value="{$info.arctype_id}">
-                    <span style="color: red;">已选 <a href="JavaScript:void(0);" id="arctype_id_num">{$info.arctype_id_num}</a> 分类</span>
+                    <span style="color: red;">已选 <font id="arctype_id_num">{$info.arctype_id_num}</font> 分类</span>
                 </dd>
             </dl>
             <script type="text/javascript">
-                $( function() {
-                    $('#arctype_id_num').click( function() {
-                        var arctype_ids = $('#arctype_id').val();
-                        var url = "{:url('Coupon/select_arctype', ['coupon_id'=>$info.coupon_id])}";
-                        url = url + '&arctype_ids=' + arctype_ids;
-                        //iframe窗
-                        layer.open({
-                            type: 2,
-                            title: '已选分类列表',
-                            shadeClose: false,
-                            shade: 0.3,
-                            area: ['80%', '90%'],
-                            content: url
-                        });
-                    });
-                });
-
-                function Arctype() {
-                    var url = "{:url('Coupon/select_arctype')}";
-                    //iframe窗
-                    layer.open({
+                /**
+                 * 选择分类
+                 * @param  {[type]} obj [description]
+                 * @return {[type]}     [description]
+                 */
+                function Arctype()
+                {
+                    var typeids = $('#arctype_id').val();
+                    var iframes = layer.open({
                         type: 2,
                         title: '请选择分类',
+                        fixed: true, //不固定
                         shadeClose: false,
-                        shade: 0.3,
-                        area: ['80%', '90%'],
-                        content: url
+                        shade: layer_shade,
+                        // maxmin: true, //开启最大化最小化按钮
+                        area: ['750px', '550px'],
+                        btn: ['确定', '关闭'],
+                        content: eyou_basefile+"?m=admin&c=Coupon&a=select_arctype&typeids="+typeids+"&lang="+__lang__,
+                        yes: function(index, layero) {
+                            var body = layer.getChildFrame('body', index);
+                            var SelectArctypeIDNew = body.find('#post_typeids').val();
+                            layer.close(index);
+                            $('#arctype_id').val(SelectArctypeIDNew);
+                            $('#SelectArctypeID').val(SelectArctypeIDNew);
+                            if (SelectArctypeIDNew) {
+                                $('#arctype_id_num').html(SelectArctypeIDNew.split(",").length).parent().show();
+                            } else {
+                                $('#arctype_id_num').parent().hide();
+                            }
+                        }
                     });
                 }
             </script>
@@ -160,9 +164,9 @@
                 </dt>
                 <dd class="opt">
                     满
-                    <input type="text" name="conditions_use" id="conditions_use" value="{$info.conditions_use}" class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 80px !important;">
+                    <input type="text" name="conditions_use" autocomplete="off" id="conditions_use" value="{$info.conditions_use}" class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 80px !important;">
                     元，减
-                    <input type="text" name="coupon_price" id="coupon_price" value="{$info.coupon_price}" class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 80px !important;">
+                    <input type="text" name="coupon_price" autocomplete="off" id="coupon_price" value="{$info.coupon_price}" class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 80px !important;">
                     元
                     <p class="notic"></p>
                 </dd>
@@ -172,7 +176,7 @@
                     <label for="coupon_stock"><em>*</em>库存</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="coupon_stock" id="coupon_stock" value="{$info.coupon_stock}" class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 100px !important;">&nbsp;张
+                    <input type="text" name="coupon_stock" autocomplete="off" id="coupon_stock" value="{$info.coupon_stock}" class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 100px !important;">&nbsp;张
                     <p class="notic"></p>
                 </dd>
             </dl>
@@ -182,7 +186,7 @@
                     <label for="redeem_points">兑换所需积分</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="redeem_points" id="redeem_points" value="{$info.redeem_points}" class="input-txt">
+                    <input type="text" name="redeem_points" id="redeem_points" value="{$info.redeem_points}" class="input-txt" autocomplete="off">
                     <p class="notic">兑换优惠券需要的积分，为0时免费领取</p>
                 </dd>
             </dl>
@@ -207,10 +211,10 @@
                     <label><input type="radio" name="use_type" value="1" {eq name="$info.use_type" value="1"} checked="checked" {/eq} onclick="chooseUseType(this);" />&nbsp;固定时间内有效</label>
                     <input type="text" autocomplete="off" name="use_start_time" id="use_start_time" {eq name="$info.use_type" value="1"} value="{$info.use_start_time|MyDate='Y-m-d H:i:s',###}" {/eq} {neq name="$info.use_type" value="1"} disabled="disabled" {/neq} class="input-txt" style="width: 130px !important;" />-
                     <input type="text" autocomplete="off" name="use_end_time" id="use_end_time" {eq name="$info.use_type" value="1"} value="{$info.use_end_time|MyDate='Y-m-d H:i:s',###}" {/eq}  {neq name="$info.use_type" value="1"} disabled="disabled" {/neq} class="input-txt" style="width: 130px !important;" />
-                    <br>
+                    <div class="mt5"></div>
                     <label><input type="radio" name="use_type" value="2" {eq name="$info.use_type" value="2"} checked="checked" {/eq} onclick="chooseUseType(this);" />&nbsp;领到当日开始</label>
                     <input type="text" id="valid_days_2" value="{$info.valid_days}" {neq name="$info.use_type" value="2"} disabled="disabled" {/neq} class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 50px !important;">&nbsp;天内有效
-                    <br>
+                    <div class="mt5"></div>
                     <label><input type="radio" name="use_type" value="3" {eq name="$info.use_type" value="3"} checked="checked" {/eq} onclick="chooseUseType(this);" />&nbsp;领到次日开始</label>
                     <input type="text" id="valid_days_3" value="{$info.valid_days}" {neq name="$info.use_type" value="3"} disabled="disabled" {/neq}  class="input-txt" onpaste="this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[^\d.]/g, '');" style="width: 50px !important;">&nbsp;天内有效
                     <p class="notic"></p>
@@ -245,8 +249,15 @@
         </div>
     </form>
 </div>
-
 <script type="text/javascript">
+    try{
+        if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
+            $(".page").css("margin-left","");
+        }else{
+            $(".page").css("margin-left","100px");
+        }
+    }catch(e){}
+
     $(document).ready(function(){
         // 颜色选择
         $('#coupon_color').colpick({
@@ -284,13 +295,27 @@
             $("#valid_days_2").attr('disabled',true);
         }
     }
+    layui.use('laydate', function() {
+        var laydate = layui.laydate;
 
+        laydate.render({
+            elem: '#start_date'
+            ,type: 'datetime'
+        });
+        laydate.render({
+            elem: '#end_date'
+            ,type: 'datetime'
+        });
+        laydate.render({
+            elem: '#use_start_time'
+            ,type: 'datetime'
+        });
+        laydate.render({
+            elem: '#use_end_time'
+            ,type: 'datetime'
+        });
+    })
     $(function () {
-        $('#start_date').layDate();
-        $('#end_date').layDate();
-        $('#use_start_time').layDate();
-        $('#use_end_time').layDate();
-
         $('input[name=coupon_type]').click(function() {
             if (3 == $(this).val()) {
                 $('#arctype_id').parent().parent().show();
@@ -383,7 +408,7 @@
             success : function(res){
                 layer.closeAll();
                 if(res.code == 1){
-                    layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                    layer.msg(res.msg, {icon: 1, shade: layer_shade, time: 1000}, function(){
                         window.location.reload();
                     });
                 }else{

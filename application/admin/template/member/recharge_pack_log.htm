@@ -1,0 +1,132 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="member/left" /}
+<div class="page min-hg-c-10" style="min-width:auto;margin-left:100px;">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <!-- <a class="back_xin" href="{:url("UsersScore/conf")}" title="返回"><i class="iconfont e-fanhui"></i></a> -->
+            <ul class="tab-base nc-row">
+                <li>
+                    <a {if condition="in_array($Request.action, ['recharge_pack_list'])"}class="current"{/if} href='{:url("Member/recharge_pack_list")}'>
+                        <span>充值套餐</span>
+                    </a>
+                </li>
+    
+                <li>
+                    <a {if condition="in_array($Request.action, ['recharge_pack_log'])"}class="current"{/if} href='{:url("Member/recharge_pack_log")}'>
+                        <span>领取记录</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="flexigrid">
+        <div class="mDiv pt0">
+            <form class="navbar-form form-inline" action="{:url('Member/recharge_pack_log')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" name="add_time_begin" id="add_time_begin" value="{$Request.param.add_time_begin}" class="qsbox" autocomplete="off" placeholder="起始日期">
+                    </div>
+                    &nbsp;至&nbsp;
+                    <div class="sDiv2">
+                        <input type="text" name="add_time_end" id="add_time_end" value="{$Request.param.add_time_end}" class="qsbox" autocomplete="off" placeholder="结束日期">
+                    </div>
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$keywords|default=''}" class="qsbox" placeholder="搜索用户名...">
+                        <input type="submit" class="btn" value="搜索">
+						<i class="iconfont e-sousuo"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                        <tr>
+                            <th class="w40"> <div class="tc">序号</div> </th>
+                            <th> <div class="text-l10">套餐信息</div> </th>
+                            <th class="w120"> <div class="text-l10">面值(元)</div> </th>
+                            <th class="w120"> <div class="text-l10">实付金额(元)</div> </th>
+                            <th class="w200"> <div class="text-l10">用户</div> </th>
+                            <th class="w150"> <div class="text-l10">支付时间</div> </th>
+                            <th class="w100"> <div class="tc">状态</div> </th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                        {empty name="$list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {else/}
+                        {volist name="$list" id="vo"}
+                        <tr>
+                            <td class="sort"> <div class="w40 tc">{$vo.virtual_id}</div> </td>
+                            <td style="width: 100%"> <div class="text-l10">{$vo.order_pack_names}</div> </td>
+                            <td> <div class="w120 text-l10">{$vo.order_face_value}</div> </td>
+                            <td> <div class="w120 text-l10">{$vo.order_pay_prices}</div> </td>
+                            <td>
+                                <div class=" w200">
+                                    <div class="d-flex" style=" padding-left: 10px;">
+                                        <img style="margin-right: 5px; float: unset; border: 1px solid #e9edef; width: 24px; height: 24px; border-radius: 50%;" src="{$vo.head_pic}">
+                                        <a href="javascript:void(0);" data-href="{:url('Member/users_edit', ['id'=>$vo['users_id'], 'from'=>'money_index', 'iframe'=>1])}" onclick="openFullframe(this, '会员资料', '100%', '100%');" class="l-height-24">{$vo.nickname}</a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td> <div class="w150 text-l10">{$vo.order_pay_time|date='Y-m-d H:i:s',###}</div> </td>
+                            <td> <div class="w100 tc">{if condition="$vo.order_status == 2"}已支付{elseif condition="$vo.order_status == 3"}已完成{/if}</div> </td>
+                        </tr>
+                        {/volist}
+                        {/empty}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {notempty name="list"}
+        <div class="footer-oper">
+            {include file="public/page" /}
+            <div style="clear:both"></div>
+        </div>
+        {/notempty}
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#add_time_begin' //指定元素
+        });
+        laydate.render({
+            elem: '#add_time_end' //指定元素
+        });
+    });
+
+</script>
+
+{include file="public/footer" /}

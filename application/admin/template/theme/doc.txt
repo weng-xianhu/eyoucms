@@ -1,0 +1,3 @@
+模板说明：
+1、后台登录页模板文件以 login_ 为前缀，比如：login_style1.htm
+2、后台欢迎页模板文件以 welcome_ 为前缀，比如：welcome_style1.htm

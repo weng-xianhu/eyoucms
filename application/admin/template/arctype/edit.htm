@@ -15,18 +15,23 @@
 <div id="ajaxwaitid"></div>
 <div class="page" style="box-shadow:none;">
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+        <div class="item-title">
+            <a class="back_xin" href="javascript:history.back();" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>栏目编辑</h3>
+                <h5></h5>
+            </div>
             <ul class="tab-base nc-row">
                 <li><a href="javascript:void(0);" data-index='1' class="tab {eq name='$tab' value='1'}current{/eq}"><span>常规选项</span></a></li>
                 <li><a href="javascript:void(0);" data-index='2' class="tab {eq name='$tab' value='2'}current{/eq}"><span>高级选项</span></a></li>
                 {if condition="2 == $field['current_channel']"}
                     {notempty name='$is_old_product_attr'}
-                        <li><a href="javascript:void(0);" data-href="{:url($channeltype_list[$field['current_channel']]['ctl_name'].'/attribute_index', ['typeid'=>$Request.param.id])}" onclick="openFullframe(this, '产品参数列表', '100%', '100%');"><span>产品参数</span></a></li>
+                        <!-- <li><a href="javascript:void(0);" data-href="{:url($channeltype_list[$field['current_channel']]['ctl_name'].'/attribute_index', ['typeid'=>$Request.param.id])}" onclick="openFullframe(this, '产品参数列表', '100%', '100%');"><span>产品参数</span></a></li> -->
                     {else /}
-                        <li><a href="javascript:void(0);" data-href="{:url('ShopProduct/attrlist_index', ['oldinlet'=>1])}" onclick="openFullframe(this, '产品参数列表', '100%', '100%');"><span>产品参数</span></a></li>
+                        <!-- <li><a href="javascript:void(0);" data-href="{:url('ShopProduct/attrlist_index', ['oldinlet'=>1])}" onclick="openFullframe(this, '产品参数列表', '100%', '100%');"><span>产品参数</span></a></li> -->
                     {/notempty}
                 {elseif condition="8 == $field['current_channel']"}
-                    <li><a href="javascript:void(0);" data-href="{:url($channeltype_list[$field['current_channel']]['ctl_name'].'/attribute_index', ['typeid'=>$Request.param.id])}" onclick="openFullframe(this, '留言属性列表', '100%', '100%');"><span>属性列表</span></a></li>
+                    <li><a href="javascript:void(0);" data-href="{:url($channeltype_list[$field['current_channel']]['ctl_name'].'/attribute_index', ['typeid'=>$Request.param.id])}" onclick="openFullframe(this, '留言字段列表', '100%', '100%');"><span>字段列表</span></a></li>
                 {/if}
             </ul>
         </div>
@@ -43,7 +48,7 @@
                     <p class="notic">保持唯一性，不可重复</p>
                 </dd>
             </dl>
-            <dl class="row {if 51 == $field['current_channel']} none {/if} " id="dl_dirname">
+            <dl class="row {if 51 == $field['current_channel'] || $is_diyseo_htmlpath == 1} none {/if} " id="dl_dirname">
                 <dt class="tit">
                     <label for="dirname">目录名称</label>
                 </dt>
@@ -89,13 +94,24 @@
                     {/empty}
                 </dd>
             </dl>
+            <!-- #weapp_UsersGroup_content# -->
             <input type="hidden" name="channeltype" id="channeltype" value="{$field.channeltype|default=''}" />
-            <dl class="row none" id="row_url">
+            <dl class="row {if $is_diyseo_htmlpath == 0} none {/if}">
+                <dt class="tit">
+                    <label for="diy_dirpath">文件保存目录</label>
+                </dt>
+                <dd class="opt">
+                    {$seo_html_arcdir}<input type="text" value="{$field.diy_dirpath}" name="diy_dirpath" id="diy_dirpath" class="w350" onkeyup="this.value=this.value.replace(/[^0-9a-zA-Z\/-]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-zA-Z\/-]/g,''));">
+                    &nbsp;<a href="javascript:void(0);" onclick="get_dirpinyin(this);" id="getpinyin" class="ncap-btn ncap-btn-green">获取拼音</a>
+                    <p class="notic">生成的文章HTML页面会存放在该目录下</p>
+                </dd>
+            </dl>
+            <dl class="row none">
                 <dt class="tit">
                     <label for="dirpath">文件保存目录</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" value="{$predirpath}" name="dirpath" id="dirpath" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9a-zA-Z\/-]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-zA-Z\/-]/g,''));">&nbsp;<a href="javascript:void(0);" onclick="get_dirpinyin(this);" id="getpinyin" class="ncap-btn ncap-btn-green">获取拼音</a>
+                    {$seo_html_arcdir}<input type="text" value="{$predirpath}" name="dirpath" id="dirpath" class="w350" onkeyup="this.value=this.value.replace(/[^0-9a-zA-Z\/-]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-zA-Z\/-]/g,''));">
                     <p class="notic">生成的文章HTML页面会存放在该目录下</p>
                 </dd>
             </dl>
@@ -104,12 +120,9 @@
                     <label>隐藏栏目</label>
                 </dt>
                 <dd class="opt">
-                    <div class="onoff">
-                        <label for="is_hidden1" class="cb-enable {if condition='$field.is_hidden eq 1'}selected{/if}">是</label>
-                        <label for="is_hidden0" class="cb-disable {if condition='$field.is_hidden eq 0'}selected{/if}">否</label>
-                        <input id="is_hidden1" name="is_hidden" value="1" type="radio" {if condition="$field.is_hidden eq 1"} checked="checked"{/if}>
-                        <input id="is_hidden0" name="is_hidden" value="0" type="radio" {if condition="$field.is_hidden eq 0"} checked="checked"{/if}>
-                    </div>
+                    <label class="curpoin"><input id="is_hidden1" name="is_hidden" value="1" type="radio" {if condition="$field.is_hidden eq 1"} checked="checked"{/if}>是</label>
+                    &nbsp;
+                    <label class="curpoin"><input id="is_hidden0" name="is_hidden" value="0" type="radio" {if condition="$field.is_hidden eq 0"} checked="checked"{/if}>否</label>
                     <p class="notic">隐藏之后，不显示在前台页面</p>
                 </dd>
             </dl>
@@ -130,27 +143,38 @@
         <div class="ncap-form-default tab_div_2" {neq name='$tab' value='2'}style="display:none;"{/neq}>
             <dl class="row {if condition="!empty($field['weapp_code']) || 51 == $field['current_channel']"}none{/if}" id="type_attr">
                 <dt class="tit">
-                    <label>栏目属性</label>
+                    <label>外部链接</label>
                 </dt>
                 <dd class="opt">
-                    <div class="onoff">
-                        <label for="is_part1" class="cb-enable {if condition='$field.is_part eq 1'}selected{/if}">外部链接</label>
-                        <label for="is_part0" class="cb-disable {if condition='$field.is_part eq 0'}selected{/if}">内容栏目</label>
-                        <input id="is_part1" name="is_part" value="1" type="radio" {if condition="$field.is_part eq 1"} checked="checked"{/if}>
-                        <input id="is_part0" name="is_part" value="0" type="radio" {if condition="$field.is_part eq 0"} checked="checked"{/if}>
-                    </div>
+                    <label class="curpoin"><input id="is_part1" name="is_part" value="1" type="radio" {if condition="$field.is_part eq 1"} checked="checked"{/if}>是</label>
+                    &nbsp;
+                    <label class="curpoin"><input id="is_part0" name="is_part" value="0" type="radio" {if condition="$field.is_part eq 0"} checked="checked"{/if}>否</label>
                     <p class="notic">外部连接（在"下方文本框"处填写网址）</p>
                 </dd>
             </dl>
-            <dl class="row is_part1 {if condition="$field.is_part eq 0"}none{/if}" id="row_url">
-                <dt class="tit">
-                    <label for="typelink"><em>*</em>外部链接</label>
-                </dt>
-                <dd class="opt">
-                    <input type="text" value="{$field.typelink|default=''}" name="typelink" id="typelink" class="input-txt" placeholder="http://">
-                    <p class="notic">请填写完整外部链接</p>
-                </dd>
-            </dl>
+            <div class="{eq name='$field.is_part' value='0'}none{/eq}" id="row_url">
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="typelink"><em>*</em></label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" value="{$field.typelink|default=''}" name="typelink" id="typelink" class="input-txt" placeholder="请填写完整外部链接">
+                        <p class="notic">请填写完整外部链接</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>链接属性</label>
+                    </dt>
+                    <dd class="opt">
+                        <label><input type="checkbox" name="target" value="1" {if condition="$field.target eq 1"}checked="checked"{/if}>新窗口打开</label>&nbsp;&nbsp;
+                        <label><input type="checkbox" name="nofollow" value="1" {if condition="$field.nofollow eq 1"}checked="checked"{/if}>nofollow</label>&nbsp;&nbsp;
+                        <a href="javascript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=17589&origin_eycms=1','链接属性使用教程')">查看标签使用教程</a>
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+            </div>
             <dl class="row">
                 <dt class="tit">
                     <label for="englist_name">英文别名</label>
@@ -184,7 +208,7 @@
                 <dd class="opt">
                     <div class="input-file-show div_litpic_local" {neq name="$field.is_remote" value="0"}style="display: none;"{/neq}>
                         <span class="show">
-                            <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="{$field.litpic_local|default='javascript:void(0);'}" target="_blank">
+                            <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="{$field.litpic_local|default='javascript:void(0);'}">
                                 <i id="img_i" class="fa fa-picture-o" {notempty name="$field.litpic_local"}onmouseover="layer_tips=layer.tips('<img src={$field.litpic_local} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
                             </a>
                         </span>
@@ -202,9 +226,35 @@
                     <p class="notic"></p>
                 </dd>
             </dl>
+            <dl class="row" id="dl_typearcrank" {eq name="$field.current_channel" value="6"}style="display:none"{/eq}>
+                <dt class="tit">
+                    <label>访问权限</label>
+                </dt>
+                <dd class="opt">
+                    <input type="hidden" value="{$field.typearcrank}" name="old_arcrank" class="input-txt">
+                    <select name="typearcrank" id="typearcrank" onclick="change_typearcrank(this);" {if $field.typearcrank < 0 && $admin_info.role_id > 0 && $auth_role_info.check_oneself < 1} disabled="disabled" {/if}>
+                    {volist name="arcrank_list" id="vo"}
+                    <option value="{$vo.rank}" {eq name="$vo.rank" value="$field.typearcrank"}selected{/eq}>{$vo.name}</option>
+                    {/volist}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic">仅限制栏目里的文档阅读权限</p>
+                </dd>
+            </dl>
+            <dl class="row {if condition=' 6 == $field.current_channel || 0 == $field.typearcrank '}none{/if}" id="dl_page_limit">
+                <dt class="tit">
+                    <label>限制页面</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="checkbox" name="page_limit[]" value="1" {if condition="in_array(1,$field.page_limit)"}checked{/if}>栏目页面</label>&nbsp;
+                    <label><input type="checkbox" name="page_limit[]" value="2" {if condition="in_array(2,$field.page_limit)"}checked{/if}>文档页面</label>
+                    <span class="err"></span>
+                    <p class="notic">限制栏目页面后，栏目打开将受限制，限制文档页面后，则打开文档页面时受限制</p>
+                </dd>
+            </dl>
             <dl class="row" id="dl_templist">
                 <dt class="tit">
-                    <label for="templist"><em>*</em>列表模板</label>
+                    <label for="templist"><em>*</em>栏目模板</label>
                 </dt>
                 <dd class="opt">
                     <select name="templist" id="templist">
@@ -224,6 +274,24 @@
                     <span class="err"></span>
                     <p class="notic">模板命名规则：<br/>view_<font class="font_nid">模型标识</font>.htm<br/>view_<font class="font_nid">模型标识</font>_自定义.htm</p>
                     &nbsp;<a href="javascript:void(0);" onclick="newtpl('view');" class="ncap-btn ncap-btn-green">新建模板</a>
+                </dd>
+            </dl>
+            <dl class="row {if $is_diyseo_htmlpath == 0 || $seo_html_listname != 4} none {/if}" id="dl_rulelist">
+                <dt class="tit">
+                    <label for="dirpath">栏目名规则</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$field.rulelist|default=$rulelist}" name="rulelist" id="rulelist" class="input-txt" >
+                    <p class="notic2">1、{tid} 栏目ID<span id="rule_tips_2"><br/>2、{page} 栏目的页码，如果没有该变量，第1页以后的html页面将不存在</span></p>
+                </dd>
+            </dl>
+            <dl class="row {if condition="in_array($field['current_channel'], [6,8]) OR ($is_diyseo_htmlpath == 0 OR $seo_html_pagename != 4)"} none {/if}" id="dl_ruleview">
+                <dt class="tit">
+                    <label for="dirpath">文档名规则</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" value="{$field.ruleview|default=$ruleview}" name="ruleview" id="ruleview" class="input-txt" >&nbsp;
+                    <p class="notic2">1、{Y}、{M}、{D} 年月日<br/>2、{aid} 文档ID</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -250,15 +318,16 @@
                     <label>SEO描述</label>
                 </dt>
                 <dd class="opt">          
-                    <textarea rows="5" cols="60" id="seo_description" name="seo_description" style="height:60px;">{$field.seo_description|default=''}</textarea>
+                    <textarea rows="5" cols="60" id="seo_description" name="seo_description" style="height:54px;" class="keywordsTextarea" onkeyup="monitorInputStr();" onkeypress="monitorInputStr();">{$field.seo_description|default=''}</textarea>
                     <span class="err"></span>
-                    <p class="notic"></p>
+                    <p class="notic">一般不超过100个字符，不填写时系统自动提取正文的前100个字符</p>
+                    <p class="notic2 {empty name='$field.seo_description'}none{/empty}" id="beenWritten">你已输入<span id="beenWrittenStr">0</span>个字符</p>
                 </dd>
             </dl>
             <dl class="row {eq name="$field['current_channel']" value="51"}none{/eq}" >
                 <dt class="tit">继承选项</dt>
                 <dd class="opt">
-                    <label class="label"><input class="check" type="checkbox" name="inherit_status" value="1">&nbsp;同时更改下级栏目的模板风格</label>
+                    <label class="label"><input class="check" type="checkbox" name="inherit_status" value="1">&nbsp;同时更改下级栏目的阅读权限、模板风格、命名规则{eq name="$field['current_channel']" value="6"}、单页内容提取{/eq}</label>
                 </dd>
             </dl>
             {if condition="!empty($field['weapp_code'])"}
@@ -272,6 +341,8 @@
                 <input type="hidden" name="id" id="id" value="{$field.id|default=''}">
                 <input type="hidden" name="grade" id="grade" value="{$field.grade|default=0}">
                 <input type="hidden" name="oldgrade" id="oldgrade" value="{$field.grade|default=0}">
+                <input type="hidden" name="old_current_channel" id="old_current_channel" value="{$field.current_channel|default=0}">
+                <input type="hidden" name="editor_addonFieldExt" id="editor_addonFieldExt" value="{$editor_addonFieldExt|default=''}">
                 <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
             </div>
         </div> 
@@ -296,9 +367,9 @@
         $('input[name=is_part]').click(function(){
             var val = $(this).val();
             if (val == 1) {
-                $('.is_part1').show();
+                $('#row_url').show();
             } else {
-                $('.is_part1').hide();
+                $('#row_url').hide();
             }
         });
 
@@ -307,6 +378,7 @@
 
     /*根据模型ID获取模板文件名*/
     function ajax_get_template() {
+        var is_diyseo_htmlpath = {$is_diyseo_htmlpath|default=0};
         var obj = $('#current_channel');
         var channel = parseInt($(obj).val());
         var js_allow_channel_arr = {$js_allow_channel_arr};
@@ -316,7 +388,16 @@
             $('#dl_dirname').hide();
         }else{
             $("#type_attr").show();
-            $('#dl_dirname').show();
+            if (is_diyseo_htmlpath == 1) {
+                $('#dl_dirname').hide();
+            } else {
+                $('#dl_dirname').show();
+            }
+        }
+        if (6 == channel){
+            $('#dl_typearcrank').hide();
+        }else{
+            $('#dl_typearcrank').show();
         }
         // 重新定义模板变量，专用于新建模板功能
         $.ajax({
@@ -343,15 +424,34 @@
         if ($.inArray(channel, js_allow_channel_arr) == -1) {
             if (channel == 6) {
                 $('#dl_templist').find('label[for=templist]').html('<em>*</em>单页模板');
+                var rulelistObj = $('input[name=rulelist]');
+                if (rulelistObj.val() == '' || '{栏目目录}/list_{tid}_{page}.html' == rulelistObj.val() || '{typedir}/list_{tid}_{page}.html' == rulelistObj.val()) {
+                    rulelistObj.val('{栏目目录}/index.html');
+                }
+                $('#rule_tips_2').hide();
             } else if (channel == 8) {
                 $('#dl_templist').find('label[for=templist]').html('<em>*</em>留言模板');
+                var rulelistObj = $('input[name=rulelist]');
+                if (rulelistObj.val() == '' || '{栏目目录}/list_{tid}_{page}.html' == rulelistObj.val() || '{typedir}/list_{tid}_{page}.html' == rulelistObj.val()) {
+                    rulelistObj.val('{栏目目录}/index.html');
+                }
+                $('#rule_tips_2').hide();
             }else if (51 == channel) {
                 $('#dl_templist').hide();
+                $('#dl_rulelist').hide();
             }
             $('#dl_tempview').hide();
+            $('#dl_ruleview').hide();
         } else {
-            $('#dl_templist').find('label[for=templist]').html('<em>*</em>列表模板');
+            $('#rule_tips_2').show();
+            $('#dl_templist').find('label[for=templist]').html('<em>*</em>栏目模板');
             $('#dl_tempview').show();
+
+            var is_diyseo_htmlpath = {$is_diyseo_htmlpath|default=0};
+            var seo_html_pagename = {$seo_html_pagename|default=2};
+            if (is_diyseo_htmlpath == 1 && seo_html_pagename == 4) {
+                $('#dl_ruleview').show();
+            }
         }
         $('#tempview').html(templateList[channel]['view']);
 
@@ -377,9 +477,9 @@
             data: {typename: typename},
             success: function(res){
                 $(obj).html('获取拼音');
-                if (res.status == 1) {
-                    dirpath = $('#dirpath').val() + '/' + res.msg;
-                    $('#dirpath').val(dirpath);
+                if (res.code == 1) {
+                    var diy_dirpath = $('#dirpath').val() + '/' + res.data.pinyin;
+                    $('#diy_dirpath').val(diy_dirpath);
                     return true;
                 } else {
                     showErrorMsg('操作失败');
@@ -388,7 +488,7 @@
             },
             error: function(e){
                 $(obj).html('获取拼音');
-                showErrorMsg(ey_unknown_error);
+                showErrorMsg(e.responseText);
                 return false;
             }
         });
@@ -411,7 +511,7 @@
                 }
             },
             error: function(e){
-                showErrorMsg(ey_unknown_error);
+                showErrorMsg(e.responseText);
                 return false;
             }
         });
@@ -422,6 +522,7 @@
         $('#grade').val(grade + 1);
         var dirpath = $(obj).find("option:selected").attr("data-dirpath");
         $('#dirpath').val(dirpath);
+
     }
 
     function check_submit(){
@@ -453,7 +554,7 @@
             $($('.tab-base').find('.tab').get(1)).addClass('current');
             $('.tab_div_1').hide();
             $('.tab_div_2').show();
-            showErrorMsg('请选择列表模板');
+            showErrorMsg('请选择栏目模板');
             $('#templist').focus();
             return false;
         }
@@ -479,7 +580,10 @@
             $('input[name=dirpath]').focus();
             return false;
         }
-        $('#post_form').submit();
+        setTimeout(function (){
+            editor_auto_210607('type');
+            $('#post_form').submit();
+        }, 1);
     }
 
     function ajax_check_dirpath()
@@ -515,31 +619,76 @@
 
     function newtpl(type)
     {
-        var nid = $('#current_channel').find('option:selected').attr('data-nid');
-        var url = "{:url('Arctype/ajax_newtpl')}";
-        if (url.indexOf('?') > -1) {
-            url += '&';
-        } else {
-            url += '?';
-        }
-        url += 'type='+type+'&nid='+nid;
+        $.ajax({
+            url: "{:url('Security/ajax_security_ask_open', ['_ajax'=>1])}",
+            type: 'GET',
+            dataType: 'JSON',
+            data: {},
+            success: function(res){
+                var security_ask_open = res.data.security_ask_open;
+                if (0 == security_ask_open) {
+                    showConfirm('需要设置密保问题验证才可以继续', {btn:['去设置', '取消']}, function(){
+                        layer.closeAll();
+                        var iframes = layer.open({
+                            type: 2,
+                            title: '安全验证中心',
+                            fixed: true, //不固定
+                            shadeClose: false,
+                            shade: layer_shade,
+                            offset: 'auto',
+                            // maxmin: true, //开启最大化最小化按钮
+                            area: ['100%', '100%'],
+                            content: "{:url('Security/second_ask_init')}"+"&source=arctype_"+type,
+                            success: function(layero, index){
 
-        if ('lists' == type) {
-            var title = '新建列表模板';
-        } else {
-            var title = '新建文档模板';
-        }
-        //iframe窗
-        layer.open({
-            type: 2,
-            title: title,
-            fixed: true, //不固定
-            shadeClose: false,
-            shade: 0.3,
-            maxmin: true, //开启最大化最小化按钮
-            area: ['90%', '90%'],
-            content: url
+                            }
+                        });
+                        layer.full(iframes);
+                    });
+                    return false;
+                }
+
+                var nid = $('#current_channel').find('option:selected').attr('data-nid');
+                var url = "{:url('Arctype/ajax_newtpl')}";
+                if (url.indexOf('?') > -1) {
+                    url += '&';
+                } else {
+                    url += '?';
+                }
+                url += 'type='+type+'&nid='+nid;
+
+                if ('lists' == type) {
+                    var title = '新建栏目模板';
+                } else {
+                    var title = '新建文档模板';
+                }
+                //iframe窗
+                layer.open({
+                    type: 2,
+                    title: title,
+                    fixed: true, //不固定
+                    shadeClose: false,
+                    shade: layer_shade,
+                    closeBtn: 3,
+                    maxmin: true, //开启最大化最小化按钮
+                    area: ['90%', '90%'],
+                    content: url
+                });
+            },
+            error: function(e){
+                showErrorMsg(e.responseText);
+                return false;
+            }
         });
+    }
+
+    function change_typearcrank(obj) {
+        var value = $(obj).val();
+        if (value > 0 ){
+            $("#dl_page_limit").show();
+        }else{
+            $("#dl_page_limit").hide();
+        }
     }
 </script>
 

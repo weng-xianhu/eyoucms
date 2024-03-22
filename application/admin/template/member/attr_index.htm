@@ -1,27 +1,46 @@
 {include file="public/layout" /}
-<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-    {include file="member/bar" /}
+{include file="member/left" /}
+<div class="page min-hg-c-10" style="min-width:auto;margin-left:100px;">
+    <!-- <div class="fixed-bar">
+        <div class="item-title">
+            <ul class="tab-base nc-row">
+                {eq name="'Member@attr_index'|is_check_access" value="1"}
+                <li>
+                    <a {if condition="in_array($Request.action, ['attr_index','attr_add','attr_edit'])"}class="current"{/if} href='{:url("Member/attr_index")}'>
+                        <span>会员属性</span>
+                    </a>
+                </li>
+                {/eq}
+            </ul>
+        </div>
+    </div> -->
     <div class="flexigrid">
-		<div class="mDiv">
-		    <div class="ftitle">
-		         {include file="member/users_bar" /}
-		    </div>
-		</div>
-        
         <!-- 操作说明 -->
-        <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+        <div id="explanation" class="explanation">
             <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
                 <h4 title="提示相关设置操作时应注意的要点">提示</h4>
                 <span title="收起提示" id="explanationZoom" style="display: block;"></span>
             </div>
             <ul>
-                <li>必填：只针对前台的会员属性有效。</li>
+                <li>会员字段有效扩展注册流程时收集更多会员信息，按需求新建字段。</li>
             </ul>
         </div>
-        <br/>
+		<div class="mDiv">
+		    <div class="ftitle">
+		        {eq name="'Member@attr_add'|is_check_access" value="1"}
+		            <div class="fbutton">
+		                <a href="javascript:void(0);" data-href="{:url('Member/attr_add')}"  onclick="openFullframe(this, '新增字段', '900px', '600px');">
+		                    <div class="add" title="新增字段">
+		                        <span><i class="layui-icon layui-icon-addition"></i>新增字段</span>
+		                    </div>
+		                </a>
+		            </div>
+		        {/eq}
+		    </div>
+		</div>
         <div class="hDiv">
             <div class="hDivBox">
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
@@ -32,13 +51,16 @@
                             <div class="tc">ID</div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="text-l10">标题</div>
+                            <div class="text-l10">字段标题</div>
                         </th>
                         <th abbr="article_time" axis="col4" class="w150">
-                            <div class="tc">类型</div>
+                            <div class="tc">字段类型</div>
                         </th>
                         <th abbr="ac_id" axis="col4" class="w80">
-                            <div class="tc">注册表单</div>
+                            <div class="tc">字段必填</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w80">
+                            <div class="tc">字段状态</div>
                         </th>
                         <th axis="col1" class="w120">
                             <div class="tc">操作</div>
@@ -57,9 +79,9 @@
                     <tbody>
                     {empty name="info"}
                         <tr>
-                            <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
-                            </td>
+                            <div class="no_row">
+                                <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                            </div>
                         </tr>
                     {else/}
                         {foreach name="info" item="vo" key="k" }
@@ -71,7 +93,7 @@
                             <td style="width: 100%">
                                 <div class="text-l10">
                                     {eq name="'Member@attr_edit'|is_check_access" value="1"}
-                                        <a href="javascript:void(0);" data-href="{:url('Member/attr_edit',array('id'=>$vo['para_id']))}" onclick="openFullframe(this, '会员中心 - 编辑属性');">{$vo.title}</a>
+                                        <a href="javascript:void(0);" data-href="{:url('Member/attr_edit',array('id'=>$vo['para_id']))}" onclick="openFullframe(this, '编辑字段', '900px', '560px');">{$vo.title}</a>
                                     {else /}
                                         {$vo.title}
                                     {/eq}
@@ -84,17 +106,26 @@
                             </td>
                             <td>
                                 <div class="w80 tc">
-                                    {if condition='$vo.is_reg == 1'}
-                                        <span class="yes" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('users_parameter','para_id','{$vo.para_id}','is_reg',this);"{/eq}><i class="fa fa-check-circle"></i>是</span>
+                                    {if condition='$vo.is_required == 1'}
+                                        <span class="yes" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('users_parameter','para_id','{$vo.para_id}','is_required',this);"{/eq}><i class="fa fa-check-circle"></i>是</span>
                                     {else /}
-                                        <span class="no" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('users_parameter','para_id','{$vo.para_id}','is_reg',this);"{/eq}><i class="fa fa-ban"></i>否</span>
+                                        <span class="no" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('users_parameter','para_id','{$vo.para_id}','is_required',this);"{/eq}><i class="fa fa-ban"></i>否</span>
                                     {/if}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="w80 tc">
+									{if condition='$vo.is_hidden == 0'}
+									<span class="yes" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"} onClick="changeTableVal('users_parameter','para_id','{$vo.para_id}','is_hidden',this);" {/eq} data-yestext='<i class="fa fa-check-circle"></i>启用' data-notext='<i class="fa fa-ban"></i>禁用' data-value='1'><i class="fa fa-check-circle"></i>启用</span>
+									{else /}
+									<span class="no" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"} onClick="changeTableVal('users_parameter','para_id','{$vo.para_id}','is_hidden',this);" {/eq} data-yestext='<i class="fa fa-check-circle"></i>启用' data-notext='<i class="fa fa-ban"></i>禁用' data-value='0'><i class="fa fa-ban"></i>禁用</span>
+									{/if}
                                 </div>
                             </td>
                             <td class="operation">
                                 <div class="w120 tc">
                                     {eq name="'Member@attr_edit'|is_check_access" value="1"}
-                                    <a href="javascript:void(0);" data-href="{:url('Member/attr_edit',array('id'=>$vo['para_id']))}" class="btn blue" onclick="openFullframe(this, '会员中心 - 编辑属性');">编辑</a>
+                                    <a href="javascript:void(0);" data-href="{:url('Member/attr_edit',array('id'=>$vo['para_id']))}" class="btn blue" onclick="openFullframe(this, '编辑字段', '900px', '600px');">编辑</a>
                                     {/eq}
                                     {eq name="$vo.is_system" value="0"}
                                         {eq name="'Member@attr_del'|is_check_access" value="1"}
@@ -126,19 +157,6 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
-        <div class="tDiv">
-            <div class="tDiv2">
-                {eq name="'Member@attr_add'|is_check_access" value="1"}
-                <div class="fbutton" >
-                    <a href="javascript:void(0);" data-href="{:url('Member/attr_add')}" class="layui-btn layui-btn-primary" onclick="openFullframe(this, '会员中心 - 新增属性');">
-                            <span class="red">新增属性</span>
-                    </a>
-                </div>
-                {/eq}
-				
-            </div>
-            <div style="clear:both"></div>
-        </div>
     </div>
 </div>
 <script>
@@ -156,9 +174,17 @@
 
     // 删除
     function usersdel(obj){
-        layer.confirm('<font color="#ff0000">该属性的数据将一起清空</font>，确认彻底删除？', {
-            title: false, // $(obj).data('title'),
-            btn: ['确定','取消'] //按钮
+        layer.confirm('确认彻底删除？该属性的数据将一起清空。', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定','取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function(){
             layer_loading('正在处理');
             // 确定

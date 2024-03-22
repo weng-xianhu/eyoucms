@@ -20,8 +20,6 @@ use think\Db;
  */
 class TagCollect extends Base
 {
-    public $users_id = 0;
-
     //初始化
     protected function _initialize()
     {
@@ -32,14 +30,14 @@ class TagCollect extends Base
      * 获取文档收藏信息
      * @author wengxianhu by 2018-4-20
      */
-    public function getCollect($aid = '',$type = 'default',$users = [])
+    public function getCollect($aid = '', $type = 'default', $users = [])
     {
         if (empty($aid)) {
             return false;
         }
         
         $is_collect = 0;
-        if (0 < $users['users_id']) {
+        if (!empty($users['users_id'])) {
             $result = Db::name("users_collection")
                 ->where(['aid' => $aid, 'users_id' => $users['users_id']])
                 ->find();

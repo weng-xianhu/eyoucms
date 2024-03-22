@@ -1,0 +1,516 @@
+{eq name="'Index@theme_conf'|is_check_access" value="1"}
+<style type="text/css">
+    #theme_main_color,#theme_assist_color {
+        /*margin:0;*/
+        /*padding:0;*/
+        border:solid 1px #ccc;
+        width:70px;
+        height:20px;
+        border-right:40px solid green;
+        /*line-height:20px;*/
+    } 
+</style>
+<form class="form-horizontal" id="postForm1" action="{:url('Index/theme_conf')}" method="post">
+    <div class="hDiv">
+        <div class="hDivBox">
+            <table cellspacing="0" cellpadding="0" style="width: 100%">
+                <thead>
+                    <tr>
+                        <th class="sign w10" axis="col0">
+                            <div class="tc"></div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w10">
+                            <div class="tc">主题设置</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class=""></div>
+                        </th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div class="ncap-form-default">
+        <!-- <dl class="row">
+            <dt class="tit">
+                <label for="theme_id">主题风格</label>
+            </dt>
+            <dd class="opt">
+                <div class="theme_style" id="theme_login_style">
+                    <ul>
+                        {volist name="$list" id="vo"}
+                        <li>
+                            <img src="{$vo.theme_pic|get_default_pic=###}" {if condition="$vo['theme_id'] == $global['web_theme_styleid']"} class="active" {/if}>
+                            <span><input name="theme_id" value="{$vo.theme_id}" type="radio" {if condition="$vo['theme_id'] == $global['web_theme_styleid']"} checked="checked" {/if}>{$vo.theme_title}</span>
+                        </li>
+                        {/volist}
+                    </ul>
+                </div>
+            </dd>
+        </dl> -->
+        {eq name='$main_lang' value='$admin_lang'}
+        <dl class="row"><dt class="tit"><label><b>登录页设置</b></label></dt></dl>
+        <dl class="row">
+            <dt class="tit">
+                <label for="login_tplname">模板选择</label>
+            </dt>
+            <dd class="opt">
+                <select name="login_tplname" id="login_tplname">
+                    <option value="">系统默认</option>
+                    {volist name="$login_tplist" id="vo"}
+                    <option value="{$vo}" {if condition="$global['web_theme_login_tplname'] == $vo"} selected="true" {/if}>{$vo}</option>
+                    {/volist}
+                </select>
+                <p class="notic">模板格式：login_自定义.htm<br/>模板目录：__ROOT_DIR__/application/admin/template/theme/</p>
+                &nbsp;<a href="javascript:void(0);" onclick="login_tplname_add();" class="ncap-btn ncap-btn-green">新建模板</a>
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="tit">
+                <label for="login_logo">登录logo</label>
+            </dt>
+            <dd class="opt">
+                <div class="input-file-show">
+                    <span class="show">
+                        <a id="img_a_login_logo" class="nyroModal" rel="gal" href="{$global.web_loginlogo|default='javascript:void(0);'}?t={php}echo getTime();{/php}" target="_blank">
+                            <i id="img_i_login_logo" class="fa fa-picture-o" {notempty name="$global.web_loginlogo"}onmouseover="layer_tips=layer.tips('<img src={$global.web_loginlogo|default=''} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                        </a>
+                    </span>
+                    <span class="type-file-box">
+                        <input type="text" id="login_logo" name="login_logo" value="{$global.web_loginlogo|default=''}" class="type-file-text" autocomplete="off">
+                        <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                        <input class="type-file-file" onClick="GetUploadify(1,'','loginlogo','login_logo_call_back','{:url('Uploadify/upload_full')}');" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                    </span>
+                </div>
+                <span class="err"></span>
+                <p class="notic"></p>
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="tit">
+                <label for="login_bgimg_model">背景图</label>
+            </dt>
+            <dd class="opt">
+                <input type="hidden" name="login_bgimg_model" value="{$global['web_loginbgimg_model']|default='1'}" id="login_bgimg_model"/>
+                <div class="theme_bg div_login_bgimg_model">
+                    <ul>
+                        <li id="login_bgimg_model_1" {if condition="$global['web_loginbgimg_model'] == 1"} class="active" {/if} data-model="1"><img src="__SKIN__/loginbg/login-bg-1.png"></li>
+                        <li id="login_bgimg_model_2" {if condition="$global['web_loginbgimg_model'] == 2"} class="active" {/if} data-model="2"><img src="__SKIN__/loginbg/login-bg-2.png"></li>
+                        {if condition="$php_servicemeal >= 2"}
+                        <li id="login_bgimg_model_3" {if condition="$global['web_loginbgimg_model'] == 3"} class="active" {/if} data-model="3"><img src="__SKIN__/loginbg/login-bg-3.png"></li>
+                        {/if}
+                        <li id="login_bgimg_model_custom" {if condition="$global['web_loginbgimg_model'] == 'custom'"} class="active" {/if} data-model="custom"><img src="__SKIN__/images/login-bg-empty.png" title="自定义背景"></li>
+                    </ul>
+                </div>
+            </dd>
+        </dl>
+        <dl class="row" id="div_custom_login_bgimg" {if condition="$global['web_loginbgimg_model'] != 'custom'"} style="display: none;" {/if}>
+            <dt class="tit">
+                <label for="login_bgimg">&nbsp;</label>
+            </dt>
+            <dd class="opt">
+                <div class="input-file-show">
+                    <span class="show">
+                        <a id="img_a_login_bgimg" class="nyroModal" rel="gal" href="{$global.web_loginbgimg|default='javascript:void(0);'}" target="_blank">
+                            <i id="img_i_login_bgimg" class="fa fa-picture-o" {notempty name="$global.web_loginbgimg"}onmouseover="layer_tips=layer.tips('<img src={$global.web_loginbgimg|default=''} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                        </a>
+                    </span>
+                    <span class="type-file-box">
+                        <input type="text" id="login_bgimg" name="login_bgimg" value="{$global.web_loginbgimg|default=''}" class="type-file-text" autocomplete="off">
+                        <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                        <input class="type-file-file" onClick="GetUploadify(1,'','loginbgimg','login_bgimg_call_back','{:url('Uploadify/upload_full')}');" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                    </span>
+                </div>
+                <span class="err"></span>
+                <p class="notic"></p>
+            </dd>
+        </dl>
+        {/eq}
+        <dl class="row"><dt class="tit"><label><b>主题元素设置</b></label></dt></dl>
+        <dl class="row">
+            <dt class="tit">
+                <label for="theme_color_model">主题色</label>
+            </dt>
+            <dd class="opt">
+                <div class="theme-color div_theme_color_model">
+                    <input type="hidden" name="theme_color_model" value="{$global['web_theme_color_model']|default='1'}" id="theme_color_model"/>
+                    <ul>
+                        <li id="theme_color_model_1" {if condition="empty($global['web_theme_color_model']) || $global['web_theme_color_model'] == 1"} class="active" {/if} data-model="1">
+                            <span class="main_color" style="background-color: #3398cc;"></span>
+                            <span class="assist_color" style="background-color: #2189be;"></span>
+                        </li>
+                        <li id="theme_color_model_2" {if condition="$global['web_theme_color_model'] == 2"} class="active" {/if} data-model="2">
+                            <span class="main_color" style="background-color: #1e9fff;"></span>
+                            <span class="assist_color" style="background-color: #0069b7;"></span>
+                        </li>
+                        <li id="theme_color_model_3" {if condition="$global['web_theme_color_model'] == 3"} class="active" {/if} data-model="3">
+                            <span class="main_color" style="background-color: #1aa094;"></span>
+                            <span class="assist_color" style="background-color: #197971;"></span>
+                        </li>
+                        <li id="theme_color_model_4" {if condition="$global['web_theme_color_model'] == 4"} class="active" {/if} data-model="4">
+                            <span class="main_color" style="background-color: #e82121;"></span>
+                            <span class="assist_color" style="background-color: #ae1919;"></span>
+                        </li>
+                        <li id="theme_color_model_5" {if condition="$global['web_theme_color_model'] == 5"} class="active" {/if} data-model="5">
+                            <span class="main_color" style="background-color:#197971;"></span>
+                            <span class="assist_color" style="background-color: #fa921b;"></span>
+                        </li>
+                        <li id="theme_color_model_6" {if condition="$global['web_theme_color_model'] == 6"} class="active" {/if} data-model="6">
+                            <span class="main_color" style="background-color:#963885;"></span>
+                            <span class="assist_color" style="background-color: #772c6a;"></span>
+                        </li>
+                        <li id="theme_color_model_custom" {if condition="$global['web_theme_color_model'] == 'custom'"} class="active" {/if} data-model="custom">
+                            <span style="background-color:#ffffff;">
+                                <img src="__STATIC__/admin/images/empty-color.png?v={$version|default='v1.6.2'}">
+                            </span>
+                            <span style="background-color:#ffffff;">
+                                <img src="__STATIC__/admin/images/empty-color.png?v={$version|default='v1.6.2'}">
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </dd>
+        </dl>
+        <div id="div_custom_theme_color" class="{if condition="$global['web_theme_color_model'] != 'custom'"} none {/if}">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="theme_main_color">自定义主色</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="theme_main_color" value="{$global.web_theme_color|default='#3398cc'}" id="theme_main_color" style="border-color: {$global.web_theme_color|default='#3398cc'};" />
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="theme_assist_color">自定义辅色</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="theme_assist_color" value="{$global.web_assist_color|default='#2189be'}" id="theme_assist_color" style="border-color: {$global.web_assist_color|default='#2189be'};" />
+                </dd>
+            </dl>
+        </div>
+        {eq name='$main_lang' value='$admin_lang'}
+        <dl class="row">
+            <dt class="tit">
+                <label for="admin_logo">后台logo</label>
+            </dt>
+            <dd class="opt">
+                <div class="input-file-show">
+                    <span class="show">
+                        <a id="img_a_admin_logo" class="nyroModal" rel="gal" href="{$global.web_adminlogo|default='javascript:void(0);'}?t={php}echo getTime();{/php}" target="_blank">
+                            <i id="img_i_admin_logo" class="fa fa-picture-o" {notempty name="$global.web_adminlogo"}onmouseover="layer_tips=layer.tips('<img src={$global.web_adminlogo|default=''} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                        </a>
+                    </span>
+                    <span class="type-file-box">
+                        <input type="text" id="admin_logo" name="admin_logo" value="{$global.web_adminlogo|default=''}" class="type-file-text" autocomplete="off">
+                        <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                        <input class="type-file-file" onClick="GetUploadify(1,'','adminlogo','admin_logo_call_back','{:url('Uploadify/upload_full')}');" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                    </span>
+                </div>
+                <span class="err"></span>
+                <p class="notic"></p>
+            </dd>
+        </dl>
+        {/eq}
+        <dl class="row">
+            <div class="bot">
+                <!-- <input type="hidden" name="theme_title" value=""> -->
+                <!-- <input type="hidden" name="is_select_theme" value="0"> -->
+                <a href="JavaScript:void(0);" onclick="checkSubmit1();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </dl>
+    </div>
+</form>
+
+<script>
+
+    $(document).ready(function(){
+
+        // 主题风格切换
+        /*$('#theme_login_style').find('li').click(function(){
+            $('#theme_login_style').find('li>img').removeClass('active');
+            $(this).find('img').addClass('active');
+            $(this).find('input[type=radio]').attr('checked', true);
+            var theme_id = $(this).find('input[type=radio]').val();
+            $.ajax({
+                type: "GET",
+                url: "{:url('Index/ajax_get_theme_info', ['_ajax'=>1])}",
+                data: {theme_id:theme_id},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if (res.code == 1) {
+                        $('input[name=is_select_theme]').val(1);
+                        var info = res.data.info;
+                        $('input[name=theme_title]').val(info.theme_title);
+                        login_logo_call_back(info.login_logo);
+                        $('#login_bgimg_model_'+info.login_bgimg_model).click();
+                        login_bgimg_call_back(info.login_bgimg);
+                        $('input[name=login_tplname]').val('');
+                        $('#theme_color_model_'+info.theme_color_model).click();
+                        if (info.theme_color_model == 'custom') {
+                            $('input[name=theme_main_color]').val(info.theme_main_color).css('border-color',info.theme_main_color);
+                            $('input[name=theme_assist_color]').val(info.theme_assist_color).css('border-color',info.theme_assist_color);
+                        }
+                        admin_logo_call_back(info.admin_logo);
+                    } else {
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        });*/
+
+        // 登录背景图切换
+        $('.div_login_bgimg_model').find('li').click(function(){
+            $('.div_login_bgimg_model').find('li').removeClass('active');
+            $(this).addClass('active');
+            var data_model = $(this).attr('data-model');
+            $('#login_bgimg_model').val(data_model);
+            if ('custom' == data_model) {
+                $('#div_custom_login_bgimg').show();
+            } else {
+                $('#div_custom_login_bgimg').hide();
+                // 登录背景图
+                var loginbgimg = $(this).find('img').attr('src');
+                $('#login_bgimg').val(loginbgimg);
+            }
+        });
+
+        // 主题色切换
+        $('.div_theme_color_model').find('li').click(function(){
+            $('.div_theme_color_model').find('li').removeClass('active');
+            $(this).addClass('active');
+            var data_model = $(this).attr('data-model');
+            $('#theme_color_model').val(data_model);
+            if ('custom' == data_model) {
+                $('#div_custom_theme_color').show();
+            } else {
+                $('#div_custom_theme_color').hide();
+                // 主题色
+                var main_color = $(this).find('span.main_color').css('background-color');
+                main_color = main_color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+                main_color= "#" + hex(main_color[1]) + hex(main_color[2]) + hex(main_color[3]);
+                $('#theme_main_color').val(main_color);
+                // 辅助色
+                var assist_color = $(this).find('span.assist_color').css('background-color');
+                assist_color = assist_color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+                assist_color= "#" + hex(assist_color[1]) + hex(assist_color[2]) + hex(assist_color[3]);
+                $('#theme_assist_color').val(assist_color);
+            }
+        });
+
+        // 10进制转为16进制
+        function hex(x) {
+            return ("0" + parseInt(x).toString(16)).slice(-2);
+        }
+
+        // 自定义 - 主题颜色选择
+        $('#theme_main_color').colpick({
+            flat:false,
+            layout:'rgbhex',
+            submit:0,
+            colorScheme:'light',
+            color:$('#theme_main_color').val(),
+            onChange:function(hsb,hex,rgb,el,bySetColor) {
+                $(el).css('border-color','#'+hex);
+                // Fill the text box just if the color was set using the picker, and not the colpickSetColor function.
+                if(!bySetColor) $(el).val('#'+hex);
+            }
+        }).keyup(function(){
+            $(this).colpickSetColor('#'+this.value);
+        });
+
+        // 自定义 - 辅助颜色选择
+        $('#theme_assist_color').colpick({
+            flat:false,
+            layout:'rgbhex',
+            submit:0,
+            colorScheme:'light',
+            color:$('#theme_assist_color').val(),
+            onChange:function(hsb,hex,rgb,el,bySetColor) {
+                $(el).css('border-color','#'+hex);
+                // Fill the text box just if the color was set using the picker, and not the colpickSetColor function.
+                if(!bySetColor) $(el).val('#'+hex);
+            }
+        }).keyup(function(){
+            $(this).colpickSetColor('#'+this.value);
+        });
+    });
+
+    function checkSubmit1(){
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'POST',
+            url : "{:url('Index/theme_conf', ['_ajax'=>1])}",
+            data : $('#postForm1').serialize(),
+            dataType : 'json',
+            success : function(res){
+                if(res.code == 1){
+                    if (res.data.is_change == 1) {
+                        /*layer.confirm('已保存，确认要新建主题风格？', {
+                            shade: layer_shade,
+                            area: ['480px', '190px'],
+                            move: false,
+                            title: '提示',
+                            btnAlign:'r',
+                            closeBtn: 3,
+                            btn: ['新建主题','关闭'], //按钮
+                            success: function () {
+                                $(".layui-layer-content").css('text-align', 'left');
+                                $(".layui-layer-btn").find('a.layui-layer-btn1').removeClass('layui-layer-btn1').addClass('layui-layer-btn2');
+                                $(".layui-layer-btn").find('a.layui-layer-btn0').removeClass('layui-layer-btn0').addClass('layui-layer-btn1');
+                                $(".layui-layer-btn").find('a.layui-layer-btn2').removeClass('layui-layer-btn2').addClass('layui-layer-btn0');
+                            },
+                            cancel: function(index, layero){
+                                layer.closeAll();
+                                window.location.reload();
+                                return false;
+                            }
+                        }, function () {
+                            layer.closeAll();
+                            layer.prompt({
+                                title: '新建主题风格',
+                                id: 'layerid_1645598368',
+                                btn: ['确定','取消'],
+                                shade: layer_shade,
+                                closeBtn: 0,
+                                success: function(layero, index) {
+                                    $("#layerid_1645598368").find('input').attr('placeholder', '请输入主题名称');
+                                    $("#layerid_1645598368").find('input').bind('keydown', function(event) {
+                                        if (event.keyCode == 13) {
+                                            theme_add_login($(this).val());
+                                        }
+                                    });
+                                },
+                                btn2: function(index, layero){
+                                    window.location.reload();
+                                    return false;
+                                }
+                            }, function(value, index) {
+                                theme_add_login(value);
+                            });
+                        }, function (index) {
+                            layer.closeAll();
+                            window.location.reload();
+                        });*/
+                    } else {
+                        layer.closeAll();
+                        layer.alert(res.msg, {
+                            shade: layer_shade,
+                            area: ['480px', '190px'],
+                            move: false,
+                            title: '提示',
+                            btnAlign:'r',
+                            closeBtn: 3,
+                            btn: ['确定','取消'],
+                            success: function () {
+                                $(".layui-layer-content").css('text-align', 'left');
+                            },
+                            cancel: function(index, layero){ 
+                                window.location.reload();
+                                return false; 
+                            },
+                            btn2: function(index, layero){
+                                window.location.reload();
+                            }
+                        },function(){
+                            top.window.location.reload();
+                        });
+                    }
+                }else{
+                    layer.closeAll();
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
+    }
+
+    /*function theme_add_login(theme_title)
+    {
+        $('input[name=theme_title]').val(theme_title);
+        $.ajax({
+            type: "POST",
+            url: "{:url('Index/theme_add_login', ['_ajax'=>1])}",
+            data: $('#postForm1').serialize(),
+            dataType: 'json',
+            success: function (res1) {
+                layer.closeAll();
+                if (res1.code == 1) {
+                    layer.alert(res1.msg, {
+                        shade: layer_shade,
+                        area: ['480px', '190px'],
+                        move: false,
+                        title: '提示',
+                        btnAlign:'r',
+                        closeBtn: 3,
+                        btn: ['关闭','刷新后台'],
+                        success: function () {
+                            $(".layui-layer-content").css('text-align', 'left');
+                        },
+                        cancel: function(index, layero){ 
+                            window.location.reload();
+                            return false; 
+                        },
+                        btn2: function(index, layero){
+                            top.window.location.reload();
+                        }
+                    },function(){
+                        window.location.reload();
+                    });
+                } else {
+                    showErrorAlert(res1.msg);
+                }
+            },
+            error:function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }*/
+
+    function admin_logo_call_back(fileurl_tmp)
+    {
+        $("#admin_logo").val(fileurl_tmp);
+        $("#img_a_admin_logo").attr('href', fileurl_tmp);
+        $("#img_i_admin_logo").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+    }
+
+    function login_logo_call_back(fileurl_tmp)
+    {
+        $("#login_logo").val(fileurl_tmp);
+        $("#img_a_login_logo").attr('href', fileurl_tmp);
+        $("#img_i_login_logo").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+    }
+
+    function login_bgimg_call_back(fileurl_tmp)
+    {
+        $("#login_bgimg").val(fileurl_tmp);
+        $("#img_a_login_bgimg").attr('href', fileurl_tmp);
+        $("#img_i_login_bgimg").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+    }
+
+    function login_tplname_add()
+    {
+        var url = "{:url('Index/ajax_theme_tplfile_add',['type'=>'login'])}";
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: '新建登录页模板',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            maxmin: false, //开启最大化最小化按钮
+            area: ['100%', '100%'],
+            content: url
+        });
+    }
+</script>
+{/eq}

@@ -1,0 +1,461 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="shop/left" /}
+
+<style type="text/css">
+    .comment_add_textarea {width: 90%; height: 30px; min-height: 30px; overflow-y: hidden;}
+    .comment_add_li {width: 40px; height: 40px;}
+</style>
+
+<div class="page min-hg-c-10">
+    <div class="fixed-bar">
+        <div class="item-title">
+    		<a class="back_xin" href="{:url('ShopComment/comment_index')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+    		<div class="subject">
+    			<h3>创建评价</h3>
+    			<h5></h5>
+    		</div>
+        </div>
+    </div>
+    <div class="flexigrid">
+        <form class="form-horizontal" id="post_form">
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">选择商品</dt>
+                    <dd class="opt" id="goods_list">
+                        <a href="JavaScript:void(0);" data-href="{:url('ShopComment/comment_goods_list')}" onclick="openFullframe(this, '选择商品', '80%', '80%');" class="ncap-btn ncap-btn-green">选择商品</a>
+                    </dd>
+                </dl>
+                <dl class="row" id="goods_details" style="display: none;">
+                    <dt class="tit"></dt>
+                    <dd class="opt">
+                        <div class="ey-pro-goods">
+                            <input type="hidden" name="aid" id="goods_id" value="0">
+                            <div class="image"><img id="goods_litpic" width="60" height="60" src=""></div>
+                            <div class="content" id="goods_title">默认商品名</div>
+                        </div>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">评分等级</dt>
+                    <dd class="opt">
+                        <div class="ey-start-ment curpoin">
+                            <input type="hidden" name="total_score" id="total_score" value="5">
+                            <i class="iconfont e-xingxing active" onclick="totalScore(0);"></i>
+                            <i class="iconfont e-xingxing active" onclick="totalScore(1);"></i>
+                            <i class="iconfont e-xingxing active" onclick="totalScore(2);"></i>
+                            <i class="iconfont e-xingxing active" onclick="totalScore(3);"></i>
+                            <i class="iconfont e-xingxing active" onclick="totalScore(4);"></i>
+                        </div>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit"> <label>评价内容</label> </dt>
+                    <dd class="opt">
+                        <div class="ment-comment-table">
+                            <div class="ment-table-wrapper">
+                                <div class="ment-table ment-table-default">
+                                    <div class="ment-table-header">
+                                        <table cellspacing="0" cellpadding="0" border="0" style="width: 947px;">
+                                            <colgroup> <col width="616"> <col width="270"> <col width="60"> </colgroup>
+                                            <thead>
+                                                <tr>
+                                                    <th> <div class="ment-table-cell"><span>评价文字</span> </div> </th>
+                                                    <th> <div class="ment-table-cell"><span>评价图片</span> </div> </th>
+                                                    <th> <div class="ment-table-cell"><span>操作</span> </div> </th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+
+                                    <div class="ment-table-body">
+                                        <table cellspacing="0" cellpadding="0" border="0" style="width: 947px;">
+                                            <colgroup> <col width="616"> <col width="270"> <col width="60"> </colgroup>
+                                            <tbody class="ment-table-tbody" id="comment_add_tr">
+                                                <tr draggable="false" class="ment-table-row" id="comment_add_tr_1">
+                                                    <td class="ment-table-column-jPj8o1">
+                                                        <div class="ment-table-cell">
+                                                            <div class="ment-table-cell-slot">
+                                                                <div class="ment-form-item ment-form-item-required" style="margin-bottom: 0px;">
+                                                                    <div class="ment-form-item-content">
+                                                                        <div class="ment-input-wrapper ment-input-wrapper-default ment-input-type-textarea">
+                                                                            <textarea wrap="soft" autocomplete="off" spellcheck="false" placeholder="请输入评价" rows="2" maxlength="500" class="ment-input comment_add_textarea" name="content[1]" id="comment_add_textarea_1"></textarea>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="ment-table-column-fbhv6T">
+                                                        <div class="ment-table-cell">
+                                                            <div class="ment-table-cell-slot">
+                                                                <div class="show-img swiper-img">
+                                                                    <div class="slide-image">
+                                                                        <ul class="image" id="comment_add_ul_1">
+                                                                            <li class="slide-image-add comment_add_li" id="comment_add_li_1" data-id="1" data-pic-id="1" onClick="recordCommentID(this);" title="最多允许上传6张图片">
+                                                                                <div class="text-icon">
+                                                                                    <span class="iconfont e-jiahao icon"></span><span>添加图片</span>
+                                                                                </div>
+                                                                            </li>
+                                                                        </ul>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="ment-table-column-6E5cHe"> <div class="ment-table-cell"><div><!-- 删除 --></div></div> </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="add-con">
+                                <a class="ment-btn ment-btn-text" href="JavaScript:void(0);" data-id="1" onClick="addCommentHtml(this);"><span>+添加评价</span></a>
+                            </div>
+                        </div>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit"> <label><em>*</em>用户</label> </dt>
+                    <dd class="opt">
+                        <input type="hidden" name="users_id" id="users_id" value="0">
+                        <span id="users_details" style="display: none;"> 已选择<font id="users_select" color="red">0</font>位用户 &nbsp; </span>
+                        <a href="JavaScript:void(0);" data-href="{:url('ShopComment/comment_users_list')}" onclick="openFullframe(this, '添加用户', '80%', '80%');" data-cancel_callback="cancel_callback" class="ncap-btn ncap-btn-green">添加用户</a>
+                        <p class="notic">建议选择的用户数量与评价文字条数对应匹配，每条评价对应一个用户；数量不对应时随机匹配</p>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit"> <label for="eYLaydateTimeLinkage">评价时段</label> </dt>
+                    <dd class="opt">
+                        <input type="text" id="eYLaydateTimeLinkage" name="add_time" placeholder="请选择时间范围" lay-verify='datetime' class="choicetime w220 layui-ldate"/>
+                        <span class="add-on input-group-addon"> <i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit"> <label>审核状态</label> </dt>
+                    <dd class="opt">
+                        <label> <input type="radio" name="is_show" value="1" checked="checked">已审核 </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label> <input type="radio" name="is_show" value="0">未审核 </label>
+                    </dd>
+                </dl>
+            </div>
+            
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <div class="bot">
+                        <a href="JavaScript:void(0);" data-url="{:url('ShopComment/comment_add', ['_ajax'=>1])}" onclick="commentAdd(this);" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                    </div>
+                </dl>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- 日期联动选择js文件 start -->
+<script type="text/javascript" src="__STATIC__/common/js/ey_laydate_time_linkage.js?v={$version}"></script>
+<!-- 日期联动选择js文件 end -->
+
+<script type="text/javascript">
+    try {
+        if (typeof(eval('is_conceal_1649209614')) == "function" && is_conceal_1649209614()){
+            $(".page").css("margin-left", "");
+            $(".page").css("min-width", "");
+        } else {
+            $(".page").css("margin-left", "100px");
+            $(".page").css("min-width", "auto");
+        }
+    } catch(e) {
+
+    }
+
+    // 商品选择页所需方法
+    function goodsSelect(obj) {
+        var goods_id = $(obj).data('id');
+        var goods_title = $(obj).data('title');
+        var goods_litpic = $(obj).data('litpic');
+        if (goods_id && goods_title && goods_litpic) {
+            // 隐藏商品选择按钮
+            // $('#goods_list').hide();
+            // 赋值商品信息
+            $('#goods_id').val(goods_id);
+            $('#goods_title').html(goods_title);
+            $('#goods_litpic').attr('src', goods_litpic);
+            // 显示商品信息
+            $('#goods_details').show();
+            // 关闭所有弹框
+            layer.closeAll();
+        }
+    }
+
+    // 会员选择页所需方法
+    var usersID = [];
+    var usersStr = '';
+    function usersSelect(obj, opt) {
+        // 当前点击会员ID
+        var users_id = $(obj).val();
+        if (users_id) {
+            // 数组去重
+            usersID = $.unique(usersID.sort());
+            // 判断是否已选择当前点击会员
+            var index = $.inArray(users_id, usersID);
+            if ('cut' == opt) {
+                    console.log(34)
+                // 去除已选
+                usersID.splice(index, 1);
+            } else if ('add' == opt) {
+                    console.log(56)
+                // 增加已选
+                usersID.push(users_id);
+            }
+            usersStr = usersID.join(',');
+        }
+    }
+
+    // 清空已选会员 并 关闭所有弹框
+    function closeUsersSelect(clear) {
+        // 清空已选会员
+        if (clear) usersID = [];
+        // 关闭所有弹框
+        layer.closeAll();
+    }
+
+    function cancel_callback()
+    {
+        usersID = [];
+    }
+
+    // 处理已选会员 并 关闭所有弹框
+    function submitUsersSelect() {
+        if (usersID.length >= 1) {
+            // 显示已选会员数量
+            $('#users_details').show().children('#users_select').html(usersID.length);
+            // 赋值会员ID隐藏域
+            $('#users_id').val(usersStr);
+        } else {
+            showErrorAlert('请选择会员');
+            return false;
+        }
+        // 关闭所有弹框
+        closeUsersSelect(false);
+    }
+
+    // 评分设置
+    function totalScore(score) {
+        // 删除所有评分选中效果
+        $('.e-xingxing').removeClass('active');
+        // 追加当选评分
+        $('.e-xingxing').each(function(idx, ele) {
+            $('.e-xingxing').eq(idx).addClass('active');
+            if (idx == score) {
+                $('#total_score').val(score+1);
+                return false;
+            }
+        });
+    }
+
+    // 添加评价的html
+    function addCommentHtml(obj) {
+        // 获取当前评价框最大ID 后 +1
+        var id = parseInt($(obj).attr('data-id')) + parseInt(1);
+        
+        // 追加新的评价框HTML
+        var html = [
+            '<tr draggable="false" class="ment-table-row" id="comment_add_tr_' + id + '">'+
+                '<td class="ment-table-column-jPj8o1">'+
+                    '<div class="ment-table-cell">'+
+                        '<div class="ment-table-cell-slot">'+
+                            '<div class="ment-form-item ment-form-item-required" style="margin-bottom: 0px;">'+
+                                '<div class="ment-form-item-content">'+
+                                    '<div class="ment-input-wrapper ment-input-wrapper-default ment-input-type-textarea">'+
+                                        '<textarea wrap="soft" autocomplete="off" spellcheck="false" placeholder="请输入评价" rows="2" maxlength="500" class="ment-input comment_add_textarea" name="content[' + id + ']"  id="comment_add_textarea_' + id + '"></textarea>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>'+
+                        '</div>'+
+                    '</div>'+
+                '</td>'+
+                '<td class="ment-table-column-fbhv6T">'+
+                    '<div class="ment-table-cell">'+
+                        '<div class="ment-table-cell-slot">'+
+                            '<div class="show-img swiper-img">'+
+                                '<div class="slide-image">'+
+                                    '<ul class="image" id="comment_add_ul_' + id + '">'+
+                                        '<li class="slide-image-add comment_add_li" id="comment_add_li_' + id + '" data-id="' + id + '" data-pic-id="1" onClick="recordCommentID(this);" title="最多允许上传6张图片">'+
+                                            '<div class="text-icon">'+
+                                                '<span class="iconfont e-jiahao icon"></span><span>添加图片</span>'+
+                                            '</div>'+
+                                        '</li>'+
+                                    '</ul>'+
+                                '</div>'+
+                            '</div>'+
+                        '</div>'+
+                    '</div>'+
+                '</td>'+
+                '<td class="ment-table-column-6E5cHe"> <div class="ment-table-cell" onClick="delCommentHtml(' + id + ');"><div>删除</div></div> </td>'+
+            '</tr>'
+        ];
+        $('#comment_add_tr').append(html);
+
+        // 覆盖当前评价框最大ID
+        $(obj).attr('data-id', id);
+    }
+
+    // 删除评价HTML
+    function delCommentHtml(id) {
+        $('#comment_add_tr_' + id).remove();
+    }
+
+    // 记录当前点击要上传图片的评论列表ID
+    var commentID = commentPicID = 1;
+    function recordCommentID(obj) {
+        // 设置点击的评价ID
+        commentID = $(obj).attr('data-id') ? $(obj).attr('data-id') : 1;
+        // 设置点击的评价ID
+        commentPicID = $(obj).attr('data-pic-id') ? $(obj).attr('data-pic-id') : 1;
+        // 调用图片上传
+        GetUploadify(6, '', 'allimg', 'uploadImgProimgCallBack');
+    }
+
+    // 图片上传后续处理图片数据
+    function uploadImgProimgCallBack(paths) {
+        var html = [];
+        for (var i = 0; i < paths.length; i++) {
+            // 已上传6张图片，多余图片已被清理
+            if (commentPicID > 6) {
+                $('#comment_add_li_' + commentID).hide();
+                window.top.layer.alert('评价图片总数超过6张上限，仅显示前6张图片', {icon: 1, title: false, closeBtn: false, yes: function () {
+                    window.top.layer.closeAll();
+                }});
+                return false;
+            }
+
+            // 图片显示框加载
+            html = [
+                '<li class="img-li comment_add_li">'+
+                    '<input type="hidden" name="upload_img[' + commentID + '][]" value="' + paths[i] + '">'+
+                    '<img src="' + paths[i] + '">'+
+                    '<i class="iconfont e-guanbi" data-paths="' + paths[i] + '" data-id="' + commentID + '" onClick="uploadImgClear(this);"></i>'+
+                '</li>'
+            ];
+            $("#comment_add_ul_" + commentID + ' li:last').before(html);
+
+            // 更新图片上传ID
+            commentPicID = parseInt(commentPicID) + parseInt(1);
+            $('#comment_add_li_' + commentID).attr('data-pic-id', commentPicID);
+        }
+
+        // 若上传图片大于等于6
+        if (commentPicID > 6) $('#comment_add_li_' + commentID).hide();
+
+        // 关闭所有弹框
+        window.top.layer.closeAll();
+    }
+
+    // 清理选中的图片
+    function uploadImgClear(obj) {
+        // 设置点击的评价ID
+        commentID = $(obj).attr('data-id') ? $(obj).attr('data-id') : 1;
+
+        // 图片路径
+        var path = $(obj).attr('data-paths');
+
+        // 删除图片显示框
+        $(obj).parent().remove();
+
+        // 恢复可上传图片数量
+        commentPicID = $('#comment_add_li_' + commentID).attr('data-pic-id');
+        commentPicID = parseInt(commentPicID) - parseInt(1);
+        $('#comment_add_li_' + commentID).attr('data-pic-id', commentPicID);
+
+        // 显示对应上传按钮
+        $('#comment_add_li_' + commentID).show();
+
+        // 删除服务器图片文件(目前已停用)
+        $.ajax({
+            type:'POST',
+            url :"{:url('Uploadimgnew/delupload')}",
+            data:{action: "del", filename: path, _ajax: 1},
+            success:function(){}
+        });
+    }
+
+    // 添加评价
+    var addGoodsID = 0;
+    var addGoodsMsg = 0;
+    var addUsersID = 0;
+    var addUsersMsg = 0;
+    function commentAdd(obj) {
+        // 评价参数处理
+        var isPost = commentPost();
+        if (!isPost) return false;
+        // 发送数据
+        $.ajax({
+            type: 'post',
+            url : $(obj).attr('data-url'),
+            data: $('#post_form').serialize(),
+            dataType: 'json',
+            success : function(res) {
+                if (1 === parseInt(res.code)) {
+                    layer.msg(res.msg, {icon: 1, time: 2000}, function() {
+                        window.location.href = res.url;
+                    });
+                } else {
+                    if (res.data.post) {
+                        commentPost();
+                    } else {
+                        // 指向提示未填写处
+                        if (res.data.obj) $(res.data.obj).focus();
+                        // 提示内容
+                        showErrorMsg(res.msg);
+                    }
+                }
+            },
+            error: function(e) {
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    // 评价参数处理
+    function commentPost() {
+        // 商品参数处理
+        addGoodsID = $('#goods_id').val() ? $('#goods_id').val() : 0;
+        if (parseInt(addGoodsID) === 0) {
+            addGoodsMsg = 1;
+            $('#goods_list').children('a').click();
+            return false;
+        }
+        // 会员参数处理
+        addUsersID = $('#users_id').val() ? $('#users_id').val() : 0;
+        if (parseInt(addUsersID) === 0) {
+            addUsersMsg = 1;
+            $('#users_id').siblings('a').click();
+            return false;
+        }
+        // 评分处理
+        var totalScore = $('#total_score').val() ? $('#total_score').val() : 0;
+        if (parseInt(totalScore) === 0) {
+            $('#total_score').val(5);
+            $('.e-xingxing').addClass('active');
+            return false;
+        }
+        // 评价时间处理
+        var eYLaydateTimeLinkage = $('#eYLaydateTimeLinkage').val() ? $('#eYLaydateTimeLinkage').val() : 0;
+        if (parseInt(eYLaydateTimeLinkage) === 0) {
+            layer.msg('请选择评价时段', {icon: 5, time: 2000});
+            return false;
+        }
+
+        return true;
+    }
+</script>
+
+{include file="public/footer" /}

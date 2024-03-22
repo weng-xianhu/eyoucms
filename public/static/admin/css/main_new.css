@@ -2490,8 +2490,8 @@ div.nav2Panel {
 
 .stats-content-l,
 .stats-content-r {
-    width: 46%;
-    margin: 20px 0;
+    width: 46.5%;
+    margin: 10px 0;
     padding: 1.5%;
     background-color: #fff;
     overflow: hidden;

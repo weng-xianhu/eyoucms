@@ -228,14 +228,30 @@
             if (src !== $G("url").value) $G("url").value = src;
             if(src) {
                 /* 设置表单内容 */
+                var that = this;
                 $G("width").value = img.width || '';
                 $G("height").value = img.height || '';
                 $G("border").value = img.getAttribute("border") || '0';
                 $G("vhSpace").value = img.getAttribute("vspace") || '0';
                 $G("title").value = img.title || img.alt || '';
                 setAlign(align);
-                this.setPreview();
-                this.updateLocker();
+                that.setPreview();
+                that.updateLocker();
+
+                // var that = this;
+                // var img_tmp = "<img src='"+src+"'/>";
+                // $(img_tmp).load(function(response, status, xhr) {
+                //     $G("width").value = this.width || '';
+                //     $G("height").value = this.height || '';
+                //     // $G("width").value = img.width || '';
+                //     // $G("height").value = img.height || '';
+                //     $G("border").value = img.getAttribute("border") || '0';
+                //     $G("vhSpace").value = img.getAttribute("vspace") || '0';
+                //     $G("title").value = img.title || img.alt || '';
+                //     setAlign(align);
+                //     that.setPreview();
+                //     that.updateLocker();
+                // });
             }
         },
         getData: function(){

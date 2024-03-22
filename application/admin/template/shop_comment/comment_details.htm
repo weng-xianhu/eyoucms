@@ -1,197 +1,361 @@
 {include file="public/layout" /}
-<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
-<style type="text/css">
-    .system_table{ border:1px solid #dcdcdc; width:100%;}
-    .system_table td{ height:40px; line-height:40px; font-size:12px; color:#454545; border-bottom:1px solid #dcdcdc; border-right:1px solid #dcdcdc; width:35%; padding-left:1%;}
-    .system_table td.gray_bg{ background:#f7f7f7; width:15%;}
-</style>
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
+{include file="shop/left" /}
+
+<style type="text/css">
+    .comment_add_textarea {width: 60%; height: 80px; min-height: 80px; overflow-y: hidden;}
+    .comment_add_li {width: 40px; height: 40px;}
+</style>
 
 <div class="page">
+    <div class="fixed-bar">
+        <div class="item-title">
+			<a class="back_xin" href="{:url('ShopComment/comment_index')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+			<div class="subject">
+				<h3>评价详情</h3>
+				<h5></h5>
+			</div>
+        </div>
+    </div>
+
+    {eq name="$Comment.systemComment" value="1"}
+    <!-- 手动评价详情 -->
     <div class="flexigrid">
-        <form class="form-horizontal" id="postForm">
-            <input type="hidden" name="order_id" value="{$Comment.order_id}">
-            <input type="hidden" name="service_id" value="{$Comment.service_id}">
-            <input type="hidden" name="order_code" value="{$Comment.order_code}">
-            <input type="hidden" name="users_id" value="{$Users.users_id}">
-            <input type="hidden" name="shipping_fee" value="{$Comment.shipping_fee}">
-
-            <!-- 会员信息 -->
-            <div class="hDiv">
-                <div class="hDivBox">
-                    <table cellspacing="0" cellpadding="0" style="width: 100%">
-                        <thead>
-                            <tr>
-                                <th class="sign w10" axis="col0">
-                                    <div class="tc"></div>
-                                </th>
-                                <th abbr="article_title" axis="col3" class="w10">
-                                    <div class="tc">会员信息</div>
-                                </th>
-                                <th abbr="ac_id" axis="col4">
-                                    <div class=""></div>
-                                </th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
+        <form class="form-horizontal" id="post_form">
+            <input type="hidden" name="isPost" value="1">
+            <input type="hidden" name="comment_id" value="{$Comment.comment_id}">
             <div class="ncap-form-default">
-                <table cellpadding="0" cellspacing="0" class="system_table">
-                    <tbody>
-                        <tr>
-                            <td class="gray_bg">会员名：</td>
-                            <td><a href="{:url('Member/users_edit', ['id'=>$Users.users_id])}">{$Users.nickname}</a></td>
-                            <td class="gray_bg">手机号码：</td>
-                            <td>{$Users.mobile}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <!-- END -->
-
-            <!-- 订单信息 -->
-            <div class="hDiv">
-                <div class="hDivBox">
-                    <table cellspacing="0" cellpadding="0" style="width: 100%">
-                        <thead>
-                            <tr>
-                                <th class="sign w10" axis="col0">
-                                    <div class="tc"></div>
-                                </th>
-                                <th abbr="article_title" axis="col3" class="w10">
-                                    <div class="tc">订单信息</div>
-                                </th>
-                                <th abbr="ac_id" axis="col4">
-                                    <div class=""></div>
-                                </th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-            <div class="ncap-form-default">
-                <table cellpadding="0" cellspacing="0" class="system_table">
-                    <tbody>
-                        <tr>
-                            <td class="gray_bg">订单ID：</td>
-                            <td>
-                                <a href="{:url('Shop/order_details', ['order_id'=>$Comment.order_id])}">{$Comment.order_id}</a>
-                            </td>
-                            <td class="gray_bg">订单编号：</td>
-                            <td>
-                                <a href="{:url('Shop/order_details', ['order_id'=>$Comment.order_id])}">{$Comment.order_code}</a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <!-- END -->
-
-            <!-- 商品信息 -->
-            <div class="hDiv">
-                <div class="hDivBox">
-                    <table cellspacing="0" cellpadding="0" style="width: 100%">
-                        <thead>
-                        <tr>
-                            <th class="sign w10" axis="col0">
-                                <div class="tc"></div>
-                            </th>
-                            <th abbr="article_title" axis="col3" class="w10">
-                                <div class="tc">商品信息</div>
-                            </th>
-                            <th abbr="ac_id" axis="col4">
-                                <div class=""></div>
-                            </th>
-                        </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-            <div class="ncap-form-default">
-                <table cellpadding="0" cellspacing="0" class="system_table">
-                    <tbody>
-                        <tr>
-                            <td class="gray_bg">商品ID：</td>
-                            <td>{$Comment.product_id}</td>
-                            <td class="gray_bg">购买数量：</td>
-                            <td>{$Comment.product_num}</td>
-                        </tr>
-                        <tr>
-                            <td class="gray_bg">商品名称：</td>
-                            <td>
-                                <a href="{$Comment.arcurl}" target="_blank">
-                                    <img src="{$Comment.product_img}" style="width: 60px;height: 60px;"> {$Comment.product_name}
+                <dl class="row">
+                    <dt class="tit">商品信息</dt>
+                    <dd class="opt">
+                        <div class="ey-pro-goods" >
+                            <div class="image"><img width="60" height="60" src="{$Comment.product_img}"></div>
+                            <div class="content">{$Comment.product_name}</div>
+                        </div>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">评分等级</dt>
+                    <dd class="opt">
+                        <div class="ey-start-ment curpoin">
+                            <input type="hidden" name="total_score" id="total_score" value="{$Comment.total_score}">
+                            <i class="iconfont e-xingxing" onclick="totalScore(0);"></i>
+                            <i class="iconfont e-xingxing" onclick="totalScore(1);"></i>
+                            <i class="iconfont e-xingxing" onclick="totalScore(2);"></i>
+                            <i class="iconfont e-xingxing" onclick="totalScore(3);"></i>
+                            <i class="iconfont e-xingxing" onclick="totalScore(4);"></i>
+                        </div>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit"> <label for="comment_add_textarea">评价内容</label> </dt>
+                    <dd class="opt">
+                        <textarea wrap="soft" autocomplete="off" spellcheck="false" placeholder="请输入评价" rows="2" maxlength="500" class="ment-input comment_add_textarea" name="content" id="comment_add_textarea">{$Comment.content}</textarea>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">评价图片</dt>
+                    <dd class="opt">
+                        {volist name="$Comment.upload_img" id="vo"}
+                        <div class="fieldext_upload">
+                            <span class="images_upload_item" id="upload_img_{$i}">
+                                <input type="hidden" name="upload_img[]" value="{$vo}">
+                                <img src="{$vo}" style="width: 100px; height: 100px;">
+                                <a class="delete" href="javascript:void(0)" onClick="uploadImgClear(this);"></a>
+                            </span>
+                        </div>
+                        {/volist}
+                        <div class="fieldext_upload">
+                            <span id="upload_img_span">
+                                <a href="javascript:void(0);" id="upload_img_upload" data-id="{$i}" onClick="recordCommentID(this);" class="img-upload" style="width: 100px; height: 100px;" title="最多允许上传6张图片">
+                                    <div class="y-line"></div>
+                                    <div class="x-line"></div>
                                 </a>
-                            </td>
-                            <td class="gray_bg">商品规格：</td>
-                            <td>{$Comment.product_spec}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                            </span>
+                        </div>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">评价时间</dt>
+                    <dd class="opt">
+                        <input type="text" class="input-txt" id="add_time" name="add_time" value="{$Comment.add_time|date='Y-m-d H:i:s',###}" autocomplete="off" lay-key="1">
+                        <span class="add-on input-group-addon"> <i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">用户</dt>
+                    <dd class="opt">
+                        <div class=" flex-row">
+                            <a href="javascript:void(0);" data-href="{:url('Member/users_edit', array('id' => $Comment['users_id']))}" onclick="openFullframe(this, '用户资料', '100%', '100%');">
+                                <img width="35" height="35" style=" border-radius: 100%;" src="{$Comment.head_pic}"> {$Comment.nickname}
+                            </a>
+                        </div>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit"> <label>审核状态</label> </dt>
+                    <dd class="opt">
+                        <label> <input type="radio" name="is_show" value="1" {eq name="$Comment.is_show" value="1"}checked="checked"{/eq}>已审核 </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label> <input type="radio" name="is_show" value="0" {eq name="$Comment.is_show" value="0"}checked="checked"{/eq}>未审核 </label>
+                    </dd>
+                </dl>
             </div>
-            <!-- END -->
 
-            <!-- 服务详情 -->
-            <div class="hDiv">
-                <div class="hDivBox">
-                    <table cellspacing="0" cellpadding="0" style="width: 100%">
-                        <thead>
-                            <tr>
-                                <th class="sign w10" axis="col0">
-                                    <div class="tc"></div>
-                                </th>
-                                <th abbr="article_title" axis="col3" class="w10">
-                                    <div class="tc">评价详情</div>
-                                </th>
-                                <th abbr="ac_id" axis="col4">
-                                    <div class=""></div>
-                                </th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
             <div class="ncap-form-default">
-                <table cellpadding="0" cellspacing="0" class="system_table">
-                    <tbody>
-                        <tr>
-                            <td class="gray_bg">评价评分：</td>
-                            <td>{$Comment.order_total_score} &nbsp; &nbsp; &nbsp; <i class="z_comment-star z_star{$Comment.total_score}"></i></td>
-                            <td class="gray_bg">评价时间：</td>
-                            <td>{$Comment.add_time|MyDate='Y-m-d H:i:s',###}</td>
-                        </tr>
-                        <tr>
-                            <td class="gray_bg">图片信息：</td>
-                            <td>
-                                {volist name="$Comment.upload_img" id="vo"}
-                                    {notempty name="$vo"}<a href="{$vo}" target="_blank"><img src="{$vo}" width="60" height="60"></a>{/notempty}
-                                {/volist}
-                            </td>
-                            <td class="gray_bg">问题描述：</td>
-                            <td><p style="line-height: 22px;">{$Comment.content}</p></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <dl class="row">
+                    <div class="bot">
+                        <a href="JavaScript:void(0);" data-url="{:url('ShopComment/comment_edit', ['_ajax'=>1])}" onclick="commentEdit(this, true);" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                    </div>
+                </dl>
             </div>
-            <!-- END -->
         </form>
     </div>
+    <script type="text/javascript">
+        layui.use('laydate', function() {
+            var laydate = layui.laydate;
+            laydate.render({elem: '#add_time',type: 'datetime'});
+        });
+
+        // 评分设置
+        function totalScore(score) {
+            // 删除所有评分选中效果
+            $('.e-xingxing').removeClass('active');
+            // 追加当选评分
+            $('.e-xingxing').each(function(idx, ele) {
+                $('.e-xingxing').eq(idx).addClass('active');
+                if (idx == score) {
+                    $('#total_score').val(score+1);
+                    return false;
+                }
+            });
+        }
+    </script>
+    {/eq}
+
+    {eq name="$Comment.systemComment" value="0"}
+    <!-- 客户评价详情 -->
+    <div class="flexigrid">
+        <form class="form-horizontal" id="post_form">
+            <input type="hidden" name="isPost" value="0">
+            <input type="hidden" name="comment_id" value="{$Comment.comment_id}">
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">关联订单</dt>
+                    <dd class="opt">
+                        <a href="javascript:void(0);" data-href="{:url('Shop/order_details', ['order_id'=>$Comment['order_id']])}" onclick="openFullframe(this, '订单详情', '100%', '100%');">{$Comment.order_code}</a>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">商品信息</dt>
+                    <dd class="opt">
+                        <div class="ey-pro-goods" >
+                            <div class="image"><img width="60" height="60" src="{$Comment.product_img}"></div>
+                            <div class="content">{$Comment.product_name}</div>
+                        </div>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">评分等级</dt>
+                    <dd class="opt">
+                        <div class="ey-start-ment">
+                            <i class="iconfont e-xingxing"></i>
+                            <i class="iconfont e-xingxing"></i>
+                            <i class="iconfont e-xingxing"></i>
+                            <i class="iconfont e-xingxing"></i>
+                            <i class="iconfont e-xingxing"></i>
+                        </div>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit"> <label for="comment_add_textarea">评价内容</label> </dt>
+                    <dd class="opt">
+                        <textarea wrap="soft" autocomplete="off" spellcheck="false" placeholder="请输入评价" rows="2" maxlength="500" class="ment-input comment_add_textarea" name="content" id="comment_add_textarea">{$Comment.content}</textarea>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">评价图片</dt>
+                    <dd class="opt">
+                        {volist name="$Comment.upload_img" id="vo"}
+                        <div class="fieldext_upload">
+                            <span class="images_upload_item" id="upload_img_{$i}">
+                                <input type="hidden" name="upload_img[]" value="{$vo}">
+                                <img src="{$vo}" style="width: 100px; height: 100px;">
+                                <a class="delete" href="javascript:void(0)" onClick="uploadImgClear(this);"></a>
+                            </span>
+                        </div>
+                        {/volist}
+                        <div class="fieldext_upload">
+                            <span id="upload_img_span">
+                                <a href="javascript:void(0);" id="upload_img_upload" data-id="{$i}" onClick="recordCommentID(this);" class="img-upload" style="width: 100px; height: 100px;" title="最多允许上传6张图片">
+                                    <div class="y-line"></div>
+                                    <div class="x-line"></div>
+                                </a>
+                            </span>
+                        </div>
+                    </dd>
+                </dl>
+                <dl class="row"> <dt class="tit">评价时间</dt> <dd class="opt">{$Comment.add_time|date='Y-m-d H:i:s',###}</dd> </dl>
+                <dl class="row">
+                    <dt class="tit">用户</dt>
+                    <dd class="opt">
+                        <div class=" flex-row">
+                            <a href="javascript:void(0);" data-href="{:url('Member/users_edit', array('id' => $Comment['users_id']))}" onclick="openFullframe(this, '用户资料', '100%', '100%');">
+                                <img width="35" height="35" style=" border-radius: 100%;" src="{$Comment.head_pic}"> {$Comment.nickname}
+                            </a>
+                        </div>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit"> <label>审核状态</label> </dt>
+                    <dd class="opt">
+                        <label> <input type="radio" name="is_show" value="1" {eq name="$Comment.is_show" value="1"}checked="checked"{/eq}>已审核 </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label> <input type="radio" name="is_show" value="0" {eq name="$Comment.is_show" value="0"}checked="checked"{/eq}>未审核 </label>
+                    </dd>
+                </dl>
+            </div>
+
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <div class="bot">
+                        <a href="JavaScript:void(0);" data-url="{:url('ShopComment/comment_edit', ['_ajax'=>1])}" onclick="commentEdit(this, false);" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                    </div>
+                </dl>
+            </div>
+        </form>
+    </div>
+    {/eq}
 </div>
 
 <script type="text/javascript">
-    $(document).ready(function(){
-        // 表格行点击选中切换
-        $('#flexigrid > table>tbody >tr').click(function(){
-            $(this).toggleClass('trSelected');
-        });
+    try {
+        if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
+            $(".page").css("margin-left", "");
+            $(".page").css("min-width", "");
+        }else{
+            $(".page").css("margin-left", "100px");
+            $(".page").css("min-width", "auto");
+        }
+    } catch(e) {
 
-        // 点击刷新数据
-        $('.fa-refresh').click(function(){
-            location.href = location.href;
+    }
+
+    $(function () {
+        var score = '{$Comment.total_score}';
+        $('.e-xingxing').each(function(idx, ele) {
+            score = parseInt(score) - 1;
+            $(ele).addClass('active');
+            if (parseInt(score) === 0) {
+                return false;
+            }
         });
     });
-</script>
 
+    // 添加评价
+    function commentEdit(obj, isPost) {
+        // 评价参数处理
+        isPost = isPost ? commentPost() : 1;
+        if (!isPost) return false;
+        // 发送数据
+        $.ajax({
+            type: 'post',
+            url : $(obj).attr('data-url'),
+            data: $('#post_form').serialize(),
+            dataType: 'json',
+            success : function(res) {
+                if (1 === parseInt(res.code)) {
+                    layer.msg(res.msg, {icon: 1, time: 2000}, function() {
+                        window.location.href = res.url;
+                    });
+                } else {
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e) {
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    // 评价参数处理
+    function commentPost() {
+        // 评分处理
+        var totalScore = $('#total_score').val() ? $('#total_score').val() : 0;
+        if (parseInt(totalScore) === 0) {
+            $('#total_score').val(5);
+            $('.e-xingxing').addClass('active');
+        }
+        // 评价时间处理
+        var add_time = $('#add_time').val() ? $('#add_time').val() : 0;
+        if (parseInt(add_time) === 0) {
+            layer.msg('请选择评价时间', {icon: 5, time: 2000});
+            return false;
+        }
+        return true;
+    }
+
+    // 清理选中的图片
+    function uploadImgClear(obj) {
+        // 删除图片显示框
+        $(obj).parent().remove();
+
+        // 恢复可上传图片数量
+        commentPicID = $('#upload_img_upload').attr('data-id');
+        commentPicID = parseInt(commentPicID) - parseInt(1);
+        $('#upload_img_upload').attr('data-id', commentPicID);
+
+        // 显示对应上传按钮
+        $('#upload_img_span').show();
+    }
+
+    // 记录当前点击要上传图片的评论列表ID
+    var commentPicID = 1;
+    function recordCommentID(obj) {
+        // 设置点击的评价ID
+        commentPicID = $(obj).attr('data-id') ? $(obj).attr('data-id') : 1;
+        // 调用图片上传
+        GetUploadify(6, '', 'allimg', 'uploadImgProimgCallBack');
+    }
+
+    // 图片上传后续处理图片数据
+    function uploadImgProimgCallBack(paths) {
+        var html = [];
+        for (var i = 0; i < paths.length; i++) {
+            commentPicID = parseInt(commentPicID) + parseInt(1);
+
+            // 已上传6张图片，多余图片已被清理
+            if (commentPicID > 6) {
+                $('#upload_img_span').hide();
+                window.top.layer.alert('评价图片总数超过6张上限，仅显示前6张图片', {icon: 1, title: false, closeBtn: false, yes: function () {
+                        window.top.layer.closeAll();
+                    }});
+                return false;
+            }
+
+            // 图片显示框加载
+            html = [
+                '<div class="fieldext_upload">'+
+                '<span class="images_upload_item" id="upload_img_' + commentPicID + '">'+
+                '<input type="hidden" name="upload_img[]" value="' + paths[i] + '">'+
+                '<img src="' + paths[i] + '" style="width: 100px; height: 100px;">'+
+                '<a class="delete" href="javascript:void(0)" onClick="uploadImgClear(this);"></a>'+
+                '</span>'+
+                '</div>'
+            ];
+            $("#upload_img_span").before(html);
+
+            // 更新图片上传ID
+            $('#upload_img_upload').attr('data-id', commentPicID);
+        }
+
+        // 若上传图片大于等于6
+        if (commentPicID >= 6) $('#upload_img_span').hide();
+
+        // 关闭所有弹框
+        window.top.layer.closeAll();
+    }
+</script>
 {include file="public/footer" /}

@@ -1,222 +1,168 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-    <meta charset="utf-8" />
-    <title>{$MenuTitle}-{eyou:global name='web_name' /}</title>
-    <meta name="renderer" content="webkit">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
-    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-    {eyou:static file="users/skin/css/bootstrap.min.css"/}
-    {eyou:static file="users/skin/css/basic.css"/}
-    {eyou:static file="users/skin/css/eyoucms.css"/}
-    {eyou:static file="users/skin/css/shop.css"/}
-    {eyou:static  file="users/skin/css/tb_style.css"/}
-    <!-- 新样式 2020-11-25 -->
-    {eyou:static file="users/skin/css/element/index.css" /}
-    {eyou:static file="users/skin/css/e-user.css" /}
-    {eyou:include file="users/skin/css/diy_css.htm"/}
-    
-    {eyou:static file="/public/static/common/js/jquery.min.js"/}
-    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
-    {eyou:static file="/public/static/common/js/tag_global.js"/}
-</head>
+    <head>
+        <meta charset="utf-8" />
+        <title>投稿列表-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/eyoucms.css"/}
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/tag_global.js"/}
+    </head>
 
-<body class="centre shop">
-<!-- 头部 -->
-{eyou:include file="users/users_header.htm" /}
-<!-- END -->
-<div class="ey-body-bg">
-    <div class="ey-body">
-        <div class="ey-container w1200">
-			<!-- 侧边 -->
-			{eyou:include file="users/users_left.htm" /}
-			<!-- END -->
-			<!-- 中部 -->
-			<div class="ey-con fr" >
-				<div class="el-main main-bg">
-					<!-- 顶部导航栏 -->
-					<div class="column-title mb20">
-						<div class="column-name">{$MenuTitle}</div>
-					</div>
-					<!-- END -->
-
-					<div class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition mt20" style="width: 100%;">
-
-						<table >
-							<thead>
-								<tr>
-									<th style="width:40px;">
-										<div class="cell tc">
-											<label class="checkbox-label release-checkbox">
-												<span> &nbsp; </span>
-												<input class="checkbox" type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
-												<span class="check-mark"></span>
-											</label>
-										</div>
-									</th>
-									<th style="width:320px ;"><div class="cell">文章标题</div></th>
-									<th style="width: 100px;"><div class="cell tc">所属栏目</div></th>
-									<th style="width: 200px;"><div class="cell tc">投稿时间</div></th>
-									<th style="width: 100px;"><div class="cell tc">审核状态</div></th>
-									<th style="width: 150px;"><div class="cell tc">操作</div></th>
-								</tr>
-							</thead>
-							<tbody>
-							{empty name="$eyou.field.data"}
-								<tr>
-									<td  align="center" axis="col0" colspan="50">
-										<div class="cell pt50 pb50 tc">
-                                           <span class="mb10"><img id='litpic_img'  src="__PUBLIC__/static/common/images/null-data.png"/></span>
-                                         </div>
-									</td>
-								</tr>
-							{else/}
-								{eyou:volist name="$eyou.field.data" id="vo"}    
-								<tr>
-									<td>
-										<div class="cell tc">
-											<label class="checkbox-label release-checkbox">
-												<span> &nbsp; </span>
-												<input class="checkbox" type="checkbox" name="aids[]" value="{$vo.aid}">
-												<span class="check-mark"></span>
-											</label>
-											
-										</div>
-									</td>
-									<td><div class="cell">
-										<a  href="javascript:void(0);" data-arurl="{$vo.arcurl}" onclick="ArcUrl(this);">
-											{$vo.title}
-										</a></div>
-									</td>
-									<td>
-										<div class="cell tc">{$vo.typename}</div>
-									</td>
-									<td>
-										<div class="cell tc">{$vo.add_time|date='Y-m-d H:i:s',###}</div>
-									</td>
-									<td>
-										<div class="cell tc">{$home_article_arcrank[$vo['arcrank']]|default=''}</div>
-									</td>
-									<td>
-										<div class="cell tc">
-											<a href="javascript:void(0);" class="mr10" data-editurl="{$vo.editurl}" onclick="EditData(this);">
-												编辑
-											</a>
-											<a href="javascript:void(0);" class="" style="margin-right: 0;" data-id='{$vo.aid}' data-url="{$eyou.field.delurl}" onclick="DelData(this);">
-												删除
-											</a>
-										</div>
-									</td>
-								</tr>
-								{/eyou:volist}
-							{/empty}
-								<tr>
-									<td >
-										<label class="checkbox-label release-checkbox ml10">
-											<span> &nbsp; </span>
-											<input class="checkbox" type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
-											<span class="check-mark"></span>
-										</label>
-									</td>
-									<td >
-										<a class="el-button el-button--default el-button--small" href="javascript:void(0);" onclick="BatchDelData(this, 'aids');" data-url="{$eyou.field.delurl}">
-											批量删除
-										</a> 
-									</td>
-								</tr>
-							</tbody>
-						</table> 
-					</div>
-					<div style="text-align: center;">{$page}</div>
-				</div>
-			<!-- END -->
-			</div>
-           
+    <body class="centre">
+        {eyou:include file="users/users_header.htm" /}
+        <div class="breadcrumbs"></div>
+        <div class="ey-body-bg">
+            <div class="ey-body pd0">
+                <div class="ey-container w1226">
+                    {eyou:include file="users/users_left.htm" /}
+                    <div class="ey-con fr" >
+                        <div class="mi-uc-box uc-main-box mi-user-favorite">
+                            <div class="uc-content-box portal-content-box">
+                                <div class="uc-context">
+                                    <div class="el-row shop-oper">
+                                        <h1 class="title">投稿列表</h1>
+                                    </div>
+                                    <div class="el-row shop-oper mt20">
+                                        <div class="shop-oper-bottom">
+                                            <div class="shop-oper-l">
+                                                <div class="el-button-group">
+                                                    <a class="el-button-xin el-button--default first {empty name='$audited'} active {/empty}" href="{:url('user/UsersRelease/release_centre', ['list' => 1])}">全部<em>({$all|default=0})</em> </a>
+                                                    <a class="el-button-xin el-button--default {eq name='$audited' value='1'} active {/eq}" href="{:url('user/UsersRelease/release_centre', ['list' => 1, 'audited' => 1])}">未审核<em>({$notAudited|default=0})</em> </a>
+                                                    <a class="el-button-xin el-button--default {eq name='$audited' value='2'} active {/eq}" href="{:url('user/UsersRelease/release_centre', ['list' => 1, 'audited' => 2])}">已审核<em>({$isAudited|default=0})</em> </a>
+                                                </div>
+                                            </div>
+                                            <div class="shop-oper-r">
+                                                <form action="{:url('user/UsersRelease/release_centre')}" method="get">
+                                                    <input type="hidden" name="m" value="user"/>
+                                                    <input type="hidden" name="c" value="UsersRelease"/>
+                                                    <input type="hidden" name="a" value="release_centre"/>
+                                                    <input type="hidden" name="list" value="1">
+                                                    <div class="input-with-select el-input el-input-group el-input-group--append">
+                                                        <input type="search" name="keywords" value="{$keywords}" autocomplete="off" placeholder="输入文档标题" class="search-text">
+                                                        <input type="submit" value="" class="search-btn iconfont">
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ey-con-inside mt20">
+                                        <div id="finance-list_wrapper" class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition" style="width: 100%;">
+                                            <table class="pay_details" cellspacing="0" cellpadding="0" style="width: 100%">
+                                                <thead>
+                                                    <tr role="row">
+                                                        <th class="w40"> <div class="cell tc"> </div> </th>
+                                                        <th><div class="cell tl">文档标题</div></th>
+                                                        <th class="w100"><div class="cell tc">所属栏目</div></th>
+                                                        <th class="w200"><div class="cell tc">投稿时间</div></th>
+                                                        <th class="w100"><div class="cell tc">审核状态</div></th>
+                                                        <th class="w150"><div class="cell tc">操作</div></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                {empty name="$eyou.field.data"}
+                                                <tr>
+                                                    <td  align="center" axis="col0" colspan="50">
+                                                        <div class="cell pt100 tc">
+                                                            <span class="mb10"><img id="litpic_img" src="{eyou:static file='users/skin/images/null-data.png' /}"></span>
+                                                            <p>当前暂无投稿记录哦~</p>
+                                                         </div>
+                                                    </td>
+                                                </tr>
+                                                {else/}
+                                                    {eyou:volist name="$eyou.field.data" id="vo"}
+                                                    <tr>
+                                                        <td>
+                                                            <div class="cell tc">
+                                                                <label class="checkbox-label release-checkbox">
+                                                                    <span> &nbsp; </span>
+                                                                    <input class="checkbox" type="checkbox" name="aids[]" value="{$vo.aid}">
+                                                                    <span class="check-mark"></span>
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="cell">
+                                                                <a href="javascript:void(0);" onclick="windowOpen('{$vo.arcurl}');">{$vo.title}</a>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="cell tc">{$vo.typename}</div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="cell tc">{$vo.add_time|date='Y-m-d H:i:s',###}</div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="cell tc">
+                                                                {eyou:if condition="($vo['arcrank'] >= 0)"}
+                                                                <span class="green">已审核</span>
+                                                                {eyou:else /}
+                                                                <span class="red">未审核</span>
+                                                                {/eyou:if}
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="cell tc">
+                                                                <a href="javascript:void(0);" class="mr10" onclick="windowLocation('{$vo.editurl}');">编辑</a>
+                                                                <a href="javascript:void(0);" style="margin-right: 0;" onclick="singleDelAction(this, '{$vo.aid}', '确认删除该投稿？');" data-url="{$eyou.field.delurl}" data-id="{$vo.aid}">删除</a>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    {/eyou:volist}
+                                                    <tr>
+                                                        <td class="border-no">
+                                                            <div class="cell tc">
+                                                                <label class="checkbox-label release-checkbox">
+                                                                    <span> &nbsp; </span>
+                                                                    <input class="checkbox checkboxAll" type="checkbox">
+                                                                    <span class="check-mark"></span>
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td class="border-no">
+                                                            <a class="el-button el-button--default el-button--small f14" href="javascript:void(0);" onclick="batchDelAction(this, 'aids', '确认批量删除投稿？');" data-url="{$eyou.field.delurl}">
+                                                                <i class="el-icon-delete"></i> 批量删除
+                                                            </a>
+                                                        </td>
+                                                        <td class="border-no"></td>
+                                                        <td class="border-no"></td>
+                                                        <td class="border-no"></td>
+                                                    </tr>
+                                                {/empty}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {$page}
+                                        {eyou:if condition="!empty($pager->totalRows)"}
+                                        <div class="fytotal">共{$pager->totalRows}条记录</div>
+                                        {/eyou:if}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-<script type="text/javascript">
-    // 内容查看
-    function ArcUrl(obj) {
-        window.open($(obj).attr('data-arurl'));
-    }
-    // 编辑内容
-    function EditData(obj) {
-        window.location.href = $(obj).attr('data-editurl');
-    }
-    // 单个删除发布的内容
-    function DelData(obj) {
-        layer.confirm('是否删除该投稿？', {
-            title: false,
-            btn: ['是','否'] //按钮
-        }, function(){
-            layer_loading('正在处理');
-            // 确定
-            $.ajax({
-                type: "POST",
-                url: $(obj).attr('data-url'),
-                data: {del_id:$(obj).attr('data-id')},
-                dataType: 'json',
-                success: function (res) {
-                    layer.closeAll();
-                    if(res.code == 1){
-                        layer.msg(res.msg, {icon: 1});
-                        window.location.reload();
-                    }else{
-                        showErrorAlert(res.msg);
+        <script type="text/javascript">
+            $(function() {
+                $('input[name*=aids]').click(function() {
+                    if ($('input[name*=aids]').length == $('input[name*=aids]:checked').length) {
+                        $('.checkboxAll').prop('checked', true);
+                    } else {
+                        $('.checkboxAll').prop('checked', false);
                     }
-                },
-                error:function(e){
-                    layer.closeAll();
-                    showErrorAlert(e.responseText);
-                }
+                });
+                $('.checkboxAll').click(function() {
+                    $('input[type=checkbox]').prop('checked', this.checked);
+                });
             });
-        }, function(index){
-            layer.close(index);
-        });
-    }
-    // 批量删除发布的内容
-    function BatchDelData(obj, name) {
-        var a = [];
-        $('input[name^='+name+']').each(function(i,o){
-            if($(o).is(':checked')){
-                a.push($(o).val());
-            }
-        })
-        if(a.length == 0){
-            showErrorAlert('请至少选择一项！');
-            return;
-        }
-        // 删除按钮
-        layer.confirm('确认批量彻底删除？', {
-            title: false,
-            btn: ['确定', '取消'] //按钮
-        }, function () {
-            layer_loading('正在处理');
-            $.ajax({
-                type: "POST",
-                url: $(obj).attr('data-url'),
-                data: {del_id:a},
-                dataType: 'json',
-                success: function (res) {
-                    layer.closeAll();
-                    if(res.code == 1){
-                        layer.msg(res.msg, {icon: 1});
-                        window.location.reload();
-                    }else{
-                        showErrorAlert(res.msg);
-                    }
-                },
-                error:function(e){
-                    layer.closeAll();
-                    showErrorAlert(e.responseText);
-                }
-            });
-        }, function (index) {
-            layer.closeAll(index);
-        });
-    }
-</script>
-{eyou:include file="users/users_footer.htm" /}
-<!-- END -->
+        </script>
+        {eyou:include file="users/users_footer.htm" /}

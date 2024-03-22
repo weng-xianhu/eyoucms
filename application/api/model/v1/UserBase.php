@@ -47,42 +47,12 @@ class UserBase extends Base
             }
         }
 
+        // 订单预处理 (自动关闭未付款订单  发货后自动确认收货  收货后超过维权时间则关闭维权入口  消费赠送)
         if (!empty($this->users_id)) {
-            // 订单超过 get_shop_order_validity 设定的时间，则修改订单为已取消状态，无需返回数据
-            // $shopModel = new \app\user\model\Shop;
-            // $shopModel->UpdateShopOrderData($this->users_id);
-            $this->UpdateShopOrderData($this->users_id);
-        }
-    }
-
-    // 处理购买订单，超过指定时间修改为已订单过期，针对未付款订单
-    private function UpdateShopOrderData($users_id){
-        $time  = getTime() - config('global.get_shop_order_validity');
-        $where = array(
-            'users_id'     => $users_id,
-            'order_status' => 0,
-            'add_time'     => array('<',$time),
-        );
-        $data = [
-            'order_status'    => 4,  // 状态修改为订单过期
-            'pay_name'        => '', // 订单过期则清空支付方式标记
-            'wechat_pay_type' => '', // 订单过期则清空微信支付类型标记
-            'update_time'     => getTime(),
-        ];
-
-        // 查询订单id数组用于添加订单操作记录
-        $OrderIds = Db::name('shop_order')->field('order_id')->where($where)->select();
-
-        if (!empty($OrderIds)) {
-            // 订单过期，更新规格数量
-            $productSpecValueModel = new \app\user\model\ProductSpecValue;
-            $productSpecValueModel->SaveProducSpecValueStock($OrderIds, $users_id);
-
-            //批量修改订单状态
-            Db::name('shop_order')->where($where)->update($data);
-
-            // 添加订单操作记录
-            AddOrderAction($OrderIds, $users_id, 0, 4, 0, 0, '订单过期！', '会员未在订单有效期内支付，订单过期！');
+            // 调用传参
+            // users_id     会员ID，传入则处理指定会员的订单数据，为空则处理所有会员订单数据
+            // usersConfig  配置信息，为空则在后续处理中自动查询
+            model('OrderPreHandle')->eyou_shopOrderPreHandle($this->users_id);
         }
     }
 }

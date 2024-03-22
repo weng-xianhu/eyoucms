@@ -1,25 +1,10 @@
 {include file="public/layout" /}
-<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" id="bodystyle"  style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-10">
     {include file="recycle_bin/bar" /}
     <div class="flexigrid">
-        <div class="mDiv">
-            <form class="navbar-form form-inline" action="{:url('RecycleBin/customvar_index')}" method="get" onsubmit="layer_loading('正在处理');">
-                {$searchform.hidden|default=''}
-                <div class="ftitle">
-                {include file="recycle_bin/btn" /}
-                </div>
-                <div class="sDiv">
-                	<div class="sDiv2">
-                		<input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="名称搜索...">
-                		<input type="submit" class="btn" value="搜索">
-						<i class="fa fa-search"></i>
-                	</div>
-                </div>
-            </form>
-        </div>
         <div class="hDiv">
             <div class="hDivBox">
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
@@ -28,7 +13,7 @@
                         <th class="sign w40" axis="col0">
                             <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                         </th>
-                        <th abbr="article_show" axis="col5" class="w60">
+                        <th abbr="article_show" axis="col5" class="w70">
                             <div class="tc">ID</div>
                         </th>
                         <th abbr="article_title" axis="col3" class="w250">
@@ -40,7 +25,7 @@
                         <th abbr="article_time" axis="col6" class="w100">
                             <div class="tc">删除时间</div>
                         </th>
-                        <th axis="col1" class="w150">
+                        <th axis="col1" class="w120">
                             <div class="tc">操作</div>
                         </th>
                     </tr>
@@ -55,7 +40,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -65,7 +52,7 @@
                                 <div class="w40 tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.id}"></div>
                             </td>
                             <td class="sort">
-                                <div class="w60 tc">
+                                <div class="w70 tc">
                                     {$vo.id}
                                 </div>
                             </td>
@@ -85,13 +72,13 @@
                                 </div>
                             </td>
                             <td class="operation">
-                                <div class="w150 tc">
+                                <div class="w120 tc">
                                     {eq name="'RecycleBin@customvar_recovery'|is_check_access" value="1"}
                                     <a class="btn blue" href="javascript:void(0);" data-url="{:url('RecycleBin/customvar_recovery')}" data-id="{$vo.id}" data-attr_var_name="{$vo.attr_var_name}" onClick="recovery(this);">还原</a>
                                     {/eq}
-									
+                                    
                                     {eq name="'RecycleBin@customvar_del'|is_check_access" value="1"}
-									<i></i>
+                                    <i></i>
                                     <a class="btn red" href="javascript:void(0);" data-url="{:url('RecycleBin/customvar_del')}" data-id="{$vo.id}" data-attr_var_name="{$vo.attr_var_name}" onClick="delfun(this);">彻底删除</a>
                                     {/eq}
                                 </div>
@@ -104,6 +91,7 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        {notempty name="list"}
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
@@ -123,13 +111,21 @@
                     </a>
                 </div>
                 {/eq}
-				{include file="public/page" /}
+                {include file="public/page" /}
             </div>
             <div style="clear:both"></div>
         </div>
+        {/notempty}
     </div>
 </div>
 <script>
+    try{
+        var mt20_1649209614 = sessionStorage.getItem("mt20_1649209614");
+        if (mt20_1649209614 != 1){
+            console.log("recycle_bin",mt20_1649209614);
+//            $("#bodystyle").css("padding"," 15px 0px");
+        }
+    }catch(e){}
     $(function(){
         $('input[name*=ids]').click(function(){
             if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
@@ -158,9 +154,17 @@
     // 还原
     function recovery(obj){
         var attr_var_name = $(obj).attr('data-attr_var_name');
-        layer.confirm('变量【<font color="red">'+attr_var_name+'</font>】还原可用，确认还原？', {
-            title: false,//attr_var_name,
-            btn: ['确定','取消'] //按钮
+        layer.confirm('确认还原？变量【<font color="red">'+attr_var_name+'</font>】还原可用。', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function(){
             layer_loading('正在处理');
             // 确定
@@ -196,13 +200,31 @@
             }
         })
         if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 5, title:false});
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
             return;
         }
         // 删除按钮
-        layer.confirm('已选定自定义变量，确认批量还原？', {
-            title: false,
-            btn: ['确定', '取消'] //按钮
+        layer.confirm('确认批量还原？', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function () {
             layer_loading('正在处理');
             $.ajax({
@@ -219,9 +241,9 @@
                         layer.alert(data.msg, {icon: 5, title:false});
                     }
                 },
-                error:function(){
+                error:function(e){
                     layer.closeAll();
-                    layer.alert(ey_unknown_error, {icon: 5, title:false});
+                    layer.alert(e.responseText, {icon: 5, title:false});
                 }
             });
         }, function (index) {
@@ -231,9 +253,17 @@
 
     // 删除
     function delfun(obj){
-        layer.confirm('此操作不可恢复，确认彻底删除？', {
-            title: false,//$(obj).attr('data-attr_var_name'),
-            btn: ['确定','取消'] //按钮
+        layer.confirm('确认彻底删除？', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function(){
             layer_loading('正在处理');
             // 确定
@@ -269,13 +299,31 @@
             }
         })
         if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 5, title:false});
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
             return;
         }
         // 删除按钮
-        layer.confirm('此操作不可恢复，确认批量彻底删除？', {
-            title: false,
-            btn: ['确定', '取消'] //按钮
+        layer.confirm('确认批量彻底删除？', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function () {
             layer_loading('正在处理');
             $.ajax({
@@ -292,9 +340,9 @@
                         layer.alert(data.msg, {icon: 5, title:false});
                     }
                 },
-                error:function(){
+                error:function(e){
                     layer.closeAll();
-                    layer.alert(ey_unknown_error, {icon: 5, title:false});
+                    layer.alert(e.responseText, {icon: 5, title:false});
                 }
             });
         }, function (index) {

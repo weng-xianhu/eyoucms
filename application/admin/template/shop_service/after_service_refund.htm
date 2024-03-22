@@ -1,0 +1,164 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="overflow-x: hidden;padding: 0;min-width: 674px;background: #fff;">
+<style type="text/css">
+    .ncap-form-default dd.opt { width: 79%; }
+    .select-express {border: 1px solid red !important; color: red !important;}
+</style>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="width: 810px;margin: 0 auto;">
+    <div class="flexigrid">
+        <form class="form-horizontal" id="postForm">
+            <input type="hidden" name="status" value="7">
+            <input type="hidden" name="last_one" value="{$Service.last_one}">
+            <input type="hidden" name="users_id" value="{$Service.users_id}">
+            <input type="hidden" name="order_id" value="{$Service.order_id}">
+            <input type="hidden" name="order_code" value="{$Order.order_code}">
+            <input type="hidden" name="details_id" value="{$Service.details_id}">
+            <input type="hidden" name="service_id" value="{$Service.service_id}">
+            <input type="hidden" name="product_id" value="{$Service.product_id}">
+            <input type="hidden" name="service_type" value="{$Service.service_type}">
+            <input type="hidden" name="order_status" value="{$Order.order_status}">
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">
+                        <label>商品总额</label>
+                    </dt>
+                    <dd class="opt">
+                        {empty name="$Order.points_shop_order"}￥{/empty}{$Details.product_subtotal}
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label>商品实付款</label>
+                    </dt>
+                    <dd class="opt">
+                        {empty name="$Order.points_shop_order"}￥{/empty}{$Service.refund_price}
+                    </dd>
+                </dl>
+
+                {notempty name="$Order.points_shop_order"}
+                <dl class="row">
+                    <dt class="tit">
+                        <label>实际退回积分</label>
+                    </dt>
+                    <dd class="opt">
+                       <input type="text" value="{$Service.actual_points}" data-points="{$Service.actual_points}" name="actual_points" id="actual_points" class="input-txt" onpaste='this.value=this.value.replace(/[^\d]/g, "");' onkeyup='this.value=this.value.replace(/[^\d]/g, ""); actualPoints(this);'>
+                    </dd>
+                </dl>
+                {/notempty}
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label>实际退回余额</label>
+                    </dt>
+                    <dd class="opt">
+                       <input type="text" value="{$Service.actual_price}" data-price="{$Service.actual_price}" name="actual_price" id="actual_price" class="input-txt" onpaste='this.value=this.value.replace(/[^\d.]/g, "");' onkeyup='this.value=this.value.replace(/[^\d.]/g, ""); actualPrice(this);'>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit"> <label>退款方式</label> </dt>
+                    <dd class="opt" style="line-height: 30px;">
+                        <label>
+                            <input type="radio" name="refund_way" id="refund_way" value="1" {eq name="$Service.refund_way" value="1"}checked="checked"{/eq}>退款到余额{notempty name="$Order.points_shop_order"}(积分){/notempty}
+                        </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label>
+                            <input type="radio" name="refund_way" id="refund_way" value="2" {eq name="$Service.refund_way" value="2"}checked="checked"{/eq}>线下退款
+                        </label>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label>退款说明</label>
+                    </dt>
+                    <dd class="opt">
+                        <textarea rows="5" cols="60" name="refund_remark" style="height: 80px;"></textarea>
+                    </dd>
+                </dl>
+            </div>
+
+            <div class="ncap-form-default">
+                <div class="bot" style="padding-bottom: 0px;">
+                    <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green">确认退款</a>
+                    <a href="JavaScript:void(0);" onclick="closeIframes();" style="height: 20px; padding: 7px 19px;">取消</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+    // 关闭自身弹窗
+    function closeIframes(isAjax) {
+        var parentObj = parent.layer.getFrameIndex(window.name);
+        if (parentObj) {
+            if (isAjax) {
+                parent.window.location.reload();
+            } else {
+                parent.layer.close(parentObj);
+            }
+        }
+    }
+
+    // 验证实际退款金额是否超过
+    function actualPrice(obj) {
+        var value = $(obj).val();
+        var price = $(obj).data('price');
+        if (parseFloat(value) > parseFloat(price)) {
+            $(obj).val(price);
+        } else {
+            $(obj).val(value);
+        }
+    }
+
+    // 验证实际退款积分是否超过
+    function actualPoints(obj) {
+        var value = $(obj).val();
+        var price = $(obj).data('points');
+        if (parseInt(value) > parseInt(price)) {
+            $(obj).val(price);
+        } else {
+            $(obj).val(value);
+        }
+    }
+
+    // 表单提交
+    function checkForm() {
+        if (!$('#refund_way:checked').val()) {
+            showErrorMsg('请选择退款方式');
+            return false;
+        }
+        var actualPrice = $('#actual_price').val();
+        if (isNaN(actualPrice) || 0 > parseFloat(actualPrice)) {
+            showErrorMsg('实际退款余额不能小于0');
+            $('#actual_price').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $.ajax({
+            type: "post",
+            url : "{:url('ShopService/after_service_handle', ['_ajax'=>1])}",
+            data: $('#postForm').serialize(),
+            dataType: 'json',
+            success: function (res) {
+                layer.closeAll();
+                if (res.code == 1) {
+                    layer.msg(res.msg, {time: 1000}, function() {
+                        closeIframes(true);
+                    });
+                } else {
+                    layer.alert(res.msg, {icon: 2, title: false, closeBtn: 0});
+                }
+            },
+            error:function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 2, title: false, closeBtn: 0});
+            }
+        });
+    }
+</script> 

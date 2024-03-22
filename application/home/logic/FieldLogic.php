@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -84,6 +84,10 @@ class FieldLogic extends Model
         }
 
         if (!empty($data) && !empty($fieldInfo)) {
+            static $city_list = null;
+            static $province_list = null;
+            static $area_list = null;
+            $baseTag = new \think\template\taglib\api\Base;
             foreach ($data as $key => $val) {
                 $dtype = !empty($fieldInfo[$key]) ? $fieldInfo[$key]['dtype'] : '';
                 if (empty($dtype)) {
@@ -95,6 +99,9 @@ class FieldLogic extends Model
                     case 'float':
                     case 'text':
                     {
+                        if (preg_match('/^(\/[\/\w]+)?(\/public\/static\/|\/uploads\/)(.*)\.(\w+)$/i', $val)) {
+                            $val = handle_subdir_pic($val);
+                        }
                         !empty($dfvalue_unit) && $data[$key.'_unit'] = $dfvalue_unit;
                         break;
                     }
@@ -107,27 +114,32 @@ class FieldLogic extends Model
                                 $eyou_imgupload_list = [];
                                 $eyou_imgupload_data = explode(',', $val);
                                 foreach ($eyou_imgupload_data as $k1 => $v1) {
-                                    $eyou_imgupload_list[$k1] = [
-                                        'image_url' => handle_subdir_pic($v1),
-                                        'intro'     => '',
-                                    ];
+                                    if (!empty($v1)) {
+                                        $eyou_imgupload_list[$k1] = [
+                                            'image_url' => (true === $is_minipro) ? $baseTag->get_default_pic($v1) : handle_subdir_pic($v1),
+                                            'intro'     => '',
+                                        ];
+                                    }
                                 }
                             }
                         } else {
                             $eyou_imgupload_list = [];
                             $eyou_imgupload_data = $val;
                             foreach ($eyou_imgupload_data as $k1 => $v1) {
-                                $v1['image_url'] = handle_subdir_pic($v1['image_url']);
-                                isset($v1['intro']) && $v1['intro'] = htmlspecialchars_decode($v1['intro']);
-                                $eyou_imgupload_list[$k1] = $v1;
+                                if (!empty($v1['image_url'])) {
+                                    $v1['image_url'] = (true === $is_minipro) ? $baseTag->get_default_pic($v1['image_url']) : handle_subdir_pic($v1['image_url']);
+                                    isset($v1['intro']) && $v1['intro'] = htmlspecialchars_decode($v1['intro']);
+                                    $eyou_imgupload_list[$k1] = $v1;
+                                }
                             }
                         }
+                        !empty($eyou_imgupload_list) && $eyou_imgupload_list = array_values($eyou_imgupload_list);
                         $val = $eyou_imgupload_list;
                         break;
                     }
                     case 'img':
                         {
-                            $val = handle_subdir_pic($val);
+                            $val = (true === $is_minipro) ? $baseTag->get_default_pic($val) : handle_subdir_pic($val);
                             break;
                         }
                     case 'media':
@@ -166,7 +178,6 @@ class FieldLogic extends Model
                         /*--end*/
 
                         if (true === $is_minipro) {
-                            $baseTag = new \think\template\taglib\api\Base;
                             $val = $baseTag->html_httpimgurl($val);
                         }
 
@@ -175,7 +186,8 @@ class FieldLogic extends Model
 
                     case 'decimal':
                     {
-                        $val = number_format($val,'2','.',',');
+                        $val = floatval($val);
+                        // $val = number_format($val,'2','.',',');
                         break;
                     }
 
@@ -196,19 +208,24 @@ class FieldLogic extends Model
                             }
                         }
                         // 默认值里不存在，则去区域表里获取
-                        if (!empty($val) && is_numeric($val)) {
-                            $city_list = get_city_list();
-                            if (!empty($city_list[$val])) {
-                                $val = $city_list[$val]['name'];
-                            } else {
-                                $province_list = get_province_list();
-                                if (!empty($province_list[$val])) {
-                                    $val = $province_list[$val]['name'];
+                        if (!empty($val) && preg_match('/^([\d\,]+)$/i', $val)) {
+                            $val_new = '';
+                            $val_arr = explode(',', $val);
+                            foreach ($val_arr as $_k => $_v) {
+                                null === $city_list && $city_list = get_city_list();
+                                if (!empty($city_list[$_v])) {
+                                    $val_new .= $city_list[$_v]['name'];
                                 } else {
-                                    $area_list = get_area_list();
-                                    $val = !empty($area_list[$val]) ? $area_list[$val]['name'] : '';
+                                    null === $province_list && $province_list = get_province_list();
+                                    if (!empty($province_list[$_v])) {
+                                        $val_new .= $province_list[$_v]['name'];
+                                    } else {
+                                        null === $area_list && $area_list = get_area_list();
+                                        $val_new .= !empty($area_list[$_v]) ? $area_list[$_v]['name'] : '';
+                                    }
                                 }
                             }
+                            $val = $val_new;
                         }
                         break;
                     }
@@ -225,6 +242,10 @@ class FieldLogic extends Model
                     }
                 }
                 $data[$key] = $val;
+            }
+            //移动端详情
+            if (isMobile() && isset($data['content']) && !empty($data['content_ey_m'])) {
+                $data['content'] = $data['content_ey_m'];
             }
         }
         return $data;

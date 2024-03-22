@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -22,7 +22,7 @@ use app\user\model\Pay as PayModel;  //用于虚拟网盘商品付款后自动�
 
 class Shop extends Base {
 
-    private $UsersConfigData = [];
+    public $UsersConfigData = [];
 
     /**
      * 构造方法
@@ -41,18 +41,34 @@ class Shop extends Base {
 
         // 会员中心配置信息
         $this->UsersConfigData = getUsersConfigData('all');
-        $this->assign('userConfig',$this->UsersConfigData);
 
+        $this->assign('userConfig', $this->UsersConfigData);
+
+        // 用于产品规格逻辑功能处理
         $this->ProductSpecLogic = new ProductSpecLogic;
+
+        // 模型是否开启
+        $channeltype_row = \think\Cache::get('extra_global_channeltype');
+        $this->assign('channeltype_row', $channeltype_row);
 
         // 过期订单预处理
         $this->ShopLogic = new ShopLogic;
         $this->ShopLogic->OverdueOrderHandle();
+
+        // 列出营销功能里已使用的模块
+        $marketFunc = $this->ShopLogic->marketLogic();
+        $this->assign('marketFunc', $marketFunc);
+
+        // 获取核销插件数据
+        $this->weappInfo = model('ShopPublicHandle')->getWeappVerifyInfo();
+        $this->assign('weappInfo', $this->weappInfo);
     }
 
     public function home()
     {
-        $this->redirect(url('Statistics/index', [], true, true));
+        $url = url('Statistics/index', [], true, true);
+        $url = preg_replace('/^http(s?)/i', $this->request->scheme(), $url);
+        $this->redirect($url);
         exit;
     }
 
@@ -64,14 +80,6 @@ class Shop extends Base {
         if (IS_POST) {
             $post = input('post.');
             if (!empty($post)) {
-                /*邮件提醒*/
-                $smtp['smtp_shop_order_pay']  = !empty($post['smtp_shop_order_pay'])  ? 1 : 0;
-                $smtp['smtp_shop_order_send'] = !empty($post['smtp_shop_order_send']) ? 1 : 0;
-                tpCache('smtp', $smtp);
-                unset($post['smtp_shop_order_pay']);
-                unset($post['smtp_shop_order_send']);
-                /*END*/
-
                 $TestPass = $post['TestPass'];
                 unset($post['TestPass']);
                 if (0 == $TestPass) unset($post['shop']['shop_open_spec']);
@@ -79,6 +87,12 @@ class Shop extends Base {
                 foreach ($post as $key => $val) {
                     is_array($val) && getUsersConfigData($key, $val);
                 }
+                if (!empty($post['shop_open_comment']) && 1 === intval($post['shop_open_comment'])) {
+                    tpCache('web', ['web_shopcomment_switch' => 1]);
+                } else if (isset($post['shop_open_comment']) && 0 === intval($post['shop_open_comment'])) {
+                    tpCache('web', ['web_shopcomment_switch' => 0]);
+                }
+                
                 $this->success('设置成功！', url('Shop/conf'));
             }
         }
@@ -99,73 +113,208 @@ class Shop extends Base {
      */
     public function index()
     {
-        // 初始化数组和条件
-        $list  = array();
-        $Where = [
-            'a.lang'   => $this->admin_lang,
+        // 是否安装 秒杀抢购插件
+        $where = [
+            'status' => 1,
+            'code' => 'Seckill'
         ];
+        $seckill = Db::name('weapp')->where($where)->count();
+        $this->assign('seckill', $seckill);
+
+        // 积分商城插件
+        $pointsShop = model('ShopPublicHandle')->getWeappPointsShop();
+        $this->assign('pointsShop', $pointsShop);
+
+        // 手机端后台管理插件特定使用参数
+        $isMobile = input('param.isMobile/d', 0);
+
+        // 初始化数组和条件
+        $where = [
+            'merchant_id' => 0,
+            'a.lang' => $this->admin_lang,
+        ];
+
         // 订单号查询
         $order_code = input('order_code/s');
-        if (!empty($order_code)) $Where['a.order_code'] = array('LIKE', "%{$order_code}%");
+        if (!empty($order_code)) $where['a.order_code'] = ['LIKE', "%{$order_code}%"];
+
+        // 支付方式查询
+        $pay_name = input('pay_name/s');
+        if (!empty($pay_name)) $where['a.pay_name'] = $pay_name;
+        $this->assign('pay_name', $pay_name);
+
+        // 订单下单终端查询
+        $order_terminal = input('order_terminal/d');
+        if (!empty($order_terminal)) $where['a.order_terminal'] = $order_terminal;
+        $this->assign('order_terminal', $order_terminal);
+        
+        // 商品类型查询
+        $contains_virtual = input('contains_virtual/d');
+        if (!empty($contains_virtual)) $where['a.contains_virtual'] = $contains_virtual;
+        $this->assign('contains_virtual', $contains_virtual);
+
+        //活动订单查询
+        $act_type = input('act_type/d', 0);
+        // 普通订单
+        if (1 === intval($act_type)) {
+            if (!empty($seckill)) $where['a.is_seckill_order'] = 0;
+            if (!empty($pointsShop)) $where['a.points_shop_order'] = 0;
+        }
+        // 秒杀插件订单
+        else if (2 === intval($act_type) && !empty($seckill)) {
+            $where['a.is_seckill_order'] = ['gt', 0];
+        }
+        // 积分商城插件订单
+        else if (3 === intval($act_type) && !empty($pointsShop)) {
+            $where['a.points_shop_order'] = 1;
+        }
 
         //时间检索条件
-        $begin    = strtotime(input('param.add_time_begin/s'));
-        $end    = input('param.add_time_end/s');
+        $begin = strtotime(input('param.add_time_begin/s'));
+        $end = input('param.add_time_end/s');
         !empty($end) && $end .= ' 23:59:59';
-        $end    = strtotime($end);
+        $end = strtotime($end);
         // 时间检索
         if ($begin > 0 && $end > 0) {
-            $Where['a.add_time'] = array('between',"$begin,$end");
+            $where['a.add_time'] = array('between', "$begin, $end");
         } else if ($begin > 0) {
-            $Where['a.add_time'] = array('egt', $begin);
+            $where['a.add_time'] = array('egt', $begin);
         } else if ($end > 0) {
-            $Where['a.add_time'] = array('elt', $end);
+            $where['a.add_time'] = array('elt', $end);
         }
 
         // 订单状态查询
         $order_status = input('order_status/s');
-        if (!empty($order_status)) $Where['a.order_status'] = (10 == $order_status) ? 0 : $order_status;
-        // 查询满足要求的总记录数
-        $count = $this->shop_order_db->alias('a')->where($Where)->count('order_id');
-        // 实例化分页类 传入总记录数和每页显示的记录数
+        if (!empty($order_status)) $where['a.order_status'] = (10 == $order_status) ? 0 : $order_status;
+
+        // 分页查询
+        $count = $this->shop_order_db->alias('a')->where($where)->count('order_id');
         $pageObj = new Page($count, config('paginate.list_rows'));
+
         // 订单主表数据查询
-        $list = $this->shop_order_db->where($Where)
-            ->field('a.*, b.username')
-            ->alias('a')
+        $list = $this->shop_order_db->alias('a')
+            ->field('a.*, b.username as u_username, b.nickname as u_nickname, b.mobile as u_mobile')
+            ->where($where)
             ->join('__USERS__ b', 'a.users_id = b.users_id', 'LEFT')
             ->order('a.order_id desc')
             ->limit($pageObj->firstRow.','.$pageObj->listRows)
             ->select();
-        $order_ids = [];
+        if (empty($list) && !empty($order_code)) {
+            // 通过商品名称查询订单号
+            $where_1['product_name'] = ['LIKE', "%{$order_code}%"];
+            $order_ids = $this->shop_order_details_db->where($where_1)->group('order_id')->column('order_id');
+            // 重新查询订单主表
+            unset($where['a.order_code']);
+            $where['a.order_id'] = ['IN', $order_ids];
+            // 分页查询
+            $count = $this->shop_order_db->alias('a')->where($where)->count('order_id');
+            $pageObj = new Page($count, config('paginate.list_rows'));
+            // 订单主表数据查询
+            $list = $this->shop_order_db->alias('a')
+                ->field('a.*, b.username as u_username, b.nickname as u_nickname, b.mobile as u_mobile')
+                ->where($where)
+                ->join('__USERS__ b', 'a.users_id = b.users_id', 'LEFT')
+                ->order('a.order_id desc')
+                ->limit($pageObj->firstRow.','.$pageObj->listRows)
+                ->select();
+        }
+
+        $order_ids = $order_code_arr = [];
         $OrderReminderID = [];
         foreach ($list as $key => $value) {
             array_push($order_ids, $value['order_id']);
-            if (1 == $value['order_status']) array_push($OrderReminderID, $value['order_id']);
+            if (1 == $value['order_status']){
+                array_push($OrderReminderID, $value['order_id']);
+            } elseif (in_array($value['order_status'],[2,3])){
+                array_push($order_code_arr, $value['order_code']);
+            }
         }
 
-        $DetailsData = $this->shop_order_details_db->where('order_id','IN',$order_ids)->order('details_id asc')->select();
+        // 处理订单详情数据
+        $where = [
+            'a.order_id' => ['IN', $order_ids]
+        ];
+        $DetailsData = $this->shop_order_details_db->alias('a')
+            ->field('a.*, b.service_id, b.status')
+            ->where($where)
+            ->join('__SHOP_ORDER_SERVICE__ b', 'a.details_id = b.details_id && b.status NOT IN (3, 8, 9)', 'LEFT')
+            ->order('details_id asc')
+            ->select();
+        $ArchivesData = get_archives_data($DetailsData, 'product_id');
+        $OrderServiceStatus = Config::get('global.order_service_status');
+        foreach ($DetailsData as $key => $value) {
+            // 售后信息处理
+            $value['service_id'] = !empty($value['service_id']) ? $value['service_id'] : 0;
+            $value['status'] = !empty($value['status']) ? $value['status'] : 0;
+            $value['status_name'] = !empty($value['status']) ? $OrderServiceStatus[$value['status']] : '';
+            // 产品属性处理
+            $value['data'] = !empty($value['data']) ? unserialize($value['data']) : [];
+            $value['pointsGoodsBuyField'] = !empty($value['data']['pointsGoodsBuyField']) ? json_decode($value['data']['pointsGoodsBuyField'], true) : [];
+            $value['data'] = htmlspecialchars_decode(htmlspecialchars_decode($value['data']['spec_value']));
+            // 组合数据
+            $value['data'] = explode('<br/>', $value['data']);
+            $valueData = '';
+            foreach ($value['data'] as $key_1 => $value_1) {
+                $delimiter = '';//!empty($isMobile) ? '；' : '';
+                if (!empty($value_1)) $valueData .= '<span>' . trim(strrchr($value_1, '：'),'：') . '</span>' . $delimiter;
+            }
+            $value['data'] = $valueData;
+            $value['arcurl'] = get_arcurl($ArchivesData[$value['product_id']]);
+            $value['litpic'] = handle_subdir_pic(get_default_pic($value['litpic']));
+            $DetailsData[$key] = $value;
+        }
+
+        // 把订单详情数据植入订单数据
+        $defaultDetails = [
+            'details_id' => 0,
+            'order_id' => 0,
+            'users_id' => 0,
+            'product_id' => 0,
+            'product_name' => '',
+            'num' => 0,
+            'data' => '',
+            'product_price' => 0,
+            'prom_type' => 0,
+            'litpic' => get_default_pic(),
+            'apply_service' => 0,
+            'is_comment' => 0,
+            'lang' => 'cn',
+            'add_time' => 0,
+            'update_time' => 0,
+            'service_id' => 0,
+            'status' => 0,
+            'status_name' => '',
+            'arcurl' => '',
+        ];
+        // 把订单详情数据植入订单数据
         $DetailsDataGroup = group_same_key($DetailsData, 'order_id');
         foreach ($list as $key => $value) {
-            // 查询订单明细表数据
-            $ArchivesData = get_archives_data($DetailsData, 'product_id');
-
-            // 处理订单详细表数据处理
-            $value['litpic'] = get_default_pic();
-            foreach ($DetailsDataGroup[$value['order_id']] as $kkk => $vvv) {
-                if (0 == $kkk) {
-                    // 产品图片
-                    if (!empty($vvv['litpic'])) {
-                        $value['litpic'] = handle_subdir_pic(get_default_pic($vvv['litpic']));
-                    }
-                    // 产品前台链接
-                    $value['arcurl'] = get_arcurl($ArchivesData[$vvv['product_id']]);
-                    break;
-                }
-            }
+            // 处理会员昵称
+            $value['u_nickname'] = !empty($value['u_nickname']) ? $value['u_nickname'] : $value['u_username'];
+            // 处理订单详情数据
+            $value['Details'] = $DetailsDataGroup[$value['order_id']];
+            if (empty($value['Details'])) $value['Details'] = [$defaultDetails];
+            // 商品条数
+            $value['rowspan'] = count($value['Details']);
+            // 添加时间
+            $value['add_time'] = date('Y-m-d H:i:s', $value['add_time']);
+            // 更新时间
+            $value['update_time'] = date('Y-m-d H:i:s', $value['update_time']);
+            // 重新赋值数据
             $list[$key] = $value;
         }
-        
+
+        // 存在积分商城订单则执行
+        $pointsShopOrder = !empty($list) ? get_arr_column($list, 'points_shop_order') : [];
+        if (!empty($pointsShopOrder) && in_array(1, $pointsShopOrder)) {
+            $weappInfo = model('ShopPublicHandle')->getWeappPointsShop();
+            if (!empty($weappInfo)) {
+                $pointsShopLogic = new \weapp\PointsShop\logic\PointsShopLogic();
+                $list = $pointsShopLogic->pointsShopOrderDataHandle($list);
+            }
+        }
+
+        // 查询订单被提醒发货次数
         if (!empty($OrderReminderID)) {
             $field = 'order_id, count(action_id) as action_count';
             $group = 'order_id';
@@ -175,64 +324,96 @@ class Shop extends Base {
             ];
             $LogData = $this->shop_order_log_db->field($field)->group($group)->where($LogWhere)->getAllWithIndex('order_id');
         }
+
+        // // 计算单页总额
+        // $total_money = $this->shop_order_db->alias('a')->where($where)->where('order_id','IN',$order_ids)->value("SUM(`order_amount`) as `total_money`");
+        // /*查询已退还的总额*/
+        // $list_order_id = get_arr_column($list, 'order_id');
+        // $where_new = [
+        //     'service_type' => 2,
+        //     'status' => ['IN', [2, 4, 5, 7]],
+        //     'order_id' => ['IN', $list_order_id]
+        // ];
+        // $refund_balance = Db::name('shop_order_service')->where($where_new)->value("SUM(`refund_balance`) as `refund_balance`");
+        // /* END */
+        // // 计算单页总额 - 已退还的总额
+        // if (!empty($refund_balance)) $total_money = $total_money - $refund_balance;
+        // $this->assign('total_money', $total_money);
+        
+
         // 分页显示输出
         $pageStr = $pageObj->show();
-        // 获取订单状态
-        $admin_order_status_arr = Config::get('global.admin_order_status_arr');
         // 获取订单方式名称
         $pay_method_arr = Config::get('global.pay_method_arr');
-        // 订单状态筛选数组
-        $OrderStatus = array(
-            0 => array(
-                'order_status' => '1',
-                'status_name'  => '待发货',
-            ),
-            1 => array(
-                'order_status' => '2',
-                'status_name'  => '已发货',
-            ),
-            2 => array(
-                'order_status' => '3',
-                'status_name'  => '已完成',
-            ),
-        );
+        // 获取订单状态
+        $admin_order_status_arr = Config::get('global.admin_order_status_arr');
 
-        // 计算单页总额
-        $total_money = $this->shop_order_db->alias('a')->where($Where)->where('order_id','IN',$order_ids)->value("SUM(`order_amount`) as `total_money`");
-
-        /*查询已退还的总额*/
-        $list_order_id = get_arr_column($list, 'order_id');
-        $where_new = [
-            'service_type' => 2,
-            'status' => ['IN', [2, 4, 5, 7]],
-            'order_id' => ['IN', $list_order_id]
-        ];
-        $refund_balance = Db::name('shop_order_service')->where($where_new)->value("SUM(`refund_balance`) as `refund_balance`");
-        /* END */
-
-        // 计算单页总额 - 已退还的总额
-        if (!empty($refund_balance)) $total_money = $total_money - $refund_balance;
-        
         // 数据加载
-        $this->assign('pager', $pageObj);
         $this->assign('list', $list);
-        $this->assign('LogData', $LogData);
         $this->assign('page', $pageStr);
-        $this->assign('total_money', $total_money);
-        $this->assign('admin_order_status_arr',$admin_order_status_arr);
-        $this->assign('pay_method_arr',$pay_method_arr);
-        $this->assign('OrderStatus', $OrderStatus);
+        $this->assign('pager', $pageObj);
+        $this->assign('LogData', $LogData);
+        $this->assign('pay_method_arr', $pay_method_arr);
+        $this->assign('admin_order_status_arr', $admin_order_status_arr);
 
-        /*检测是否存在订单中心模板*/
-        if ('v1.0.1' > getVersion('version_themeshop') && !empty($this->UsersConfigData['shop_open'])) {
-            $is_syn_theme_shop = 1;
-        } else {
-            $is_syn_theme_shop = 0;
+        // 是否开启文章付费
+        $channelRow = Db::name('channeltype')->where('nid', 'in',['article','download'])->getAllWithIndex('nid');
+        foreach ($channelRow as &$val){
+            if (!empty($val['data'])) $val['data'] = json_decode($val['data'], true);
         }
-        $this->assign('is_syn_theme_shop',$is_syn_theme_shop);
-        /*--end*/
+        $this->assign('channelRow', $channelRow);
 
-        return $this->fetch();
+        // 是否开启货到付款
+        $shopOpenOffline = 1;
+        if (0 === intval($this->UsersConfigData['shop_open_offline']) || !isset($this->UsersConfigData['shop_open_offline'])) {
+            $shopOpenOffline = 0;
+        }
+        $this->assign('shopOpenOffline', $shopOpenOffline);
+
+        // 开启的商城商品类型
+        $shopType = $this->UsersConfigData['shop_type'];
+        $this->assign('shopType', $shopType);
+
+        // 是否开启微信、支付宝支付
+        $where = [
+            'status' => 1,
+            'pay_mark' => ['IN', ['wechat', 'alipay']]
+        ];
+        $payApiConfig = Db::name('pay_api_config')->where($where)->select();
+        $openWeChat = $openAliPay = 1;
+        foreach ($payApiConfig as $key => $value) {
+            $payInfo = unserialize($value['pay_info']);
+            if (!empty($payInfo) && isset($payInfo['is_open_wechat']) && 0 === intval($payInfo['is_open_wechat'])) {
+                $openWeChat = 0;
+            }
+            if (!empty($payInfo) && isset($payInfo['is_open_alipay']) && 0 === intval($payInfo['is_open_alipay'])) {
+                $openAliPay = 0;
+            }
+        }
+        $this->assign('openWeChat', $openWeChat);
+        $this->assign('openAliPay', $openAliPay);
+
+        // 是否安装 可视化微信小程序（商城版），未安装开启则不显示小程序支付
+        $where = [
+            'status' => 1,
+            'code' => 'DiyminiproMall'
+        ];
+        $openMall = Db::name('weapp')->where($where)->count();
+        $this->assign('openMall', $openMall);
+
+        // 如果安装手机端后台管理插件并且在手机端访问时执行
+        if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+            $mbPage = input('param.p/d', 1);
+            $nullShow = intval($pageObj->totalPages) === intval($mbPage) ? 1 : 0;
+            $this->assign('nullShow', $nullShow);
+            if ($mbPage >= 2) {
+                return $this->display('shop/order_list');
+            } else {
+                return $this->display('shop/index');
+            }
+        } else {
+            return $this->fetch();
+        }
     }
 
     /**
@@ -240,7 +421,7 @@ class Shop extends Base {
      */
     public function order_details()
     {
-        $order_id = input('param.order_id');
+        $order_id = input('param.order_id/d');
         if (!empty($order_id)) {
             // 查询订单信息
             $this->GetOrderData($order_id);
@@ -248,36 +429,106 @@ class Shop extends Base {
             $Action = $this->shop_order_log_db->where('order_id',$order_id)->order('action_id desc')->select();
             // 操作记录数据处理
             foreach ($Action as $key => $value) {
+                $value['action_note'] = str_replace('!', '', $value['action_note']);
+                $value['action_note'] = str_replace('！', '', $value['action_note']);
+                // 会员操作
+                if (!empty($value['users_id'])) {
+                    $Action[$key]['action_note'] = '[买家] ' . $value['action_note'];
+                    $user = $this->users_db->field('username, nickname')->where('users_id', $value['users_id'])->find();
+                    $Action[$key]['action_users'] = !empty($user['nickname']) ? $user['nickname'] : $user['username'];
+                }
+                // 管理员操作
+                else if (!empty($value['action_user'])) {
+                    $Action[$key]['action_note'] = '[商家] ' . $value['action_note'];
+                    $user_name = Db::name('admin')->where('admin_id', $value['action_user'])->getField('user_name');
+                    $Action[$key]['action_users'] = !empty($user_name) ? $user_name : '';
+                }
+                // 系统操作
+                else {
+                    $Action[$key]['action_note'] = '[系统] ' . $value['action_note'];
+                    $Action[$key]['action_users'] = '自动操作';
+                }
+
                 $Action[$key]['action_desc'] = str_replace("！", "", $value['action_desc']);
-
-                if (0 == $value['action_user']) {
-                    // 若action_user为0，表示会员操作，根据订单号中的ID获取会员名。
-                    $username = $this->users_db->field('username')->where('users_id',$value['users_id'])->find();
-                    $Action[$key]['username'] = '会 &nbsp; 员: '.$username['username'];
-                } else {
-                    // 若action_user不为0，表示管理员操作，根据ID获取管理员名。
-                    $user_name = Db::name('admin')->field('user_name')->where('admin_id',$value['action_user'])->find();
-                    $Action[$key]['username'] = '管理员: '.$user_name['user_name'];
-                }
-
                 // 操作时，订单发货状态
-                $Action[$key]['express_status'] = '未发货';
-                if (1 == $value['express_status']) {
-                    $Action[$key]['express_status'] = '已发货';
-                }
-
+                $Action[$key]['express_status'] = 1 == $value['express_status'] ? '已发货' : '未发货';
                 // 操作时，订单付款状态
-                $Action[$key]['pay_status'] = '未支付';
-                if (1 == $value['pay_status']) {
-                    $Action[$key]['pay_status'] = '已支付';
-                }
+                $Action[$key]['pay_status'] = 1 == $value['pay_status'] ? '已支付' : '未支付';
             }
 
             $this->assign('Action', $Action);
-            return $this->fetch('order_details');
+
+            // 如果安装手机端后台管理插件并且在手机端访问时执行
+            $isMobile = input('param.isMobile/d', 0);
+            if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+                return $this->display('shop/order_details');
+            } else {
+                return $this->fetch('order_details');
+            }
         }else{
             $this->error('非法访问！');
         }
+    }
+    
+    // 订单备注
+    public function order_remarks()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+            if (!empty($post['order_id']) && !empty($post['order_remarks'])) {
+                $admin_id = session('admin_info.admin_id');
+                $admin_info = Db::name('admin')->where(['admin_id'=>$admin_id])->find();
+                // 执行条件
+                $where = [
+                    'order_id' => intval($post['order_id'])
+                ];
+                // 查询订单备注信息
+                $adminNote = Db::name('shop_order')->where($where)->getField('admin_note');
+                if (empty($adminNote)) {
+                    $adminNote = [
+                        'times' => date('Y-m-d H:i:s'),
+                        'admin_id' => $admin_info['admin_id'],
+                        'admin_name' => $admin_info['user_name'],
+                        'remarks' => strval($post['order_remarks'])
+                    ];
+                    $update = [
+                        'admin_note' => serialize([$adminNote]),
+                        'update_time' => getTime()
+                    ];
+                } else {
+                    // 解析原先的备注信息
+                    $adminNote = unserialize($adminNote);
+                    // 新的备注信息
+                    $adminNoteNew = [
+                        'times' => date('Y-m-d H:i:s'),
+                        'admin_id' => $admin_info['admin_id'],
+                        'admin_name' => $admin_info['user_name'],
+                        'remarks' => strval($post['order_remarks'])
+                    ];
+                    // 合并两个备注信息
+                    $adminNote = array_merge($adminNote, [$adminNoteNew]);
+                    $update = [
+                        'admin_note' => serialize($adminNote),
+                        'update_time' => getTime()
+                    ];
+                }
+                if (!empty($update)) $updateID = Db::name('shop_order')->where($where)->update($update);
+                if (!empty($updateID)) $this->success('备注成功');
+            }
+            $this->error('操作失败，刷新重试！');
+        }
+    
+        $order_id = input('param.order_id/d', 0);
+        $this->assign('order_id', $order_id);
+        $where = [
+            'order_id' => intval($order_id)
+        ];
+        $remarksList = Db::name('shop_order')->where($where)->getField('admin_note');
+        $remarksList = !empty($remarksList) ? unserialize($remarksList) : [];
+        krsort($remarksList);
+        $this->assign('remarksList', $remarksList);
+    
+        return $this->fetch();
     }
 
     /**
@@ -289,7 +540,20 @@ class Shop extends Base {
         if ($order_id) {
             // 查询订单信息
             $this->GetOrderData($order_id);
-            return $this->fetch('order_send');
+
+            $where = [
+                'is_choose' => 1,
+            ];
+            $express = $this->shop_express_db->where($where)->order('sort_order asc, express_id asc')->select();
+            $this->assign('express', $express);
+
+            // 如果安装手机端后台管理插件并且在手机端访问时执行
+            $isMobile = input('param.isMobile/d', 0);
+            if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+                return $this->display('shop/order_send');
+            } else {
+                return $this->fetch('order_send');
+            }
         }
     }
 
@@ -300,11 +564,24 @@ class Shop extends Base {
     {
         if (IS_POST) {
             $post = input('post.');
+            // 参数强制转类型
+            $post['order_id'] = intval($post['order_id']);
+            $post['users_id'] = intval($post['users_id']);
+            $post['prom_type'] = intval($post['prom_type']);
+            $post['express_id'] = intval($post['express_id']);
+
+            // 需要物流时必须选择快递
+            if (isset($post['prom_type']) && 0 === $post['prom_type']) {
+                if (empty($post['express_id']) || empty($post['express_name']) || empty($post['express_code'])) {
+                    $this->error('请选择快递公司');
+                }
+            }
+
             // 条件数组
             $Where = [
-                'order_id'   => $post['order_id'],
-                'users_id'   => $post['users_id'],
-                'lang'       => $this->admin_lang,
+                'order_id' => $post['order_id'],
+                'users_id' => $post['users_id'],
+                'lang' => $this->admin_lang,
             ];
 
             // 更新数组
@@ -316,16 +593,15 @@ class Shop extends Base {
                 'express_time'  => getTime(),
                 'consignee'     => $post['consignee'],
                 'update_time'   => getTime(),
-                'note'          => $post['note'],
                 'virtual_delivery' => $post['virtual_delivery'],
             ];
-            
+
             // 订单操作记录逻辑
             $LogWhere = [
-                'order_id'       => $post['order_id'],
+                'order_id' => $post['order_id'],
                 'express_status' => 1,
             ];
-            $LogData   = $this->shop_order_log_db->where($LogWhere)->count();
+            $LogData = $this->shop_order_log_db->where($LogWhere)->count();
             if (!empty($LogData)) {
                 // 数据存在则表示为修改发货内容
                 $OrderData = $this->shop_order_db->where($Where)->field('prom_type')->find();
@@ -339,7 +615,7 @@ class Shop extends Base {
                             // 若存在数据则拼装
                             $Note .= '给买家回复：'.$post['virtual_delivery'];
                         }
-                    }else{
+                    } else {
                         // 继续保持为虚拟订单修改
                         $Note = '虚拟订单，无需物流。';
                         if (!empty($post['virtual_delivery'])) {
@@ -347,7 +623,7 @@ class Shop extends Base {
                             $Note .= '给买家回复：'.$post['virtual_delivery'];
                         }
                     }
-                }else{
+                } else {
                     // 提交的数据为普通订单
                     if ($OrderData['prom_type'] != $post['prom_type']) {
                         // 这一段暂时无用，因为发货时，暂时无法选择将虚拟订单修改为普通订单
@@ -356,13 +632,13 @@ class Shop extends Base {
                             // 若存在数据则拼装
                             $Note .= '给买家回复：'.$post['virtual_delivery'];
                         }
-                    }else{
+                    } else {
                         // 继续保持为普通订单修改
                         $Note = '使用'.$post['express_name'].'发货成功！';
                     }
                 }
                 $UpdateData['prom_type'] = $post['prom_type'];
-            }else{
+            } else {
                 // 数据不存在则表示为初次发货，拼装发货内容
                 $Desc = '发货成功！';
                 $Note = '使用'.$post['express_name'].'发货成功！';
@@ -377,19 +653,18 @@ class Shop extends Base {
                 }
             }
 
-            if (empty($post['prom_type']) && empty($post['express_order'])) {
-                $this->error('配送单号不能为空！');
-            }
+            // 配送单号
+            if (empty($post['prom_type']) && empty($post['express_order'])) $this->error('配送单号不能为空');
 
             // 更新订单主表信息
             $IsOrder = $this->shop_order_db->where($Where)->update($UpdateData);
             if (!empty($IsOrder)) {
                 // 更新订单明细表信息
                 $Data['update_time'] = getTime();
-                $this->shop_order_details_db->where('order_id',$post['order_id'])->update($Data);
+                $this->shop_order_details_db->where('order_id', $post['order_id'])->update($Data);
 
                 // 添加订单操作记录
-                AddOrderAction($post['order_id'],'0',session('admin_id'),'2','1','1',$Desc,$Note);
+                AddOrderAction($post['order_id'], 0, session('admin_id'), 2, 1, 1, $Desc, $Note);
 
                 // 查询会员信息
                 $Field = 'username, nickname, email, mobile';
@@ -413,31 +688,124 @@ class Shop extends Base {
             }
         }
     }
+    // 订单更新收货地址
+    public function order_address()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+            // 判断数据
+            if (empty($post['consignee'])) $this->error('请填写收货人姓名！');
+            if (empty($post['mobile'])) $this->error('请填写收货人手机！');
+            if (empty($post['province'])) $this->error('请选择省份！');
+            if (empty($post['city'])) $this->error('请选择城市！');
+            if (empty($post['district'])) $this->error('请选择县区！');
+            if (empty($post['address'])) $this->error('请填写详细地址！');
+    
+            // 更新地址
+            $where = [
+                'order_id' => intval($post['order_id']),
+            ];
+            $update = [
+                'consignee' => strval($post['consignee']),
+                'mobile' => strval($post['mobile']),
+                'province' => intval($post['province']),
+                'city' => intval($post['city']),
+                'district' => intval($post['district']),
+                'address' => strval($post['address']),
+                'update_time' => getTime()
+            ];
+            $updateID = Db::name('shop_order')->where($where)->update($update);
+            if (!empty($updateID)) {
+                // 添加订单操作记录
+                AddOrderAction($post['order_id'], 0, session('admin_id'), 1, 0, 1, '修改地址！', '修改买家订单收货信息！');
+                $this->success('更新成功');
+            } else {
+                $this->error('操作失败，刷新重试！');
+            }
+        }
+    
+        $order_id = input('param.order_id/d', 0);
+        $this->assign('order_id', $order_id);
+        $address = Db::name('shop_order')->field('consignee, mobile, province, city, district, address')->where($where)->find($order_id);
+        $this->assign('address', $address);
+        $provinceList = get_province_list();
+        $this->assign('provinceList', $provinceList);
+        $cityList = Db::name('region')->where('parent_id', $address['province'])->select();
+        $this->assign('cityList', $cityList);
+        $areaList = Db::name('region')->where('parent_id', $address['city'])->select();
+        $this->assign('areaList', $areaList);
+    
+        return $this->fetch();
+    }
+    
+    // 联动地址获取
+    public function ajaxGetSpecifyRegion()
+    {
+        $parent_id  = input('param.parent_id/d');
+        $region = Db::name('region')->where("parent_id", $parent_id)->select();
+        $html = '';
+        if (!empty($region)) {
+            // 拼装下拉选项
+            foreach ($region as $value) {
+                $html .= "<option value='{$value['id']}'>{$value['name']}</option>";
+            }
+        }
+        $this->success('查询成功！', null, $html);
+    }
 
     /**
      * 查询快递名字及Code
      */
     public function order_express()
     {
-        $ExpressData = array();
-        $Where = array();
+        // 查询条件
+        $where = [];
         $keywords = input('keywords/s');
-        if (!empty($keywords)) {
-            $Where['express_name'] = array('LIKE', "%{$keywords}%");
-        }
+        if (!empty($keywords)) $where['express_name'] = ['LIKE', "%{$keywords}%"];
+            
+        // 分页查询
+        $count = $this->shop_express_db->where($where)->count('express_id');
+        $pageObj = new Page($count, 10);
 
-        $count = $this->shop_express_db->where($Where)->count('express_id');// 查询满足要求的总记录数
-        $pageObj = new Page($count, '10');// 实例化分页类 传入总记录数和每页显示的记录数
-        $ExpressData = $this->shop_express_db->where($Where)
+        // 查询数据
+        $ExpressData = $this->shop_express_db->where($where)
             ->order('sort_order asc,express_id asc')
             ->limit($pageObj->firstRow.','.$pageObj->listRows)
             ->select();
 
-        $pageStr = $pageObj->show(); 
-        $this->assign('ExpressData', $ExpressData);
+        // 计算选中个数
+        $where['is_choose'] = 1;
+        $selectNum = $this->shop_express_db->where($where)->count();
+        $this->assign('selectNum', $selectNum);
+
+        // 加载模板
+        $pageStr = $pageObj->show();
+        $select = input('param.select/d', 0);
+        $this->assign('select', $select);
         $this->assign('pageStr', $pageStr);
         $this->assign('pageObj', $pageObj);
+        $this->assign('ExpressData', $ExpressData);
         return $this->fetch('order_express');
+    }
+
+    // 全部选中/全部取消
+    public function express_is_choose()
+    {
+        if (IS_AJAX_POST) {
+            $is_choose = input('post.is_choose/d', 0);
+            if (isset($is_choose) && $is_choose >= 0) {
+                $where = [
+                    'is_choose' => !empty($is_choose) ? 0 : 1
+                ];
+                $update = [
+                    'is_choose' => $is_choose,
+                    'update_time' => getTime(),
+                ];
+                $ResultID = $this->shop_express_db->where($where)->update($update);
+                if (!empty($ResultID)) $this->success('操作成功');
+            }
+        }
+        $this->error('操作失败');
     }
 
     /**
@@ -458,11 +826,14 @@ class Shop extends Base {
                 // 订单删除
                 $IsDelete = $this->shop_order_db->where($Where)->delete();
                 if (!empty($IsDelete)) {
-                    // 同步删除订单下的产品
-                    $this->shop_order_details_db->where($Where)->delete();
+                    $Where = [
+                        'order_id' => $post['order_id'],
+                    ];
                     // 同步删除订单下的操作记录
                     $this->shop_order_log_db->where($Where)->delete();
-                    $this->success('删除成功！');
+                    // 同步删除订单下的产品
+                    $this->shop_order_details_db->where($Where)->delete();
+                    $this->success('删除成功！', url('Shop/index'));
                 }else{
                     $this->error('数据错误！');
                 }
@@ -481,6 +852,7 @@ class Shop extends Base {
                     $UpdateData['pay_time']     = getTime();
                     // 管理员付款
                     $UpdateData['pay_name']     = 'admin_pay';
+                    $UpdateData['wechat_pay_type'] = '';
 
                     /*用于添加订单操作记录*/
                     $order_status   = '1'; // 订单状态
@@ -491,6 +863,9 @@ class Shop extends Base {
                     /*结束*/
 
                 }else if ('ysh' == $post['status_name']) {
+                    // 如果后台【商城中心】-【商城配置】-【订单设置】-收货后可维权时间设置为0，则表示订单不允许申请维权
+                    $OrderData['allow_service'] = !empty($this->UsersConfigData['order_right_protect_time']) ? 0 : 1;
+
                     // 订单确认收货，追加更新数组
                     $UpdateData['order_status'] = '3';
                     $UpdateData['confirm_time'] = getTime();
@@ -551,11 +926,147 @@ class Shop extends Base {
                     if ('yfk' == $post['status_name'] && $OrderData['prom_type'] == 1) {
                         PayModel::afterVirtualProductPay($Where);
                     }
+
+                    // 确认收货则执行
+                    if ('ysh' == $post['status_name']) {
+                        // 如果安装了分销插件则执行
+                        if (is_dir('./weapp/DealerPlugin/')) {
+                            // 开启分销插件则执行
+                            $weappInfo = model('Weapp')->getWeappList('DealerPlugin');
+                            if (!empty($weappInfo['status']) && 1 == $weappInfo['status']) {
+                                // 调用分销逻辑层方法
+                                $dealerCommonLogic = new \weapp\DealerPlugin\logic\DealerCommonLogic;
+                                $dealerCommonLogic->dealerOrderSettlementExecute($post['order_id'], $post['users_id']);
+                            }
+                        }
+                        // 如果安装了秒杀插件则执行
+                        if (is_dir('./weapp/Seckill/')) {
+                            $SeckillRow = model('Weapp')->getWeappList('Seckill');
+                            //is_seckill_order 只有安装了秒杀插件 shop_order表才会有这个字段
+                            if (!empty($SeckillRow) && 1 == intval($SeckillRow['status']) && !empty($order['is_seckill_order'])) {
+                                // 调用秒杀逻辑层方法
+                                $weappSeckillLogic = new \weapp\Seckill\logic\SeckillLogic;
+                                $weappSeckillLogic->confirmOrderHandle($post['order_id'], $post['users_id']);
+                            }
+                        }
+                    }
                     $this->success('操作成功！');
                 }
             }
         }else{
             $this->error('非法访问！');
+        }
+    }
+
+    // 手动关闭订单并退款
+    public function order_manual_refund()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+            $OrderID = intval($post['order_id']);
+            $RefundNote = trim($post['refund_note']);
+            if (!empty($OrderID)) {
+                $update = [
+                    'order_id' => $OrderID,
+                    'order_status' => '-1',
+                    'manual_refund' => 1,
+                    'refund_note' => $RefundNote,
+                    'update_time' => getTime(),
+                ];
+                $ResultID = $this->shop_order_db->update($update);
+                if (!empty($ResultID)) {
+                    // 如果安装了秒杀插件则执行
+                    if (is_dir('./weapp/Seckill/')) {
+                        $SeckillRow = model('Weapp')->getWeappList('Seckill');
+                        //is_seckill_order 只有安装了秒杀插件 shop_order表才会有这个字段
+                        if (!empty($SeckillRow) && 1 == intval($SeckillRow['status']) && !empty($order['is_seckill_order'])) {
+                            // 调用秒杀逻辑层方法
+                            $users_id = $this->shop_order_db->where('order_id',$OrderID)->value('users_id');
+                            $weappSeckillLogic = new \weapp\Seckill\logic\SeckillLogic;
+                            $weappSeckillLogic->cancelOrderHandle($OrderID, $users_id);
+                        }
+                    }
+
+                    // 添加订单操作记录
+                    AddOrderAction($OrderID, 0, session('admin_id'), '-1', 0, 1, '关闭并退款', '管理员手动关闭订单并自行退款');
+
+                    // 商品库存恢复
+                    $where = [
+                        'order_id' => $OrderID,
+                    ];
+                    $shopOrder = $this->shop_order_db->where($where)->select();
+                    model('OrderPreHandle')->restoreGoodsStock($shopOrder);
+
+                    // 加添订单售后信息
+                    $this->adminAddOrderService($OrderID, $RefundNote);
+
+                    // 返回结束
+                    $this->success('操作完成');
+                }
+            }
+        }
+        $this->error('非法访问！');
+    }
+
+    // 加添订单售后信息
+    public function adminAddOrderService($orderID = 0, $refundNote = '')
+    {
+        $where = [
+            'order_id' => $orderID,
+        ];
+        // 查询订单信息
+        $order = Db::name('shop_order')->where($where)->find();
+        $city = get_city_name($order['city']);
+        $district = get_area_name($order['district']);
+        $province = get_province_name($order['province']);
+        $order['address'] = $province . ' ' . $city . ' ' . $district . ' ' . $order['address'];
+        // 查询订单商品信息
+        $details = $this->shop_order_details_db->where($where)->select();
+        if (!empty($details)) {
+            $times = getTime();
+            foreach ($details as $key => $value) {
+                // 商品规格信息
+                $value['data'] = !empty($value['data']) ? unserialize($value['data']) : [];
+                $product_spec = !empty($value['data']['spec_value']) ? htmlspecialchars_decode(htmlspecialchars_decode($value['data']['spec_value'])) : '';
+                // 订单售后信息
+                $insert = [
+                    'service_type' => 2,
+                    'users_id'     => intval($order['users_id']),
+                    'merchant_id'  => intval($order['merchant_id']),
+                    'order_id'     => intval($order['order_id']),
+                    'order_code'   => strval($order['order_code']),
+                    'details_id'   => intval($value['details_id']),
+                    'product_id'   => intval($value['product_id']),
+                    'product_name' => strval($value['product_name']),
+                    'product_spec' => strval($product_spec),
+                    'product_num'  => intval($value['num']),
+                    'product_img'  => strval($value['litpic']),
+                    'content'      => '商家主动退款',
+                    'address'      => strval($order['address']),
+                    'consignee'    => $order['consignee'],
+                    'mobile'       => $order['mobile'],
+                    'manual_refund'=> 1,
+                    'manual_time'  => $times,
+                    'refund_note'  => !empty($refundNote) ? $refundNote : '商家主动退款',
+                    'refund_price' => unifyPriceHandle($value['product_price']),
+                    'refund_code'  => 'TK' . $times . rand(10, 99),
+                    'status'       => 7,
+                    'add_time'     => $times,
+                    'update_time'  => $times,
+                ];
+                $resultID = Db::name('shop_order_service')->insertGetId($insert);
+                if (!empty($resultID)) {
+                    // 更新订单明细表中对应商品为申请服务
+                    $update = [
+                        'apply_service' => 1,
+                        'update_time' => getTime()
+                    ];
+                    $this->shop_order_details_db->where('details_id', $value['details_id'])->update($update);
+
+                    // 添加订单服务记录
+                    OrderServiceLog($resultID, $order['order_id'], 0, session('admin_id'), '商家主动退款');
+                }
+            }
         }
     }
 
@@ -598,13 +1109,12 @@ class Shop extends Base {
         }
 
         // 省份
-        $Template = Db::name('region')->field('a.id, a.name,b.template_money,b.template_id')
+        $Template = Db::name('region')->field('a.id, a.name, b.template_money, b.template_id')
             ->alias('a')
             ->join('__SHOP_SHIPPING_TEMPLATE__ b', 'a.id = b.province_id', 'LEFT')
             ->where($Where)
             ->getAllWithIndex('id');
         $this->assign('Template', $Template);
-        
         // 统一配送
         $info = $this->shipping_template_db->where('province_id','100000')->find();
         $this->assign('info', $info);
@@ -648,13 +1158,28 @@ class Shop extends Base {
      */
     function GetOrderData($order_id)
     {
+        // 手机端后台管理插件特定使用参数
+        $isMobile = input('param.isMobile/d', 0);
+
         // 获取订单数据
         $OrderData = $this->shop_order_db->find($order_id);
+        $OrderData['add_time'] = date('Y-m-d H:i:s', $OrderData['add_time']);
+        $OrderData['pay_time'] = !empty($OrderData['pay_time']) ? date('Y-m-d H:i:s', $OrderData['pay_time']) : 0;
+        $OrderData['update_time'] = !empty($OrderData['update_time']) ? date('Y-m-d H:i:s', $OrderData['update_time']) : 0;
+        $OrderData['express_time'] = !empty($OrderData['express_time']) ? date('Y-m-d H:i:s', $OrderData['express_time']) : 0;
+        $OrderData['confirm_time'] = !empty($OrderData['confirm_time']) ? date('Y-m-d H:i:s', $OrderData['confirm_time']) : 0;
+        $OrderData['order_terminal_name'] = '电脑端';
+        if (!empty($OrderData['order_terminal']) && 2 === intval($OrderData['order_terminal'])) {
+            $OrderData['order_terminal_name'] = '手机端';
+        } else if (!empty($OrderData['order_terminal']) && 3 === intval($OrderData['order_terminal'])) {
+            $OrderData['order_terminal_name'] = '微信小程序';
+        }
 
         // 获取会员数据
         $UsersData = $this->users_db->find($OrderData['users_id']);
+        !empty($UsersData) && $UsersData['head_pic'] = get_head_pic($UsersData['head_pic']);
         // 当前单条订单信息的会员ID，存入session，用于添加订单操作表
-        session('OrderUsersId',$OrderData['users_id']);
+        session('OrderUsersId', $OrderData['users_id']);
 
         // 获取订单详细表数据
         $DetailsData = $this->shop_order_details_db->where('order_id',$OrderData['order_id'])->select();
@@ -674,32 +1199,48 @@ class Shop extends Base {
         $array_new = get_archives_data($DetailsData,'product_id');
         $OrderData['prom_type_virtual'] = false;
         // 处理订单详细表数据处理
+        $total_num = 0;
+        $OrderData['totalAmount'] = 0;
         foreach ($DetailsData as $key => $value) {
+            $total_num += intval($value['num']);
             if ($value['prom_type'] == 1) {
                 $OrderData['prom_type_virtual'] = true;
             }
             // 产品属性处理
-            $ValueData = unserialize($value['data']);
-            // 规制值
-            $spec_value = !empty($ValueData['spec_value']) ? htmlspecialchars_decode($ValueData['spec_value']) : '';
-            $spec_value = htmlspecialchars_decode($spec_value);
-            // 旧参数
-            $attr_value = !empty($ValueData['attr_value']) ? htmlspecialchars_decode($ValueData['attr_value']) : '';
-            $attr_value = htmlspecialchars_decode($attr_value);
-            // 新参数
-            $attr_value_new = !empty($ValueData['attr_value_new']) ? htmlspecialchars_decode($ValueData['attr_value_new']) : '';
-            $attr_value_new = htmlspecialchars_decode($attr_value_new);
-            // 优先显示新参数
-            $attr_value = !empty($attr_value_new) ? $attr_value_new : $attr_value;
-            $DetailsData[$key]['data'] = $spec_value . $attr_value;
+            $value['data'] = !empty($value['data']) ? unserialize($value['data']) : [];
+            $DetailsData[$key]['pointsGoodsBuyField'] = !empty($value['data']['pointsGoodsBuyField']) ? json_decode($value['data']['pointsGoodsBuyField'], true) : [];
+            $value['data'] = htmlspecialchars_decode(htmlspecialchars_decode($value['data']['spec_value']));
+            // 组合数据
+            $value['data'] = explode('<br/>', $value['data']);
+            $valueData = '';
+            foreach ($value['data'] as $key_1 => $value_1) {
+                $delimiter = '';//!empty($isMobile) ? '；' : '';
+                if (!empty($value_1)) $valueData .= '<span>' . trim(strrchr($value_1, '：'),'：') . '</span>' . $delimiter;
+            }
+            $DetailsData[$key]['product_spec'] = $value['data'] = $valueData;
+
+            // // 规制值
+            // $spec_value = !empty($ValueData['spec_value']) ? htmlspecialchars_decode($ValueData['spec_value']) : '';
+            // $spec_value = htmlspecialchars_decode($spec_value);
+            // // 旧参数
+            // $attr_value = !empty($ValueData['attr_value']) ? htmlspecialchars_decode($ValueData['attr_value']) : '';
+            // $attr_value = htmlspecialchars_decode($attr_value);
+            // // 新参数
+            // $attr_value_new = !empty($ValueData['attr_value_new']) ? htmlspecialchars_decode($ValueData['attr_value_new']) : '';
+            // $attr_value_new = htmlspecialchars_decode($attr_value_new);
+            // // 优先显示新参数
+            // $attr_value = !empty($attr_value_new) ? $attr_value_new : $attr_value;
+            // $DetailsData[$key]['data'] = $spec_value . $attr_value;
 
             // 产品内页地址
             $DetailsData[$key]['arcurl'] = get_arcurl($array_new[$value['product_id']]);
-            
             // 小计
-            $DetailsData[$key]['subtotal'] = $value['product_price'] * $value['num'];
-            
-            $DetailsData[$key]['litpic'] = handle_subdir_pic($DetailsData[$key]['litpic']); // 支持子目录
+            $DetailsData[$key]['subtotal'] = unifyPriceHandle($value['product_price'] * $value['num']);
+            // 合计金额
+            $OrderData['totalAmount'] += $DetailsData[$key]['subtotal'];
+            $OrderData['totalAmount'] = unifyPriceHandle($OrderData['totalAmount']);
+            // 支持子目录
+            $DetailsData[$key]['litpic'] = handle_subdir_pic($DetailsData[$key]['litpic']);
         }
 
         // 订单类型
@@ -708,38 +1249,49 @@ class Shop extends Base {
         }else{
             $OrderData['prom_type_name'] = '虚拟订单';
         }
+        if (!empty($OrderData['is_seckill_order'])) $OrderData['prom_type_name'] = '秒杀订单';
+        if (!empty($OrderData['points_shop_order'])) $OrderData['prom_type_name'] = '积分订单';
 
         // 移动端查询物流链接
         $MobileExpressUrl = "//m.kuaidi100.com/index_all.html?type=".$OrderData['express_code']."&postid=".$OrderData['express_order'];
+        $this->assign('MobileExpressUrl', $MobileExpressUrl);
+        // PC端查询物流链接
+        $pcExpressUrl = "https://www.kuaidi100.com/chaxun?com=".$OrderData['express_code']."&nu=".$OrderData['express_order'];
+        $this->assign('pcExpressUrl', $pcExpressUrl);
+        // 管理员备注
+        $adminNoteCount = !empty($OrderData['admin_note']) ? count(unserialize($OrderData['admin_note'])) : 0;
+        $this->assign('adminNoteCount', $adminNoteCount);
+
+        // 存在积分商城订单则执行
+        if (!empty($OrderData['points_shop_order'])) {
+            $weappInfo = model('ShopPublicHandle')->getWeappPointsShop();
+            if (!empty($weappInfo)) {
+                $list = !empty($OrderData) ? $OrderData : [];
+                $list['Details'] = !empty($DetailsData) ? $DetailsData : [];
+                $pointsShopLogic = new \weapp\PointsShop\logic\PointsShopLogic();
+                $pointsShopLogic->pointsShopOrderDataHandle([$list], $OrderData, $DetailsData);
+            }
+        }
 
         // 加载数据
-        $this->assign('MobileExpressUrl', $MobileExpressUrl);
         $this->assign('OrderData', $OrderData);
         $this->assign('DetailsData', $DetailsData);
         $this->assign('UsersData', $UsersData);
-        $this->assign('admin_order_status_arr',$admin_order_status_arr);
-        $this->assign('pay_method_arr',$pay_method_arr);
-    }
-
-    // 检测并第一次从官方同步订单中心的前台模板
-    public function ajax_syn_theme_shop()
-    {
-        $icon = 2;
-        $msg = '下载订单中心模板包异常，请第一时间联系技术支持，排查问题！';
-        $shopLogic = new ShopLogic;
-        $data = $shopLogic->syn_theme_shop();
-        if (true !== $data) {
-            if (1 <= intval($data['code'])) {
-                $this->success('初始化成功！', url('Shop/index'));
-            } else {
-                if (is_array($data)) {
-                    $msg = $data['msg'];
-                    $icon = !empty($data['icon']) ? $data['icon'] : $icon;
-                }
-            }
+        $this->assign('admin_order_status_arr', $admin_order_status_arr);
+        $this->assign('pay_method_arr', $pay_method_arr);
+        $this->assign('total_num', $total_num);
+        
+        // 核销订单记录信息
+        $weappVerifyLog = [];
+        if (!empty($this->weappInfo)) {
+            $where = [
+                'users_id' => intval($OrderData['users_id']),
+                'order_id' => intval($OrderData['order_id']),
+            ];
+            $weappVerifyLog = Db::name('weapp_verify')->where($where)->find();
+            $weappVerifyLog['verify_time'] = !empty($weappVerifyLog['verify_time']) ? date('Y-m-d H:i:s', $weappVerifyLog['verify_time']) : 0;
         }
-        getUsersConfigData('shop', ['shop_open' => 0]);
-        $this->error($msg, null, ['icon'=>$icon]);
+        $this->assign('weappVerifyLog', $weappVerifyLog);
     }
 
     // ------------------------------------------------------------------------------------------------------
@@ -1002,10 +1554,8 @@ class Shop extends Base {
         if (IS_AJAX_POST) {
             $post = input('post.');
 
-            // 当选中的规格名称超过三个，不允许再添加
-            if (3 == count(session('spec_arr'))) {
-                $this->error('最多只能添加三种规格大类！');
-            }
+            // 当选中的规格大类大于等于三个则不允许再添加
+            if (3 == count(session('spec_arr'))) $this->error('最多只能添加三种规格大类');
 
             // 获取预设规格标记ID数组
             $PresetMarkIdArray = $this->ProductSpecLogic->GetPresetMarkIdArray($post);
@@ -1016,7 +1566,7 @@ class Shop extends Base {
                 model('ProductSpecData')->PresetSpecAddData($post);
                 // 拼装更新预设名称下拉选项
                 $Result = $this->ProductSpecLogic->GetPresetNameOption($PresetMarkIdArray, $post);
-            }else{
+            } else {
                 $this->error('最多只能添加三种规格大类！');
             }
             
@@ -1024,7 +1574,7 @@ class Shop extends Base {
                 $ResultData = $this->ProductSpecLogic->GetPresetValueOption('', $post['spec_mark_id'], $post['aid'], 2);
                 $PresetName = $ResultData['PresetName'];
                 $PresetValueOption = $ResultData['PresetValueOption'];
-            }else{
+            } else {
                 // 拼装预设值下拉选项
                 $PresetValue = $this->product_spec_preset_db->where('preset_mark_id','IN',$post['preset_mark_id'])->field('preset_id,preset_name,preset_value')->select();
                 $PresetName = $PresetValue[0]['preset_name'];
@@ -1039,7 +1589,7 @@ class Shop extends Base {
                     'spec_mark_id_arr'    => $Result['MarkId'],
                     'preset_value_option' => $PresetValueOption,
                 ];
-            }else{
+            } else {
                 // 结果返回
                 $ReturnHtml = [
                     'preset_name'         => $PresetName,
@@ -1130,16 +1680,14 @@ class Shop extends Base {
             $ValueArray  = $this->ProductSpecLogic->ClearSpecValueID($post);
 
             // 把session中的数据和提交的数据组合
-            $SpecArray   = $this->ProductSpecLogic->GetSessionPostArrayMerge($post);
-            if (isset($SpecArray['error']) && !empty($SpecArray['error'])) {
-                $this->error($SpecArray['error']);
-            }
+            $SpecArray = $this->ProductSpecLogic->GetSessionPostArrayMerge($post);
+            if (isset($SpecArray['error']) && !empty($SpecArray['error'])) $this->error($SpecArray['error']);
 
             // 获取规格拼装后的html表格
             if (isset($post['aid']) && !empty($post['aid'])) {
                 // 编辑
                 $HtmlTable = $this->ProductSpecLogic->SpecAssemblyEdit($SpecArray, $post['aid']);
-            }else{
+            } else {
                 // 新增
                 $HtmlTable = $this->ProductSpecLogic->SpecAssembly($SpecArray);
             }
@@ -1148,20 +1696,20 @@ class Shop extends Base {
                 // 删除规格值后的规格值下拉框
                 $PresetValueOption = $ValueArray['Option'];
                 $ResultValue['Value'] = null;
-            }else{
+            } else {
                 $ResultValue = model('ProductSpecPreset')->GetPresetNewData(session('spec_arr'), $post);
                 // 获取新增规格值后的下拉框
                 if (empty($post['aid'])) {
                     $PresetValueOption = $this->ProductSpecLogic->GetPresetValueOption($ResultValue['Option']);
-                }else{
+                } else {
                     $PresetValueOption = $ResultValue['Option'];
                 }
             }
 
             // 返回数据
             $ReturnData = [
-                'HtmlTable'         => $HtmlTable,
-                'PresetNameOption'  => $ResultArray['Option'],
+                'HtmlTable' => $HtmlTable,
+                'PresetNameOption' => $ResultArray['Option'],
                 'PresetMarkIdArray' => $ResultArray['MarkId'],
                 'SelectPresetValue' => $ResultValue['Value'],
                 'PresetValueOption' => $PresetValueOption,
@@ -1438,5 +1986,223 @@ class Shop extends Base {
     public function market_index()
     {
         return $this->fetch();
+    }
+
+    //会员编辑 订单数列表
+    public function users_edit_order_index()
+    {
+        // 初始化数组和条件
+        $where = [
+            'a.lang' => $this->admin_lang,
+        ];
+
+        // 会员编辑专用 - 筛选
+        $users_id = input('users_id/d');
+        if (!empty($users_id)) {
+            $where['a.users_id'] = $users_id;
+            $where['a.order_status'] = 3;
+        }
+        // 订单号查询
+        $order_code = input('order_code/s');
+        if (!empty($order_code)) $where['a.order_code'] = ['LIKE', "%{$order_code}%"];
+
+        // 分页查询
+        $count = $this->shop_order_db->alias('a')->where($where)->count('order_id');
+        $pageObj = new Page($count, config('paginate.list_rows'));
+
+        // 订单主表数据查询
+        $list = $this->shop_order_db->alias('a')
+            ->field('a.*, b.username as u_username, b.nickname as u_nickname, b.mobile as u_mobile')
+            ->where($where)
+            ->join('__USERS__ b', 'a.users_id = b.users_id', 'LEFT')
+            ->order('a.order_id desc')
+            ->limit($pageObj->firstRow.','.$pageObj->listRows)
+            ->select();
+        if (empty($list) && !empty($order_code)) {
+            // 通过商品名称查询订单号
+            $where_1['product_name'] = ['LIKE', "%{$order_code}%"];
+            $order_ids = $this->shop_order_details_db->where($where_1)->group('order_id')->column('order_id');
+            // 重新查询订单主表
+            unset($where['a.order_code']);
+            $where['a.order_id'] = ['IN', $order_ids];
+            // 分页查询
+            $count = $this->shop_order_db->alias('a')->where($where)->count('order_id');
+            $pageObj = new Page($count, config('paginate.list_rows'));
+            // 订单主表数据查询
+            $list = $this->shop_order_db->alias('a')
+                ->field('a.*, b.username as u_username, b.nickname as u_nickname, b.mobile as u_mobile')
+                ->where($where)
+                ->join('__USERS__ b', 'a.users_id = b.users_id', 'LEFT')
+                ->order('a.order_id desc')
+                ->limit($pageObj->firstRow.','.$pageObj->listRows)
+                ->select();
+        }
+
+        $order_ids = [];
+        $OrderReminderID = [];
+        foreach ($list as $key => $value) {
+            array_push($order_ids, $value['order_id']);
+            if (1 == $value['order_status']) array_push($OrderReminderID, $value['order_id']);
+        }
+
+        // 处理订单详情数据
+        $where = [
+            'a.order_id' => ['IN', $order_ids]
+        ];
+        $DetailsData = $this->shop_order_details_db->alias('a')
+            ->field('a.*, b.service_id, b.status')
+            ->where($where)
+            ->join('__SHOP_ORDER_SERVICE__ b', 'a.details_id = b.details_id', 'LEFT')
+            ->order('details_id asc')
+            ->select();
+        $ArchivesData = get_archives_data($DetailsData, 'product_id');
+        $OrderServiceStatus = Config::get('global.order_service_status');
+        foreach ($DetailsData as $key => $value) {
+            // 售后信息处理
+            $value['service_id'] = !empty($value['service_id']) ? $value['service_id'] : 0;
+            $value['status'] = !empty($value['status']) ? $value['status'] : 0;
+            $value['status_name'] = !empty($value['status']) ? $OrderServiceStatus[$value['status']] : '';
+            // 产品属性处理
+            $value['data'] = unserialize($value['data']);
+            $value['data'] = htmlspecialchars_decode(htmlspecialchars_decode($value['data']['spec_value']));
+            // 组合数据
+            $value['data'] = explode('<br/>', $value['data']);
+            $valueData = '';
+            foreach ($value['data'] as $key_1 => $value_1) {
+                if (!empty($value_1)) $valueData .= '<span>' . trim(strrchr($value_1, '：'),'：') . '</span>';
+            }
+            $value['data'] = $valueData;
+            $value['arcurl'] = get_arcurl($ArchivesData[$value['product_id']]);
+            $value['litpic'] = handle_subdir_pic(get_default_pic($value['litpic']));
+            $DetailsData[$key] = $value;
+        }
+
+        // 把订单详情数据植入订单数据
+        $DetailsDataGroup = group_same_key($DetailsData, 'order_id');
+        foreach ($list as $key => $value) {
+            // 处理会员昵称
+            $value['u_nickname'] = !empty($value['u_nickname']) ? $value['u_nickname'] : $value['u_username'];
+            // 处理订单详情数据
+            $value['Details'] = $DetailsDataGroup[$value['order_id']];
+            // 商品条数
+            $value['rowspan'] = count($value['Details']);
+            // 添加时间
+            $value['add_time'] = date('Y-m-d H:i:s', $value['add_time']);
+            // 更新时间
+            $value['update_time'] = date('Y-m-d H:i:s', $value['update_time']);
+            // 重新赋值数据
+            $list[$key] = $value;
+        }
+
+        // 分页显示输出
+        $pageStr = $pageObj->show();
+
+        // 数据加载
+        $this->assign('list', $list);
+        $this->assign('page', $pageStr);
+        $this->assign('pager', $pageObj);
+
+        return $this->fetch('member/edit/order_index');
+    }
+    //前台改变产品类型,被取消的类型的商品将会统一下架处理,这里返回受影响的商品数量
+    public function get_shop_type_arc()
+    {
+        $cancel_type = input('param.cancel_type/s');
+        $cancel_type = explode(',',$cancel_type);
+        $where_prom_type = [];
+        if (in_array(0,$cancel_type)) $where_prom_type[] = 0;
+        if (in_array(1,$cancel_type)) {
+            $where_prom_type[] = 1;
+            $where_prom_type[] = 2;
+            $where_prom_type[] = 3;
+        }
+        if (in_array(2,$cancel_type)) $where_prom_type[] = 4;
+        $where['channel'] = 2;
+        $where['is_del'] = 0;
+        $where['arcrank'] = ['>',-1];
+        $where['prom_type'] = ['in',$where_prom_type];
+        $count = Db::name('archives')->where($where)->count();
+        $this->success('success','',$count);
+    }
+
+    // 订单确认核销
+    public function verify()
+    {
+        if (IS_AJAX_POST && !empty($this->weappInfo)) {
+            // 开启核销插件则执行
+            if (!empty($this->weappInfo['status']) && 1 === intval($this->weappInfo['status'])) {
+                // 调用核销逻辑层方法
+                $post = input('post.');
+                $verifyLogic = new \weapp\Verify\logic\VerifyLogic;
+                $verifyLogic->verifyOrderConfirmHandle($post, $this->weappInfo);
+            }
+            $this->error('请先开启核销插件');
+        }
+        $this->error('请先安装核销插件');
+    }
+
+    public function shopOrderPreHandle()
+    {
+        if (IS_AJAX_POST) {
+            model('OrderPreHandle')->eyou_shopOrderPreHandle(0, getUsersConfigData('all'), 'admin');
+            $this->success('订单处理完成');
+        }
+    }
+
+    public function push_shipping()
+    {
+        if (IS_AJAX_POST) {
+            $order_code = input('post.order_code/s');
+            if (empty($order_code)) $this->error('缺少必要参数!');
+            $users_id = input('post.users_id/d');
+            $source = input('post.source/d');
+            $action = input('post.action/s');
+            if ('mark' == $action){
+                $r = model('ShopPublicHandle')->updateWxShippingInfo($users_id, $order_code,$source,0,'手动发货');
+                if (false !== $r){
+                    $this->success('标记手动发货成功!');
+                }else{
+                    $this->error('标记手动发货失败');
+                }
+            }elseif ('retry' == $action){
+                $item_desc = '';
+                $where['order_code'] = $order_code;
+                $where['users_id'] = $users_id;
+                if (2 == $source){
+                    $order = Db::name('shop_order')->where($where)->find();
+                }elseif (1 == $source){
+                    $item_desc = '充值';
+                    $order['order_code'] = $order_code;
+                    $order['users_id'] = $users_id;
+                }elseif (3 == $source){
+                    $item_desc = '会员升级';
+                    $order['order_code'] = $order_code;
+                    $order['users_id'] = $users_id;
+                }elseif (8 == $source){
+                    $order = Db::name('media_order')->where($where)->find();
+                    $item_desc = $order['product_name'];
+                }elseif (9 == $source){
+                    $order = Db::name('article_order')->where($where)->find();
+                    $item_desc = $order['product_name'];
+                }elseif (10 == $source){
+                    $order = Db::name('download_order')->where($where)->find();
+                    $item_desc = $order['product_name'];
+                }
+                $WxPayOrderLogic = new \app\common\logic\WxPayOrderLogic();
+                $WxPayOrderLogic->minipro_send_goods($order,$source,$item_desc);
+                $where['order_source'] = $source;
+                $return = Db::name('wx_shipping_info')->where($where)->find();
+                if (!empty($return)){
+                    if (empty($return['errcode'])){
+                        $this->success($return['errmsg']);
+                    } else{
+                        $this->error($return['errmsg']);
+                    }
+                }else{
+                    $this->error('该订单不在推送范围内');
+                }
+            }
+        }
+        $this->error('请求错误!');
     }
 }

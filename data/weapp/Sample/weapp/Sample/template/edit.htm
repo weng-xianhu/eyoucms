@@ -41,7 +41,7 @@
                         <span class="type-file-box">
                             <input type="text" id="logo_local" name="logo_local" value="{$row.logo_local|default=''}" class="type-file-text" autocomplete="off">
                             <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
-                            <input class="type-file-file" onClick="GetUploadify(1,'','weapp','img_call_back','{:U('Uploadify/upload')}')" size="30" hidefocus="true" nc_type="change_site_logo"
+                            <input class="type-file-file" onClick="GetUploadify(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
                                  title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
                         </span>
                     </div>

@@ -15,7 +15,8 @@ table { border-collapse: collapse; border-spacing:0;}
 th { text-align: left; }
 input, button, select, textarea { outline: none }
 i,em{ font-style:normal;}
-i.fa { font-size: 14px; vertical-align: middle; margin-right: 4px; }
+i.fa{ font-size: 14px; vertical-align: middle; margin-right: 4px; }
+i.iconfont { font-size: 18px; vertical-align: middle; margin-right: 4px; color: #999;}
 input[type='text']:focus{ border:1px solid #62b3ff;}
 input[type='text'].error:focus{ border:1px dashed #E84C3D;}
 input[type='submit']{ outline:0 none;}
@@ -468,7 +469,7 @@ input.error,textarea.error{ background-color: #FFF0F0;background-repeat: repeat;
 .warpper{ position:relative; min-width:1000px; width:100%;}
 .warpper .title{ height:30px; line-height:50px; font-size:17px; color:#343434; padding:0 20px;}
 .warpper .content{ position:relative; padding:20px 30px;}
-.warpper .start_content{ padding:15px 10px 0px 15px;}
+.warpper .start_content{ padding:10px 10px 0px 10px;}
 
 .contentWarp:after,.contentWarp:before,.contentWarp .section .sc_title:after,.contentWarp .section .sc_title:before{ content: ".";display: block;height: 0;clear: both;visibility: hidden;}
 .contentWarp_item{ float: left;margin-right: 32px;}
@@ -481,7 +482,7 @@ input.error,textarea.error{ background-color: #FFF0F0;background-repeat: repeat;
 .contentWarp .section_select{ overflow:hidden; margin-bottom:-10px;}
 .contentWarp .section .sc_title{padding:26px 0 14px; border-bottom:1px solid #e4eaec; position:relative;}
 .contentWarp .section .sc_title h3{ float:left; font-size:16px; font-weight:normal; color:#333; line-height:20px;}
-.contentWarp .section .sc_title h3 i{color: #707070;margin-right: 6px; font-size: 16px;}
+.contentWarp .section .sc_title h3 i{color: #707070;margin-right:4px; font-size: 18px;vertical-align: middle;float: left;}
 .contentWarp .section .sc_title cite{ float:right; color:#999; line-height:20px;}
 .contentWarp .section .sc_icon{ display:block; width:20px; height:20px; position:absolute;}
 
@@ -655,7 +656,7 @@ i.ice_b{ background-position:-336px -214px;}
 .info_count{
     background: #fff;
     padding: 0.8% 0 0 1.1%;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 .index_box .info_count h3{
      height: 42px;
@@ -703,6 +704,7 @@ i.ice_b{ background-position:-336px -214px;}
 }
 .info_count li a p cite i{
     font-size: 20px;
+    color: #4fc0e8;
 }
 .info_count .navs{
     text-align: center;

@@ -1,0 +1,273 @@
+{include file="public/layout" /}
+
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="box-shadow:none;padding-bottom: 0;">
+    <div class="flexigrid" style="min-height: 400px;">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th abbr="download_title" axis="col3" class="w150">
+                            <div class="tc">变化积分</div>
+                        </th>
+                        <th abbr="download_title" axis="col3" class="w150">
+                            <div class="tc">当前积分</div>
+                        </th>
+                        <th align="center"  axis="col6" class="">
+                            <div class="tl text-l10">备注</div>
+                        </th>
+                        <th abbr="download_title" axis="col3" class="w150">
+                            <div class="tc">操作人</div>
+                        </th>
+                        <th abbr="download_title" axis="col3" class="w150">
+                            <div class="tc">操作时间</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                    <tr>
+                        <td class="no-data" align="center" axis="col0" colspan="50">
+                            <div class="no_row">
+                                <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {else/}
+                    {foreach name="list" item="vo" key="k" }
+                    <tr>
+                        <td>
+                            <div class="pad-tb12 tc w150" >
+                                {if condition='$vo.score < 0'}
+                                <span style="color: red;">{$vo.score}</span>
+                                {elseif condition="$vo.score > 0"}
+                                <span style="color: green;">{$vo.score}</span>
+                                {/if}
+                            </div>
+                        </td>
+                        <td  >
+                            <div class="pad-tb12 tc w150" >
+                                {$vo.current_score}
+                            </div>
+                        </td>
+                        <td style="width: 100%;">
+                            <div class="pad-tb12 tl text-l10">
+                                {notempty name='$vo.remark'}
+                                    {$vo.remark}
+                                {else /}
+                                    {if condition='1 == $vo.type'}
+                                    提问
+                                    {elseif condition="2 == $vo.type"}
+                                    回答
+                                    {elseif condition="3 == $vo.type"}
+                                    最佳答案
+                                    {elseif condition="4 == $vo.type"}
+                                    悬赏退回
+                                    {elseif condition="5 == $vo.type"}
+                                    每日签到
+                                    {elseif condition="6 == $vo.type"}
+                                    管理员编辑
+                                    {elseif condition="7 == $vo.type && $vo.score < 0"}
+                                    问题悬赏
+                                    {elseif condition="7 == $vo.type && $vo.score > 0"}
+                                    问题获得悬赏
+                                    {elseif condition="9 == $vo.type && $vo.score < 0"}
+                                    积分兑换
+                                    {elseif condition="9 == $vo.type && $vo.score > 0"}
+                                    积分兑换取消
+                                    {/if}
+                                {/notempty}
+
+                            </div>
+                        </td>
+                        <td>
+                            <div class="pad-tb12 tc w150" >
+                                {empty name='$vo.admin_id'}
+                                    {$vo.nickname}
+                                {else /}
+                                    {$vo.user_name}
+                                {/empty}
+                            </div>
+                        </td>
+                        <td  >
+                            <div class="pad-tb12 tc w150" >
+                                {$vo.add_time|MyDate="Y-m-d H:i:s",###}
+                            </div>
+                        </td>
+                    </tr>
+                    {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        {notempty name="list"}
+        <div class="footer-oper">
+            <div class="nav-dropup">
+            </div>
+            <div class="fbuttonr">
+                <div class="pages">
+                    {$page}
+                </div>
+            </div>
+            {notempty name='$pager->totalRows'}
+            <div class="fbuttonr">
+                <div class="total">
+                    <h5>共{$pager->totalRows}条
+                    </h5>
+                </div>
+            </div>
+            {/notempty}
+        </div>
+        {/notempty}
+    </div>
+</div>
+<script type="text/javascript">
+    // 修改指定表的指定字段值 包括有按钮点击切换是否 或者 排序 或者输入框文字
+    function changeMemgiftTableVal(table,id_name,id_value,field,obj)
+    {
+        var src = "";
+        if($(obj).hasClass('no')) // 图片点击是否操作
+        {
+            //src = '/public/images/yes.png';
+            var text = "隐藏";
+            if ($(obj).attr('data-yestext')) {
+                text = $(obj).attr('data-yestext');
+            }
+            var value = 0;
+            try {
+                if ($(obj).attr('data-value')) {
+                    value = $(obj).attr('data-value');
+                    if ('weapp' == table && 'status' == field) {
+                        $(obj).attr('data-value', -1); // 插件的禁用
+                        if ('Diyminipro' == $(obj).attr('data-weapp_code')) {
+                            $('#Diyminipro_theme_index', window.parent.document).show();
+                        }
+                    }
+                }
+            } catch(e) {
+                // 出现异常以后执行的代码
+                // e:exception，用来捕获异常的信息
+            }
+
+        }else if($(obj).hasClass('yes')){ // 图片点击是否操作
+            var text = "显示";
+            if ($(obj).attr('data-notext')) {
+                text = $(obj).attr('data-notext');
+            }
+            var value = 1;
+            try {
+                if ($(obj).attr('data-value')) {
+                    value = $(obj).attr('data-value');
+                    if ('weapp' == table && 'status' == field) {
+                        $(obj).attr('data-value', 1); // 插件的启用
+                        if ('Diyminipro' == $(obj).attr('data-weapp_code')) {
+                            $('#Diyminipro_theme_index', window.parent.document).hide();
+                        }
+                    }
+                }
+            } catch(e) {
+                // 出现异常以后执行的代码
+                // e:exception，用来捕获异常的信息
+            }
+        }else{ // 其他输入框操作
+            var value = $(obj).val();
+        }
+
+        var url = eyou_basefile + "?m="+module_name+"&c=Index&a=changeTableVal&_ajax=1";
+        var lang = $.cookie('admin_lang');
+        if (!lang) lang = __lang__;
+        if ($.trim(lang) != '') {
+            url = url + '&lang=' + lang;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {table:table,id_name:id_name,id_value:id_value,field:field,value:value},
+            dataType: 'json',
+            success: function(res){
+                if (res.code == 1) {
+                    var inputype = $(obj).attr('data-inputype');
+                    if ('int' == inputype) {
+                        $(obj).val(parseInt($(obj).val()));
+                    }
+                    if ($(obj).hasClass('no')) {
+                        $(obj).removeClass('no').addClass('yes');
+                        $(obj).html(text);
+                    }else if($(obj).hasClass('yes')) {
+                        $(obj).removeClass('yes').addClass('no');
+                        $(obj).html(text);
+                    }
+                    var seo_pseudo = $(obj).attr('data-seo_pseudo');
+                    if(table == 'archives' && 2 == seo_pseudo){
+                        /*生成静态页面代码*/
+                        layer_loading('生成页面');
+                        var typeid = $(obj).attr('data-typeid');
+                        $.ajax({
+                            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
+                            type:'POST',
+                            dataType:'json',
+                            data:{aid:id_value,typeid:typeid,type:'view',ctl_name:'Archives',_ajax:1},
+                            success:function(res1){
+                                $.ajax({
+                                    url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
+                                    type:'POST',
+                                    dataType:'json',
+                                    data:{aid:id_value,typeid:typeid,type:'lists',ctl_name:'Archives',_ajax:1},
+                                    success:function(res2){
+                                        layer.closeAll();
+                                        layer.msg('生成完成', {icon: 1, time: 1500});
+                                    },
+                                    error: function(e){
+                                        layer.closeAll();
+                                        layer.alert('生成当前栏目HTML失败，请手工生成栏目静态！', {icon: 5, title: false});
+                                    }
+                                });
+                            },
+                            error: function(e){
+                                layer.closeAll();
+                                layer.alert('生成HTML失败，请手工生成静态HTML！', {icon: 5, title: false});
+                            }
+                        });
+                        /*end*/
+                    } else {
+                        if(!$(obj).hasClass('no') && !$(obj).hasClass('yes')){
+                            var time = 1500;
+                            if (res.data.time && 0 < res.data.time) {
+                                time = res.data.time;
+                            }
+                            layer.msg(res.msg, {icon: 1, time: time}, function(){
+                                if (1 == res.data.refresh) {
+                                    window.location.reload();
+                                }
+                            });
+                        } else {
+                            if (1 == res.data.refresh) {
+                                window.location.reload();
+                            }
+                        }
+                    }
+                } else {
+                    var time = parseFloat(res.wait) * 1000;
+                    layer.msg(res.msg, {icon: 5, time: time}, function(){
+                        window.location.reload();
+                    });
+                }
+            }
+        });
+    }
+
+</script>
+
+{include file="public/footer" /}

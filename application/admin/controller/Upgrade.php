@@ -2,7 +2,7 @@
 /**
  * eyoucms
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -23,9 +23,11 @@ class Upgrade extends Controller {
      */
     function __construct() {
         parent::__construct();
-        @ini_set('memory_limit', '1024M'); // 设置内存大小
-        @ini_set("max_execution_time", "0"); // 请求超时时间 0 为不限时
-        @ini_set('default_socket_timeout', 3600); // 设置 file_get_contents 请求超时时间 官方的说明，似乎没有不限时间的选项，也就是不能填0，你如果填0，那么socket就会立即返回失败，
+        function_exists('set_time_limit') && set_time_limit(0);
+        @ini_set('memory_limit','-1');
+        // @ini_set('memory_limit', '1024M'); // 设置内存大小
+        // @ini_set("max_execution_time", "0"); // 请求超时时间 0 为不限时
+        // @ini_set('default_socket_timeout', 3600); // 设置 file_get_contents 请求超时时间 官方的说明，似乎没有不限时间的选项，也就是不能填0，你如果填0，那么socket就会立即返回失败，
         $this->assign('version', getCmsVersion());
     }
 
@@ -42,7 +44,7 @@ class Upgrade extends Controller {
         $sys_info['fileupload']     = @ini_get('file_uploads') ? ini_get('upload_max_filesize') :'unknown';
         $sys_info['max_ex_time']    = @ini_get("max_execution_time").'s'; //脚本最大执行时间
         $sys_info['set_time_limit'] = function_exists("set_time_limit") ? true : false;
-        $sys_info['domain']         = $_SERVER['HTTP_HOST'];
+        $sys_info['domain']         = request()->host();
         $sys_info['memory_limit']   = ini_get('memory_limit');                                  
         $sys_info['version']        = file_get_contents(DATA_PATH.'conf/version.txt');
         $mysqlinfo = Db::query("SELECT VERSION() as version");
@@ -64,7 +66,10 @@ class Upgrade extends Controller {
         $upgradeMsg = $upgradeLogic->checkVersion(); //升级包消息     
         $this->assign('upgradeMsg',$upgradeMsg);
 
-        $this->assign('web_show_popup_upgrade', $globalTpCache['web.web_show_popup_upgrade']);
+        if (isset($globalTpCache['web_show_popup_upgrade']) && 2 == $globalTpCache['web_show_popup_upgrade'] && $this->php_servicemeal <= 0) {
+            $globalTpCache['web_show_popup_upgrade'] = -1;
+        }
+        $this->assign('web_show_popup_upgrade', $globalTpCache['web_show_popup_upgrade']);
 
         $this->assign('global', $globalTpCache);
 
@@ -79,19 +84,24 @@ class Upgrade extends Controller {
         function_exists('set_time_limit') && set_time_limit(0);
 
         /*权限控制 by 小虎哥*/
-        $auth_role_info = session('admin_info.auth_role_info');
-        if(0 < intval(session('admin_info.role_id')) && ! empty($auth_role_info) && intval($auth_role_info['online_update']) <= 0){
-            $this->error('您没有操作权限，请联系超级管理员分配权限');
+        $admin_info = session('admin_info');
+        if (0 < intval($admin_info['role_id'])) {
+            $auth_role_info = $admin_info['auth_role_info'];
+            if (!empty($auth_role_info) && intval($auth_role_info['online_update']) <= 0) {
+                $this->error('您没有操作权限，请联系超级管理员分配权限');
+            }
         }
         /*--end*/
 
+        $curent_version = getCmsVersion();
         $upgradeLogic = new \app\admin\logic\UpgradeLogic();
         $data = $upgradeLogic->OneKeyUpgrade(); //升级包消息
         if (1 <= intval($data['code'])) {
+            adminLog("系统在线升级：{$curent_version} -> ".getCmsVersion());
             $this->success($data['msg'], null, ['code'=>$data['code']]);
         } else {
             $code = 0;
-            $msg = '升级异常，请第一时间联系技术支持，排查问题！';
+            $msg = '升级异常，请排查问题！';
             if (is_array($data)) {
                 isset($data['code']) && $code = $data['code'];
                 isset($data['msg']) && $msg = $data['msg'];
@@ -174,17 +184,21 @@ class Upgrade extends Controller {
 
         if (true == $is_pass) {
             /*------------------检测目录读写权限----------------------*/
-            $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVNlcnZpY2UmYT1nZXRfZGF0YWJhc2VfdHh0';
-            $service_url = base64_decode(config('service_ey')).base64_decode($tmp_str);
-            $url = $service_url . '&version=' . getCmsVersion();
-            $response = @httpRequest($url);
-            if (empty($response)) {
-                $context = stream_context_set_default(array('http' => array('timeout' => 3,'method'=>'GET')));
-                $response = @file_get_contents($url,false,$context);
+            $values = [
+                'version' => getCmsVersion(),
+            ];
+            $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+            $upgradeLogic->GetKeyData($values);
+            $url = $upgradeLogic->getServiceUrl().'/index.php?m=api&c=Service&a=get_database_txt';
+            $response = @httpRequest($url, 'POST', $values, [], 5);
+            if (false === $response) {
+                $url = $url.'&'.http_build_query($values);
+                $context = stream_context_set_default(array('http' => array('timeout' => 5,'method'=>'GET')));
+                $response = @file_get_contents($url, false, $context);
             }
             $params = json_decode($response,true);
             if (false == $params) {
-                $this->error('连接升级服务器超时，请刷新重试，或者联系技术支持！', null, ['code'=>2]);
+                $this->error('连接升级服务器超时，请刷新重试！', null, ['code'=>2]);
             }
 
             if (is_array($params)) {
@@ -245,7 +259,7 @@ class Upgrade extends Controller {
                     }
                     /*------------------end----------------------*/
                 } else if (2 == intval($params['code'])) {
-                    $this->error('官方缺少版本号'.getCmsVersion().'的数据库比较文件，请第一时间联系技术支持！', null, ['code'=>2]);
+                    $this->error('官方缺少版本号'.getCmsVersion().'的数据库比较文件！', null, ['code'=>2]);
                 }
             }
 

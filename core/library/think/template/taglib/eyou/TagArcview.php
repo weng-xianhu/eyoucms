@@ -13,6 +13,7 @@
 
 namespace think\template\taglib\eyou;
 
+use think\Db;
 use app\home\logic\FieldLogic;
 
 /**
@@ -46,11 +47,18 @@ class TagArcview extends Base
         $result = M("archives")->field('b.*, a.*')
             ->alias('a')
             ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
-            ->where('a.lang', $this->home_lang)
-            ->find($aid);
+            ->where('a.aid', $aid)
+            ->find();
         if (empty($result)) {
             echo '标签arcview报错：该文档ID('.$aid.')不存在。';
             return false;
+        }
+        if (self::$language_split) {
+            if ($result['lang'] != self::$home_lang) {
+                $lang_title = Db::name('language_mark')->where(['mark'=>self::$home_lang])->value('cn_title');
+                echo "标签arcview报错：【{$lang_title}】语言 aid 值不存在。";
+                return false;
+            }
         }
         /*--end*/
         $result['litpic'] = get_default_pic($result['litpic']); // 默认封面图
@@ -76,6 +84,24 @@ class TagArcview extends Base
         }
         /*--end*/
 
+        $result['users_price'] = floatval($result['users_price']); // 价格
+        $result['real_sales'] = $result['sales_num']; // 真实总销量
+        $result['sales_num'] = $result['sales_all']; // 总虚拟销量
+
+        // 多城市站点
+        $cityIdArr = $cityList = [];
+        !empty($result['province_id']) && array_push($cityIdArr, $result['province_id']); // 收集省份ID
+        !empty($result['city_id']) && array_push($cityIdArr, $result['city_id']); // 收集城市ID
+        !empty($result['area_id']) && array_push($cityIdArr, $result['area_id']); // 收集区域ID
+        if (self::$city_switch_on && empty(self::$site_info)) {
+            if (!empty($cityIdArr)) {
+                $cityList = Db::name('citysite')->field('id,name')->where(['id'=>['IN', $cityIdArr]])->getAllWithIndex('id');
+            }
+        }
+        $result['siteinfo']['province_name'] = !empty($cityList[$result['province_id']]) ? $cityList[$result['province_id']]['name'] : '';
+        $result['siteinfo']['city_name'] = !empty($cityList[$result['city_id']]) ? $cityList[$result['city_id']]['name'] : '';
+        $result['siteinfo']['area_name'] = !empty($cityList[$result['area_id']]) ? $cityList[$result['area_id']]['name'] : '';
+
         /*附加表*/
         $addtableName = $channeltype_table.'_content';
         if (!empty($addfields)) {
@@ -87,6 +113,9 @@ class TagArcview extends Base
             $addfields_arr = array_intersect($addfields_arr, $extFields);
             if (!empty($addfields_arr) && is_array($addfields_arr)) {
                 $addfields = implode(',', $addfields_arr);
+                if (strstr(",{$addfields},", ',content,')){
+                    $addfields .= ',content_ey_m';
+                }
             } else {
                 $addfields = '*';
             }
@@ -110,6 +139,13 @@ class TagArcview extends Base
         /*--end*/
 
         $result = view_logic($aid, $result['channel'], $result, true);
+        // 手机端详情内容
+        if (isset($result['content_ey_m'])) {
+            if (isMobile() && !empty($result['content_ey_m'])) {
+                $result['content'] = $result['content_ey_m'];
+            }
+            unset($result['content_ey_m']);
+        }
 
         return $result;
     }

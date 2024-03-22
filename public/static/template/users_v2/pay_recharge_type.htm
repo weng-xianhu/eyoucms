@@ -1,3 +1,16 @@
+{eyou:sppayapilist id='vo'}
+{eyou:notempty name="$vo.pay_id"}
+<div class="pay-item">
+    <a href="JavaScript:void(0);" onclick="SelectPayMethod('{$vo.pay_id}', '{$vo.pay_mark}');">
+        <img src="{$vo.pay_img}">
+    </a>
+</div>
+{/eyou:notempty}
+{$vo.hidden}
+{/eyou:sppayapilist}
+<input type="hidden" id="PayID">
+<input type="hidden" id="PayMark">
+
 {eyou:if condition="1 != $data.transaction_type && 1 == $data.pay_balance_open"}
     <div class="pay-item" data-toggle="modal" data-target="#pay-order-modal">
         <a  href="JavaScript:void(0);" id="PayBalancePayment" onclick="PayBalancePayment();">
@@ -48,7 +61,6 @@
         function PayIsRecharge(msg ,url) {
             layer.confirm(msg, {
                 title: false,
-                closeBtn: 0,
                 btn: ['去充值','其他方式支付'],
                 cancel: function(index, layero){ 
                     $('#PayBalancePayment').prop("disabled", false).css("pointer-events", "");
@@ -57,9 +69,8 @@
                 // 去充值
                 window.open(url); 
                 
-                layer.confirm('充值成功？ 是否立即支付？', {
+                layer.confirm('是否充值成功，立即支付？', {
                     title: false,
-                    closeBtn: 0,
                     btn: ['立即支付','其他方式支付'],
                     cancel: function(index, layero){ 
                         $('#PayBalancePayment').prop("disabled", false).css("pointer-events", "");
@@ -81,22 +92,3 @@
         }
     </script>
 {/eyou:if}
-
-<!-- 支付API列表，套板请务必将整块代码一起复制，包含隐藏域 -->
-<script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
-{eyou:sppayapilist id='vo'}
-    {eyou:notempty name="$vo.pay_id"}
-        {neq name="$vo.pay_mark" value="Hupijiaopay"}
-            {eyou:php}$pay_mark_vars = "users/skin/images/".$vo['pay_mark'].".png";{/eyou:php}
-            <div class="pay-item">
-                <a href="JavaScript:void(0);" onclick="SelectPayMethod('{$vo.pay_id}', '{$vo.pay_mark}');">
-                    <img src="{eyou:empty name='$vo.pay_img'}{eyou:static file='$pay_mark_vars' /}{eyou:else/}{$vo.pay_img}{/eyou:empty}">
-                </a>
-            </div>
-        {/neq}
-    {/eyou:notempty}
-    {$vo.hidden}
-{/eyou:sppayapilist}
-<input type="hidden" id="PayID">
-<input type="hidden" id="PayMark">
-<!-- END -->

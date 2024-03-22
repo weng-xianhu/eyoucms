@@ -5,69 +5,75 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{$eyou.field.seo_title}</title>
-        <meta name="description" content="{$eyou.field.seo_description}" />
         <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+        <meta name="description" content="{$eyou.field.seo_description}" />
         <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
         {eyou:static file="skin/style/pintuer.css" /}
         {eyou:static file="skin/style/header.css" /}
         {eyou:static file="skin/style/style.css" /}
-        {eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+        {eyou:static file="skin/style/iconfont.css" /}
         <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
     </head>
     <body>
         <div id="mobile-mask">
-            <!--网站公用头部——开始-->
+            <!-- 公用头部 begin -->
             {eyou:include file="header.htm" /}
+            <!-- 公用头部 end -->
             <div class="layout bg-gray">
+                <!-- 当前位置 begin -->
                 <div class="container-layout">
                     <div class="line">
                         <div class="nav-bread">
-                            <i class="fa fa-home margin-small-right text-gray" aria-hidden="true"></i>{eyou:position/}
+                            <i class="iconfont icon-home margin-small-right" aria-hidden="true"></i>{eyou:position/}
                         </div>
                     </div>
                 </div>
+                <!-- 当前位置 end -->
                 <div class="container-layout">
                     <div class="line">
                         <div class="xl12 xs12">
-                            <!--内容 begin-->
                             <div class="bg-white padding-big radius-middle">
                                 <div class="article">
                                     <div class="post">
+                                        <!-- 标题 begin -->
                                         <h1>{$eyou.field.title}</h1>
+                                        <!-- 标题 end -->
                                         <div class="blank-small"></div>
                                     </div>
                                     <div class="line">
                                         <div class="xl12 xs12">
                                             <div class="text-gray text-default height-big">
                                                 <span class="margin-right">作者：{$eyou.field.author}</span>
-                                                <span class="margin-right">发布时间：{$eyou.field.add_time|MyDate='Y-m-d',###}</span>
+                                                <span class="margin-right">更新时间：{$eyou.field.update_time|MyDate='Y-m-d',###}</span>
 
                                             </div>
                                         </div>
                                     </div>
                                     <div class="blank"></div>
                                     <div class="content">
+                                        <!-- 内容详情 begin -->
                                         {$eyou.field.content}
+                                        <!-- 内容详情 end -->
                                     </div>
                                     <div class="blank-small"></div>
                                     <div class="text-center">
-                                        <!-- 收藏代码开始  -->
-                                        {eyou:collect cancel="<i class='fa fa-heart margin-small-right' style='color: #999;'></i>加入收藏" collect="<i class='fa fa-heart margin-small-right'></i>已收藏" }
+                                        <!-- 收藏 begin -->
+                                        {eyou:collect cancel="<i class='iconfont icon-shoucang1  margin-small-right' style='color: #999;'></i>加入收藏" collect="<i class='iconfont icon-shoucang1  margin-small-right'></i>已收藏" }
                                         <a class="button text-center bg-gray border-none radius-rounded text-center text-main" {$field.onclick}>{$field.cancel}</a>
                                         {$field.hidden}
                                         {/eyou:collect}
-                                        <!--  收藏代码结束 -->
+                                        <!-- 收藏 end -->
                                     </div>
                                 </div>
                                 <div class="blank-middle"></div>
-                                <!--tag-->
+                                <!-- tag begin -->
                                 {eyou:notempty name='$eyou.field.tags'}
                                 <span class="text-main padding-right">Tag:</span>
-                                {eyou:tag getall='0'}
+                                {eyou:tags getall='0'}
                                 <a href="{$field.link}" class="tag tags bg-yellow radius-rounded height text-white margin-small-bottom padding-small" {$field.target}>{$field.tag}</a>
-                                {/eyou:tag}
+                                {/eyou:tags}
                                 {/eyou:notempty}
-                                <!--tag end-->
+                                <!-- tag end -->
                                 <div class="blank-small"></div>
                             </div>
                         </div>
@@ -76,8 +82,7 @@
                             <div class="download-detail bg-white">
                                 <div class="padding-big">
                                     {eyou:volist name="$eyou.field.file_list" id="field"}
-                                    <!-- {$field.file_url} -->
-                                    <a href="{$field.downurl}" {eyou:if condition="$field.extract_code !=''"}data-clipboard-text="{$field.extract_code}" {/eyou:if} class="btn button button-big button-block text-center bg-yellow border-none radius-big margin-bottom"><i class="fa fa-arrow-alt-to-bottom margin-right"></i>{$field.server_name}</a>
+                                    <a href="{$field.downurl}" {eyou:if condition="$field.extract_code !=''"}data-clipboard-text="{$field.extract_code}" {/eyou:if} class="btn button button-big button-block text-center bg-yellow border-none radius-big margin-bottom"><i class="iconfont icon-xiazai margin-right"></i>{$field.server_name}</a>
                                     {eyou:if condition="$field.extract_code !=''"}
                                     <div class="text-center text-gray margin-small-top">
                                         提取码：{$field.extract_code}
@@ -89,19 +94,19 @@
                                     <div class="text-center">
                                         <div class="xl4 xs4 xb4 xm4">
                                             <span class="text-gray text-default">
-                                                <i class="fa fa-eye margin-small-right"></i>
+                                                <i class="iconfont icon-eye margin-small-right"></i>
                                                 {eyou:arcclick /}
                                             </span>
                                         </div>
                                         <div class="xl4 xs4 xb4 xm4">
                                             <span class="text-gray text-middle">
-                                                <i class="fa fa-cloud-download margin-small-right"></i>
+                                                <i class="iconfont icon-download margin-small-right"></i>
                                                 {$eyou.field.downcount}
                                             </span>
                                         </div>
                                         <div class="xl4 xs4 xb4 xm4">
                                             <span class="text-gray text-middle">
-                                                <i class="fa fa-heart margin-small-right"></i>
+                                                <i class="iconfont icon-shoucang1 margin-small-right"></i>
                                                 <span>{eyou:collectnum /}</span>
                                             </span>
                                         </div>
@@ -115,10 +120,9 @@
                                     <h2>标签</h2>
                                 </div>
                                 <div class="blank"></div>
-                                {eyou:tag getall='1' row='20' }
-                                <a href="{$field.link}" class="tag tags bg-white border radius-rounded text-gray margin-bottom margin-small-right padding "
-                                    {$field.target}>{$field.tag}</a>
-                                {/eyou:tag}
+                                {eyou:tags getall='1' loop='20' }
+                                <a href="{$field.link}" class="tag tags bg-white border radius-rounded text-gray margin-bottom margin-small-right padding " {$field.target}>{$field.tag}</a>
+                                {/eyou:tags}
                             </div>
                             <div class="blank"></div>
                         </div>
@@ -127,42 +131,42 @@
                 <div class="container-layout">
                     <div class="line">
                         <div class="xl12 xs12 xm12 xb12">
-                            <!-- 上下篇 begin -->
                             <div class="prenext-pro">
                                 <div class="line">
-                                    <div class="xl5 xs5 xm5 xb5">
-                                        {eyou:prenext get='next' titlelen='30'}
-                                        <a href="{$field.arcurl}" class="button button-block bg-white border radius-none text-main text-middle text-center" title="上一篇:{$field.title}"><i class="margin-right fa fa-long-arrow-left"></i>上一篇</a>
-                                        {eyou:else /}
-                                        <a class="button button-block bg-white border radius-none text-gray text-middle text-center"><i class="margin-right fa fa-long-arrow-left"></i>没有了</a>
-                                        {/eyou:prenext}
-                                    </div>
-
-                                    <div class="xl2 xs2 xm2 xb2 text-center">
-                                        {eyou:type typeid="$eyou.field.parent_id"}
-                                        <a href="{$field.typeurl}" class="button radius-none border button-block bg-white text-main text-middle text-center"><i class="fa fa-align-justify margin-right"></i><span class="hidden-l">返回</span></a>
-                                        {/eyou:type}
-                                    </div>
-
+                                    <!-- 上一篇 begin -->
                                     <div class="xl5 xs5 xm5 xb5">
                                         {eyou:prenext get='pre' titlelen='30'}
-                                        <a href="{$field.arcurl}" class="button border button-block bg-white radius-none text-main text-middle text-center float-right" title="下一篇:{$field.title}">下一篇<i class="margin-left fa fa-long-arrow-right"></i></a>
+                                        <a href="{$field.arcurl}" class="button button-block bg-white border radius-none text-main text-middle text-center" title="上一篇:{$field.title}"><i class="iconfont icon-up-arrow-left margin-right"></i>上一篇</a>
                                         {eyou:else /}
-                                        <a class="button button-block bg-white border radius-none text-gray text-middle text-center">没有了<i class="margin-left fa fa-long-arrow-right"></i></a>
+                                        <a class="button button-block bg-white border radius-none text-gray text-middle text-center"><i class="iconfont icon-up-arrow-left margin-right"></i>没有了</a>
                                         {/eyou:prenext}
                                     </div>
+                                    <!-- 上一篇 end -->
+                                    <div class="xl2 xs2 xm2 xb2 text-center">
+                                        {eyou:type typeid="$eyou.field.typeid"}
+                                        <a href="{$field.typeurl}" class="button radius-none border button-block bg-white text-main text-middle text-center"><i class="iconfont icon-back margin-right"></i><span class="hidden-l">返回</span></a>
+                                        {/eyou:type}
+                                    </div>
+                                    <!-- 下一篇 begin -->
+                                    <div class="xl5 xs5 xm5 xb5">
+                                        {eyou:prenext get='next' titlelen='30'}
+                                        <a href="{$field.arcurl}" class="button border button-block bg-white radius-none text-main text-middle text-center float-right" title="下一篇:{$field.title}">下一篇<i class="iconfont icon-up-arrow-right margin-left"></i></a>
+                                        {eyou:else /}
+                                        <a class="button button-block bg-white border radius-none text-gray text-middle text-center">没有了<i class="iconfont icon-up-arrow-right margin-left"></i></a>
+                                        {/eyou:prenext}
+                                    </div>
+                                    <!-- 下一篇 end -->
                                 </div>
                             </div>
-                            <!-- 上下篇 end -->
                         </div>
                     </div>
-                    <!--line end-->
                 </div>
                 <div class="blank-small"></div>
             </div>
+            <!-- 公用底部 begin -->
             {eyou:include file="footer.htm" /}
+            <!-- 公用底部 end -->
         </div>
-        <!-- id="mobile-mask" -->
         {eyou:static file="skin/js/jquery.min.js" /}
         {eyou:static file="skin/js/pintuer.js" /}
         {eyou:static file="skin/js/common.js" /}

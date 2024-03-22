@@ -1,0 +1,117 @@
+{include file="public/layout" /}
+
+<body class="eyou_body_xin">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div id="geduan_div" class="h10"></div>
+<div class="page" style="min-width: auto; padding-bottom: 15px;">
+    <div class="flexigrid">
+        {include file="notice/notice_details_bar" /}
+        <form class="form-horizontal pl10 pr10" id="post_form" action="" method="post">
+            <div class="ncap-form-default tab_div_1">
+                <!-- 短信通知 -->
+                <dl class="row">
+                    <dt class="tit">是否开启</dt>
+                    <dd class="opt">
+                        <ul class="nc-row ncap-waybill-list">
+                            <li style="width: 100%;">
+                                <label class="label" >
+                                    <input class="check" type="radio" name="is_open" value="1" {notempty name="$info.is_open"}checked="checked"{/notempty}><span>开启</span>
+                                </label>
+                                &nbsp; &nbsp;
+                                <label class="label" >
+                                    <input class="check" type="radio" name="is_open" value="0" {empty name="$info.is_open"}checked="checked"{/empty}><span>关闭</span>
+                                </label>
+                            </li>
+                        </ul>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit"><em>*</em>签名名称</dt>
+                    <dd class="opt">
+                        <input name="sms_sign" value="{$info.sms_sign}" class="input-txt w250" type="text" placeholder="短信签名名称，例：易优"/>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit"><em>*</em>{eq name='$info.sms_type' value='1'}模板CODE{else /}模板id{/eq}</dt>
+                    <dd class="opt">
+                        <input name="sms_tpl_code" value="{$info.sms_tpl_code}" class="input-txt w250" type="text" placeholder="{eq name='$info.sms_type' value='1'}短信模板CODE，例：SMS_123456789{else /}短信模板id，例：123456789{/eq}"/>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit"><em>*</em>模板内容</dt>
+                    <dd class="opt">
+                        <textarea rows="5" cols="80" name="tpl_content" style="height:80px;" class="w250" placeholder="{eq name='$info.sms_type' value='1'}短信模板内容，例：您的验证码为 ${content} ，该验证码30分钟内有效，请勿泄露于他人。{else /}短信模板内容，例：您的验证码为 {1} ，该验证码30分钟内有效，请勿泄露于他人。{/eq}">{$info.tpl_content}</textarea>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">模板演示</dt>
+                    <dd class="opt"> 
+                        <div class="default-template-content"><img src="__STATIC__/admin/images/notice_template_sms_bg.png" alt="" class="bg-img">
+                            <div class="sms-notice">
+                                <div class="message-content">{$info.tpl_content_demo}</div>
+                            </div>
+                        </div>
+                     </dd>
+                </dl>
+                <div style="height: 30px;display: block;"></div>
+                <!-- 短信通知 -->
+            </div>
+            <div class="ncap-form-default">
+                <div class="bot2" style="padding-left: 160px;">
+                    <input type="hidden" name="sms_type" value="{$info.sms_type}">
+                    <input type="hidden" name="send_scene" value="{$info.send_scene}">
+                    <input type="hidden" name="tpl_id" value="{$info.tpl_id}">
+                    <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">保存</a>
+                    <a class="ncap-btn-big ncap-btn-no" href="javascript:history.back();" title="返回">返回</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    function checkForm(){
+        var sms_type = $('input[name=sms_type]').val();
+        if($('input[name=sms_sign]').val() == ''){
+            showErrorMsg('签名名称不能为空！');
+            $('input[name=sms_sign]').focus();
+            return false;
+        }
+        if($('input[name=sms_tpl_code]').val() == ''){
+            if (1 == sms_type) {
+                showErrorMsg('模板CODE不能为空！');
+            } else {
+                showErrorMsg('模板id不能为空！');
+            }
+            $('input[name=sms_tpl_code]').focus();
+            return false;
+        }
+        if($('textarea[name=tpl_content]').val() == ''){
+            showErrorMsg('模板内容不能为空！');
+            $('textarea[name=tpl_content]').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Notice/notice_details_sms', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if (res.code == 1) {
+                    layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                        window.location.reload();
+                    });
+                } else {
+                    showErrorAlert(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

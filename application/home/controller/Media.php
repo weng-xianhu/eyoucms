@@ -97,39 +97,41 @@ class Media extends Base
      */
     public function record_process()
     {
-        \think\Session::pause(); // 暂停session，防止session阻塞机制
-
-        $aid         = input('aid/d', 0);
-        $file_id     = input('file_id/d', 0);
-        $timeDisplay = input('timeDisplay/d', 0);
-        $users_id    = session('users_id');
-        if (empty($users_id)){
-            return true;
+        // \think\Session::pause(); // 暂停session，防止session阻塞机制
+        if (IS_AJAX_POST) {
+            $aid         = input('aid/d', 0);
+            $file_id     = input('file_id/d', 0);
+            $timeDisplay = input('timeDisplay/d', 0);
+            $users_id    = session('users_id');
+            if (empty($users_id)){
+                return true;
+            }
+            if ( 0 == $timeDisplay ){
+                exit;
+            }
+            $where       = ['users_id' => intval($users_id),
+                            'aid'      => $aid,
+                            'file_id'  => $file_id];
+            $count       = Db::name('media_play_record')->where($where)->find();
+            $data        = [
+                'users_id'    => intval($users_id),
+                'aid'         => intval($aid),
+                'file_id'     => intval($file_id),
+                'play_time'   => $timeDisplay,
+                'update_time' => getTime(),
+            ];
+            if (!empty($count)) {
+                $timeDisplay = $timeDisplay + $count['play_time'];
+                $file_time = Db::name('media_file')->where('file_id',$file_id)->value('file_time');
+                $data['play_time'] = $timeDisplay > $file_time ? $file_time : $timeDisplay;
+                $data['play_time'] = intval($data['play_time']);
+                //更新
+                Db::name('media_play_record')->where($where)->update($data);
+            }else{
+                $data['add_time'] = getTime();
+                Db::name('media_play_record')->insert($data);
+            }
         }
-        if ( 0 == $timeDisplay ){
-            exit;
-        }
-        $where       = ['users_id' => $users_id,
-                        'aid'      => $aid,
-                        'file_id'  => $file_id];
-        $count       = Db::name('media_play_record')->where($where)->find();
-        $data        = [
-            'users_id'    => intval($users_id),
-            'aid'         => intval($aid),
-            'file_id'     => intval($file_id),
-            'play_time'   => $timeDisplay,
-            'update_time' => getTime(),
-        ];
-        if (!empty($count)) {
-            $timeDisplay = $timeDisplay + $count['play_time'];
-            $file_time = Db::name('media_file')->where('file_id',$file_id)->value('file_time');
-            $data['play_time'] = $timeDisplay > $file_time ? $file_time : $timeDisplay;
-            $data['play_time'] = intval($data['play_time']);
-            //更新
-            Db::name('media_play_record')->where($where)->update($data);
-        }else{
-            $data['add_time'] = getTime();
-            Db::name('media_play_record')->insert($data);
-        }
+        abort(404);
     }
 }

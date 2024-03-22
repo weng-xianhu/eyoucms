@@ -52,7 +52,7 @@ dl,dd,ul,li {margin:0;padding:0;list-style:none}
 .owl-carousel .owl-dots .owl-dot{display:inline-block;position:relative;vertical-align:middle}
 .owl-carousel .owl-dots .owl-dot span{width:8px;height:8px;margin:0 5px;border-radius:50%;background:#d3d3d3;display:inline-block;text-align:center;-webkit-transition:all ease .5s;-o-transition:all ease .5s;transition:all ease .5s}
 .owl-carousel .owl-dots .owl-dot.active span{width:16px;height:8px;background:#000;border-radius:20px}
-.owl-carousel .owl-nav i{font-size:24px;color:#fff}
+.owl-carousel .owl-nav i{font-size:23px;color:#fff}
 .owl-carousel .owl-nav .owl-next,.owl-carousel .owl-nav .owl-prev{background:#000;width:42px;height:42px;line-height:48px;-webkit-transition:all ease .5s;-o-transition:all ease .5s;transition:all ease .5s;-webkit-transform:translateY(-50%);-ms-transform:translateY(-50%);transform:translateY(-50%);top:50%;position:absolute;text-align:center;border-radius:50%;opacity:0}
 .owl-carousel .owl-nav .owl-prev{background:#000;left:20px;right:auto}
 .owl-carousel .owl-nav .owl-next{right:20px}
@@ -124,6 +124,7 @@ dl,dd,ul,li {margin:0;padding:0;list-style:none}
 /* 路径 */
 .nav-bread{padding:0;height:70px;line-height:70px;font-size:0}
 .nav-bread h2{font-size:24px;font-weight:600}
+.nav-bread i{color:#888888;}
 .nav-bread a{color:#888888;font-size:14px;display:inline-block;}
 .nav-bread a:hover{color:#ff9600}
 .nav-bread a:after {content:"";padding:0 10px;background:url(../images/nav-bread.png) no-repeat center 50%;}
@@ -170,8 +171,8 @@ dl,dd,ul,li {margin:0;padding:0;list-style:none}
 
 /* 属性 */
 .filter-box .padding-big{padding:15px 25px}
-.filter-box dl{margin:15px 0;}
-.filter-box dl dt{width:8%;display:block;float:left;line-height:24px;font-weight:normal}
+.filter-box dl{margin:15px 0;display: flex;}
+.filter-box dl dt{width:8%;display:block;flex: none;line-height:24px;font-weight:normal}
 .filter-box dl dd{display:block;float:left;position:relative;}
 .filter-nav ul li {margin:0;display:block;float:left;width:auto;line-height:24px;}
 .filter-nav ul li a{margin:0 10px 0 0;padding:2px 10px;cursor:pointer;display:block;color:#6E6E6E;transition:.3s;-moz-transition:.3s;-webkit-transition:.3s;}
@@ -192,12 +193,13 @@ dl,dd,ul,li {margin:0;padding:0;list-style:none}
 /* 横向不带ICO导航 */
 
 /* 新闻列表 */
-.list-news {margin-bottom:30px}
-.list-news .time{margin-top:70px;margin-right:-20px;padding:15px 0 10px 0;border-right:1px solid #eee;}
+.list-news {display: flex;align-items: center;justify-content: center;margin-bottom:30px}
+.list-news .time{margin-right:-20px;padding:15px 0 10px 0;border-right:1px solid #eee;}
 .list-news .time .text-large{font-size:52px;line-height:54px;}
-.list-news .news {margin-top:70px;margin-left:50px;margin-right:30px}
+.list-news .news {margin-left:50px;margin-right:30px}
 .list-news .news h3 a{display:block;font-size:24px;color:#333;margin-bottom:20px}
-.list-news .button{margin-top:70px;width:70px;line-height:56px;font-size:24px;border:1px solid #ebebeb;}
+.list-news .button{width:70px;line-height:56px;font-size:24px;border:1px solid #ebebeb;}
+.list-news .button i{font-size: 22px;}
 .list-news:hover .button{background:#ff9600;color:#fff;border:1px solid #ff9600}
 .list-news:hover h3 a{color:#ff9600}
 /* 新闻列表 */
@@ -233,6 +235,7 @@ dl,dd,ul,li {margin:0;padding:0;list-style:none}
 .video-list .media-body .padding-big{padding:20px}
 .video-list .media-body h2{margin:0 0 20px 0;overflow:hidden}
 .video-list .media a.play{opacity:.6;position:absolute;top:50%;left:50%;margin-left:-24px;margin-top:-24px;width:48px;height:48px;line-height:48px;background:rgba(0,0,0,.6);z-index:2;-webkit-transition:.5s;-o-transition:.5s;transition:.5s}
+.video-list .media a.play i{font-size: 24px;}
 .video-list .media .playtime{position:absolute;bottom:10px;right:10px;padding:0 8px;height:20px;line-height:18px;background:rgba(0,0,0,.5);z-index:2;-webkit-transition:.5s;-o-transition:.5s;transition:.5s}
 .video-list .media:hover a.collect,.video-list .media:hover a.play{opacity:1;-webkit-transition:.5s;-o-transition:.5s;transition:.5s}
 .video-list .excerpt-info ul li.v2-1{width:50%}
@@ -249,6 +252,8 @@ dl,dd,ul,li {margin:0;padding:0;list-style:none}
 .video-detail .tab .tab-nav li a,.video-detail .tab .tab-nav .active a:focus {outline:none;}
 .video-detail .tab .tab-body {border-radius:0;border-top:solid 0px #ebebeb;padding:25px}
 			/* ======播放器 */
+.jw-video{text-align: center;height: 510px; border-right: 1px solid #433D3D;}
+.jw-video video{width: auto;max-width: 100%;height: 100%;}
 .jw-video-expense{position:absolute;left:0;top:0;width:100%;height:100%;background:#616770;z-index:1;display:none}
 .jw-video-expense .apply{position:absolute;left:50%;margin-left:-176px;top:50%;margin-top:-50px}
 .jw-video-expense .button{cursor:pointer}
@@ -410,15 +415,14 @@ dl,dd,ul,li {margin:0;padding:0;list-style:none}
 .guestbook .form-group {padding-bottom:20px}
 .guestbook .input{font-size:16px;padding:0 15px;height:50px;line-height:50px;border:0;width:100%;display:block;-webkit-appearance:none;transition:all 1s cubic-bezier(0.175,0.885,0.32,1) 0s;box-shadow:0 0px 0px rgba(0,0,0,0.0) inset;}
 .guestbook .textarea {padding:12px;line-height:24px;width:100%;font-size:16px;background:#fff;border:0;}
+
+
 .guestbook .label {display:block;line-height:24px;}
 .guestbook .label label {font-weight:400;}
 .guestbook .field {font-size:16px}
 .guestbook select {font-size:16px;padding:0 35px 0 15px;width: 100%; height:50px;line-height:50px;border:0;appearance:none;-moz-appearance:none;-webkit-appearance:none;background:#fff url(../images/select-down.png) no-repeat right 50%;color:#666;}
 .guestbook .form-tips .guestbook .input-help ul {border:0;background:#fff;padding:5px 10px;box-shadow:0 0 0 #fff;border-radius:0 0 4px 4px;width:150px;min-width:150px;width:auto;_width:150px;color:#EE3333;font-size:12px}
-.guestbook .input::-webkit-input-placeholder, .guestbook .textarea::-webkit-input-placeholder {color: #111;font-size: 16px;}
-.guestbook .input:-moz-placeholder, .guestbook .textarea:-moz-placeholder {color: #111;font-size: 16px;}
-.guestbook .input::-moz-placeholder, .guestbook .textarea::-moz-placeholder {color: #111;font-size: 16px;}
-.guestbook .input:-ms-input-placeholder, .guestbook .textarea:-ms-input-placeholder {color: #111;font-size: 16px;}
+
 /* 联系我们end */
 
 .channel-banner {height:350px;position:relative;background-repeat:no-repeat;background-position:center center;background-size:cover;margin:0;padding:0;}

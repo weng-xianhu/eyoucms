@@ -108,6 +108,7 @@ class Ask extends Base
             // 清理session并回到首页
             session('users_id', null);
             session('users', null);
+            cookie('users_id', null);
             $this->error($msg, $logut_redirect_url);
         }
         /* END */
@@ -263,6 +264,7 @@ class Ask extends Base
     {
         if (IS_AJAX_POST || IS_POST) {
             $param = input('param.');
+            $param['ask_id'] = intval($param['ask_id']);
             // 是否登录、是否允许发布问题、数据判断及处理，返回内容数据
             $content = $this->ParamDealWith($param, false);
             $ori_money = Db::name('ask')->where('ask_id', $param['ask_id'])->getField('money');
@@ -343,6 +345,8 @@ class Ask extends Base
             $param = input('param.');
             // 数据判断处理
             if (empty($param['answer_id']) || empty($param['ask_id'])) $this->error('请选择采纳的回答');
+            $param['ask_id'] = intval($param['ask_id']);
+            $param['answer_id'] = intval($param['answer_id']);
             // 查询提问信息
             $AskInfo = $this->ask_db->field('users_id, status')->where('ask_id', $param['ask_id'])->find();
             if (!empty($this->users['admin_id']) || $AskInfo['users_id'] = input('post.users_id/d')) {
@@ -441,6 +445,8 @@ class Ask extends Base
     {
         if (IS_AJAX_POST || IS_POST) {
             $param = input('param.');
+            $param['ask_id'] = intval($param['ask_id']);
+            $param['answer_id'] = intval($param['answer_id']);
             // 是否登录、是否允许发布问题、数据判断及处理，返回内容数据
             $content = $this->AnswerDealWith($param, false);
 
@@ -619,9 +625,9 @@ class Ask extends Base
             // 是否登录
             $this->UsersIsLogin();
             $post = input('post.');
-            $ask_id = !empty($post['ask_id']) ? $post['ask_id'] : 0;
-            $answer_id = !empty($post['answer_id']) ? $post['answer_id'] : 0;
-            $like_source = !empty($post['like_source']) ? $post['like_source'] : 0;
+            $ask_id = !empty($post['ask_id']) ? intval($post['ask_id']) : 0;
+            $answer_id = !empty($post['answer_id']) ? intval($post['answer_id']) : 0;
+            $like_source = !empty($post['like_source']) ? intval($post['like_source']) : 0;
             if (empty($like_source) || (1 == $like_source && empty($ask_id))) {
                 $this->error('请选择点赞信息');
             } else if (in_array($like_source, [2, 3]) && (empty($ask_id) || empty($answer_id))) {
@@ -699,7 +705,7 @@ class Ask extends Base
                     'is_review'   => 1,
                     'update_time' => getTime(),
                 ];
-                $ResultId  = $this->ask_db->where('ask_id', $param['ask_id'])->update($UpAakData);
+                $ResultId  = $this->ask_db->where('ask_id', intval($param['ask_id']))->update($UpAakData);
                 if (!empty($ResultId)) $this->success('审核成功！');
                 $this->error('审核失败！');
             } else {
@@ -719,8 +725,8 @@ class Ask extends Base
                 if (empty($param['ask_id']) || empty($param['answer_id'])) $this->error('提交信息有误，请刷新重试！');
                 // 更新审核评论
                 $where        = [
-                    'ask_id'    => $param['ask_id'],
-                    'answer_id' => $param['answer_id'],
+                    'ask_id'    => intval($param['ask_id']),
+                    'answer_id' => intval($param['answer_id']),
                 ];
                 $UpAnswerData = [
                     'is_review'   => 1,
@@ -932,12 +938,15 @@ class Ask extends Base
             session('users', $LatestData);
             // session('open_id',  $LatestData['open_id']);
             session('users_id', $LatestData['users_id']);
-            setcookie('users_id', $LatestData['users_id'], null);
+            cookie('users_id', $LatestData['users_id']);
             /* END */
             // 返回数据
             return $LatestData;
         } else {
             // session中不存在会员ID则返回空
+            session('users_id', null);
+            session('users', null);
+            cookie('users_id', null);
             return false;
         }
     }

@@ -42,7 +42,6 @@ class TagWeapp extends Base
         );
         $result = M('weapp')->field('code,config')
             ->where($map)
-            // ->cache(true, EYOUCMS_CACHE_TIME, 'hooks')
             ->select();
         foreach ($result as $key => $val) {
             $config = json_decode($val['config'], true);

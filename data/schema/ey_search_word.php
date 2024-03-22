@@ -12,7 +12,7 @@ return array (
   'word' => 
   array (
     'name' => 'word',
-    'type' => 'varchar(50)',
+    'type' => 'varchar(255)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -27,10 +27,46 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'resultNum' => 
+  array (
+    'name' => 'resultNum',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'sort_order' => 
   array (
     'name' => 'sort_order',
     'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'users_id' => 
+  array (
+    'name' => 'users_id',
+    'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'ip' => 
+  array (
+    'name' => 'ip',
+    'type' => 'varchar(20)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'is_hot' => 
+  array (
+    'name' => 'is_hot',
+    'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

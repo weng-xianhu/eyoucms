@@ -5,38 +5,38 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <title>{$eyou.field.seo_title}</title>
-        <meta name="description" content="{$eyou.field.seo_description}" />
         <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+        <meta name="description" content="{$eyou.field.seo_description}" />
         <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
         {eyou:static file="skin/style/pintuer.css" /}
         {eyou:static file="skin/style/header.css" /}
         {eyou:static file="skin/style/style.css" /}
-        {eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+        {eyou:static file="skin/style/iconfont.css" /}
         <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
     <body>
         <div id="mobile-mask">
-            <!--网站公用头部-->
+            <!-- 公用头部 begin -->
             {eyou:include file="header.htm" /}
+            <!-- 公用头部 end -->    
+            <!-- 公用栏目图片 begin -->
             {eyou:include file="banner.htm" /}
+            <!-- 公用栏目图片 end -->
             <!-- 横向栏目样式 begin -->
             <div class="nav-x">
-                <div class="container">
+                <div class="container-layout">
                     <div class="menu-toggle">
                         <button class="button icon-navicon" data-target="#subnav">
                             <span>
-                                <i class="fa fa-reorder margin-small-right"></i>
-                                {eyou:type typeid='$eyou.field.parent_id' }{$field.typename}{/eyou:type}
-                                <!-- 上一级栏目名称 -->
+                                {$eyou.field.typename}
+                                {eyou:empty name="$eyou.field.children"}<i class="iconfont icon-down margin-small-right"></i>{/eyou:empty}
                             </span>
                         </button>
-                        <h3>{$eyou.field.typename}</h3>
-                        <!-- 当前栏目名称 -->
                         <ul class="nav-navicon text-center" id="subnav">
-                            {eyou:channel type="first" id="field2" currentstyle="active"}
-                            <li class="col-2">
+                            {eyou:models type="first" id="field2" currentstyle="active"}
+                            <li>
                                 <a href="{$field2.typeurl}" class="{$field2.currentstyle}">{$field2.typename}</a>
                             </li>
-                            {/eyou:channel}
+                            {/eyou:models}
                         </ul>
                     </div>
                 </div>
@@ -50,7 +50,7 @@
                             {eyou:list pagesize='6' titlelen='20'}
                             <div class="xl12 xs12">
                                 <div class="media-img margin-bottom">
-                                    <a href="{$field.arcurl}" target="_blank">
+                                    <a href="{$field.arcurl}">
                                         <img src="{$field.litpic}" alt="{$field.title}" class="img-responsive">
                                         <div class="linear-link">
                                             <div class="subtitle">
@@ -63,7 +63,7 @@
                             </div>
                             {/eyou:list}
                         </div>
-                        <!-- 分页 -->
+                        <!-- 分页 begin -->
                         <div class="blank-small"></div>
                         <div class="text-center">
                             <ul class="pagination">
@@ -71,14 +71,15 @@
                             </ul>
                         </div>
                         <div class="blank-small"></div>
-                        <!-- 分页 -->
+                        <!-- 分页 end -->
                     </div>
                 </div>
                 <div class="blank-large"></div>
             </div>
-            <!--网站公用底部——开始-->
+            <!-- 公用底部 begin -->
             {eyou:include file="footer.htm" /}
-        </div><!-- id="mobile-mask" -->
+            <!-- 公用底部 end -->
+        </div>
         {eyou:static file="skin/js/jquery.min.js" /}
         {eyou:static file="skin/js/pintuer.js" /}
         {eyou:static file="skin/js/common.js" /}

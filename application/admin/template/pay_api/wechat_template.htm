@@ -7,7 +7,7 @@
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit; min-width:400px;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width: 400px;">
+<div class="page min-hg-c-10" style="min-width: 400px;">
     <div class="flexigrid">
         <form class="form-horizontal" id="postWechatForm">
             <input type="hidden" name="pay_id" value="{$Config.pay_id}">
@@ -17,12 +17,9 @@
                         <label>支付功能</label>
                     </dt>
                     <dd class="opt">
-                        <div class="onoff">
-                            <label for="is_open_wechat0" class="cb-enable {if condition='!isset($pay_info.is_open_wechat) || empty($pay_info.is_open_wechat)'}selected{/if}">开启</label>
-                            <label for="is_open_wechat1" class="cb-disable {if condition='isset($pay_info.is_open_wechat) && $pay_info.is_open_wechat == 1'}selected{/if}">关闭</label>
-                            <input id="is_open_wechat0" name="pay_info[is_open_wechat]" value="0" type="radio" {if condition="!isset($pay_info.is_open_wechat) || empty($pay_info.is_open_wechat)"} checked="checked"{/if}>
-                            <input id="is_open_wechat1" name="pay_info[is_open_wechat]" value="1" type="radio" {if condition="isset($pay_info.is_open_wechat) && $pay_info.is_open_wechat == 1"} checked="checked"{/if}>
-                        </div>
+                        <label class="curpoin"><input id="is_open_wechat0" name="pay_info[is_open_wechat]" value="0" type="radio" {if condition="!isset($pay_info.is_open_wechat) || empty($pay_info.is_open_wechat)"} checked="checked"{/if}>开启</label>
+                        &nbsp;
+                        <label class="curpoin"><input id="is_open_wechat1" name="pay_info[is_open_wechat]" value="1" type="radio" {if condition="isset($pay_info.is_open_wechat) && $pay_info.is_open_wechat == 1"} checked="checked"{/if}>关闭</label>
                     </dd>
                 </dl>
                 <!-- <dl class="row">
@@ -52,7 +49,7 @@
                         <label for="username"><em class="em_empty {notempty name='$pay_info.is_open_wechat'} none {/notempty}">*</em>微信AppId</label>
                     </dt>
                     <dd class="opt">
-                        <input type="text" name="pay_info[appid]" id="appid" value="{$pay_info.appid|default=''}" class="input-txt">
+                        <input type="text" name="pay_info[appid]" id="appid" value="{$pay_info.appid|default=''}" class="input-txt" autocomplete="off">
                         <p class="notic">请输入您的微信公众平台中的微信AppId，用于微信支付。</p>
                     </dd>
                 </dl>
@@ -61,7 +58,7 @@
                         <label for="username"><em class="em_empty {notempty name='$pay_info.is_open_wechat'} none {/notempty}">*</em>微信商户号</label>
                     </dt>
                     <dd class="opt">
-                        <input type="text" name="pay_info[mchid]" id="mchid" value="{$pay_info.mchid|default=''}" class="input-txt">
+                        <input type="text" name="pay_info[mchid]" id="mchid" value="{$pay_info.mchid|default=''}" class="input-txt" autocomplete="off">
                         <p class="notic">请输入您的微信公众平台中的微信商户号，用于微信支付。</p>
                     </dd>
                 </dl>
@@ -70,14 +67,14 @@
                         <label for="username"><em class="em_empty {notempty name='$pay_info.is_open_wechat'} none {/notempty}">*</em>微信KEY值</label>
                     </dt>
                     <dd class="opt">
-                        <input type="text" name="pay_info[key]" id="key" value="{$pay_info.key|default=''}" class="input-txt">
+                        <input type="text" name="pay_info[key]" id="key" value="{$pay_info.key|default=''}" class="input-txt" autocomplete="off">
                         <p class="notic">请输入您的微信公众平台中的微信KEY值，用于微信支付。</p>
                     </dd>
                 </dl>
                 <dl class="row">
                     <div class="bot" style="padding-bottom:0px;">
                         <a href="JavaScript:void(0);" onclick="wechatset();" class="ncap-btn-big ncap-btn-green" id="submitWechatBtn">确认提交</a>
-                        &nbsp;<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=8829','微信支付配置教程')" style="font-size: 12px;padding-left: 10px;position:absolute;top: 30px">不会配置？</a>
+                        &nbsp;<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=8829&origin_eycms=1','微信支付配置教程')" style="font-size: 12px;padding-left: 10px;position:absolute;top: 30px">不会配置？</a>
                     </div>
                 </dl>
             </div>
@@ -127,7 +124,7 @@
                 if (1 == res.code) {
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000});
+                    _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000});
                 } else {
                     showErrorAlert(res.msg);
                 }

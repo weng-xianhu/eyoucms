@@ -1,15 +1,11 @@
 {include file="public/layout" /}
-<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-    {include file="member/bar" /}
+{include file="member/left" /}
+<div class="page min-hg-c-10" style="min-width:auto;margin-left:100px;">
+    {include file="users_score/bar" /}
     <div class="flexigrid">
-        <div class="mDiv">
-            <div class="ftitle">
-                 {include file="users_score/bar" /}
-            </div>
-        </div>
         <form class="form-horizontal" id="post_form" action="{:url('UsersScore/conf')}" method="post">
             <div class="hDiv htitx">
                 <div class="hDivBox">
@@ -47,8 +43,7 @@
                         <label for="score_intro">积分说明</label>
                     </dt>
                     <dd class="opt ui-web_description ui-text">
-                        <textarea rows="5" cols="100" id="score_intro" name="score_intro" style="height:100px;"
-                                  class="ui-input" data-num="200">{$score.score_intro|default='a) 积分不可兑现、不可转让,仅可在本平台使用;
+                        <textarea rows="5" cols="100" id="score_intro" name="score_intro" style="height:100px;" class="ui-input" data-num="200">{$score.score_intro|default='a) 积分不可兑现、不可转让,仅可在本平台使用;
 b) 您在本平台参加特定活动也可使用积分,详细使用规则以具体活动时的规则为准;
 c) 积分的数值精确到个位(小数点后全部舍弃,不进行四舍五入)
 d) 买家在完成该笔交易(订单状态为“已签收”)后才能得到此笔交易的相应积分,如购买商品参加店铺其他优惠,则优惠的金额部分不享受积分获取;'}</textarea>
@@ -78,36 +73,75 @@ d) 买家在完成该笔交易(订单状态为“已签收”)后才能得到此
             </div>
             <div class="ncap-form-default">
                 <dl class="row">
-                    <dt class="tit" style="width: auto">
-                        <label><b>签到模块</b></label>
-                    </dt>
-                </dl>
-                <dl class="row">
                     <dt class="tit">
                         <label>签到送积分</label>
                     </dt>
                     <dd class="opt">
-                        <div class="onoff">
-                            <label for="score_signin_status1" class="cb-enable {if condition='isset($score.score_signin_status) AND $score.score_signin_status eq 1'}selected{/if}" onclick="changeSigninStatus('control_signin_status',1);">开启</label>
-                            <label for="score_signin_status0" class="cb-disable {if condition='!isset($score.score_signin_status) OR empty($score.score_signin_status)'}selected{/if}" onclick="changeSigninStatus('control_signin_status',0);">关闭</label>
-                            <input id="score_signin_status1" name="score_signin_status" value="1" type="radio" {if condition="isset($score.score_signin_status) AND $score.score_signin_status eq 1" } checked="checked" {/if}>
-                            <input id="score_signin_status0" name="score_signin_status" value="0" type="radio" {if condition="!isset($score.score_signin_status) OR empty($score.score_signin_status)" } checked="checked" {/if}>
-                        </div>
-                        <p class="notic"></p>
+                        <label class="curpoin">
+                            <input name="score_signin_status" value="1" type="radio" {if condition="!empty($score.score_signin_status)"} checked="checked" {/if} onclick="changeStatus('control_signin_status', 1);">开启
+                        </label>
+                        &nbsp;
+                        <label class="curpoin">
+                            <input name="score_signin_status" value="0" type="radio" {if condition="empty($score.score_signin_status)"} checked="checked" {/if} onclick="changeStatus('control_signin_status', 0);">关闭
+                        </label>
                     </dd>
                 </dl>
-                <div id="control_signin_status" {empty name="$score.score_signin_status"}style="display:none;"{/empty}>
-                    <dl class="row">
-                        <dt class="tit">
-                            <label>签到加积分</label>
-                        </dt>
-                        <dd class="opt">
-                            <input type="text" name="score_signin_score" value="{$score.score_signin_score|default=3}" class="w80">&nbsp;积分/次
-                            <span class="err"></span>
-                            <p class="notic"></p>
-                        </dd>
-                    </dl>
-                </div>
+                <dl class="row {if condition='empty($score.score_signin_status)'}none{/if}" id="control_signin_status">
+                    <dt class="tit">
+                        <label>签到加积分</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="score_signin_score" value="{$score.score_signin_score|default=3}" class="w80">&nbsp;积分/次
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label>消费获得积分</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin">
+                            <input name="score_consume_status" value="1" type="radio" {if condition="!empty($score.score_consume_status)"} checked="checked" {/if} onclick="changeStatus('control_consume_status', 1);">开启
+                        </label>
+                        &nbsp;
+                        <label class="curpoin">
+                            <input name="score_consume_status" value="0" type="radio" {if condition="empty($score.score_consume_status)"} checked="checked" {/if} onclick="changeStatus('control_consume_status', 0);">关闭
+                        </label>
+                        <p class="notic">订单完成后，并且达到收货后可维权时间，才能获得消费积分</p>
+                    </dd>
+                </dl>
+                <dl class="row {empty name='$score.score_consume_status'}none{/empty}" id="control_consume_status">
+                    <dt class="tit">
+                        <label>消费￥1.00获得</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="score_consume_money" value="{$score.score_consume_money|default=1}" class="w80">&nbsp;积分
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label>登录送积分</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin">
+                            <input name="score_login_points_open" value="1" type="radio" {if condition="!empty($score.score_login_points_open)"} checked="checked" {/if} onclick="changeStatus('score_login_points_value', 1);">开启
+                        </label>
+                        &nbsp;
+                        <label class="curpoin">
+                            <input name="score_login_points_open" value="0" type="radio" {if condition="empty($score.score_login_points_open)"} checked="checked" {/if} onclick="changeStatus('score_login_points_value', 0);">关闭
+                        </label>
+                    </dd>
+                </dl>
+                <dl class="row {empty name='$score.score_login_points_open'}none{/empty}" id="score_login_points_value">
+                    <dt class="tit">
+                        <label>登录送</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="score_login_points_value" value="{$score.score_login_points_value|default=1}" class="w80">&nbsp;积分
+                        <p class="notic">每天登录赠送一次积分，同一天不累计。</p>
+                    </dd>
+                </dl>
             </div>
             <div class="ncap-form-default">
                 <dl class="row">
@@ -131,15 +165,7 @@ d) 买家在完成该笔交易(订单状态为“已签收”)后才能得到此
         $('#post_form').submit();
     }
 
-    function changeStatus(id,val) {
-        if (1 == val) {
-            $("#"+id).show();
-        }else{
-            $("#"+id).hide();
-        }
-    }
-
-    function changeSigninStatus(id,val) {
+    function changeStatus(id, val) {
         if (1 == val) {
             $("#"+id).show();
         }else{

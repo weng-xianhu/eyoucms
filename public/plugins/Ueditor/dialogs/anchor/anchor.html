@@ -7,13 +7,62 @@
         <style type="text/css">
             *{color: #838383;margin: 0;padding: 0}
             html,body {font-size: 12px;overflow: hidden; }
-            .content{padding:5px 0 0 15px;}
-            input{width:210px;height:21px;line-height:21px;margin-left: 4px;}
+            .content{padding:5px 0 0 15px;display: flex;flex-direction: row;align-items: center;}
+            .div-label{display: flex;flex-direction: row;align-items: center;}
+            .div-label label{display: flex;flex-direction: row;align-items: center;margin-right: 10px;cursor: pointer;}
+            .div-label label span{margin-left: 2px;}
+            input {
+                width: 210px;
+                line-height: 20px;
+                white-space: nowrap;
+                display: inline-block;
+                height: 20px;
+                overflow: hidden;
+                cursor: text;
+                font-size: 13px;
+                padding: 4px 6px;
+                resize: none;
+                margin-left: 4px;
+                color: #555555;
+                background-color: #FFF;
+                border: solid 1px #eee;
+            }
+            input:focus {
+                color: #33464F;
+                background-color: #fff;
+                border: solid 1px #eee;
+                border-color: #eee;
+                box-shadow: 0 0 0 1px rgba(51,152,204,0.5) !important;
+                outline: 0 none;
+            }
+            
+            input[type="radio"] {
+                width: 13px;
+                height: 21px;
+                line-height: 21px;
+                margin-left: 4px;
+                cursor: pointer;
+            }
         </style>
     </head>
     <body>
         <div class="content">
-            <span><var id="lang_input_anchorName"></var></span><input id="anchorName"  value="" />
+            <span><var id="lang_input_anchorName"></var></span><input  id="anchorName"  value="" />
+        </div>
+        <div class="content" style="margin-top: 5px;">
+            <span>锚点用途：</span>
+            <div class="div-label">
+                <label><input type="radio" name="anchorUse" value="1" onclick="anchorUseClick(this);"><span>内部关联</span></label>
+                <label><input type="radio" name="anchorUse" value="2" onclick="anchorUseClick(this);" checked="checked"><span>目录大纲</span></label>
+                <label><a href="javascript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=30644&origin_eycms=1','百度编辑器的锚点用法教程')" style="text-decoration: none;">(教程)</a></label>
+            </div>
+        </div>
+        <div class="content" id="anchorUse_2" style="margin-top: 5px; display: none;">
+            <span>目录层级：</span>
+            <div class="div-label">
+                <label><input type="radio" name="anchorStyle" value="h2" checked="checked"><span>一级</span></label>
+                <label><input type="radio" name="anchorStyle" value="h3"><span>二级</span></label>
+            </div>
         </div>
         <script type="text/javascript" src="../internal.js"></script>
         <script type="text/javascript">
@@ -22,19 +71,94 @@
             if(node && node.tagName == 'IMG' && (node = node.getAttribute('anchorname'))){
                 anchorInput.value = node;
             }
+
+            if (2 == document.querySelector('input[name="anchorUse"]:checked').value) {
+                document.getElementById('anchorUse_2').style.display = "flex";
+            } else {
+                document.getElementById('anchorUse_2').style.display = "none";
+            }
+
+            function anchorUseClick(obj)
+            {
+                var anchorUse = obj.value;
+                if (2 == anchorUse) {
+                    document.getElementById('anchorUse_2').style.display = "flex";
+                } else {
+                    document.getElementById('anchorUse_2').style.display = "none";
+                }
+            }
+
             anchorInput.onkeydown = function(evt){
                 evt = evt || window.event;
                 if(evt.keyCode == 13){
-                    editor.execCommand('anchor', anchorInput.value);
+                    var anchorValue = anchorInput.value.trim();
+                    if (!anchorValue) {
+                        alert('锚点名字不能为空');
+                        anchorInput.focus();
+                        return false;
+                    }
+                    editor.execCommand('anchor', anchorValue);
+                    if (2 == document.querySelector('input[name="anchorUse"]:checked').value) {
+                        var anchorStyle = document.querySelector('input[name="anchorStyle"]:checked').value;
+                        appendHx(anchorStyle);
+                    }
                     dialog.close();
                     domUtils.preventDefault(evt)
                 }
             };
             dialog.onok = function (){
-                editor.execCommand('anchor', anchorInput.value);
+                var anchorValue = anchorInput.value.trim();
+                if (!anchorValue) {
+                    alert('锚点名字不能为空');
+                    anchorInput.focus();
+                    return false;
+                }
+                editor.execCommand('anchor', anchorValue);
+                if (2 == document.querySelector('input[name="anchorUse"]:checked').value) {
+                    var anchorStyle = document.querySelector('input[name="anchorStyle"]:checked').value;
+                    appendHx(anchorStyle);
+                }
                 dialog.close();
             };
             $focus(anchorInput);
+
+            // 选中锚点的文本进行段落格式化(h2/h3/h4/h5/h6)
+            function appendHx(anchorStyle) {
+                editor.execCommand('paragraph',anchorStyle);
+            }
+
+            // 选中文本自动出现在锚点输入框里
+            function getText() {
+                // 当你点击按钮时编辑区域已经失去了焦点，如果直接用getText将不会得到内容，所以要在选回来，然后取得内容
+                var range = editor.selection.getRange();
+                range.select();
+                var txt = editor.selection.getText();
+                if (txt) {
+                    anchorInput.value = txt;
+                }
+            }
+
+            // 获取选中的文本到锚点里
+            getText();
+        </script>
+        <script type="text/javascript" src="../../third-party/jquery-1.10.2.min.js"></script>
+        <script type="text/javascript" src="../../../layer-v3.1.0/layer.js"></script>
+        <script type="text/javascript">
+            function click_to_eyou_1575506523(url,title,width,height) {
+                //iframe窗
+                if (!width) width = '80%';
+                if (!height) height = '80%';
+                parent.layer.open({
+                    type: 2,
+                    title: title,
+                    fixed: true, //不固定
+                    shadeClose: false,
+                    shade: [0.7, '#fafafa'],
+                    maxmin: false, //开启最大化最小化按钮
+                    area: [width, height],
+                    content: url
+                });
+            }
         </script>
     </body>
 </html>

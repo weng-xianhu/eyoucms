@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -45,7 +45,7 @@ class MemberLogic extends Model
         // api_Service_checkVersion
         $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVVwZ3JhZGUmYT1jaGVja1RoZW1lVmVyc2lvbg==';
         $this->service_url = base64_decode($this->service_ey).base64_decode($tmp_str);
-        $this->upgrade_url = $this->service_url . '&domain='.request()->host(true).'&v=' . $this->version.'&type=theme_users';
+        $this->upgrade_url = $this->service_url . '&domain='.request()->host(true).'&v=' . $this->version.'&type=theme_users&cms_version='.getVersion();
         $this->planPath_pc = 'template/'.TPL_THEME.'pc/';
         $this->planPath_m = 'template/'.TPL_THEME.'mobile/';
     }
@@ -56,7 +56,9 @@ class MemberLogic extends Model
     public function syn_theme_users()
     {
         error_reporting(0);//关闭所有错误报告
-        if ('v1.0.1' > $this->version) {
+        $web_users_tpl_theme = tpCache('web.web_users_tpl_theme');
+        empty($web_users_tpl_theme) && $web_users_tpl_theme = 'users';
+        if (!file_exists($this->planPath_pc.$web_users_tpl_theme)) {
             return $this->OneKeyUpgrade();
         } else {
             return true;
@@ -469,9 +471,9 @@ class MemberLogic extends Model
         }
         $mysqlinfo = \think\Db::query("SELECT VERSION() as version");
         $mysql_version  = $mysqlinfo[0]['version'];
-        $vaules = array(
+        $values = array(
             'type'  => 'theme_users',
-            'domain'=>$_SERVER['HTTP_HOST'], //用户域名                
+            'domain'=>request()->host(), //用户域名                
             'key_num'=>$this->version, // 用户版本号
             'to_key_num'=>$to_key_num, // 用户要升级的版本号                
             'add_time'=>time(), // 升级时间
@@ -483,7 +485,7 @@ class MemberLogic extends Model
         );
         // api_Service_upgradeLog
         $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVVwZ3JhZGUmYT11cGdyYWRlTG9nJg==';
-        $url = base64_decode($this->service_ey).base64_decode($tmp_str).http_build_query($vaules);
+        $url = base64_decode($this->service_ey).base64_decode($tmp_str).http_build_query($values);
         @httpRequest($url);
     }
 

@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>选择门店</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/basic.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/tag_global.js"/}
+        {eyou:static file="/public/static/common/js/mobile_global.js"/}
+    </head>
+
+    <body>
+        <div class="">
+            <div class="ey-body">
+                <div class="ey-container">
+                    <div class="el-row">
+                        <div class="address-con">
+                            <div class="el-row">
+                                {eyou:volist name="list" id="vo"}
+                                    <div class="el-col el-col-24" data-store_id="{$vo.store_id}" data-store_name="{$vo.store_name}" data-store_address="{$vo.store_address}" data-prov_city_area="{$vo.prov_city_area}" onclick="parent.selectVerifyStore(true, this);">
+                                        <div class="address-item flex box">
+                                            <div class="address-item-l">
+                                                <div class="txt-row">
+                                                    <strong class="f16">{$vo.store_name}</strong>
+                                                </div>
+                                                <div class="txt-row">
+                                                    <span>{$vo.store_address}</span>
+                                                </div>
+                                                <div class="txt-row">
+                                                    <span>联系电话：{$vo.store_phone}</span>
+                                                </div>
+                                                <div class="txt-row">
+                                                    <span>营业时间：{$vo.store_business}</span>
+                                                </div>
+                                            </div>
+                                            <div class="address-item-r">
+                                                <span>选择</span>
+                                            </div>
+                                        </div>  
+                                    </div>
+                                {/eyou:volist}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

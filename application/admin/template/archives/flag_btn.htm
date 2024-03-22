@@ -6,3 +6,30 @@
             {/volist}
         </select>
     </div>
+    {notempty name="$global.web_citysite_open"}
+    <div class="sDiv2">  
+        <select name="province_id" id="province_id" class="select" style="margin:0px 5px;" onchange="set_city_list(0);">
+            <option value="0">全国</option>
+            {volist name=':get_site_province_list()' id='vo'}
+            <option value="{$vo.id}" {eq name="$Request.param.province_id" value="$vo.id" } selected="true" {/eq}>{$vo.name}</option>
+            {/volist}
+        </select>
+        <select name="city_id" id="city_id" class="select" style="margin:0px 5px;display: none;" onchange="set_area_list(0);">
+            <option value="">--请选择--</option>
+        </select>
+        <select name="area_id" id="area_id" class="select" style="margin:0px 5px;display: none;">
+            <option value="">--请选择--</option>
+        </select>
+    </div>
+    <script type="text/javascript">
+        try {
+            set_city_list({$Request.param.city_id|default=0});
+            set_area_list({$Request.param.area_id|default=0});
+        }catch(e){}
+        $(document).ready(function(){
+            $('#searchForm select[name=province_id],#searchForm select[name=city_id],#searchForm select[name=area_id]').change(function(){
+                $('#searchForm').submit();
+            });
+        });
+    </script>
+    {/notempty}

@@ -23,6 +23,7 @@ class ArchivesFlag extends Base
     {
         $list = array();
         $keywords = input('keywords/s');
+        $keywords = addslashes(trim($keywords));
 
         $condition = array();
         if (!empty($keywords)) {

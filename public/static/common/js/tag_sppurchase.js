@@ -21,7 +21,7 @@ function shop_add_cart() {
     var ajaxdata = 'aid='+aid+'&num='+num+'&spec_value_id='+SelectValueIds.value;
 
     // 库存数量
-    var StockCountObj = document.getElementById('ey_stock_1565602291').value;
+    var StockCountObj = document.getElementById('ey_stock_v602291').value;
     if (parseInt(StockCountObj) == 0) {
         if (!window.layer) {
             alert('商品已售罄！');
@@ -75,7 +75,7 @@ function shop_add_cart() {
  * @param  {[type]} name [description]
  * @return {[type]}      [description]
  */
-function getUrlParam_1607507428(name)
+function getUrlParam_v507428(name)
 {
     var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
     var r = window.location.search.substr(1).match(reg);
@@ -83,13 +83,13 @@ function getUrlParam_1607507428(name)
 }
 
 // 表单提交
-function submitForm_1607507428(formname)
+function submitForm_v507428(formname)
 {
     $("form[name="+formname+"]").submit();
 }
 
 // 选择支付方式
-function paySelect_1607507428(formname)
+function paySelect_v507428(formname)
 {
     var JsonData    = fe912b5dac71082e12c1827a3107f9b;
     var QuantityObj = document.getElementById(JsonData.quantity);
@@ -97,7 +97,7 @@ function paySelect_1607507428(formname)
 
     var aid = JsonData.aid;
     var spec_value_id = SelectValueIds.value;
-    var mini_id = getUrlParam_1607507428('mini_id');
+    var mini_id = getUrlParam_v507428('mini_id');
     if ($('select[name=mini_id]') && 0 < $('select[name=mini_id]').val()) {
         mini_id = $('select[name=mini_id]').val();
     }
@@ -108,7 +108,7 @@ function paySelect_1607507428(formname)
     }
 
     // 库存数量
-    var StockCountObj = document.getElementById('ey_stock_1565602291').value;
+    var StockCountObj = document.getElementById('ey_stock_v602291').value;
     if (parseInt(StockCountObj) == 0) {
         layer.alert('商品已售罄！', {icon: 5, title: false, closeBtn: false});
         return false;
@@ -119,20 +119,20 @@ function paySelect_1607507428(formname)
 
     var formhtml = '';
     formhtml += '<form name="'+formname+'" action="'+JsonData.buyFormUrl+'" method="post" style="display: none;">';
-    formhtml += '    <input type="hidden" name="aid_1607507428" value="'+aid+'" />';
-    formhtml += '    <input type="hidden" name="mini_id_1607507428" value="'+mini_id+'" />';
-    formhtml += '    <input type="hidden" name="spec_value_id_1607507428" value="'+spec_value_id+'" />';
-    formhtml += '    <input type="hidden" name="pay_code_1607507428" value="alipay" />';
+    formhtml += '    <input type="hidden" name="aid_v507428" value="'+aid+'" />';
+    formhtml += '    <input type="hidden" name="mini_id_v507428" value="'+mini_id+'" />';
+    formhtml += '    <input type="hidden" name="spec_value_id_v507428" value="'+spec_value_id+'" />';
+    formhtml += '    <input type="hidden" name="pay_code_v507428" value="alipay" />';
     formhtml += '</form>';
     $('body').append(formhtml);
 
     var content = '';
-    content += '<style type="text/css">body .WeChatScanCode_1607507428 .layui-layer-content{padding:0px;}</style>';
+    content += '<style type="text/css">body .WeChatScanCode_v507428 .layui-layer-content{padding:0px;}</style>';
     content += '<div style="margin-top:20px;">';
-    content += '<a href="javascript:void(0);" onclick="layer.closeAll();parent.submitForm_1607507428(\''+formname+'\');" style="float: left;">';
+    content += '<a href="javascript:void(0);" onclick="layer.closeAll();parent.submitForm_v507428(\''+formname+'\');" style="float: left;">';
     content += ' <img src="'+JsonData.root_dir+'/public/static/common/images/alipay.png" width="150" height="50" alt="支付宝支付" />';
     content += '</a>';
-    content += '<a href="javascript:void(0);" onclick="layer.closeAll();parent.WeChatScanCode_1607507428(\''+aid+'\',\''+mini_id+'\',\''+spec_value_id+'\',\'weipay\');" style="float: right;">';
+    content += '<a href="javascript:void(0);" onclick="layer.closeAll();parent.WeChatScanCode_v507428(\''+aid+'\',\''+mini_id+'\',\''+spec_value_id+'\',\'weipay\');" style="float: right;">';
     content += ' <img src="'+JsonData.root_dir+'/public/static/common/images/weipay.png" width="150" height="50" alt="微信支付" />';
     content += '</a>';
     content += '</div>';
@@ -142,26 +142,26 @@ function paySelect_1607507428(formname)
         title: '选择支付方式',
         shadeClose: false,
         maxmin: false, //开启最大化最小化按钮
-        skin: 'WeChatScanCode_1607507428',
+        skin: 'WeChatScanCode_v507428',
         area: ['320px', '150px'],
         content: content
     });
 }
 
 // 微信扫码支付
-function WeChatScanCode_1607507428(aid, mini_id, spec_value_id, pay_code)
+function WeChatScanCode_v507428(aid, mini_id, spec_value_id, pay_code)
 {
     var formData = new FormData();
-    formData.append('aid_1607507428', aid);
-    formData.append('mini_id_1607507428', mini_id);
-    formData.append('spec_value_id_1607507428', spec_value_id);
-    formData.append('pay_code_1607507428', pay_code);
+    formData.append('aid_v507428', aid);
+    formData.append('mini_id_v507428', mini_id);
+    formData.append('spec_value_id_v507428', spec_value_id);
+    formData.append('pay_code_v507428', pay_code);
 
-    weipay_1607507428(formData);
+    weipay_v507428(formData);
 }
 
 // 微信扫码支付，用于PC端
-function weipay_1607507428(formData)
+function weipay_v507428(formData)
 {
     formData.append('_ajax', 1);
     layer_loading('正在处理');
@@ -177,7 +177,7 @@ function weipay_1607507428(formData)
         success: function(res){
             layer.closeAll();
             if (res.code == 1) {
-                AlertPayImg_1607507428(res.data);
+                AlertPayImg_v507428(res.data);
             } else {
                 layer.alert(res.msg, {icon:5, title: false, closeBtn: false});
             }
@@ -189,24 +189,24 @@ function weipay_1607507428(formData)
     });
 }
 
-var PayPolling_1607507428;
+var PayPolling_v507428;
 // 装载显示扫码支付的二维码
-function AlertPayImg_1607507428(data) {
+function AlertPayImg_v507428(data) {
     var html = "<img src='"+data.url_qrcode+"' style='width: 250px; height: 250px;'><br/><span style='color: red; display: inline-block; width: 100%; text-align: center;'>正在支付中...请勿刷新</span>";
     layer.alert(html, {
         title: '微信扫码支付',
         btn: [],
         success: function() {
-            PayPolling_1607507428 = window.setInterval(function(){ OrderPayPolling_1607507428(data); }, 2000);
+            PayPolling_v507428 = window.setInterval(function(){ OrderPayPolling_v507428(data); }, 2000);
         },
         cancel: function() {
-            window.clearInterval(PayPolling_1607507428);
+            window.clearInterval(PayPolling_v507428);
         }
     });
 }
 
 // 订单轮询
-function OrderPayPolling_1607507428(data) {
+function OrderPayPolling_v507428(data) {
     var pay_id = data.pay_id;
     var pay_mark = data.pay_mark;
     var unified_id = data.unified_id;
@@ -232,7 +232,7 @@ function OrderPayPolling_1607507428(data) {
             if (1 == res.code) {
                 if (res.data) {
                     layer_loading('正在处理');
-                    window.clearInterval(PayPolling_1607507428);
+                    window.clearInterval(PayPolling_v507428);
                     if (2 == transaction_type) {
                         if (!res.data.mobile && !res.data.email) {
                             layer.closeAll();
@@ -297,7 +297,7 @@ function BuyNow(aid){
 
     try {
         if (document.getElementsByName("mini_id")[0]) {
-            var mini_id = getUrlParam_1607507428('mini_id');
+            var mini_id = getUrlParam_v507428('mini_id');
             if (0 < document.getElementsByName("mini_id")[0].value) {
                 mini_id = document.getElementsByName("mini_id")[0].value;
             }
@@ -308,7 +308,7 @@ function BuyNow(aid){
     }catch(err){}
 
     // 库存数量
-    var StockCountObj = document.getElementById('ey_stock_1565602291').value;
+    var StockCountObj = document.getElementById('ey_stock_v602291').value;
     if (parseInt(StockCountObj) == 0) {
         if (!window.layer) {
             alert('商品已售罄！');
@@ -362,18 +362,18 @@ function CartUnifiedAlgorithm(symbol){
     // 数量
     var QuantityObj = document.getElementById(fe912b5dac71082e12c1827a3107f9b.quantity);
     // 库存数量
-    var StockCountObj = document.getElementById('ey_stock_1565602291');
+    var StockCountObj = document.getElementById('ey_stock_v602291');
     // 默认数量
     var quantity = '';
     if ('change' == symbol) {
         // 直接修改数量
         if ('1' > QuantityObj.value || '' == QuantityObj.value) {
             quantity = 1;
-            if (!window.layer) {
-                alert('商品数量最少为1');
-            } else {
-                layer.alert('商品数量最少为1', {icon: 5, title: false, closeBtn: false});
-            }
+            // if (!window.layer) {
+            //     alert('商品数量最少为1');
+            // } else {
+            //     layer.alert('商品数量最少为1', {icon: 5, title: false, closeBtn: false});
+            // }
         }else{
             if (Number(QuantityObj.value) > Number(StockCountObj.value)) {
                 quantity = Number(StockCountObj.value);
@@ -390,11 +390,11 @@ function CartUnifiedAlgorithm(symbol){
     }else{
         quantity = 1;
         // 如果数量小于1则自动填充1
-        if (!window.layer) {
-            alert('商品数量最少为1');
-        } else {
-            layer.alert('商品数量最少为1', {icon: 5, title: false, closeBtn: false});
-        }
+        // if (!window.layer) {
+        //     alert('商品数量最少为1');
+        // } else {
+        //     layer.alert('商品数量最少为1', {icon: 5, title: false, closeBtn: false});
+        // }
     }
     // 数量是否大于库存量
     if (StockCountObj.value < quantity) {
@@ -411,6 +411,9 @@ function CartUnifiedAlgorithm(symbol){
 
 // 去购车去
 function shop_cart_list(url) {
+    window.location.href = url;
+    
+/*
     if (!window.layer) {
         var mymessage = confirm('加入购物车成功，前往购物车！');
         if (mymessage == true) window.location.href = url;
@@ -423,16 +426,23 @@ function shop_cart_list(url) {
             window.location.href = url;
         });
     }
+    */
 }
 
 // 去登陆
 function is_login(url){
-    if (document.getElementById('ey_login_id_1609665117')) {
-        $('#ey_login_id_1609665117').trigger('click');
+    if (document.getElementById('ey_login_id_v665117')) {
+        $('#ey_login_id_v665117').trigger('click');
     } else {
-        var mymessage = confirm('您还没未登录，请登录后购买！');
-        if(mymessage == true){
-            window.location.href = url;
+        if (!window.layer) {
+            var mymessage = confirm('您还没未登录，请登录后购买！');
+            if(mymessage == true){
+                window.location.href = url;
+            }
+        } else {
+            layer.alert('您还没未登录，请登录后购买！', {icon: 5, title: false}, function(){
+                window.location.href = url;
+            });
         }
     }
 }
@@ -443,20 +453,20 @@ function sortNumber(a, b) {
 
 function SpecSelect(spec_mark_id, spec_value_id, discount_price) {
     var JsonData = fe912b5dac71082e12c1827a3107f9b;
-
+    var currentstyle = JsonData.currentstyle;
     // 清除同一类下的所有选中参数class
     var ClassArray = document.getElementsByClassName("spec_mark_"+spec_mark_id);
     for (var i = 0; i < ClassArray.length; i++) {
-        ClassArray[i].classList.remove("btn-danger");
+        ClassArray[i].classList.remove(currentstyle);
     }
 
     // 当前点击的添加上class
-    document.getElementsByClassName('spec_value_'+spec_value_id)[0].classList.add('btn-danger');
+    document.getElementsByClassName('spec_value_'+spec_value_id)[0].classList.add(currentstyle);
 
     /*规格值ID处理*/
     // 获取所有选中的规格值ID
     var SelectValueIds = '';
-    var danger = document.getElementsByClassName('btn-danger');
+    var danger = document.getElementsByClassName(currentstyle);
     for (var i = 0; i < danger.length; i++) {
         if (danger[i].dataset.spec_value_id) {
             SelectValueIds += danger[i].dataset.spec_value_id;
@@ -481,19 +491,34 @@ function SpecSelect(spec_mark_id, spec_value_id, discount_price) {
         if (SelectValueIds == SpecData[i]['spec_value_id']) {
             document.getElementById('SelectValueIds').value  = SelectValueIds;
             if (discount_price) {
-                var old_price   = Number(SpecData[i]['spec_price']);
-                document.getElementById('old_price').innerText   = old_price.toFixed(2);
+                if (document.getElementById('old_price')) {
+                    var old_price   = Number(SpecData[i]['spec_price']);
+                    document.getElementById('old_price').innerText   = parseFloat(old_price.toFixed(2));
+                }
                 var users_price = Number(SpecData[i]['spec_price']) * discount_price;
-                document.getElementById('users_price').innerText = users_price.toFixed(2);
+                if (document.getElementById('users_price')) {
+                    document.getElementById('users_price').innerText = parseFloat(users_price.toFixed(2));
+                }
+                if (document.getElementById('totol_price')) {
+                    document.getElementById('totol_price').innerText = parseFloat(users_price.toFixed(2));
+                }
             }else{
                 var users_price = Number(SpecData[i]['spec_price']);
-                document.getElementById('users_price').innerText = users_price.toFixed(2);
+                if (document.getElementById('users_price')) {
+                    document.getElementById('users_price').innerText = parseFloat(users_price.toFixed(2));
+                }
+                if (document.getElementById('totol_price')) {
+                    document.getElementById('totol_price').innerText = parseFloat(users_price.toFixed(2));
+                }
             }
             if (document.getElementById('stock_count')) {
                 document.getElementById('stock_count').innerText = SpecData[i]['spec_stock'];
             }
-            if (document.getElementById('ey_stock_1565602291')) {
-                document.getElementById('ey_stock_1565602291').value = SpecData[i]['spec_stock'];
+            if (document.getElementById('sales_num')) {
+                document.getElementById('sales_num').innerText = SpecData[i]['spec_sales_num'];
+            }
+            if (document.getElementById('ey_stock_v602291')) {
+                document.getElementById('ey_stock_v602291').value = SpecData[i]['spec_stock'];
             }
             // 更新价格和库存后，购买数量重置为 1 
             document.getElementById(fe912b5dac71082e12c1827a3107f9b.quantity).value = 1;

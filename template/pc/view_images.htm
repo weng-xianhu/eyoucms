@@ -4,47 +4,49 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>{$eyou.field.seo_title}</title>
-<meta name="description" content="{$eyou.field.seo_description}" />
 <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<meta name="description" content="{$eyou.field.seo_description}" />
 <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
 {eyou:static file="skin/style/pintuer.css" /}
 {eyou:static file="skin/style/header.css" /}
 {eyou:static file="skin/style/style.css" /}
-{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+{eyou:static file="skin/style/iconfont.css" /}
 <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
 </head>
 <body>
-<!--网站公用头部——开始-->
+<!--公用头部 begin -->
 {eyou:include file="header.htm" /}
-<!-- 频道banner,可在栏目图片里编辑 -->
+<!-- 公用头部 end -->    
 
-<!-- 频道banner end -->
 <div class="layout bg-gray">
+    <!--当前位置 begin -->
 	<div class="container">
 		<div class="line">
 			<div class="nav-bread">
-				<i class="fa fa-home margin-small-right"></i>{eyou:position/}
+				<i class="iconfont icon-home margin-small-right"></i>{eyou:position/}
 			</div>
 		</div>
 	</div>
+    <!--当前位置 end -->
 	<div class="container">
 		<div class="line">
 			<div class="x12">
-				<!--内容 begin-->
 				<div class="article bg-white">
 					<div class="padding-large">
 						<div class="post margin-big-bottom">
-							<h1>{$eyou.field.title}</h1>
+                            <!-- 标题 begin -->
+                            <h1>{$eyou.field.title}</h1>
+                            <!-- 标题 end -->
 							<div class="blank"></div>
 							<div class="text-gray padding-big-bottom text-default">
 								<span class="margin-right">作者：{$eyou.field.author}</span>
-								<span class="margin-right">发布时间：{$eyou.field.add_time|MyDate='Y-m-d',###}</span>
+								<span class="margin-right">更新时间：{$eyou.field.update_time|MyDate='Y-m-d',###}</span>
 								<span class="margin-right">点击数：{eyou:arcclick /}</span>
 							</div>
 							<hr class="bg-gray">
 						</div>
 						<div class="blank"></div>
-						<!-- 相册begin -->
+						<!-- 相册 begin -->
 							<ul class="pgwSlideshow">
 							{eyou:volist name="$eyou.field.image_list"}
 							<li>
@@ -52,18 +54,20 @@
 							</li>
 							{/eyou:volist}
 							</ul>
-						<!-- 相册end -->
+						<!-- 相册 end -->
 						<div class="blank-small"></div>
 						<div class="post">
-							{$eyou.field.content}
+                            <!-- 内容详情 begin -->
+                            {$eyou.field.content}
+                            <!-- 内容详情 end -->
 						</div>		
-						<!--tag-->
+						<!--tag begin -->
 						<div class="blank-middle"></div>
 						{eyou:notempty name='$eyou.field.tags'}
 							<span>Tag：</span>
-							{eyou:tag getall='0'}
+							{eyou:tags getall='0'}
 							<a href="{$field.link}" class="tag tags bg-yellow radius-rounded text-white margin-small-bottom padding-small" {$field.target}>{$field.tag}</a>
-							{/eyou:tag}
+							{/eyou:tags}
 						{/eyou:notempty}
 						<div class="blank-small"></div>
 						<!--tag end-->						
@@ -76,42 +80,41 @@
 	<div class="container">
 		<div class="line">
 			<div class="xl12 xs12 xm12 xb12">
-				<!-- 上下篇 begin -->
 				<div class="prenext-pro">
 					<div class="line">
-						<div class="x5">
-							{eyou:prenext get='next' titlelen='30'}
-							<a href="{$field.arcurl}" class="button button-block bg-white border radius-none text-main text-middle text-center" title="{eyou:lang name='sys10' /}{$field.title}"><i class="margin-right fa fa-long-arrow-left"></i>{$field.title}</a>
-							{eyou:else /}
-							<a class="button button-block bg-white border radius-none text-gray text-middle text-center" title="{eyou:lang name='sys10' /}"><i class="margin-right fa fa-long-arrow-left"></i>没有了</a>
-							{/eyou:prenext}
-						</div>
-
-						<div class="x2 text-center">
-							{eyou:type typeid="$eyou.field.parent_id"}
-							<a href="{$field.typeurl}" class="button radius-none border button-block bg-white text-main text-middle text-center"><i class="fa fa-align-justify margin-right"></i><span class="hidden-l">返回列表</span></a>
-							<!-- {$field.typename} -->
-							{/eyou:type}
-						</div>
-
+                        <!-- 上一篇 begin -->
 						<div class="x5">
 							{eyou:prenext get='pre' titlelen='30'}
-							<a href="{$field.arcurl}" class="button border button-block bg-white radius-none text-main text-middle text-center float-right" title="{$field.title}">{$field.title}<i class="margin-left fa fa-long-arrow-right"></i></a>
+							<a href="{$field.arcurl}" class="button button-block bg-white border radius-none text-main text-middle text-center" title="{eyou:lang name='sys10' /}{$field.title}"><i class="iconfont icon-up-arrow-left margin-right"></i>{$field.title}</a>
 							{eyou:else /}
-                            <a class="button button-block bg-white border radius-none text-gray text-middle text-center"><i class="margin-left fa fa-long-arrow-right"></i>没有了</a>
+							<a class="button button-block bg-white border radius-none text-gray text-middle text-center" title="{eyou:lang name='sys10' /}"><i class="iconfont icon-up-arrow-left margin-right"></i>没有了</a>
 							{/eyou:prenext}
 						</div>
+                        <!-- 上一篇 end -->
+						<div class="x2 text-center">
+							{eyou:type typeid="$eyou.field.typeid"}
+							<a href="{$field.typeurl}" class="button radius-none border button-block bg-white text-main text-middle text-center"><i class="iconfont icon-back margin-right"></i><span class="hidden-l">返回列表</span></a>
+							{/eyou:type}
+						</div>
+                        <!-- 下一篇 begin -->
+						<div class="x5">
+							{eyou:prenext get='next' titlelen='30'}
+							<a href="{$field.arcurl}" class="button border button-block bg-white radius-none text-main text-middle text-center float-right" title="{$field.title}">{$field.title}<i class="iconfont icon-up-arrow-right margin-left"></i></a>
+							{eyou:else /}
+                            <a class="button button-block bg-white border radius-none text-gray text-middle text-center"><i class="iconfont icon-up-arrow-right margin-left"></i>没有了</a>
+							{/eyou:prenext}
+						</div>
+                        <!-- 下一篇 end -->
 				   </div>
 				</div>
-				<!-- 上下篇 end -->
 			</div>
-		</div><!--line end-->
+		</div>
 	</div>
 	<div class="blank-big"></div>
 </div>
-<!--网站公用底部——开始-->
+<!--网站公用底部 begin -->
 {eyou:include file="footer.htm" /}
-<!--网站公用底部——结束-->
+<!--网站公用底部 end -->
 {eyou:static file="skin/js/pintuer.js" /}
 {eyou:static file="skin/js/common.js" /}
 {eyou:static file="skin/Lib/PgwSlideshow/css/pgwslideshow.css" /}

@@ -63,6 +63,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'switch_map' => 
+  array (
+    'name' => 'switch_map',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'only_oneself' => 
   array (
     'name' => 'only_oneself',
@@ -93,7 +102,7 @@ return array (
   'permission' => 
   array (
     'name' => 'permission',
-    'type' => 'text',
+    'type' => 'longtext',
     'notnull' => false,
     'default' => NULL,
     'primary' => false,

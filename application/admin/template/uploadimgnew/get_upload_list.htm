@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <!-- Apple devices fullscreen -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <!-- Apple devices fullscreen -->
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <title>本地图片</title>
+        <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/uploadimgnew/layui/css/layui.css?v={$version}">
+        <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/uploadimgnew/css/image-upload.css?v={$version}">
+        <link href="__SKIN__/font/css/font-awesome.min.css?v={$version}" rel="stylesheet" />
+        {if condition="file_exists(ROOT_PATH.'public/static/admin/css/theme_style.css')"}
+            <link href="__SKIN__/css/theme_style.css?v={$version}_{$global['web_theme_style_uptime']|default=0}" rel="stylesheet" type="text/css">
+        {elseif condition="file_exists(APP_PATH.'admin/template/public/theme_css.htm') && function_exists('hex2rgba')" /}
+            {include file="public/theme_css" /}
+        {/if}
+        <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js?v={$version}"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/uploadimgnew/layui/layui.js?v={$version}"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/uploadimgnew/js/jquery.cookie.js?v={$version}"></script>
+        <script type="text/javascript">
+            var eyou_basefile = "{$Request.baseFile}";
+            var module_name = "{$Think.const.MODULE_NAME}";
+            var __root_dir__ = "__ROOT_DIR__";
+            var __lang__ = "{$admin_lang}";
+        </script>
+        <style type="text/css">
+            #layui-laydate1.layui-laydate{
+                right: 7px;
+                left: unset !important;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="upload-box ui-layout-center">
+            <div class="upload-body">
+                <div class="upload-main">
+                    <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                        <div class="layui-tab-content" style="height: 100%;">
+                            <div class="layui-tab-item layui-show"  id="bendi_cont">
+                                <div class="upload-con" style="overflow-y: auto;">
+                                    <div class="images-con">
+                                        <div class="image-header">
+                                            <div class="image-header-l"  id="topbar">
+                                                <button type="button" class="addfile layui-btn layui-btn-normal"><i class="layui-icon layui-icon-upload-drag"></i><span class="text addfiletext">上传图片</span></button>
+                                                <div class="img-about">
+                                                    <span class="tag-left"></span>
+                                                    <span class="text">存储于{$storageTitle}，建议&lt;2M</span>
+                                                </div>
+                                            </div>
+                                            <form id="searchForm" action="{:url('Uploadimgnew/get_upload_list')}" method="get" onsubmit="layer_loading('正在处理');">
+                                                {$searchform.hidden|default=''}
+                                                <div class="image-header-r">
+                                                    <div class="layui-form">
+                                                        <div class="layui-form-item">
+                                                            <div class="layui-inline">
+                                                                <div class="layui-input-inline" style="width: 195px;margin-right:0px;">
+                                                                    <i class="glyphicon glyphicon-calendar fa fa-calendar" style=" position: absolute; font-size: 14px; vertical-align: baseline; margin-right: 4px; top: 12px; right: 5px; color: #ababab; "></i>
+                                                                    <input type="text" name="eytime" class="layui-input" id="eytime" placeholder="选择上传时间" autocomplete="off" value="{$Request.param.eytime}">
+                                                                </div>
+                                                                <input type="hidden" name="lang" value="{$info.lang}">
+                                                                <input type="hidden" name="num" value="{$info.num}">
+                                                                <input type="hidden" name="input" value="{$info.input}">
+                                                                <input type="hidden" name="path" value="{$info.path}">
+                                                                <input type="hidden" name="func" value="{$info.func}">
+                                                                <input type="hidden" name="is_water" value="{$info.is_water}">
+                                                                <input type="hidden" name="type_id" value="{$type_id}">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        {empty name="$imglist"}
+                                            <ul class="image-list" id="file_list">
+                                                <div style="width: 100%;height: 300px;line-height: 20;text-align: center;">
+                                                    {eyou:empty name="$admin_logic_1639031991"}
+                                                    <img id='litpic_img' src="__PUBLIC__/static/common/images/null-data.png"/>
+                                                    <!-- <div style="color: #999;">暂无图片记录，<a style="color: #34a3dc;" href="javascript:void(0);" onclick="parent.syn_old_imgdata(false);">点击同步</a>站点图片</div> -->
+                                                    {eyou:else /}
+                                                    <img id='litpic_img' src="__PUBLIC__/static/common/images/null-data.png"/>
+                                                    {/eyou:empty}
+                                                </div>
+                                            </ul>
+                                        {else /}
+                                            <ul class="image-list" id="file_list">
+                                                {volist name="$imglist" id="vo"}
+                                                    <li data-img="{$vo.image_url}" data-title="{$vo.title}" data-id="{$vo.img_id}">
+                                                        <div class="picbox">
+                                                            <img src="{$vo.image_url}">
+                                                            <div class="image-select-layer">
+                                                                <i class="layui-icon layui-icon-ok-circle"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div class="namebox" style="height: 15px;">
+                                                            <span class="eyou_imgtime">{$vo.title}</span>
+                                                            <span class="eyou_imgname">{$vo.width} x {$vo.height}</span>
+                                                        </div>
+                                                        <div class="tools layer">
+                                                            <i class="layui-icon layui-icon-close-fill close" onclick="delimg(this,'{$vo.img_id}')"></i>
+                                                        </div>
+                                                    </li>
+                                                {/volist}
+                                            </ul>
+                                        {/empty}
+                                        <div class="image-pages">
+                                            <div class="image-pages-l">
+                                                <button type="button" class="layui-btn layui-btn-primary layui-btn-sm removeall" onclick="batch_delimg(this);" style="display: none;">删除选中(0)</button>
+                                            </div>
+                                            <div class="image-pages-r"><div id="page">{$pageStr}</div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var type_id = {$type_id|default=0};
+            var UploadUpUrl = "{$info.upload}&unneed_syn={$Request.param.unneed_syn}";
+            var callback = "{$info.func}";
+            var num = {$info.num|default=1};
+            var upload_num = num;
+            if (num == 1) {
+                upload_num = 100;
+            }
+            var input = "{$info.input|default=''}";
+            var image_accept = "{$info.image_accept}";
+            var countimg = {$countimg|default=0};
+            var eytime = "{$eytime|default=''}";
+        </script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/uploadimgnew/js/get_upload_list.js?v={$version}0"></script>
+    </body>
+</html>

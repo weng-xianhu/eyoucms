@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 define('THINK_VERSION', '5.0.24');
 define('THINK_START_TIME', microtime(true));
@@ -77,7 +86,9 @@ if ('' != $_root) {
 defined('ROOT_DIR') or define('ROOT_DIR', $_root);
 // 编辑器图片上传相对路径
 defined('UPLOAD_PATH') or define('UPLOAD_PATH', 'uploads/'); 
+// 当前是http还是https协议
+defined('TCP_SCHEME') or define('TCP_SCHEME', $http); 
 // 静态页面文件目录，存储静态页面文件
 defined('HTML_ROOT') or define('HTML_ROOT', RUNTIME_PATH . 'html/'); 
 // 静态页面文件目录，存储静态页面文件
-defined('HTML_PATH') or define('HTML_PATH', HTML_ROOT . $http.'/'); 
+defined('HTML_PATH') or define('HTML_PATH', HTML_ROOT . TCP_SCHEME.'/'); 

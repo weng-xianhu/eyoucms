@@ -19,7 +19,7 @@
             </div>
             <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <div class="sDiv">
-                <div class="sDiv2 addartbtn fl" style="margin-right: 6px;">
+                <div class="sDiv2 addartbtn fl" style="">
                     <input type="button" class="btn current" value="返回列表" onclick="window.location.href='{:url("Shop/index")}';">
                 </div>
             </div>
@@ -96,7 +96,7 @@
                                                 title: '订单发货详情',
                                                 fixed: true, //不固定
                                                 shadeClose: false,
-                                                shade: 0.3,
+                                                shade: layer_shade,
                                                 area: ['100%', '100%'],
                                                 content: url
                                             });
@@ -114,6 +114,7 @@
                                                 //iframe窗
                                                 var iframes = layer.open({
                                                     type: 2,
+                                                    shade: layer_shade,
                                                     title: '物流查询',
                                                     shadeClose: false,
                                                     maxmin: false, //开启最大化最小化按钮
@@ -138,7 +139,11 @@
                                 {eq name="$OrderData.payment_method" value="1"}
                                     快递代收
                                 {else/}
-                                    {$pay_method_arr[$OrderData.pay_name]|default='未付款'}
+                                    {gt name='$OrderData.order_amount' value='0'}
+                                        {$pay_method_arr[$OrderData.pay_name]|default='未付款'}
+                                    {else /}
+                                        免支付
+                                    {/gt}
                                 {/eq}
                             </td>
                             <td class="gray_bg">订单类型：</td>
@@ -282,7 +287,9 @@
                         {empty name="DetailsData"}
                             <tr>
                                 <td class="no-data" align="center" axis="col0" colspan="50">
-                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                    <div class="no_row">
+                                        <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                    </div>
                                 </td>
                             </tr>
                         {else/}
@@ -434,7 +441,9 @@
                         {empty name="Action"}
                             <tr>
                                 <td class="no-data" align="center" axis="col0" colspan="50">
-                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                    <div class="no_row">
+                                        <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                    </div>
                                 </td>
                             </tr>
                         {else/}
@@ -514,8 +523,16 @@
         }
         
         layer.confirm(msg, {
-            title: false,
-            btn: ['确定','取消']
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         },function(){
             $('#status_name').val(status_name);
             layer_loading('正在处理');

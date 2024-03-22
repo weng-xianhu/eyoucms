@@ -1,4 +1,4 @@
-var JsonData = eyou_data_json_1611563866;
+var JsonData = eyou_data_json_v563866;
 var IsMobile = JsonData.IsMobile;
 var ProductID = JsonData.ProductID;
 var GetAllDataUrl = JsonData.GetAllDataUrl;

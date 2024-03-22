@@ -1,227 +1,660 @@
 {eyou:volist name="$users_para" id="vo"}
-        {eyou:switch name="vo.dtype"}
-            {eyou:case value="hidden"}
-                <!-- 隐藏域 start -->
-                <div class="item-from-row" style="display: none;">
-                    <dt class="tit">
-                        &nbsp;&nbsp;<label>{$vo.title}</label>
-                    </dt>
-                    <dd class="opt">
-                        <input type="hidden" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">
-                        <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
-                    </dd>
-                </div>
-                <!-- 隐藏域 start -->
-            {/eyou:case}
+    {eyou:switch name="vo.dtype"}
+        {eyou:case value="hidden"}
+        <!-- 隐藏域 start -->
+        <div class="list_item" style="display: none;">
+            <div class="list_left">
+                {$vo.title}
+            </div>
+            <div class="flex-dir-row flex-y-center">
+                <input type="hidden" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">
+            </div>
+            <span class="beta_arrow_right"></span>
+        </div>
+        <!-- 隐藏域 start -->
+        {/eyou:case}
 
-            {eyou:case value="mobile"}
-                <!-- 手机文本框 start -->
-                {eyou:include file="/public/static/template/users_v2/users_centre_field_mobile_m.htm" /}
-                <!-- 手机文本框 end -->
-            {/eyou:case}
-
-            {eyou:case value="email"}
-                <!-- 邮箱文本框 start -->
-                <div class="ey-con ey-row mt10">
-                	<div class="item-from-flex">
-                		<div class="item-flex wb25">
-                			<div class="item-tit fs16">
-                				{$vo.title}
-                			</div>
+        {eyou:case value="mobile"}
+        <!-- 手机文本框 start -->
+        {eyou:if condition="3 == $users['thirdparty']"}
+        <div class="list_item">
+            <div class="list_left">
+                {$vo.title}
+            </div>
+            <div class="flex-dir-row flex-y-center">
+                {$users.mobile|default=''}
+            </div>
+            <span class="beta_arrow_right"></span>
+        </div>
+        {eyou:else /}
+        <div class="list_item">
+            <div class="list_left">
+                {$vo.title}
+            </div>
+            <div class="flex-dir-row flex-y-center">
+                {eyou:empty name='$users.mobile' /}
+                <a href="JavaScript:void(0);" onclick="openMobileAction740128('绑定手机号');" class="fc9">请输入手机号码</a>
+                {eyou:else /}
+                <a href="JavaScript:void(0);" onclick="openMobileAction740128('修改手机号');">{$users.mobile}</a>
+                {/eyou:empty}
+            </div>
+            <div id="users_bind_mobile_html" style="display: none;">
+                <div class="el-row">
+                    <div class="ey-popup">
+                        <div class="el-form-item">
+                            <div class="el-input">
+                                <input type="text" name="mobile" class="el-input__inner" id="mobileInput740128" placeholder="手机号码" {eq name='$users.is_mobile' value='0'} value="{$users.mobile}" {/eq} maxlength="11" onpaste="this.value=this.value.replace(/[^\d]/g, '');" onkeyup="this.value=this.value.replace(/[^\d]/g, '');" autocomplete="off">
+                            </div>
                         </div>
-                        <div class="item-flex-r flex wb75">
-                			<div class="item-con wb100 tar_z">
-                                <span class="tit fs16">{$vo.dfvalue|default=''}</span>
-                                <!-- 手机端 -->
-                                {eyou:eq name='is_mobile' value='1'}
-                                    {eyou:eq name='$users.is_email' value='1'}
-                                        <span class="link"><a href="JavaScript:void(0);" onclick="BindEmailMobile('更改邮箱');" class="email_z">更改邮箱</a></span> 
-                                    {eyou:else/}
-                                        <span class="link"><a href="JavaScript:void(0);" onclick="BindEmailMobile('绑定邮箱');" class="email_z">绑定邮箱</a></span>
-                                    {/eyou:eq}
-                                    
-                                {eyou:else/}
-                                    <!-- PC端 -->
-                                    {eyou:eq name='$users.is_email' value='1'}
-                                        <span class="err"><a href="JavaScript:void(0);" onclick="get_{$vo.fieldArr}{$vo.name|default=''}_email_code('更改邮箱');" class="email_z">更改邮箱</a></span>
-                                    {eyou:else/}
-                                        <span class="err"><a href="JavaScript:void(0);" onclick="get_{$vo.fieldArr}{$vo.name|default=''}_email_code('绑定邮箱');" class="email_z">绑定邮箱</a></span>
-                                    {/eyou:eq}
-                                    
-                                {/eyou:eq}
-                                <p class="notic">{$vo.remark|default=''}</p>    
-                			</div>
-                		</div>
-                	</div>
-                </div>
-                {eyou:eq name='is_mobile' value='2'}
-                    <script type="text/javascript">
-                        function get_{$vo.fieldArr}{$vo.name|default=''}_email_code(title)
-                        {
-                            var url = "{eyou:url link='user/Users/bind_email'/}";
-                            if (url.indexOf('?') > -1) {
-                                url += '&';
-                            } else {
-                                url += '?';
-                            }
-                            url += 'title='+title;
-                            //iframe窗
-                            layer.open({
-                                type: 2,
-                                title: title,
-                                shadeClose: false,
-                                maxmin: false, //开启最大化最小化按钮
-                                area: ['350px', '300px'],
-                                content: url
-                            });
-                        }
-                    </script>
-                {/eyou:eq}
-                <!-- 邮箱文本框 end -->
-            {/eyou:case}
-
-            {eyou:case value="text"}
-                <!-- 单行文本框 start -->
-                <div class="ey-con ey-row mt10">
-                	<div class="item-from-flex">
-                		<div class="item-flex-l">
-                			<div class="item-tit fs16">
-                                {eyou:if condition="1 == $vo.is_required"}
-                                	<span class="red">*</span>
-                                {eyou:else/}
-                                    <span class="red"> </span>
-                                {/eyou:if}
-                				{$vo.title}
-                			</div>
-                			<div class="item-con">
-                                <input type="text" class="input-text fs16" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">{$vo.dfvalue_unit|default=''}
-                                <span class="err"></span>
-                                <p class="notic">{$vo.remark|default=''}</p>
-                			</div>
-                		</div>
-                		<div class="item-flex-r">
-                			<i class="el-icon-arrow-right"></i>
-                		</div>
-                	</div>
-                </div>
-                <!-- 单行文本框 end -->
-            {/eyou:case}
-
-            {eyou:case value="multitext"}
-                <!-- 多行文本框 start -->
-                <div class="ey-con ey-row mt10">
-                	<div class="item-from-flex">
-                		<div class="item-flex-l">
-                			<div class="item-tit fs16">
-                                {eyou:if condition="1 == $vo.is_required"}
-                                	<span class="red">*</span>
-                                {eyou:else/}
-                                    <span class="red"></span>
-                                {/eyou:if}
-                				{$vo.title}
-                			</div>
-                			<div class="item-con">
-                                 <textarea id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" class="fs16" style="height:60px;width:100%;" >{$vo.dfvalue|default=''}</textarea>
-                                <span class="err"></span>
-                                <p class="notic">{$vo.remark|default=''}</p>
-                			</div>
-                		</div>
-                	</div>
-                </div>
-                
-                <!-- 多行文本框 end -->
-            {/eyou:case}
-
-            {eyou:case value="checkbox"}
-                <!-- 复选框 start -->
-                <div class="ey-con ey-row mt10">
-                	<div class="item-from-flex">
-                		<div class="item-flex-l">
-                			<div class="item-tit fs16">
-                				{$vo.title}
-                			</div>
-                			<div class="item-con">
-                				{eyou:volist name="$vo.dfvalue" id="v2"}
-                				   <label class="checkbox-label">
-                                        <input type="checkbox" class="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>
-                						<span class="check-mark"></span>
-                                        <span class="text">{$v2}</span>
-                					</label>
-                				{/eyou:volist}
-                                {eyou:if condition="1 == $vo.is_required"}
-                                    <p>（必选）</p>
-                                {/eyou:if}
-                				<span class="err"></span>
-                				<p class="notic">{$vo.remark|default=''}</p>
-                			</div>
-                		
-                		</div>
-                	</div>
-                </div>
-                <!-- 复选框 end -->
-            {/eyou:case}
-
-            {eyou:case value="radio"}
-                <!-- 单选项 start -->
-                <div class="ey-con ey-row mt10">
-                    <div class="item-from-flex">
-                        <div class="item-flex-l">
-                            <div class="item-tit fs16">
-                                {$vo.title}
+                        <div class="el-form-item">
+                            <div class="el-input el-input-group">
+                                <input type="text" name="vertify" id="vertifyInput740128" autocomplete="off" class="el-input__inner" placeholder="图片验证码" />
+                                <img src="{eyou:url link='api/Ajax/vertify' vars='type=bind' /}" class="chicuele" id="imgVerifys" onClick="handleVerifyRefresh('imgVerifys', 'bind');">
                             </div>
-                            <div class="item-con">
-                                {eyou:volist name="$vo.dfvalue" id="v2"}
-                                   <label class="radio-label">
-                                        <input type="radio" class="radio" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/eyou:if}>
-                                        <span class="check-mark"></span>
-                                        <span class="text">{$v2}</span>
-                                    </label>
-                                {/eyou:volist}
-                                {eyou:if condition="1 == $vo.is_required"}
-                                    <p>（必选）</p>
-                                {/eyou:if}
-                                <span class="err"></span>
-                                <p class="notic">{$vo.remark|default=''}</p>
+                        </div>
+                        <div class="el-form-item">
+                            <div class="el-input el-input-group el-input-group--append el-input-group--prepend">
+                                <input type="text" name="mobile_code" class="el-input__inner" id="mobileCodeInput740128" placeholder="手机验证码" autocomplete="off">
+                                <div class="el-input-group__append">
+                                    <input type="button" onclick="getMobileCode740128(this);" class="el-button el-button--default" value="获取验证码">
+                                </div>  
                             </div>
-                        
+                        </div>
+                        <div class="el-form-item">
+                            <div class="el-input">
+                                <button type="button" onclick="submitBindMobile740128();" class="el-button el-button--primary" style="width: 100%; box-sizing: border-box;">确定</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <!-- 单选项 end -->
-            {/eyou:case}
+            </div>
+            <script type="text/javascript">
+                // 绑定、更换手机号码
+                function openMobileAction740128(title) {
+                    var content = $('#users_bind_mobile_html').html();
+                    if (content) $('#users_bind_mobile_html').empty();
+                    layer.open({
+                        type: 1,
+                        anim: 2,
+                        title: title,
+                        content: content,
+                        success: function () {
+                            $(".layui-layer-content").parent().css('top', 'unset').css('bottom', '0px').css('width', '100%').css('left', '0px');
+                        },
+                        cancel: function() {
+                            if (content) $('#users_bind_mobile_html').html(content);
+                        }
+                    });
+                }
 
-            {eyou:case value="select"}
-                <!-- 下拉框 start -->
-                <div class="ey-con ey-row mt10">
-                	<div class="item-from-flex">
-                		<div class="item-flex wb25">
-                			<div class="item-tit fs16">
-                                {eyou:if condition="1 == $vo.is_required"}
-                				<span class="red">*</span> 
-                                {/eyou:if}
-                                {$vo.title}
-                			</div>
-                		</div>
-                		<div class="item-flex-r wb75">
-                			<div class="select">
-                				<select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}">
-                				    <option value="">请选择</option>
-                				    {eyou:volist name="$vo.dfvalue" id="v2"}
-                				        <option value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}selected{/eyou:if}>{$v2}</option>
-                				    {/eyou:volist}
-                				</select>
-                			</div>
-                            <span class="err"></span>
-                            <p class="notic">{$vo.remark|default=''}</p>
-                		</div>
-                	</div>
+                // 获取手机验证码
+                function getMobileCode740128(obj) {
+                    // 手机号验证
+                    var mobile = $("#mobileInput740128").val();
+                    if (!mobile) {
+                        $("#mobileInput740128").focus();
+                        showLayerMsg('手机号码不能为空');
+                        return false;
+                    }
+                    // 手机格式不正确
+                    var mobile_format = /^1[0-9]{10}$/i;
+                    if (!mobile_format.test(mobile)) {
+                        $("#mobileInput740128").focus();
+                        showLayerMsg('请输入正确的手机号码');
+                        return false;
+                    }
+                    // 图形验证码
+                    var vertify = $("#vertifyInput740128").val();
+                    if (!vertify) {
+                        $("#vertifyInput740128").focus();
+                        showLayerMsg('请输入图形验证码');
+                        return false;
+                    }
+
+                    $(obj).val('获取中…');
+                    // 正在处理提示动画
+                    var loading = showLayerLoad();
+                    $.ajax({
+                        url : "{:dynamic_url('api/Ajax/SendMobileCode', ['_ajax'=>1])}",
+                        data: {mobile: mobile, is_mobile: true, source: 1, vertify: vertify, type: 'bind'},
+                        type: 'post',
+                        dataType: 'json',
+                        success: function(res) {
+                            layer.close(loading);
+                            showLayerMsg(res.msg);
+                            if (1 === parseInt(res.code)) {
+                                countDown740128(obj);
+                                $("#mobileCodeInput740128").focus();
+                            } else {
+                                $(obj).val('获取验证码');
+                            }
+                        },
+                        error: function(e) {
+                            layer.close(loading);
+                            $(obj).val('获取验证码');
+                            showLayerAlert(e.responseText);
+                        }
+                    });
+                }
+
+                // 倒计时
+                function countDown740128(obj) {
+                    var setTime;
+                    var time = "{$mobile_send_time|default='120'}";
+                    setTime = setInterval(function() {
+                        if (0 >= parseInt(time)) {
+                            clearInterval(setTime);
+                            return false;
+                        }
+                        time--;
+                        $(obj).val(time + '秒').attr('disabled', true);
+                        if (0 === parseInt(time)) $(obj).val('获取验证码').attr('disabled', false);
+                    }, 1000);
+                }
+
+                // 提交手机及验证码进行绑定
+                function submitBindMobile740128() {   
+                    // 手机号验证
+                    var mobile = $("#mobileInput740128").val();
+                    if (!mobile) {
+                        $("#mobileInput740128").focus();
+                        showLayerMsg('手机号码不能为空');
+                        return false;
+                    }
+                    // 手机格式不正确
+                    var mobile_format = /^1[0-9]{10}$/i;
+                    if (!mobile_format.test(mobile)) {
+                        $("#mobileInput740128").focus();
+                        showLayerMsg('请输入正确的手机号码');
+                        return false;
+                    }
+                    var mobile_code = $("#mobileCodeInput740128").val();
+                    if(!mobile_code) {
+                        showLayerMsg('验证码不能为空');
+                        $("#mobileCodeInput740128").focus();
+                        return false;
+                    }
+
+                    var loading = showLayerLoad();
+                    $.ajax({
+                        url : "{:dynamic_url('user/Users/bind_mobile', ['_ajax'=>1])}",
+                        data: {mobile: mobile, mobile_code: mobile_code},
+                        type: 'post',
+                        dataType: 'json',
+                        success: function(res){
+                            if (1 === parseInt(res.code)) {
+                                layer.closeAll();
+                                showLayerMsg(res.msg, 2, function() {
+                                    window.location.reload();
+                                });
+                            } else {
+                                layer.close(loading);
+                                showLayerMsg(res.msg);
+                            }
+                        },
+                        error: function(e) {
+                            layer.close(loading);
+                            showLayerAlert(e.responseText);
+                        }
+                    });
+                };
+            </script>
+        </div>
+        {/eyou:if}
+        <!-- 手机文本框 end -->
+        {/eyou:case}
+
+        {eyou:case value="email"}
+        <!-- 邮箱文本框 start -->
+        <div class="list_item">
+            <div class="list_left">
+                {$vo.title}
+            </div>
+            <div class="flex-dir-row flex-y-center">
+                {eyou:empty name='$users.email'/}
+                <a href="JavaScript:void(0);" onclick="openEmailAction657130('绑定邮箱');" class="fc9">请输入邮箱地址</a>
+                {eyou:else /}
+                <a href="JavaScript:void(0);" onclick="openEmailAction657130('更改邮箱');">{$users.email}</a>
+                {/eyou:empty}
+            </div>
+        </div>
+        <div id="users_bind_email_html" style="display: none;">
+            <div class="el-row">
+                <div class="ey-popup">
+                    <div class="el-form-item">
+                        <div class="el-input">
+                            <input type="text" name="email" class="el-input__inner" id="emailInput657130" placeholder="请输入邮箱地址" {eyou:empty name='$users.is_email'} value="{$users.email}" {/eyou:empty} autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="el-form-item">
+                         <div class="el-input el-input-group el-input-group--append el-input-group--prepend">
+                            <input type="text" name="email_code" class="el-input__inner" id="emailCodeInput657130" placeholder="请输入验证码" autocomplete="off">
+                            <div class="el-input-group__append">
+                                <input type="button" onclick="getEmailCode657130(this);" class="el-button el-button--default" value="获取验证码">
+                            </div>
+                         </div>
+                    </div>
+                    <div class="el-form-item">
+                        <div class="el-input">
+                            <button type="button" onclick="submitBindEmail657130();" class="el-button el-button--primary" style="width: 100%; box-sizing: border-box;">确定</button>
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            // 绑定、更换邮箱
+            function openEmailAction657130(title) {
+                var content = $('#users_bind_email_html').html();
+                if (content) $('#users_bind_email_html').empty();
+                layer.open({
+                    type: 1,
+                    anim: 2,
+                    title: title,
+                    content: content,
+                    success: function () {
+                        $(".layui-layer-content").parent().css('top', 'unset').css('bottom', '0px').css('width', '100%').css('left', '0px');
+                    },
+                    cancel: function() {
+                        if (content) $('#users_bind_email_html').html(content);
+                    }
+                });
+            }
+
+            // 获取邮箱验证码
+            function getEmailCode657130(obj) {
+                // 邮箱地址
+                var email = $("#emailInput657130").val();
+                // 验证邮箱格式是否正确
+                if (!handleEmailFormat(email)) {
+                    $("#emailInput657130").focus();
+                    showLayerMsg('请输入正确邮箱地址');
+                    return false;
+                }
                 
-                <!-- 下拉框 end -->
-            {/eyou:case}
-            <!-- 扩展 start -->
-            {eyou:include file="/public/static/template/users_v2/users_centre_field_extend_m.htm" /}
-            <!-- 扩展 end -->
-        {/eyou:switch}
+
+                $(obj).val('获取中…');
+                // 正在处理提示动画
+                var loading = showLayerLoad();
+                $.ajax({
+                    url : "{:dynamic_url('user/Smtpmail/send_email', ['_ajax'=>1])}",
+                    data: {email: email, title: '邮箱验证', type: 'bind_email', scene: 3},
+                    type: 'post',
+                    dataType: 'json',
+                    success: function(res) {
+                        layer.close(loading);
+                        showLayerMsg(res.msg);
+                        if (1 === parseInt(res.code)) {
+                            countDown657130(obj);
+                            $("#emailCodeInput657130").focus();
+                        } else {
+                            $(obj).val('获取验证码');
+                        }
+                    },
+                    error: function(e) {
+                        layer.close(loading);
+                        $(obj).val('获取验证码');
+                        showLayerAlert(e.responseText);
+                    }
+                });
+            }
+
+            // 倒计时
+            function countDown657130(obj) {
+                var setTime;
+                var time = "{$email_send_time|default='120'}";
+                setTime = setInterval(function() {
+                    if (0 >= parseInt(time)) {
+                        clearInterval(setTime);
+                        return false;
+                    }
+                    time--;
+                    $(obj).val(time + '秒').attr('disabled', true);
+                    if (0 === parseInt(time)) $(obj).val('获取验证码').attr('disabled', false);
+                }, 1000);
+            }
+
+            // 提交邮箱绑定信息
+            function submitBindEmail657130() {
+                // 验证邮箱格式是否正确
+                var email = $("#emailInput657130").val();
+                if (!(email)) {
+                    showLayerMsg('邮箱地址不能为空');
+                    return false;
+                }
+                // 验证邮箱格式是否正确
+                var email = $("#emailInput657130").val();
+                if (!handleEmailFormat(email)) {
+                    showLayerMsg('请输入正确邮箱地址');
+                    return false;
+                }
+                
+
+                // 邮箱验证码不能为空
+                var email_code = $("#emailCodeInput657130").val();
+                if (!email_code) {
+                    $("#emailCodeInput657130").focus();
+                    showLayerMsg('验证码不能为空');
+                    return false;
+                }
+
+                var loading = showLayerLoad();
+                $.ajax({
+                    url : "{:dynamic_url('user/Users/bind_email', ['_ajax'=>1])}",
+                    data: {email: email, email_code: email_code},
+                    type: 'post',
+                    dataType: 'json',
+                    success: function(res){
+                        if (1 === parseInt(res.code)) {
+                            layer.closeAll();
+                            showLayerMsg(res.msg, 2, function() {
+                                window.location.reload();
+                            });
+                        } else {
+                            layer.close(loading);
+                            showLayerMsg(res.msg);
+                        }
+                    },
+                    error: function(e) {
+                        layer.close(loading);
+                        showLayerAlert(e.responseText);
+                    }
+                });
+            }
+        </script>
+        <!-- 邮箱文本框 end -->
+        {/eyou:case}
+
+        {eyou:case value="text"}
+        <!-- 单行文本框 start -->
+        <div class="list_item">
+            <div class="list_left">
+                {$vo.title}
+            </div>
+            <div class="flex-dir-row flex-y-center">
+                <input type="text" class="input-text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">{$vo.dfvalue_unit|default=''}
+            </div>
+        </div>
+        <!-- 单行文本框 end -->
+        {/eyou:case}
+
+        {eyou:case value="multitext"}
+        <!-- 多行文本框 start -->
+        <div class="list_item">
+            <div class="list_left">
+                {$vo.title}
+            </div>
+            <div class="flex-dir-row flex-y-center">
+                <textarea id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" style="height: 20px; width: 100%;">{$vo.dfvalue|default=''}</textarea>
+            </div>
+        </div>
+        <!-- 多行文本框 end -->
+        {/eyou:case}
+
+        {eyou:case value="checkbox"}
+        <!-- 复选框 start -->
+        <div class="list_item" style="padding: 10px 15px;">
+            <div class="list_left">
+                {$vo.title}
+            </div>
+            <div class="flex-dir-row flex-y-center">
+                {eyou:volist name="$vo.dfvalue" id="v2"}
+               <label class="checkbox-label">
+                    <input type="checkbox" class="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"} checked="checked" {/if}>
+                    <span class="check-mark"></span>
+                    <span class="text">{$v2}</span>
+                </label>
+                {/eyou:volist}
+            </div>
+        </div>
+        <!-- 复选框 end -->
+        {/eyou:case}
+
+        {eyou:case value="radio"}
+        <!-- 单选项 start -->
+        <div class="list_item" style="padding: 10px 15px;">
+            <div class="list_left">
+                {$vo.title}
+            </div>
+            <div class="flex-dir-row flex-y-center">
+                {eyou:volist name="$vo.dfvalue" id="v2"}
+               <label class="radio-label">
+                    <input type="radio" class="radio" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"} checked="checked" {/eyou:if}>
+                    <span class="check-mark"></span>
+                    <span class="text">{$v2}</span>
+                </label>
+                {/eyou:volist}
+            </div>
+        </div>
+        <!-- 单选项 end -->
+        {/eyou:case}
+
+        {eyou:case value="select"}
+        <!-- 下拉框 start -->
+        <div class="list_item">
+            <div class="list_left">
+                {$vo.title}
+            </div>
+            <div class="flex-dir-row flex-y-center">
+                <div class="select">
+                    <select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}">
+                        <option value="">请选择</option>
+                        {eyou:volist name="$vo.dfvalue" id="v2"}
+                        <option value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"} selected {/eyou:if}>{$v2}</option>
+                        {/eyou:volist}
+                    </select>
+                </div>
+            </div>
+            <span class="beta_arrow_right"></span>
+        </div>
+        <!-- 下拉框 end -->
+        {/eyou:case}
+
+        <!-- 扩展 start -->
+        {case value="imgs"}
+        <script type="text/javascript" src="__STATIC__/admin/js/jquery-ui/jquery-ui.min.js"></script>
+        <!-- 多张图 start -->
+        <div class="list_item item-from-flex">
+            <div class="list_left">
+                {$vo.title|default=''}
+            </div>
+            <div class="flex-dir-row flex-y-center tab-pane" id="dl_{$vo.fieldArr}_{$vo.name|default=''}">
+                <div class="images_upload_main" id="tab_{$vo.fieldArr}_{$vo.name|default=''}">
+                    <div class="sort-list-{$vo.fieldArr}_{$vo.name|default=''}">
+                        {volist name="$vo[$vo['name'].'_eyou_imgupload_list']" id="v2" key="k2"}
+                        <div class="fieldext_upload fieldext_upload_html" >
+                            <div class="images_upload_item">
+                                <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2|default=''}">
+                                <a class="img-upload" href="{$v2|default=''}" onclick="" target="_blank">
+                                    <img src="{$v2|default=''}">
+                                </a>
+                                <a class="delete" href="javascript:void(0)" onclick="{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'{$v2|default=''}')">删除</a>
+                            </div>
+                        </div>
+                        {/volist}
+                        <div class="fieldext_upload" style="display:none;"></div>
+                    </div>
+                </div>
+                <!-- 上传图片显示的样板 start -->
+                <div class="{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl" style="display: none;">
+                    <div class="fieldext_upload fieldext_upload_html">
+                        <div class="images_upload_item">
+                            <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="" />
+                            <a class="img-upload" href="javascript:void(0);" onClick="" >
+                                <img src="__STATIC__/admin/images/add-button.jpg"/>
+                            </a>
+                            <a class="delete" href="javascript:void(0)">&nbsp;&nbsp;</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- 上传图片显示的样板 end -->
+                <div class="images_upload_main" id="tab_{$vo.fieldArr}_{$vo.name|default=''}">
+                    <div class="fieldext_upload fieldext_upload_html">
+                        <a href="javascript:void(0);" onClick="GetUploadify(100, '', 'allimg', '{$vo.fieldArr}_{$vo.name|default=''}_call_back', '', '上传多图', 1);" class="img-upload">
+                            <div class="y-line"></div>
+                            <div class="x-line"></div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            // 上传多图回调函数
+            function {$vo.fieldArr}_{$vo.name|default=''}_call_back(paths) {
+                var  last_div = $(".{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl").html();
+                for (var i = 0; i < paths.length; i++) {
+                    if ($(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html").length > 0) {
+                        $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").after(last_div);  // 插入一个 新图片
+                    } else {
+                        $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload:last").before(last_div);  // 插入一个 新图片
+                    }
+                    $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+                    $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('img').attr('src',paths[i]);// 修改他的图片路径
+                    $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('删除');
+                    $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+                }
+            }
+
+            // 上传之后删除组图input
+            function {$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(obj,path) {
+                $(obj).parent().parent().remove();
+            }
+
+            /** 以下 产品相册的拖动排序相关 js*/
+            $( ".sort-list-{$vo.fieldArr}_{$vo.name|default=''}" ).sortable({
+                start: function( event, ui) {},
+                stop: function( event, ui ) {}
+            });
+            $( ".sort-list-{$vo.fieldArr}_{$vo.name|default=''}" ).disableSelection();
+        </script>
+        <!-- 多张图 end -->
+        {/case}
+
+        {eyou:case value="img"}
+        <!-- 单张图 start -->
+        <div class="list_item item-from-flex">
+            <div class="list_left">
+                {$vo.title}
+            </div>
+            <div class="flex-dir-row flex-y-center">
+                <div class="images_upload_main mr10">
+                    <a href="javascript:void(0);" onclick="$('#singlePicFile_{$vo.name|default=''}').trigger('click');" class="img-upload img_a_{$vo.fieldArr}_{$vo.name|default=''}">
+                        <div class="y-line" id="singlePicYline_{$vo.para_id|default=0}" {notempty name="$vo.info"} style="display: none;" {/notempty}></div>
+                        <div class="x-line" id="singlePicXline_{$vo.para_id|default=0}" {notempty name="$vo.info"} style="display: none;" {/notempty}></div>
+                        <img src="{$vo.info|default=''}" id="singlePicImgSrc_{$vo.para_id|default=0}" {empty name='$vo.info'}display: none;{/empty}">
+                    </a>
+                </div>
+                <input type="file" id="singlePicFile_{$vo.name|default=''}" data-id="{$vo.para_id|default=0}" onchange="uploadSinglePicFile(this);" style="display: none;">
+                <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="singlePicHidden_{$vo.para_id|default=0}" value="{$vo.info|default=''}">
+            </div>
+        </div>
+        <!-- 单张图 end -->
+        {/eyou:case}
+
+        {case value="file"}
+        {eyou:static file="/public/plugins/layui/css/layui.css" /}
+        {eyou:static file="/public/plugins/layui/layui.js" /}
+        <!-- 单个文件 start -->
+        <div class="list_item">
+            <div class="list_left">
+                {$vo.title}
+            </div>
+            <div class="flex-dir-row flex-y-center">
+                <a id="download_file_{$vo.fieldArr}_{$vo.name|default=''}" style="margin-right: 30px; text-decoration: none; {eyou:notempty name='$vo.dfvalue' /} display: ''; {eyou:else /} display: none; {/eyou:notempty}" {eyou:notempty name='$vo.dfvalue' /} href="{$vo.dfvalue|default=''}" download="{$vo.dfvalue|get_filename=###}" {/eyou:notempty}>
+                <img src="__STATIC__/common/images/file.png" alt="" style="width: 16px; height: 16px; margin-right: 3px;">下载</a>
+                <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" style="display: none;">
+                <button type="button" class="el-button  el-button--small" id="upload_{$vo.fieldArr}_{$vo.name|default=''}" ><i class="el-icon-paperclip"></i>上传文件</button>
+            </div>
+        </div>
+        <script type="text/javascript">
+            $(function() {
+                layui.use('upload', function() {
+                    // 执行实例
+                    var upload = layui.upload;
+                    var uploadInst = upload.render({
+                        elem: "#upload_{$vo.fieldArr}_{$vo.name|default=''}",
+                        url: "{:url('user/Uploadify/DownloadUploadFileAjax')}",
+                        accept: 'file',
+                        exts: '{$vo.ext}',
+                        size: {$vo.filesize},
+                        done: function(res) {
+                            if (res.state == "SUCCESS") {
+                                layer.msg('上传成功!');
+                                $("#{$vo.fieldArr}_{$vo.name|default=''}").val(res.url);
+                                $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+                                $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").attr('href', res.url);
+                                var arr = res.url.split("/");
+                                var download = arr[arr.length-1];
+                                $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").attr('download', download);
+                                $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('color', '#000');
+                                $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").html('<img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件');
+                            } else {
+                                showLayerAlert(res.state);
+                                $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('display', '');
+                                $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('color', 'red');
+                                $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").text(res.state);
+                            }
+                        }
+                    });
+                });
+            });
+        </script>
+        <!-- 单个文件 end -->
+        {/case}
+
+        {eyou:case value="datetime"}
+        {eyou:static file="/public/plugins/laydate/laydate.js"/}
+        <!-- 日期和时间 start -->
+        <div class="list_item">
+            <div class="list_left">
+                {$vo.title}
+            </div>
+            <div class="flex-dir-row flex-y-center">
+                <input type="text" class="input-text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">{$vo.dfvalue_unit|default=''}
+            </div>
+        </div>
+        <script type="text/javascript">
+            $(function () {
+                $('#{$vo.fieldArr}_{$vo.name|default=''}').layDate();
+            });
+        </script>
+        <!-- 日期和时间 end -->
+        {/eyou:case}
+    {/eyou:switch}
 {/eyou:volist}
+
+<script type="text/javascript">
+    // 单图上传
+    function uploadSinglePicFile(obj) {
+        var file = $(obj)[0].files[0];
+        if (!file) return false;
+        var formData = new FormData();
+        formData.append('_ajax', 1);
+        formData.append('file', file);
+        formData.append('compress', '1000-1000');
+        showLayerLoad();
+        $.ajax({
+            type: 'post',
+            url : eyou_basefile + "?m=user&c=Uploadify&a=imageUp",
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: function (res) {
+                layer.closeAll();
+                if (res.state == 'SUCCESS') {
+                    var id = $(obj).data('id');
+                    $("#singlePicHidden_" + id).val(res.url);
+                    $("#singlePicImgSrc_" + id).show().attr('src', res.url);
+                    $('#singlePicYline_'+id+', #singlePicXline_' + id).hide();
+                } else {
+                    showLayerAlert(res.state);
+                }
+            },
+            error: function(e) {
+                layer.closeAll();
+                showLayerAlert(e.responseText);
+            }
+        })
+    }
+</script>

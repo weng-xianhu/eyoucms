@@ -256,7 +256,7 @@
             },
             error: function(e){
                 layer.closeAll();
-                showErrorMsg(ey_unknown_error);
+                showErrorMsg(e.responseText);
                 return false;
             }
         });
@@ -342,7 +342,7 @@
             },
             error: function(e){
                 layer.closeAll();
-                showErrorMsg(ey_unknown_error);
+                showErrorMsg(e.responseText);
                 return false;
             }
         });

@@ -7,8 +7,8 @@
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
  * ============================================================================
- * Author: 陈风任 <491085389@qq.com>
- * Date: 2019-2-20
+ * Author: 小虎哥 <1105415366@qq.com>
+ * Date: 2018-4-3
  */
 namespace app\user\model;
 
@@ -70,6 +70,8 @@ class Users extends Model
                 }
             }
         }
+
+        return false;
     }
 
     // 判断邮箱和手机是否存在，并且判断验证码是否验证通过
@@ -85,10 +87,10 @@ class Users extends Model
 
         // 处理邮箱和手机是否存在
         $where_1 = [
-            'name'     => ['LIKE', ["email_%","mobile_%"], 'OR'],
             'is_system'=> 1,
             'lang'     => $this->home_lang,
         ];
+        $where_1[] = Db::raw(" ( name LIKE 'email_%' OR name LIKE 'mobile_%' ) ");
         if ('reg' == $type) {
             $where_1['is_reg'] = 1; // 是否为注册表单
         }
@@ -287,6 +289,8 @@ class Users extends Model
                 }
             }
         }
+
+        return false;
     }
 
     // 查询会员属性信息表的邮箱和手机字段
@@ -368,18 +372,29 @@ class Users extends Model
      * @param   用于修改，携带数据
      * @author  陈风任 by 2019-2-20
      */
-    public function getDataParaList($users_id = '')
+    public function getDataParaList($users_id = '', $is_system = '')
     {
         // 字段及内容数据处理
-        $row = M('users_parameter')->field('a.*,b.info,b.users_id')
-            ->alias('a')
-            ->join('__USERS_LIST__ b', "a.para_id = b.para_id AND b.users_id = {$users_id}", 'LEFT')
-            ->where([
-                'a.lang'       => $this->home_lang,
-                'a.is_hidden'  => 0,
-            ])
-            ->order('a.sort_order asc,a.para_id asc')
-            ->select();
+        $where = [
+            'a.lang'       => $this->home_lang,
+            'a.is_hidden'  => 0,
+
+        ];
+        if (!empty($is_system)) {
+            $where['a.is_system'] = 1;
+        }
+        //删除多余干扰数据
+        $have = Db::name("users_list")->field("max(list_id) as list_id")->where(['lang'=>$this->home_lang,"users_id"=>$users_id])->group("para_id")->getField("list_id",true);
+        if ($have){
+            Db::name("users_list")->where(['lang'=>$this->home_lang,"users_id"=>$users_id,"list_id"=>['not in',$have]])->delete();
+        }
+        $row = Db::name('users_parameter')->alias('a')->where($where)->order('a.sort_order asc,a.para_id asc')->cache(true, EYOUCMS_CACHE_TIME, 'users_parameter')->select();
+        $listRow = Db::name('users_list')->field('info,para_id,users_id')->where(['users_id'=>$users_id])->getAllWithIndex('para_id');
+        foreach ($row as $key => $val) {
+            $val['users_id'] = empty($listRow[$val['para_id']]) ? '' : $listRow[$val['para_id']]['users_id'];
+            $val['info'] = empty($listRow[$val['para_id']]) ? '' : $listRow[$val['para_id']]['info'];
+            $row[$key] = $val;
+        }
         // 根据所需数据格式，拆分成一维数组
         $addonRow = [];
         foreach ($row as $key => $value) {
@@ -473,17 +488,9 @@ class Users extends Model
 
                     case 'img':
                     {
-                        $val[$val['name'].'_eyou_is_remote'] = 0;
-                        $val[$val['name'].'_eyou_remote'] = '';
-                        $val[$val['name'].'_eyou_local'] = '';
                         if (isset($addonRow[$val['name']])) {
-                            if (is_http_url($addonRow[$val['name']])) {
-                                $val[$val['name'].'_eyou_is_remote'] = 1;
-                                $val[$val['name'].'_eyou_remote'] = handle_subdir_pic($addonRow[$val['name']]);
-                            } else {
-                                $val[$val['name'].'_eyou_is_remote'] = 0;
-                                $val[$val['name'].'_eyou_local'] = handle_subdir_pic($addonRow[$val['name']]);
-                            }
+                            $val[$val['name']] = handle_subdir_pic($addonRow[$val['name']]);
+                            $val['info'] = handle_subdir_pic($addonRow[$val['name']]);
                         }
                         break;
                     }
@@ -516,7 +523,15 @@ class Users extends Model
 
                     case 'datetime':
                     {
-                        $val['dfvalue'] = !empty($addonRow[$val['name']]) ? date('Y-m-d H:i:s', $addonRow[$val['name']]) : date('Y-m-d H:i:s');
+                        if (!empty($addonRow[$val['name']])) {
+                            if (is_numeric($addonRow[$val['name']])) {
+                                $val['dfvalue'] = date('Y-m-d H:i:s', $addonRow[$val['name']]);
+                            } else {
+                                $val['dfvalue'] = $addonRow[$val['name']];
+                            }
+                        } else {
+                            $val['dfvalue'] = date('Y-m-d H:i:s');
+                        }
                         break;
                     }
 

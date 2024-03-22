@@ -4,7 +4,7 @@
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page" style="box-shadow:none;min-width: 400px;">
-    <div class="flexigrid">
+    <div class="flexigrid pb30">
         <div class="mDiv">
             <div class="ftitle">
                 <h3>可选文档列表</h3>
@@ -21,10 +21,9 @@
                         </select>
                     </div>
                     <div class="sDiv2">
-                        <input type="hidden" name="aids" value="{$Request.param.aids|default=''}">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="请输入标题">
                         <input type="submit" class="btn" value="搜索">
-                        <i class="fa fa-search"></i>
+                        <i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -64,7 +63,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -72,7 +73,7 @@
                         <tr>
                             <td class="sign">
                                 <div class="tc w40">
-                                    <input type="checkbox" name="ids[]" value="{$vo.aid}">
+                                    <input type="checkbox" name="ids[]" id="input_ids_{$vo.aid}" value="{$vo.aid}" data-title="{$vo.title}">
                                     <textarea class="none" id="ids_{$vo.aid}">{$vo.json_encode_params}</textarea>
                                 </div>
                             </td>
@@ -116,39 +117,21 @@
         </div>
         <div class="tDiv">
             <div class="tDiv2">
-                <div class="fbutton checkboxall">
-                    <input type="checkbox" class="checkAll">
-                </div>
-                <div class="fbutton">
-                    <a href="javascript:void(0);" onclick="addAidlist();">
-                        <div class="add" title="把选定值加到列表">
-                            <span><i class="fa fa-send"></i>把选定值加到列表</span>
-                        </div>
-                    </a>
-                </div>
+                <div class="fbutton checkboxall"><input type="checkbox" class="checkAll"></div>
+                <div class="fbuttonr">{include file="public/page" /}</div>
             </div>
             <div style="clear:both"></div>
         </div>
         <!--分页位置-->
-        {$page}
     </div>
 </div>
+<div class="bot3 wm100">
+    <div class="item-selected">已选择<font id="selectLength" color="red">0</font>多少条</div>
+    <a href="javascript:void(0);" onclick="addAidlist();" class="ncap-btn-big ncap-btn-green"><span>确认</span></a>
+    <a class="ncap-btn-big ncap-btn-no" href="javascript:void(0);" onclick="window.parent.layer.closeAll();" title="关闭">关闭</a>
+</div>
 <script type="text/javascript">
-    $(function(){
-        $('input[name*=ids]').click(function(){
-            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
-                $('.checkAll').prop('checked','checked');
-            } else {
-                $('.checkAll').prop('checked', false);
-            }
-        });
-        $('input[type=checkbox].checkAll').click(function(){
-            $('input[type=checkbox]').prop('checked',this.checked);
-        });
-    });
-    
     $(document).ready(function(){
-
         // 表格行点击选中切换
         $('#flexigrid > table>tbody >tr').click(function(){
             $(this).toggleClass('trSelected');
@@ -164,31 +147,95 @@
         });
     });
 
-    /**
-     * 把选定值加到列表
-     * @returns {Array}
-     */
-    function addAidlist() {
-        var a = [];
-        var k = 0;
-        aids = '';
-        $('input[name^=ids]').each(function(i,o){
-            if($(o).is(':checked')){
-                a.push($(o).val());
-                if (k > 0) {
-                    aids += ',';
-                }
-                aids += $(o).val();
-                k++;
+    // 父级页面数据
+    var parentNodeAidArr = parent.nodeAidArr;
+    var parentNodeAidList = parent.nodeAidList;
+    $(function() {
+        // 循环加载指定文档为已选中
+        for (var i = 0; i < parentNodeAidArr.length; i++) {
+            $('#input_ids_' + parentNodeAidArr[i]).prop('checked', true);
+        }
+        // 判断是否全选
+        checkAllLoad();
+        // 加载已选文档数
+        $('#selectLength').html(parentNodeAidArr.length);
+
+        // 单选操作
+        $('input[name*=ids]').click(function() {
+            // 判断是否全选
+            checkAllLoad();
+            // 加载已选节点文档数据
+            newNodeAidSelectLoad();
+        });
+
+        // 全选操作
+        $('input[type=checkbox].checkAll').click(function() {
+            $('input[type=checkbox]').prop('checked', this.checked);
+            // 加载已选节点文档数据
+            newNodeAidSelectLoad();
+        });
+
+        // 判断是否全选
+        function checkAllLoad() {
+            if (parseInt($('input[name*=ids]').length) === parseInt($('input[name*=ids]:checked').length)) {
+                $('.checkAll').prop('checked', true);
+            } else {
+                $('.checkAll').prop('checked', false);
             }
-        })
-        if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 2, title:false});
-            return;
         }
 
-        eval('window.parent.select_article_back(aids)');
-        window.parent.layer.closeAll();
+        // 加载已选节点文档数据
+        function newNodeAidSelectLoad() {
+            var aidArr = [];
+            var addList = [];
+            $('input[name^=ids]').each(function(i, o) {
+                var value = $(o).val();
+                if ($(o).is(':checked') && $.inArray(value, aidArr) == -1 && $.inArray(value, parentNodeAidArr) == -1) {
+                    // aid处理
+                    aidArr.push(value);
+                    // 列表处理
+                    addList.push({'aid': value, 'title': $(o).data('title')});
+                }
+            });
+            // 合并已选的文档aid数据
+            var newAidArr = $.merge(parentNodeAidArr, aidArr);
+            // 合并已选的文档列表数据
+            var newAddList = $.merge(parentNodeAidList, addList);
+            // 去除未选的文档aid和列表数据
+            $('input[name^=ids]').each(function(i, o) {
+                var value = $(o).val();
+                var index = $.inArray(value, newAidArr);
+                if (!$(o).is(':checked') && index >= 0) {
+                    newAidArr.splice(index, 1);
+                    newAddList.splice(index, 1);
+                }
+            });
+            // 加载已选文档数
+            $('#selectLength').html(newAidArr.length);
+            // 加载到父级页面
+            parent.nodeAidSelectLoad(newAidArr, newAddList);
+        }
+    });
+
+    // 把选定值加到列表
+    function addAidlist() {
+        if (parentNodeAidArr.length == 0) {
+            layer.alert('请至少选择一项', {
+                closeBtn: 3,
+                move: false,
+                title: '提示',
+                btnAlign: 'r',
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                }
+            });
+            return false;
+        }
+
+        parent.selectArticleBack();
+        parent.layer.closeAll();
     }
 </script>
 

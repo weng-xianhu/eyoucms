@@ -1,0 +1,678 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="box-shadow:none;">
+    <div class="fixed-bar">
+        <div class="item-title">
+            {if condition="$Request.param.pid > 0"}
+            <a class="back_xin" href="{:url('Citysite/index', ['pid'=>$parentInfo.parent_id])}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            {elseif condition="$Request.param.source eq 'archives'"}
+            <a class="back_xin" href="javascript:history.back();"  title="返回"><i class="iconfont e-fanhui"></i></a>
+            {else /}
+            <a class="back_xin" href="{:url('Index/switch_map')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            {/if}
+            <!-- <a class="back_sz" href="javascript:void(0);" data-href="{:url('Citysite/conf')}" onclick="openHelpframe(this, '功能配置', '500px', '100%', 'r');" title="功能配置"><i class="iconfont e-shezhi-tongyong"></i></a> -->
+            <div class="subject">
+                <h3>城市分站</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    <div class="flexigrid" style="min-height: 600px;">
+        <!-- 操作说明 -->
+        <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248);  margin-bottom: 10px;">
+            <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                <h4 title="提示相关设置操作时应注意的要点">操作提示</h4>
+                <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+            </div>
+            <ul>
+                <li>如果前台要显示多城市分站列表，请<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=11842&origin_eycms=1','citysite 多城市站点列表标签调用')">查看标签教程</a></li>
+            </ul>
+        </div>
+        <div class="mDiv pt0">
+            <div class="ftitle">
+                {eq name="'Citysite@conf'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-href="{:url('Citysite/conf')}" onclick="openFullframe(this, '功能配置', '700px', '90%');">
+                        <div class="add">
+                            <span>功能配置</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+               
+                <div class="nav-dropup">
+                    <button class="layui-btn layui-btn-primary dropdown-bt" id="dropdown-bt-add">新增区域<i class="layui-icon layui-icon-down"></i></button>
+                    <div class="droptop-menus" id="dropdown-menus-add" style="display:none; {if condition='0 < $pager->totalRows && ($pager->totalRows < 4 || $pager->listRows < 4)'}top:28px;bottom:unset;border-bottom:1px solid rgba(0,0,0,.15);border-top:none; min-height: 110px;{/if}">
+                        {eq name="'Citysite@add'|is_check_access" value="1"}
+                        <a href="javascript:void(0);" data-href="{:url('Citysite/add', ['pid'=>$parentInfo.id])}" onclick="openFullframe(this, '单项新增', '700px', '80%');">单项新增</a>
+                        {/eq}
+                        {eq name="'Citysite@batch_add'|is_check_access" value="1"}
+                        <a href="javascript:void(0);" data-href="{:url('Citysite/batch_add', ['pid'=>$parentInfo.id])}" onclick="openFullframe(this, '批量新增', '700px', '80%');">批量新增</a>
+                        {/eq}
+                        {eq name="'Citysite@set_top_status'|is_check_access" value="1"}
+                        <a href="javascript:void(0);" onclick="import_city(this, '导入全国');" data-url="{:url('Citysite/import_city')}">导入全国数据</a>
+                        {/eq}
+                    </div>
+                </div>
+                <div class="nav-dropup">
+                    <button class="layui-btn layui-btn-primary dropdown-bt" id="dropdown-bt-sta">状态操作<i class="layui-icon layui-icon-down"></i></button>
+                    <div class="droptop-menus" id="dropdown-menus-sta" style="display:none; {if condition='0 < $pager->totalRows && ($pager->totalRows < 4 || $pager->listRows < 4)'}top:28px;bottom:unset;border-bottom:1px solid rgba(0,0,0,.15);border-top:none; min-height: 110px;{/if}">
+                        {eq name="'Citysite@set_top_status'|is_check_access" value="1"}
+                        <a href="javascript:void(0);" data-href="{:url('Citysite/set_city_status')}" onclick="setCityStatus(this, 1);">全部启用</a>
+                        {/eq}
+                        {eq name="'Citysite@set_top_status'|is_check_access" value="1"}
+                        <a href="javascript:void(0);" data-href="{:url('Citysite/set_city_status')}" onclick="setCityStatus(this, 0);">全部禁用</a>
+                        {/eq}
+                        {eq name="'Citysite@set_top_status'|is_check_access" value="1"}
+                        <a href="javascript:void(0);" data-href="{:url('Citysite/set_bqs_status')}" onclick="setBqsStatus(this);">启用推荐城市</a>
+                        {/eq}
+                    </div>
+                </div>
+                {notempty name="$parentInfo['id']"}
+                    <div class="fbutton">
+                        <a href="{:url('Citysite/index', ['pid'=>$parentInfo['parent_id']])}">
+                            <div class="adds">
+                                <span>
+                                    返回上一层
+                                </span>
+                            </div>
+                        </a>
+                    </div>
+                {/notempty}
+            </div>
+            <!-- <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div> -->
+            <form class="navbar-form form-inline" action="{:url('Citysite/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2 fl" style="">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索名称...">
+                        <input type="submit" class="btn" value="搜索">
+						<i class="iconfont e-sousuo"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" class="checkAll"></div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="text-l10">区域名称</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w120">
+                            <div class="tc">
+                                二级域名
+                                {eq name="'Citysite@set_is_open'|is_check_access" value="1"}
+                                <a href="javascript:void(0);" data-href="{:url('Citysite/batch_set_is_open')}" data-set_is_open="{$set_is_open}" onclick="batch_set_is_open(this);">（配置）</a>
+                                {/eq}
+                            </div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w160">
+                            <div class="tc">上级区域</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc">启用</div>
+                        </th>
+                        <!-- <th abbr="article_time" axis="col6" class="w50">
+                            <div class="tc">层级</div>
+                        </th> -->
+                        <th axis="col1" class="w220">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w60">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc"><input type="checkbox" name="ids[]" value="{$vo.id}"></div>
+                            </td>
+                            <td class="sort">
+                                <div class="w40 tc">
+                                    {$vo.id}
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div class="text-l10">
+                                    {eq name="'Citysite@edit'|is_check_access" value="1"}
+                                    <input style="text-align: left;" type="text" onchange="changeTableVal('citysite','id','{$vo.id}','name',this);" value="{$vo.name}" />
+                                    {else /}
+                                    {$vo.name}
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w120 tc">
+                                    {empty name='$vo.is_open'}无{else/}{$vo.domain}{/empty}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w160 tc">
+                                    {empty name='$parentInfo.name'}无{else/}{$parentInfo.name}{/empty}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tc w60">
+                                    {if condition="$vo['status'] eq 1"}
+                                        <span class="yes" data-value="0" data-id="{$vo.id}" {eq name="'Citysite@edit'|is_check_access" value="1"}onClick="setStatus(this);"{/eq}><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                        <span class="no" data-value="1" data-id="{$vo.id}" {eq name="'Citysite@edit'|is_check_access" value="1"}onClick="setStatus(this);"{/eq}><i class="fa fa-ban"></i>否</span>
+                                    {/if}
+                                </div>
+                            </td>
+                            <!-- <td class="">
+                                <div class="w50 tc">
+                                    {$vo.level}
+                                </div>
+                            </td> -->
+                            <td class="operation">
+                                <div class="w220 tc">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
+                                    <a href="javascript:void(0);" data-href="{:url('Citysite/edit',array('id'=>$vo['id']))}" class="btn blue" onclick="openFullframe(this, '编辑区域');">编辑</a>
+                                    <i></i>
+                                    {/eq}
+
+                                    {if condition="$vo['level'] >= 3 || ($vo['level'] == 2 && preg_match('/(北京|天津|上海|重庆)/i', $parentInfo['name']))"}
+                                    <a href="javascript:void(0);" class="btn grey">查看下级</a>
+                                    {else /}
+                                    <a href="{:url('Citysite/index',array('pid'=>$vo['id']))}" class="btn blue">查看下级</a>
+                                    {/if}
+<!--                                    <i></i>
+ 
+                                    {if condition="($vo.is_default eq 1)"}
+                                    <a class="btn grey"  href="javascript:void(0);">默认区域</a>
+                                    {else /}
+                                    <a class="btn blue" href="javascript:;" onClick="changeSortOrder('{$vo.id}');">设为默认</a>
+                                    {/if}
+ -->
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                                    <i></i>
+                                    <a class="btn red" href="javascript:void(0)" data-url="{:url('Citysite/del')}" data-id="{$vo.id}" data-msg="将同步清空该区域下的全部区域，确认删除？" onClick="delfun(this);">删除</a>
+                                    {/eq}
+                                    <i></i>
+                                    <a href="{$vo.siteurl}" class="btn blue" target="_blank">预览</a>
+                                </div>
+                            </td>
+							<i></i>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {eq name="'Citysite@edit'|is_check_access" value="1"}
+                                    <input style="text-align: left;" type="text" onchange="changeTableVal('citysite','id','{$vo.id}','sort_order',this);" size="4"  value="{$vo.sort_order}" />
+                                    {else /}
+                                    {$vo.sort_order}
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="footer-oper">
+            <span class="ml15">
+                <input type="checkbox" class="checkAll" autocomplete="off">
+            </span>
+            <div class="nav-dropup">
+                <button class="layui-btn layui-btn-primary dropdown-bt" id="dropdown-bt-bat">批量操作<i class="layui-icon layui-icon-up"></i></button>
+                <div class="dropdown-menus" id="dropdown-menus-bat" style="display:none; {if condition='0 < $pager->totalRows && ($pager->totalRows < 4 || $pager->listRows < 4)'}top:28px;bottom:unset;border-bottom:1px solid rgba(0,0,0,.15);border-top:none; min-height: 110px;{/if}">
+                    {eq name="'Citysite@batch_setcity'|is_check_access" value="1"}
+                    <a href="javascript:void(0);" onclick="batch_setcity(this, 'ids', '批量设置地区');" data-url="{:url('Citysite/batch_setcity', ['level'=>$parentInfo.level])}">设置地区</a>
+                    {/eq}
+                    {eq name="'Citysite@del'|is_check_access" value="1"}
+                    <a href="javascript:void(0);" onclick="batch_del(this, 'ids');" data-url="{:url('Citysite/del')}">删除地区</a>
+                    {/eq}
+                    <hr class="layui-bg-gray">
+                    {eq name="'Citysite@batch_setcityseo'|is_check_access" value="1"}
+                    <a href="javascript:void(0);" onclick="batch_setcityseo(this, 'ids', '批量设置SEO');" data-url="{:url('Citysite/batch_setcityseo', ['level'=>$parentInfo.level])}">设置SEO</a>
+                    {/eq}
+                </div>
+            </div>
+            <a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=11842&origin_eycms=1','citysite 多城市站点列表标签调用')" style="font-size: 12px;padding-left: 10px;position:absolute;top: 18px">标签教程？</a>
+            {include file="public/page" /}
+        </div>
+    </div>
+</div>
+<script>
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        // 新增批量操作
+        $("#dropdown-bt-add").click(function(){
+            $("#dropdown-menus-add").slideToggle(200);
+            $("#dropdown-menus-bat").slideUp(200);
+            $("#dropdown-menus-sta").slideUp(200);
+            event.stopPropagation();
+        })
+
+        // 状态批量操作
+        $("#dropdown-bt-sta").click(function(){
+            $("#dropdown-menus-sta").slideToggle(200);
+            $("#dropdown-menus-bat").slideUp(200);
+            $("#dropdown-menus-add").slideUp(200);
+            event.stopPropagation();
+        })
+
+        // 批量操作
+        $("#dropdown-bt-bat").click(function(){
+            $("#dropdown-menus-bat").slideToggle(200);
+            $("#dropdown-menus-add").slideUp(200);
+            $("#dropdown-menus-sta").slideUp(200);
+            event.stopPropagation();
+        })
+        $(document).click(function(){
+            $("#dropdown-menus-bat").slideUp(200);
+            $("#dropdown-menus-add").slideUp(200);
+            $("#dropdown-menus-sta").slideUp(200);
+            event.stopPropagation();
+        })
+    });
+
+    //修改是否默认
+    // function changeSortOrder(id) {
+    //     var url = "{:url('Citysite/setSortOrder')}";
+    //     $.ajax({
+    //         type: 'POST',
+    //         url: url,
+    //         data: {id:id,_ajax:1},
+    //         dataType: 'json',
+    //         success: function(res) {
+    //             if (res.code == 1) {
+    //                 layer.msg(res.msg, {icon: 1, time:1000}, function(){
+    //                     window.location.reload();
+    //                 });
+    //             } else {
+    //                 layer.msg(res.msg, {icon: 5}, function(){
+    //                     window.location.reload();
+    //                 });
+    //             }
+    //         },
+    //         error:function (e) {
+    //             showErrorAlert(e.responseText);
+    //         }
+    //     });
+    // }
+ 
+    /**
+     * 关闭当前弹窗
+     */
+    function closeIframes(obj) {
+        parent.layer.close(parentObj);
+    }
+
+    // 是否启用
+    function setStatus(obj)
+    {
+        var src = "";
+        if($(obj).hasClass('no')) // 图片点击是否操作
+        {
+            var text = "<i class='fa fa-check-circle'></i>是";
+            if ($(obj).attr('data-yestext')) {
+                text = $(obj).attr('data-yestext');
+            }
+            var value = 1;
+            try {  
+                if ($(obj).attr('data-value')) {
+                    value = $(obj).attr('data-value');
+                }
+            } catch(e) {  
+                // 出现异常以后执行的代码  
+                // e:exception，用来捕获异常的信息  
+            } 
+                
+        }else if($(obj).hasClass('yes')){ // 图片点击是否操作
+            var text = "<i class='fa fa-ban'></i>否";
+            if ($(obj).attr('data-notext')) {
+                text = $(obj).attr('data-notext');
+            }
+            var value = 0;
+            try {  
+                if ($(obj).attr('data-value')) {
+                    value = $(obj).attr('data-value');
+                }
+            } catch(e) {  
+                // 出现异常以后执行的代码  
+                // e:exception，用来捕获异常的信息  
+            } 
+        }else{ // 其他输入框操作
+            var value = $(obj).val();
+        }
+
+        var id = $(obj).attr('data-id');
+        var status = value;
+        $.ajax({
+            type: 'POST',
+            url: eyou_basefile + "?m="+module_name+"&c=Citysite&a=setStatus&lang"+__lang__,
+            data: {id:id, status:status, _ajax:1},
+            dataType: 'json',
+            success: function(res){
+                if (res.code == 1) {
+                    if ($(obj).hasClass('no')) {
+                        $(obj).removeClass('no').addClass('yes');
+                        $(obj).html(text);
+                    }else if($(obj).hasClass('yes')) {
+                        $(obj).removeClass('yes').addClass('no');
+                        $(obj).html(text);
+                    }
+                    layer.msg(res.msg, {icon: 1, time: 500});
+                } else {
+                    var time = parseFloat(res.wait) * 1000;
+                    layer.msg(res.msg, {icon: 5, time: time}, function(){
+                        window.location.reload();
+                    });  
+                }
+            }
+        }); 
+    }
+
+    /**
+     * 快速开启百强市
+     * @param {[type]} obj [description]
+     */
+    function setBqsStatus(obj) {
+        var iframes = layer.open({
+            type: 2,
+            title: '快速启用百强市的列表',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            offset: 'auto',
+            // maxmin: true, //开启最大化最小化按钮
+            area: ['80%', '80%'],
+            anim: 0,
+            btn: ['我已知晓，确认启用', '取消'],
+            content: 'https://www.eyoucms.com/plus/view.php?aid=29193&origin_eycms=1',
+            yes: function(index, layero){
+                layer_loading('正在处理');
+                $.ajax({
+                    type: 'POST',
+                    url: $(obj).data('href'),
+                    data: {_ajax:1},
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code == 1) {
+                            layer.closeAll();
+                            var _parent = parent;
+                            _parent.layer.msg(res.msg, {icon: 1, time:1000}, function(){
+                                _parent.window.location.reload();
+                            });
+                        } else {
+                            showErrorAlert(res.msg);
+                        }
+                    },
+                    error:function (e) {
+                        showErrorAlert(e.responseText);
+                    }
+                });
+            }
+        });
+    }
+
+    function setCityStatus(obj, status)
+    {
+        var title = '确定开启全部区域吗？';
+        var btn = ['我已知晓，确认启用', '取消'];
+        if (0 == status) {
+            title = '确认关闭全部区域吗？';
+            btn = ['我已知晓，确认关闭', '取消'];
+        }
+        layer.confirm(title, {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: btn, //按钮
+            success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: 'POST',
+                url: $(obj).data('href'),
+                data: {status:status, _ajax:1},
+                dataType: 'json',
+                success: function(res) {
+                    if (res.code == 1) {
+                        layer.closeAll();
+                        layer.msg(res.msg, {icon: 1, time:1000}, function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function (e) {
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+
+    /**
+     * 批量设置区域
+     */
+    function batch_setcity(obj, name, title)
+    {
+        var a = [];
+        var k = 0;
+        var ids = '';
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+                if (k > 0) {
+                    ids += ',';
+                }
+                ids += $(o).val();
+                k++;
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                }
+            });
+            return;
+        }
+
+        var url = $(obj).attr('data-url');
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: title,
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            maxmin: false, //开启最大化最小化按钮
+            area: ['650px', '520px'],
+            content: url,
+            success: function(layero, index){
+                var body = layer.getChildFrame('body', index);
+                body.find('input[name=ids]').val(ids);
+            }
+        });
+    }
+
+    /**
+     * 批量设置SEO
+     */
+    function batch_setcityseo(obj, name, title)
+    {
+        var a = [];
+        var k = 0;
+        var ids = '';
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+                if (k > 0) {
+                    ids += ',';
+                }
+                ids += $(o).val();
+                k++;
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                }
+            });
+            return;
+        }
+
+        var url = $(obj).attr('data-url');
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: title,
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            maxmin: false, //开启最大化最小化按钮
+            area: ['650px', '520px'],
+            content: url,
+            success: function(layero, index){
+                var body = layer.getChildFrame('body', index);
+                body.find('input[name=ids]').val(ids);
+            }
+        });
+    }
+
+    /**
+     * 一键导入全国城市
+     */
+    function import_city(obj, title)
+    {
+        var url = $(obj).attr('data-url');
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: title,
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            maxmin: false, //开启最大化最小化按钮
+            area: ['650px', '80%'],
+            content: url,
+            success: function(layero, index){
+
+            }
+        });
+    }
+
+    function batch_set_is_open(obj)
+    {
+        var set_is_open = $(obj).attr('data-set_is_open');
+        if (1 == set_is_open) {
+            var title = '批量启用全部二级域名状态，启用后自动分配区域拼音的二级域名URL，请自行解析二级域名至服务器。';
+            var btn = ['一键启用'];
+        } else {
+            var title = '批量关闭全部二级域名状态，关闭后将还原回目录形式访问区域站点。';
+            var btn = ['一键关闭'];
+        }
+        layer.confirm(title, {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '批量配置',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: btn, //按钮
+            success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: 'POST',
+                url: $(obj).data('href'),
+                data: {set_is_open:set_is_open, _ajax:1},
+                dataType: 'json',
+                success: function(res) {
+                    if (res.code == 1) {
+                        layer.closeAll();
+                        layer.msg(res.msg, {icon: 1, time:1000}, function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function (e) {
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+</script>
+
+{include file="public/footer" /}

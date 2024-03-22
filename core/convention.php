@@ -314,6 +314,8 @@ return [
         'web_tpl_theme'  => '', // 前台模板风格
         'web_users_tpl_theme'  => 'users', // 会员中心模板风格
         'users_wap_tpl_dir'    => 'wap', // 会员中心模板的手机模板目录
+        'web_citysite_open'   => 0, // 多城市站点
+        'site_default_home'  => '', // 前台默认子站点
     ],
     'tpcache'   => [],
 

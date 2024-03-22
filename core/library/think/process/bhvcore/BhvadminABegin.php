@@ -30,24 +30,23 @@ class BhvadminABegin {
         self::$controllerName = request()->controller();
         self::$moduleName = request()->module();
         self::$method = request()->method();
-        // file_put_contents ( DATA_PATH."log.txt", date ( "Y-m-d H:i:s" ) . "  " . var_export('admin_AfterSaveBehavior',true) . "\r\n", FILE_APPEND );
         $this->_initialize();
     }
 
     private function _initialize() {
         if ('POST' == self::$method) {
             $this->checksms();
+            $this->checkzy();
             $this->checkWeChatlogin();
             $this->checkoss();
-
+            $this->checkjc();
             if ('Weapp' == self::$controllerName) {
-                // file_put_contents ( DATA_PATH."log.txt", date ( "Y-m-d H:i:s" ) . "  " . var_export('core_WeappBehavior',true) . "\r\n", FILE_APPEND );
                 $this->instok();
                 $this->weapp_init();
             }
             $this->checksp();
         } else {
-            if (!preg_match('/^attrlist_/i', self::$actionName) && !preg_match('/^attribute_/i', self::$actionName)) {
+            if (!preg_match('/^(attrlist_|attribute_|ajax_)/i', self::$actionName)) {
                 $this->checkspview();
             }
             $this->ojbkCJ();
@@ -76,30 +75,19 @@ class BhvadminABegin {
         // $id = request()->param('id');
         $code = self::$code;
 
-        /*基本信息*/
-        // $row = M('Weapp')->field('code')->find($id);
-        // if (empty($row)) {
-        //     return true;
-        // }
-        // $code = $row['code'];
-        /*--end*/
-
-        $keys = binaryJoinChar(config('binary.14'), 10);
-        $sey_domain = config($keys);
-        $sey_domain = base64_decode($sey_domain);
         /*数组键名*/
         $arrKey = binaryJoinChar(config('binary.15'), 13);
         /*--end*/
-        $vaules = array(
-            $arrKey => urldecode($_SERVER['HTTP_HOST']),
+        $values = array(
+            $arrKey => urldecode(request()->host()),
             'code'  => $code,
             'ip'    => GetHostByName($_SERVER['SERVER_NAME']),
             'key_num'=>getWeappVersion(self::$code),
         );
-        $query_str = binaryJoinChar(config('binary.16'), 43);
-        $url = $sey_domain.$query_str.http_build_query($vaules);
-        $context = stream_context_set_default(array('http' => array('timeout' => $timeout,'method'=>'GET')));
-        $response = @file_get_contents($url,false,$context);
+        $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+        $upgradeLogic->GetKeyData($values);
+        $url = $upgradeLogic->getServiceUrl().'/index.php?m=api&c=Weapp&a=get_authortoken';
+        $response = @httpRequest($url, 'POST', $values, [], 5);
         $params = json_decode($response,true);
 
         if (is_array($params) && 0 != $params['errcode']) {
@@ -174,16 +162,57 @@ class BhvadminABegin {
     /**
      * @access protected
      */
-    private function checksms()
+    private function checkjc()
     {
-        $ca = array_join_string(array('U3','lz','dG','Vt','Q','H','N','t','c','w','=','='));
-        if (in_array(self::$controllerName.'@'.self::$actionName, [$ca])) {
+        $ca = array_join_string(array('Rm9','yZW','lnbk','Aq'));
+        if (in_array(self::$controllerName.'@'.self::$actionName, [$ca]) || in_array(self::$controllerName.'@*', [$ca])) {
             $key0 = array_join_string(array('d','2','Vi','L','n','dl','Yl9','p','c1','9','hd','XRo','b','3J','0b','2','tl','b','g=','='));
             $value = tpcache($key0);
             $value = !empty($value) ? intval($value) : 0;
             if (-1 == $value) {
                 $data = ['code' => 0, 'icon'=>4];
                 $msg = array_join_string(array('6K','+l','5','Yq','f6','I','O9','5Y','+q6','Z','mQ','5L','qO5','o','6I','5p','2D5','Z','+f','5Z','CN7','7','yB'));
+                $this->error($msg, null, $data);
+            }
+        }
+    }
+
+    /**
+     * @access protected
+     */
+    private function checksms()
+    {
+        $ca = array_join_string(array('U3','lz','dG','Vt','Q','H','N','t','c','w','=','='));
+        $ca2 = array_join_string(array('Tm9','0a','WNl','QG5','vdG','ljZ','V9kZ','XRh','aWx','zX3','Ntc','w=='));
+        if (in_array(self::$controllerName.'@'.self::$actionName, [$ca, $ca2])) {
+            $key0 = array_join_string(array('d','2','Vi','L','n','dl','Yl9','p','c1','9','hd','XRo','b','3J','0b','2','tl','b','g=','='));
+            $value = tpcache($key0);
+            $value = !empty($value) ? intval($value) : 0;
+            if (-1 == $value) {
+                $data = ['code' => 0, 'icon'=>4];
+                $msg = array_join_string(array('6K','+l','5','Yq','f6','I','O9','5Y','+q6','Z','mQ','5L','qO5','o','6I','5p','2D5','Z','+f','5Z','CN7','7','yB'));
+                $this->error($msg, null, $data);
+            }
+        }
+    }
+
+    /**
+     * @access protected
+     */
+    private function checkzy()
+    {
+        $ca = array_join_string(array('Tm9','0a','WN','lQG5','vdGl','jZV','9kZX','Rha','Wxz','X2F','wcGx','ldH','M='));
+        $ca2 = array_join_string(array('Tm90','aWN','lQG5','vdGl','jZV9','kZXR','haW','xzX','3dl','Y2h','hdA=','='));
+        if (in_array(self::$controllerName.'@'.self::$actionName, [$ca, $ca2])) {
+            $key0 = array_join_string(array('d','2','Vi','L','n','dl','Yl9','p','c1','9','hd','XRo','b','3J','0b','2','tl','b','g=','='));
+            $value = tpcache($key0);
+            $value = !empty($value) ? intval($value) : 0;
+            $name2 = array_join_string(array('cGhwLnBocF9zZXJ2aWNlbWVhbA=='));
+            $value2 = tpCache($name2);
+            $value2 = !empty($value2) ? intval($value2) : 0;
+            if (2 > $value2) {
+                $data = ['code' => 0, 'icon'=>4];
+                $msg = array_join_string(array('6K+l','5Yqf6I','O95Y+q6Zm','Q5LqO5','LiT5L','ia5o6','I5p2D','5Z+f5Z','CN77yB'));
                 $this->error($msg, null, $data);
             }
         }

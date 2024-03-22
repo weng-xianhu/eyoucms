@@ -1,0 +1,96 @@
+<style type="text/css">
+    .detail_row {
+        border-bottom: 0;
+        min-height: 45px;
+        padding: 0 10px;
+        display: block;
+        font-size: 12px;
+    }
+    .detail_row.detail_row_cmt {
+        position: relative;
+        height: 45px;
+        line-height: 45px;
+        color: #262626;
+        padding-left: 8px;
+        margin-top: 3px;
+    }
+    .detail_row.detail_row_cmt:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        -webkit-transform: translateY(-50%);
+        transform: translateY(-50%);
+        width: 3px;
+        height: 15px;
+        background-image: -webkit-gradient(linear, left top, left bottom, from(#f5503a), to(#fad1cb));
+        background-image: -webkit-linear-gradient(top, #f5503a, #fad1cb);
+        background-image: linear-gradient(180deg, #f5503a, #fad1cb)
+    }
+    .detail_row.detail_row_cmt h3.tit {
+        min-width: 40px;
+        color: #262626;
+        font-weight: 700;
+        font-size: 15px;
+        padding: 0
+    }
+    .detail_row.detail_row_cmt .icon_promote {
+        position: absolute;
+        top: 50%;
+        -webkit-transform: translateY(-50%);
+        transform: translateY(-50%);
+        width: 12px;
+        height: 12px;
+        background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUBAMAAAB/pwA+AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAwUExURUdwTCkpKSYmJiYmJiYmJiYmJiYmJjc3NycnJycnJyYmJicnJyYmJigoKCYmJiYmJvf3oVwAAAAPdFJOUwAl9LuPUdELdOulezpl3fSrByIAAABPSURBVAjXY2BgYGhqYIAB/T9w5vpvcKbQ/wswJvf/6TAm+/svcBXx/wVgTOb/BjAm4/+vcBX+37AwkRQgaUMYhmQFksVIzkFyJJLToR4CAPhWHjGm8cEOAAAAAElFTkSuQmCC) no-repeat;
+        background-size: cover;
+        margin-top: -1px;
+        right: 0;
+    }
+    .detail_row.detail_row_cmt p.good {
+        top: 0;
+        color: #8c8c8c;
+        right: 15px;
+        font-size: 12px;
+        position: absolute;
+        height: 42px;
+        line-height: 42px;
+    }
+    .detail_row.detail_row_cmt p.count {
+        top: 2px;
+        left: 45px;
+        color: #8c8c8c;
+        font-size: 12px;
+        position: absolute;
+        height: 42px;
+        line-height: 42px;
+    }
+    .GetMoreData{
+        font-size:.32rem; text-align:center; color:#888; padding: 0.25rem 0.24rem 0.4rem; clear:both;
+    }
+    .NoMoreData{
+        font-size:.32rem; text-align:center; color:#888; padding: 0.25rem 0.24rem 0.4rem; clear:both; display: none;
+    }
+</style>
+<div class="detail_row detail_row_cmt" >
+    <h3 class="tit">评价</h3>
+    <p class="good">评分 <strong>{$averageRating}</strong></p>
+    <p class="count"><strong>{$totalScoreRows}</strong>条</p>
+    <p class="cmt_none_tips" id="evalNone" style="display: none;">暂无评价，欢迎您购买之后留下宝贵的评价</p>
+</div>
+<div class="bgw appraise">
+    <div id="view-more-appraise">
+        <ul class="appraise-ul comList">{eyou:include file="system/comment_list.htm" /}</ul>
+        <div class="morediv" id="view-more-appraise">
+            {eyou:empty name="$Comment"}
+                <div class="NoMoreData enkecor" style="display: block;">暂无评价</div>
+            {eyou:else/}
+                {eyou:egt name="$totalScoreRows" value="5"}
+                <div class="GetMoreData"> <a href="javascript:void(0)" data-p="1" onclick="AjaxLoadMore(this);">查看更多</a> </div>
+                <div class="NoMoreData"> <a href="javascript:void(0)">已加载全部评价</a> </div>
+                {eyou:else/}
+                <div class="NoMoreData" style="display: block;"> <a href="javascript:void(0)">已加载全部评价</a> </div>
+                {/eyou:egt}
+            {/eyou:empty}
+        </div>
+    </div>
+</div>

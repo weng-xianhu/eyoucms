@@ -12,7 +12,7 @@ return array (
   'order_code' => 
   array (
     'name' => 'order_code',
-    'type' => 'varchar(30)',
+    'type' => 'varchar(50)',
     'notnull' => false,
     'default' => '',
     'primary' => false,

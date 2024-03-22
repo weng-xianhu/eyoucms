@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -13,9 +13,11 @@
 
 namespace app\admin\controller;
 
+use app\admin\logic\ArchivesLogic;
 use think\Page;
 use think\Db;
 use app\common\logic\ArctypeLogic;
+use think\Cache;
 
 /**
  * 插件的控制器
@@ -57,7 +59,7 @@ class Language extends Base
         $this->langAttributeModel = model('LanguageAttribute');
         $this->langAttrModel = model('LanguageAttr');
         $this->langPackModel = model('LanguagePack');
-        $system_use_language = tpCache('system.system_use_language');
+        $system_use_language = tpCache('global.system_use_language');
         if (empty($system_use_language) && empty($this->php_servicemeal)) {
             $str = '6K+l5Yqf6IO95LuF6ZmQ5LqO5o6I5p2D5Z+f5ZCN5Y+v55So77yB';
             $this->error(base64_decode($str));
@@ -72,7 +74,11 @@ class Language extends Base
         function_exists('set_time_limit') && set_time_limit(0); //防止备份数据过程超时
         
         /*修复多语言之前的坑，删除索引，兼容多语言的重名变量*/
-        Db::execute('ALTER TABLE `ey_config` DROP INDEX `name`');
+        try {
+            Db::execute('ALTER TABLE `ey_config` DROP INDEX `name`');
+        } catch (\Exception $e) {
+            
+        }
         /*--end*/
 
         /*同步数据到模板变量*/
@@ -111,6 +117,42 @@ class Language extends Base
     }
 
     /**
+     * 多语言 - 功能配置
+     */
+    public function conf()
+    {
+        if (IS_POST) {
+            $post = input('post.');
+            $tpCacheData = [];
+            $language_split = 0;
+            foreach ($post as $key => $val) {
+                if (in_array($key, ['language'])) {
+                    $language_split = $val['language_split'];
+                    $tpCacheData[$key] = $val;
+                }
+            }
+            if (!empty($tpCacheData)) {
+                foreach ($tpCacheData as $key => $val) {
+                    if (is_language()) {
+                        $langRow = Db::name('language')->order('id asc')
+                            ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                            ->select();
+                        foreach ($langRow as $_k => $_v) {
+                            tpCache($key, $val, $_v['mark']);
+                        }
+                    } else { // 单语言
+                        tpCache($key, $val);
+                    }
+                }
+                adminLog("多语言分离：".($language_split ? '开启' : '关闭'));
+            }
+            $this->success('保存成功');
+        }
+
+        return $this->fetch();
+    }
+
+    /**
      * 多语言 - 新增
      */
     public function add()
@@ -142,9 +184,21 @@ class Language extends Base
             );
             $saveData = array_merge($post, $nowData);
             /*--end*/
+            $this->langModel->delLangData([$mark]); // 创建时删除多余的语言数据
             $this->langModel->save($saveData);
             $insertId = $this->langModel->id;
             if (false !== $insertId) {
+                //设置其他语言为前台默认语言，执行模式切换操作
+                if ($is_home_default && $mark != 'cn'){
+                    $seo_pseudo = tpCache('global.seo_pseudo');
+                    //前台默认语言不是中文的时候，不允许使用静态模式，强制转换为伪静态
+                    if ($seo_pseudo == 2){
+                        tpCache('seo',['seo_pseudo'=>3],'cn');
+                        tpCache('seo',['seo_pseudo'=>3],$mark);
+                    }
+                    //删除静态文件
+                    del_html_dirpath();
+                }
                 $syn_status = $this->langModel->afterAdd($insertId, $post);
                 if (false !== $syn_status) {
                     adminLog('新增多语言：'.$post['title']); // 写入操作日志
@@ -185,7 +239,7 @@ class Language extends Base
             if(!empty($post['id'])){
                 $is_home_default = intval($post['is_home_default']);
                 $mark = trim($post['mark']);
-                
+
                 $count = $this->langModel->where([
                     'mark'=>$mark,
                     'id'=>['NEQ', $post['id']]
@@ -194,15 +248,24 @@ class Language extends Base
                     $this->error('该语言已存在，请检查');
                 }
 
+                // 至少要保留一种语言是启用状态
+                if (empty($post['status'])) {
+                    $return = model('Language')->isValidateStatus('status', $post['status']);
+                    if (is_array($return)) {
+                        $this->error($return['msg']);
+                    }
+                }
+
                 /*组装存储数据*/
                 $nowData = array(
                     'is_home_default'    => $is_home_default,
                     'update_time'    => getTime(),
                 );
+
                 $saveData = array_merge($post, $nowData);
                 /*--end*/
                 $r = $this->langModel->save($saveData, ['id'=>$post['id']]);
-                if ($r) {
+                if ($r !== false) {
                     /*默认语言的设置*/
                     if (1 == $is_home_default) { // 设置默认语言，只允许有一个是默认，其他取消
                         $this->langModel->where('id','NEQ',$post['id'])->update([
@@ -219,6 +282,16 @@ class Language extends Base
                             }
                         } else { // 单语言
                             tpCache('system', ['system_home_default_lang'=>$mark]);
+                        }
+                        //设置其他语言为前台默认语言，执行模式切换操作
+                        if ($mark != 'cn'){
+                            $seo_pseudo = tpCache('global.seo_pseudo');
+                            //前台默认语言不是中文的时候，不允许使用静态模式，强制转换为伪静态
+                            if ($seo_pseudo == 2){
+                                tpCache('seo',['seo_pseudo'=>3],'cn');
+                                tpCache('seo',['seo_pseudo'=>3],$mark);
+                            }
+                            del_html_dirpath();
                         }
                         /*--end*/
                     } else { // 默认语言取消之后，自动将第一个语言设置为默认
@@ -249,10 +322,10 @@ class Language extends Base
                     model('Language')->setLangNum();
                     
                     adminLog('编辑多语言：'.$post['title']); // 写入操作日志
-                    $this->success("操作成功!", url('Language/index'));
+                    $this->success("操作成功", url('Language/index'));
                 }
             }
-            $this->error("操作失败!");
+            $this->error("操作失败");
         }
 
         $id = input('id/d', 0);
@@ -264,8 +337,10 @@ class Language extends Base
             $this->error('数据不存在，请联系管理员！');
             exit;
         }
-
         $this->assign('row',$row);
+
+        $count = Db::name('language')->count();
+        $this->assign('count', $count);
 
         return $this->fetch();
     }
@@ -316,6 +391,10 @@ class Language extends Base
      */
     public function customvar_arctype()
     {
+        if (!empty($this->globalConfig['language_split'])) {
+            $this->error('语言分离不支持模板栏目变量');
+        }
+
         /*同步数据到模板变量*/
         $this->syn_langattr();
         /*--end*/
@@ -383,6 +462,9 @@ class Language extends Base
         $this->syn_langattr_proattribute();
         $this->syn_langattr_ad();
         $this->syn_langattr_ad_position();
+        $this->syn_langattr_links_group();
+        $this->syn_langattr_form();
+        $this->syn_langattr_formattribute();
     }
 
     /**
@@ -461,12 +543,126 @@ class Language extends Base
         $updateData = array(); // 更新数据存储
         $addAttrData = array(); // 新增模板留言属性变量数据存储
         $langAttributeRow = $this->langAttributeModel->where('attr_group',$attr_group)->getAllWithIndex('attr_name');
-        $result = Db::name('guestbook_attribute')->where('lang',$this->main_lang)->order('attr_id asc')->select();
+        $result = Db::name('guestbook_attribute')->where(['lang'=>$this->main_lang,'form_type'=>0])->order('attr_id asc')->select();
         //  栏目表ey_arctype对比多语言模板变量表ey_language_attribute，检测两边数据是否一致
         foreach($result as $k=>$v){
             // 对比结果：栏目表有，多语言模板变量表没有
             $attr_name = 'attr_'.$v['attr_id'];
             $gbookAttr_arr[] = $attr_name;
+            $data = array(
+                'attr_title'    => $v['attr_name'],
+                'attr_name'     => $attr_name,
+                'attr_group'    => $attr_group,
+                'is_del'        => isset($v['is_del']) ? $v['is_del'] : 0,
+            );
+            if(empty($langAttributeRow[$attr_name])){ // 新增留言属性之后进行同步到多语言模板变量
+                $data['add_time'] = getTime();
+                $data['update_time'] = getTime();
+                $addData[] = $data;
+                $addAttrData[] = [
+                    'attr_name'    => $attr_name,
+                    'attr_value' => $v['attr_id'],
+                    'lang'  => $this->main_lang,
+                    'attr_group'    => $attr_group,
+                    'add_time'  => getTime(),
+                    'update_time'   => getTime(),
+                ]; 
+            } else { // 更新
+                if ($langAttributeRow[$attr_name]['attr_title'] != $v['attr_name']) {
+                    $updateData[] = [
+                        'attr_id'   => $langAttributeRow[$attr_name]['attr_id'],
+                        'attr_title'   => $v['attr_name'],
+                        'is_del'        => $v['is_del'],
+                        'update_time'   => getTime(),
+                    ];
+                }
+            }
+        }
+        if (!empty($addData)) {
+            $this->langAttributeModel->saveAll($addData);
+        }
+        if (!empty($addAttrData)) {
+            $this->langAttrModel->saveAll($addAttrData);
+        }
+        if (!empty($updateData)) {
+            $this->langAttributeModel->saveAll($updateData);
+        }
+    }
+
+    /**
+     * 同步表单到多语言模板变量表
+     */
+    private function syn_langattr_form()
+    {
+        $attr_group = 'form';
+        $form_arr = array(); // 表单数组
+        $addData = array(); // 新增数据存储
+        $updateData = array(); // 更新数据存储
+        $addAttrData = array(); // 新增模板广告变量数据存储
+        $langAttributeRow = $this->langAttributeModel->where('attr_group',$attr_group)->getAllWithIndex('attr_name');
+        $result = Db::name('form')->where('lang',$this->main_lang)->order('form_id asc')->select();
+        //  表单表ey_form对比多语言模板变量表ey_language_attribute，检测两边数据是否一致
+        foreach($result as $k=>$v){
+            // 对比结果：表单表有，多语言模板变量表没有
+            $attr_name = 'form'.$v['form_id'];
+            $form_arr[] = $attr_name;
+            $data = array(
+                'attr_title'    => $v['form_name'],
+                'attr_name'     => $attr_name,
+                'attr_group'    => $attr_group,
+                'is_del'        => isset($v['is_del']) ? $v['is_del'] : 0,
+            );
+            if(empty($langAttributeRow[$attr_name])){ // 新增表单之后进行同步到多语言模板变量
+                $data['add_time'] = getTime();
+                $data['update_time'] = getTime();
+                $addData[] = $data;
+                $addAttrData[] = [
+                    'attr_name'    => $attr_name,
+                    'attr_value' => $v['form_id'],
+                    'lang'  => $this->main_lang,
+                    'attr_group'    => $attr_group,
+                    'add_time'  => getTime(),
+                    'update_time'   => getTime(),
+                ]; 
+            } else { // 更新
+                if ($langAttributeRow[$attr_name]['attr_title'] != $v['form_name']) {
+                    $updateData[] = [
+                        'attr_id'   => $langAttributeRow[$attr_name]['attr_id'],
+                        'attr_title'   => $v['form_name'],
+                        'is_del'        => $v['is_del'],
+                        'update_time'   => getTime(),
+                    ];
+                }
+            }
+        }
+        if (!empty($addData)) {
+            $this->langAttributeModel->saveAll($addData);
+        }
+        if (!empty($addAttrData)) {
+            $this->langAttrModel->saveAll($addAttrData);
+        }
+        if (!empty($updateData)) {
+            $this->langAttributeModel->saveAll($updateData);
+        }
+    }
+
+    /**
+     * 同步表单属性到多语言模板变量表
+     */
+    private function syn_langattr_formattribute()
+    {
+        $attr_group = 'form_attribute';
+        $formAttr_arr = array(); // 留言属性数组
+        $addData = array(); // 新增数据存储
+        $updateData = array(); // 更新数据存储
+        $addAttrData = array(); // 新增模板留言属性变量数据存储
+        $langAttributeRow = $this->langAttributeModel->where('attr_group',$attr_group)->getAllWithIndex('attr_name');
+        $result = Db::name('guestbook_attribute')->where(['lang'=>$this->main_lang,'form_type'=>1])->order('attr_id asc')->select();
+        //  栏目表ey_form对比多语言模板变量表ey_language_attribute，检测两边数据是否一致
+        foreach($result as $k=>$v){
+            // 对比结果：栏目表有，多语言模板变量表没有
+            $attr_name = 'attr_'.$v['attr_id'];
+            $formAttr_arr[] = $attr_name;
             $data = array(
                 'attr_title'    => $v['attr_name'],
                 'attr_name'     => $attr_name,
@@ -661,6 +857,63 @@ class Language extends Base
                     $updateData[] = [
                         'attr_id'   => $langAttributeRow[$attr_name]['attr_id'],
                         'attr_title'   => $v['title'],
+                        'is_del'        => $v['is_del'],
+                        'update_time'   => getTime(),
+                    ];
+                }
+            }
+        }
+        if (!empty($addData)) {
+            $this->langAttributeModel->saveAll($addData);
+        }
+        if (!empty($addAttrData)) {
+            $this->langAttrModel->saveAll($addAttrData);
+        }
+        if (!empty($updateData)) {
+            $this->langAttributeModel->saveAll($updateData);
+        }
+    }
+
+    /**
+     * 同步友情链接分组到多语言模板变量表
+     */
+    private function syn_langattr_links_group()
+    {
+        $attr_group = 'links_group';
+        $linksgroup_arr = array(); // 友情分组数组
+        $addData = array(); // 新增数据存储
+        $updateData = array(); // 更新数据存储
+        $addAttrData = array(); // 新增模板广告变量数据存储
+        $langAttributeRow = $this->langAttributeModel->where('attr_group',$attr_group)->getAllWithIndex('attr_name');
+        $result = Db::name('links_group')->where('lang',$this->main_lang)->order('id asc')->select();
+        //  友情分组表ey_links_group对比多语言模板变量表ey_language_attribute，检测两边数据是否一致
+        foreach($result as $k=>$v){
+            // 对比结果：友情分组表有，多语言模板变量表没有
+            $attr_name = 'linksgroup'.$v['id'];
+            $linksgroup_arr[] = $attr_name;
+            $data = array(
+                'attr_title'    => $v['group_name'],
+                'attr_name'     => $attr_name,
+                'attr_group'    => $attr_group,
+                'is_del'        => isset($v['is_del']) ? $v['is_del'] : 0,
+            );
+            if(empty($langAttributeRow[$attr_name])){ // 新增友情分组之后进行同步到多语言模板变量
+                $data['add_time'] = getTime();
+                $data['update_time'] = getTime();
+                $addData[] = $data;
+                $addAttrData[] = [
+                    'attr_name'    => $attr_name,
+                    'attr_value' => $v['id'],
+                    'lang'  => $this->main_lang,
+                    'attr_group'    => $attr_group,
+                    'add_time'  => getTime(),
+                    'update_time'   => getTime(),
+                ]; 
+            } else { // 更新
+                if ($langAttributeRow[$attr_name]['attr_title'] != $v['group_name']) {
+                    $updateData[] = [
+                        'attr_id'   => $langAttributeRow[$attr_name]['attr_id'],
+                        'attr_title'   => $v['group_name'],
                         'is_del'        => $v['is_del'],
                         'update_time'   => getTime(),
                     ];
@@ -993,8 +1246,6 @@ class Language extends Base
      */
     public function pack_edit()
     {
-        $admin_lang = $this->admin_lang;
-
         $official = input('official');
 
         if (IS_POST) {
@@ -1006,7 +1257,7 @@ class Language extends Base
             // 旧的变量名
             $old_name = $languagepack_db->where([
                     'id'  => $id,
-                    'lang'    => $admin_lang,
+                    'lang'    => $this->admin_lang,
                 ])->getField('name');
 
             // 检测变量名
@@ -1017,7 +1268,7 @@ class Language extends Base
             $count = $languagepack_db->where([
                     'name'  => $name,
                     'id'    => ['NEQ', $id],
-                    'lang'  => $admin_lang,
+                    'lang'  => $this->admin_lang,
                 ])->count();
             if (!empty($count)) {
                 $this->error('该变量名已存在，请检查');
@@ -1057,7 +1308,7 @@ class Language extends Base
         $id = input('id/d');
         $row = Db::name('language_pack')->where([
                 'id'    => $id,
-                'lang'  => $admin_lang,
+                'lang'  => $this->admin_lang,
             ])->find();
         if (empty($row)) {
             $this->error('数据不存在，请联系管理员！');
@@ -1195,13 +1446,13 @@ class Language extends Base
     public function add_lang_syn_pack($mark = '', $c_lang = '')
     {
         if (!empty($mark) && !empty($c_lang)) {
-            $service_ey = config('service_ey');
-            $query_str = 'L2luZGV4LnBocD9tPWFwaSZjPUxhbmd1YWdlJmE9c3luX3BhY2tfc2luZ2xlJg==';
             $values = array(            
                 'lang'=>$mark, 
             );
-            $url = base64_decode($service_ey).base64_decode($query_str);
-            $response = httpRequest2($url, 'POST', $values);
+            $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+            $upgradeLogic->GetKeyData($values);
+            $url = $upgradeLogic->getServiceUrl().'/index.php?m=api&c=Language&a=syn_pack_single';
+            $response = @httpRequest2($url, 'POST', $values, [], 5);
             $params = json_decode($response,true);
             if (is_array($params) && !empty($params)) {
                 if ($params['code'] === 0) {
@@ -1239,7 +1490,7 @@ class Language extends Base
                             ]);
                         /*--end*/
                         $this->createLangFile(); // 生成语言包文件
-                        $this->success('同步成功', url('Language/index'));
+                        $this->success('操作成功', url('Language/index'));
                     }
                 }
             }
@@ -1257,14 +1508,13 @@ class Language extends Base
         function_exists('set_time_limit') && set_time_limit(0);
 
         $syn_pack_id = Db::name('language')->max('syn_pack_id');
-        $service_ey = config('service_ey');
-        $query_str = 'L2luZGV4LnBocD9tPWFwaSZjPUxhbmd1YWdlJmE9c3luX3BhY2tfbGlzdCY=';
-        $values = array(            
+        $values = array(
             'pack_id'=>$syn_pack_id, 
         );
-        $url = base64_decode($service_ey).base64_decode($query_str).http_build_query($values);
-        $context = stream_context_set_default(array('http' => array('timeout' => 5,'method'=>'GET')));
-        $response = @file_get_contents($url,false,$context);
+        $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+        $upgradeLogic->GetKeyData($values);
+        $url = $upgradeLogic->getServiceUrl().'/index.php?m=api&c=Language&a=syn_pack_list';
+        $response = @httpRequest2($url, 'POST', $values, [], 5);
         $params = json_decode($response,true);
         $list = !empty($params['list']) ? $params['list'] : [];
         if (false != $response && empty($list)) {
@@ -1326,19 +1576,40 @@ class Language extends Base
         function_exists('set_time_limit') && set_time_limit(0);
 
         $syn_pack_id = Db::name('language')->max('syn_pack_id');
-        $service_ey = config('service_ey');
-        $query_str = 'L2luZGV4LnBocD9tPWFwaSZjPUxhbmd1YWdlJmE9Y2hlY2tfYWxsX25ld19wYWNrJg==';
         $values = array(            
             'pack_id'=>$syn_pack_id, 
         );
-        $url = base64_decode($service_ey).base64_decode($query_str).http_build_query($values);
-        $context = stream_context_set_default(array('http' => array('timeout' => 3,'method'=>'GET')));
-        $response = @file_get_contents($url,false,$context);
+        $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+        $upgradeLogic->GetKeyData($values);
+        $url = $upgradeLogic->getServiceUrl().'/index.php?m=api&c=Language&a=check_all_new_pack';
+        $response = @httpRequest2($url, 'POST', $values, [], 5);
         $params = json_decode($response,true);
         if (false != $params && 0 < intval($params)) {
             $this->error("有新版本语言包");
         } else {
             $this->success("已是最新语言包");
         }
+    }
+
+    /**
+     * 同步
+     * @return [type] [description]
+     */
+    public function sync()
+    {
+        function_exists('set_time_limit') && set_time_limit(0);
+
+        if (IS_AJAX_POST) {
+            $id = input('post.id/d');
+            $is_jump = input('post.is_jump/d');
+            $mark = Db::name('language')->where('id',$id)->value('mark');
+            if (empty($mark)) $this->error('语言不存在!');
+            $ArchivesLogic = new ArchivesLogic;
+            $res = $ArchivesLogic->batch_copy_all($mark,$is_jump);
+            if (false !== $res){
+                $this->success('同步成功!');
+            }
+        }
+        $this->error('同步失败!');
     }
 }

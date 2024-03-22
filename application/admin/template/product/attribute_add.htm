@@ -131,16 +131,16 @@
                     _parent.layer.close(parentObj);    
                     if(res.hasOwnProperty('data')){
                         if(res.data.hasOwnProperty('url')){
-                            _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                            _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                                 _parent.gourl(res.data.url);
                             });
                         }else{
-                            _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                            _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                                 _parent.window.location.reload();
                             });
                         }
                     }else{
-                        _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                             _parent.window.location.reload();
                         });
                     }

@@ -1,0 +1,348 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page min-hg-c-10">
+    {include file="channeltype/bar" /}
+    <div class="flexigrid">
+            <div class="mDiv">
+                <div class="ftitle">
+    				{eq name="$Think.const.CONTROLLER_NAME.'@channel_add'|is_check_access" value="1"}
+    				<div class="fbutton">
+                        <a href="javascript:void(0);" data-href="{:url('Field/channel_add', array('channel_id'=>$channel_id))}" onclick="openFullframe(this, '新增字段', '100%', '100%');">
+    				        <div class="add">
+    				            <span><i class="layui-icon layui-icon-addition"></i>新增字段</span>
+    				        </div>
+    				    </a>
+    				</div>
+    				{/eq}
+                </div>
+                <form class="navbar-form form-inline" action="{:url('Field/channel_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                    {$searchform.hidden|default=''}
+                    <div class="sDiv">
+                        <div class="sDiv2">
+                            <input type="hidden" name="searchopt" value="1">
+                            <input type="hidden" name="channel_id" id="channel_id" value="{$channel_id|default='1'}">
+                            <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="字段搜索...">
+                            <input type="submit" class="btn" value="搜索">
+                            <i class="iconfont e-sousuo"></i>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th abbr="article_title" axis="col3" class="w50">
+                                <div class="tc">ID</div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="">
+                                <div class="text-l10">字段标题</div>
+                            </th>
+                            <th abbr="article_time" axis="col6" class="w160">
+                                <div class="tc">所属模型</div>
+                            </th>
+                            <th abbr="article_time" axis="col6" class="w160">
+                                <div class="tc">字段名称</div>
+                            </th>
+                            <th abbr="article_time" axis="col6" class="w120">
+                                <div class="tc">字段类型</div>
+                            </th>
+                            <th abbr="article_time" axis="col6" class="w70">
+                                <div class="tc">字段分类</div>
+                            </th>
+                            <th abbr="article_time" axis="col6" class="w100">
+                                <div class="tc">更新时间</div>
+                            </th>
+                            <th axis="col1" class="w250">
+                                <div class="tc">操作</div>
+                            </th>
+                            <th abbr="article_time" axis="col6" class="w60">
+                                <div class="tc">排序</div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="bDiv" style="height: auto;">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%;">
+                        <tbody>
+                        {empty name="list"}
+                            <tr>
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <div class="no_row">
+                                        <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {else/}
+                            {foreach name="list" item="vo" key="k" }
+                            <tr>
+                                <td class="sort">
+                                    <div class="tc w50">
+                                        {if condition="$pager->nowPage > 1"}
+                                            {$pager->listRows * ($pager->nowPage-1) + $k+1}
+                                        {else /}
+                                            {$k+1}
+                                        {/if}
+                                    </div>
+                                </td>
+                                <td style="width: 100%">
+                                    <div class="text-l10">
+                                    {if condition="($vo['ifsystem'] eq 1) OR (1 eq $vo['ifmain'])"}
+                                        {$vo.title}
+                                    {else /}
+                                        {eq name="$Think.const.CONTROLLER_NAME.'@channel_edit'|is_check_access" value="1"}
+                                        <a href="javascript:void(0);" data-href="{:url('Field/channel_edit',array('channel_id'=>$channel_id,'id'=>$vo['id']))}" onclick="openFullframe(this, '编辑字段', '100%', '100%');">{$vo.title}</a>
+                                        {else /}
+                                        {$vo.title}
+                                        {/eq}
+                                    {/if}
+                                    </div>
+                                </td>
+                                <td class="">
+                                    <div class="w160 tc">
+                                        模型字段未调用
+                                    </div>
+                                </td>
+                                <td class="">
+                                    <div class="w160 tc">
+                                        {$vo.name}
+                                    </div>
+                                </td>
+                                <td class="">
+                                    <div class="w120 tc">
+                                        {$fieldtypeList[$vo['dtype']]['title']|default='数据错误'}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="tc w70">
+                                        {if condition="($vo['ifsystem'] eq 1) OR (1 eq $vo['ifmain'])"}
+                                            系统
+                                        {else /}
+                                            自定义
+                                        {/if}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="w100 tc">
+                                        {$vo.update_time|date='Y-m-d',###}
+                                    </div>
+                                </td>
+                                <td  class="operation">
+                                    <div class="w250 tc">
+                                    {eq name="'Field@ajax_channel_show'|is_check_access" value="1"}
+                                    {if condition="$vo['ifcontrol'] eq 1"}
+                                    <a class="btn grey"  href="javascript:void(0);" data-id="{$vo.id}" data-ifeditable="{eq name='$vo.ifeditable' value='1'}0{else /}1{/eq}">{if condition="$vo['ifeditable'] eq 1"}隐藏{else /}显示{/if}</a>
+                                    {else /}
+                                    <a class="btn blue"  href="javascript:void(0);" data-url="{:url('Field/ajax_channel_show')}" data-id="{$vo.id}" data-ifeditable="{eq name='$vo.ifeditable' value='1'}0{else /}1{/eq}" onClick="handleShow(this);">{if condition="$vo['ifeditable'] eq 1"}隐藏{else /}显示{/if}</a>
+                                    {/if}
+                                    {/eq}
+    								<i></i>
+                                    {if condition="($vo['ifsystem'] eq 1) OR (1 eq $vo['ifmain'])"}
+                                        {eq name="$Think.const.CONTROLLER_NAME.'@channel_edit'|is_check_access" value="1"}
+                                        <a href="javascript:void(0);" class="btn grey">编辑</a>
+                                        {/eq}
+    									<i></i>
+                                        {eq name="$Think.const.CONTROLLER_NAME.'@channel_del'|is_check_access" value="1"}
+                                        <a class="btn grey"  href="javascript:void(0);"  data-id="{$vo.id}">删除</a>
+                                        {/eq}
+                                    {else /}
+                                        {eq name="$Think.const.CONTROLLER_NAME.'@channel_edit'|is_check_access" value="1"}
+                                        <a href="javascript:void(0);" data-href="{:url('Field/channel_edit',array('channel_id'=>$channel_id,'id'=>$vo['id']))}" class="btn blue" onclick="openFullframe(this, '编辑字段', '100%', '100%');">编辑</a>
+                                        {/eq}
+    									<i></i>
+                                        {eq name="$Think.const.CONTROLLER_NAME.'@channel_del'|is_check_access" value="1"}
+                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Field/channel_del', array('channel_id'=>$channel_id))}" data-id="{$vo.id}" onClick="delfun(this);">删除</a>
+                                        {/eq}
+                                    {/if}
+    								<i></i>
+                                    <a class="btn blue" href="javascript:void(0);" data-name="{$vo.name}" data-channel_id="{$channel_id|default='0'}" data-dtype="{$vo.dtype}" data-ifmain="{$vo.ifmain}" data-is_screening="{$vo.is_screening}" onclick="copyToClipBoard(this)">标签调用</a>
+                                    </div>
+                                </td>
+                                <td class="sort">
+                                    <div class="w60 tc">
+                                    {if condition="empty($vo['ifmain'])"}
+                                        {eq name="$Think.const.CONTROLLER_NAME.'@channel_edit'|is_check_access" value="1"}
+                                        <input style="text-align: left;" type="text" onchange="changeTableVal('channelfield','id','{$vo.id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                        {else /}
+                                        {$vo.sort_order}
+                                        {/eq}
+                                    {else /}
+                                        ———
+                                    {/if}
+                                    </div>
+                                </td>
+                                
+                            </tr>
+                            {/foreach}
+                        {/empty}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="iDiv" style="display: none;"></div>
+            </div>
+            <div class="tDiv">
+                <div class="tDiv2">
+    				{include file="public/page" /}
+                <div style="clear:both"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    function delfun(obj){
+        var title = '<font color="#ff0000">重要提示！</font>';
+        layer.confirm('确认删除？此操作将会删除与该模型所有相关的数据且不可恢复。', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id'), _ajax:1},
+                dataType : 'json',
+                success : function(res){
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error:function(e){
+                    showErrorAlert(e.responseText);
+                }
+            })
+        }, function(index){
+          layer.close(index);
+        });
+      return false;
+    }
+
+    function handleShow(obj){
+        var title = $(obj).attr('data-title');
+        var channel_id = $(obj).attr('data-id');
+        var status = $(obj).attr('data-status');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Channeltype/ajax_show')}",
+            data : {id:channel_id,status:status, _ajax:1},
+            dataType : 'json',
+            success : function(res){
+
+                if (res.code == 1) {
+
+                    if (0 == res.data.confirm) {
+                        if (channel_id == 5){
+                            if(status == 1){
+                                parent.$("#sub-menu").find("#Member_media_index").show();
+                            }else{
+                                parent.$("#sub-menu").find("#Member_media_index").hide();
+                            }
+                        }
+                        layer.msg(res.msg, {icon: 1, time:500}, function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        var confirm = layer.confirm(res.msg, {
+                            title: false,
+                            btn: ['启用','取消'] //按钮
+                        }, function(index){
+                            layer.close(index);
+                            // 确定
+                            if (51 == channel_id) {
+                                layer_loading('正在下载');
+                                $.ajax({
+                                    type : 'post',
+                                    url : "{:url('Channeltype/ajax_syn_theme_ask', ['_ajax'=>1])}",
+                                    data : {id:channel_id,status:$(obj).attr('data-status'),_ajax:1},
+                                    dataType : 'json',
+                                    success : function(res){
+                                        layer.closeAll();
+                                        if(res.code == 1){
+                                            layer.msg(res.msg, {icon: 1, time: 500}, function(){
+                                                window.location.reload();
+                                            });
+                                        }else{
+                                            var icon = 5;
+                                            if (res.data.icon) {icon = res.data.icon;}
+                                            layer.alert(res.msg, {icon: icon, title:false, closeBtn:false}, function(){
+                                                window.location.reload();
+                                            });
+                                        }
+                                    },
+                                    error:function(e){
+                                        showErrorAlert(e.responseText);
+                                    }
+                                })
+                            } else {
+                                layer_loading('正在处理');
+                                $.ajax({
+                                    type : 'post',
+                                    url : "{:url('Channeltype/ajax_check_tpl')}",
+                                    data : {id:channel_id,status:$(obj).attr('data-status'),tpltype:res.data.tpltype, _ajax:1},
+                                    dataType : 'json',
+                                    success : function(res){
+                                        layer.closeAll();
+                                        if(res.code == 1){
+                                            layer.msg(res.msg, {icon: 1, time: 500}, function(){
+                                                window.location.reload();
+                                            });
+                                        }else{
+                                            showErrorAlert(res.msg);
+                                        }
+                                    },
+                                    error:function(e){
+                                        showErrorAlert(e.responseText);
+                                    }
+                                })
+                            }
+                        });
+                    }
+                } else {
+                    var icon = 5;
+                    try {
+                        if (res.data.icon) {
+                            icon = res.data.icon;
+                        }
+                    }catch(err){}
+                    showErrorAlert(res.msg, icon);
+                }
+            },
+            error:function(e){
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

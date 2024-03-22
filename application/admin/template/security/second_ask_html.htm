@@ -1,0 +1,244 @@
+<dl class="row">
+    <dt class="tit">
+        <label for="security_ask_open">密保状态</label>
+    </dt>
+    <dd class="opt">
+        <label class="curpoin"><input id="security_ask_open1" name="security_ask_open" value="1" type="radio" onclick="security_verify_open(this);" {if condition="!empty($security.security_ask_open)"} checked="checked"{/if}>开启</label>
+        &nbsp;
+        <label class="curpoin"><input id="security_ask_open0" name="security_ask_open" value="0" type="radio" onclick="security_verify_open(this);" {if condition="empty($security.security_ask_open)"} checked="checked"{/if}>关闭</label>
+        <span class="err"></span>
+        <p class="notic">开启后，部分功能使用前，将进行二次问答验证</p>
+    </dd>
+</dl>
+<div id="div_security_verify" class="{if condition='empty($security.security_ask_open)'}none{/if}">
+    <input type="hidden" id="is_ask_add_edit" value="{empty name='$security.security_ask'}add{else /}edit{/empty}">
+    <textarea id="security_askanswer_content" style="display: none;">{$security_askanswer_content|default=''}</textarea>
+    <textarea id="security_ask_content" style="display: none;">{$security['security_ask']|default=''}</textarea>
+    {empty name='$security.security_ask'}
+        <dl class="row">
+            <dt class="tit">
+                <label for="security_ask"><em>*</em>设置密保问题</label>
+            </dt>
+            <dd class="opt" style="width: auto;">
+                <select name="security_ask" id="security_ask" class="w210">
+                    <option value="-1">请选择…</option>
+                    {volist name='$security_askanswer_list' id='vo'}
+                    <option value="{$key}">{$vo}</option>
+                    {/volist}
+                </select>
+                &nbsp;<a href="javascript:void(0);" onclick="get_ask_list(this);" class="ncap-btn ncap-btn-green">问题列表</a>
+                <span class="err"></span>
+                <p class="notic"></p>
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="tit">
+                <label for="security_answer"><em>*</em>设置密保答案</label>
+            </dt>
+            <dd class="opt" style="width: auto;">
+                <input type="text" name="security_answer" value="" id="security_answer" class="w200" autocomplete="off">
+                <span class="err"></span>
+                <p class="notic"></p>
+            </dd>
+        </dl>
+    {else /}
+        <dl class="row">
+            <dt class="tit">
+                <label for="security_ask_old">密保问题</label>
+            </dt>
+            <dd class="opt" style="width: auto;">
+                {$security.security_ask}
+                <input type="hidden" name="security_ask_old" id="security_ask_old" value="{$security.security_ask}">
+                <span class="err"></span>
+                <p class="notic"></p>
+            </dd>
+        </dl>
+        <dl class="row">
+            <dt class="tit">
+                <label for="security_answer_old"><em id="security_answer_old_em" style="display: none;">*</em>密保答案</label>
+            </dt>
+            <dd class="opt" style="width: auto;">
+                <input type="text" name="security_answer_old" value="" id="security_answer_old" placeholder="" class="w200" autocomplete="off">
+                <span class="err"></span>
+                <p class="notic">不重新设置无需填写问题答案</p>
+            </dd>
+        </dl>
+        <dl class="row edit_colse">
+            <dt class="tit">
+                <label for="security_ask">重置密保问题</label>
+            </dt>
+            <dd class="opt" style="width: auto;">
+                <select name="security_ask" id="security_ask" class="w210">
+                    <option value="-1">请选择…</option>
+                    {volist name='$security_askanswer_list' id='vo'}
+                    <option value="{$key}">{$vo}</option>
+                    {/volist}
+                </select>
+                &nbsp;<a href="javascript:void(0);" onclick="get_ask_list(this);" class="ncap-btn ncap-btn-green">问题列表</a>
+                <span class="err"></span>
+                <p class="notic"></p>
+            </dd>
+        </dl>
+        <dl class="row edit_colse">
+            <dt class="tit">
+                <label for="security_answer"><em id="security_answer_em" style="display: none;">*</em>重置密保答案</label>
+            </dt>
+            <dd class="opt" style="width: auto;">
+                <input type="text" name="security_answer" value="" id="security_answer" class="w200" autocomplete="off">
+                <span class="err"></span>
+                <p class="notic">为空默认不修改</p>
+            </dd>
+        </dl>
+        <script type="text/javascript">
+            $(function(){
+                // 新设置安全问题
+                $('select[name=security_ask]').change(function(){
+                    var security_ask = $(this).val();
+                    var security_answer = $.trim($('input[name=security_answer]').val());
+                    if (0 > security_ask && security_answer === '') {
+                        $('#security_answer_em').hide();
+                        $('#security_answer_old_em').hide();
+                        $('#security_answer_old').removeClass('emptytips');
+                    } else {
+                        $('#security_answer_em').show();
+                        $('#security_answer_old_em').show();
+                        $('#security_answer_old').addClass('emptytips');
+                    }
+                });
+                // 新设置问题答案
+                $('input[name=security_answer]').keyup(function(){
+                    var security_ask = $('select[name=security_ask]').val();
+                    var security_answer = $.trim($(this).val());
+                    if (security_answer === '' && 0 > security_ask) {
+                        $('#security_answer_em').hide();
+                        $('#security_answer_old_em').hide();
+                        $('#security_answer_old').removeClass('emptytips');
+                    } else {
+                        $('#security_answer_em').show();
+                        $('#security_answer_old_em').show();
+                        $('#security_answer_old').addClass('emptytips');
+                    }
+                });
+            });
+        </script>
+    {/empty}
+    <dl class="row edit_colse">
+        <dt class="tit">
+            <label for="security_verifyfunc">应用范围</label>
+        </dt>
+        <dd class="opt">
+            <!-- <label title="强制勾选"><input type="checkbox" name="security_verifyfunc[]" value="Security@*" checked="checked" disabled="true">安全中心</label>&nbsp;&nbsp; -->
+            <label title="强制勾选"><input type="checkbox" name="security_verifyfunc[]" value="Filemanager@*" checked="checked" disabled="true">模板管理</label>&nbsp;&nbsp;
+            <label class="curpoin"><input type="checkbox" name="security_verifyfunc[]" value="Weapp@*" {if condition="!empty($security['security_verifyfunc']) && in_array('Weapp@*', $security['security_verifyfunc'])"}checked="checked"{/if}>插件应用</label>&nbsp;&nbsp;
+            <label class="curpoin" title="修改管理员、会员密码都要密保验证"><input type="checkbox" name="security_verifyfunc[]" value="edit_pwd" {if condition="!empty($security['security_verifyfunc']) && in_array('edit_pwd', $security['security_verifyfunc'])"}checked="checked"{/if}>修改密码</label>
+            <p class="notic">建议勾选，避免存在被注入木马的安全漏洞隐患</p>&nbsp;&nbsp;
+        </dd>
+    </dl>
+    <dl class="row edit_colse">
+        <dt class="tit">
+            <label for="security_ask_ip_open">IP白名单</label>
+        </dt>
+        <dd class="opt">
+            <label class="curpoin"><input id="security_ask_ip_open1" name="security_ask_ip_open" value="1" type="radio" {if condition="!isset($security.security_ask_ip_open) || $security.security_ask_ip_open == 1"} checked="checked"{/if}>开启</label>
+            &nbsp;
+            <label class="curpoin"><input id="security_ask_ip_open0" name="security_ask_ip_open" value="0" type="radio" {if condition="isset($security.security_ask_ip_open) && $security.security_ask_ip_open == 0"} checked="checked"{/if}>关闭</label>
+            <span class="err"></span>
+            <p class="notic">如果开启该功能，在相同IP下登录后，任意一个管理员二次验证成功，其他人不再弹出验证</p>
+        </dd>
+    </dl>
+</div>
+<script type="text/javascript">
+    function get_ask_list(obj)
+    {
+        layer.prompt({
+            title: '密保问题管理',
+            id: 'layerid_1645756024',
+            formType: 2,
+            btn: ['保存','取消'],
+            shade: layer_shade,
+            closeBtn: 0,
+            value: $('#security_askanswer_content').val(),
+            success: function(layero, index) {
+                if ('edit' == $('#is_ask_add_edit').val()) {
+                    var security_ask_content = "{$security.security_ask}";
+                    if (security_ask_content == '') {
+                        security_ask_content = $('#security_ask_content').val();
+                    }
+                    var before_str = "<div style='margin: -8px 0px 10px 0px;'>当前问题名称：<font style='color: red;'>"+security_ask_content+"</font></div>";
+                    $("#layerid_1645756024").prepend(before_str);
+
+                    var after_str = "<div style='margin-top: 5px;font-size: 12px; color: #999999;'>保存后，已设置的问题名称会默认存入问题列表</div>";
+                    $("#layerid_1645756024").append(after_str);
+                }
+                $("#layerid_1645756024").find('textarea').attr('placeholder', '一行代表一个问题');
+            },
+            btn2: function(index, layero){
+                layer.close(index);
+                return false;
+            }
+        }, function(value, index) {
+            save_ask_list(value);
+        });
+    }
+
+    function save_ask_list(value)
+    {
+        //loading层
+        var loading = layer.load(3, {
+            shade: [0.1,'#fff'] //0.1透明度的白色背景
+        });
+        $.ajax({
+            type : 'post',
+            url : "{:url('Security/save_ask_list', ['_ajax'=>1])}",
+            data : {value:value},
+            dataType : 'json',
+            success : function(res) {
+                if (res.code == 1) {
+                    layer.closeAll();
+                    var selected_text = $('select[name=security_ask] option:selected').text();
+                    var option_html = '<option value="-1">请选择…</option>';
+                    $.each(res.data.security_askanswer_list, function(index, item) {
+                        if (selected_text == item) {
+                            option_html += '<option value="'+index+'" selected="true">'+item+'</option>';
+                        } else {
+                            option_html += '<option value="'+index+'">'+item+'</option>';
+                        }
+                    });
+                    $('select[name=security_ask]').html(option_html);
+                    $('#security_askanswer_content').val(res.data.value);
+                    layer.msg(res.msg, {shade: 0.1, time: 1000});
+                }else{
+                    layer.close(loading);
+                    $('#layerid_1645756024').find('input[type=textarea]').focus();
+                    layer.msg(res.msg, {time: 1000});
+                }
+            },
+            error: function(e) {
+                layer.close(loading);
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    function security_verify_open(obj)
+    {
+        var is_open = $(obj).val();
+        var is_ask_add_edit = $('#is_ask_add_edit').val();
+        if (1 == is_open) {
+            $('#div_security_verify').show();
+            if ('edit' == is_ask_add_edit) {
+                $('#security_answer_old_em').hide();
+                $('#security_answer_old').removeClass('emptytips');
+                $('.edit_colse').show();
+            }
+        } else {
+            if ('edit' == is_ask_add_edit) {
+                $('#security_answer_old_em').show();
+                $('#security_answer_old').addClass('emptytips').focus();
+                $('.edit_colse').hide();
+            } else if ('add' == is_ask_add_edit) {
+                $('#div_security_verify').hide();
+            }
+        }
+    }
+</script>

@@ -2,16 +2,16 @@
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-10">
     {include file="admin/admin_bar" /}
     <div class="flexigrid">
-        <div class="mDiv">
+        <div class="mDiv pt0">
             <div class="ftitle">
                {eq name='$main_lang' value='$admin_lang'}
                    {eq name="$Think.const.CONTROLLER_NAME.'@admin_add'|is_check_access" value="1"}
                    <div class="fbutton">
                        <a href="javascript:void(0);" data-href="{:url('Admin/admin_add')}" onclick="openFullframe(this, '新增管理员', '100%', '100%');">
-                           <div class="add" title="新增管理员">
+                           <div class="add">
                                <span><i class="layui-icon layui-icon-addition"></i>新增管理员</span>
                            </div>
                        </a>
@@ -25,7 +25,7 @@
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索相关数据...">
                         <input type="submit" class="btn" value="搜索">
-						<i class="fa fa-search"></i>
+                        <i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -50,7 +50,7 @@
                             <div class="tc">真实姓名</div>
                         </th>
                         <th abbr="article_show" axis="col5" class="w150">
-                            <div class="tc">权限组</div>
+                            <div class="tc">角色组</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w120">
                             <div class="tc">手机号码</div>
@@ -58,10 +58,9 @@
                         <th abbr="article_time" axis="col6" class="w160">
                             <div class="tc">最后登录时间</div>
                         </th>
-                        <th axis="col1" class="w120">
+                        <th axis="col1" class="{if condition="!empty($thirdata['type'])"}w180{else /}w120{/if}">
                             <div class="tc">操作</div>
                         </th>
-                        
                     </tr>
                     </thead>
                 </table>
@@ -74,7 +73,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -85,8 +86,8 @@
                                 <div class="w40 tc">
                                     {if condition="$Think.session.admin_id != $vo.admin_id AND !empty($vo.parent_id)"}
                                     <input type="checkbox" name="ids[]" value="{$vo.admin_id}">
-									{else/}
-									<input disabled type="checkbox" name="ids[]" value="{$vo.admin_id}">
+                                    {else/}
+                                    <input disabled  type="checkbox" name="ids[]" value="{$vo.admin_id}" class="grey">
                                     {/if}
                                 </div>
                             </td>
@@ -97,9 +98,12 @@
                             <td style="width: 100%">
                                 <div class="text-l10">
                                     {eq name="'Admin@admin_edit'|is_check_access" value="1"}
-                                    <a href="javascript:void(0);" data-href="{:url('Admin/admin_edit',array('id'=>$vo['admin_id']))}" onclick="openFullframe(this, '编辑管理员', '100%', '100%');">{$vo.user_name}</a>
+                                        <a href="javascript:void(0);" data-href="{:url('Admin/admin_edit',array('id'=>$vo['admin_id'],'iframe'=>1))}" onclick="openFullframe(this, '编辑管理员', '100%', '100%');">{$vo.user_name}</a>&nbsp;
+                                        {notempty name='$vo.is_locklogin'}
+                                        <a href="javascript:void(0);" style="color: red;" data-url="{:url('Admin/ajax_unlock_login',array('id'=>$vo['admin_id']))}" onclick="unlock_login(this);">[解锁]</a>
+                                        {/notempty}
                                     {else /}
-                                    {$vo.user_name}
+                                        {$vo.user_name}
                                     {/eq}
                                 </div>
                             </td>
@@ -126,20 +130,28 @@
                                 </div>
                             </td>
                             <td class="operation">
-                                <div class="w120 tc">
+                                <div class="{if condition="!empty($thirdata['type'])"}w180{else /}w120{/if} tc">
                                     {eq name="'Admin@admin_edit'|is_check_access" value="1"}
-                                    <a href="javascript:void(0);" data-href="{:url('Admin/admin_edit',array('id'=>$vo['admin_id']))}" class="btn blue" onclick="openFullframe(this, '编辑管理员', '100%', '100%');">编辑</a>
+                                        {if condition="!empty($thirdata['type']) && in_array($thirdata['type'], ['EyouGzhLogin','WechatLogin'])"}
+                                            {if condition="!empty($wxlist[$vo['admin_id']])"}
+                                                <a href="javascript:void(0);" class="btn blue" data-logintype="{$thirdata['type']}" onclick="unbindWeChat(this);" data-id="{$vo.admin_id}">解绑微信</a>
+                                            {else /}
+                                                <a href="javascript:void(0);" class="btn blue" data-logintype="{$thirdata['type']}" onclick="bindWeChat(this);" data-id="{$vo.admin_id}">绑定微信</a>
+                                            {/if}
+                                            <i></i>
+                                        {/if}
+                                        <a href="javascript:void(0);" data-href="{:url('Admin/admin_edit',array('id'=>$vo['admin_id'],'iframe'=>1))}" class="btn blue" data-closereload="1" onclick="openFullframe(this, '编辑管理员', '100%', '100%');">编辑</a>
                                     {/eq}
                                     {eq name='$main_lang' value='$admin_lang'}
-                                    {eq name="'Admin@admin_del'|is_check_access" value="1"}
-                                        {if condition="$Think.session.admin_id != $vo.admin_id AND !empty($vo.parent_id)"}
-										<i></i>
-                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Admin/admin_del')}" data-id="{$vo.admin_id}" onClick="delfun(this);">删除</a>
-										{else /}
-										<i></i>
-										<a class="btn grey"  href="javascript:void(0);" data-id="{$vo.admin_id}">删除</a>
-                                        {/if}
-                                    {/eq}
+                                        {eq name="'Admin@admin_del'|is_check_access" value="1"}
+                                            {if condition="$Think.session.admin_id != $vo.admin_id AND !empty($vo.parent_id)"}
+                                                <i></i>
+                                                <a class="btn red"  href="javascript:void(0);" data-url="{:url('Admin/admin_del')}" data-id="{$vo.admin_id}" onClick="delfun(this);">删除</a>
+                                            {else /}
+                                                <i></i>
+                                                <a class="btn grey"  href="javascript:void(0);" data-id="{$vo.admin_id}">删除</a>
+                                            {/if}
+                                        {/eq}
                                     {/eq}
                                 </div>
                             </td>
@@ -183,7 +195,7 @@
             }
         });
         $('input[type=checkbox].checkAll').click(function(){
-            $('input[type=checkbox]').prop('checked',this.checked);
+            $('input[type=checkbox]:not(:disabled)').prop('checked',this.checked);
         });
     });
     
@@ -201,6 +213,198 @@
         // 上传头像及时显示
         $('#admin_head_pic', window.parent.document).attr('src', $('#head_pic').val());
     });
+
+    /**
+     * 解锁登陆失败锁定的用户名
+     * @param  {[type]} obj [description]
+     * @return {[type]}     [description]
+     */
+    function unlock_login(obj)
+    {
+        var url = $(obj).attr('data-url');
+        $.ajax({
+            type : 'post',
+            url : url,
+            data : {_ajax:1},
+            dataType : 'json',
+            success : function(res){
+                if(res.code == 1){
+                    layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                        window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    /*-----------------------------绑定与解绑微信 start------------------------*/
+
+    /**
+     * 绑定微信应用
+     * @return {[type]} [description]
+     */
+    var notifyPolling = null;
+    function bindWeChat(obj)
+    {
+        var logintype = $(obj).attr('data-logintype');
+        if ('WechatLogin' == logintype) {
+            var admin_id = $(obj).attr('data-id');
+            var gourl = window.location.href;
+            var url = "{:url('Admin/wechat_bind', [], true, true)}";
+            url += "&admin_id="+admin_id+"&origin=list&gourl="+encodeURIComponent(gourl);
+            var iframes = layer.open({
+                type: 2,
+                title: '微信扫码绑定',
+                fixed: true, //不固定
+                shadeClose: false,
+                shade: layer_shade,
+                btnAlign:'r',
+                closeBtn: 3,
+                // maxmin: true, //开启最大化最小化按钮
+                area: ['500px', '460px'],
+                content: url
+            });
+        } else if ('EyouGzhLogin' == logintype) {
+            layer_loading('正在加载');
+            var admin_id = $(obj).attr('data-id');
+            $.ajax({
+                type: 'POST',
+                url: "{:url('Admin/mp_getqrcode')}",
+                data: {op:'bind', admin_id:admin_id, _ajax:1},
+                dataType: "JSON",
+                success: function(res){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        var html_content = '<img src="https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket='+ res.data.ticket +'" style="width: 250px; height: 250px;"><p style="color: red;padding: 8px 0;font-size: 15px;text-align: center;">打开微信扫一扫</p> <script type="text/javascript"> getNotify("'+admin_id+'","'+res.data.uniqid_scene+'"); <\/script>';
+                        layer.open({
+                            type: 1,
+                            title:'微信扫码绑定',
+                            shade: layer_shade,
+                            id: 'layer_official_account',
+                            shadeClose: false,
+                            content: html_content,
+                            end: function() {
+                                clearNotify();
+                            }
+                        });
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }
+    }
+
+    /**
+     * 轮询是否绑定官方公众号
+     * @return {[type]} [description]
+     */
+    function getNotify(admin_id, uniqid_scene){
+        notifyPolling = setTimeout(function(){
+            $.ajax({
+                type: 'POST',
+                url: "{:url('Admin/mp_bingwxgzhopenid')}",
+                data: {op:'bind', admin_id:admin_id, uniqid_scene:uniqid_scene, _ajax:1},
+                dataType: "JSON",
+                success: function(res){
+                    if (1 == res.data.code){
+                        layer.closeAll();
+                        clearNotify();
+                        layer.msg('绑定成功', {shade: layer_shade, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    } else if (0 == res.code) {
+                        layer.closeAll();
+                        clearNotify();
+                        layer.alert(res.msg, {icon: 5, title:false, closeBtn:false}, function(){
+                            window.location.reload();
+                        });
+                    } else if (2 == res.data.code) {
+                        getNotify(admin_id, uniqid_scene);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    clearNotify();
+                    layer.alert('扫码检测异常，重新尝试！', {icon: 5, title:false, closeBtn:false}, function(){
+                        window.location.reload();
+                    });
+                }
+            });
+        }, 1800);
+    }
+
+    function clearNotify(){
+        if(notifyPolling > 0){
+            clearTimeout(notifyPolling);
+            notifyPolling = null;
+        }
+    }
+
+    /**
+     * 解除绑定微信应用
+     * @return {[type]} [description]
+     */
+    function unbindWeChat(obj)
+    {
+        var logintype = $(obj).attr('data-logintype');
+        if ('WechatLogin' == logintype) {
+            layer_loading('正在处理');
+            var admin_id = $(obj).attr('data-id');
+            $.ajax({
+                type : 'post',
+                url : "{:url('Admin/wechat_unbind_handle')}",
+                data : {admin_id:admin_id, _ajax:1},
+                dataType : 'json',
+                success : function(res){
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        } else if ('EyouGzhLogin' == logintype) {
+            layer_loading('正在处理');
+            var admin_id = $(obj).attr('data-id');
+            $.ajax({
+                type: 'POST',
+                url: '{:url("Admin/mp_unbindwx")}',
+                data: {admin_id:admin_id, _ajax:1},
+                dataType: "JSON",
+                success: function(res){
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }
+    }
 </script>
 
 {include file="public/footer" /}

@@ -1,62 +1,84 @@
-// 确认收货
-function Confirm(order_id,order_code) {
-    layer.confirm('您确认已收到货物？', {
-        title:false,
-        btn: ['是', '否'] //按钮
-    }, function () {
-        // 是
-        var JsonData = d62a4a8743a94dc0250be0c53f833b;
-        var url = JsonData.shop_member_confirm;
+var jsonData = d62a4a8743a94dc0250be0c53f833b;
+var showHeight = '200px;';
+var showWidth = 1 === parseInt(jsonData.is_wap) ? '380px;' : '480px;';
+
+// 取消订单
+function CancelOrder(order_id) {
+    layer.confirm('确定要取消订单？', {
+        title: false,
+        skin: 'xin-demo-btn',
+        btn: ['确定', '取消'], //按钮
+        closeBtn: 0,
+        shadeClose: true
+    }, function() {
         $.ajax({
-            url: url,
-            data: {order_id:order_id,order_code:order_code,_ajax:1},
-            type:'post',
-            dataType:'json',
-            success:function(res){
+            url : jsonData.shop_order_cancel,
+            data: {order_id: order_id},
+            type: 'post',
+            dataType: 'json',
+            success: function(res) {
                 layer.closeAll();
-                if ('1' == res.code) {
-                    window.location.reload();
-                }else{
-                    layer.msg(res.msg, {time: 2000});
+                if (1 === parseInt(res.code)) {
+                    showSuccessMsg(res.msg, function() {
+                        window.location.reload();
+                    });
+                } else {
+                    showErrorMsg(res.msg);
                 }
             }
         });
-    }, function (index) {
-        // 否
-        layer.closeAll(index);
     });
 }
 
 // 提醒发货
-function OrderRemind(order_id,order_code) {
+function OrderRemind(order_id, order_code) {
     layer.confirm('需要提醒管理员发货？', {
-        title:false,
-        btn: ['是', '否'] //按钮
-    }, function () {
-        // 是
-        var JsonData = d62a4a8743a94dc0250be0c53f833b;
-        var url = JsonData.shop_order_remind;
+        title: false,
+        skin: 'xin-demo-btn',
+        btn: ['确定', '取消'], //按钮
+        closeBtn: 0,
+        shadeClose: true
+    }, function() {
         $.ajax({
-            url: url,
-            data: {order_id:order_id,order_code:order_code,_ajax:1},
-            type:'post',
-            dataType:'json',
-            success:function(res){
+            url : jsonData.shop_order_remind,
+            data: {order_id: order_id, order_code: order_code},
+            type: 'post',
+            dataType: 'json',
+            success: function(res) {
                 layer.closeAll();
-                if ('1' == res.code) {
-                    layer.msg(res.msg, {time: 2000});
-                }else{
-                    layer.msg(res.msg, {time: 2000});
-                }
+                showSuccessMsg(res.msg);
             }
         });
-    }, function (index) {
-        // 否
-        layer.closeAll(index);
     });
 }
 
-function LogisticsInquiry(url){
+// 确认收货
+function Confirm(order_id, order_code) {
+    layer.confirm('您确认已收到货物？', {
+        title: false,
+        skin: 'xin-demo-btn',
+        btn: ['确定', '取消'], //按钮
+        closeBtn: 0,
+        shadeClose: true
+    }, function() {
+        $.ajax({
+            url : jsonData.shop_member_confirm,
+            data: {order_id: order_id, order_code: order_code},
+            type: 'post',
+            dataType: 'json',
+            success: function(res) {
+                layer.closeAll();
+                if (1 === parseInt(res.code)) {
+                    window.location.reload();
+                } else {
+                    showErrorMsg(res.msg);
+                }
+            }
+        });
+    });
+}
+
+function LogisticsInquiry(url) {
     //iframe窗
     layer.open({
         type: 2,

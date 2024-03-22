@@ -60,49 +60,38 @@ function EditAddress(){
             layer.alert(e.responseText, {icon: 5});
         }
     });
-};
+}
 
 // 删除收货地址
-function DelAddress(addr_id, obj){
-    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
-
-    layer.confirm('是否删除收货地址？', {
-        title:false,
-        closeBtn: false,
-        btn: ['是', '否'] //按钮
-    }, function () {
-        // 是
-        layer_loading('正在处理');
+function DelAddress(addr_id, obj) {
+    unifiedConfirmBox('确认删除收货地址？', '380px;', '200px;', function() {
+        var parentObj = parent.layer.getFrameIndex(window.name);
         $.ajax({
-            url: $('#DelAddress').val(),
-            data: {addr_id:addr_id,_ajax:1},
-            type:'post',
-            dataType:'json',
-            success:function(res){
+            url : $('#DelAddress').val(),
+            data: {addr_id: addr_id},
+            type: 'post',
+            dataType: 'json',
+            success: function(res) {
                 layer.closeAll();
-                if (1 == res.code) {
+                if (1 === parseInt(res.code)) {
                     var _parent = parent;
                     _parent.layer.close(parentObj);
                     _parent.$('#UlHtml').find("#"+addr_id+'_ul_li').remove();
-                    _parent.layer.msg(res.msg, {time: 1000});
-                }else{
-                    layer.msg(res.msg, {time: 2000});
+                    _parent.showSuccessMsg(res.msg);
+                } else {
+                    showErrorMsg(res.msg);
                 }
             },
             error: function (e) {
                 layer.closeAll();
-                layer.alert(e.responseText, {icon: 5, title:false});
+                showErrorAlert(e.responseText);
             }
         });
-    }, function (index) {
-        // 否
-        layer.closeAll(index);
     });
 }
 
 // 更新收货地址html
-function EditHtml(data)
-{   
+function EditHtml(data) {   
     // 获取修改后的值
     var consignee = data.consignee;
     var mobile    = data.mobile;
@@ -119,8 +108,5 @@ function EditHtml(data)
         parent.$('#UlHtml').find('.defaultTxt_1610180641').attr('data-is_default', 0).hide();
         var currentObj = parent.$('#UlHtml').find('#'+data.addr_id+'_ul_li');
         currentObj.find('.defaultTxt_1610180641').attr('data-is_default', 1).show();
-        // var edithtml = '<div class="el-col el-col-24" id="'+data.addr_id+'_ul_li">'+currentObj.html()+'</div>';
-        // currentObj.remove();
-        // parent.$('#UlHtml').prepend(edithtml);
     }
 }

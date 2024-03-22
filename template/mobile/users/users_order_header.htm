@@ -1,0 +1,20 @@
+<div class="ey-header-status">
+    <div class="header-status-l"><a href="{eyou:url link='user/Users/index'/}"><i class="el-icon-arrow-left"></i></a></div>
+    <div class="header-status-m">会员订单</div>
+    <div class="header-status-r"></div>
+</div>
+<div class="h50"></div>
+
+<div class="oper-row" >
+    <div class="oper-row-roll">
+        {if condition="isset($partChannel['article']['data']['is_article_pay']) && $partChannel['article']['data']['is_article_pay'] == 1"}
+        <a class="oper-row-button {if $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'article_index'} active {/if}" href="{eyou:url link='user/Users/article_index'/}"> 文章订单 </a>
+        {/if}
+        {if condition="isset($partChannel['download']['data']['is_download_pay']) && $partChannel['download']['data']['is_download_pay'] == 1"}
+        <a class="oper-row-button {if $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'download_index'} active {/if}" href="{eyou:url link='user/Users/download_index'/}"> 下载订单 </a>
+        {/if}
+        {if condition="isset($partChannel['media']['data']['is_media_pay']) && $partChannel['media']['data']['is_media_pay'] == 1"}
+        <a class="oper-row-button {if $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'media_index'} active {/if}" href="{eyou:url link='user/Users/media_index'/}"> 视频订单 </a>
+        {/if}
+    </div>
+</div>

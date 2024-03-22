@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 namespace think;
 
@@ -542,32 +551,62 @@ class Template
                 if (null == $is_mobile) {
                     $is_mobile = isMobile();
                 }
+                static $city_switch_on = null;
+                if (null == $city_switch_on) {
+                    $city_switch_on = config('city_switch_on');
+                }
+                static $site_template = null;
+                if ($city_switch_on && null == $site_template) {
+                    $site_template = config('tpcache.site_template');
+                }
+                static $home_site = null;
+                if (null == $home_site) {
+                    $home_site = get_home_site();
+                }
                 /*end*/
                 foreach ($matches as $match) {
                     $array = $this->parseAttr($match[0]);
                     $file  = $array['file'];
-                    if ( (defined('MODULE_NAME') && 'admin' != MODULE_NAME) || !defined('MODULE_NAME') && 'admin' != Request::instance()->module() ) {
-                        if (!empty($is_mobile)) {
-                            if (file_exists('./template/'.TPL_THEME.'pc/'.$web_users_tpl_theme.'/'.$users_wap_tpl_dir.'/users_login.htm') && preg_match('/^users(_([^\/]*))?\//i', $file)) {
-                                $file = str_ireplace("{$web_users_tpl_theme}/", "{$web_users_tpl_theme}/{$users_wap_tpl_dir}/", $file);
-                            }
-                            else if (file_exists('./template/'.TPL_THEME.'pc/ask/'.$users_wap_tpl_dir) && preg_match('/^ask(_([^\/]*))?\//i', $file)) {
-                                $file = str_ireplace("ask/", "ask/{$users_wap_tpl_dir}/", $file);
-                            }
+                    // 插件引入会员中心模板跟随会员中心模板风格
+                    if ('plugins' == MODULE_NAME && preg_match('/\/template\/(pc|mobile)\//i', $file)) {
+                        $file = '.'. $file;
+                        if (!empty($tpl_theme)) {
+                            $file = preg_replace('/\/template\/'.$tpl_theme.'\/(pc|mobile)\/users(_([^\/]*))?\//', '/template/'.$tpl_theme.'/${1}/'.$web_users_tpl_theme.'/', $file);
+                        } else {
+                            $file = preg_replace('/\/template\/(pc|mobile)\/users(_([^\/]*))?\//', '/template/${1}/'.$web_users_tpl_theme.'/', $file);
                         }
-                        $file = preg_replace('/^users(_([^\/]*))?\//', $web_users_tpl_theme.'/', $file); // 支持会员中心模板切换
-                    }
-                    if (preg_match('/^([^\\/]+)(.*)\.'.$this->config['view_suffix'].'$/i', $file) === 1) {
-                        // 支持模板引入的写法： {eyou:include file="header.htm" /} 或者 {eyou:include file="header" /}  或者 {eyou:include file="users/header.htm" /} 或者 {eyou:include file="users/header" /}
-                        $file = str_replace('.'.$this->config['view_suffix'], '', $file);
-                    } else if (stristr($file, '.'.$this->config['view_suffix']) && (stristr($file, '/') || stristr($file, '\\'))) {
-                        // 支持绝对路径的模板引入写法： {eyou:include file="/template/pc/header.htm" /}
-                        $file  = '.'.$file;
-                        if (preg_match('/\/template\/(pc|mobile)\//i', $file)) {
-                            $file = str_replace('./template/', './template/'.TPL_THEME, $file);
+                    } else {
+                        if ( (defined('MODULE_NAME') && 'admin' != MODULE_NAME) || !defined('MODULE_NAME') && 'admin' != Request::instance()->module() ) {
+                            if (!empty($is_mobile)) {
+                                if (file_exists('./template/'.TPL_THEME.'pc/'.$web_users_tpl_theme.'/'.$users_wap_tpl_dir.'/users_login.htm') && preg_match('/^users(_([^\/]*))?\//i', $file)) {
+                                    $file = str_ireplace("{$web_users_tpl_theme}/", "{$web_users_tpl_theme}/{$users_wap_tpl_dir}/", $file);
+                                }
+                                else if (!is_dir('./weapp/Ask/') && file_exists('./template/'.TPL_THEME.'pc/ask/'.$users_wap_tpl_dir) && preg_match('/^ask(_([^\/]*))?\//i', $file)) {
+                                    $file = str_ireplace("ask/", "ask/{$users_wap_tpl_dir}/", $file);
+                                }
+                            }
+                            $file = preg_replace('/^users(_([^\/]*))?\//', $web_users_tpl_theme.'/', $file); // 支持会员中心模板切换
                         }
-                        // 支持会员中心模板切换
-                        $file = preg_replace('/\/template\/'.$tpl_theme.'\/(pc|mobile)\/users(_([^\/]*))?\//', '/template/'.$tpl_theme.'/${1}/'.$web_users_tpl_theme.'/', $file);
+                        if (preg_match('/^([^\\/]+)(.*)\.'.$this->config['view_suffix'].'$/i', $file) === 1) {
+                            // 支持模板引入的写法： {eyou:include file="header.htm" /} 或者 {eyou:include file="header" /}  或者 {eyou:include file="users/header.htm" /} 或者 {eyou:include file="users/header" /}
+                            $file = str_replace('.'.$this->config['view_suffix'], '', $file);
+                            // 多城市站点的独立模板
+                            if ($city_switch_on && !empty($site_template) && !empty($home_site) && !preg_match('/^users(_([^\/]*))?\//i', $file)) {
+                                if (file_exists('./template/'.THEME_STYLE_PATH.'/city/'.$home_site)) {
+                                    $file = 'city/'.$home_site.'/'.$file;
+                                } else if (file_exists('./template/'.THEME_STYLE_PATH.'/'.$home_site)) {
+                                    $file = $home_site.'/'.$file;
+                                }
+                            }
+                        } else if (stristr($file, '.'.$this->config['view_suffix']) && (stristr($file, '/') || stristr($file, '\\'))) {
+                            // 支持绝对路径的模板引入写法： {eyou:include file="/template/pc/header.htm" /}
+                            $file  = '.'.$file;
+                            if (preg_match('/\/template\/(pc|mobile)\//i', $file)) {
+                                $file = str_replace('./template/', './template/'.TPL_THEME, $file);
+                            }
+                            // 支持会员中心模板切换
+                            $file = preg_replace('/\/template\/'.$tpl_theme.'\/(pc|mobile)\/users(_([^\/]*))?\//', '/template/'.$tpl_theme.'/${1}/'.$web_users_tpl_theme.'/', $file);
+                        }
                     }
                     unset($array['file']);
                     // 分析模板文件名并读取内容
@@ -616,6 +655,18 @@ class Template
                 if (null == $is_mobile) {
                     $is_mobile = isMobile();
                 }
+                static $city_switch_on = null;
+                if (null == $city_switch_on) {
+                    $city_switch_on = config('city_switch_on');
+                }
+                static $site_template = null;
+                if ($city_switch_on && null == $site_template) {
+                    $site_template = config('tpcache.site_template');
+                }
+                static $home_site = null;
+                if (null == $home_site) {
+                    $home_site = get_home_site();
+                }
                 /*end*/
                 foreach ($matches as $match) {
                     $array = $this->parseAttr($match[0]);
@@ -625,7 +676,7 @@ class Template
                             if (file_exists('./template/'.TPL_THEME.'pc/'.$web_users_tpl_theme.'/'.$users_wap_tpl_dir.'/users_login.htm') && preg_match('/^users(_([^\/]*))?\//i', $file)) {
                                 $file = str_ireplace("{$web_users_tpl_theme}/", "{$web_users_tpl_theme}/{$users_wap_tpl_dir}/", $file);
                             }
-                            else if (file_exists('./template/'.TPL_THEME.'pc/ask/'.$users_wap_tpl_dir) && preg_match('/^ask(_([^\/]*))?\//i', $file)) {
+                            else if (!is_dir('./weapp/Ask/') && file_exists('./template/'.TPL_THEME.'pc/ask/'.$users_wap_tpl_dir) && preg_match('/^ask(_([^\/]*))?\//i', $file)) {
                                 $file = str_ireplace("ask/", "ask/{$users_wap_tpl_dir}/", $file);
                             }
                         }
@@ -634,6 +685,14 @@ class Template
                     if (preg_match('/^([^\\/]+)(.*)\.'.$this->config['view_suffix'].'$/i', $file) === 1) {
                         // 支持模板引入的写法： {eyou:include file="header.htm" /} 或者 {eyou:include file="header" /}  或者 {eyou:include file="users/header.htm" /} 或者 {eyou:include file="users/header" /}
                         $file = str_replace('.'.$this->config['view_suffix'], '', $file);
+                        // 多城市站点的独立模板
+                        if ($city_switch_on && !empty($site_template) && !empty($home_site) && !preg_match('/^users(_([^\/]*))?\//i', $file)) {
+                            if (file_exists('./template/'.THEME_STYLE_PATH.'/city/'.$home_site)) {
+                                $file = 'city/'.$home_site.'/'.$file;
+                            } else if (file_exists('./template/'.THEME_STYLE_PATH.'/'.$home_site)) {
+                                $file = $home_site.'/'.$file;
+                            }
+                        }
                     } else if (stristr($file, '.'.$this->config['view_suffix']) && (stristr($file, '/') || stristr($file, '\\'))) {
                         // 支持绝对路径的模板引入写法： {eyou:include file="/template/pc/header.htm" /}
                         $file  = '.'.$file;

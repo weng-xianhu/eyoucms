@@ -31,7 +31,7 @@
                     <label for="seo_keywords">SEO关键词</label>
                 </dt>
                 <dd class="opt">
-                    <textarea rows="5" cols="60" name="seo_keywords" id="seo_keywords" style="height: 40px;">{$info['seo_keywords']|default=''}</textarea>
+                    <textarea rows="5" cols="60" name="seo_keywords" id="seo_keywords" style="height: 20px;">{$info['seo_keywords']|default=''}</textarea>
                     <p class="notic"></p>
                 </dd>
             </dl>
@@ -76,7 +76,7 @@
                 if (1 == res.code) {
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                         _parent.window.location.reload();
                     });
                 } else {

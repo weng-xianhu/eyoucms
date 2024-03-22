@@ -1,0 +1,170 @@
+{include file="public/layout" /}
+<script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;padding-bottom: 15px;">
+    <div class="flexigrid flexigrid-xin">
+        <div class="header-bar">
+            <div class="more">
+                <div class="search">
+                    <div class="content">
+                        <form id="postForm" action="{:url('ShopService/users_edit_after_service')}" method="get" onsubmit="layer_loading('正在处理');" style="display: unset;">
+                            {$searchform.hidden|default=''}
+                            <input type="hidden" name="users_id" value="{$Request.param.users_id}">
+                            <div class="ey-form-item"><label class="users-form-item-label">关键词：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <!-- 订单号查询 -->
+                                            <div class="sDiv2">
+                                                <input type="text" size="50" name="order_code" id="order_code" value="{$Request.param.order_code}" class="qsbox" style="width: 170px;" placeholder="订单号或商品名称...">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="ey-form-item" style="margin-left: 20px;">
+                            <div class="users-form-item-content">
+                                <span class="bt-xin" onclick="OrderQuery();">查询</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="geduan-xin"></div>
+</div>
+
+<div class="page" style="min-width:auto;">
+    <div class="flexigrid flexigrid-xin" style=" padding-right: 1px; ">
+        <div class="tableDiv  bubbleInfo">
+            <table cellspacing="0" cellpadding="0" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th align="center" abbr="article_title" axis="col3"> <div class="">商品信息</div> </th>
+                        <th abbr="article_time" axis="col6" class="w200"> <div class="">单价/数量</div> </th>
+                        <th abbr="article_time" axis="col6" class="w240"> <div class="">退还金额</div> </th>
+                        <th abbr="article_time" axis="col6" class="w160"> <div class="">处理状态</div> </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {empty name="Service"}
+                    <tr>
+                        <td class="no-data" align="center" axis="col0" colspan="50">
+                            <div class="">
+                                <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                            </div>
+                        </td>
+                    </tr>
+                {else/}
+                    {volist name="Service" id="vo"}
+                    <tr class="order-empty"> <td colspan="8"></td> </tr>
+                    <tr>
+                        <td class="biaotou" colspan="8">
+                             <span class="mr15" style=" display: flex; flex-direction: row; align-items: center; ">
+                                <i class="iconfont e-shijian"></i><span class="mr15">{$vo.add_time}</span>
+                                <span class="mr15">订单号：{$vo.order_code} <a class="copy order_code" onclick="OrderCopy('order_code');" data-clipboard-text="{$vo.order_code}">复制</a></span>
+                                <span class="mr15">服务单号：{$vo.refund_code} <a class="copy refund_code" onclick="OrderCopy('refund_code');" data-clipboard-text="{$vo.refund_code}">复制</a></span>
+                             </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="goods-detail">
+                                <div class="goods-image">
+                                    <a href="{$vo.arcurl}" target="_blank"><img src="{$vo.product_img}"></a>
+                                </div>
+                                <div class="goods-info">
+                                    <p class="goods-title"><!-- <span class="shi">实</span> -->{$vo.product_name}</p>
+                                    <p class="goods-spec">{$vo.product_spec}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class=""><p style="font-weight: 600;">￥{$vo.product_price} X {$vo.num}</p></td>
+                        <td class="" rowspan="1"><p>￥{$vo.refund_price}</p></td>
+                        <td class="" rowspan="1">
+                            <p>
+                                {if condition="1 == $vo.status"}
+                                <span class="zt" style="color: #ff9900;">{$ServiceStatus[$vo.status]|default=''}</span>
+                                {elseif condition="in_array($vo.status, [2, 4, 5, 6, 7])"}
+                                <span class="zt" style="color: #19be6b;">{$ServiceStatus[$vo.status]|default=''}</span>
+                                {else}
+                                <span class="zt" style="color: #939799;">{$ServiceStatus[$vo.status]|default=''}</span>
+                                {/if}
+                            </p>
+                        </td>
+                    </tr>
+                    {/volist}
+                {/empty}
+                </tbody>
+            </table>
+        </div>
+        {notempty name="list"}
+        <div class="tDiv"> <div class="tDiv2"> {include file="public/page" /} </div> <div style="clear:both"></div> </div>
+        {/notempty}
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#add_time_begin' //指定元素
+        });
+        laydate.render({
+            elem: '#add_time_end' //指定元素
+        });
+    });
+
+    $(document).ready(function() {
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    // 订单查询
+    function OrderQuery(isReset) {
+        if (isReset && 'reset' == isReset) {
+            window.location.href = "{:url('ShopService/after_service')}";
+        } else {
+            $('#postForm').submit();
+        }
+    }
+
+    // 订单号复制
+    function OrderCopy(copyClass) {
+        var clipboard1 = new Clipboard("." + copyClass);
+        clipboard1.on("success", function(e) {
+            layer.msg("复制成功");
+        });
+        clipboard1.on("error", function(e) {
+            layer.msg("复制失败！请手动复制", {icon: 5});
+        }); 
+    }
+</script>
+
+{include file="public/footer" /}

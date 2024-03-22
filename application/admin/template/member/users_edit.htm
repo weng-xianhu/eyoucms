@@ -4,208 +4,489 @@
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+{empty name='$iframe'}
+{include file="member/left" /}
+<div class="page" style="min-width:auto;margin-left:100px;">
+{else /}
+<div class="page" style="min-width:auto;">
+{/empty}
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="{:url('Member/users_index')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
-            <ul class="tab-base nc-row">
-                <li><a href="javascript:void(0);" class="current"><span>编辑会员</span></a></li>
-            </ul>
-        </div>
-    </div>
-    <form class="form-horizontal" id="postForm" action="{:url('Member/users_edit')}" method="post">
-        <div class="ncap-form-default">
-            <dl class="row"><dt class="tit"><label><b>基本资料</b></label></dt></dl>
-            <dl class="row">
-                <dt class="tit">
-                    <label for="username">会员头像</label>
-                </dt>
-                <dd class="opt">
-                    <div class="txpic" onClick="GetUploadify(1,'','allimg','head_pic_call_back');">
-                        <input type="hidden" name="head_pic" id="head_pic" value="{$info.head_pic}" />
-                        <img id="img_head_pic" src="{$info.head_pic|get_head_pic=###}" />
-                        <em>更换头像</em>
-                    </div>
-                </dd>
-            </dl>
-            <dl class="row">
-                <dt class="tit">
-                    <label for="username">用&nbsp;&nbsp;户&nbsp;&nbsp;名</label>
-                </dt>
-                <dd class="opt">
-                    {$info.username}
-                </dd>
-            </dl>
-            <dl class="row">
-                <dt class="tit">
-                    <label for="nickname">会员昵称</label>
-                </dt>
-                <dd class="opt">
-                    <input type="text" name="nickname" id="nickname" value="{$info.nickname}" class="input-txt">
-                </dd>
-            </dl>
-            <dl class="row">
-                <dt class="tit">
-                    <label for="password">登录密码</label>
-                </dt>
-                <dd class="opt">
-                    <input type="text" name="password" id="password" autocomplete="off" class="input-txt" placeholder="不修改留空">
-                </dd>
-            </dl>
-            <dl class="row {if condition="empty($userConfig['level_member_upgrade'])"} none {/if} ">
-                <dt class="tit">
-                    <label for="level">会员级别</label>
-                </dt>
-                <dd class="opt">
-                    <select name="level" id="level" onchange="IsOpenDays(this);">
-                        {volist name='$level' id='vo'}
-                            <option value="{$vo.level_id}" {eq name="$info.level" value="$vo.level_id"}selected{/eq}>{$vo.level_name}</option>
-                        {/volist}
-                    </select>
-                    <span class="err"></span>
-                    <p class="notic"></p>
-                </dd>
-            </dl>
-
-            {if condition="1 == $userConfig.level_member_upgrade"}
-                <dl class="row" {eq name="$info.level" value="1"}style="display: none;"{/eq} id='users_days'>
-                    <dt class="tit">
-                        <label for="users_days"><em>*</em>会员天数</label>
-                    </dt>
-                    <dd class="opt">
-                        <input type="text" name="level_maturity_days_up" id="level_maturity_days" value="{$info.level_maturity_days_new|default='0'}" onkeyup="this.value=this.value.replace(/[^0-9]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/\[^0-9]/g,''));" maxlength="10">
-                        <span class="err"></span>
-                        <p class="notic">请填写会员有效期天数，不填写则会默认为注册会员！</p>
-                    </dd>
-                </dl>
-                <input type="hidden" name="level_maturity_days_new" value="{$info.level_maturity_days_new}">
-                <input type="hidden" name="level_maturity_days_old" value="{$info.level_maturity_days}">
+        <div class="item-title" style="margin: 0;padding-bottom: 12px;border: unset;">
+            {if condition='$Request.param.layer == 1'}
+            <a class="back_xin" href="javascript:void(0);" onclick="parent.layer.closeAll();" ><i class="iconfont e-fanhui"></i></a>
+            {else /}
+            <a class="back_xin" href="javascript:history.back();"><i class="iconfont e-fanhui"></i></a>
             {/if}
-            <input type="hidden" id="level_member_upgrade" value="{$userConfig.level_member_upgrade|default='0'}">
-
-            {if condition="1 == $userConfig.pay_open"}
-            <dl class="row">
-                <dt class="tit">
-                    <label for="users_money">账户余额</label>
-                </dt>
-                <dd class="opt">
-                    <input type="text" name="users_money" id="users_money" value="{$info.users_money|default='0.00'}" onkeyup='this.value=this.value.replace(/[^\d.]/g,"");' onpaste='this.value=this.value.replace(/[^\d.]/g,"")' maxlength="10">&nbsp;元
-                    <p class="notic"></p>
-                </dd>
-            </dl>
-            {/if}
-            {if condition="$php_servicemeal > 1"}
-            <dl class="row">
-                <dt class="tit">
-                    <label for="coin">会员{$scoreCofing['score_name']|default='积分'}</label>
-                </dt>
-                <dd class="opt">
-                    <input type="text" name="scores" id="scores" value="{$info.scores|default='0'}" onkeyup='this.value=this.value.replace(/[^\d]/g,"");' onpaste='this.value=this.value.replace(/[^\d]/g,"")' maxlength="10">
-                    <p class="notic"></p>
-                </dd>
-            </dl>
-            {/if}
-            <dl class="row">
-                <dt class="tit">
-                    <label>是否激活</label>
-                </dt>
-                <dd class="opt">
-                    <div class="onoff">
-                        <label for="is_activation1" class="cb-enable {if condition='$info.is_activation eq 1'}selected{/if}">是</label>
-                        <label for="is_activation0" class="cb-disable {if condition='$info.is_activation eq 0'}selected{/if}">否</label>
-                        <input id="is_activation1" name="is_activation" value="1" type="radio" {if condition="$info.is_activation eq 1"} checked="checked"{/if}>
-                        <input id="is_activation0" name="is_activation" value="0" type="radio" {if condition="$info.is_activation eq 0"} checked="checked"{/if}>
-                    </div>
-                    <p class="notic"></p>
-                </dd>
-            </dl>
-            <dl class="row">
-                <dt class="tit">
-                    <label for="reg_time">注册日期</label>
-                </dt>
-                <dd class="opt">
-                    {$info.reg_time|date='Y-m-d H:i:s',###}
-                </dd>
-            </dl>
-            <dl class="row">
-                <dt class="tit">
-                    <label for="last_login">最后登录</label>
-                </dt>
-                <dd class="opt">
-                    {$info.last_login|date='Y-m-d H:i:s',###}
-                </dd>
-            </dl>
-            {notempty name='$users_para'}
-            <dl class="row"><dt class="tit"><label><b>更多资料</b></label></dt></dl>
-            {include file="member/users_field"/}
-            {/notempty}
-            <dl class="row">
-                <dt class="tit">
-                    <label for="last_login">快捷操作</label>
-                </dt>
-                <dd class="opt">
-                    <a href="{:url('Member/syn_users_login', ['users_id'=>$info.users_id, 'mca'=>'user/Users/index'])}" target="_blank">登录到此用户会员中心</a>
-                </dd>
-            </dl>
-            <div class="bot">
-                <input type="hidden" name="users_id" value="{$info.users_id}">
-                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            <div class="subject">
+                <h3>编辑会员</h3>
+                <h5></h5>
+            </div>
+            <div class="right">
+                <div class="fbutton">
+                    {eq name='$info.is_lock' value='-1'}
+                    <a onclick="change_is_lock(this);" data-value="0" class="duobt">恢复发言</a>
+                    {/eq}
+                    {eq name='$info.is_lock' value='-99'}
+                    <a onclick="change_is_lock(this);" data-value="0" class="duobt">移除黑名单</a>
+                    {else /}
+                    <a onclick="change_is_lock(this);" data-value="-99" class="duobt">加入黑名单</a>
+                    {/eq}
+                    <a class="duobt" data-url="{:url('Member/users_del')}" data-id="{$info.users_id}" data-admin_id="{$info.admin_id}" data-username="{$info.username}" onClick="usersdel(this);">删除</a>
+                </div>
             </div>
         </div>
-    </form>
+    </div>
+    <div class="users-tabs-content">
+        <div class="users-tabs-tabpane">
+            <form class="" id="postForm" action="{:url('Member/users_edit')}" method="post">
+                {:token('__token_users_edit__')}
+                <input type="hidden" name="users_id" value="{$info.users_id}">
+                <input type="hidden" name="nickname" id="nickname" value="{$info.nickname}">
+                <input type="hidden" name="is_lock" id="is_lock" value="{$info.is_lock}">
+                <div class="vip-detail-base">
+                    <div class="content">
+                        <div class="base">
+                            <div class="form-title hasMargin">
+                                基本资料
+                            </div>
+                            <div class="user-image-r">
+                                <div class="user-image-p"
+                                     onClick="GetUploadify(1,'','allimg','head_pic_call_back');">
+                                    <input type="hidden" name="head_pic" id="head_pic" value="{$info.head_pic}"/>
+                                    <img id="img_head_pic"
+                                         src="{$info.head_pic|get_head_pic=###,false,$info['sex']}" title="修改头像"
+                                         style="cursor: pointer;"/>
+                                </div>
+                                <div class="user-image-n">
+                                   ID：{$info.users_id}
+                                </div>
+                                <div class="user-image-h"><i class="iconfont e-zhuye"></i><a
+                                        href="{:url('Member/syn_users_login', ['users_id'=>$info.users_id, 'mca'=>'user/Users/index'])}"
+                                        target="_blank">个人中心</a>
+                                </div>
+                            </div>
+                            <div class="base-information users-row">
+                                <div class="users-col">
+                                    <div class="user">
+                                        <div class="users-form-con">
+                                            <div class="users-form-item">
+                                                <label class="users-form-item-label">用户昵称：</label>
+                                                <div class="users-form-item-content">
+                                                    <div class="text"><span class="n-name">{$info.nickname|html_msubstr=###,0,20,true}</span> <a onclick="edit_nickname();"><i class="iconfont e-bianji2"></i></a></div>
+                                                </div>
+                                            </div>
+                                            <div class="users-form-item">
+                                                <label class="users-form-item-label">用户名称：</label>
+                                                <div class="users-form-item-content">
+                                                    <div class="text">{$info.username}</div>
+                                                </div>
+                                            </div>
+                                            <div class="users-form-item">
+                                                <label class="users-form-item-label">登录密码：</label>
+                                                <div class="users-form-item-content">
+                                                    <input type="text" name="password" id="password"
+                                                           autocomplete="off" class="input-txt" placeholder="不修改留空">
+                                                </div>
+                                            </div>
+                                            <div class="users-form-item">
+                                                <label class="users-form-item-label">绑定信息：</label>
+                                                <div class="users-form-item-content">
+                                                    <div class="source">
+                                                        <div class="users-tooltip">
+                                                            <div class="users-tooltip-rel" style=" display: table-cell; ">
+                                                                {eq name='$info.is_mobile' value='1'}
+                                                                <img src="__SKIN__/images/r_phone.png">
+                                                                {else /}
+                                                                <img src="__SKIN__/images/r_phone_no.png">
+                                                                {/eq}
+                                                            </div>
+                                                        </div>
+                                                        <div class="users-tooltip">
+                                                            <div class="users-tooltip-rel" style=" display: table-cell; ">
+                                                                {if condition="in_array($info['thirdparty'], [5]) || !empty($info['wxlogin']['openid'])"}
+                                                                <img src="__SKIN__/images/r_weixin.png">
+                                                                {else /}
+                                                                <img src="__SKIN__/images/r_weixin_no.png">
+                                                                {/if}
+                                                            </div>
+                                                        </div>
+                                                        <div class="users-tooltip">
+                                                            <div class="users-tooltip-rel" style=" display: table-cell; ">
+                                                                {if condition="in_array($info['thirdparty'], [6])"}
+                                                                <img src="__SKIN__/images/r_wechat.png">
+                                                                {else /}
+                                                                <img src="__SKIN__/images/r_wechat_no.png">
+                                                                {/if}
+                                                            </div>
+                                                        </div>
+                                                        <div class="users-tooltip">
+                                                            <div class="users-tooltip-rel" style=" display: table-cell; ">
+                                                                {if condition="!empty($info.qqlogin)"}
+                                                                <img src="__SKIN__/images/r_qq.png">
+                                                                {else /}
+                                                                <img src="__SKIN__/images/r_qq_no.png">
+                                                                {/if}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="users-form-con">
+                                            <div class="users-form-item">
+                                                <label class="users-form-item-label">会员级别：</label>
+                                                <div class="users-form-item-content">
+                                                    <select name="level" id="level" onchange="IsOpenDays(this);">
+                                                        {volist name='$level' id='vo'}
+                                                        <option value="{$vo.level_id}" {eq name="$info.level" value="$vo.level_id" }selected{/eq}>{$vo.level_name}</option>
+                                                        {/volist}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="users-form-item" {eq name="$info.level" value="1"}style="display: none;"{/eq} id="users_days" >
+                                                <label class="users-form-item-label">会员天数：</label>
+                                                <div class="users-form-item-content">
+                                                    <input type="text" name="level_maturity_days_up"
+                                                           id="level_maturity_days"
+                                                           value="{$info.level_maturity_days_new|default='0'}"
+                                                           onkeyup="this.value=this.value.replace(/[^0-9]/g,'');"
+                                                           onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/\[^0-9]/g,''));"
+                                                           maxlength="10" class="input-txt">
+                                                    <p class="notic">请填写会员有效期天数，不填写则会默认为注册会员！</p>
+                                                </div>
+                                                <input type="hidden" name="level_maturity_days_new" value="{$info.level_maturity_days_new}">
+                                                <input type="hidden" name="level_maturity_days_old" value="{$info.level_maturity_days}">
+                                                <input type="hidden" id="level_member_upgrade" value="1">
+                                            </div>
+
+                                            <div class="users-form-item">
+                                                <label class="users-form-item-label">手机号码：</label>
+                                                <div class="users-form-item-content">
+                                                    <input type="text" name="users_[mobile_1]" id="users__mobile_1" autocomplete="off"
+                                                           class="input-txt" value="{$info.mobile}">
+                                                </div>
+                                            </div>
+                                            <div class="users-form-item">
+                                                <label class="users-form-item-label">邮箱地址：</label>
+                                                <div class="users-form-item-content">
+                                                    <input type="text" id="users__email_2" name="users_[email_2]"  autocomplete="off"
+                                                           class="input-txt" value="{$info.email}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="users-form-con">
+                                            
+                                            <div class="users-form-item">
+                                                <label class="users-form-item-label">注册时间：</label>
+                                                <div class="users-form-item-content">
+                                                    <div class="text">{$info.reg_time|date='Y-m-d H:i:s',###}</div>
+                                                </div>
+                                            </div>
+                                            <div class="users-form-item">
+                                                <label class="users-form-item-label">最后登录：</label>
+                                                <div class="users-form-item-content">
+                                                    <div class="text">{$info.last_login|date='Y-m-d H:i:s',###}</div>
+                                                </div>
+                                            </div>
+                                            <div class="users-form-item">
+                                                <label class="users-form-item-label">登录 IP：</label>
+                                                <div class="users-form-item-content">
+                                                    <div class="text">{$info.last_ip}</div>
+                                                </div>
+                                            </div>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {notempty name='$users_para'}
+                            
+                            <div class="base-information users-row">
+                                <div class="users-col-z">
+                                    <div class="user">
+                                        {include file="member/users_field"/}
+                                    </div>
+                                </div>
+                            </div>
+                            {/notempty}
+                            <div class="base-information users-row">
+                                <div class="users-col-z">
+                                    <div class="footer-btn">
+                                        <button type="button" class="black-l users-btn" onclick="checkForm();">
+                                            <span>保存</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="asset">
+                            <div class="form-title hasMargin">
+                                财务信息
+                            </div>
+                            <div class="asset-information users-row">
+                                <div class="users-col users-col-span-4">
+                                    <div class="asset-information-content">
+                                        <div class="asset-head">
+                                            <p class="title-l">余额</p>
+                                            <div class="title-r">
+                                                <button type="button" class="users-btn users-btn-text"
+                                                        href="javascript:void(0);"
+                                                        data-href="{:url('Member/users_edit_money',['users_id'=>$info.users_id])}"
+                                                        onclick="openFullframe(this, '余额充值', '640px', '430px');">
+                                                    <span>充值</span>
+                                                </button>
+                                                <button type="button" class="users-btn users-btn-text" onclick="openFullframe(this, '余额明细', '1150px', '720px');"
+                                                        data-href="{:url('Member/users_money_detail',['users_id'=>$info.users_id])}">
+                                                    <span>明细</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="asset-con">
+                                            <p class="data">￥{$info.users_money|floatval=###}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="users-col users-col-span-4">
+                                    <div class="asset-information-content">
+                                        <div class="asset-head">
+                                            <p class="title-l">积分</p>
+                                            <div class="title-r">
+                                                <button type="button" class="users-btn users-btn-text"
+                                                        href="javascript:void(0);"
+                                                        data-href="{:url('Member/users_edit_score',['users_id'=>$info.users_id])}"
+                                                        onclick="openFullframe(this, '积分充值', '640px', '430px');">
+                                                    <span>充值</span>
+                                                </button>
+                                                <button type="button" class="users-btn users-btn-text"
+                                                        onclick="openFullframe(this, '积分明细', '1150px', '720px');"
+                                                        data-href="{:url('Member/users_score_detail',['users_id'=>$info.users_id])}">
+                                                    <span>明细</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="asset-con">
+                                            <p class="data">{$info.scores|default='0'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {if condition='1 == $usersConfig.shop_open && 1 == $usersConfig.pay_open'}
+                        <div class="deal">
+                            <div class="form-title hasMargin">
+                                订单信息
+                            </div>
+                            <div class="deal-information users-row">
+                                <div class="users-col users-col-span-xxl-6">
+                                    <div class="deal-information-content">
+                                        <div class="tit-name">订单交易</div>
+                                        <div class="flex-a-center  flex-dir-row flex-just-between Statistics_center_left_item_list">
+                                            <p class="flex-dir-column">
+                                                <span class="column-shu sort_style" data-href="{:url('Shop/users_edit_order_index',['users_id'=>$info.users_id])}"
+                                                      onclick="openFullframe(this, '订单列表', '100%', '100%');">
+                                                {$order_count.0.count|default=0}笔</span>
+                                                <span class="column-biao">累计订单数</span>
+                                            </p>
+                                            <p class="flex-dir-column tr">
+                                                <span class="column-shu">￥{$order_count.0.sum|default=0}</span>
+                                                <span class="column-biao">累计成交额</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="users-col users-col-span-xxl-6">
+                                    <div class="deal-information-content">
+                                        <div class="tit-name">退款订单</div>
+                                        <div class="flex-a-center  flex-dir-row flex-just-between Statistics_center_left_item_list">
+                                            <p class="flex-dir-column">
+                                                <span class="column-shu sort_style" data-href="{:url('ShopService/users_edit_after_service',['users_id'=>$info.users_id])}"
+                                                  onclick="openFullframe(this, '退款订单列表', '100%', '100%');">
+                                                 {$refund_count.0.count|default=0}笔</span>
+                                                <span class="column-biao">累计退款数</span>
+                                            </p>
+                                            <p class="flex-dir-column tr">
+                                                <span class="column-shu">￥{$refund_count.0.sum|default=0}</span>
+                                                <span class="column-biao">累计退款额</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {/if}
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+<input type="hidden" name="security_ask_old" id="security_ask_old" value="{$global['security_ask']|default=''}">
 
 <script type="text/javascript">
-    function IsOpenDays(obj){
+    function edit_nickname() {
+        layer.prompt({
+            value: '{$info.nickname|default=""}',
+            title: '修改昵称',
+        }, function(value, index, elem){
+            $('#nickname').val(value);
+            checkForm();
+            layer.close(index);
+        });
+    }
+
+    function IsOpenDays(obj) {
         if (1 == $('#level_member_upgrade').val()) {
+            var exptime = 0;
             var level_id = $(obj).val();
             if (1 == level_id) {
-                $('#users_days').css('display','none');
-            }else{
-                $('#users_days').css('display','');
-                $('#level_maturity_days').css('border-color','red').focus();
+                $('#users_days').css('display', 'none');
+                $('#level_maturity_days').val(exptime);
+            } else {
+                $.ajax({
+                    type: 'post',
+                    url : "{:url('Member/query_level_days')}",
+                    data: {level_id: level_id, '_ajax': 1},
+                    dataType: 'json',
+                    success: function (res) {
+                        layer.closeAll();
+                        if (res.code == 1) {
+                            exptime = parseInt(res.data);
+                            $('#level_maturity_days').val(exptime);
+                        } else {
+                            showErrorMsg(res.msg);
+                        }
+                    },
+                    error: function (e) {
+                        layer.closeAll();
+                        showErrorAlert(e.responseText);
+                    }
+                });
+                $('#users_days').css('display', '');
+                $('#level_maturity_days').css('border-bottom', 'solid 1px rgba(51,152,204,0.8)').focus();
             }
         }
     }
 
-    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     // 判断输入框是否为空
-    function checkForm(){
+    function checkForm() {
         if (1 == $('#level_member_upgrade').val()) {
-            if (1 != $('#level').val() && (!$('#level_maturity_days').val() || 0 == $('#level_maturity_days').val())){
+            if (1 != $('#level').val() && (!$('#level_maturity_days').val() || 0 == $('#level_maturity_days').val())) {
                 showErrorMsg('请填写会员有效期天数！');
                 $('#level_maturity_days').focus();
                 return false;
             }
         }
+        var password = $.trim($('#password').val());
+        if (0 < password.length) {
+            {$pwdJsCode|default=''}
+            var security_verifyfunc = {$global['security_verifyfunc']|json_encode=###};
+            if($.inArray('edit_pwd', security_verifyfunc) != -1){
+                if (!ajax_isverify_answer()) {
+                    autoload_security();
+                    return false;
+                }
+            }
+        }
 
         layer_loading('正在处理');
-        $.ajax({
-            type : 'post',
-            url : "{:url('Member/users_edit', ['_ajax'=>1])}",
-            data : $('#postForm').serialize(),
-            dataType : 'json',
-            success : function(res){
-                layer.closeAll();
-                if(res.code == 1){
-                    layer.msg(res.msg, {icon: 1, time:1000},function(){
-                        window.location.reload();
-                    });
-                }else{
-                    showErrorMsg(res.msg);
+        setTimeout(function (){
+            $.ajax({
+                type: 'post',
+                url: "{:url('Member/users_edit', ['_ajax'=>1])}",
+                data: $('#postForm').serialize(),
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if (res.code == 1) {
+                        layer.msg(res.msg, {icon: 1, time: 1000}, function () {
+                            window.location.reload();
+                        });
+                    } else {
+                        showErrorMsg(res.msg);
+                    }
+                },
+                error: function (e) {
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
                 }
-            },
-            error: function(e){
-                layer.closeAll();
-                showErrorAlert(e.responseText);
-            }
-        });
+            });
+        }, 1);
     }
 
-    function head_pic_call_back(fileurl_tmp)
-    {
-      $("#head_pic").val(fileurl_tmp);
-      $("#img_head_pic").attr('src', fileurl_tmp);
+    function head_pic_call_back(fileurl_tmp) {
+        $("#head_pic").val(fileurl_tmp);
+        $("#img_head_pic").attr('src', fileurl_tmp);
+    }
+
+    function change_is_lock(obj) {
+        var value = $(obj).attr('data-value');
+        $('#is_lock').val(value);
+        if (-99 == value) {
+            var msg = "加入黑名单将限制以下功能：<br/>1.禁止会员中心全部数据的提交。<br/>2.禁止问答发帖/回帖等数据提交。";
+            layer.confirm(msg, {
+                shade: layer_shade,
+                area: ['480px', '230px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['确定','取消'] ,//按钮
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                }
+            }, function(){
+                checkForm();
+            }, function(index){
+                layer.close(index);
+            });
+        } else {
+            checkForm();
+        }
+    }
+    // 删除
+    function usersdel(obj){
+        var admin_id = $(obj).data('admin_id');
+        if (0 < admin_id) {
+            var title = "系统管理员前台ID，删除不可恢复？<br/>包含该会员数据有(订单、投稿、问答、留言等)";
+        } else {
+            var title = "确认彻底删除？<br/>包含该会员数据有(订单、投稿、问答、留言等)";
+        }
+        layer.confirm(title, {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定','取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id'), _ajax:1},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.href = "{:url('Member/users_index')}";
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
     }
 </script>
+
 
 {include file="public/footer" /}

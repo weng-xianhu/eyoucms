@@ -3,7 +3,7 @@
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 {include file="shop/left" /}
-<div class="page" style="margin-left:98px;">
+<div class="page" style="margin-left:100px;">
     {include file="sharp/bar" /}
     <div class="flexigrid">
         <div class="mDiv">
@@ -60,7 +60,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}

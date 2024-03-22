@@ -3,34 +3,27 @@
 <body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-    <div class="fixed-bar">
-        <div class="item-title">
-            <ul class="tab-base nc-row">
-                {eq name="'UsersNotice@index'|is_check_access" value="1"}
-                <li>
-                    <a href="{:url('UsersNotice/index')}" {if condition="in_array($Think.const.CONTROLLER_NAME, ['UsersNotice'])"}class="current"{/if}>
-                    <span>站内通知</span>
-                    </a>
-                </li>
-                {/eq}
-            </ul>
-        </div>
-    </div>
-
+<div class="page min-hg-c-i">
+    {include file="users_notice/bar" /}
     <div class="flexigrid">
-        <div class="mDiv">
+        
+        <div class="mDiv pt0">
             <div class="ftitle">
-                {include file="users_notice/bar" /}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" onclick="signAllRead(this);">
+                        <div class="add" title="全部标记已读">
+                            <span>全部标记已读</span>
+                        </div>
+                    </a>
+                </div>
             </div>
-
             <form class="navbar-form form-inline" action="{:url('UsersNotice/admin_notice_index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
                         <input type="submit" class="btn" value="搜索">
-						<i class="fa fa-search"></i>
+						<i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -48,7 +41,7 @@
                             <div class="tc">ID</div>
                         </th>
                         <th abbr="article_title" axis="col3" >
-                            <div class="text-l10">通知标题 [<a href="javascript:void(0);" onclick="signAllRead(this);">全部标记已读</a>]</div>
+                            <div class="text-l10">通知标题 </div>
                         </th>
                         <th abbr="ac_id" axis="col4" class="w160">
                             <div class="text-l10">通知类型</div>
@@ -71,7 +64,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -114,6 +109,7 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        {notempty name="list"}
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
@@ -126,6 +122,7 @@
             </div>
             <div style="clear:both"></div>
         </div>
+        {/notempty}
     </div>
 </div>
 <script type="text/javascript">
@@ -180,7 +177,7 @@
                     $(".UnreadNotify1615518028", window.parent.document).html(0);
                     $(".UnreadNotify1615518028", window.parent.document).hide();
                     $(".notread1620347507").hide();
-                    layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000});
+                    layer.msg(res.msg, {icon: 1, shade: 0.1, time: 1000});
                 }else{
                     showErrorMsg(res.msg);
                 }

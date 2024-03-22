@@ -2,9 +2,53 @@
 <!-- 用户自定义扩展模板文件 -->
 {include file="diy_extend/archives_extend" /}
 <!-- end -->
+<script>
+    // 获取联动地址
+    function GetFieldRegionData_1670295376(t,type){
+        var name = $(t).attr('data-name');
+        var parent_id = parseInt($(t).val());
 
+        if(!parent_id || 0 >= parent_id){
+            if ('province' == type) {
+                $('#city_'+name).hide();
+                $('#area_'+name).hide();
+            }else if ('city' == type){
+                $('#area_'+name).hide();
+            }
+            return false;
+        }
+
+        var url = "{:url('Field/ajax_get_region_data')}";
+        $.ajax({
+            url: url,
+            data: {parent_id:parent_id,_ajax:1},
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                if (res.region_html) {
+                    // 输出下一级栏目选项
+                    if ('province' == type) {
+                        res = '<option value="-1">请选择</option>'+ res.region_html;
+                        $('#city_'+name).empty().html(res);
+                        $('#city_'+name).show();
+                        $('#area_'+name).hide();
+                        $('#area_'+name).empty();
+                    }else if ('city' == type){
+                        res = '<option value="-1">请选择</option>'+ res.region_html;
+                        $('#area_'+name).empty().html(res);
+                        $('#area_'+name).show();
+                    }
+                }
+            },
+            error : function(e) {
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5});
+            }
+        });
+    }
+</script>
 {volist name="$addonFieldExtList" id="vo"}
-    {if !isset($vo.ifeditable) || $vo.ifeditable}
+{if condition="(('Custom' == $controller_name && isset($vo.ifeditable) && $vo.ifeditable == 1) || ('Custom' != $controller_name && (!isset($vo.ifeditable) || $vo.ifeditable)))"}
         {switch name="vo.dtype"}
             {case value="hidden"}
                 <!-- 隐藏域 start -->
@@ -14,14 +58,13 @@
                     </dt>
                     <dd class="opt">
                         <input type="hidden" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">
-                        <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <!-- 隐藏域 start -->
             {/case}
 
             {case value="region"}
+                {empty name="$vo.set_type"}
                 <!-- 区域选项 start -->
                 <dl class="row">
                     <dt class="tit">
@@ -38,6 +81,38 @@
                     </dd>
                 </dl>
                 <!-- 区域选项 end -->
+                {else /}
+                    <dl class="row">
+                        <dt class="tit">
+                            <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                        </dt>
+                        <dd class="opt">
+                            <!--一级-->
+                            <select name="{$vo.fieldArr}[{$vo.name|default=''}][]" id="province_{$vo.fieldArr}_{$vo.name|default=''}" data-name="{$vo.fieldArr}_{$vo.name|default=''}" onchange="GetFieldRegionData_1670295376(this,'province');" {if condition="!empty($vo.region_level) && $vo.region_level > 1"}disabled{/if}>
+                                <option  value="-1">请选择</option>
+                                <option {if condition="$vo['trueValue'][0] === 0 || $vo['trueValue'][0] ==='0'"} selected {/if} value="0">全国</option>
+                                {volist name="$vo.dfvalue" id="v_p"}
+                                    <option {if condition="$vo['trueValue'][0] == $v_p.id"} selected {/if} value="{$v_p.id}">{$v_p.name}</option>
+                                {/volist}
+                            </select>
+                            <!--二级-->
+                            <select name="{$vo.fieldArr}[{$vo.name|default=''}][]" id="city_{$vo.fieldArr}_{$vo.name|default=''}" data-name="{$vo.fieldArr}_{$vo.name|default=''}" onchange="GetFieldRegionData_1670295376(this,'city');" {empty name="$vo['city_list']"}style="display: none;"{/empty} {if condition="!empty($vo.region_level) && $vo.region_level > 2"}disabled{/if}>
+                                {volist name="$vo.city_list" id="v_p"}
+                                <option {if condition="$vo['trueValue'][1] == $v_p.id"} selected {/if} value="{$v_p.id}">{$v_p.name}</option>
+                                {/volist}
+                            </select>
+                            <!--三级-->
+                            <select name="{$vo.fieldArr}[{$vo.name|default=''}][]" id="area_{$vo.fieldArr}_{$vo.name|default=''}" {empty name="$vo['trueValue'][2]"}style="display: none;"{/empty}>
+                                {volist name="$vo.area_list" id="v_p"}
+                                <option {if condition="$vo['trueValue'][2] == $v_p.id"} selected {/if} value="{$v_p.id}">{$v_p.name}</option>
+                                {/volist}
+                            </select>
+
+                            <span class="err"></span>
+                            <p class="notic">{$vo.remark|default=''}</p>
+                        </dd>
+                    </dl>
+                {/empty}
             {/case}
 
             {case value="text"}
@@ -61,7 +136,7 @@
                     <dt class="tit">
                         <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
                     </dt>
-                    <dd class="opt">          
+                    <dd class="opt">
                         <textarea rows="5" cols="60" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" style="height:60px;">{$vo.dfvalue|default=''}</textarea>
                         <span class="err"></span>
                         <p class="notic">{$vo.remark|default=''}</p>
@@ -155,7 +230,7 @@
                     <dt class="tit">
                         <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
                     </dt>
-                    <dd class="opt"> 
+                    <dd class="opt">
                         <select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}">
                             {volist name="$vo.dfvalue" id="v2"}
                             <option value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}selected{/if}>{$v2}</option>
@@ -609,19 +684,18 @@
                                     <td >
                                         <div class="sort-list-{$vo.fieldArr}_{$vo.name|default=''}">
                                             {volist name="$vo[$vo['name'].'_eyou_imgupload_list']" id="v2" key="k2"}
-                                            <div class="images_upload" style="display:inline-block;">
-                                                <div style="position: relative; height: 130px;">
+                                            <div class="images_upload images_upload_html" style="display:inline-block;">
+                                                <div class="images_upload_box">
                                                     <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2['image_url']}">
                                                     <a href="{$v2['image_url']}" onclick="" class="upimg" target="_blank" title="拖动修改排序">
-                                                        <img src="{$v2['image_url']}" width="136" height="136">
+                                                        <img data-original="{$v2['image_url']}">
                                                     </a>
                                                     <a href="javascript:void(0)" onclick="{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'{$v2['image_url']}')" class="delect" title="删除"></a>
                                                 </div>
-                                                <textarea rows="5" cols="60" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_intro][]" style="height:28px; width: 136px;" placeholder="图片注释">{$v2.intro}</textarea>
+                                                <textarea rows="5" cols="60" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_intro][]" placeholder="图片注释">{$v2.intro}</textarea>
                                             </div>
                                             {/volist}
-                                            <div class="images_upload">
-                                            </div>
+                                            <div class="images_upload"></div>
                                         </div>
                                         <a href="javascript:void(0);" onClick="GetUploadify(100,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back');"  class="img-upload mb15" title="点击上传">
                                              <div class="y-line"></div>
@@ -634,15 +708,15 @@
                         </div>
                         <!-- 上传图片显示的样板 start -->
                         <div class="{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl none">
-                            <div class="images_upload" style="display:inline-block;">
-                                <div style="position: relative; height: 130px;">
+                            <div class="images_upload images_upload_html" style="display:inline-block;">
+                                <div class="images_upload_box">
                                     <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="" />
                                     <a href="javascript:void(0);" onClick="" class="upimg" title="拖动修改排序">
-                                        <img src="__STATIC__/admin/images/add-button.jpg" width="136" height="136" />
+                                        <img src="__STATIC__/admin/images/add-button.jpg"/>
                                     </a>
                                     <a href="javascript:void(0)" class="delect" title="删除">&nbsp;&nbsp;</a>
                                 </div>
-                                <textarea rows="5" cols="60" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_intro][]" style="height:28px; width: 136px;" placeholder="图片注释"></textarea>
+                                <textarea rows="5" cols="60" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_intro][]"  placeholder="图片注释"></textarea>
                             </div>
                         </div>
                         <!-- 上传图片显示的样板 end -->
@@ -651,19 +725,23 @@
                 <script type="text/javascript">
                     // 上传多图回调函数
                     function {$vo.fieldArr}_{$vo.name|default=''}_call_back(paths){
-                        
+
                         var  last_div = $(".{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl").html();
                         for (var i=0;i<paths.length ;i++ )
                         {
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".images_upload:eq(0)").before(last_div);  // 插入一个 新图片
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".images_upload:eq(0)").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".images_upload:eq(0)").find('img').attr('src',paths[i]);// 修改他的图片路径
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".images_upload:eq(0)").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('');
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".images_upload:eq(0)").find('input').val(paths[i]); // 设置隐藏域 要提交的值
-                        }             
+                            if ($(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html").length > 0) {
+                                $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").after(last_div);  // 插入一个 新图片
+                            } else {
+                                $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload:last").before(last_div);  // 插入一个 新图片
+                            }
+                            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+                            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").find('img').attr('src',paths[i]);// 修改他的图片路径
+                            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('');
+                            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+                        }
                     }
                     /*
-                     * 上传之后删除组图input     
+                     * 上传之后删除组图input
                      * @access   public
                      * @val      string  删除的图片input
                      */
@@ -673,31 +751,31 @@
                         $.ajax({
                             type:'GET',
                             url:"{:url('Field/del_channelimgs', ['_ajax'=>1])}",
-                            data:{filename:path,channel:"{$channeltype|default='0'}",fieldname:"{$vo.name}",aid:"{$aid|default='0'}"},
+                            data:{filename:path,channel:"{$channeltype|default='0'}",fieldid:"{$vo.id}",aid:"{$aid|default='0'}"},
                             success:function(){
                                 $(obj).parent().parent().remove(); // 删除完服务器的, 再删除 html上的图片
                                 $.ajax({
                                     type:'GET',
-                                    url:"{:url('Uploadify/delupload', ['_ajax'=>1])}",
+                                    url:"{:url('Uploadimgnew/delupload', ['_ajax'=>1])}",
                                     data:{action:"del", filename:path},
                                     success:function(){}
                                 });
                             }
-                        });    
+                        });
                     }
 
                     /** 以下 产品相册的拖动排序相关 js*/
 
                     $( ".sort-list-{$vo.fieldArr}_{$vo.name|default=''}" ).sortable({
                         start: function( event, ui) {
-                        
+
                         }
                         ,stop: function( event, ui ) {
 
                         }
                     });
-                    //因为他们要拖动，所以尽量设置他们的文字不能选择。 
-                    $( ".sort-list-{$vo.fieldArr}_{$vo.name|default=''}" ).disableSelection();
+                    //因为他们要拖动，所以尽量设置他们的文字不能选择。
+                    // $( ".sort-list-{$vo.fieldArr}_{$vo.name|default=''}" ).disableSelection();
                 </script>
                 <!-- 多张图 end -->
             {/case}
@@ -708,7 +786,7 @@
                     <dt class="tit">
                         <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
                     </dt>
-                    <dd class="opt"> 
+                    <dd class="opt">
                         <input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="只允许纯数字" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9]/g,''));">&nbsp;{$vo.dfvalue_unit|default=''}
                         <span class="err"></span>
                         <p class="notic">{$vo.remark|default=''}</p>
@@ -723,7 +801,7 @@
                     <dt class="tit">
                         <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
                     </dt>
-                    <dd class="opt"> 
+                    <dd class="opt">
                         <input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="允许带有小数点的数值" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9\.]/g,''));">&nbsp;{$vo.dfvalue_unit|default=''}
                         <span class="err"></span>
                         <p class="notic">{$vo.remark|default=''}</p>
@@ -738,7 +816,7 @@
                     <dt class="tit">
                         <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
                     </dt>
-                    <dd class="opt"> 
+                    <dd class="opt">
                         <input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="允许带有小数点的金额" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9\.]/g,''));">&nbsp;{$vo.dfvalue_unit|default=''}
                         <span class="err"></span>
                         <p class="notic">{$vo.remark|default=''}</p>
@@ -753,19 +831,25 @@
                     <dt class="tit">
                         <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
                     </dt>
-                    <dd class="opt"> 
-                        <input type="text" class="input-txt" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" value="{$vo['dfvalue']}" autocomplete="off">        
+                    <dd class="opt">
+                        <input type="text" class="input-txt" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" value="{$vo['dfvalue']}" autocomplete="off">
                         <span class="add-on input-group-addon">
                             <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
-                        </span> 
+                        </span>
                         <span class="err"></span>
                         <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <script type="text/javascript">
-                    $(function () {
-                        $('#{$vo.fieldArr}_{$vo.name|default=''}').layDate();   
-                    });
+                    layui.use('laydate', function() {
+                        var laydate = layui.laydate;
+
+                        //常规用法
+                        laydate.render({
+                            elem: "#{$vo.fieldArr}_{$vo.name|default=''}"
+                            ,type: 'datetime'
+                        });
+                    })
                 </script>
                 <!-- 日期和时间 end -->
             {/case}
@@ -777,24 +861,181 @@
                         <dt class="tit">
                             <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
                         </dt>
-                        <dd class="opt">          
-                            <textarea class="span12 ckeditor" id="{$vo.fieldArr}_{$vo.name|default=''}" data-func="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" title="">{$vo.dfvalue|default=''}</textarea>
-                            <div class="opt-moreOper">
-                                <p>
-                                    <a href="javascript:void(0);" onclick="remote_to_local_{$vo.fieldArr}_{$vo.name|default=''}();" class="ncap-btn2">远程图片本地化</a>&nbsp;
-                                    <a href="javascript:void(0);" onclick="replace_links_{$vo.fieldArr}_{$vo.name|default=''}();" class="ncap-btn2">清除非本站链接</a>&nbsp;
-                                </p>
-                            </div>
-                            <span class="err"></span>
-                            <p class="notic">{$vo.remark|default=''}</p>
+                        <dd class="opt">
+                            {if condition="$vo.name=='content'"}
+                                {notempty name="$have_content_ey_m"}
+                                <div class="pcwap-onoff">
+                                    <label onclick="contentSwitch(1);" class="cb-enable selected">PC端详情</label>
+                                    <label onclick="contentSwitch(2);" class="cb-disable">手机端详情</label>
+                                </div>
+                                {/notempty}
+                                {if condition="isset($vo['first']) AND 1 == $vo['first']"}
+                                    <label class="curpoin"><input  type="checkbox" name="editor_remote_img_local" id="editor_remote_img_local" data-val="{$vo.editor.editor_remote_img_local}" value="1" {eq name="$vo.editor.editor_remote_img_local" value="1"} checked {/eq}>远程图片本地化</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(1);">[手动]</a>&nbsp; -->
+                                    <label class="curpoin"><input type="checkbox" name="editor_img_clear_link" id="editor_img_clear_link" data-val="{$vo.editor.editor_img_clear_link}" value="1" {eq name="$vo.editor.editor_img_clear_link" value="1"} checked {/eq}>清除非本站链接</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(2);">[手动]</a>&nbsp; -->
+                                    {if condition="'Arctype' == $controller_name && 'single_edit' == $action_name"}
+                                    <label class="curpoin"><input class="check" type="checkbox" name="empty_logic" value="1" {notempty name="$info['empty_logic']"} checked="checked" {/notempty}>提取下级栏目内容</label>&nbsp;<p class="notic">当内容详情没有填写时，前台内容部分将自动调用下级栏目的内容</p>
+                                    {/if}
+                                {/if}
+                                <div id="div_hint" style="float: right;display: none;">
+                                    <a style="color: #f00;">左侧编辑器如不填写，就自动引用pc端的内容</a>
+                                    <a class="ui_tips" style="margin-left: 5px;" href="javascript:void(0);" onmouseover="layer_tips = layer.tips('1、pc和手机端调用标签共用，不用额外调用。<br/>2、pc不填写不会自动引用手机端内容。', this, {time:100000});" onmouseout="layer.close(layer_tips);"></a>
+                                </div>
+                            {else /}
+                                {if condition="isset($vo['first']) AND 1 == $vo['first']"}
+                                    <label class="curpoin"><input  type="checkbox" name="editor_remote_img_local" id="editor_remote_img_local" data-val="{$vo.editor.editor_remote_img_local}" value="1" {eq name="$vo.editor.editor_remote_img_local" value="1"} checked {/eq}>远程图片本地化</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(1);">[手动]</a>&nbsp; -->
+                                    <label class="curpoin"><input type="checkbox" name="editor_img_clear_link" id="editor_img_clear_link" data-val="{$vo.editor.editor_img_clear_link}" value="1" {eq name="$vo.editor.editor_img_clear_link" value="1"} checked {/eq}>清除非本站链接</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(2);">[手动]</a>&nbsp; -->
+                                {/if}
+                            {/if}
+                            <div style="clear: both;"></div>
+                            {if condition="$vo.name=='content' || $vo.name=='content_ey_m'"}
+                                <textarea  class="span12 ckeditor" id="{$vo.fieldArr}_{$vo.name|default=''}" data-func="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" title="">{$vo.dfvalue|default=''}</textarea>
+                                <textarea style="display: none;" class="span12 ckeditor" id="{$vo.fieldArr}_{$vo.name|default=''}_ey_m" data-func="{$vo.fieldArr}_{$vo.name|default=''}_ey_m" name="{$vo.fieldArr}[{$vo.name|default=''}_ey_m]" title="">{$content_ey_m_dfvalue|default=''}</textarea>
+                                {notempty name="$have_content_ey_m"}
+                                <div id="content_ey_m_div" {if condition="$vo.name=='content'"}style="display: none"{/if}>
+                                    <p id="content_ey_m_all_tit">
+                                        <i class="iconfont e-left" style="float: left;font-size: 18px;"></i>正文预览 <i class="iconfont e-xiaochengxu1" style="float: right;font-size: 24px;"></i>
+                                    </p>
+                                    <div id="content_ey_m_all_div">
+                                        <div id="phone_title_div" {if condition="!empty($nid) and $nid == 'single'"}style="display:none"{/if}>这里是标题</div>
+                                        <div id="phone_time_div" {if condition="!empty($nid) and $nid == 'single'"}style="display:none"{/if}>2022-03-31</div>
+                                        <div id="phone_preview_div"></div>
+                                    </div>
+                                </div>
+                                {/notempty}
+                            {else /}
+                                <textarea class="span12 ckeditor" id="{$vo.fieldArr}_{$vo.name|default=''}" data-func="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" title="">{$vo.dfvalue|default=''}</textarea>
+                                <span class="err"></span>
+                                <p class="notic">{$vo.remark|default=''}</p>
+                            {/if}
                         </dd>
                     </dl>
+                    <style>
+                        #addonFieldExt_content_ey_m{
+                            max-width: 58%;
+                            width: 100%;
+                            float: left;
+                            margin-right: 2%;
+                            display: block;
+                        }
+                        #content_ey_m_div{
+                            float: right;
+                            width: 39%;
+                            max-width: 470px;
+                            display: block;
+                            border: solid 1px #eee;
+                            zoom: 1;
+                            -webkit-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.065);
+                            -moz-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.065);
+                            box-shadow: 0 1px 4px rgb(0 0 0 / 10%);
+                        }
+                        #content_ey_m_all_tit{
+                            padding: 10px 10px;
+                            text-align: center;
+                            font-size: 17px;
+                            color: #444;
+                            font-weight: 500;
+                            border-bottom: solid 1px #eee;
+                        }
+                        #content_ey_m_all_div{
+                            width: 100%;
+                            height: 491px;
+                            overflow: auto;
+                            box-sizing: border-box;
+                        }
+                        #phone_title_div{
+                            font-size: 20px;
+                            font-weight: bold;
+                            padding: 5px 10px;
+                            margin-top: 10px;
+                            color: #444;
+                        }
+                        #phone_time_div{
+                            padding: 0 10px;
+                            margin-bottom: 5px;
+                        }
+                        #phone_preview_div{
+                            padding: 10px;
+                            width: 100%;
+                            /*height: 491px;*/
+                            /*overflow: auto;*/
+                            /*border: solid 1px #eee;*/
+                            box-sizing: border-box;
+                        }
+                        #phone_preview_div img {
+                            -ms-interpolation-mode: bicubic;
+                        }
+                        #phone_preview_div img {
+                            max-width: 100%;
+                        }
+                        #phone_preview_div video{
+                            max-width: 100%;
+                        }
+                    </style>
+                    <script type="text/javascript">
+                        function contentSwitch(id) {
+                            if (id == 1){
+                                $("#addonFieldExt_content").show();
+                                $("#addonFieldExt_content_ey_m").hide();
+                                $("#content_ey_m_div").hide();
+                                $("#div_hint").hide();
+                            }else{
+                                $("#addonFieldExt_content_ey_m").show();
+                                $("#content_ey_m_div").show();
+                                $("#addonFieldExt_content").hide();
+                                $("#div_hint").show();
+                            }
+                        }
+                        $(function(){
+                            //自定义radio样式
+                            $(".cb-enable").on('click', function(){
+                                var parent = $(this).parents('.pcwap-onoff');
+                                $('.cb-disable',parent).removeClass('selected');
+                                $(this).addClass('selected');
+                                $('.checkbox',parent).attr('checked', true);
+                            });
+                            $(".cb-disable").on('click', function(){
+                                var parent = $(this).parents('.pcwap-onoff');
+                                $('.cb-enable',parent).removeClass('selected');
+                                $(this).addClass('selected');
+                                $('.checkbox',parent).attr('checked', false);
+                            });
+                        });
+                    </script>
+
+                    {if condition="isset($vo['first']) AND 1 == $vo['first']"}
+                    <script type="text/javascript">
+                        // 打开多图选择及上传界面
+                        function OpenImagesList(e, obj) {
+                            var func = '';
+                            if (e.path && e.path[10] && e.path[10].id && undefined != e.path[10].id) {
+                                func = e.path[10].id;
+                            } else {
+                                func = $(obj).parent().parent().parent().parent().parent().parent().parent().parent().parent().attr('id');
+                            }
+                            if (func.indexOf('addonFieldExt_') == -1) {
+                                func = 'addonFieldExt_content';
+                            }
+                            var OpenUrl = "{:url('Uploadimgnew/upload', ['num'=>30, 'path'=>'allimg', 'is_water'=>1])}";
+                            OpenUrl += "&func=images_call_" + func;
+                            top.layer.open({
+                                type: 2,
+                                title: '图片上传',
+                                shade: layer_shade,
+                                maxmin: false,
+                                shadeClose: false,
+                                area: ['1000px', '625px'],
+                                content: OpenUrl
+                            });
+                        }
+                    </script>
+                    {/if}
+
                     <script type="text/javascript">
                         var ue_{$vo.fieldArr}_{$vo.name|default=''} = UE.getEditor('{$vo.fieldArr}_{$vo.name|default=''}',{
-                            serverUrl :"{:url('Ueditor/index',array('savepath'=>'ueditor'))}",
+                            serverUrl :"{:url('Ueditor/index',array('savepath'=>'allimg'))}",
                             zIndex: 999,
                             initialFrameWidth: "100%", //初化宽度
-                            initialFrameHeight: 450, //初化高度            
+                            initialFrameHeight: 450, //初化高度
                             focus: false, //初始化时，是否让编辑器获得焦点true或false
                             maximumWords: 99999,
                             removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
@@ -811,69 +1052,116 @@
                             }
                         }
 
-                        // 远程图片本地化
-                        function remote_to_local_{$vo.fieldArr}_{$vo.name|default=''}() {
+                        // 加载图片到编辑器指定位置
+                        function images_call_{$vo.fieldArr}_{$vo.name|default=''}(fileurl_tmp,filename_tmp) {
+                            var addBody = '';
+                            $.each(fileurl_tmp, function(index, items) {
+                                addBody += '<p><img src="'+items+'" alt="'+filename_tmp[index]+'"></p>';
+                            });
+                            UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").execCommand('inserthtml', addBody);
+                        }
+
+                        // 自动远程图片本地化/自动清除非本站链接
+                        function ajax_auto_editor_{$vo.fieldArr}_{$vo.name|default=''}(local,link) {
                             var body = UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").getContent();
-                            layer_loading('下载中');
                             $.ajax({
                                 type: 'POST',
-                                url: "{:url('Archives/ajax_remote_to_local')}",
-                                data: {body:body,_ajax:1},
+                                url: "{:url('Archives/ajax_auto_editor')}",
+                                data: {local:local,link:link,body:body,_ajax:1},
                                 dataType: "JSON",
+                                async:false,
                                 success: function(res){
-                                    layer.closeAll();
                                     if (res.code == 1) {
                                         UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").setContent(res.data.body);
-                                        layer.msg(res.msg, {icon: 1, time:1000});
-                                    } else {
-                                        showErrorMsg(res.msg);
                                     }
-                                },
-                                error: function(e){
-                                    layer.closeAll();
-                                    showErrorMsg(res.msg);
                                 }
                             });
                         }
 
-                        // 清除非本站链接
-                        function replace_links_{$vo.fieldArr}_{$vo.name|default=''}() {
-                            var body = UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").getContent();
-                            layer_loading('正在处理');
+                    </script>
+                    {if condition="$vo.name=='content' || $vo.name=='content_ey_m'"}
+                    <script type="text/javascript">
+                        //编辑器发生变动执行方法
+                        function get_ue_content_ey_m_1645596891(){
+                            try{
+                                var content_ey_m_text = UE.getEditor("addonFieldExt_content_ey_m").getContent();
+                            }catch (e){
+                                var content_ey_m_text = '';
+                            }
+                            if (content_ey_m_text === '' || content_ey_m_text === undefined){  //手机端为空时候，pc端编辑器信息给正文预览
+                                content_ey_m_text = UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").getContent();
+                            }
+                            $('#phone_preview_div').html(content_ey_m_text);
+                        }
+                        var ue_addonFieldExt_content_ey_m = UE.getEditor('addonFieldExt_content_ey_m',{
+                            serverUrl :"{:url('Ueditor/index',array('savepath'=>'allimg'))}",
+                            zIndex: 999,
+                            initialFrameWidth: "100%", //初化宽度
+                            initialFrameHeight: 478, //初化高度
+                            focus: false, //初始化时，是否让编辑器获得焦点true或false
+                            maximumWords: 99999,
+                            removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
+                            pasteplain:false, //是否默认为纯文本粘贴。false为不使用纯文本粘贴，true为使用纯文本粘贴
+                            autoHeightEnabled: false,
+                            toolbars: ueditor_toolbars_ey_m
+                        });
+                        //必须在提交前渲染编辑器；
+                        function addonFieldExt_content_ey_m() {
+                            //判断编辑模式状态:0表示【源代码】HTML视图；1是【设计】视图,即可见即所得；-1表示不可用
+                            if(UE.getEditor("addonFieldExt_content_ey_m").queryCommandState('source') != 0) {
+                                UE.getEditor("addonFieldExt_content_ey_m").execCommand('source'); //切换到【设计】视图
+                            }
+                        }
+                        // 加载图片到编辑器指定位置
+                        function images_call_addonFieldExt_content_ey_m(fileurl_tmp,filename_tmp) {
+                            var addBody = '';
+                            $.each(fileurl_tmp, function(index, items) {
+                                addBody += '<p><img src="'+items+'" alt="'+filename_tmp[index]+'"></p>';
+                            });
+                            UE.getEditor("addonFieldExt_content_ey_m").execCommand('inserthtml', addBody);
+                        }
+
+                        // 自动远程图片本地化/自动清除非本站链接
+                        function ajax_auto_editor_addonFieldExt_content_ey_m(local,link) {
+                            var body = UE.getEditor("addonFieldExt_content_ey_m").getContent();
                             $.ajax({
                                 type: 'POST',
-                                url: "{:url('Archives/ajax_replace_links')}",
-                                data: {body:body,_ajax:1},
+                                url: "{:url('Archives/ajax_auto_editor')}",
+                                data: {local:local,link:link,body:body,_ajax:1},
                                 dataType: "JSON",
+                                async:false,
                                 success: function(res){
-                                    layer.closeAll();
                                     if (res.code == 1) {
-                                        UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").setContent(res.data.body);
-                                        layer.msg(res.msg, {icon: 1, time:1000});
-                                    } else {
-                                        showErrorMsg(res.msg);
+                                        UE.getEditor("addonFieldExt_content_ey_m").setContent(res.data.body);
                                     }
-                                },
-                                error: function(e){
-                                    layer.closeAll();
-                                    showErrorMsg(res.msg);
                                 }
                             });
                         }
+                        var myDate = new Date();
+                        var myYear = myDate.getFullYear(); //获取完整的年份
+                        var myMonth = myDate.getMonth() + 1; //获取当前月份(0-11,0代表1月)
+                        var myToday = myDate.getDate(); //
+                        $('#phone_time_div').html(myYear+'-'+ myMonth+'-'+ myToday);
+                        function get_ue_phone_title_1645596891(){
+                            if ($("input[name='title']").length > 0){
+                                var phone_title = $("input[name='title']")[0].value;
+                                $('#phone_title_div').text(phone_title);
+                            }
+                        }
+                        phone_title_1645596891 = window.setInterval(function(){ get_ue_phone_title_1645596891(); }, 500);
                     </script>
+                    {/if}
                 {else/}
                     <dl class="row">
                         <dt class="tit">
                             <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
                         </dt>
                         <dd class="opt">
+                            {if condition="isset($vo['first']) AND 1 == $vo['first']"}
+                            <label class="curpoin"><input type="checkbox" name="editor_remote_img_local" id="editor_remote_img_local" data-val="{$vo.editor.editor_remote_img_local}" value="1" {eq name="$vo.editor.editor_remote_img_local" value="1"} checked {/eq} >远程图片本地化</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(1);">[手动]</a>&nbsp; -->
+                            <label class="curpoin"><input type="checkbox" name="editor_img_clear_link" id="editor_img_clear_link" data-val="{$vo.editor.editor_img_clear_link}" value="1" {eq name="$vo.editor.editor_img_clear_link" value="1"} checked {/eq} >清除非本站链接</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(2);">[手动]</a>&nbsp; -->
+                            {/if}
                             <textarea id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]">{$vo.dfvalue|default=''}</textarea>
-                            <div class="opt-moreOper">
-                                <p>
-                                    <a href="javascript:void(0);" onclick="remote_to_local_{$vo.fieldArr}_{$vo.name|default=''}();" class="ncap-btn2">远程图片本地化</a>&nbsp;
-                                    <a href="javascript:void(0);" onclick="replace_links_{$vo.fieldArr}_{$vo.name|default=''}();" class="ncap-btn2">清除非本站链接</a>&nbsp;
-                                </p>
-                            </div>
                             <span class="err"></span>
                             <p class="notic">{$vo.remark|default=''}</p>
                         </dd>
@@ -887,62 +1175,36 @@
                         } catch(e) {}
 
                         CKEDITOR.replace(elemtid, {
-                            filebrowserBrowseUrl: "{:url('Ueditor/index', ['savepath'=>'ueditor', 'action'=>'uploadimage'])}",
-                            filebrowserImageBrowseUrl: "{:url('Ueditor/index', ['savepath'=>'ueditor', 'action'=>'uploadimage'])}",
-                            filebrowserUploadUrl: "{:url('Ueditor/index', ['savepath'=>'ueditor', 'action'=>'uploadimage'])}",
-                            filebrowserImageUploadUrl: "{:url('Ueditor/index', ['savepath'=>'ueditor', 'action'=>'uploadimage'])}",
+                            filebrowserBrowseUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                            filebrowserImageBrowseUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                            filebrowserUploadUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                            filebrowserImageUploadUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
                         });
 
-                        // 远程图片本地化
-                        function remote_to_local_{$vo.fieldArr}_{$vo.name|default=''}() {
+                        // 自动远程图片本地化/自动清除非本站链接
+                        function ajax_auto_editor_{$vo.fieldArr}_{$vo.name|default=''}(local,link) {
                             var body = CKEDITOR.instances.{$vo.fieldArr}_{$vo.name|default=''}.getData();
-                            layer_loading('下载中');
                             $.ajax({
                                 type: 'POST',
-                                url: "{:url('Archives/ajax_remote_to_local')}",
-                                data: {body:body,_ajax:1},
+                                url: "{:url('Archives/ajax_auto_editor')}",
+                                data: {local:local,link:link,body:body,_ajax:1},
                                 dataType: "JSON",
+                                async:false,
                                 success: function(res){
-                                    layer.closeAll();
                                     if (res.code == 1) {
                                         CKEDITOR.instances.{$vo.fieldArr}_{$vo.name|default=''}.setData(res.data.body);
-                                        layer.msg(res.msg, {icon: 1, time:1000});
-                                    } else {
-                                        showErrorMsg(res.msg);
                                     }
-                                },
-                                error: function(e){
-                                    layer.closeAll();
-                                    showErrorMsg(res.msg);
-                                }
-                            });
-                        }
-
-                        // 清除非本站链接
-                        function replace_links_{$vo.fieldArr}_{$vo.name|default=''}() {
-                            var body = CKEDITOR.instances.{$vo.fieldArr}_{$vo.name|default=''}.getData();
-                            layer_loading('正在处理');
-                            $.ajax({
-                                type: 'POST',
-                                url: "{:url('Archives/ajax_replace_links')}",
-                                data: {body:body,_ajax:1},
-                                dataType: "JSON",
-                                success: function(res){
-                                    layer.closeAll();
-                                    if (res.code == 1) {
-                                        CKEDITOR.instances.{$vo.fieldArr}_{$vo.name|default=''}.setData(res.data.body);
-                                        layer.msg(res.msg, {icon: 1, time:1000});
-                                    } else {
-                                        showErrorMsg(res.msg);
-                                    }
-                                },
-                                error: function(e){
-                                    layer.closeAll();
-                                    showErrorMsg(res.msg);
                                 }
                             });
                         }
                     </script>
+                    {if condition="$vo.name=='content' || $vo.name=='content_ey_m'"}
+                    <script type="text/javascript">
+                        // 自动远程图片本地化/自动清除非本站链接
+                        function ajax_auto_editor_addonFieldExt_content_ey_m(local,link) {
+                        }
+                    </script>
+                    {/if}
                 {/eq}
                 <!-- HTML文本 end -->
             {/case}
@@ -956,11 +1218,11 @@
                     <dd class="opt">
                         <input type="text" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}_media_url" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" style="width: 400px !important;" >
                         <input type="file" id="{$vo.fieldArr}_{$vo.name|default=''}_upload_media" onchange="{$vo.fieldArr}_{$vo.name|default=''}_upload_media_20210408(this)" style="display: none;">
-                        {if condition='qny == $vo.upload_flag'}
+                        {if condition="'qny' == $vo.upload_flag"}
                         <button type="button" class="layui-btn" id="{$vo.fieldArr}_{$vo.name|default=''}_qny_upload_media" onclick="$('#{$vo.fieldArr}_{$vo.name|default=\'\'}_upload_media').attr('data-type', 'qny').trigger('click');">七牛云上传</button>
-                        {elseif condition='oss == $vo.upload_flag'}
+                        {elseif condition="'oss' == $vo.upload_flag"}
                         <button type="button" class="layui-btn" id="{$vo.fieldArr}_{$vo.name|default=''}_oss_upload_media" onclick="$('#{$vo.fieldArr}_{$vo.name|default=\'\'}_upload_media').attr('data-type', 'oss').trigger('click');">oss上传</button>
-                        {elseif condition='cos == $vo.upload_flag'}
+                        {elseif condition="'cos' == $vo.upload_flag"}
                         <button type="button" class="layui-btn" id="{$vo.fieldArr}_{$vo.name|default=''}_cos_upload_media" onclick="$('#{$vo.fieldArr}_{$vo.name|default=\'\'}_upload_media').attr('data-type', 'cos').trigger('click');">cos上传</button>
                         {else}
                         <button type="button" class="layui-btn" id="{$vo.fieldArr}_{$vo.name|default=''}_local_upload_media" onclick="$('#{$vo.fieldArr}_{$vo.name|default=\'\'}_upload_media').attr('data-type', 'local').trigger('click');">本地上传</button>
@@ -1311,8 +1573,17 @@
     {/if}
 {/volist}
 
-<script>
+<script type="text/javascript">
+    var notic_tips_230112 = 0;
     $(function(){
+        try {
+            $("img").lazyload({
+                effect: "fadeIn",
+                placeholder : "__PUBLIC__/static/common/images/loading.gif",
+                threshold: 200
+            });
+        }catch(e){}
+        
         auto_notic_tips();
         /**
         * 自动小提示
@@ -1324,8 +1595,15 @@
                 var a_length = $(item).prev("a.ui_tips").length;
                 if ($(item).html() != '' && 0 == a_length) {
                     $(item).before(html);
+                    notic_tips_230112 = 1;
                 }
             });
+        }
+
+        // 第一个自定义字段显示感汉号提示
+        if (0 == notic_tips_230112) {
+            var ganhaohtml = '<a class="ui_tips" href="javascript:void(0);" onmouseover="layer_tips = layer.tips($(this).parent().find(\'p.notic-ganhan-ico\').html(), this, {time:100000});" onmouseout="layer.close(layer_tips);"></a><p class="notic-ganhan-ico none">属于自定义字段。在“功能地图>频道模型>字段管理”里管理</p>';
+            $($('#FieldAddonextitem').find('dl > dd').find('p.notic').get(0)).parent().append(ganhaohtml);
         }
     });
 </script>

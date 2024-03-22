@@ -81,6 +81,7 @@ class AuthRole extends Model{
             'remark' => ! empty($input['remark']) ? $input['remark'] : '',
             'language' => ! empty($input['language']) ? $input['language'] : null,
             'online_update' => ! empty($input['online_update']) ? (int)$input['online_update'] : 0,
+            'switch_map' => ! empty($input['switch_map']) ? (int)$input['switch_map'] : 0,
             'editor_visual' => ! empty($input['editor_visual']) ? (int)$input['editor_visual'] : 0,
             'only_oneself' => ! empty($input['only_oneself']) ? (int)$input['only_oneself'] : 0,
             'check_oneself' => ! empty($input['check_oneself']) ? (int)$input['check_oneself'] : 0,

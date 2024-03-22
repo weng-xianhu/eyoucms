@@ -3,22 +3,15 @@
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-    <div class="fixed-bar">
-        <div class="item-title">
-            <a class="back" href="{:url('Index/switch_map')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
-            <ul class="tab-base nc-row">
-                <li><a href="{:url('Channeltype/index')}" class="tab current"><span>频道模型</span></a></li>
-            </ul>
-        </div>
-    </div>
+<div class="page min-hg-c-10">
+    {include file="channeltype/bar" /}
     <div class="flexigrid">
-        <div class="mDiv">
+        <div class="mDiv pt0">
             <div class="ftitle">
                 {eq name="'Channeltype@add'|is_check_access" value="1"}
                 <div class="fbutton">
-                    <a href="javascript:void(0);" data-href="{:url('Channeltype/add')}" onclick="openFullframe(this, '新增模型');">
-                        <div class="add" title="新增模型">
+                    <a href="javascript:void(0);" data-href="{:url('Channeltype/add')}" onclick="openFullframe(this, '新增模型', '80%', '80%');">
+                        <div class="add">
                             <span><i class="layui-icon layui-icon-addition"></i>新增模型</span>
                         </div>
                     </a>
@@ -46,7 +39,7 @@
                         <th abbr="article_time" axis="col6" class="w50">
                             <div class="tc">启用</div>
                         </th>
-                        <th axis="col1" id="th_handle" class="w160">
+                        <th axis="col1" id="th_handle" class="w150">
                             <div class="tc">操作</div>
                         </th>
                     </tr>
@@ -61,7 +54,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -76,12 +71,12 @@
                                 <div class="tl text-l10">
                                     {eq name="'Channeltype@edit'|is_check_access" value="1"}
                                         {eq name="$vo.nid" value="ask"}
-                                            <a href="javascript:void(0);" data-href="{:url('Ask/index')}" onclick="openFullframe(this, '问答模型', '100%', '100%');">{$vo.title}</a>
+                                            <a href="javascript:void(0);" data-href="{:url('Ask/index')}" onclick="openFullframe(this, '问答模型', '100%', '100%');">{$vo.ntitle}</a>
                                         {else /}
-                                            <a href="javascript:void(0);" data-href="{:url('Channeltype/edit',array('id'=>$vo['id']))}" onclick="openFullframe(this, '模型编辑', '100%', '100%');">{$vo.title}</a>
+                                            <a href="{:url('Channeltype/edit',array('id'=>$vo['id']))}" >{$vo.title}</a>
                                         {/eq}
                                     {else /}
-                                        {$vo.title}
+                                        {$vo.ntitle}
                                     {/eq}
                                 </div>
                             </td>
@@ -105,23 +100,23 @@
                                 </div>
                             </td>
                             <td class="operation">
-                                <div class="tc w160">
+                                <div class="tc w150">
                                     {eq name="$vo.nid" value="ask"}
                                         <a href="javascript:void(0);" data-href="{:url('Ask/index')}" onclick="openFullframe(this, '问答模型', '100%', '100%');" class="btn blue">管理</a>
                                         <i></i>
-                                        <a class="btn grey" href="javascript:void(0);">内容字段</a>
+                                        <a class="btn grey" href="javascript:void(0);">字段</a>
                                     {else /}
                                         {eq name="'Channeltype@edit'|is_check_access" value="1"}
-                                            <a href="javascript:void(0);" data-href="{:url('Channeltype/edit',array('id'=>$vo['id']))}" class="btn blue" onclick="openFullframe(this, '模型编辑', '100%', '100%');">编辑</a>
+                                            <a href="{:url('Channeltype/edit',array('id'=>$vo['id']))}" class="btn blue" >编辑</a>
                                         {/eq}
 
                                         {eq name="'Channeltype@edit'|is_check_access" value="1"}
                                             {eq name="$vo.nid" value="guestbook"}
                                             <i></i>
-                                            <a href="{:url('Field/attribute_index')}" class="btn blue">内容属性</a>
+                                            <a href="{:url('Field/attribute_index')}" class="btn blue">字段</a>
                                             {else /}
                                             <i></i>
-                                            <a href="{:url('Field/channel_index',array('channel_id'=>$vo['id']))}" class="btn blue">内容字段</a>
+                                            <a href="{:url('Field/channel_index',array('channel_id'=>$vo['id']))}" class="btn blue">字段</a>
                                             {/eq}
                                         {/eq}
                                     {/eq}
@@ -173,9 +168,17 @@
 
     function delfun(obj){
         var title = '<font color="#ff0000">重要提示！</font>';
-        layer.confirm('<font color="#ff0000">此操作将会删除与该模型所有相关的数据且不可恢复，请谨慎操作！</font>是否确认删除？', {
-            title: false,
-            btn: ['确定','取消'] //按钮
+        layer.confirm('确认删除？此操作将会删除与该模型所有相关的数据且不可恢复。', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function(){
             layer_loading('正在处理');
             // 确定
@@ -206,14 +209,24 @@
     function handleShow(obj){
         var title = $(obj).attr('data-title');
         var channel_id = $(obj).attr('data-id');
+        var status = $(obj).attr('data-status');
         $.ajax({
             type : 'post',
             url : "{:url('Channeltype/ajax_show')}",
-            data : {id:channel_id,status:$(obj).attr('data-status'), _ajax:1},
+            data : {id:channel_id,status:status, _ajax:1},
             dataType : 'json',
             success : function(res){
+
                 if (res.code == 1) {
+
                     if (0 == res.data.confirm) {
+                        if (channel_id == 5){
+                            if(status == 1){
+                                parent.$("#sub-menu").find("#Member_media_index").show();
+                            }else{
+                                parent.$("#sub-menu").find("#Member_media_index").hide();
+                            }
+                        }
                         layer.msg(res.msg, {icon: 1, time:500}, function(){
                             window.location.reload();
                         });

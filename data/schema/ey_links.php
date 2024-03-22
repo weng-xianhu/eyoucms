@@ -21,7 +21,7 @@ return array (
   'groupid' => 
   array (
     'name' => 'groupid',
-    'type' => 'tinyint(2) unsigned',
+    'type' => 'int(11) unsigned',
     'notnull' => false,
     'default' => '1',
     'primary' => false,
@@ -105,6 +105,33 @@ return array (
     'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'province_id' => 
+  array (
+    'name' => 'province_id',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'city_id' => 
+  array (
+    'name' => 'city_id',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'area_id' => 
+  array (
+    'name' => 'area_id',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),

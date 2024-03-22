@@ -23,10 +23,11 @@ class WeappLogic extends Model
     public $data_path;
     // public $config_path;
     // public $curent_version;    
-    public $service_url;
-    // public $upgrade_url;
+    public $upgrade_url;
     public $service_ey;
     // public $code;
+    public $cms_version;
+    public $upgrade_postdata = [];
     
     /**
      * 析构函数
@@ -34,15 +35,20 @@ class WeappLogic extends Model
     function  __construct() {
         // $this->code = input('param.code/s', '');
         // $this->curent_version = getWeappVersion($this->code);
-        $this->service_ey = config('service_ey');
+        $this->cms_version = getCmsVersion();
+        $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+        $this->service_ey = $upgradeLogic->getServiceUrl(true);
         $this->root_path = ROOT_PATH; // 
         $this->weapp_path = WEAPP_DIR_NAME.DS; // 
         $this->data_path = DATA_PATH; // 
         // $this->config_path = $this->weapp_path.$this->code.DS.'config.php'; // 版本配置文件路径
         // api_Weapp_checkVersion
-        $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVdlYXBwJmE9Y2hlY2tWZXJzaW9u';
-        $this->service_url = base64_decode($this->service_ey).base64_decode($tmp_str).'&domain='.request()->host(true);
-        // $this->upgrade_url = $this->service_url.'&code='.$this->code.'&v='.$this->curent_version;
+        $this->upgrade_url = $this->service_ey.'/index.php?m=api&c=Weapp&a=checkVersion';
+        $this->upgrade_postdata = [
+            'domain' => request()->host(true),
+            'cms_version' => $this->cms_version,
+            'ip' => serverIP(),
+        ];
     }
 
     /**
@@ -51,7 +57,7 @@ class WeappLogic extends Model
      */
     public function insertWeapp()
     {
-        $row        = Db::name('weapp')->field('id,code,config,is_buy')->getAllWithIndex('code'); // 数据库
+        $row        = Db::name('weapp')->field('*')->getAllWithIndex('code'); // 数据库
         $new_arr    = array(); // 本地
         $addData    = array(); // 数据存储变量
         $updateData = array(); // 数据存储变量
@@ -92,7 +98,7 @@ class WeappLogic extends Model
         }
         //数据库有 本地没有
         foreach($row as $k => $v){
-            if (!in_array($v['code'], $new_arr) && $v['is_buy'] < 1) {//is_buy  0->本地安装,1-线上购买
+            if (!in_array($v['code'], $new_arr) && isset($v['is_buy']) && $v['is_buy'] < 1) {//is_buy  0->本地安装,1-线上购买
                 Db::name('weapp')->where($v)->cache(true, null, 'weapp')->delete();
             }
         }
@@ -180,13 +186,29 @@ class WeappLogic extends Model
     public function checkVersion($code, $serviceVersionList = false) {
         error_reporting(0);//关闭所有错误报告
         $lastupgrade = array();
+
         if (false === $serviceVersionList) {
-            $curent_version = getWeappVersion($code);
-            $url = $this->service_url.'&code='.$code.'&v='.$curent_version;
-            $context = stream_context_set_default(array('http' => array('timeout' => 3,'method'=>'GET')));
-            $serviceVersionList = @file_get_contents($url,false,$context);    
-            $serviceVersionList = json_decode($serviceVersionList,true);
+            $this->upgrade_postdata['code'] = $code;
+            $this->upgrade_postdata['v'] = getWeappVersion($code);
+            $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+            $upgradeLogic->GetKeyData($this->upgrade_postdata);
+            $serviceVersionList = @httpRequest($this->upgrade_url, 'POST', $this->upgrade_postdata, [], 5);
+            if (false === $serviceVersionList) {
+                $url = $this->upgrade_url.'&'.http_build_query($this->upgrade_postdata);
+                $context = stream_context_set_default(array('http' => array('timeout' => 5,'method'=>'GET')));
+                $serviceVersionList = @file_get_contents($url, false, $context);
+            }
+            if (false === $serviceVersionList) {
+                return ['code' => 0, 'msg' => "无法连接远程升级服务器！"];
+            } else {
+                $serviceVersionList = json_decode($serviceVersionList,true);
+                if (isset($serviceVersionList['code']) && empty($serviceVersionList['code'])) {
+                    $msg = empty($serviceVersionList['msg']) ? 'API请求超时' : $serviceVersionList['msg'];
+                    return ['code' => 0, 'msg' => "<font color='red'>{$msg}</font>"];
+                } 
+            }
         }
+
         if(!empty($serviceVersionList))
         {
             $upgradeArr = array();
@@ -264,14 +286,31 @@ class WeappLogic extends Model
         }
 
         $curent_version = getWeappVersion($code);
-        $upgrade_dev = config('global.upgrade_dev');
-        $upgrade_url = $this->service_url.'&code='.$code.'&dev='.$upgrade_dev.'&v='.$curent_version;
-        $serviceVersionList = file_get_contents($upgrade_url);
-        $serviceVersionList = json_decode($serviceVersionList,true);
-        if (empty($serviceVersionList)) {
-            return ['code' => 0, 'msg' => "没找到升级包"];
+        $this->upgrade_postdata['code'] = $code;
+        $this->upgrade_postdata['dev'] = config('global.upgrade_dev');
+        $this->upgrade_postdata['v'] = $curent_version;
+        $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+        $upgradeLogic->GetKeyData($this->upgrade_postdata);
+        $url = $this->service_ey."/index.php?m=api&c=Weapp&a=upgradeVersion";
+        $serviceVersionList = @httpRequest($url, 'POST', $this->upgrade_postdata, [], 5);
+        if (false === $serviceVersionList) {
+            $url = $url.'&'.http_build_query($this->upgrade_postdata);
+            $context = stream_context_set_default(array('http' => array('timeout' => 5,'method'=>'GET')));
+            $serviceVersionList = @file_get_contents($url, false, $context);
         }
-        
+        if (false === $serviceVersionList) {
+            return ['code' => 0, 'msg' => "无法连接远程升级服务器！"];
+        } else {
+            $serviceVersionList = json_decode($serviceVersionList,true);
+            if (isset($serviceVersionList['code']) && empty($serviceVersionList['code'])) {
+                $msg = empty($serviceVersionList['msg']) ? 'API请求超时' : $serviceVersionList['msg'];
+                return ['code' => 0, 'msg' => $msg];
+            }
+        }
+        if (empty($serviceVersionList)) {
+            return ['code' => 0, 'msg' => "当前没有可升级的版本！"];
+        }
+
         clearstatcache(); // 清除文件夹权限缓存
         $config_path = $this->weapp_path.$code.DS.'config.php'; // 版本配置文件路径
         if(!is_writeable($config_path)) {
@@ -328,7 +367,7 @@ class WeappLogic extends Model
 
             /*更新的SQL文件列表*/
             $sql_file = !empty($val['sql_file']) ? $val['sql_file'] : array();
-            $sqlfileArr = array_merge($sqlfileArr, $val['sql_file']);
+            $sqlfileArr = array_merge($sqlfileArr, $sql_file);
             /*--end*/
         }
         /*--end*/
@@ -513,27 +552,8 @@ class WeappLogic extends Model
      */
     private function downloadFile($fileUrl,$md5File)
     {
-        $downFileName = explode('/', $fileUrl);    
-        $downFileName = end($downFileName);
-        $saveDir = $this->data_path.'backup'.DS.$downFileName; // 保存目录
-        tp_mkdir(dirname($saveDir));
-        if(!file_get_contents($fileUrl, 0, null, 0, 1)){
-            return ['code' => 0, 'msg' => '官方插件升级包不存在']; // 文件存在直接退出
-        }
-        $ch = curl_init($fileUrl);            
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
-        $file = curl_exec ($ch);
-        curl_close ($ch);                                                            
-        $fp = fopen($saveDir,'w');
-        fwrite($fp, $file);
-        fclose($fp);
-        if(!eyPreventShell($saveDir) || !file_exists($saveDir) || $md5File != md5_file($saveDir))
-        {
-              // 下载保存升级包失败，请检查所有目录的权限以及用户组不能为root
-            return ['code' => 0, 'msg' => 'data目录不可写入，无法执行更新，请检查该目录权限以及用户组再重试'];
-        }
-        return ['code' => 1, 'msg' => '下载成功'];
+        $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+        return $upgradeLogic->downloadFile($fileUrl, $md5File, 'weapp');
     }            
     
     // 升级记录 log 日志
@@ -547,8 +567,8 @@ class WeappLogic extends Model
         }
         $mysqlinfo = \think\Db::query("SELECT VERSION() as version");
         $mysql_version  = $mysqlinfo[0]['version'];
-        $vaules = array(
-            'domain'=>$_SERVER['HTTP_HOST'], //用户域名  
+        $values = array(
+            'domain'=>request()->host(), //用户域名  
             'code'  => $code, // 插件标识
             'key_num'=>getWeappVersion($code), // 用户版本号
             'to_key_num'=>$to_key_num, // 用户要升级的版本号                
@@ -560,9 +580,114 @@ class WeappLogic extends Model
             'web_server'    => $_SERVER['SERVER_SOFTWARE'],
         );
         // api_Weapp_upgradeLog
-        $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVdlYXBwJmE9dXBncmFkZUxvZyY=';
-        $url = base64_decode($this->service_ey).base64_decode($tmp_str).http_build_query($vaules);
-        file_get_contents($url);
+        $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+        $upgradeLogic->GetKeyData($values);
+        $url = $this->service_ey.'/index.php?m=api&c=Weapp&a=upgradeLog';
+        httpRequest($url, 'POST', $values, [], 5);
+    }
+
+    /**
+     * 兼容早期版本，1.4.5或以下版本
+     * @param  array  &$assign_data [description]
+     * @return [type]               [description]
+     */
+    public function installpwd_145(&$assign_data = [])
+    {
+        $main_lang = get_main_lang();
+        /*插件安装密码设置*/
+        $weapp_installpwd = tpCache('weapp.weapp_installpwd', [], $main_lang);
+        if (!empty($weapp_installpwd)) {
+            $weapp_installpwd = 1;
+        } else {
+            $weapp_installpwd = 0;
+        }
+        $assign_data['weapp_installpwd'] = $weapp_installpwd;
+        /*--end*/
+
+        $admin_info = session('admin_info');
+        /*是否创始人*/
+        $isFounder = 0;
+        if (empty($admin_info['parent_id']) && -1 == $admin_info['role_id']) {
+            $isFounder = 1;
+        }
+        $assign_data['isFounder'] = $isFounder;
+        /*--end*/
+
+        /*登录第一次输入插件安装密码之后，在退出之前安装所有插件都不再输入安装密码*/
+        $is_weapp_installpwd = 0;
+        $weapp_installpwd = tpCache('weapp.weapp_installpwd', [], $main_lang);
+        $firstInstallpwd = empty($admin_info['weapp_info']['firstInstallpwd']) ? '' : $admin_info['weapp_info']['firstInstallpwd'];
+        if (!empty($firstInstallpwd) && $firstInstallpwd == $weapp_installpwd) {
+            $is_weapp_installpwd = 1;
+        }
+        $assign_data['is_weapp_installpwd'] = $is_weapp_installpwd;
+        /*--end*/
+    }
+
+    /**
+     *  加密函数
+     *
+     * @access    public
+     * @param     string $string 字符串
+     * @param     string $operation 操作
+     * @return    string
+     */
+    public function mchStrCode($string, $operation = 'ENCODE', $auth_code = '')
+    {
+        if (empty($auth_code)) {
+            if (function_exists('get_auth_code')) {
+                $auth_code = get_auth_code();
+            } else {
+                $auth_code = tpCache('system.system_auth_code');
+                if (empty($auth_code)) {
+                    $auth_code = \think\Config::get('AUTH_CODE');
+                    /*多语言*/
+                    if (is_language()) {
+                        $langRow = \think\Db::name('language')->order('id asc')->select();
+                        foreach ($langRow as $key => $val) {
+                            tpCache('system', ['system_auth_code'=>$auth_code], $val['mark']);
+                        }
+                    } else { // 单语言
+                        tpCache('system', ['system_auth_code'=>$auth_code]);
+                    }
+                    /*--end*/
+                }
+            }
+        }
+        
+        if (function_exists('mchStrCode')) {
+            return mchStrCode($string, $operation, $auth_code);
+        }
+
+        $key_length = 4;
+        $expiry     = 0;
+        $key        = md5($auth_code);
+        $fixedkey   = md5($key);
+        $egiskeys   = md5(substr($fixedkey, 16, 16));
+        $runtokey   = $key_length ? ($operation == 'ENCODE' ? substr(md5(microtime(true)), -$key_length) : substr($string, 0, $key_length)) : '';
+        $keys       = md5(substr($runtokey, 0, 16) . substr($fixedkey, 0, 16) . substr($runtokey, 16) . substr($fixedkey, 16));
+        $string     = $operation == 'ENCODE' ? sprintf('%010d', $expiry ? $expiry + time() : 0) . substr(md5($string . $egiskeys), 0, 16) . $string : base64_decode(substr($string, $key_length));
+
+        $i             = 0;
+        $result        = '';
+        $string_length = strlen($string);
+        for ($i = 0; $i < $string_length; $i++) {
+            $result .= chr(ord($string[$i]) ^ ord($keys[$i % 32]));
+        }
+        if ($operation == 'ENCODE') {
+            return $runtokey . str_replace('=', '', base64_encode($result));
+        } else {
+            $str1 = substr($result, 0, 10);
+            if(version_compare(PHP_VERSION,'8.0.0','>')) {
+                $str1 = !empty($str1) ? $str1 : 0;
+            }
+
+            if (($str1 == 0 || intval($str1) - time() > 0) && substr($result, 10, 16) == substr(md5(substr($result, 26) . $egiskeys), 0, 16)) {
+                return substr($result, 26);
+            } else {
+                return '';
+            }
+        }
     }
 } 
 ?>

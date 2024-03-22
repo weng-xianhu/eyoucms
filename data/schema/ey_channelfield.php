@@ -189,4 +189,13 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'set_type' => 
+  array (
+    'name' => 'set_type',
+    'type' => 'tinyint(3)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
 );

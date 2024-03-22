@@ -37,15 +37,28 @@ class TagList extends Base
      * 获取列表
      * @author wengxianhu by 2018-4-20
      */
-    public function getList($param = array(), $page = 1, $pagesize = null, $orderby = '', $addfields = '', $orderway = '')
+    public function getList($param = array())
     {
-        $field = 'a.aid,a.title,a.litpic,a.click,a.channel,a.users_price,a.old_price,a.seo_title,a.seo_description,a.add_time,a.is_litpic,a.typeid,b.typename';
-        empty($orderway) && $orderway = 'desc';
-        $page = !empty($param['page']) ? intval($param['page']) : $page;
-        $pagesize = empty($pagesize) ? config('paginate.list_rows') : $pagesize;
+        $field = 'a.*,b.typename';
         $param['typeid'] = $typeid = !empty($param['typeid']) ? $param['typeid'] : $this->tid;
         $titlelen = !empty($param['titlelen']) ? intval($param['titlelen']) : 100;
         $infolen = !empty($param['infolen']) ? intval($param['infolen']) : 160;
+        $addfields = !empty($param['addfields']) ? str_replace(["'", '"'], '', $param['addfields']) : '';
+        $orderby = !empty($param['orderby']) ? trim($param['orderby']) : '';
+        $arcrank = empty($param['arcrank']) ? 'off' : $param['arcrank'];
+        $page = !empty($param['page']) ? intval($param['page']) : 1;
+        if (!empty($param['limit'])) {
+            $pagesize = !empty($param['limit']) ? intval($param['limit']) : 15;
+        } else {
+            $pagesize = !empty($param['pagesize']) ? intval($param['pagesize']) : 15;
+        }
+
+        if (!empty($param['orderway'])) {
+            $ordermode = !empty($param['orderway']) ? trim($param['orderway']) : 'desc';
+        } else {
+            $ordermode = !empty($param['ordermode']) ? trim($param['ordermode']) : 'desc';
+        }
+        
         if (!empty($param['channelid'])) {
             if (empty($param['typeid']) && empty($param['channel'])) {
                 $param['channel'] = intval($param['channelid']);
@@ -54,8 +67,8 @@ class TagList extends Base
         $channeltype = !empty($param['channel']) ? intval($param['channel']) : '';
 
         /*
-        $args = [$param,$page,$pagesize,$orderby,$addfields,$orderway,$field];
-        $cacheKey = "think\\template\\taglib\\api\\TagList-getList-".json_encode($args);
+        $args = [$param,$field];
+        $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.json_encode($args));
         $redata = cache($cacheKey);
         if (!empty($redata['data'])) { // 启用缓存
             return $redata;
@@ -72,8 +85,7 @@ class TagList extends Base
         // 如果指定了频道ID，则频道下的所有文档都展示
         if (!empty($channeltype)) { // 优先展示模型下的文章
             unset($param['typeid']);
-        }
-        elseif (!empty($typeid)) { // 其次展示栏目下的文章
+        }elseif (!empty($typeid)) { // 其次展示栏目下的文章
             $typeidArr = explode(',', $typeid);
             if (count($typeidArr) == 1) {
                 $typeid = intval($typeid);
@@ -129,7 +141,18 @@ class TagList extends Base
                 } elseif ($key == 'channel') {
                     array_push($condition, "a.channel IN ({$channeltype})");
                 } elseif ($key == 'typeid') {
-                    array_push($condition, "a.typeid IN ({$typeid})");
+                    $web_stypeid_open = tpCache('web.web_stypeid_open'); // 是否开启副栏目
+                    if (empty($web_stypeid_open)) { // 关闭副栏目
+                        array_push($condition, "a.typeid IN ({$typeid})");
+                    } else { // 开启副栏目
+                        $stypeid_where = "";
+                        $typeid_arr = explode(',', $typeid);
+                        $typeid_arr = array_unique($typeid_arr);
+                        foreach ($typeid_arr as $_k => $_v) {
+                            $stypeid_where .= " OR CONCAT(',', a.stypeid, ',') LIKE '%,{$_v},%' ";
+                        }
+                        $condition[] = Db::raw(" (a.typeid IN ({$typeid}) {$stypeid_where}) ");
+                    }
                 } elseif ($key == 'notypeid') {
                     $param[$key] = str_replace('，', ',', $param[$key]);
                     array_push($condition, "a.typeid NOT IN (".$param[$key].")");
@@ -197,7 +220,7 @@ class TagList extends Base
         array_push($condition, "a.arcrank > -1");
         array_push($condition, "a.status = 1");
         array_push($condition, "a.is_del = 0"); // 回收站功能
-        array_push($condition, "a.lang = '{$this->main_lang}'");
+        array_push($condition, "a.lang = '".self::$home_lang."'");
         /*定时文档显示插件*/
         if (is_dir('./weapp/TimingTask/')) {
             $TimingTaskRow = model('Weapp')->getWeappList('TimingTask');
@@ -212,7 +235,7 @@ class TagList extends Base
             $where_str = implode(" AND ", $condition);
         }
         // 给排序字段加上表别名
-        $orderby = getOrderBy($orderby,$orderway);
+        $orderby = getOrderBy($orderby, $ordermode);
 
         // 获取查询的表名
         $channeltype_info = model('Channeltype')->getInfo($channeltype);
@@ -232,16 +255,66 @@ class TagList extends Base
             ->paginate($pagesize, false, $paginate);
         $result = $pages->toArray();
 
-        $aidArr = array();
+        $users = model('v1.User')->getUser(false);
+        $aidArr = $adminArr = $usersArr = $mediaArr = [];
         foreach ($result['data'] as $key => $val) {
+            array_push($aidArr, $val['aid']); // 收集文档ID
+            array_push($adminArr, $val['admin_id']); // 收集admin_id
+            array_push($usersArr, $val['users_id']); // 收集users_id
             $val['title'] = htmlspecialchars_decode($val['title']);
             $val['title'] = text_msubstr($val['title'], 0, $titlelen, false);
             $val['seo_description'] = text_msubstr($val['seo_description'], 0, $infolen, false);
             $val['seo_title'] = $this->set_arcseotitle($val['typename'], $val['seo_title']);
             $val['litpic'] = $this->get_default_pic($val['litpic']); // 默认封面图
+            $val['add_time_format'] = $this->time_format($val['add_time']);
             $val['add_time'] = date('Y-m-d', $val['add_time']);
+
+            $val['old_price'] = unifyPriceHandle($val['users_price']);
+            $val['crossed_price'] = model('ShopPublicHandle')->getGoodsSpecCrossedPrice($val['crossed_price'], $val['aid']);
+            $resultData = $this->handle_price($val['users_price'], $users, $val['aid'], $val['users_discount_type']);
+            $val['users_price'] = $resultData['users_price'];
+            $val['level_discount'] = $resultData['level_discount'];
+            $val['users_price_arr'] = explode('.', $val['users_price']);
+            
+            $val['real_sales'] = $val['sales_num']; // 真实总销量
+            $val['sales_num'] = $val['sales_all']; // 总虚拟销量
+
             $result['data'][$key] = $val;
             array_push($aidArr, $val['aid']); // 文档ID数组
+        }
+
+        //获取文章作者的信息 需要传值arcrank = on
+        if ('on' == $arcrank) {
+            $field = 'username,nickname,head_pic,users_id,admin_id,sex';
+            $userslist = Db::name('users')->field($field)
+                ->where('admin_id','in',$adminArr)
+                ->whereOr('users_id','in',$usersArr)
+                ->select();
+            foreach ($userslist as $key => $val) {
+                $val['head_pic'] = $this->get_head_pic($val['head_pic'], false, $val['sex']);
+                empty($val['nickname']) && $val['nickname'] = $val['username'];
+                if (!empty($val['admin_id'])) {
+                    $adminLitpicArr[$val['admin_id']] = $val;
+                }
+                if (!empty($val['users_id'])) {
+                    $usersLitpicArr[$val['users_id']] = $val;
+                }
+            }
+            $adminLitpic = Db::name('users')->field($field)->where('admin_id','>',0)->order('users_id asc')->find();
+            $adminLitpic['head_pic'] = $this->get_head_pic($adminLitpic['head_pic'], false, $adminLitpic['sex']);
+            empty($adminLitpic['nickname']) && $adminLitpic['nickname'] = $adminLitpic['username'];
+
+            foreach ($result['data'] as $key => $val) {
+                if (!empty($val['users_id'])) {
+                    $users = !empty($usersLitpicArr[$val['users_id']]) ? $usersLitpicArr[$val['users_id']] : [];
+                } elseif (!empty($val['admin_id'])) {
+                    $users = !empty($adminLitpicArr[$val['admin_id']]) ? $adminLitpicArr[$val['admin_id']] : [];
+                } else {
+                    $users = $adminLitpic;
+                }
+                !empty($users) && $val['users'] = $users;
+                $result['data'][$key] = $val;
+            }
         }
 
         /*附加表*/
@@ -262,15 +335,45 @@ class TagList extends Base
             }
             /*end*/
             !empty($addfields) && $addfields = ','.$addfields;
-            
+
+            if (strstr(",{$addfields},", ',content,')){
+                $addfields .= ',content_ey_m';
+            }
             $resultExt = M($addtableName)->field("aid {$addfields}")->where('aid','in',$aidArr)->getAllWithIndex('aid');
             /*自定义字段的数据格式处理*/
             $resultExt = $this->fieldLogic->getChannelFieldList($resultExt, $channeltype, true);
             /*--end*/
+
+            //统计集数
+            $jishuArr = Db::name('media_file')->where('aid','in',$aidArr)->group('aid')->field('count(*) as count,aid')->getAllWithIndex('aid');
             foreach ($result['data'] as $key => $val) {
                 $valExt = !empty($resultExt[$val['aid']]) ? $resultExt[$val['aid']] : array();
+                if (strstr(",{$addfields},", ',content,') && !empty($valExt['content_ey_m'])){
+                    $valExt['content'] = $valExt['content_ey_m'];
+                }
+                if (isset($valExt['content_ey_m'])) {unset($valExt['content_ey_m']);}
+                if (!empty($valExt['content'])) {
+                    $valExt['content_img_list'] = $this->get_content_img($valExt['content']);
+                }
                 $val = array_merge($valExt, $val);
-                $val['total_duration'] = gmSecondFormat($val['total_duration'], ':');
+                $val['total_duration'] = gmSecondFormat($val['total_duration'], ':'); //视频总时长
+                $val['episodes_count'] = !empty($jishuArr[$val['aid']]) ? $jishuArr[$val['aid']]['count'] : 0;//视频总集数
+                //视频权限
+                $val['media_auth_type'] = 1;// 所有人免费
+                if (0 < $val['users_price'] && empty($val['users_free'])) {
+                    if (empty($val['arc_level_id'])) {
+                        //不限会员 付费
+                        $val['media_auth_type'] = 2;
+                    } else {
+                        //3-限制会员 付费
+                        $val['media_auth_type'] = 3;
+                    }
+                } else {
+                    if (0 < intval($val['arc_level_id'])) { // 会员免费
+                        $val['media_auth_type'] = 4;
+                    }
+                }
+
                 $result['data'][$key] = $val;
             }
         } else if (!empty($addfields) && !empty($aidArr)) {
@@ -287,15 +390,33 @@ class TagList extends Base
                 $addfields = '';
             }
             /*end*/
-            !empty($addfields) && $addfields = ','.$addfields;
-            $resultExt = M($addtableName)->field("aid {$addfields}")->where('aid','in',$aidArr)->getAllWithIndex('aid');
-            /*自定义字段的数据格式处理*/
-            $resultExt = $this->fieldLogic->getChannelFieldList($resultExt, $channeltype, true);
-            /*--end*/
-            foreach ($result['data'] as $key => $val) {
-                $valExt = !empty($resultExt[$val['aid']]) ? $resultExt[$val['aid']] : array();
-                $val = array_merge($valExt, $val);
-                $result['data'][$key] = $val;
+            if (!empty($addfields)) {
+                $addfields = ','.$addfields;
+                if (strstr(",{$addfields},", ',content,')){
+                    if (in_array($channeltype, [1,2,3,4,5,6,7])) {
+                        $addfields .= ',content_ey_m';
+                    } else {
+                        if (in_array($extFields, ['content_ey_m'])) {
+                            $addfields .= ',content_ey_m';
+                        }
+                    }
+                }
+                $resultExt = M($addtableName)->field("aid {$addfields}")->where('aid','in',$aidArr)->getAllWithIndex('aid');
+                /*自定义字段的数据格式处理*/
+                $resultExt = $this->fieldLogic->getChannelFieldList($resultExt, $channeltype, true);
+                /*--end*/
+                foreach ($result['data'] as $key => $val) {
+                    $valExt = !empty($resultExt[$val['aid']]) ? $resultExt[$val['aid']] : array();
+                    if (strstr(",{$addfields},", ',content,') && !empty($valExt['content_ey_m'])){
+                        $valExt['content'] = $valExt['content_ey_m'];
+                    }
+                    if (isset($valExt['content_ey_m'])) {unset($valExt['content_ey_m']);}
+                    if (!empty($valExt['content'])) {
+                        $valExt['content_img_list'] = $this->get_content_img($valExt['content']);
+                    }
+                    $val = array_merge($valExt, $val);
+                    $result['data'][$key] = $val;
+                }
             }
         }
         /*--end*/
@@ -312,7 +433,7 @@ class TagList extends Base
         //             if (!isset($downloadFileArr[$val['aid']]) || empty($downloadFileArr[$val['aid']])) {
         //                 $downloadFileArr[$val['aid']] = array();
         //             }
-        //             $val['downurl'] = ROOT_DIR."/index.php?m=home&c=View&a=downfile&id={$val['file_id']}&uhash={$val['uhash']}&lang={$this->main_lang}";
+        //             $val['downurl'] = ROOT_DIR."/index.php?m=home&c=View&a=downfile&id={$val['file_id']}&uhash={$val['uhash']}&lang={self::$home_lang}";
         //             $downloadFileArr[$val['aid']][] = $val;
         //         }
         //         /*--end*/
@@ -331,5 +452,27 @@ class TagList extends Base
         // cache($cacheKey, $redata, null, 'archives');
 
         return $redata;
+    }
+
+    private function handle_price($users_price = 0, $users = [], $aid = 0, $users_discount_type = 0)
+    {
+        $result = [
+            'level_discount' => 100,
+            'users_price' => $users_price,
+        ];
+        if (!empty($users['level'])) {
+            $level_discount = !empty($users['level_discount']) ? intval($users['level_discount']) : 100;
+            $result['level_discount'] = intval($level_discount);
+            if (!empty($level_discount) && 100 !== intval($level_discount)) {
+                $level_discount = intval($level_discount) / intval(100);
+                $users_price = 2 === intval($users_discount_type) ? floatval($users_price) : floatval($users_price) * floatval($level_discount);
+            }
+        }
+        if (1 === intval($users_discount_type)) {
+            $users_price = model('ShopPublicHandle')->handleUsersDiscountPrice($aid, $users['level']);
+        }
+        $result['users_price'] = unifyPriceHandle($users_price);
+
+        return $result;
     }
 }

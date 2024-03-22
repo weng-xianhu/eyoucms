@@ -13,7 +13,6 @@
 
 namespace app\user\controller;
 
-use think\Page;
 use think\Db;
 use think\Config;
 use think\Cookie;
@@ -24,14 +23,13 @@ class Article extends Base
     public function _initialize()
     {
         parent::_initialize();
-        $this->users_db = Db::name('users');
         $this->article_order_db = Db::name('article_order');
     }
 
     //购买
-    public function buy() {
+    public function buy()
+    {
         if (IS_AJAX_POST) {
-
             // 提交的订单信息判断
             $post = input('post.');
             if (empty($post['aid'])) $this->error('操作异常，请刷新重试');
@@ -39,126 +37,121 @@ class Article extends Base
             // 查询是否已购买
             $where = [
                 'order_status' => 1,
-                'product_id' => $post['aid'],
+                'product_id' => intval($post['aid']),
                 'users_id' => $this->users_id
             ];
             $count = $this->article_order_db->where($where)->count();
             if (!empty($count)) $this->error('已购买过');
 
-            // 查询视频文档内容
-            $Where = [
+            // 查看是否已生成过订单
+            $where['order_status'] = 0;
+            $articleOrder = $this->article_order_db->where($where)->order('order_id desc')->find();
+
+            // 查询文章文档内容
+            $where = [
                 'is_del' => 0,
                 'status' => 1,
                 'aid' => $post['aid'],
                 'arcrank' => ['>', -1]
             ];
-            $list = Db::name('archives')->where($Where)->find();
-            if (empty($list)) $this->error('操作异常，请刷新重试');
+            $archives = Db::name('archives')->field('aid, title, litpic, users_price')->where($where)->find();
+            if (empty($archives)) $this->error('操作异常，请刷新重试');
+            $archives['users_price'] = get_discount_price($this->users['level_discount'], $archives['users_price']);
 
-            // 查看是否已生成过订单
-            $where['order_status'] = 0;
-            $order =$this->article_order_db->where($where)->order('order_id desc')->find();
-            if (!empty($order)) {
-                $OrderID = $order['order_id'];
+            // 订单生成规则
+            $time = getTime();
+            $orderCode = date('Y') . $time . rand(10, 100);
+            if (!empty($articleOrder)) {
                 // 更新订单信息
-                $time = getTime();
-                $OrderData = [
-                    'order_code'      => $order['order_code'],
+                $orderID = !empty($articleOrder['order_id']) ? intval($articleOrder['order_id']) : 0;
+                $orderData = [
+                    'order_code'      => $orderCode,
                     'users_id'        => $this->users_id,
                     'order_status'    => 0,
-                    'order_amount'    => $list['users_price'],
-                    'product_id'      => $list['aid'],
-                    'product_name'    => $list['title'],
-                    'product_litpic'  => get_default_pic($list['litpic']),
+                    'order_amount'    => $archives['users_price'],
+                    'product_id'      => $archives['aid'],
+                    'product_name'    => $archives['title'],
+                    'product_litpic'  => get_default_pic($archives['litpic']),
                     'lang'            => $this->home_lang,
-                    'add_time'        => $time,
                     'update_time'     => $time
                 ];
-                $this->article_order_db->where('order_id', $OrderID)->update($OrderData);
+                $this->article_order_db->where('order_id', $orderID)->update($orderData);
             } else {
                 // 生成订单并保存到数据库
-                $time = getTime();
-                $OrderData = [
-                    'order_code'      => date('Y') . $time . rand(10,100),
+                $orderData = [
+                    'order_code'      => $orderCode,
                     'users_id'        => $this->users_id,
                     'order_status'    => 0,
-                    'order_amount'    => $list['users_price'],
+                    'order_amount'    => $archives['users_price'],
                     'pay_time'        => '',
                     'pay_name'        => '',
                     'wechat_pay_type' => '',
                     'pay_details'     => '',
-                    'product_id'      => $list['aid'],
-                    'product_name'    => $list['title'],
-                    'product_litpic'  => get_default_pic($list['litpic']),
+                    'product_id'      => $archives['aid'],
+                    'product_name'    => $archives['title'],
+                    'product_litpic'  => get_default_pic($archives['litpic']),
                     'lang'            => $this->home_lang,
                     'add_time'        => $time,
                     'update_time'     => $time
                 ];
-                $OrderID = $this->article_order_db->insertGetId($OrderData);
+                $orderID = $this->article_order_db->insertGetId($orderData);
             }
 
             // 保存成功
-            if (!empty($OrderID)) {
+            if (!empty($orderID)) {
                 // 支付结束后返回的URL
                 $ReturnUrl = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : $post['return_url'];
                 cookie($this->users_id . '_' . $post['aid'] . '_EyouArticleViewUrl', $ReturnUrl);
-
                 // 对ID和订单号加密，拼装url路径
-                $Paydata = [
+                $paydata = [
                     'type' => 9,
-                    'order_id' => $OrderID,
-                    'order_code' => $OrderData['order_code'],
+                    'order_id' => $orderID,
+                    'order_code' => $orderData['order_code'],
                 ];
-
                 // 先 json_encode 后 md5 加密信息
-                $Paystr = md5(json_encode($Paydata));
-
+                $paystr = md5(json_encode($paydata));
                 // 清除之前的 cookie
-                Cookie::delete($Paystr);
-
+                Cookie::delete($paystr);
                 // 存入 cookie
-                cookie($Paystr, $Paydata);
-
+                cookie($paystr, $paydata);
                 // 跳转链接
-                if (isMobile()){
-                    $PaymentUrl = urldecode(url('user/Pay/pay_recharge_detail',['paystr'=>$Paystr]));//第一种支付
-                }else{
-                    $PaymentUrl = urldecode(url('user/Article/pay_recharge_detail',['paystr'=>$Paystr]));//第二种支付,弹框支付
-                }
-                $this->success('订单已生成！', $PaymentUrl);
+                // if (isMobile()) {
+                //     $PaymentUrl = urldecode(url('user/Pay/pay_recharge_detail', ['paystr'=>$paystr]));//第一种支付
+                // } else {
+                //     $PaymentUrl = urldecode(url('user/Article/pay_recharge_detail', ['paystr'=>$paystr]));//第二种支付,弹框支付
+                // }
+                $this->success('订单已生成！', urldecode(url('user/Article/pay_recharge_detail', ['paystr' => $paystr])));
             }
         } else {
             abort(404);
         }
     }
+
     // 充值详情
     public function pay_recharge_detail()
     {
+        $url = url('user/Article/index');
         // 接收数据读取解析
-        $Paystr = input('param.paystr/s');
-        $PayData = cookie($Paystr);
-
-        if (!empty($PayData['order_id']) && !empty($PayData['order_code'])) {
+        $paystr = input('param.paystr/s', '');
+        $paydata = !empty($paystr) ? cookie($paystr) : [];
+        if (!empty($paydata['order_id']) && !empty($paydata['order_code'])) {
             // 订单信息
-            $order_id   = !empty($PayData['order_id']) ? intval($PayData['order_id']) : 0;
-            $order_code = !empty($PayData['order_code']) ? $PayData['order_code'] : '';
+            $order_id   = !empty($paydata['order_id']) ? intval($paydata['order_id']) : 0;
+            $order_code = !empty($paydata['order_code']) ? $paydata['order_code'] : '';
         } else {
-            $this->error('订单不存在或已变更', url('user/Shop/shop_centre'));
+            $this->error('订单不存在或已变更', $url);
         }
 
         // 处理数据
-        if (is_array($PayData) && (!empty($order_id) || !empty($order_code))) {
+        if (is_array($paydata) && (!empty($order_id) || !empty($order_code))) {
             $data = [];
             if (!empty($order_id)) {
-                /*余额开关*/
+                // 余额开关
                 $pay_balance_open = getUsersConfigData('pay.pay_balance_open');
-                if (!is_numeric($pay_balance_open) && empty($pay_balance_open)) {
-                    $pay_balance_open = 1;
-                }
-                /*end*/
+                if (!is_numeric($pay_balance_open) && empty($pay_balance_open)) $pay_balance_open = 1;
 
-                if(!empty($PayData['type']) && 9 == $PayData['type']){
-                    //文章支付订单
+                // 查询文章支付订单
+                if (!empty($paydata['type']) && 9 == $paydata['type']) {
                     $where = [
                         'order_id'   => $order_id,
                         'order_code' => $order_code,
@@ -166,15 +159,13 @@ class Article extends Base
                         'lang'       => $this->home_lang
                     ];
                     $data = Db::name('article_order')->where($where)->find();
-                    if (empty($data)) $this->error('订单不存在或已变更', url('user/Article/index'));
-
-                    $url = url('user/Article/index');
-                    if (in_array($data['order_status'], [1])) $this->error('订单已支付，即将跳转！', $url);
+                    if (empty($data)) $this->error('订单不存在或已变更', $url);
+                    if (in_array($data['order_status'], [1])) $this->error('订单已支付，即将跳转', $url);
 
                     // 组装数据返回
                     $data['transaction_type'] = 9; // 交易类型，9为购买文章
                     $data['unified_id']       = $data['order_id'];
-                     $data['unified_number']   = $data['order_code'];
+                    $data['unified_number']   = $data['order_code'];
                     $data['cause']            = $data['product_name'];
                     $data['pay_balance_open'] = $pay_balance_open;
                     $this->assign('data', $data);

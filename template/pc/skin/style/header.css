@@ -11,6 +11,9 @@
 #pc-header .nav li ul li a {background:#FFF;line-height:42px;color:#3e3e3e;font-size:14px;font-weight:normal;display:block;width:100%;text-align:left;}
 #pc-header .nav li ul li a:hover{background:#ff9600;color:#fff;}
 
+/* 登录图标 */
+.log-in a.user-ico i{font-size: 20px !important;}
+
 /* pc搜索图标 */
 #pc-header .searchBar{position:absolute;top:37px;right:120px}
 #pc-header a.search-ico i{font-size:18px;color:#6E6E6E;}
@@ -37,8 +40,8 @@
 
 /* 注册登录切换 */
 .register .tab{font-size:0}
-.register .tab li{cursor:pointer;display:inline-block;position:relative;font-size:20px;width:60px;color:#666;margin:0 0 40px 0}
-.register .tab li::before{background:#ccc;content:'';position:absolute;bottom:-10px;left:0;width:100%;height:3px;border-radius:3px;transition:transform .3s;}
+.register .tab li{cursor:pointer;display:inline-block;position:relative;font-size:20px;width:100%;color:#666;margin:0 0 40px 0}
+/* .register .tab li::before{background:#ccc;content:'';position:absolute;bottom:-10px;left:0;width:100%;height:3px;border-radius:3px;transition:transform .3s;} */
 .register .tab li.cur{color:#ff9600}
 .register .tab li.cur::before{background:#ff9600;content:'';position:absolute;bottom:-10px;left:0;width:100%;height:3px;border-radius:3px;transition:transform .3s;}
 
@@ -48,6 +51,7 @@
 
 .register .bnt-login{margin:0 auto;text-align:center}
 .register .bnt-login a{display:inline-block;color:#fff;font-size:22px;width:48px;height:48px;text-align:center;line-height:48px;margin-right:10px;border-radius:30px}
+.register .bnt-login a i{font-size: 22px;}
 .register .bnt-login a:hover{opacity:0.8}
 .register .bnt-login a.weixin{background:#38B624}
 .register .bnt-login a.qq{background:#1F92DF}
@@ -57,6 +61,7 @@
 /* 弹出搜索 begin */
 .searchBar-m {display:none;width:100%;height:100%;position:fixed;top:0px;z-index:9999;text-align:center}
 .searchBar-m .mask {position:absolute;left:0;right:0;width:100%;height:100%;background:#000;opacity:0.8;}
+.searchBar-m .mask-ico i{font-size: 20px;}
 .searchBar-m a {display:block;position:absolute;right:5%;top:5%;width:60px;height:60px;line-height:56px;font-size:48px;z-index:9999;color:#fff;}
 .searchBar-m a:hover{color:#ff9600}
 .searchBar-m .form-group {width:70%;max-width:720px;position:absolute;left:50%;top:40%;transform:translate(-50%,-200%);}

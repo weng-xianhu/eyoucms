@@ -5,29 +5,13 @@
 <div class="page">
 
     <div class="row-bar clearfix mb10">
-        <div class="row-bar-l fl">
-            <ul class="tab-base nc-row">
-                {eq name="$Think.const.CONTROLLER_NAME.'@index'|is_check_access" value="1"}
-                <li><a href="{:url('Weapp/index')}" class="tab {eq name="$Request.action" value="index"}current{/eq}"><span>我的插件</span></a></li>
-                {/eq}
-                
-                {eq name="$Think.const.CONTROLLER_NAME.'@plugin'|is_check_access" value="1"}
-                    {eq name="$weapp_plugin_open" value="1"}
-                    <li><a href="{:url('Weapp/plugin')}" class="tab {eq name="$Request.action" value="plugin"}current{/eq}"><span>云插件库</span></a></li>
-                    {/eq}
-                {/eq}
-                
-                {eq name="$Think.const.CONTROLLER_NAME.'@mybuy'|is_check_access" value="1"}
-                <li><a href="{:url('Weapp/mybuy', ['install'=>0])}" class="tab {eq name="$Request.action" value="mybuy"}current{/eq}"><span>已购买插件</span></a></li>
-                {/eq}
-            </ul>
-        </div>
+        {include file="weapp/bar" /}
         <div class="flexigrid fr">
             <form  id="searchForm" class="navbar-form form-inline fl" action="{:url('Weapp/plugin')}" method="get"
                   onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
-                    <div class="sDiv2 fl" style="margin-right: 6px;">
+                    <div class="sDiv2 fl" style="">
                         <select name="is_pay" class="select" style="margin:5px 5px;" onchange="$('#searchForm').submit();">
                             <option value="">--全部--</option>
                             <option value="1" {eq name="$Request.param.is_pay" value="1"}selected{/eq}>免费</option>
@@ -35,10 +19,10 @@
                             <option value="3" {eq name="$Request.param.is_pay" value="3"}selected{/eq}>已购买</option>
                         </select>
                     </div>
-                    <div class="sDiv2 fl" style="margin-right: 6px;">
+                    <div class="sDiv2 fl" style="">
                         <input type="text" size="30" name="keywords" class="qsbox" value="{$Request.param.keywords}" placeholder="搜索相关数据...">
                         <input type="submit" class="btn" value="搜索">
-            			<i class="fa fa-search"></i>
+            			<i class="iconfont e-sousuo"></i>
                     </div>
                     
                 </div>
@@ -65,7 +49,9 @@
                         <tbody>
                             <tr>
                                 <td class="no-data" align="center" axis="col0" colspan="50">
-                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                    <div class="no_row">
+                                        <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -260,23 +246,24 @@
             }else {
                 window.open("https://www.eyoucms.com/plus/view.php?aid="+id);
                 layer.open({
-                    type: 1
-                    , title: '友情提示'
-                    , btn: ['购买成功', '购买失败']
-                    , yes: function (index, layero) {
+                    type: 1, 
+                    shade: layer_shade,
+                    title: '友情提示', 
+                    btn: ['购买成功', '购买失败'], 
+                    yes: function (index, layero) {
                         layer.closeAll();
                         remoteInstall(code, min_version);
-                    }
-                    ,btn2: function(index, layero){
+                    },
+                    btn2: function(index, layero){
                         layer.close();
                         // location.reload()//重新加载页面
-                    }
-                    , cancel: function () {
+                    }, 
+                    cancel: function () {
                         //右上角关闭回调
                         // return false //开启该代码可禁止点击该按钮关闭
-                    }
-                    ,shadeClose: true //点击遮罩关闭
-                    ,content: "<div style='padding:20px;'>购买成功可在线安装该插件！</div>"
+                    },
+                    shadeClose: true, //点击遮罩关闭
+                    content: "<div style='padding:20px;'>购买成功可在线安装该插件！</div>"
                 });
             }
         }

@@ -39,7 +39,7 @@ return array (
   'controller' => 
   array (
     'name' => 'controller',
-    'type' => 'varchar(20)',
+    'type' => 'varchar(50)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -76,6 +76,24 @@ return array (
   array (
     'name' => 'checked',
     'type' => 'tinyint(4)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'litpic' => 
+  array (
+    'name' => 'litpic',
+    'type' => 'varchar(100)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'statistics_type' => 
+  array (
+    'name' => 'statistics_type',
+    'type' => 'int(5)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

@@ -1,0 +1,145 @@
+{include file="public/layout"/}
+<body class="bodystyle" style=" overflow-y: scroll;min-width:auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<style type="text/css">
+    #layerid_1645756024 textarea
+    {
+        height: 220px;
+    }
+</style>
+<div class="page" style="min-width:auto; ">
+    <div class="flexigrid htitx">
+        <form class="form-horizontal" id="handlepost" method="post" enctype="multipart/form-data">
+            <div class="ncap-form-default">
+                {include file="security/second_ask_html" /}
+                <dl class="row">
+                    <div class="bot" style="padding-bottom:0px;">
+                        <input type="hidden" name="gourl" value="{$gourl}">
+                        <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green">确认提交</a>
+                    </div>
+                </dl>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+    function checkForm(){
+        var is_founder = {$admin_info['is_founder']|default=0};
+        if ($('input[name=security_ask_open]:checked').val() == 1) {
+            var security_ask = $('select[name=security_ask]').val();
+            var security_answer = $.trim($('input[name=security_answer]').val());
+            if ('add' == $('#is_ask_add_edit').val()) {
+                if (0 > security_ask) {
+                    showErrorMsg('请设置安全问题！');
+                    return false;
+                }
+                if (security_answer === '') {
+                    showErrorMsg('请设置问题答案！');
+                    $('input[name=security_answer]').focus();
+                    return false;
+                }
+            } else {
+                if (security_answer !== '' || 0 <= security_ask) {
+                    var security_answer_old = $.trim($('input[name=security_answer_old]').val());
+                    if (security_answer_old === '') {
+                        showErrorMsg('原问题答案不能为空！');
+                        $('input[name=security_answer_old]').focus();
+                        return false;
+                    } else {
+                        if (0 <= security_ask) {
+                            if (security_answer === '') {
+                                showErrorMsg('请设置问题答案！');
+                                $('input[name=security_answer]').focus();
+                                return false;
+                            } else if (security_answer === security_answer_old) {
+                                showErrorMsg('设置问题答案不能与原来的一致！');
+                                $('input[name=security_answer]').focus();
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            var security_ask_open = {$security['security_ask_open']|default=0};
+            if (0 == is_founder && 1 == security_ask_open) {
+                showErrorAlert('创始人才能关闭安全验证功能！');
+                return false;
+            }
+        }
+        
+        if(!ajax_isverify_answer())
+        {
+            autoload_security();
+            return false;
+        }
+
+        security_ask_submitForm();
+    }
+
+    function security_ask_submitForm()
+    {
+        layer_loading('正在处理');
+        setTimeout(function(){
+            var source = "{$source|default=''}";
+            $.ajax({
+                type : 'post',
+                url : "{:url('Security/second_ask_init', ['_ajax'=>1])}",
+                data : $('#handlepost').serialize(),
+                dataType : 'json',
+                success : function(res){
+                    layer.closeAll();
+                    if (res.code == 1) {
+                        var btn = ['关闭窗口', '重设'];
+                        if (res.data.is_show_answer == 1) {
+                            btn = ['记住了', '重设'];
+                        }
+                        layer.confirm(res.msg, {
+                            shade: layer_shade,
+                            area: ['480px', '190px'],
+                            move: false,
+                            title: '提示',
+                            btnAlign:'r',
+                            closeBtn: 3,
+                            btn: btn ,//按钮
+                            success: function () {
+                                $(".layui-layer-content").css('text-align', 'left');
+                            }
+                        }, function (index) {
+                            var _parent = parent;
+                            if (res.data.gourl) {
+                                _parent.layer.close(parentObj);
+                                _parent.window.location.href = res.data.gourl;
+                            } else {
+                                if (res.data.is_show_answer == 1) {
+                                    window.location.reload();
+                                } else {
+                                    if ('arctype_lists' == source) {
+                                        _parent.newtpl('lists');
+                                    } else if ('arctype_view' == source) {
+                                        _parent.newtpl('view');
+                                    }
+                                    _parent.layer.close(parentObj);
+                                }
+                            }
+                        }, function (index) {
+                            window.location.reload();
+                        });
+                    }else{
+                        showErrorMsg(res.msg);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }, 1);
+    }
+</script>
+
+{include file="public/footer" /}

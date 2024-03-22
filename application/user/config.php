@@ -46,6 +46,8 @@ $user_config = array(
         'Users@login', // 登录
         'Users@logout', // 退出
         'Users@reg', // 注册
+        'Users@mobile_login', // 手机号登录
+        'Users@mobile_reg', // 手机号注册
         'Users@vertify', // 验证码
         'Users@retrieve_password', // 忘记密码 -- 邮箱
         'Users@reset_password', // 忘记密码 -- 邮箱

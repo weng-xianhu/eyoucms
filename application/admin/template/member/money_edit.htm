@@ -6,7 +6,7 @@
 <div id="ajaxwaitid"></div>
 <div class="page">
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="{:url('Member/money_index')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a></a>
+        <div class="item-title"><a class="back_xin" href="{:url('Member/money_index')}" title="返回"><i class="iconfont e-fanhui"></i></a></a>
             <div class="subject">
                 <h3>充值管理 - 编辑订单</h3>
                 <h5></h5>
@@ -162,8 +162,16 @@
             var msg = '确定要标记订单为已付款？';
         }
         layer.confirm(msg, {
-            title: false,
-            btn: ['确定','取消']
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定','取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         },function(){
             $('#status_name').val(status_name);
             layer_loading('正在处理');

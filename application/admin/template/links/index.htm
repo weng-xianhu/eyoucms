@@ -2,10 +2,10 @@
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-10">
     {include file="links/bar" /}
     <div class="flexigrid">
-        <div class="mDiv">
+        <div class="mDiv pt0">
             <div class="ftitle">
                 {eq name="'Links@add'|is_check_access" value="1"}
                 <div class="fbutton">
@@ -18,13 +18,21 @@
                 {/eq}
                  {include file="links/links_group_bar" /}
             </div>
-            <form class="navbar-form form-inline" action="{:U('Links/index')}" method="get" onsubmit="layer_loading('正在处理');">
+            <form class="navbar-form form-inline" id="searchForm" action="{:U('Links/index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
-                    <div class="sDiv2 fl" style="margin-right: 6px;">
+                    <div class="sDiv2">  
+                        <select name="groupid" class="select" style="margin:0px 5px;">
+                            <option value="">--全部--</option>
+                            {volist name="links_group" id="vo"}
+                                <option value="{$vo.id}" {eq name="$Request.param.groupid" value="$vo.id"}selected{/eq}>{$vo.group_name}</option>
+                            {/volist}
+                        </select>
+                    </div>
+                    <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索相关数据...">
                         <input type="submit" class="btn" value="搜索">
-                        <i class="fa fa-search"></i>
+                        <i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -77,7 +85,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -164,6 +174,7 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        {notempty name="list"}
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
@@ -180,6 +191,7 @@
             </div>
             <div style="clear:both"></div>
         </div>
+        {/notempty}
     </div>
 </div>
 <script>
@@ -193,6 +205,10 @@
         });
         $('input[type=checkbox].checkAll').click(function(){
             $('input[type=checkbox]').prop('checked',this.checked);
+        });
+
+        $('#searchForm select[name=groupid]').change(function(){
+            $('#searchForm').submit();
         });
     });
     

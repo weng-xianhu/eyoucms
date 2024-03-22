@@ -1,0 +1,95 @@
+<div class="hDiv" id="canal_list">
+    <div class="hDivBox">
+        <table cellspacing="0" cellpadding="0" style="width: 100%">
+            <thead>
+            <tr>
+                <th class="sign w10" axis="col0">
+                    <div class="tc"></div>
+                </th>
+                <th abbr="article_title" axis="col3" class="w10">
+                    <div id="anchor-sms" class="tc">渠道配置</div>
+                </th>
+                <th abbr="ac_id" axis="col4">
+                    <div class=""></div>
+                </th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+<div class="plug-list">
+    <!-- 开放API -->
+    <div class="plug-item-content">
+        <div class="plug-item-top">
+            <div class="plug-img">
+                <a href="{:url('Canal/conf_api')}"><img src="__SKIN__/images/conf_api.png?v={$version}" width="80" height="80"></a>
+            </div>
+            <div class="plug-text">
+                <div class="plug-text-title">
+                    <a href="{:url('Canal/conf_api')}">小程序API</a>
+                </div>
+                <div class="plug-text-versions">
+                    <span>开源小程序api接口配置(目前支持微信、百度、抖音小程序)</span>
+                </div>
+                <!-- <div class="plug-text-des">暂无描述</div> -->
+            </div>
+        </div>
+        <div class="plug-item-bottm">
+            <a href="JavaScript:void(0);" id="conf_api_open1" onclick="ConfApiOpen(1);" {empty name="$confApi.apiopen"} style="cursor: pointer;" {else/} style="cursor: pointer; display: none;" {/empty} title="点击关闭">已启用 </a>
+            <a href="JavaScript:void(0);" id="conf_api_open0" onclick="ConfApiOpen(0);" {empty name="$confApi.apiopen"} style="cursor: pointer; color: #9ea3a7; display: none;" {else/} style="cursor: pointer; color: #9ea3a7;" {/empty} title="点击启用">已关闭 </a>
+            <a href="{:url('Canal/conf_api')}" id="a_conf_api" {notempty name="$confApi.apiopen"}class="none"{/notempty}>配置</a>
+        </div>
+    </div>
+    <script type="text/javascript">
+        function ConfApiOpen(open_value) {
+            $.ajax({
+                url: "{:url('Canal/ajax_save_apiopen', ['_ajax'=>1])}",
+                type: 'POST',
+                dataType: 'JSON',
+                data: {open_value: open_value},
+                success: function(res) {
+                    if (1 == res.code) {
+                        if (1 == open_value) {
+                            $('#conf_api_open0').show();
+                            $('#conf_api_open1').hide();
+                            $('#a_conf_api').hide();
+                        } else {
+                            $('#conf_api_open1').show();
+                            $('#conf_api_open0').hide();
+                            $('#a_conf_api').show();
+                        }
+                        layer.msg(res.msg, {icon: 1, time: 1000});
+                        return false;
+                    } else {
+                        layer.alert(res.msg, {icon: 2, title:false});
+                        return false;
+                    }
+                },
+                error: function(e){
+                    showErrorMsg(e.responseText);
+                    return false;
+                }
+            });
+        }
+    </script>
+    <!-- 微信公众号 -->
+    <div class="plug-item-content">
+        <div class="plug-item-top">
+            <div class="plug-img">
+                <a href="{:url('Canal/conf_wechat')}"><img src="__SKIN__/images/conf_wechat.png?v={$version}" width="80" height="80"></a>
+            </div>
+            <div class="plug-text">
+                <div class="plug-text-title">
+                    <a href="{:url('Canal/conf_wechat')}">微信公众号</a>
+                </div>
+                <div class="plug-text-versions">
+                    <span>微信公众号api接口配置、微站点开启及相关设置</span>
+                </div>
+                <!-- <div class="plug-text-des">暂无描述</div> -->
+            </div>
+        </div>
+        <div class="plug-item-bottm">
+            <a href="{:url('Canal/conf_wechat')}">配置</a>
+        </div>
+    </div>
+</div>

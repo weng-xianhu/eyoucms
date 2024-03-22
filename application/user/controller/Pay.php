@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -40,7 +40,7 @@ class Pay extends Base
 
         // 支付功能是否开启
         $redirect_url = '';
-        $pay_open = getUsersConfigData('pay.pay_open');
+        $pay_open = $this->usersConfig['pay_open'];
         $web_users_switch = tpCache('web.web_users_switch');
         if (empty($pay_open)) { 
             // 支付功能关闭，立马跳到会员中心
@@ -70,32 +70,94 @@ class Pay extends Base
     {
         // 订单超过 get_order_validity 设定的时间，则修改订单为已取消状态，无需返回数据
         // model('Pay')->UpdateOrderData($this->users_id);
-
-        // 数据查询
-        $condition['a.users_id'] = $this->users_id;
-        $condition['a.lang']     = $this->home_lang;
-        // 只读取已付款或已完成订单信息
-        $condition['a.status']   = array('IN',[2,3]);
-        $count = $this->users_money_db->alias('a')->where($condition)->count();// 查询满足要求的总记录数
-        $Page = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
-        $list = $this->users_money_db->field('a.*')
-            ->alias('a')
-            ->where($condition)
-            ->order('a.moneyid desc')
-            ->limit($Page->firstRow.','.$Page->listRows)
-            ->select();
-        $show = $Page->show();// 分页显示输出
-        $this->assign('page',$show);// 赋值分页输出
-        $this->assign('list',$list);// 赋值数据集
-        $this->assign('pager',$Page);// 赋值分页集
-
+        // 获取金额明细状态
+        $pay_status_arr = Config::get('global.pay_status_arr');
         // 获取金额明细类型
         $pay_cause_type_arr = Config::get('global.pay_cause_type_arr');
-        $this->assign('pay_cause_type_arr',$pay_cause_type_arr);
+        // 只读取已付款或已完成订单信息
+        $condition = [];
+        array_push($condition, "a.lang = '".$this->home_lang.'\'');
+        array_push($condition, "a.users_id = ".$this->users_id);
+        array_push($condition, "a.status IN (2, 3)");
+        // $increase_type = [0, 3, 5, 6];
+        $increase_type = [3, 5, 6];
+        $decrease_type = [1, 2, 4, 7];
+        $queryID = input('param.queryID/d', 0);
+        if (!empty($queryID)) {
+            if (in_array($queryID, [10, 20])) {
+                if (10 === intval($queryID)) {
+                    $cause_type = implode(',', $increase_type);
+                    array_push($condition, "(a.cause_type IN ({$cause_type}) OR (a.cause_type = 0 AND a.pay_method ='balance'))");
+                } else {
+                    $cause_type = implode(',', $decrease_type);
+                    array_push($condition, "a.cause_type IN ({$cause_type})");
+                }
+            }
+            else if (in_array($queryID, [30, 40, 50, 60])) {
+                array_push($condition, "a.admin_id = 0");
+                switch (intval($queryID)) {
+                    case 30:
+                        $queryName = 'shop_order';
+                        break;
+                    case 40:
+                        $queryName = 'article_order';
+                        break;
+                    case 50:
+                        $queryName = 'media_order';
+                        break;
+                    case 60:
+                        $queryName = 'download_order';
+                        break;
+                }
+                $where = [
+                    'pay_name' => 'balance',
+                    'users_id' => $this->users_id
+                ];
+                $orderCodes = Db::name($queryName)->where($where)->column('order_code');
+                $orderCodes = !empty($orderCodes) ? implode(',', $orderCodes) : '\'\'';
+                array_push($condition, "a.order_number IN ({$orderCodes})");
+            }
+            else if (in_array($queryID, [70])) {
+                array_push($condition, "a.admin_id > 0");
+            }
+        } else {
+            array_push($condition, "(a.cause_type != 0 OR (a.cause_type = 0 AND a.pay_method ='balance'))");
+        }
+        $this->assign('queryID', $queryID);
+        $this->assign('increase_type', $increase_type);
+        $this->assign('decrease_type', $decrease_type);
+        $where_str = "";
+        if (0 < count($condition)) $where_str = implode(" AND ", $condition);
+        $count = $this->users_money_db->alias('a')->where($where_str)->count();// 查询满足要求的总记录数
+        $Page = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数 
+        $list = $this->users_money_db->field('a.*')
+            ->alias('a')
+            ->where($where_str)
+            ->order('a.add_time desc, a.moneyid desc')
+            ->limit($Page->firstRow.','.$Page->listRows)
+            ->select();
+        foreach ($list as $key => $val) {
+            $val['money'] = floatval($val['money']);
+            $val['users_money'] = floatval($val['users_money']);
+            $val['status_name'] = !empty($pay_status_arr[$val['status']]) ? $pay_status_arr[$val['status']] : '';
+            if (3 === intval($val['cause_type'])) {
+                $causeValue = !empty($val['cause']) ? explode('，', $val['cause']) : [];
+                $val['cause_type_name'] = !empty($causeValue[0]) ? str_replace('购买', '订单', $causeValue[0]) : '';
+            } else {
+                $val['cause_type_name'] = !empty($pay_cause_type_arr[$val['cause_type']]) ? $pay_cause_type_arr[$val['cause_type']] : '';
+            }
+            if (in_array($val['cause_type'], [4, 5]) && empty($val['order_number'])) {
+                $val['order_number'] = date('Ymd') . $val['add_time'];
+            }
+            $list[$key] = $val;
+        }
 
-        // 获取金额明细状态
-        $pay_status_arr     = Config::get('global.pay_status_arr');
-        $this->assign('pay_status_arr',$pay_status_arr);
+        $show = $Page->show();// 分页显示输出
+        $this->assign('page', $show);// 赋值分页输出
+        $this->assign('list', $list);// 赋值数据集
+        $this->assign('pager', $Page);// 赋值分页集
+        $this->assign('pay_status_arr', $pay_status_arr);
+        $this->assign('pay_cause_type_arr', $pay_cause_type_arr);
 
         $result = [];
 
@@ -110,6 +172,13 @@ class Pay extends Base
         );
         $this->assign('eyou', $eyou);
 
+        /*第三套模板，将充值功能加入明细页面*/
+        $money = input('param.money/f');
+        $this->assign('money', $money);
+        $unified_number = input('param.unified_number/s');
+        $this->assign('unified_number', $unified_number);
+        /*end*/
+
         return $this->fetch('users/pay_consumer_details');
     }
 
@@ -117,94 +186,82 @@ class Pay extends Base
     public function pay_account_recharge()
     {
         if (IS_AJAX_POST) {
-            // 获取微信配置信息
-            // $pay_wechat_config = !empty($this->usersConfig['pay_wechat_config']) ? unserialize($this->usersConfig['pay_wechat_config']) : [];
-            $pay_wechat_config = [];
-            
-            // 获取支付宝配置信息
-            // $pay_alipay_config = !empty($this->usersConfig['pay_alipay_config']) ? unserialize($this->usersConfig['pay_alipay_config']) : [];
-            $pay_alipay_config = [];
-
-            // 都为空则返回
-            $is_open_wechat = 0;
-            if (empty($pay_wechat_config) && empty($pay_alipay_config)) {
-                $where = [
-                    'status' => 1,
-                    'pay_info' => ['NEQ', '']
-                ];
-                $PayApiList = Db::name('pay_api_config')->where($where)->select();
-                $is_open_wechat = 1;
-                if (!empty($PayApiList)) {
-                    foreach ($PayApiList as $key => $value) {
-                        if (!empty($value['pay_info'])) {
-                            if ('wechat' == $value['pay_mark']) $is_open_wechat = 0;
-                            
-                            $PayInfo = unserialize($value['pay_info']);
-                            if ('wechat' == $value['pay_mark']) {
-                                if (0 == $PayInfo['is_open_wechat']) {
-                                    if (empty($PayInfo['appid']) || empty($PayInfo['mchid']) || empty($PayInfo['key'])) {
-                                        $is_open_wechat = 1;
-                                        unset($PayApiList[$key]);
-                                    }
-                                } else {
+            $where = [
+                'status' => 1,
+                'pay_info' => ['NEQ', '']
+            ];
+            $PayApiList = Db::name('pay_api_config')->where($where)->select();
+            $is_open_wechat = 1;
+            if (!empty($PayApiList)) {
+                foreach ($PayApiList as $key => $value) {
+                    if (!empty($value['pay_info'])) {
+                        if ('wechat' == $value['pay_mark']) $is_open_wechat = 0;
+                        
+                        $PayInfo = unserialize($value['pay_info']);
+                        if ('wechat' == $value['pay_mark']) {
+                            if (0 == $PayInfo['is_open_wechat']) {
+                                if (empty($PayInfo['appid']) || empty($PayInfo['mchid']) || empty($PayInfo['key'])) {
                                     $is_open_wechat = 1;
                                     unset($PayApiList[$key]);
                                 }
-                            } else if ('alipay' == $value['pay_mark']) {
-                                if (0 == $PayInfo['is_open_alipay']) {
-                                    if (version_compare(PHP_VERSION,'5.5.0','<')) {
+                            } else {
+                                $is_open_wechat = 1;
+                                unset($PayApiList[$key]);
+                            }
+                        } else if ('alipay' == $value['pay_mark']) {
+                            if (0 == $PayInfo['is_open_alipay']) {
+                                if (version_compare(PHP_VERSION,'5.5.0','<')) {
+                                    // 旧版支付宝
+                                    if (empty($PayInfo['account']) || empty($PayInfo['code']) || empty($PayInfo['id'])) {
+                                        unset($PayApiList[$key]);
+                                    }
+                                } else {
+                                    if (1 == $PayInfo['version']) {
                                         // 旧版支付宝
                                         if (empty($PayInfo['account']) || empty($PayInfo['code']) || empty($PayInfo['id'])) {
                                             unset($PayApiList[$key]);
                                         }
                                     } else {
-                                        if (1 == $PayInfo['version']) {
-                                            // 旧版支付宝
-                                            if (empty($PayInfo['account']) || empty($PayInfo['code']) || empty($PayInfo['id'])) {
-                                                unset($PayApiList[$key]);
-                                            }
-                                        } else {
-                                            // 新版支付宝
-                                            if (empty($PayInfo['app_id']) || empty($PayInfo['merchant_private_key']) || empty($PayInfo['alipay_public_key'])) {
-                                                unset($PayApiList[$key]);
-                                            }
+                                        // 新版支付宝
+                                        if (empty($PayInfo['app_id']) || empty($PayInfo['merchant_private_key']) || empty($PayInfo['alipay_public_key'])) {
+                                            unset($PayApiList[$key]);
                                         }
                                     }
-                                } else {
-                                    unset($PayApiList[$key]);
                                 }
-                            } else if (0 == $value['system_built']) {
-                                if (0 == $PayInfo['is_open_pay']) {
-                                    $is_set = false;
-                                    foreach ($PayInfo as $kk => $vv) {
-                                        if ((stristr($kk, 'appid') || stristr($kk, 'appsecret')) && !empty($vv)) {
-                                            $is_set = true;
-                                            break;
-                                        }
-                                    }
-                                    if (false === $is_set) {
-                                        unset($PayApiList[$key]); 
-                                    }
-                                } else {
-                                    unset($PayApiList[$key]);
-                                }
-                                if (!empty($PayApiList[$key])) {
-                                    $PayApiList[$key]['pay_img'] = get_default_pic('/weapp/'.$value['pay_mark'].'/pay.png');
-                                }
+                            } else {
+                                unset($PayApiList[$key]);
                             }
-                        } else {
-                            unset($PayApiList[$key]);
+                        } else if (0 == $value['system_built']) {
+                            if (0 == $PayInfo['is_open_pay']) {
+                                $is_set = false;
+                                foreach ($PayInfo as $kk => $vv) {
+                                    if ((stristr($kk, 'appid') || stristr($kk, 'appsecret')) && !empty($vv)) {
+                                        $is_set = true;
+                                        break;
+                                    }
+                                }
+                                if (false === $is_set) {
+                                    unset($PayApiList[$key]); 
+                                }
+                            } else {
+                                unset($PayApiList[$key]);
+                            }
+                            if (!empty($PayApiList[$key])) {
+                                $PayApiList[$key]['pay_img'] = get_default_pic('/weapp/'.$value['pay_mark'].'/pay.png');
+                            }
                         }
+                    } else {
+                        unset($PayApiList[$key]);
                     }
-                    if (empty($PayApiList)) $this->error('网站支付配置未完善，充值服务暂停使用');
-                } else {
-                    $this->error('网站支付配置未完善，充值服务暂停使用');
                 }
+                if (empty($PayApiList)) $this->error('网站支付配置未完善，充值服务暂停使用');
+            } else {
+                $this->error('网站支付配置未完善，充值服务暂停使用');
             }
             
             // 判断传入的数据
             $money = input('post.money/f');
-            $unified_number = input('post.unified_number/s');
+            $unified_number = input('post.unified_number/s', '');
             if (!empty($unified_number) && !preg_match('/^\d+$/',$unified_number)) $this->error('订单号不存在！');
 
             // 判断不为空和数字字符串
@@ -218,38 +275,38 @@ class Pay extends Base
                     ];
                     $moneyRow = $this->users_money_db->where($where)->find();
                 }
-                if (!empty($moneyRow)) { // 更改充值金额
-                    $moneyid = $moneyRow['moneyid'];
-                    $order_number = $moneyRow['order_number'];
-                    $old_money = $moneyRow['money'];
-                    $data = [
-                        'money'         => $money,
-                        'users_money'   => Db::raw('users_money-'.$old_money),
-                        'status'        => 1,
-                        'update_time'   => getTime()
-                    ];
+
+                $time = getTime();
+                if (!empty($moneyRow['moneyid'])) {
+                    // 更改充值金额
+                    $moneyid = !empty($moneyRow['moneyid']) ? intval($moneyRow['moneyid']) : 0;
+                    $order_number = date('Ymd') . $time . rand(10, 100);
+                    $order_number_old = !empty($moneyRow['order_number']) ? $moneyRow['order_number'] : '';
                     $where = [
                         'moneyid'  => $moneyid,
-                        'users_id' => $this->users_id
+                        'users_id' => $this->users_id,
+                        'order_number' => $order_number_old,
+                    ];
+                    $data = [
+                        'money'       => $money,
+                        'users_money' => $this->users['users_money'] + $money,
+                        'order_number' => $order_number,
+                        'status'      => 1,
+                        'add_time'    => $time,
+                        'update_time' => $time
                     ];
                     $this->users_money_db->where($where)->update($data);
                 } else {
                     // 数据添加到订单表
-                    $where = [
-                        'lang' => $this->home_lang,
-                        'users_id' => $this->users_id
-                    ];
-                    $users = M('users')->field('users_money')->where($where)->find();
-                    $pay_cause_type_arr = Config::get('global.pay_cause_type_arr');
-                    $time = getTime();
                     $cause_type = 1;
                     $order_number = date('Ymd') . $time . rand(10,100); //订单生成规则
+                    $pay_cause_type_arr = Config::get('global.pay_cause_type_arr');
                     $data = [
                         'users_id'      => $this->users_id,
                         'cause_type'    => $cause_type,
                         'cause'         => $pay_cause_type_arr[$cause_type],
                         'money'         => $money,
-                        'users_money'   => $users['users_money'] + $money,
+                        'users_money'   => $this->users['users_money'] + $money,
                         'pay_details'   => '',
                         'order_number'  => $order_number,
                         'status'        => 1,
@@ -265,7 +322,6 @@ class Pay extends Base
 
                 // 添加状态
                 if (!empty($moneyid)) {
-
                     if (isMobile() && isWeixin() && 0 == $is_open_wechat) {
                         $ReturnOrderData = [
                             'unified_id'       => $moneyid,
@@ -275,25 +331,9 @@ class Pay extends Base
                         ];
                         $this->success('等待支付', null, $ReturnOrderData);
                     } else {
-                        // 对ID和订单号加密，拼装url路径
-                        // $querydata = [
-                        //     'moneyid'      => $moneyid,
-                        //     'order_number' => $order_number,
-                        // ];
-                        // /*修复1.4.2漏洞 -- 加密防止利用序列化注入SQL*/
-                        // $querystr = '';
-                        // foreach($querydata as $_qk => $_qv)
-                        // {
-                        //     $querystr .= $querystr ? "&$_qk=$_qv" : "$_qk=$_qv";
-                        // }
-                        // $querystr = str_replace('=', '', mchStrCode($querystr));
-                        // $auth_code = tpCache('system.system_auth_code');
-                        // $hash = md5("payment".$querystr.$auth_code);
-                        // /*end*/
-                        // $url = urldecode(url('user/Pay/pay_recharge_detail', ['querystr'=>$querystr,'hash'=>$hash]));
-                        
                         $payment_type = input('post.payment_type/s');
-                        if (getUsersTplVersion() == 'v2' && !empty($payment_type)) { // 第二版会员中心
+                        // 第二、第三、第四版会员中心充值处理
+                        if (in_array($this->usersTplVersion, ['v2', 'v3', 'v4']) && !empty($payment_type)) {
                             $payment_type_arr = explode('_', $payment_type);
                             $pay_mark = !empty($payment_type_arr[1]) ? $payment_type_arr[1] : '';
                             $payApiRow = Db::name('pay_api_config')->where(['pay_mark'=>$pay_mark,'lang'=>$this->home_lang])->find();
@@ -309,23 +349,20 @@ class Pay extends Base
                             ];
                             $this->success('正在支付中', url('user/Pay/pay_consumer_details'), $data);
                         }
+                        // 第一版会员中心充值处理
                         else {
-                            $Paydata = [
+                            $paydata = [
                                 'moneyid'      => $moneyid,
                                 'order_number' => $order_number,
                             ];
-
                             // 先 json_encode 后 md5 加密信息
-                            $Paystr = md5(json_encode($Paydata));
-
+                            $paystr = md5(json_encode($paydata));
                             // 清除之前的 cookie
-                            Cookie::delete($Paystr);
-
+                            Cookie::delete($paystr);
                             // 存入 cookie
-                            cookie($Paystr, $Paydata);
-
+                            cookie($paystr, $paydata);
                             // 跳转链接
-                            $url = urldecode(url('user/Pay/pay_recharge_detail',['paystr'=>$Paystr]));
+                            $url = urldecode(url('user/Pay/pay_recharge_detail', ['paystr'=>$paystr]));
                             $this->success('等待支付', $url, ['is_gourl'=>1]);
                         }
                     }
@@ -338,7 +375,15 @@ class Pay extends Base
         $money = input('param.money/f');
         $this->assign('money', $money);
 
-        $unified_number = input('param.unified_number/s');
+        $unified_number = input('param.unified_number/s', '');
+        if (empty($unified_number)) {
+            $where = [
+                'status' => 1,
+                'cause_type' => 1,
+                'users_id' => $this->users_id
+            ];
+            $unified_number = $this->users_money_db->where($where)->order('moneyid desc')->getField('order_number');
+        }
         $this->assign('unified_number', $unified_number);
 
         return $this->fetch('users/pay_account_recharge');
@@ -384,11 +429,12 @@ class Pay extends Base
                 $data['unified_amount']   = $data['money'];
                 $data['unified_number']   = $data['order_number'];
                 $data['cause']            = '余额充值';
+                $data['shop_open_offline'] = !empty($this->usersConfig['shop_open_offline']) ? intval($this->usersConfig['shop_open_offline']) : 0;
                 $this->assign('data', $data);
 
             } else if (!empty($order_id)) {
                 /*余额开关*/
-                $pay_balance_open = getUsersConfigData('pay.pay_balance_open');
+                $pay_balance_open = $this->usersConfig['pay_balance_open'];
                 if (!is_numeric($pay_balance_open) && empty($pay_balance_open)) {
                     $pay_balance_open = 1;
                 }
@@ -411,12 +457,13 @@ class Pay extends Base
                     // 组装数据返回
                     $data['transaction_type'] = 8; // 交易类型，8为购买视频
                     $data['unified_id']       = $data['order_id'];
-                    $data['unified_amount']   = $data['order_amount'];
+                    $data['unified_amount']   = floatval($data['order_amount']);
                     $data['unified_number']   = $data['order_code'];
                     $data['cause']            = '购买视频';
                     $data['pay_balance_open'] = $pay_balance_open;
+                    $data['shop_open_offline'] = !empty($this->usersConfig['shop_open_offline']) ? intval($this->usersConfig['shop_open_offline']) : 0;
                     $this->assign('data', $data);
-                }else if(!empty($PayData['type']) && 9 == $PayData['type']){
+                } else if(!empty($PayData['type']) && 9 == $PayData['type']) {
                     //文章支付订单
                     $where = [
                         'order_id'   => $order_id,
@@ -433,10 +480,34 @@ class Pay extends Base
                     // 组装数据返回
                     $data['transaction_type'] = 9; // 交易类型，9为购买文章
                     $data['unified_id']       = $data['order_id'];
-                    $data['unified_amount']   = $data['order_amount'];
+                    $data['unified_amount']   = floatval($data['order_amount']);
                     $data['unified_number']   = $data['order_code'];
                     $data['cause']            = $data['product_name'];
                     $data['pay_balance_open'] = $pay_balance_open;
+                    $data['shop_open_offline'] = !empty($this->usersConfig['shop_open_offline']) ? intval($this->usersConfig['shop_open_offline']) : 0;
+                    $this->assign('data', $data);
+                }else if(!empty($PayData['type']) && 10 == $PayData['type']) {
+                    //下载模型支付订单
+                    $where = [
+                        'order_id'   => $order_id,
+                        'order_code' => $order_code,
+                        'users_id'   => $this->users_id,
+                        'lang'       => $this->home_lang
+                    ];
+                    $data = Db::name('download_order')->where($where)->find();
+                    if (empty($data)) $this->error('订单不存在或已变更', url('user/Download/index'));
+
+                    $url = url('user/Download/index');
+                    if (in_array($data['order_status'], [1])) $this->error('订单已支付，即将跳转！', $url);
+
+                    // 组装数据返回
+                    $data['transaction_type'] = 10; // 交易类型，10为购买下载模型
+                    $data['unified_id']       = $data['order_id'];
+                    $data['unified_amount']   = floatval($data['order_amount']);
+                    $data['unified_number']   = $data['order_code'];
+                    $data['cause']            = $data['product_name'];
+                    $data['pay_balance_open'] = $pay_balance_open;
+                    $data['shop_open_offline'] = !empty($this->usersConfig['shop_open_offline']) ? intval($this->usersConfig['shop_open_offline']) : 0;
                     $this->assign('data', $data);
                 } else {
                     // 获取支付订单
@@ -448,7 +519,9 @@ class Pay extends Base
                     ];
                     $data = $this->shop_order_db->where($where)->find();
                     if (empty($data)) $this->error('订单不存在或已变更', url('user/Shop/shop_centre'));
-                    
+                    // 非法提交，请正规合法提交订单-订单列表点击立即支付时检测判断-订单主表判断
+                    if (empty($data['order_total_num'])) $this->error('非法提交，请正规合法提交订单，非法代码：403');
+
                     // 判断订单状态，1已付款(待发货)，2已发货(待收货)，3已完成(确认收货)，-1订单取消(已关闭)，4订单过期
                     $url = urldecode(url('user/Shop/shop_order_details', ['order_id' => $data['order_id']]));
                     if (in_array($data['order_status'], [1, 2, 3])) {
@@ -462,16 +535,88 @@ class Pay extends Base
                     // 组装数据返回
                     $data['transaction_type'] = 2; // 交易类型，2为购买
                     $data['unified_id']       = $data['order_id'];
-                    $data['unified_amount']   = $data['order_amount'];
+                    $data['unified_amount']   = floatval($data['order_amount']);
                     $data['unified_number']   = $data['order_code'];
                     $data['cause']            = '购买商品';
                     $data['pay_balance_open'] = $pay_balance_open;
-                    $this->assign('data', $data);
+                    $data['province']         = get_province_name($data['province']);
+                    $data['city']             = get_city_name($data['city']);
+                    $data['district']         = get_area_name($data['district']);
+                    $data['addressInfo']      = $data['province'].' '.$data['city'].' '.$data['district'].' '.$data['address'];
 
+                    // 订单关闭倒计时处理
+                    $data['paymentExpire'] = 0;
+                    $data['eyCountdownTimes'] = 'eyCountdownTimes';
+                    if (isset($data['order_status']) && 0 === intval($data['order_status'])) {
+                        // 查询 自动关闭未付款订单 时长
+                        $orderUnpayCloseTime = $this->usersConfig['order_unpay_close_time'];
+                        if (!empty($orderUnpayCloseTime)) {
+                            // 未付款过期时间
+                            $data['paymentExpire'] = $data['add_time'] + (intval($orderUnpayCloseTime) * 60) - getTime();
+                        }
+                    }
+
+                    // 规格处理
+                    $order_details = Db::name('shop_order_details')->where('order_id',$data['order_id'])->order('details_id asc')->select();
+                    foreach ($order_details as $key => $val) {
+                        // 非法提交，请正规合法提交订单-订单列表点击立即支付时检测判断-订单副表判断
+                        if (empty($val['num'])) $this->error('非法提交，请正规合法提交订单，非法代码：404');
+
+                        $product_spec = unserialize($val['data']);
+                        $order_details[$key]['pointsGoodsBuyField'] = !empty($product_spec['pointsGoodsBuyField']) ? json_decode($product_spec['pointsGoodsBuyField'], true) : [];
+                        if (!empty($product_spec['spec_value_id'])) {
+                            $spec_value_id = explode('_', $product_spec['spec_value_id']);
+                            if (!empty($spec_value_id)) {
+                                $product_spec_list = [];
+                                $SpecWhere = [
+                                    'aid'           => $val['product_id'],
+                                    'spec_value_id' => ['IN',$spec_value_id]
+                                ];
+                                $ProductSpecData = Db::name("product_spec_data")->where($SpecWhere)->field('spec_name, spec_value')->select();
+                                foreach ($ProductSpecData as $spec_value) {
+                                    $product_spec_list[] = [
+                                        'name' => $spec_value['spec_name'],
+                                        'value' => $spec_value['spec_value'],
+                                    ];
+                                }
+                                $order_details[$key]['product_spec_list'] = $product_spec_list;
+                            }
+                        }
+                    }
+                    $data['order_details'] = $order_details;
+
+                    // 支付参数
+                    $data['PromType'] = $data['prom_type'];
+                    $data['shop_open_offline'] = !empty($this->usersConfig['shop_open_offline']) ? intval($this->usersConfig['shop_open_offline']) : 0;
+                    $payApiHidden = model('ShopPublicHandle')->getPayApiHidden($data);
+                    $data['use_pay_type'] = $payApiHidden['usePayType'];
+                    $data['payTypeHidden'] = $payApiHidden['payTypeHidden'];
+
+                    // 存在积分商城订单则执行
+                    if (!empty($data['points_shop_order'])) {
+                        $weappInfo = model('ShopPublicHandle')->getWeappPointsShop();
+                        if (!empty($weappInfo)) {
+                            $list = !empty($data) ? $data : [];
+                            $list['Details'] = !empty($data['order_details']) ? $data['order_details'] : [];
+                            $pointsShopLogic = new \weapp\PointsShop\logic\PointsShopLogic();
+                            $pointsShopLogic->pointsShopOrderDataHandle([$list], $data, $data['order_details']);
+                            $data['order_details'] = !empty($data['Details']) ? $data['Details'] : $data['order_details'];
+                        }
+                    }
+
+                    // 仅到店核销
+                    $data['onlyVerify'] = !empty($data['logistics_type']) && 2 === intval($data['logistics_type']) ? true : false;
+                    // 仅物流配送
+                    $data['onlyDelivery'] = !empty($data['logistics_type']) && 1 === intval($data['logistics_type']) ? true : false;
+
+                    $this->assign('data', $data);
                 }
             }
-
-            return $this->fetch('users/pay_recharge_detail');
+            if (!empty($PayData['type']) && 9 === intval($PayData['type']) && isMobile()) {
+                return $this->fetch('system/article_pay');
+            }else{
+                return $this->fetch('users/pay_recharge_detail');
+            }
         }
         $this->error('参数错误！');
     }
@@ -686,7 +831,8 @@ class Pay extends Base
     }
 
     // 微信支付，获取订单信息并调用微信接口，生成二维码用于扫码支付
-    public function pay_wechat_png(){
+    public function pay_wechat_png()
+    {
         $users_id = session('users_id');
         if (!empty($users_id)) {
             $unified_number   = input('param.unified_number/s');
@@ -725,7 +871,8 @@ class Pay extends Base
     }
 
     // ajax异步查询订单状态，轮询方式（微信）
-    public function pay_deal_with(){
+    public function pay_deal_with()
+    {
         if (IS_AJAX_POST) {
             $unified_number   = input('post.unified_number/s');
             $transaction_type = input('post.transaction_type/d');
@@ -893,7 +1040,8 @@ class Pay extends Base
     }
 
     // 微信支付成功后跳转到此页面
-    public function pay_success(){
+    public function pay_success()
+    {
         $transaction_type = input('param.transaction_type/d');
         if (1 == $transaction_type) {
             $url = urldecode(url('user/Pay/pay_consumer_details'));
@@ -905,24 +1053,34 @@ class Pay extends Base
     }
 
     // 新版支付宝支付
-    public function newAlipayPayUrl(){
+    public function newAlipayPayUrl()
+    {
         $data['unified_number']   = input('param.unified_number/s');
         $data['unified_amount']   = input('param.unified_amount/f');
         $data['transaction_type'] = input('param.transaction_type/d');
+        /*校验支付金额与订单金额是否相符合，避免被钻空子 start*/
+        $payLogicObj = new PayLogic();
+        $OrderData = $payLogicObj->checkAmount($data['unified_number'],$data['unified_amount'],$data['transaction_type']);
+        if(empty($OrderData)){
+            $this->error("支付失败，支付金额与订单金额不相符");
+        }
+        /*校验支付金额与订单金额是否相符合，避免被钻空子 end*/
         // 调用新版支付宝支付方法
         $Result = model('PayApi')->getNewAliPayPayUrl($data);
         if (!empty($Result)) $this->error($Result);
     }
 
     // 支付宝回调接口，处理订单数据
-    public function alipay_return(){
+    public function alipay_return()
+    {
         // 跳转处理回调信息
         $pay_logic = new PayLogic();
         $result    = $pay_logic->alipay_return();
-        if (1 == $result['code']) {
+        if (!empty($result['code']) && 1 == $result['code']) {
             $this->redirect($result['url']);
         }else{
-            $this->error($result['msg']);
+            $msg = !empty($result['msg']) ? $result['msg'] : '数据出错';
+            $this->error($msg);
         }
     }
 
@@ -931,7 +1089,11 @@ class Pay extends Base
     {
         if (IS_AJAX_POST) {
             $post = input('post.');
-            $Data = $this->shop_order_db->field('order_amount,order_id,order_status')->find($post['unified_id']);
+            $post['unified_id'] = intval($post['unified_id']);
+            $Data = $this->shop_order_db->field('order_code,order_amount,order_id,order_status')->where([
+                    'order_id'  => $post['unified_id'],
+                    'order_code' => $post['unified_number'],
+                ])->find();
             if (empty($Data)) $this->error('订单不存在或已变更', url('user/Shop/shop_centre'));
             
             //1已付款(待发货)，2已发货(待收货)，3已完成(确认收货)，-1订单取消(已关闭)，4订单过期
@@ -960,15 +1122,15 @@ class Pay extends Base
                     'update_time'  => getTime(),
                 ];
                 $OrderWhere = [
-                    'order_id'   => $post['unified_id'],
-                    'order_code' => $post['unified_number'],
+                    'order_id'   => $Data['order_id'],
+                    'order_code' => $Data['order_code'],
                 ];
                 $OrderWhere = array_merge($Where, $OrderWhere);
                 $return = $this->shop_order_db->where($OrderWhere)->update($OrderData);
 
                 if (!empty($return)) {
                     $DetailsWhere = [
-                        'order_id'   => $post['unified_id'],
+                        'order_id'   => $Data['order_id'],
                     ];
                     $DetailsWhere = array_merge($Where, $DetailsWhere);
                     $DetailsData['update_time'] = getTime();
@@ -981,7 +1143,7 @@ class Pay extends Base
                     $users_id = $this->users_db->where($Where)->update($UsersData);
                     if (!empty($users_id)) {
                         // 添加订单操作记录
-                        AddOrderAction($post['unified_id'],$this->users_id,'0','1','0','1','支付成功！','会员使用余额完成支付！');
+                        AddOrderAction($Data['order_id'],$this->users_id,'0','1','0','1','支付成功！','会员使用余额完成支付！');
                         // 虚拟自动发货
                         model('Pay')->afterVirtualProductPay($DetailsWhere);
 
@@ -1023,7 +1185,7 @@ class Pay extends Base
                 // 支付方式(支付宝或微信)，用于判断
                 $pay_method_type  = $post['pay_method'];
                 // 订单ID，用于查询
-                $unified_id       = $post['unified_id'];
+                $unified_id       = intval($post['unified_id']);
                 // 订单号，用于查询
                 $unified_number   = $post['unified_number'];
 
@@ -1173,26 +1335,28 @@ class Pay extends Base
                             'is_gourl'         => 1,
                         ];
                         if ($this->users['users_money'] <= '0.00') {
-                            if (!empty($this->users['open_id'])) {
-                                $ReturnOrderData['is_gourl'] = 0;
+                            if (!empty($this->users['open_id']) || 0 === intval($this->users['thirdparty'])) {
                                 // 余额小于0
+                                $ReturnOrderData['is_gourl'] = 0;
                                 $this->success('101：信息正确', null, $ReturnOrderData);
-                            }else if (2 == $post['order_source']) {
+                            } else if (2 == $post['order_source']) {
                                 $this->error('余额为0！');
-                            }else{
-                                $this->error('手机端微信使用本站账号登录仅可余额支付！');
+                            } else {
+                                // $this->error('手机端微信使用本站账号登录仅可余额支付！');
                             }
-                        }else{
-                            if (!empty($this->users['open_id'])) {
+                        } else {
+                            if (!empty($this->users['open_id']) || 0 === intval($this->users['thirdparty'])) {
                                 // 余额大于0
-                                $url = url('user/Shop/shop_wechat_pay_select');
-                                session($this->users_id.'_ReturnOrderData',$ReturnOrderData);
-                                $this->success('102：信息正确', $url, $ReturnOrderData);
-                            }else if ($this->users['users_money'] < $order_total_amount){
+                                // $url = url('user/Shop/shop_wechat_pay_select');
+                                // session($this->users_id.'_ReturnOrderData', $ReturnOrderData);
+                                // $this->success('102：信息正确', $url, $ReturnOrderData);
+                                $ReturnOrderData['is_gourl'] = 0;
+                                $this->success('102：信息正确', null, $ReturnOrderData);
+                            } else if ($this->users['users_money'] < $order_total_amount){
                                 $this->error('余额不足！');
-                            }else{
+                            } else {
                                 $url = url('user/Shop/shop_wechat_pay_select');
-                                session($this->users_id.'_ReturnOrderData',$ReturnOrderData);
+                                session($this->users_id.'_ReturnOrderData', $ReturnOrderData);
                                 $this->success('102：信息正确', $url, $ReturnOrderData);
                             }
                         }
@@ -1259,7 +1423,7 @@ class Pay extends Base
                 'lang'     => $this->home_lang,
             ];
             $open_id = input('post.openid') ? input('post.openid') : $this->users_db->where($where)->getField('open_id');
-            if (empty($open_id)) $this->error('手机端微信使用本站账号登录仅可余额支付！');
+            // if (empty($open_id)) $this->error('手机端微信使用本站账号登录仅可余额支付！');
 
             if (2 == $transaction_type) {
                 // 购买商品
@@ -1279,6 +1443,33 @@ class Pay extends Base
                 $PayData = $this->users_money_db->where($PayWhere)->field('order_number, money')->find();
                 $out_trade_no = $PayData['order_number'];
                 $total_fee    = $PayData['money'];
+            } else if (3 == $transaction_type) { 
+                // 升级金额
+                $PayWhere = [
+                    'moneyid'      => $unified_id,
+                    'order_number' => $unified_number
+                ];
+                $PayData = $this->users_money_db->where($PayWhere)->field('order_number, money')->find();
+                $out_trade_no = $PayData['order_number'];
+                $total_fee    = $PayData['money'];
+            } else if (9 == $transaction_type) { 
+                // 文章付费金额
+                $PayWhere = [
+                    'order_id'      => $unified_id,
+                    'order_code' => $unified_number
+                ];
+                $PayData = M('article_order')->where($PayWhere)->field('order_code, order_amount')->find();
+                $out_trade_no = $PayData['order_code'];
+                $total_fee    = $PayData['order_amount'];
+            } else if (10 == $transaction_type) {
+                // 下载模型付费金额
+                $PayWhere = [
+                    'order_id'      => $unified_id,
+                    'order_code' => $unified_number
+                ];
+                $PayData = Db::name('download_order')->where($PayWhere)->field('order_code, order_amount')->find();
+                $out_trade_no = $PayData['order_code'];
+                $total_fee    = $PayData['order_amount'];
             } else {
                 $this->error('订单类型错误！');
             }
@@ -1303,7 +1494,8 @@ class Pay extends Base
         }
     }
 
-    public function get_openid() {
+    public function get_openid()
+    {
         // 小程序配置
         $MiniproValue = Db::name('weapp_minipro0002')->where('type', 'minipro')->getField('value');
         if (empty($MiniproValue)) return false;
@@ -1327,7 +1519,8 @@ class Pay extends Base
         echo json_encode($res);
     }
 
-    public function ajax_applets_pay() {
+    public function ajax_applets_pay()
+    {
         // 小程序配置
         $MiniproValue = Db::name('weapp_minipro0002')->where('type', 'minipro')->getField('value');
         if (empty($MiniproValue)) return false;
@@ -1448,9 +1641,153 @@ class Pay extends Base
                                 $this->success('支付成功！', $url, $Result); 
                             }
                         }
+                    } else if (3 == $transaction_type) { 
+                        // 会员升级处理
+                        $moneydata = $this->users_money_db->where([
+                            'order_number' => $result['out_trade_no'],
+                        ])->find();
+
+                        // 微信付款成功后，订单并未修改状态时，修改订单状态并返回
+                        if ($moneydata['status'] == 1) {
+                            $cause = unserialize($moneydata['cause']);
+                            $UsersTypeData = M('users_type_manage')->where('type_id',$cause['type_id'])->find();
+
+                            // 订单更新条件
+                            $where = [
+                                'moneyid' => $moneydata['moneyid'],
+                                'users_id' => $moneydata['users_id'],
+                            ];
+
+                            // 订单更新数据，更新为已付款
+                            $details = '会员当前级别为【' . $this->users['level_name'] . '】，使用微信支付【 ' . $UsersTypeData['type_name'] . '】，支付金额为' . $UsersTypeData['price'];
+                            $UpMoneyData = [
+                                'cause'           => serialize($UsersTypeData),
+                                'money'           => $UsersTypeData['price'],
+                                'status'          => 2,
+                                'pay_method'      => $moneydata['pay_method'],
+                                'wechat_pay_type' => 'WeChatInternal',
+                                'pay_details'     => serialize($details),
+                                // 如果时升级订单则存在升级会员级别ID
+                                'level_id'        => $UsersTypeData['level_id'],
+                                'update_time'     => getTime()
+                            ];
+
+                            // 订单更新
+                            $ResultID = $this->users_money_db->where($where)->update($UpMoneyData);
+
+                            // 订单更新后续操作
+                            if (!empty($ResultID)) {
+                                $Where = [
+                                    'users_id' => $moneydata['users_id'],
+                                ];
+
+                                // 获取更新会员数据数组
+                                $UpUsersData = $this->GetUpUsersData($UsersTypeData);
+                                $ReturnID = M('users')->where($Where)->update($UpUsersData);
+                                
+                                // 用户充值金额后续操作
+                                if (!empty($ReturnID)) {
+                                    $url = url('user/Level/level_centre');
+                                    $this->success('升级成功', $url);
+                                } else {
+                                    $this->error('付款成功，但未升级成功，请联系管理员。');
+                                }
+                            } else {
+                                $this->error('付款成功，数据错误，未能升级成功，请联系管理员。');
+                            }
+                        }
+                    } else if (9 == $transaction_type) { 
+                        // 支付处理
+                        $order_data = M('article_order')->where([
+                            'order_code' => $result['out_trade_no'],
+                        ])->find();
+                        if (0 == $order_data['order_status']) {
+                            $OrderWhere = [
+                                'order_id' => $order_data['order_id'],
+                            ];
+                            // 修改会员金额明细表中，对应的订单数据，存入返回的数据，订单已付款
+                            $OrderData = [
+                                'order_status' => 1,
+                                'pay_details'  => serialize($result),
+                                'pay_time'     => getTime(),
+                                'pay_name'  => 'wechat',
+                                'wechat_pay_type' => 'WeChatInternal',
+                                'update_time'  => getTime(),
+                            ];
+                            $order_id = M('article_order')->where($OrderWhere)->update($OrderData);
+                            if (!empty($order_id)) {
+                                // 添加订单操作记录
+                                AddOrderAction($order_data['order_id'],$order_data['users_id'],'0','1','0','1','支付成功！','会员使用微信小程序完成支付！');
+                                    
+                                $url = url('user/Users/article_index');
+                                $this->success('支付成功！', $url);
+                            } else {
+                                $this->error('付款成功，但未执行业务，请联系管理员。');
+                            }
+                        }
+                    } else if (10 == $transaction_type) {
+                        // 支付处理
+                        $order_data = Db::name('download_order')->where([
+                            'order_code' => $result['out_trade_no'],
+                        ])->find();
+                        if (0 == $order_data['order_status']) {
+                            $OrderWhere = [
+                                'order_id' => $order_data['order_id'],
+                            ];
+                            // 修改会员金额明细表中，对应的订单数据，存入返回的数据，订单已付款
+                            $OrderData = [
+                                'order_status' => 1,
+                                'pay_details'  => serialize($result),
+                                'pay_time'     => getTime(),
+                                'pay_name'  => 'wechat',
+                                'wechat_pay_type' => 'WeChatInternal',
+                                'update_time'  => getTime(),
+                            ];
+                            $order_id = Db::name('download_order')->where($OrderWhere)->update($OrderData);
+                            if (!empty($order_id)) {
+                                // 添加订单操作记录
+                                AddOrderAction($order_data['order_id'],$order_data['users_id'],'0','1','0','1','支付成功！','会员使用微信小程序完成支付！');
+
+                                $url = url('user/Users/download_index');
+                                $this->success('支付成功！', $url);
+                            } else {
+                                $this->error('付款成功，但未执行业务，请联系管理员。');
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+
+    // 拼装更新会员数据数组
+    private function GetUpUsersData($data = array(), $balance = false)
+    {
+        $time = getTime();
+        // 会员期限定义数组
+        $limit_arr = Config::get('global.admin_member_limit_arr');
+        // 到期天数
+        $maturity_days = $limit_arr[$data['limit_id']]['maturity_days'];
+        // 更新会员属性表的数组
+        $result = [
+            'level' => $data['level_id'],
+            'update_time' => $time,
+            'level_maturity_days' => Db::raw('level_maturity_days+'.($maturity_days)),
+        ];
+
+        // 如果是余额支付则追加数组
+        if (!empty($balance)) $result['users_money'] = Db::raw('users_money-'.($data['price']));
+        
+        // 判断是否需要追加天数，maturity_code在Base层已计算，1表示终身会员天数
+        if (1 != $this->users['maturity_code']) {
+            // 判断是否到期，到期则执行，3表示会员在期限内，不需要进行下一步操作
+            if (3 != $this->users['maturity_code']) {
+                // 追加天数数组
+                $result['open_level_time']     = $time;
+                $result['level_maturity_days'] = $maturity_days;
+            }
+        }
+
+        return $result;
     }
 }

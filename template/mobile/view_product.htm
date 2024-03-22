@@ -5,31 +5,34 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{$eyou.field.seo_title}</title>
-        <meta name="description" content="{$eyou.field.seo_description}" />
         <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+        <meta name="description" content="{$eyou.field.seo_description}" />
         <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
         {eyou:static file="skin/style/pintuer.css" /}
         {eyou:static file="skin/style/header.css" /}
         {eyou:static file="skin/style/style.css" /}
-        {eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
-
+        {eyou:static file="skin/style/iconfont.css" /}
         {eyou:static file="skin/js/jquery.min.js" /}
         <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
     </head>
     <body>
         <div id="mobile-mask">
-            <!--header-->
+            <!-- 公用头部 begin -->
             {eyou:include file="header.htm" /}
+            <!-- 公用头部 end -->
             <div class="layout bg-gray">
+                <!-- 当前位置 begin -->
                 <div class="container-layout">
                     <div class="line">
                         <div class="nav-bread">
-                            <i class="fa fa-home-alt margin-small-right" aria-hidden="true"></i>{eyou:position/}
+                            <i class="iconfont icon-home margin-small-right" aria-hidden="true"></i>{eyou:position/}
                         </div>
                     </div>
                 </div>
+                <!-- 当前位置 end -->
                 <div class="container-layout product-description">
                     <div class="line">
+                        <!-- 产品图集 begin -->
                         <div class="xl12 xs12">
                             {eyou:notempty name='$eyou.field.image_list' /}
                             {eyou:volist name="$eyou.field.image_list" limit='0,1'}
@@ -58,6 +61,7 @@
                                 {/eyou:notempty}
                             </div>
                         </div>
+                        <!-- 产品图集 end -->
                         <div class="blank"></div>
                         <div class="xl12 xs12">
                             <div class="padding">
@@ -68,11 +72,11 @@
                                         <p class="text-gray text-default">{$eyou.field.seo_description}</p>
                                         <div class="blank-small"></div>
                                     </div>
-                                    <!-- 价格 标签开始 -->
+                                    <!-- 价格 begin -->
                                     <div class="ey-price text-large text-yellow Conv_DINCondensedC">￥{$eyou.field.users_price}</div>
-                                    <!-- 价格 标签结束 -->
+                                    <!-- 价格 end -->
 
-                                    <!--购物车组件start-->
+                                    <!-- 购物车组件 begin -->
                                     {eyou:sppurchase id='field' currentstyle='btn-danger'}
 
                                     <div class="blank-middle"></div>
@@ -87,11 +91,11 @@
                                     </div>
                                     {/eyou:volist}
 
-                                    <!-- 规格 标签结束 -->
+                                    <!-- 规格 end -->
 
                                     <div class="blank"></div>
 
-                                    <!-- 数量操作 标签开始 -->
+                                    <!-- 数量操作 begin -->
                                     <div class="ey-number">
                                         <span class="text-sub">数量：</span>
                                         <div class="btn-input">
@@ -100,26 +104,26 @@
                                             <button class="layui-btn" {$field.IncreaseQuantity}>+</button>
                                         </div>
                                     </div>
-                                    <!-- 数量操作 标签结束 -->
+                                    <!-- 数量操作 end -->
 
                                     <div class="blank"></div>
 
-                                    <!-- 库存量 标签开始 -->
+                                    <!-- 库存量 begin -->
                                     <span class="text-sub" {$field.stock_show}>库存：{$field.stock_count} 件</span>
-                                    <!-- 库存量 标签结束 -->
+                                    <!-- 库存量 end -->
 
                                     <div class="blank"></div>
 
-                                    <!-- 购买按钮 标签开始 -->
+                                    <!-- 购买按钮 begin -->
                                     <div class="ey-buyaction">
                                         <a class="ey-joinin" href="JavaScript:void(0);" {$field.ShopAddCart}><i class="fa fa-shopping-basket margin-small-right"></i>加入购物车</a>
                                         <a class="ey-joinbuy" href="JavaScript:void(0);" {$field.BuyNow}><i class="fa fa-shopping-cart margin-small-right"></i>立即购买</a>
                                     </div>
-                                    <!-- 购买按钮 标签结束 -->
+                                    <!-- 购买按钮 end -->
 
                                     {$field.hidden}
                                     {/eyou:sppurchase}
-                                    <!--购物车组件end-->
+                                    <!-- 购物车组件 end -->
 
                                     {eyou:static file="skin/style/shopcart.css" /}
                                 </div>
@@ -140,7 +144,6 @@
                                 <div class="line">
                                     <ul class="tab-nav">
                                         <li class="active"><a href="#overview">商品介绍</a></li>
-                                        <!-- <li><a href="#specification">商品参数</a> </li> -->
                                     </ul>
                                 </div>
                             </div>
@@ -155,23 +158,11 @@
                                             <div class="tab-panel active" id="overview">
                                                 <div class="content overflow-x">
                                                     <div class="blank-middle"></div>
-                                                    <!--产品详情-->
+                                                    <!-- 内容详情 begin -->
                                                     {$eyou.field.content}
+                                                    <!-- 内容详情 end -->
                                                 </div>
                                             </div>
-                                            <!--产品参数调用自动——开始-->
-                                            <!-- <div class="tab-panel" id="specification">
-                                                <div class="content overflow-x">
-                                                    <div class="blank-middle"></div>
-                                                    <ul class="attribute">
-                                                        {eyou:attribute type='newattr'
-                                                        attrid='$eyou.field.attrlist_id'}
-                                                        <li><span>{$attr.name}：</span>{$attr.value} </li>
-                                                        {/eyou:attribute}
-                                                    </ul>
-                                                </div>
-                                            </div> -->
-                                            <!--产品参数调用——结束-->
                                         </div>
                                     </div>
                                 </div>
@@ -181,7 +172,6 @@
                     </div>
                 </div>
             </div>
-            <!-- Related Products -->
             <div class="layout bg-gray">
                 <div class="blank-small"></div>
                 <div class="container-layout">
@@ -191,7 +181,7 @@
                     <div class="blank"></div>
                     <div class="line">
                         <div class="owl-carousel dot-center carousel-pro">
-                            {eyou:arclist flag='c' orderby='now' titlelen='30' row='9' typeid='3'}
+                            {eyou:artlist flag='c' orderby='now' titlelen='30' loop='9' typeid='3'}
                             <div class="item media media-y bg-white">
                                 <div class="padding">
                                     <a href="{$field.arcurl}" title="{$field.title}"><img src="{$field.litpic}" class="img-responsive"></a>
@@ -203,7 +193,7 @@
                                                     <span class="Conv_DINCondensedC text-middle">￥{$field.users_price}</span>
                                                 </li>
                                                 <li class="v2-2 text-gray text-right float-right text-small">
-                                                    <i class="fa fa-eye margin-small-right margin-left"></i>{$field.click}
+                                                    <i class="iconfont icon-eye margin-small-right margin-left"></i>{$field.click}
                                                 </li>
                                                 <div class="clearfix"></div>
                                             </ul>
@@ -211,17 +201,17 @@
                                     </div>
                                 </div>
                             </div>
-                            {/eyou:arclist}
+                            {/eyou:artlist}
                         </div>
                     </div>
                 </div>
                 <div class="blank-small"></div>
             </div>
-            <!-- Related Products end -->
 
-            <!--footer-->
+            <!-- 公用底部 begin -->
             {eyou:include file="footer.htm" /}
-        </div><!-- id="mobile-mask" -->
+            <!-- 公用底部 end -->
+        </div>
 
         {eyou:static file="skin/js/pintuer.js" /}
         {eyou:static file="skin/js/common.js" /}

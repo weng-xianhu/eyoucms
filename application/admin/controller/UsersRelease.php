@@ -18,7 +18,7 @@ use think\Config;
 
 class UsersRelease extends Base {
 
-    public $current_channel = [1,3,4];
+    public $current_channel = [1,3,4,5];
     public function __construct(){
         parent::__construct();
 
@@ -36,50 +36,52 @@ class UsersRelease extends Base {
      * 商城设置
      */
     public function conf(){
-        if (IS_POST) {
-            $post = input('post.');
-            /*栏目处理*/
-            $typeids = $post['typeids'];
-            unset($post['typeids']);
-            /* END */
-            if (!empty($post)) {
-                foreach ($post as $key => $val) {
-                    getUsersConfigData($key, $val);
-                }
+        if (IS_AJAX) {
+            $is_automatic_review = input('param.is_automatic_review/d', 0);
+            $is_open_posts_count = input('param.is_open_posts_count/d', 0);
+            $release_typeids = input('param.release_typeids/s', '');
+            $typeids = !empty($release_typeids) ? explode(',', $release_typeids) : [];
 
-                /*设置可投稿的栏目*/
+            $confData = [
+                'is_automatic_review' => $is_automatic_review,
+                'is_open_posts_count' => $is_open_posts_count,
+                'release_default_id' => !empty($typeids[0]) ? intval($typeids[0]) : 0,
+            ];
+            getUsersConfigData('users', $confData);
+
+            /*设置可投稿的栏目*/
+            // $typeids = explode(',', $release_typeids);
+            $where = [
+                'id' => ['IN', $typeids],
+            ];
+            if (0 == $typeids[0]) {
                 $where = [
-                    'id' => ['IN', $typeids],
+                    'current_channel' => ['in',$this->current_channel],
+                    'lang' => $this->admin_lang,
                 ];
-                if (0 == $typeids[0]) {
-                    $where = [
-                        'current_channel' => ['in',$this->current_channel],
-                        'lang' => $this->admin_lang,
-                    ];
-                }
-                $update = [
-                    'is_release' => 1,
-                    'update_time' => getTime(),
-                ];
-                if (!empty($where) && !empty($update)) {
-                    /*将全部设置为不可投稿*/
-                    Db::name('arctype')->where([
-                        'current_channel' => ['in',$this->current_channel],
-                        'lang' => $this->admin_lang,
-                    ])->update([
-                        'is_release' => 0,
-                        'update_time' => getTime(),
-                    ]);
-                    /* END */
-
-                    /*设置选择的栏目为可投稿*/
-                    Db::name('arctype')->where($where)->update($update);
-                    /* END */
-                }
-                /* END */
-                
-                $this->success('设置成功！');
             }
+            $update = [
+                'is_release' => 1,
+                'update_time' => getTime(),
+            ];
+            if (!empty($where) && !empty($update)) {
+                /*将全部设置为不可投稿*/
+                Db::name('arctype')->where([
+                    'current_channel' => ['in',$this->current_channel],
+                    'lang' => $this->admin_lang,
+                ])->update([
+                    'is_release' => 0,
+                    'update_time' => getTime(),
+                ]);
+                /* END */
+
+                /*设置选择的栏目为可投稿*/
+                Db::name('arctype')->where($where)->update($update);
+                /* END */
+            }
+            /* END */
+            
+            $this->success('设置成功！');
         }
         // 会员投稿配置信息
         $UsersC = getUsersConfigData('users');
@@ -102,7 +104,7 @@ class UsersRelease extends Base {
 
     public function ajax_users_level_bout()
     {
-        $UsersLevel = Db::name('users_level')->where('lang',$this->admin_lang)->select();
+        $UsersLevel = model('UsersLevel')->getList();
         $LevelCount = count($UsersLevel);
 
         $this->assign('list',$UsersLevel);

@@ -1,20 +1,45 @@
 {include file="public/layout" /}
-
-<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;min-width:auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 {include file="shop/left" /}
-<div class="page" style="min-width:auto;margin-left:98px;">
+<!-- <div class="page {empty name='$web_shopcomment_switch'}on-off_show{/empty}"> -->
+<div class="page min-hg-c-10">
+    <!--遮罩给上面的class + on-off_show-->
+    <!-- <div class="on-off_shade">
+        <div class="on-off_shadeCon">
+            <span>目前还没有开启商品评价功能，<a href="javascript:void(0);" data-url="{:url('ShopComment/ajax_open_close')}" data-value="{$web_navigation_switch}" onclick="ajax_open_close(this);">我要开启</a></span>
+        </div>
+    </div> -->
+    <!-- <div class="fixed-bar">
+        <div class="item-title">
+			<a class="back_xin" href="javascript:history.back();" title="返回"><i class="iconfont e-fanhui"></i></a>
+			<div class="subject">
+				<h3>评价列表</h3>
+				<h5></h5>
+			</div>
+        </div>
+    </div> -->
     <div class="flexigrid">
-        <div class="mDiv">
-            <div class="ftitle"> <h3>评价列表</h3> <h5>(共{$pager->totalRows}条数据)</h5> </div>
+        <div class="mDiv pt0">
+            <div class="ftitle"> 
+				<div class="fbutton">
+					<a href="{:url('ShopComment/comment_add')}" >
+						<div class="add" title="创建评价">
+							<span><i class="layui-icon layui-icon-addition"></i>创建评价</span>
+						</div>
+					</a>
+				</div>
+			</div>
             <form class="navbar-form form-inline" id="postForm" action="{:url('ShopComment/comment_index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
                     <div class="sDiv2">
-                        <input type="text" size="50" name="order_code" value="{$Request.param.order_code}" class="qsbox" style="width: 200px;" placeholder="搜索订单号..."> <input type="submit" class="btn" value="搜索"> <i class="fa fa-search"></i>
+                        <input type="text" size="50" name="order_code" value="{$Request.param.order_code}" class="qsbox" style="width: 200px;" placeholder="搜索订单号..."> <input type="submit" class="btn" value="搜索"> <i class="iconfont e-sousuo"></i>
                     </div>
-
+                    <!-- {notempty name='$web_shopcomment_switch'}
+                    &nbsp;<a href="javascript:void(0);" data-url="{:url('ShopComment/ajax_open_close')}" data-value="{$web_shopcomment_switch}" onclick="ajax_open_close(this);">关闭评价</a>
+                    {/notempty} -->
                 </div>
             </form>
         </div>
@@ -28,35 +53,35 @@
                             <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                         </th>
 
-                        <th align="center" abbr="article_title" axis="col3" class="w60">
-                            <div class="tc">缩略图</div>
-                        </th>
-
-                        <th abbr="article_time" axis="col6" class="w180">
-                            <div class="tc">订单号</div>
+                        <th align="center" abbr="article_title" axis="col3" class="w250">
+                            <div class="text-l10 ">商品信息</div>
                         </th>
 
                         <th abbr="article_title" axis="col3" class="">
                             <div style="text-align: left; padding-left: 10px;" class="">评价内容</div>
                         </th>
-
-                        <th abbr="article_time" axis="col6" class="w100">
+                        
+                        <th abbr="" axis="col6" class="w80">
+                            <div class="tc">来源</div>
+                        </th>
+                        
+                        <th abbr="" axis="col6" class="w120">
                             <div class="tc">评价评分</div>
                         </th>
 
-                        <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">用户名</div>
+                        <th abbr="" axis="col6" class="w120">
+                            <div class="tc">用户</div>
                         </th>
 
-                        <th abbr="article_time" axis="col6" class="w60">
-                            <div class="tc">显示</div>
+                        <th abbr="" axis="col6" class="w80">
+                            <div class="tc">审核</div>
                         </th>
 
                         <th abbr="article_time" axis="col6" class="w160">
                             <div class="tc">评价时间</div>
                         </th>
 
-                        <th axis="col1" class="w120">
+                        <th axis="col1" class="w150">
                             <div class="tc">操作</div>
                         </th>
                     </tr>
@@ -81,34 +106,32 @@
                                 <div class="w40 tc"> <input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.comment_id}"> </div>
                             </td>
 
-                            <td class="w60">
-                                <div class="tc">
+                            <td class="">
+                                <div class="w250 flex-row">
                                     <a href="{$vo.arcurl}" target="_blank"><img width="60" height="60" src="{$vo.product_img}"></a>
-                                </div>
-                            </td>
-
-                             <td class="">
-                                <div class="w180 tc">
-                                    <a href="javascript:void(0);" data-href="{:url('Shop/order_details', array('order_id' => $vo['order_id']))}" onclick="openFullframe(this, '订单详情', '100%', '100%');"> {$vo.order_code} </a>
+									<div>
+										<a href="{$vo.arcurl}" target="_blank" class="ml5">{$vo.product_name}</a>
+									</div>
+                                    
                                 </div>
                             </td>
 
                             <td class="" style="width: 100%;">
-                                <div class="tl" style="padding-left: 10px;"> {$vo.content} </div>
+                                <div class="tl text-l10" > {$vo.content} </div>
                             </td>
+                            
+                            <td class=""> <div class="w80 tc"> {eq name="$vo.systemComment" value="1"}后台{else/}客户{/eq} </div> </td>
+
+                            <td class=""> <div class="w120 tc"> <i class="z_comment-star z_star{$vo.total_score}"></i> </div> </td>
 
                             <td class="">
-                                <div class="w100 tc"> {$vo.order_total_score} <br/><i class="z_comment-star z_star{$vo.total_score}"></i></div>
-                            </td>
-
-                            <td class="">
-                                <div class="w100 tc">
-                                    <a href="javascript:void(0);" data-href="{:url('Member/users_edit', array('id' => $vo['users_id']))}" onclick="openFullframe(this, '用户资料', '100%', '100%');"> {$vo.username} </a>
+                                <div class="w120 tc">
+                                    <a href="javascript:void(0);" data-href="{:url('Member/users_edit', array('id' => $vo['users_id']))}" onclick="openFullframe(this, '用户资料', '100%', '100%');"> <img style="width: 30px;height: 30px;margin:0px 5px!important;float: unset;margin: auto;border-radius: 100%;" src="{$vo.head_pic}" />{$vo.nickname} </a>
                                 </div>
                             </td>
 
                             <td class="">
-                                <div class="w60 tc">
+                                <div class="w80 tc">
                                     {eq name="$vo['is_show']" value='1'}
                                         <span class="yes" onClick="changeTableVal('shop_order_comment', 'comment_id', '{$vo.comment_id}', 'is_show', this);"><i class="fa fa-check-circle"></i>是</span>
                                     {else /}
@@ -120,8 +143,11 @@
                             <td class=""> <div class="w160 tc"> {$vo.add_time|MyDate='Y-m-d H:i:s',###} </div> </td>
 
                             <td class="operation">
-                                <div class="w120 tc">
-                                    <a href="javascript:void(0);" data-href="{:url('ShopComment/comment_details', array('comment_id' => $vo['comment_id']))}" onclick="openFullframe(this, '评价详情', '100%', '100%');" class="btn blue">详情</a>
+                                <div class="w150 tc">
+                                    <a href="{:url('ShopComment/comment_details', array('comment_id' => $vo['comment_id']))}" class="btn blue">详情</a>
+                                    <i></i>
+                                    <!-- <a class="btn blue">显示</a> -->
+                                    <a href="javascript:void(0);" data-id="{$vo.comment_id}" data-admin_reply="{$vo.admin_reply.adminReply}" data-reply_time="{$vo.admin_reply.replyTime}" onclick="commentAdminReply(this);" class="btn blue">回复{notempty name="$vo.admin_reply.adminReply"}<em class="num">!</em>{/notempty}</a>
                                     <i></i>
                                     <a href="javascript:void(0);" data-url="{:url('ShopComment/comment_del')}" data-id="{$vo.comment_id}" onclick="delfun(this);" class="btn blue">删除</a>
                                 </div>
@@ -134,7 +160,7 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
-
+        {notempty name="Comment"}
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
@@ -147,10 +173,20 @@
             </div>
             <div style="clear:both"></div>
         </div>
+        {/notempty}
     </div>
 </div>
-
 <script type="text/javascript">
+    try{
+        if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
+            $(".page").css("margin-left","");
+            $(".page").css("min-width","");
+        }else{
+            $(".page").css("margin-left","100px");
+            $(".page").css("min-width","auto");
+        }
+    }catch(e){}
+
     $(function(){
         $('input[name*=ids]').click(function(){
             if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
@@ -175,6 +211,79 @@
             location.href = location.href;
         });
     });
+
+    function ajax_open_close(obj, inc_type, name,value) {
+        $.ajax({
+            type : 'post',
+            url : $(obj).attr('data-url'),
+            data : {value:$(obj).attr('data-value'), _ajax:1},
+            dataType : 'json',
+            success : function(res){
+                if(res.code == 1){
+                    window.location.reload();
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                showErrorAlert(e.responseText);
+            }
+        })
+    }
+
+    // 商家快捷回复
+    function commentAdminReply(obj) {
+        var commentID = $(obj).attr('data-id') ? $(obj).attr('data-id') : 0;
+        var reply_time = $(obj).attr('data-reply_time') ? $(obj).attr('data-reply_time') : 0;
+        var admin_reply = $(obj).attr('data-admin_reply') ? $(obj).attr('data-admin_reply') : '';
+        layer.prompt({
+            formType: 2,
+            shade: layer_shade,
+            value: admin_reply,
+            title: '请填写商家回复',
+            btnAlign:'r',
+            closeBtn: 3,
+            id: 'adminReply',
+            btn: ['确定', '取消'],
+            area: ['300px', '100px'],
+            success: function(layero, index) {
+                $(".layui-layer-content").css('text-align', 'left');
+                // 回复框字数限制
+                $("#adminReply").find('textarea').attr('maxlength', '280');
+                // 回复框标题
+                $("#adminReply").prepend(msg);
+                // 回复框更新时间
+                if (parseInt(reply_time) !== 0) {
+                    var msg = '<br/><span style="color: #999; font-size: 12px;">最后更新：'+reply_time+'</span>';
+                    $("#adminReply").append(msg);
+                } 
+            }
+        }, function(adminReply, index, elem) {
+            // 商家快捷回复
+            addCommentAdminReply(commentID, adminReply);
+            layer.close(index);
+        });
+    }
+
+    // 商家快捷回复
+    function addCommentAdminReply(commentID, adminReply) {
+        $.ajax({
+            type: 'post',
+            url : "{:url('ShopComment/comment_admin_reply', ['_ajax'=>1])}",
+            data: {comment_id: commentID, admin_reply: adminReply},
+            dataType: 'json',
+            success : function(res) {
+                if (1 === parseInt(res.code)) {
+                    window.location.reload();
+                } else {
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e) {
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
 </script>
 
 {include file="public/footer" /}

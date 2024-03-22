@@ -3,37 +3,55 @@
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-10">
+    {notempty name="$channel_id"}
     <div class="fixed-bar">
         <div class="item-title">
-            <a class="back" href="{:url('Channeltype/index')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            <a class="back_xin" href="{:url('Channeltype/index')}"  title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>{$channeltype_row[$channel_id]['ntitle']|default='无'}字段</h3>
+                <h5></h5>
+            </div>
             <ul class="tab-base nc-row">
-                <li><a href="javascript:void(0);" class="tab current"><span>{$channeltype_row[$channel_id]['ntitle']|default='无'}字段</span></a></li>
+                <li><a href="{:url('Channeltype/edit', ['id'=>$channel_id])}" {eq name='$Request.action' value='edit'}class="current"{/eq}><span>模型编辑</span></a></li>
+                <li><a href="{:url('Field/channel_index', ['channel_id'=>$channel_id])}" {eq name='$Request.action' value='channel_index'}class="current"{/eq}><span>字段管理</span></a></li>
             </ul>
         </div>
     </div>
+    {else/}
+    <!-- 全部模型字段管理 -->
+    {include file="channeltype/bar" /}
+    {/notempty}
     <div class="flexigrid">
-        <div class="mDiv">
+        <div class="mDiv pt0">
             <div class="ftitle">
 				{eq name="$Think.const.CONTROLLER_NAME.'@channel_add'|is_check_access" value="1"}
 				<div class="fbutton">
-                    <a href="javascript:void(0);" data-href="{:url('Field/channel_add', array('channel_id'=>$channel_id))}" onclick="openFullframe(this, '新增字段', '100%', '100%');">
-				        <div class="add" title="新增字段">
+                    <a href="javascript:void(0);" {notempty name="$channel_id"} data-href="{:url('Field/channel_add', array('channel_id'=>$channel_id))}" {else/} data-href="{:url('Field/channel_add', array('type'=>'all'))}" {/notempty} onclick="openFullframe(this, '新增字段', '100%', '100%');">
+				        <div class="add">
 				            <span><i class="layui-icon layui-icon-addition"></i>新增字段</span>
 				        </div>
 				    </a>
 				</div>
 				{/eq}
             </div>
-            <form class="navbar-form form-inline" action="{:url('Field/channel_index')}" method="get" onsubmit="layer_loading('正在处理');">
+            <form id="searchForm" class="navbar-form form-inline" action="{:url('Field/channel_index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
+                    <div class="sDiv2">  
+                        <select id="select_channel" class="select" style="margin:0px 5px;">
+                            <option value="">--全部模型--</option>
+                            {volist name="$channeltype_row" id="vo"}
+                                <option value="{$vo.id}" {eq name="$channel_id" value="$vo.id"}selected{/eq}>{$vo.title}</option>
+                            {/volist}
+                        </select>
+                    </div>
                     <div class="sDiv2">
                         <input type="hidden" name="searchopt" value="1">
                         <input type="hidden" name="channel_id" id="channel_id" value="{$channel_id|default='1'}">
-                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="字段搜索...">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="标题/名称搜索...">
                         <input type="submit" class="btn" value="搜索">
-                        <i class="fa fa-search"></i>
+                        <i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -50,18 +68,21 @@
                             <div class="text-l10">字段标题</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w160">
+                            <div class="tc">所属模型</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w160">
                             <div class="tc">字段名称</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w120">
                             <div class="tc">字段类型</div>
                         </th>
-                        <th abbr="article_time" axis="col6" class="w70">
+                        <!-- <th abbr="article_time" axis="col6" class="w70">
                             <div class="tc">字段分类</div>
-                        </th>
+                        </th> -->
                         <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">更新时间</div>
+                            <div class="tc">创建时间</div>
                         </th>
-                        <th axis="col1" class="w250">
+                        <th axis="col1" class="w220">
                             <div class="tc">操作</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w60">
@@ -79,7 +100,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -87,7 +110,11 @@
                         <tr>
                             <td class="sort">
                                 <div class="tc w50">
-                                    {$vo.id}
+                                    {if condition="$pager->nowPage > 1"}
+                                        {$pager->listRows * ($pager->nowPage-1) + $k+1}
+                                    {else /}
+                                        {$k+1}
+                                    {/if}
                                 </div>
                             </td>
                             <td style="width: 100%">
@@ -96,11 +123,16 @@
                                     {$vo.title}
                                 {else /}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@channel_edit'|is_check_access" value="1"}
-                                    <a href="javascript:void(0);" data-href="{:url('Field/channel_edit',array('channel_id'=>$channel_id,'id'=>$vo['id']))}" onclick="openFullframe(this, '编辑字段', '100%', '100%');">{$vo.title}</a>
+                                    <a href="javascript:void(0);" {notempty name="$channel_id"} data-href="{:url('Field/channel_edit',array('channel_id'=>$vo['channel_id'],'id'=>$vo['id']))}" {else/} data-href="{:url('Field/channel_edit',array('channel_id'=>$vo['channel_id'],'id'=>$vo['id'],'type'=>'all'))}" {/notempty} onclick="openFullframe(this, '编辑字段', '100%', '100%');">{$vo.title}</a>
                                     {else /}
                                     {$vo.title}
                                     {/eq}
                                 {/if}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w160 tc">
+                                    {$channeltype_list[$vo.channel_id]['title']}
                                 </div>
                             </td>
                             <td class="">
@@ -113,7 +145,7 @@
                                     {$fieldtypeList[$vo['dtype']]['title']|default='数据错误'}
                                 </div>
                             </td>
-                            <td>
+                            <!-- <td>
                                 <div class="tc w70">
                                     {if condition="($vo['ifsystem'] eq 1) OR (1 eq $vo['ifmain'])"}
                                         系统
@@ -121,14 +153,14 @@
                                         自定义
                                     {/if}
                                 </div>
-                            </td>
+                            </td> -->
                             <td>
                                 <div class="w100 tc">
-                                    {$vo.update_time|date='Y-m-d',###}
+                                    {$vo.add_time|date='Y-m-d',###}
                                 </div>
                             </td>
                             <td  class="operation">
-                                <div class="w250 tc">
+                                <div class="w220 tc">
                                 {eq name="'Field@ajax_channel_show'|is_check_access" value="1"}
                                 {if condition="$vo['ifcontrol'] eq 1"}
                                 <a class="btn grey"  href="javascript:void(0);" data-id="{$vo.id}" data-ifeditable="{eq name='$vo.ifeditable' value='1'}0{else /}1{/eq}">{if condition="$vo['ifeditable'] eq 1"}隐藏{else /}显示{/if}</a>
@@ -147,22 +179,22 @@
                                     {/eq}
                                 {else /}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@channel_edit'|is_check_access" value="1"}
-                                    <a href="javascript:void(0);" data-href="{:url('Field/channel_edit',array('channel_id'=>$channel_id,'id'=>$vo['id']))}" class="btn blue" onclick="openFullframe(this, '编辑字段', '100%', '100%');">编辑</a>
+                                    <a href="javascript:void(0);" {notempty name="$channel_id"} data-href="{:url('Field/channel_edit',array('channel_id'=>$vo['channel_id'],'id'=>$vo['id']))}" {else/} data-href="{:url('Field/channel_edit',array('channel_id'=>$vo['channel_id'],'id'=>$vo['id'],'type'=>'all'))}" {/notempty} class="btn blue" onclick="openFullframe(this, '编辑字段', '100%', '100%');">编辑</a>
                                     {/eq}
 									<i></i>
                                     {eq name="$Think.const.CONTROLLER_NAME.'@channel_del'|is_check_access" value="1"}
-                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Field/channel_del', array('channel_id'=>$channel_id))}" data-id="{$vo.id}" onClick="delfun(this);">删除</a>
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Field/channel_del', array('channel_id'=>$vo['channel_id']))}" data-id="{$vo.id}" onClick="delfun(this);">删除</a>
                                     {/eq}
                                 {/if}
 								<i></i>
-                                <a class="btn blue" href="javascript:void(0);" data-name="{$vo.name}" data-channel_id="{$channel_id|default='0'}" data-dtype="{$vo.dtype}" data-ifmain="{$vo.ifmain}" data-is_screening="{$vo.is_screening}" onclick="copyToClipBoard(this)">标签调用</a>
+                                <a class="btn blue" href="javascript:void(0);" data-name="{$vo.name}" data-channel_id="{$vo['channel_id']|default='0'}" data-dtype="{$vo.dtype}" data-ifmain="{$vo.ifmain}" data-is_screening="{$vo.is_screening}" onclick="copyToClipBoard(this)">标签调用</a>
                                 </div>
                             </td>
                             <td class="sort">
                                 <div class="w60 tc">
                                 {if condition="empty($vo['ifmain'])"}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@channel_edit'|is_check_access" value="1"}
-                                    <input style="text-align: left;" type="text" onchange="changeTableVal('channelfield','id','{$vo.id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                    <input class="tc" onchange="changeTableVal('channelfield','id','{$vo.id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
                                     {else /}
                                     {$vo.sort_order}
                                     {/eq}
@@ -218,9 +250,17 @@
 
     function delfun(obj){
       var title = $(obj).attr('data-typename');
-      layer.confirm('<font color="#ff0000">数据将无法恢复</font>，确认删除？', {
-          title: false,
-          btn: ['确定','取消'] //按钮
+      layer.confirm('确认删除？', {
+          shade: layer_shade,
+          area: ['480px', '190px'],
+          move: false,
+          title: '提示',
+          btnAlign:'r',
+          closeBtn: 3,
+          btn: ['确定', '取消'] ,//按钮
+          success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
         }, function(){
           layer_loading('正在处理');
         // 确定
@@ -333,7 +373,7 @@
                         contentdiv += '<dd>标签 arclist / list 内调用 <font color="red">(更多简洁调法请参考标签 arclist /list)</font>：</dd>';
                         contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:120px;">' + liststr + '}</textarea></dd>';
                         if (1 == is_screening) {
-                            contentdiv += '<dd style="color: red;">自定义字段应用于条件筛选，请参考标签用法：<a id="call_tags_help" href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('+"'https://www.eyoucms.com/plus/view.php?aid=7881','筛选标签调用'"+')">查看标签调用</a></dd>';
+                            contentdiv += '<dd style="color: red;">自定义字段应用于条件筛选，请参考标签用法：<a id="call_tags_help" href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('+"'https://www.eyoucms.com/plus/view.php?aid=7881&origin_eycms=1','筛选标签调用'"+')">查看标签调用</a></dd>';
                         }
                     }
                     break;
@@ -361,7 +401,7 @@
                             contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{'+liststr+'}"></dd>';
                         }
                         if (1 == is_screening) {
-                            contentdiv += '<dd style="color: red;">自定义字段应用于条件筛选，请参考标签用法：<a id="call_tags_help" href="https://www.eyoucms.com/plus/view.php?aid=7881" target="_blank">查看标签调用</a></dd>';
+                            contentdiv += '<dd style="color: red;">自定义字段应用于条件筛选，请参考标签用法：<a id="call_tags_help" href="https://www.eyoucms.com/plus/view.php?aid=7881&origin_eycms=1" target="_blank">查看标签调用</a></dd>';
                         }
                     }
                     break;
@@ -379,7 +419,7 @@
                             contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{'+liststr+'}"></dd>';
                         }
                         if (1 == is_screening) {
-                            contentdiv += '<dd style="color: red;">自定义字段应用于条件筛选，请参考标签用法：<a id="call_tags_help" href="https://www.eyoucms.com/plus/view.php?aid=7881" target="_blank">查看标签调用</a></dd>';
+                            contentdiv += '<dd style="color: red;">自定义字段应用于条件筛选，请参考标签用法：<a id="call_tags_help" href="https://www.eyoucms.com/plus/view.php?aid=7881&origin_eycms=1" target="_blank">查看标签调用</a></dd>';
                         }
                     }
                     break;
@@ -387,6 +427,7 @@
         }
         contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color: #F60;">请将相应标签复制并粘贴到对应模板文件中！</dd></dl></div>'
         layer.open({
+            shade: layer_shade,
             title: '标签调用',
             type: 1,
             skin: 'layui-layer-demo',

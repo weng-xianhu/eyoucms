@@ -8,11 +8,8 @@
     a:hover {
         color: {$theme_color};
     }
-    .ey-container .ey-header-top {
-        background: linear-gradient(90deg, {$theme_color} 10%, {$theme_color|hex2rgba=###,0.8} 60%);
-    }
+    
     .ey-container .ey-con .oper-row .el-button.active {
-        background-color: {$theme_color};
         border-color: {$theme_color};
     }
     .el-button--primary {
@@ -27,6 +24,7 @@
     .el-button--primary.is-plain:focus, .el-button--primary.is-plain:hover {
         background: {$theme_color};
         border-color: {$theme_color};
+        color: #fff
     }
     .el-button--primary:hover, .el-button--primary:focus {
         background: {$theme_color|hex2rgba=###,0.9};
@@ -62,9 +60,6 @@
         border: 1px solid {$theme_color};
         background-color: {$theme_color};
     }
-    .ey-container .address-add {
-        background-color:{$theme_color};
-    }
     .ey-container .address-con .address-item.cur {
         border: 1px solid {$theme_color|hex2rgba=###,0.6};
     }
@@ -93,7 +88,7 @@
         border-color: {$theme_color}
     }
     .my-top {
-        background: {$theme_color|hex2rgba=###,0.1};
+        background: {$theme_color|hex2rgba=###,0.07};
     }
     .m-user-title {
         color: {$theme_color};
@@ -117,11 +112,7 @@
     .button2 {
         background: {$theme_color};
     }
-    .el-button:focus, .el-button:hover {
-        color: {$theme_color};
-        border-color: {$theme_color};
-        background-color: {$theme_color|hex2rgba=###,0.1};
-    }
+  
     .ey-container .checkbox-label .checkbox:checked+.check-mark {
         background-color: {$theme_color};
         border: 1px solid {$theme_color};
@@ -133,9 +124,7 @@
         color: {$theme_color};
         border-bottom: 1px solid {$theme_color};
     }
-    .ey-container .column-title .column-name {
-        color:{$theme_color};
-    }
+    
     .ey-container .pay-type .pay-con .pay-type-item.active:before {
         color: {$theme_color};
         border-bottom: 30px solid {$theme_color};
@@ -150,8 +139,11 @@
 </style>
 
 <script type="text/javascript">
+    var __isMobile__ = 1;
     var __root_dir__ = "__ROOT_DIR__";
     var __version__ = "{$version}";
     var __lang__ = "{$home_lang}";
     var eyou_basefile = "{$Request.baseFile}";
+    var GetUploadify_url = "{eyou:url link='user/Uploadify/upload' /}";
+    var delUploadify_url = "{eyou:url link='user/Uploadify/delupload' /}";
 </script>

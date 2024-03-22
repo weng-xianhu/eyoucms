@@ -1,0 +1,166 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>订单支付-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/basic.css" /}
+        {eyou:static file="users/skin/css/eyoucms.css" /}
+        <!-- 新样式 2020-12-8 -->
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm" /}
+
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="users/skin/js/global.js" /}
+        {eyou:static file="/public/static/common/js/mobile_global.js"/}
+        <script>
+            !(function (doc, win) {
+                var docEle = doc.documentElement,
+                    evt = "onorientationchange" in window ? "orientationchange" : "resize",
+                    fn = function () {
+                        var width = docEle.clientWidth;
+                        width && (docEle.style.fontSize = 13 * (width / 320) + "px");
+                    };
+
+                win.addEventListener(evt, fn, false);
+                doc.addEventListener("DOMContentLoaded", fn, false);
+            }(document, window));
+        </script>
+    </head>
+
+    <body>
+        <div class="ey-container buy-vip">
+            <div class="buy-number mb10">
+                <p>会员昵称：{$users.nickname}</p>
+            </div>
+            <div class="buy-course">
+                <div class="bc-block">
+                    <img src="{$data.product_litpic}" style="height: 60px;" class="left-pic">
+                    <div class="right-con">
+                        <p class="p1">{$data.cause}</p>
+                        <p class="p2">¥ {$data.order_amount}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="el-row bgfff mt10">
+                <div class="el-row" id="div_zhifufangshi">
+                    <div class="el-form level-row">
+                        {eyou:sppayapilist id='vo'}
+                        {eyou:notempty name="$vo.pay_id"}
+                        <label class="radio-label pt10 pb10 pl20 pr20 e-label border-b-1-e">
+                            <span class="ariticlePay phpSelectPayRadio" data-id="{$vo.pay_id}" data-mark="{$vo.pay_mark}" onclick="selectPayType(this);">
+                                <span><img class="pay_img" src="{$vo.pay_img}" alt="{$vo.pay_name}">{$vo.pay_name} </span>
+                                <input class="radio" type="radio" name='pay_id' value="{$vo.pay_id}" {eyou:eq name="$key" value="0"} checked {/eyou:eq}>
+                                <span class="check-mark top15 ri20"></span>
+                            </span>
+                        </label>
+                        {/eyou:notempty}
+                        {$vo.hidden}
+                        {/eyou:sppayapilist}
+
+                        {eyou:eq name="$data.pay_balance_open" value="1"}
+                        <label class="radio-label pt10 pb10 pl20 pr20 e-label border-b-1-e">
+                            <span class="ariticlePay phpSelectPayRadio" data-id="0" data-mark="balance" onclick="selectPayType(this);">
+                                <span><img class="pay_img" src="{eyou:static file='users/skin/images/pay_yiyou.png' /}" alt="余额支付">余额支付 </span>
+                                <input class="radio" type="radio" name='pay_id' value="0">
+                                <span class="check-mark top15 ri20"></span>
+                            </span>
+                        </label>
+                        {/eyou:eq}
+                        <input type="hidden" id="PayID">
+                        <input type="hidden" id="PayMark">
+                        <input type="hidden" id="PayType" value="9">
+                    </div>
+                </div>
+            </div>
+            <div class="buy-price mt10">
+                <p><strong>应付金额</strong><b>￥{$data.order_amount}</b></p>
+            </div>
+            <div class="el-row mt30 btfx">
+                <input type="hidden" id="unified_id" value="{$data.unified_id}">
+                <input type="hidden" id="unified_number" value="{$data.unified_number}">
+                <a href="JavaScript:void(0);" onclick="ariticlePay(this);" class="button2" style="color: #fff!important;"> 立即支付 </a>
+            </div>
+        </div>
+        <script type="text/javascript">
+            $($('.ariticlePay')[0]).trigger('click');
+
+            // 支付方式选择
+            function selectPayType(obj) {
+                $('#PayID').val($(obj).data('id'));
+                $('#PayMark').val($(obj).data('mark'));
+            }
+
+            function ariticlePay(obj) {
+                // 禁止再次点击余额支付
+                $(obj).prop("disabled", true).css("pointer-events", "none");
+                // 提交支付
+                var pay_id = $('#PayID').val();
+                var pay_mark = $('#PayMark').val();
+                var pay_type = $('#PayType').val();
+                var unified_id = $('#unified_id').val();
+                var unified_number = $('#unified_number').val();
+                if (0 === parseInt(pay_id) && 'balance' == pay_mark) {
+                    // 发送请求
+                    layer_loading('订单处理中');
+                    $.ajax({
+                        url: '{$RootDir}/index.php?m=user&c=PayApi&a=balance_payment&_ajax=1',
+                        data: {unified_id: unified_id, unified_number: unified_number, transaction_type: pay_type},
+                        type:'post',
+                        dataType:'json',
+                        success:function(res) {
+                            layer.closeAll();
+                            if (1 == res.code) {
+                                layer.msg(res.msg, {time: 1500}, function() {
+                                    window.location.href = res.url;
+                                });
+                            } else {
+                                rechargePay(obj, res.msg, res.url);
+                            }
+                        }
+                    });
+                } else {
+                    SelectPayMethod_2(pay_id, pay_mark, $('#unified_id').val(), $('#unified_number').val(), $('#PayType').val());
+                }
+            }
+
+            // 是否要去充值
+            function rechargePay(obj, msg ,url) {
+                layer.confirm(msg, {
+                    title: false,
+                    btn: ['去充值','其他方式支付'],
+                    cancel: function(index, layero){ 
+                        $(obj).prop("disabled", false).css("pointer-events", "");
+                    }
+                }, function() {
+                    // 去充值
+                    window.open(url);
+                    layer.confirm('是否充值成功，立即支付？', {
+                        title: false,
+                        btn: ['立即支付','其他方式支付'],
+                        cancel: function(index, layero){ 
+                            $(obj).prop("disabled", false).css("pointer-events", "");
+                        }
+                    }, function() {
+                        // 立即支付
+                        ariticlePay(obj);
+                    }, function(index) {
+                        // 选择其他方式支付时，恢复禁用的余额支付按钮
+                        $(obj).prop("disabled", false).css("pointer-events", "");
+                        layer.closeAll(index);
+                    });
+                }, function(index) {
+                    // 选择其他方式支付时，恢复禁用的余额支付按钮
+                    $(obj).prop("disabled", false).css("pointer-events", "");
+                    layer.closeAll(index);
+                });
+            }
+        </script>
+    </body>
+</html>

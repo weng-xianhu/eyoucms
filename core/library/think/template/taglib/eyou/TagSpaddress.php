@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -21,44 +21,68 @@ use think\Db;
  */
 class TagSpaddress extends Base
 {
+    public $usersTplVersion    = '';
+    
     //初始化
     protected function _initialize()
     {
         parent::_initialize();
+        $this->usersTplVersion = getUsersTplVersion();
+        $this->usersTpl2xVersion = getUsersTpl2xVersion();
     }
 
     /**
      * 获取地址管理数据
      */
-    public function getSpaddress($type = '')
+    public function getSpaddress($opt = '')
     {
-        if ($type == 'add') {
+        $sourceType = input('param.type/s', 'list');
+        if ($opt == 'add') {
             $UlHtmlId = 'UlHtml';
             // 封装添加收货地址JS
-            $AddressData[0]['UlHtmlId']    = " id=\"{$UlHtmlId}\" ";
-            $AddressData[0]['ShopAddAddr'] = " onclick=\"ShopAddAddress(this);\" ";
+            $AddressData[0]['UlHtmlId'] = " id='{$UlHtmlId}' ";
+            $AddressData[0]['ShopAddAddr'] = " onclick='ShopAddAddress(this);' ";
+            // 查询条件
+            $AddressWhere = [
+                'users_id' => (int)session('users_id'),
+            ];
+            $addressCount = Db::name("shop_address")->where($AddressWhere)->select();
+            $AddressData[0]['addressCount'] = $addressCount;
 
             // 传入JS参数
-            $data['UlHtmlId']  = $UlHtmlId;
-            $data['shop_get_wechat_addr_url'] = isMobile() && isWeixin() ? url('user/Shop/shop_get_wechat_addr') : '';
-            $data['shop_add_address']  = url('user/Shop/shop_add_address');
-            $data['shop_edit_address'] = url('user/Shop/shop_edit_address');
-            $data['shop_del_address']  = url('user/Shop/shop_del_address');
-            $data['shop_set_default']  = url('user/Shop/shop_set_default_address');
-            $data['addr_width']  = '350px';
-            $data['addr_height'] = '480px';
+            $data['is_wap'] = 0;
+            $data['addr_width']  = '460px';
+            $data['addr_height'] = '460px';
             if (isWeixin() || isMobile()) {
+                $data['is_wap'] = 1;
                 $data['addr_width']  = '100%';
                 $data['addr_height'] = '100%';
+            } else if ($this->usersTpl2xVersion == 'v2.x') {
+                $data['addr_width']  = '660px';
+                $data['addr_height'] = '392px';
             }
+            $data['UlHtmlId'] = $UlHtmlId;
+            $data['sourceType'] = $sourceType;
+            $data['usersTpl2xVersion'] = $this->usersTpl2xVersion;
+            $data['shop_add_address'] = url('user/Shop/shop_add_address');
+            $data['shop_edit_address'] = url('user/Shop/shop_edit_address');
+            $data['shop_del_address'] = url('user/Shop/shop_del_address', ['_ajax'=>1], true, false, 1, 1, 0);
+            $data['shop_set_default'] = url('user/Shop/shop_set_default_address', ['_ajax'=>1], true, false, 1, 1, 0);
+            $data['shop_get_wechat_addr_url'] = isMobile() && isWeixin() ? url('user/Shop/shop_get_wechat_addr') : '';
             $data_json = json_encode($data);
             $version   = getCmsVersion();
+            if (empty($this->usersTplVersion) || 'v1' == $this->usersTplVersion) {
+                $jsfile = "tag_spaddress.js";
+            } else {
+                $jsfile = "tag_spaddress_{$this->usersTplVersion}.js";
+            }
             // 循环中第一个数据带上JS代码加载
+            $srcurl = get_absolute_url("{$this->root_dir}/public/static/common/js/{$jsfile}?v={$version}");
             $AddressData[0]['hidden'] = <<<EOF
 <script type="text/javascript">
     var aeb461fdb660da59b0bf4777fab9eea = {$data_json};
 </script>
-<script type="text/javascript" src="{$this->root_dir}/public/static/common/js/tag_spaddress.js?v={$version}"></script>
+<script language="javascript" type="text/javascript" src="{$srcurl}"></script>
 EOF;
             return $AddressData;
             exit;
@@ -67,7 +91,6 @@ EOF;
         // 查询条件
         $AddressWhere = [
             'users_id' => session('users_id'),
-            'lang'     => $this->home_lang,
         ];
         $AddressData = Db::name("shop_address")->where($AddressWhere)->order('is_default desc, addr_id asc')->select();
         if (empty($AddressData)) return false;
@@ -86,9 +109,9 @@ EOF;
             $AddressData[$key]['district'] = get_area_name($value['district']);
 
             // 会员模板版本号
-            if (getUsersTplVersion() != 'v1' && isMobile()) {
+            if ($this->usersTplVersion != 'v1' && isMobile()) {
                 // 封装Ul的ID
-                $AddressData[$key]['ul_il_id'] = " id=\"{$value['addr_id']}_ul_li\" onclick=\"selectAddress_1610201146({$value['addr_id']}, this)\" ";
+                $AddressData[$key]['ul_il_id'] = " id=\"{$value['addr_id']}_ul_li\" onclick=\"selectAddress_v201146({$value['addr_id']}, this)\" ";
             } else {
                 // 封装Ul的ID
                 $AddressData[$key]['ul_il_id'] = " id=\"{$value['addr_id']}_ul_li\" ";
@@ -110,7 +133,11 @@ EOF;
             $AddressData[$key]['MobileId'] = " id=\"{$value['addr_id']}_mobile\" ";
 
             // 封装收货地址信息
-            $AddressData[$key]['Info'] = $AddressData[$key]['country'].' '.$AddressData[$key]['province'].' '.$AddressData[$key]['city'].' '.$AddressData[$key]['district'];
+            if ($this->usersTplVersion == 'v3' || $this->usersTpl2xVersion = 'v2.x') {
+                $AddressData[$key]['Info'] = $AddressData[$key]['province'].' '.$AddressData[$key]['city'].' '.$AddressData[$key]['district'];
+            } else {
+                $AddressData[$key]['Info'] = $AddressData[$key]['country'].' '.$AddressData[$key]['province'].' '.$AddressData[$key]['city'].' '.$AddressData[$key]['district'];
+            }
 
             // 封装收货地址信息ID
             $AddressData[$key]['InfoId'] = " id=\"{$value['addr_id']}_info\" ";

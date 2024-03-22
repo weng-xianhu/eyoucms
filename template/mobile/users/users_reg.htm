@@ -1,155 +1,437 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-    <meta charset="utf-8" />
-    <title>账号注册-{eyou:global name='web_name' /}</title>
-    <meta name="renderer" content="webkit">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
-    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-    {eyou:static file="users/skin/css/basic.css" /}
-    {eyou:static file="users/skin/css/eyoucms.css" /}
-    {eyou:include file="users/skin/css/diy_css.htm" /}
-    
-    {eyou:static file="/public/static/common/js/jquery.min.js"/}
-    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
-    {eyou:static file="users/skin/js/global.js" /}
-</head>
+    <head>
+        <meta charset="utf-8" />
+        <title>账号注册-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/basic.css" /}
+        {eyou:static file="users/skin/css/eyoucms.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm" /}
 
-<body class="reg regi">
-<div class="register_index ey-member">
-    <div class="container">
-        <form name='theForm' id="theForm" method="post" class="form-register panel-body fv-form">
-            <div class="mip-reg-logo"><a href="{eyou:global name='web_cmsurl' /}" class="ey-logo"><img src="{eyou:global name='web_logo'/}" /></a></div>
-            <div class="mip-reg-heading">账号注册</div>
-            <div class="form-group">
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                    <input type="text" name="username" required class="form-control" placeholder="用户名"/>
-                </div>
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="users/skin/js/global.js" /}
+        {eyou:static file="/public/static/common/js/mobile_global.js"/}
+    </head>
+
+    <body class="login-reg">
+        <div class="wrapper">
+            <input type="hidden" id="wechat_url" value="{$eyou.field.wechat_url}">
+            <div class="hend-box">
+                <div class="title">注册</div>
+                <div class="desc">已有账号,<a href="{eyou:url link='user/Users/login' /}" style="color: #ff9600;">立即登录</a></div>
             </div>
-            <div class="form-group">
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-                    <input type="password" name="password" required class="form-control" placeholder="登录密码"/>
+            <div class="cont-box">
+                <div id="con_sign_1">
+                    <form name='theForm' id="theForm" method="post" class="">
+                        <div class="wx-form-group">
+                            <input type="text" name="username" required class="wx-form-control" placeholder="请输入账号" autocomplete="off" />
+                        </div>
+                        <div class="wx-form-group">
+                            <input type="password" name="password" required class="wx-form-control" placeholder="请输入密码" autocomplete="off" />
+                        </div>
+                        <div class="wx-form-group">
+                            <input type="password" name="password2" required class="wx-form-control" placeholder="请确认密码" autocomplete="off" />
+                        </div>
+                        {eyou:include file="users/users_reg_field.htm" /}
+                        {eyou:eq name="$is_vertify" value="1"}
+                        <div class="wx-form-group">
+                            <div class="field">
+                                <input type="text" name="vertify" autocomplete="off" class="wx-form-control" placeholder="请输入验证码" />
+                                <img src="{eyou:url link='api/Ajax/vertify' vars='type=users_reg' /}" class="chicuele" id="imgVerifys" onclick="fleshVerify();" title="看不清？点击更换验证码" align="absmiddle">
+                            </div>
+                        </div>
+                        {/eyou:eq}
+                        <!-- 用户协议》和《隐私政策》 -->
+                        <div class="clause-box">
+                            <label class="checkbox-label">
+                                <input class="checkbox" type="checkbox" name="agreement" value="1">
+                                <span class="check-mark"></span>
+                            </label>
+                            <a href="javascript:void(0)">我同意《用户协议》和《隐私政策》</a>
+                        </div>
+                        
+                        <input style="margin-top: 44px;" type="button" onclick="checkUser();" class="btn btn-lg btn-primary btn-block" value="立即注册" />
+                        <div class="login-link"> 
+                            <a class="" style="color: #ff9600;" id="click_sign_1" href="javascript:void(0);" onclick="showPhoneSignIn1();">使用手机号注册</a>
+                        </div>
+                    </form>
                 </div>
+                <div id="con_sign_2" style="display:none;">
+                    <form name='theMobileForm' id="theMobileForm" method="post" class="">
+                        <div class="wx-form-group">
+                            <input type="text" class="wx-form-control" required="" name="mobile" maxlength="11" value="" placeholder="手机号码">
+                        </div>
+                        <div class="wx-form-group" id="vertify_div">
+                            <div class="field">
+                                <input type="text" name="mobile_vertify" autocomplete="off" class="wx-form-control" placeholder="图片验证码" />
+                                <img src="{eyou:url link='api/Ajax/vertify' vars='type=users_mobile_reg' /}" class="chicuele" id="mobile_imgVerifys" onclick="mobile_fleshVerify();" title="看不清？点击更换验证码" align="absmiddle">
+                            </div>
+                        </div>
+                        <div class="wx-form-group">
+                            <div class="field">
+                                <input id="mobile_code" type="text" class="wx-form-control" name="mobile_code" placeholder="请输入动态码">
+                                <input type="button" id="mobile_code_button" onclick="send_mobile_code();" class="sento" value="获取动态码">
+                            </div>
+                        </div>
+                        <input type="hidden" name="__mobile_1_token__" value="{$Request.token.__mobile_1_token__}" />
+                        <input style="margin-top: 44px;" type="button" onclick="checkMobileUser1649732103();" class="btn btn-lg btn-primary btn-block" value="立即注册" />
+                        <div class="login-link">
+                            <a class="fr" style="color: #ff9600;" id="click_sign_2" href="javascript:void(0);" onclick="showPhoneSignIn2();">使用用户名注册</a>
+                        </div>
+                        <script>
+                            $("input[name=mobile]").keyup(function(event){
+                                var mobile = $(this).val();
+                                if (11 == mobile.length && 32 <= event.keyCode) {
+                                    $('#vertify_div').css('display','block');
+                                }
+                            });
+                            $("input[name=mobile_vertify]").keyup(function(event){
+                                var mobile_vertify = $(this).val();
+                                if (4 <= mobile_vertify.length && 32 <= event.keyCode) {
+                                    send_mobile_code();
+                                }
+                            });
+                                                        
+                            function send_mobile_code() {
+                                                        
+                                var mobile = $("input[name=mobile]").val();
+                                // 手机号是否为空
+                                if (!mobile) {
+                                    $("input[name=mobile]").focus();
+                                    layer.msg('请输入手机号码！', {time: 1500});
+                                    return false;
+                                }
+                                                        
+                                // 手机格式不正确
+                                var reg = /^1[0-9]{10}$/i;
+                                if (!reg.test(mobile)) {
+                                    $("input[name=mobile]").focus();
+                                    layer.msg('请输入正确的请输入手机号码！', {time: 1500});
+                                    return false;
+                                }
+                                $('#vertify_div').css('display','block');
+                                var mobile_vertify = $("input[name=mobile_vertify]").val();
+                                if (!mobile_vertify) {
+                                    return false;
+                                }
+                                                        
+                                // 设置为不可点击
+                                $("#mobile_code_button").val('获取中…').attr('disabled', 'disabled');
+                                var __mobile_1_token__ = $('input[name=__mobile_1_token__]').val();
+                                                        
+                                $.ajax({
+                                    url: "{eyou:url link='api/Ajax/SendMobileCode' /}",
+                                    // source:2 登录   source:0  注册
+                                    data: {type:'users_mobile_reg', mobile:mobile, is_mobile:true, title:'账号注册', source:0,IsVertify:1, vertify:mobile_vertify, __mobile_1_token__:__mobile_1_token__},
+                                    type:'post',
+                                    dataType:'json',
+                                    success:function(res){
+                                        if (res.code == 1) {
+                                            code_countdown();
+                                            layer.msg(res.msg, {time: 1500});
+                                        } else {
+                                            $("#mobile_code_button").val('获取验证码').removeAttr("disabled");
+                                            layer.alert(res.msg, {icon: 2, title: false, closeBtn: 0});
+                                        }
+                                    },
+                                    error : function() {
+                                        $("#mobile_code_button").val('获取验证码').removeAttr("disabled");
+                                        layer.alert('发送失败，请尝试重新发送！', {icon: 5, title: false, closeBtn: 0});
+                                    }
+                                });
+                            }
+                            function mobile_fleshVerify(){
+                                var src = "{eyou:url link='api/Ajax/vertify' vars='type=users_mobile_login' /}";
+                                if (src.indexOf('?') > -1) {
+                                    src += '&';
+                                } else {
+                                    src += '?';
+                                }
+                                src += 'r='+ Math.floor(Math.random()*100);
+                                $('#mobile_imgVerifys').attr('src', src);
+                                                        
+                                $.ajax({
+                                    async:false,
+                                    url: "__ROOT_DIR__/index.php?m=api&c=Ajax&a=get_token&name=__mobile_1_token__",
+                                    data: {_ajax:1},
+                                    type:'GET',
+                                    dataType:'html',
+                                    success:function(res1){
+                                        $('input[name=__mobile_1_token__]').val(res1);
+                                    },
+                                    error : function(e) {
+                                        layer.closeAll();
+                                        layer.alert(e.responseText, {icon: 5, title:false});
+                                    }
+                                });
+                            }
+                                                        
+                            function code_countdown(){
+                                // 倒计时
+                                var setTime;
+                                var time = 120;
+                                setTime = setInterval(function() {
+                                    if(0 >= time) {
+                                        clearInterval(setTime);
+                                        return false;
+                                    }
+                                                        
+                                    time--;
+                                    $("#mobile_code_button").val(time + '秒').attr('disabled', 'disabled');
+                                    if(time == 0) $("#mobile_code_button").val('获取验证码').removeAttr("disabled");
+                                }, 1000);
+                            }
+                            function checkMobileUser1649732103() {
+                                var mobile = $('#theMobileForm input[name=mobile]');
+                                var mobile_code = $('#theMobileForm input[name=mobile_code]');
+                                                        
+                                if (mobile.val() == '') {
+                                    layer.msg('手机号不能为空！', {
+                                        time: 1500
+                                    });
+                                    mobile.focus();
+                                    return false;
+                                }
+                                                        
+                                if (mobile_code.val() == '') {
+                                    layer.msg('验证码不能为空！', {
+                                        time: 1500
+                                    });
+                                    mobile_code.focus();
+                                    return false;
+                                }
+                                                        
+                                layer_loading('正在处理');
+                                $.ajax({
+                                    url: "{eyou:url link='user/Users/mobile_reg' /}",
+                                    data: $('#theMobileForm').serialize(),
+                                    type: 'post',
+                                    dataType: 'json',
+                                    success: function(response) {
+                                        layer.closeAll();
+                                        var res = response.data;
+                                        if (res.status == 0) {
+                                            layer.msg(response.msg, {
+                                                time: 1500
+                                            }, function() {
+                                                window.location = response.url;
+                                            });
+                                        } else if ('vertify' == res.status) {
+                                            mobile_fleshVerify();
+                                            layer.msg(response.msg, {
+                                                time: 2000
+                                            });
+                                        } else if (res.status == 1) {
+                                            layer.msg(response.msg, {
+                                                time: 2000
+                                            });
+                                        } else if (res.status == 2) {
+                                            layer.msg(response.msg, {
+                                                time: 1500
+                                            }, function() {
+                                                window.location = response.url;
+                                            });
+                                        } else if (res.status == 3) {
+                                            layer.msg(response.msg, {
+                                                time: 1500
+                                            }, function() {
+                                                window.location = response.url;
+                                            });
+                                        } else {
+                                            mobile_fleshVerify();
+                                            layer.msg(response.msg, {
+                                                time: 2000
+                                            });
+                                        }
+                                    },
+                                        error: function(e) {
+                                            layer.closeAll();
+                                            mobile_fleshVerify();
+                                            showErrorAlert(e.responseText);
+                                        }
+                                    });
+                                };
+                        </script>
+                    </form>
+                </div>
+                <!-- 第三方账号登录 -->
+                {eyou:include file="/public/static/template/users_v2/users_loginapi_m.htm" /}
+                <!-- 第三方账号登录 -->
             </div>
-            
-            <div class="form-group">
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-                    <input type="password" name="password2" required data-password="password" class="form-control" placeholder="重复密码"/>
-                </div>
-            </div>
-
-            <!-- 更多资料中的会员属性 -->
-            {eyou:include file="users/users_reg_field.htm" /}
-            <!-- 结束 -->
-
-            {eyou:eq name="$is_vertify" value="1"}
-                <div class="form-group">
-                    <div class="input-group input-group-icon">
-                    <span class="input-group-addon"><i class="fa fa-shield"></i></span>
-                    <div class="formText">
-                        <input type="text" name="vertify" autocomplete="off" class="form-control" placeholder="图片验证码" />
-                        <img src="{eyou:url link='api/Ajax/vertify' vars='type=users_reg' /}" class="chicuele" id="imgVerifys" onclick="fleshVerify();" title="看不清？点击更换验证码" align="absmiddle">
-                    </div>
-                    </div>
-                </div>
-            {/eyou:eq}
-
-            <input type="button" onclick="checkUser();" class="btn btn-lg btn-primary btn-block" value="立即注册"/>
-            <div class="login-link"><a href="{eyou:url link='user/Users/login' /}">已有账号？</a></div>
-
-            <!-- 第三方账号登录 -->
-            {eyou:include file="/public/static/template/users/users_loginapi.htm" /}
-            <!-- 第三方账号登录 -->
-        </form>
-    </div>
-</div>
-
-<script type="text/javascript">
-    $(document).keydown(function(event){
-        if(event.keyCode ==13){
-            checkUser();
-            return false;
-        }
-    });
-
-    function fleshVerify(){
-        var src = "{eyou:url link='api/Ajax/vertify' vars='type=users_reg' /}";
-        if (src.indexOf('?') > -1) {
-            src += '&';
-        } else {
-            src += '?';
-        }
-        src += 'r='+ Math.floor(Math.random()*100);
-        $('#imgVerifys').attr('src', src);
-    }
-
-    function checkUser(){
-        var username = $('#theForm input[name=username]');
-        var password = $('#theForm input[name=password]');
-        var password2 = $('#theForm input[name=password2]');
-
-        if(username.val() == ''){
-            layer.msg('用户名不能为空！', {time: 1500});
-            username.focus();
-            return false;
-        }
-
-        if(password.val() == ''){
-            layer.msg('登录密码不能为空！', {time: 1500});
-            password.focus();
-            return false;
-        }
-
-        if(password2.val() != password.val()){
-            layer.msg('两次密码不一致！', {time: 1500});
-            password.focus();
-            return false;
-        }
-
-        layer_loading('正在处理');
-        $.ajax({
-            // async:false,
-            url: "{eyou:url link='user/Users/reg' /}",
-            data: $('#theForm').serialize(),
-            type:'post',
-            dataType:'json',
-            success:function(response){
-                layer.closeAll();
-                var res = response.data;
-                if(res.status == 0){
-                    layer.msg(response.msg, {time: 1500}, function(){
-                        window.location = response.url;
-                    });
-                } else if ('vertify' == res.status) {
-                    fleshVerify();
-                    layer.msg(response.msg, {time: 2000});
-                }else if(res.status == 1){
-                    layer.msg(response.msg, {time: 2000});
-                }else if(res.status == 2){
-                    layer.msg(response.msg, {time: 1500}, function(){
-                        window.location = response.url;
-                    });
-                }else if(res.status == 3){
-                    layer.msg(response.msg, {time: 1500}, function(){
-                        window.location = response.url;
-                    });
-                }else{
-                    fleshVerify();
-                    layer.msg(response.msg, {time: 2000});
-                }
-            },
-            error : function(e) {
-                layer.closeAll();
-                fleshVerify();
-                showErrorAlert(e.responseText);
+        </div>
+        <script>
+            // 点击事件处理函数
+            function showPhoneSignIn1() {
+            // 获取元素
+            var conSign1 = document.getElementById('con_sign_1');
+            var conSign2 = document.getElementById('con_sign_2');
+            // 隐藏账号登录相关元素
+            conSign1.style.display = 'none';
+            // 显示手机号登录相关元素
+            conSign2.style.display = 'block';
             }
-        });
-    };
-</script>
+            function showPhoneSignIn2() {
+            // 获取元素
+            var conSign1 = document.getElementById('con_sign_1');
+            var conSign2 = document.getElementById('con_sign_2');
+            // 显示账号登录相关元素
+            conSign1.style.display = 'block';
+            // 隐藏手机号登录相关元素
+            conSign2.style.display = 'none';
+            }
+            
+            /**
+             * 明文密码
+             */
+            $(".pass-showhide").attr('data-showOrHide', 'hide');
+            $(".pass-showhide").on('click', function(){
+                var showOrHide = $(this).attr('data-showOrHide');
+                if ('hide' == showOrHide) {
+                    $(this).attr('data-showOrHide', 'show');
+                    var name = $(this).data('name');
+                    $("input[name="+name+"]").get(0).type="text";
+                    $(this).removeClass('pass-hide').addClass('pass-show');
+                } else {
+                    $(this).attr('data-showOrHide', 'hide');
+                    var name = $(this).data('name');
+                    $("input[name="+name+"]").get(0).type="password";
+                    $(this).removeClass('pass-show').addClass('pass-hide');
+                }
+            });
+            //切换账号登录与手机号登录
+            $(".tab_list li").click(function(){
+                var index = $(this).attr('data-index');
+                $(".tab_list li").each(function(){
+                    $(this).removeClass('current');
+                });
+                $(".item").each(function(i,v){
+                    if (index == i){
+                        $(this).css('display','block');
+                    } else{
+                        $(this).css('display','none');
+                    }
+                });
+                $(this).addClass('current');
+        
+            });
+        
+            $(document).keydown(function(event) {
+                if (event.keyCode == 13) {
+                    var index = $(".tab_list .current").attr('data-index');
+                    if (0 == index) {
+                        checkUser();
+                    }else if(1 == index){
+                        checkMobileUser1649732103();
+                    }
+                }
+            });
+        
+            function fleshVerify() {
+                var src = "{eyou:url link='api/Ajax/vertify' vars='type=users_reg' /}";
+                if (src.indexOf('?') > -1) {
+                    src += '&';
+                } else {
+                    src += '?';
+                }
+                src += 'r=' + Math.floor(Math.random() * 100);
+                $('#imgVerifys').attr('src', src);
+            }
+        
+            function checkUser() {
+                var username = $('#theForm input[name=username]');
+                var password = $('#theForm input[name=password]');
+                var password2 = $('#theForm input[name=password2]');
+                // 《用户协议》和《隐私政策》
+                var agreement = $('#theForm input[name=agreement]:checked').val();
+        
+                if (username.val() == '') {
+                    layer.msg('用户名不能为空！', {
+                        time: 1500
+                    });
+                    username.focus();
+                    return false;
+                }
+        
+                if (password.val() == '') {
+                    layer.msg('登录密码不能为空！', {
+                        time: 1500
+                    });
+                    password.focus();
+                    return false;
+                }
+                
+                {$pwdJsCode|default=''}
 
-</body>
+                if (password2.val() != password.val()) {
+                    layer.msg('两次密码不一致！', {
+                        time: 1500
+                    });
+                    password.focus();
+                    return false;
+                }
+                // 《用户协议》和《隐私政策》
+                if (1 != agreement) {
+                    layer.msg('请勾选同意《用户协议》和《隐私政策》', {time: 1500});
+                    password.focus();
+                    return false;
+                }
+        
+                layer_loading('正在处理');
+                $.ajax({
+                    // async:false,
+                    url: "{eyou:url link='user/Users/reg' /}",
+                    data: $('#theForm').serialize(),
+                    type: 'post',
+                    dataType: 'json',
+                    success: function(response) {
+                        layer.closeAll();
+                        var res = response.data;
+                        if (res.status == 0) {
+                            layer.msg(response.msg, {
+                                time: 1500
+                            }, function() {
+                                window.location = response.url;
+                            });
+                        } else if ('vertify' == res.status) {
+                            fleshVerify();
+                            layer.msg(response.msg, {
+                                time: 2000
+                            });
+                        } else if (res.status == 1) {
+                            layer.msg(response.msg, {
+                                time: 2000
+                            });
+                        } else if (res.status == 2) {
+                            layer.msg(response.msg, {
+                                time: 1500
+                            }, function() {
+                                window.location = response.url;
+                            });
+                        } else if (res.status == 3) {
+                            layer.msg(response.msg, {
+                                time: 1500
+                            }, function() {
+                                window.location = response.url;
+                            });
+                        } else {
+                            fleshVerify();
+                            layer.msg(response.msg, {
+                                time: 2000
+                            });
+                        }
+                    },
+                    error: function(e) {
+                        layer.closeAll();
+                        fleshVerify();
+                        showErrorAlert(e.responseText);
+                    }
+                });
+            };
+        </script>
+
+    </body>
 </html>

@@ -7,9 +7,9 @@
 <meta http-equiv="Content-Language" content="zh-cn"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
 <title><?php echo $Title; ?> - <?php echo $Powered; ?></title>
-<link rel="stylesheet" href="./css/install.css?v=v1.3.1" />
-<script src="./js/jquery.js?v=v1.3.1"></script> 
-<script src="./../public/plugins/layer-v3.1.0/layer.js?v=v1.3.1"></script> 
+<link rel="stylesheet" href="./css/install.css?v=v1.6.4" />
+<script src="./js/jquery.js?v=v1.6.4"></script> 
+<script src="./../public/plugins/layer-v3.1.0/layer.js?v=v1.6.4"></script> 
 </head>
 <body>
 <div class="wrap">
@@ -27,31 +27,31 @@
           </tr>
           <tr>
             <td class="tar">数据库地址</td>
-              <td><input type="text" name="dbhost" id="dbhost" value="127.0.0.1" class="input"><div id="J_install_tip_dbhost"><span class="gray">一般为127.0.0.1 或 localhost</span></div></td>
+              <td><input type="text" name="dbhost" id="dbhost" value="127.0.0.1" class="input" autocomplete="off"><div id="J_install_tip_dbhost"><span class="gray">一般为127.0.0.1 或 localhost</span></div></td>
             </tr>
           <tr>
             <td class="tar">数据库端口</td>
-            <td><input type="text" name="dbport" id="dbport" value="3306" class="input"><div id="J_install_tip_dbport"><span class="gray">一般为3306</span></div></td>
+            <td><input type="text" name="dbport" id="dbport" value="3306" class="input" autocomplete="off"><div id="J_install_tip_dbport"><span class="gray">一般为3306</span></div></td>
           </tr>
           <tr>
             <td class="tar">数据库账号</td>
-            <td><input type="text" name="dbuser" id="dbuser" value="root" class="input" onkeyup="$(this).val($.trim($(this).val()));"><div id="J_install_tip_dbuser"></div></td>
+            <td><input type="text" name="dbuser" id="dbuser" value="root" class="input" autocomplete="off" onkeyup="$(this).val($.trim($(this).val()));"><div id="J_install_tip_dbuser"></div></td>
           </tr>
           <tr>
             <td class="tar">数据库密码</td>
             <td class="data-password">
-              <input type="password" name="dbpw" id="dbpw" value="" class="input" autoComplete="off" onBlur="TestDbPwd(0)">
+              <input type="password" name="dbpw" id="dbpw" value="" class="input" autocomplete="off" onBlur="TestDbPwd(0)">
               <div id="J_install_tip_dbpw"></div>
               <span class="password-icon hide pass-showhide" data-name="dbpw"></span>
             </td>
           </tr>
           <tr>
             <td class="tar">数据库名</td>
-            <td><input type="text" name="dbname" id="dbname" value="eyoucms" class="input" onBlur="TestDbPwd(0)"><div id="J_install_tip_dbname"></div></td>
+            <td><input type="text" name="dbname" id="dbname" value="eyoucms" class="input" autocomplete="off" onBlur="TestDbPwd(0)"><div id="J_install_tip_dbname"></div></td>
           </tr>
           <tr>
             <td class="tar">数据库表前缀</td>
-            <td><input type="text" name="dbprefix" id="dbprefix" value="ey_" class="input" ><div id="J_install_tip_dbprefix"><span class="gray">推荐使用&nbsp;ey_</span></div></td>
+            <td><input type="text" name="dbprefix" id="dbprefix" value="ey_" class="input" autocomplete="off"><div id="J_install_tip_dbprefix"><span class="gray">推荐使用&nbsp;ey_</span></div></td>
           </tr>
         </table>
        
@@ -61,12 +61,12 @@
           </tr>
           <tr>
             <td class="tar">管理员帐号</td>
-            <td><input type="text" name="manager" id="manager" value="admin" class="input"><div id="J_install_tip_manager"></div></td>
+            <td><input type="text" name="manager" id="manager" value="admin" class="input" autocomplete="off"><div id="J_install_tip_manager"></div></td>
           </tr>
           <tr>
             <td class="tar">管理员密码</td>
             <td class="data-password">
-              <input type="password" name="manager_pwd" id="manager_pwd" class="input" autoComplete="off">
+              <input type="password" name="manager_pwd" id="manager_pwd" class="input" autocomplete="off">
               <div id="J_install_tip_manager_pwd"></div>
               <span class="password-icon hide pass-showhide" data-name="manager_pwd"></span>
             </td>
@@ -74,7 +74,7 @@
           <tr>
             <td class="tar">请确认密码</td>
             <td class="data-password">
-              <input type="password" name="manager_ckpwd" id="manager_ckpwd" class="input" autoComplete="off">
+              <input type="password" name="manager_ckpwd" id="manager_ckpwd" class="input" autocomplete="off">
               <div id="J_install_tip_manager_ckpwd"></div>
               <span class="password-icon hide pass-showhide" data-name="manager_ckpwd"></span>
             </td>

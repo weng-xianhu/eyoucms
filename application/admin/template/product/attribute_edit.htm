@@ -5,7 +5,7 @@
 <div id="ajaxwaitid"></div>
 <div class="page" style="box-shadow:none;">
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+        <div class="item-title"><a class="back_xin" href="javascript:history.back();" title="返回"><i class="iconfont e-fanhui"></i></a>
             <div class="subject">
                 <h3>编辑参数</h3>
                 <h5></h5>
@@ -139,16 +139,16 @@
                     _parent.layer.close(parentObj);    
                     if(res.hasOwnProperty('data')){
                         if(res.data.hasOwnProperty('url')){
-                            _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                            _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                                 _parent.gourl(res.data.url);
                             });
                         }else{
-                            _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                            _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                                 _parent.window.location.reload();
                             });
                         }
                     }else{
-                        _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                             _parent.window.location.reload();
                         });
                     }

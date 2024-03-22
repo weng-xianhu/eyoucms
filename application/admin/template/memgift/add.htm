@@ -1,0 +1,292 @@
+{include file="public/layout" /}
+
+{eq name="$editor.editor_select" value="1"}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+{else/}
+    {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
+{/eq}
+
+<body class="bodystyle" style="overflow-y: scroll;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title"><a class="back_xin" href="{:url('Memgift/index')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <ul class="tab-base nc-row">
+                <li><a href="javascript:void(0);" class="current"><span>新增商品</span></a></li>
+            </ul>
+        </div>
+    </div>
+    <form class="form-horizontal" id="postForm" action="{:url('Memgift/add')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="giftname"><em>*</em>商品名称</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="giftname" id="giftname" value="" class="input-txt" autocomplete="off">
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="litpic">缩略图</label>
+                </dt>
+                <dd class="opt">
+                    <div class="input-file-show div_litpic_local" >
+                        <span class="show">
+                            <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="javascript:void(0);">
+                                <i id="img_i" class="fa fa-picture-o" onmouseout="layer.close(layer_tips);"></i>
+                            </a>
+                        </span>
+                        <span class="type-file-box">
+                            <input type="text" id="litpic" name="litpic" value="" class="type-file-text" autocomplete="off">
+                            <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                            <input class="type-file-file" onClick="GetUploadify(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
+                                   title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                        </span>
+                    </div>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="type">商品属性</label>
+                </dt>
+                <dd class="opt">
+                    <select name="type" id="type">
+                        <option value="-1" selected>实物</option>
+                        {foreach name="$users_level" item="vo" key="k" }
+                        <option value="{$vo.type_id}">{$vo.level_name}</option>
+                        {/foreach}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="score"><em>*</em>兑换价格</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="score" id="score" value="" class="input-txt" autocomplete="off" style="width: 100px !important;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" onpaste="this.value=this.value.replace(/[^\d\.]/g,'')">&nbsp;{$score.score_name}
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label for="stock"><em>*</em>库存</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="stock" id="stock" value="" class="input-txt" autocomplete="off" style="width: 100px !important;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" onpaste="this.value=this.value.replace(/[^\d\.]/g,'')">
+                </dd>
+            </dl>
+            
+            <dl class="row">
+                <dt class="tit">
+                    <label for="type">商品状态</label>
+                </dt>
+                <dd class="opt">
+                    <select name="status" id="status">
+                        <option value="1" selected>显示</option>
+                        <option value="0">隐藏</option>
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+
+            {eq name="$editor.editor_select" value="1"}
+                <dl class="row">
+                    <dt class="tit">
+                        <label>商品详情</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin"><input type="checkbox" id="editor_remote_img_local" data-val="{$editor.editor_remote_img_local}" {eq name="$editor.editor_remote_img_local" value="1"} checked {/eq}>远程图片本地化</label>&nbsp;<a href="javascript:void(0);" onclick="ajax_auto_editor_content(1,0);">[手动]</a>
+                        <label class="curpoin"><input type="checkbox" id="editor_img_clear_link" data-val="{$editor.editor_img_clear_link}" {eq name="$editor.editor_img_clear_link" value="1"} checked {/eq}>清除非本站链接</label>&nbsp;<a href="javascript:void(0);" onclick="ajax_auto_editor_content(0,1);">[手动]</a>
+
+                        <textarea class="span12 ckeditor" id="content" data-func="content" name="content" title=""></textarea>
+                        <span class="err"></span>
+                    </dd>
+                </dl>
+                <script type="text/javascript">
+                    // 打开多图选择及上传界面
+                    function OpenImagesList(e, obj) {
+                        var OpenUrl = "{:url('Uploadimgnew/upload', ['num'=>30, 'path'=>'allimg', 'is_water'=>1])}";
+                        OpenUrl += "&func=images_call_content";
+                        top.layer.open({
+                            type: 2,
+                            title: '图片上传',
+                            shade: layer_shade,
+                            maxmin: false,
+                            shadeClose: false,
+                            area: ['1000px', '625px'],
+                            content: OpenUrl
+                        });
+                    }
+                    var ue_content = UE.getEditor('content',{
+                        serverUrl :"{:url('Ueditor/index',array('savepath'=>'allimg'))}",
+                        zIndex: 999,
+                        initialFrameWidth: "100%", //初化宽度
+                        initialFrameHeight: 450, //初化高度
+                        focus: false, //初始化时，是否让编辑器获得焦点true或false
+                        maximumWords: 99999,
+                        removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
+                        pasteplain:false, //是否默认为纯文本粘贴。false为不使用纯文本粘贴，true为使用纯文本粘贴
+                        autoHeightEnabled: false,
+                        toolbars: ueditor_toolbars
+                    });
+
+                    //必须在提交前渲染编辑器；
+                    function content() {
+                        //判断编辑模式状态:0表示【源代码】HTML视图；1是【设计】视图,即可见即所得；-1表示不可用
+                        if(UE.getEditor("content").queryCommandState('source') != 0) {
+                            UE.getEditor("content").execCommand('source'); //切换到【设计】视图
+                        }
+                    }
+
+                    // 加载图片到编辑器指定位置
+                    function images_call_content(fileurl_tmp,filename_tmp) {
+                        var addBody = '';
+                        $.each(fileurl_tmp, function(index, items) {
+                            addBody += '<p><img src="'+items+'" alt="'+filename_tmp[index]+'"></p>';
+                        });
+                        UE.getEditor("content").execCommand('inserthtml', addBody);
+                    }
+
+                    // 自动远程图片本地化/自动清除非本站链接
+                    function ajax_auto_editor_content(local,link) {
+                        var body = UE.getEditor("content").getContent();
+                        $.ajax({
+                            type: 'POST',
+                            url: "{:url('Archives/ajax_auto_editor')}",
+                            data: {local:local,link:link,body:body,_ajax:1},
+                            dataType: "JSON",
+                            async:false,
+                            success: function(res){
+                                if (res.code == 1) {
+                                    UE.getEditor("content").setContent(res.data.body);
+                                }
+                            }
+                        });
+                    }
+                </script>
+            {else/}
+                <dl class="row">
+                    <dt class="tit">
+                        <label>商品详情</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin"><input  type="checkbox" id="editor_remote_img_local" data-val="{$editor.editor_remote_img_local}" {eq name="$editor.editor_remote_img_local" value="1"} checked {/eq}>远程图片本地化</label>&nbsp;<a href="javascript:void(0);" onclick="ajax_auto_editor_content(1,0);">[手动]</a>
+                        <label class="curpoin"><input type="checkbox" id="editor_img_clear_link" data-val="{$editor.editor_img_clear_link}" {eq name="$editor.editor_img_clear_link" value="1"} checked {/eq}>清除非本站链接</label>&nbsp;<a href="javascript:void(0);" onclick="ajax_auto_editor_content(0,1);">[手动]</a>
+                        <textarea id="content" name="content"></textarea>
+                        <span class="err"></span>
+                    </dd>
+                </dl>
+                <script type="text/javascript">
+                    // 加载编辑器，若存在编辑器则先进行销毁
+                    try {
+                        var elemtid = "content";
+                        var editor = CKEDITOR.instances[elemtid];
+                        if (editor) editor.destroy(true);
+                    } catch(e) {}
+
+                    CKEDITOR.replace(elemtid, {
+                        filebrowserBrowseUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                        filebrowserImageBrowseUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                        filebrowserUploadUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                        filebrowserImageUploadUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                    });
+
+                    // 自动远程图片本地化/自动清除非本站链接
+                    function ajax_auto_editor_content(local,link) {
+                        var body = CKEDITOR.instances.content.getData();
+                        $.ajax({
+                            type: 'POST',
+                            url: "{:url('Archives/ajax_auto_editor')}",
+                            data: {local:local,link:link,body:body,_ajax:1},
+                            dataType: "JSON",
+                            async:false,
+                            success: function(res){
+                                if (res.code == 1) {
+                                    CKEDITOR.instances.content.setData(res.data.body);
+                                }
+                            }
+                        });
+                    }
+                </script>
+
+            {/eq}
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    function img_call_back(fileurl_tmp){
+        $("#litpic").val(fileurl_tmp);
+        $("#img_a").attr('href', fileurl_tmp);
+        $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+    }
+
+    // 判断输入框是否为空
+    function checkForm(){
+        if($.trim($('#giftname').val()) == ''){
+            showErrorMsg('商品名称不能为空！');
+            $('#giftname').focus();
+            return false;
+        }
+
+        if($.trim($('#score').val()) == '' || $('#score').val() == 0){
+            showErrorMsg('兑换价格不能为空！');
+            $('#score').focus();
+            return false;
+        }
+
+        if($.trim($('#stock').val()) == '' || $('#stock').val() == 0){
+            showErrorMsg('库存不能为空！');
+            $('#stock').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        var link = 0,local = 0;
+        if ($('#editor_remote_img_local').attr('checked')) {
+            local = 1;
+        }
+        if ($('#editor_img_clear_link').attr('checked')) {
+            link = 1;
+        }
+        if (1 == link || 1 == local){
+            ajax_auto_editor_content(local,link);
+        }
+        $.ajax({
+            type : 'post',
+            url : "{:url('Memgift/add', ['_ajax'=>1])}",
+            data : $('#postForm').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {icon: 1, time:1000},function(){
+                        if (res.url){
+                            window.location = res.url;
+                        }else{
+                            window.location.reload();
+                        }
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 namespace think;
 
@@ -297,7 +306,7 @@ class Request
      * @access public
      * @return string
      */
-    public function rootDomain($domain = '')
+    public function rootDomain($domain = '', $tq_suffix = false)
     {
         $root = Config::get('url_domain_root');
 
@@ -307,17 +316,32 @@ class Request
             if (empty($host)) {
                 return $root;
             }
-            $domain_postfix_cn_array = ["com", "net", "org", "gov", "edu", "nm", "cn", "co", "hk"];
+            $domain_postfix_cn_array = ["ac", "ah", "bj", "cn", "com", "co", "cq", "fj", "edu", "gd", "gs", "gov", "goho", "gx", "gz", "ha", "hb", "he", "hi", "hl", "hk", "hn", "jl", "js", "jx", "ln", "lt", "me", "mo", "net", "nm", "nx", "org", "plc", "qh", "sc", "sd", "sh", "sn", "sx", "tj", "tw", "xj", "xz", "yn", "zj", "bbhj"];
             $array_domain = explode(".", $host);
             $array_num = count($array_domain) - 1;
-            if (in_array($array_domain[$array_num], ['cn','tw','hk','nz','au'])) {
+            if (in_array($array_domain[$array_num], ['cn','tw','hk','nz','au','uk','co','jp','hj'])) {
                 if (in_array($array_domain[$array_num - 1], $domain_postfix_cn_array)) {
-                    $root = $array_domain[$array_num - 2] . "." . $array_domain[$array_num - 1] . "." . $array_domain[$array_num];
+                    $suffix = "." . $array_domain[$array_num - 1] . "." . $array_domain[$array_num];
+                    if ($tq_suffix) {
+                        $root = $suffix;
+                    } else {
+                        $root = $array_domain[$array_num - 2] . $suffix;
+                    }
                 } else {
-                    $root = $array_domain[$array_num - 1] . "." . $array_domain[$array_num];
+                    $suffix = "." . $array_domain[$array_num];
+                    if ($tq_suffix) {
+                        $root = $suffix;
+                    } else {
+                        $root = $array_domain[$array_num - 1] . $suffix;
+                    }
                 }
             } else {
-                $root = $array_domain[$array_num - 1] . "." . $array_domain[$array_num];
+                $suffix = "." . $array_domain[$array_num];
+                if ($tq_suffix) {
+                    $root = $suffix;
+                } else {
+                    $root = $array_domain[$array_num - 1] . $suffix;
+                }
             }
         }
 
@@ -325,11 +349,21 @@ class Request
     }
 
     /**
+     * 获取当前域名的后缀
+     * @access public
+     * @return string
+     */
+    public function domainSuffix($domain = '')
+    {
+        return $this->rootDomain($domain, true);
+    }
+
+    /**
      * 获取当前子域名
      * @access public
      * @return string
      */
-    public function subDomain($subDomain = '', $ignoreIP = true)
+    public function subDomain($subDomain = '', $ignoreIP = true, $host = '')
     {
         if (!empty($subDomain)) {
             return $this->scheme().'://'.$subDomain.'.'.$this->rootDomain();
@@ -337,18 +371,26 @@ class Request
 
         if (is_null($this->subDomain)) {
 
-            if (!empty($ignoreIP) && preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/i', $this->host(true))) {
+            $host = !empty($host) ? $host : $this->host(true);
+
+            if (!empty($ignoreIP) && preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/i', $host)) {
                 return '';
             }
 
             // 获取当前主域名
-            $rootDomain = Config::get('url_domain_root');
+            $rootDomain = '';
+            empty($host) && $rootDomain = Config::get('url_domain_root');
 
             if ($rootDomain) {
                 // 配置域名根 例如 thinkphp.cn 163.com.cn 如果是国家级域名 com.cn net.cn 之类的域名需要配置
-                $domain = explode('.', rtrim(stristr($this->host(true), $rootDomain, true), '.'));
+                $domain = str_ireplace('.'.$rootDomain, '', '.'.$host);
+                $domain = trim($domain, '.');
+                $domain = explode('.', $domain);
             } else {
-                $domain = explode('.', $this->host(true), -2);
+                $rootDomain = $this->rootDomain($host);
+                $domain = str_ireplace('.'.$rootDomain, '', '.'.$host);
+                $domain = trim($domain, '.');
+                $domain = explode('.', $domain);
             }
 
             $this->subDomain = implode('.', $domain);
@@ -1447,6 +1489,9 @@ class Request
             $host = $_SERVER['HTTP_X_REAL_HOST'];
         } else {
             $host = $this->server('HTTP_HOST');
+            if (empty($host)) {
+                $host = $this->server('SERVER_NAME');
+            }
         }
 
         return true === $strict && strpos($host, ':') ? strstr($host, ':', true) : $host;

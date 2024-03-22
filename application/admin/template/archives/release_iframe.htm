@@ -6,7 +6,7 @@
 <div id="ajaxwaitid"></div>
 <div class="page ksedit" style="min-width: auto;">
     <form class="form-horizontal" id="post_form" action="{:url('Archives/release')}" method="post">
-        <div class="ncap-form-default">
+        <div class="ncap-form-default pb20">
             <dl class="row">
                 <dt class="tit">
                     <label for="title"><em>*</em>发布至</label>
@@ -50,7 +50,7 @@
             var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
             parent.layer.close(parentObj);
 
-            var url = "//{$Request.host}{$Request.baseFile}?m=admin&c=Archives&a=release&lang={$Request.param.lang}";
+            var url = "//{$website_host}{$Request.baseFile}?m=admin&c=Archives&a=release&lang={$Request.param.lang}";
             if (url.indexOf('?') > -1) {
                 url += '&';
             } else {
@@ -58,11 +58,16 @@
             }
             url += 'typeid=' + typeid;
 
-            {eq name="iframe" value="2"}
-                parent.window.location = url;
-            {else /}
-                parent.content_body.location = url;
-            {/eq}
+            if (2 === parseInt(current_channel)) {
+                parent.archivesRelease('Product', {$shopOpen|default='0'}, url);
+            } else {
+                var iframe = '{$iframe}';
+                if (2 === parseInt(iframe)) {
+                    parent.window.location = url;
+                } else {
+                    parent.content_body.location = url;
+                }
+            }
         });
     });
 </script>

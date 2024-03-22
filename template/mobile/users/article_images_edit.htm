@@ -1,0 +1,68 @@
+<div class="item-from-flex">
+    <div class="item-flex-l">
+        <div class="item-tit">图片集：</div>
+        <div class="item-con tab-pane arc-pane">
+            <div class="images_upload_main" id="tab_imgupload">
+                <div class="sort-list">
+                    {volist name="$imgupload_list" id="vo"}
+                    <div class="images_upload">
+                        <div class="images_upload_item">
+                            <input type="hidden" name="imgupload[]" value="{$vo.image_url}"/>
+                            <a class="img-upload" href="{$vo.image_url}" title="拖动修改排序" target="_blank">
+                                <img src="{$vo.image_url|default='__STATIC__/admin/images/add-button.jpg'}" />
+                            </a>
+                            <a href="javascript:void(0)" class="delete" onclick="imagesModelClearPic(this, '{$vo.image_url}')"></a>
+                        </div>
+                        <textarea rows="5" cols="60" name="imgintro[]" style="height: 20px; width: 70px;" placeholder="图片注释">{$vo.intro}</textarea>
+                    </div>
+                    {/volist}
+                </div>
+            </div>
+            <div id="imagesModelPicTpl" style="display: none;">
+                <div class="images_upload">
+                    <div class="images_upload_item">
+                        <input type="hidden" name="imgupload[]" value=""/>
+                        <a class="img-upload" href="javascript:void(0);" title="拖动修改排序">
+                            <img src="__STATIC__/admin/images/add-button.jpg" />
+                        </a>
+                        <a href="javascript:void(0)" class="delete"></a>
+                    </div>
+                    <textarea rows="5" cols="60" name="imgintro[]" style="height: 20px; width: 70px;" placeholder="图片注释"></textarea>
+                </div>
+            </div>
+
+            <div class="images_upload_main" id="tab_imgupload">
+                <a href="javascript:void(0);" class="img-upload" title="拖动修改排序" onClick="GetUploadify(100, '', 'allimg', 'imagesModelCallBack', '', '上传图片集', 1);">
+                    <div class="y-line"></div>
+                    <div class="x-line"></div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function imagesModelCallBack(paths) {
+        var  last_div = $("#imagesModelPicTpl").html();
+        for (var i = 0; i < paths.length; i++) {
+            $(".images_upload:eq(0)").before(last_div);
+            $(".images_upload:eq(0)").find('input').val(paths[i]);
+            $(".images_upload:eq(0)").find('a:eq(0)').attr('href', paths[i]).attr('target', "_blank");
+            $(".images_upload:eq(0)").find('img').attr('src', paths[i]);
+            $(".images_upload:eq(0)").find('a:eq(1)').attr('onclick', "imagesModelClearPic(this, '"+paths[i]+"')");
+        }
+    }
+
+    // 上传之后删除组图input
+    function imagesModelClearPic(obj, path) {
+        // 删除数据库记录
+        $.ajax({
+            url : eyou_basefile + "?m=user&c=UsersRelease&a=del_channelimgs&_ajax=1",
+            data: {filename: path},
+            type: 'POST',
+            success: function() {
+                $(obj).parent().parent().remove();
+            }
+        });
+    }
+</script>

@@ -152,7 +152,7 @@ class Userseyou extends Paginator
      * @param string $listsize 当前页对称两边的条数
      * @return mixed
      */
-    public function render($listitem = '', $listsize = '')
+    public function render($listitem = '', $listsize = '', $pre_text = '', $next_text = '')
     {
         if ($this->hasPages()) { // 有数据的情况下
 
@@ -166,13 +166,19 @@ class Userseyou extends Paginator
                 array_push($pageArr, $this->getFirstButton(lang('sys1')));
             }
             if (in_array('pre', $listitemArr)) {
-                array_push($pageArr, $this->getPreviousButton(lang('sys2')));
+                if (empty($pre_text)) {
+                    $pre_text = lang('sys2');
+                }
+                array_push($pageArr, $this->getPreviousButton($pre_text));
             }
             if (in_array('pageno', $listitemArr)) {
                 array_push($pageArr, $this->getLinks($listsize));
             }
             if (in_array('next', $listitemArr)) {
-                array_push($pageArr, $this->getNextButton(lang('sys3')));
+                if (empty($next_text)) {
+                    $next_text = lang('sys3');
+                }
+                array_push($pageArr, $this->getNextButton($next_text));
             }
             if (in_array('end', $listitemArr)) {
                 array_push($pageArr, $this->getLastButton(lang('sys4')));

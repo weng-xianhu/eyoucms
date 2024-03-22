@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -23,10 +23,19 @@ use app\admin\logic\AjaxLogic;
 
 class Admin extends Base {
 
+    private $admin_info = [];
+
+    public function _initialize() {
+        parent::_initialize();
+        $this->admin_info = session('?admin_info') ? session('admin_info') : [];
+        $this->assign('admin_info', $this->admin_info);
+    }
+
     public function index()
     {
         $list = array();
         $keywords = input('keywords/s');
+        $keywords = addslashes(trim($keywords));
 
         $condition = array();
         if (!empty($keywords)) {
@@ -34,12 +43,11 @@ class Admin extends Base {
         }
 
         /*权限控制 by 小虎哥*/
-        $admin_info = session('admin_info');
-        if (0 < intval($admin_info['role_id'])) {
-            $condition['a.admin_id|a.parent_id'] = $admin_info['admin_id'];
+        if (0 < intval($this->admin_info['role_id'])) {
+            $condition['a.admin_id|a.parent_id'] = $this->admin_info['admin_id'];
         } else {
-            if (!empty($admin_info['parent_id'])) {
-                $condition['a.admin_id|a.parent_id'] = $admin_info['admin_id'];
+            if (!empty($this->admin_info['parent_id'])) {
+                $condition['a.admin_id|a.parent_id'] = $this->admin_info['admin_id'];
             }
         }
         /*--end*/
@@ -57,22 +65,36 @@ class Admin extends Base {
             ->limit($Page->firstRow.','.$Page->listRows)
             ->select();
 
+        $locklist = tpSetting('adminlogin');
         foreach ($list as $key => $val) {
             if (0 >= intval($val['role_id'])) {
                 $val['role_name'] = !empty($val['parent_id']) ? '超级管理员' : '创始人';
             }
+            // 是否被锁定
+            $login_lock_key = 'adminlogin_'.md5('login_lock_'.$val['user_name'].clientIP()); // 是否被锁定
+            $val['is_locklogin'] = !empty($locklist[$login_lock_key]) ? 1 : 0;
+
             $list[$key] = $val;
         }
-
         $show = $Page->show();// 分页显示输出
         $this->assign('page',$show);// 赋值分页输出
         $this->assign('list',$list);// 赋值数据集
         $this->assign('pager',$Page);// 赋值分页集
 
+        // 第三方扫码绑定与解绑
+        $wxlist = [];
+        $thirdata = login_third_type();
+        if ('EyouGzhLogin' == $thirdata['type']) {
+            $wxlist = Db::name('admin_wxlogin')->where(['type'=>1])->getAllWithIndex('admin_id');
+        } else if ('WechatLogin' == $thirdata['type']) {
+            $wxlist = Db::name('admin_wxlogin')->where(['type'=>2])->getAllWithIndex('admin_id');
+        }
+        $this->assign('wxlist', $wxlist);
+        $this->assign('thirdata', $thirdata);
+
         /*第一次同步CMS用户的栏目ID到权限组里*/
         $this->syn_built_auth_role();
         /*--end*/
-
         return $this->fetch();
     }
 
@@ -82,20 +104,54 @@ class Admin extends Base {
     public function login()
     {
         if (session('?admin_id') && session('admin_id') > 0) {
-            $web_adminbasefile = tpCache('web.web_adminbasefile');
-            $web_adminbasefile = !empty($web_adminbasefile) ? $web_adminbasefile : '/login.php';
+            $web_adminbasefile = tpCache('global.web_adminbasefile');
+            $web_adminbasefile = !empty($web_adminbasefile) ? $web_adminbasefile : $this->root_dir.'/login.php';
+            if (stristr($web_adminbasefile, 'index.php')) {
+                $baseFile = explode('/', request()->baseFile());
+                $web_adminbasefile = end($baseFile);
+                $web_adminbasefile = $this->root_dir.'/'.$web_adminbasefile;
+            }
             $this->success("您已登录", $web_adminbasefile);
         }
       
-        // $gb_funcs = get_extension_funcs('gd');
         $is_vertify = 1; // 默认开启验证码
         $admin_login_captcha = config('captcha.admin_login');
         if (!function_exists('imagettftext') || empty($admin_login_captcha['is_on'])) {
             $is_vertify = 0; // 函数不存在，不符合开启的条件
+        } else if (is_file('./data/conf/admin_vertify.txt')) {
+            $is_exist = @file_get_contents('./data/conf/admin_vertify.txt');
+            if ($is_exist !== false && empty($is_exist)) {
+                $is_vertify = 0;
+            }
         }
         $this->assign('is_vertify', $is_vertify);
 
+        /*----------------微信扫码登录 start---------------*/
+        $login_type = 1; //仅账号密码登录  2-账号密码登录&微信扫码登录 3-仅微信扫码登录
+        $thirdata = login_third_type();
+        $third_login = !empty($thirdata['type']) ? $thirdata['type'] : '';
+        if ('EyouGzhLogin' == $third_login) {
+            if (empty($thirdata['data']['force'])){
+                $login_type = 2; //2-账号密码登录&微信扫码登录
+            } else {
+                $login_type = 3; //仅微信扫码登录
+            }
+        } else if ('WechatLogin' == $third_login) {
+            if (empty($thirdata['data']['security_wechat_forcelogin'])) {
+                $login_type = 2; //2-账号密码登录&微信扫码登录
+            } else {
+                $login_type = 3; //仅微信扫码登录
+            }
+        }
+        $this->assign('login_type', $login_type);
+        $this->assign('third_login', $third_login);
+        /*----------------微信扫码登录 end---------------*/
+
         if (IS_POST) {
+
+            if (!in_array($login_type, [1,2])) {
+                $this->error('强制扫码，不支持普通登录！');
+            }
 
             $post = input('post.');
 
@@ -127,135 +183,215 @@ class Admin extends Base {
                 }
             }
 
+            $admin_count = 0;
             $user_name = input('post.user_name/s');
             $password = input('post.password/s');
 
-            /*登录错误次数的限制*/
-/*            $ststem_login_errnum_key = 'system_'.md5('login_errnum_'.$user_name);
-            $ststem_login_errtime_key = 'system_'.md5('login_errtime_'.$user_name);
-            $loginErrtotal = config('login_errtotal'); // 限定最大的登录错误次数
-            $loginErrexpire = config('login_errexpire'); // 限定登录错误锁定有效时间
-            $loginErrnum = tpCache('system.'.$ststem_login_errnum_key); // 登录错误次数
-            $loginErrtime = tpCache('system.'.$ststem_login_errtime_key); // 最后一次登录错误时间
-            if (intval($loginErrnum) >= intval($loginErrtotal)) {
-                if (getTime() < $loginErrtime + $loginErrexpire) {
-                    adminLog('登录失败(已被锁定)');
-                    $this->error("登录错误次数超限，用户名被锁定15分钟！");
-                } else {
-                    // 重置登录错误次数
-                    $loginErrnum = 0;
-                    $loginErrtime = 0;
-                    tpCache('system', [$ststem_login_errnum_key => $loginErrnum]);
-                    tpCache('system', [$ststem_login_errtime_key => $loginErrtime]);
-                }
-            }*/
-            /*end*/
-
-            $condition['user_name'] = $user_name;
-            $condition['password'] = $password;
-            if (!empty($condition['user_name']) && !empty($condition['password'])) {
-                $condition['password'] = func_encrypt($condition['password']);
-                $admin_info = Db::name('admin')->where($condition)->find();
-                if (empty($admin_info)) {
-                    adminLog('登录失败(用户名/密码错误)');
-                    /*记录登录错误次数*/
-                    /*$login_num = intval($loginErrtotal) - intval($loginErrnum);
-                    $ststem_login_errnum = $loginErrnum + 1;
-                    tpCache('system', [$ststem_login_errnum_key=>$ststem_login_errnum]);
-                    tpCache('system', [$ststem_login_errtime_key=>getTime()]);
-                    $this->error("用户名或密码错误，您还可以尝试[{$login_num}]次！");*/
-                    $this->error("用户名或密码错误！");
-                    /*end*/
-                } else {
-                    if ($admin_info['status'] == 0) {
-                        adminLog('登录失败(用户名被禁用)');
-                        $this->error('用户名被禁用！');
-                    }
-
-                    $role_id = !empty($admin_info['role_id']) ? $admin_info['role_id'] : -1;
-                    $auth_role_info = array();
-                    if (!empty($admin_info['parent_id'])) {
-                        $role_name = '超级管理员';
-                        $isFounder = 0;
-                    } else {
-                        $role_name = '创始人';
-                        $isFounder = 1;
-                    }
-                    if (0 < intval($role_id)) {
-                        $auth_role_info = Db::name('auth_role')
-                            ->field("a.*, a.name AS role_name")
-                            ->alias('a')
-                            ->where('a.id','eq', $role_id)
-                            ->find();
-                        if (!empty($auth_role_info)) {
-                            $auth_role_info['language'] = unserialize($auth_role_info['language']);
-                            $auth_role_info['cud'] = unserialize($auth_role_info['cud']);
-                            $auth_role_info['permission'] = unserialize($auth_role_info['permission']);
-                            $role_name = $auth_role_info['name'];
+            /*---------登录错误次数的限制 start----------*/
+            $globalConfing = tpCache('global');
+            $web_login_lockopen = 0; // 是否开启登录失败锁定
+            if (!isset($globalConfing['web_login_lockopen']) || !empty($globalConfing['web_login_lockopen'])) {
+                $web_login_lockopen = 1;
+                $admin_count = Db::name('admin')->where(['user_name'=>$user_name])->count();
+                if (!empty($admin_count)) {
+                    $loginErrtotal = !empty($globalConfing['web_login_errtotal']) ? intval($globalConfing['web_login_errtotal']) : config('login_errtotal'); // 登录错误最大次数
+                    $loginErrexpire = !empty($globalConfing['web_login_errexpire']) ? intval($globalConfing['web_login_errexpire']) : config('login_errexpire'); // 登录错误最大限制时间
+                    $clientIP = clientIP();
+                    $login_errnum_key = 'adminlogin_'.md5('login_errnum_'.$user_name.$clientIP);
+                    $login_errtime_key = 'adminlogin_'.md5('login_errtime_'.$user_name.$clientIP);
+                    $login_lock_key = 'adminlogin_'.md5('login_lock_'.$user_name.$clientIP); // 是否被锁定
+                    $loginErrnum = (int)tpSetting('adminlogin.'.$login_errnum_key); // 登录错误次数
+                    $loginErrtime = tpSetting('adminlogin.'.$login_errtime_key); // 最后一次登录错误时间
+                    if ($loginErrnum >= $loginErrtotal) {
+                        if (getTime() < $loginErrtime + $loginErrexpire) {
+                            adminLog("登录失败(已被锁定，登录错误超限{$loginErrtotal}次)");
+                            $surplus_time = ($loginErrtime + $loginErrexpire) - getTime();
+                            if ($surplus_time <= 0) {
+                                $surplus_time = 1;
+                            }
+                            $this->error("多次登录失败，距离解锁还有".ceil($surplus_time/60)."分钟！");
+                        } else {
+                            // 重置登录错误次数
+                            $loginErrnum = $loginErrtime = $login_lock = 0;
+                            tpSetting('adminlogin', [$login_errnum_key => $loginErrnum]);
+                            tpSetting('adminlogin', [$login_errtime_key => $loginErrtime]);
+                            tpSetting('adminlogin', [$login_lock_key => $login_lock]);
                         }
                     }
-                    $admin_info['auth_role_info'] = $auth_role_info;
-                    $admin_info['role_name'] = $role_name;
-
-                    $last_login_time = getTime();
-                    $last_login_ip = clientIP();
-                    $login_cnt = $admin_info['login_cnt'] + 1;
-                    Db::name('admin')->where("admin_id = ".$admin_info['admin_id'])->save(array('last_login'=>$last_login_time, 'last_ip'=>$last_login_ip, 'login_cnt'=>$login_cnt, 'session_id'=>$this->session_id));
-                    $admin_info['last_login'] = $last_login_time;
-                    $admin_info['last_ip'] = $last_login_ip;
-
-                    // 头像
-                    empty($admin_info['head_pic']) && $admin_info['head_pic'] = get_head_pic($admin_info['head_pic'], true);
-
-                    $admin_info_new = $admin_info;
-                    /*过滤存储在session文件的敏感信息*/
-                    foreach (['user_name','true_name','password'] as $key => $val) {
-                        unset($admin_info_new[$val]);
-                    }
-                    /*--end*/
-
-                    session('admin_id',$admin_info['admin_id']);
-                    session('admin_info', $admin_info_new);
-                    session('admin_login_expire', getTime()); // 登录有效期
-
-                    /*检查密码复杂度*/
-                    $admin_login_pwdlevel = checkPasswordLevel($password);
-                    session('admin_login_pwdlevel', $admin_login_pwdlevel);
-                    /*end*/
-
-                    // 重置登录错误次数
-                    /*tpCache('system', [$ststem_login_errnum_key=>0]);
-                    tpCache('system', [$ststem_login_errtime_key=>0]);*/
-
-                    adminLog('后台登录');
-                    $url = session('from_url') ? session('from_url') : $this->request->baseFile();
-                    session('isset_author', null); // 内置勿动
-
-                    /*同步追加一个后台管理员到会员用户表*/
-                    $this->syn_users_login($admin_info, $isFounder);
-                    /* END */
-
-                    $this->success('登录成功', $url);
                 }
-            } else {
-                $this->error('请填写用户名/密码');
             }
+            /*---------登录错误次数的限制 end----------*/
+
+            if (!empty($user_name) && !empty($password)) {
+                $condition['user_name'] = $user_name;
+                $admin_info = Db::name('admin')->where($condition)->find();
+                if (!empty($admin_info)) {
+
+                    /*等保密码复杂度验证 start*/
+                    if (is_dir('./weapp/Equal/')) {
+                        $equal_privkey = input('post.equal_privkey/s');
+                        $equalLogic = new \weapp\Equal\logic\EqualLogic;
+                        $equalLogic->loginLogic($password, $equal_privkey);
+                    }
+                    /*等保密码复杂度验证 end*/
+
+                    $entry = pwd_encry_type($admin_info['password']);
+                    $encry_password = func_encrypt($password, true, $entry);
+                    if ($admin_info['password'] == $encry_password) {
+                        if ($admin_info['status'] == 0) {
+                            adminLog('登录失败(用户名被禁用)');
+                            $this->error('用户名被禁用！');
+                        }
+                        $admin_info = adminLoginAfter($admin_info['admin_id'], $this->session_id);
+                        // 检查密码复杂度
+                        session('admin_login_pwdlevel', checkPasswordLevel($password));
+
+                        adminLog('后台登录');
+                        $url = session('from_url') ? session('from_url') : $this->request->baseFile();
+                        session('isset_author', null); // 内置勿动
+
+                        // 同步追加一个后台管理员到会员用户表
+                        $isFounder = !empty($admin_info['parent_id']) ? 0 : 1;
+                        $this->syn_users_login($admin_info, $isFounder);
+                        $this->success('登录成功', $url);
+                    }
+                }
+            }
+
+            /*----------记录登录错误次数 start-----------*/
+            if (!empty($admin_count) && !empty($web_login_lockopen)) {
+                $login_errnum = $loginErrnum + 1;
+                $login_num = $loginErrtotal - $login_errnum;
+                tpSetting('adminlogin', [$login_errnum_key=>$login_errnum]);
+                tpSetting('adminlogin', [$login_errtime_key=>getTime()]);
+                if ($login_num > 0) {
+                    $this->error("用户名或密码错误，您还可以尝试[{$login_num}]次！");
+                } else {
+                    tpSetting('adminlogin', [$login_lock_key => 1]);
+                    $this->error("登录错误超限{$loginErrtotal}次，账号将被锁定".ceil($loginErrexpire/60)."分钟！");
+                }
+            }
+            /*----------记录登录错误次数 end-----------*/
+
+            adminLog("登录失败({$user_name})");
+            $this->error("用户名或密码错误！");
         }
 
         $ajaxLogic = new AjaxLogic;
         $ajaxLogic->login_handle();
+        
+        // 仅微信扫码登录
+        // if ('WechatLogin' == $third_login && 3 == $login_type) {
+        //     $this->wechatLogin();
+        // }
+
+        $this->global = tpCache('global');
+        $this->assign('global', $this->global);
+        $this->assign('time', getTime());
+
+        /*等保密码复杂度验证 start*/
+        $pwdJsCode = '';
+        if (is_dir('./weapp/Equal/')) {
+            $equalLogic = new \weapp\Equal\logic\EqualLogic;
+            $pwdJsCode = $equalLogic->pwdJsCode();
+        }
+        if ('close' == $pwdJsCode) {
+            $pwdJsCode = '';
+        }
+        $this->assign('pwdJsCode', $pwdJsCode);
+        /*等保密码复杂度验证 end*/
         
         session('admin_info', null);
         $viewfile = 'admin/login';
         if (2 <= $this->php_servicemeal) {
             $viewfile = 'admin/login_zy';
         }
-        $this->global = tpCache('global');
-        $this->assign('global', $this->global);
 
-        return $this->fetch(":{$viewfile}");
+        $web_theme_login_tplname = empty($this->globalConfig['web_theme_login_tplname']) ? '' : $this->globalConfig['web_theme_login_tplname'];
+        if (!empty($web_theme_login_tplname) && file_exists("application/admin/template/theme/{$web_theme_login_tplname}")) {
+            $login_tplname = str_ireplace('.htm', '', $web_theme_login_tplname);
+            $viewfile = "theme/{$login_tplname}";
+        }
+
+        if (is_dir('./weapp/Mbackend/') && isMobile()) {
+            $viewfile = 'weapp/Mbackend/template/admin/login_m.htm';
+            if (2 <= $this->php_servicemeal) {
+                $viewfile = 'weapp/Mbackend/template/admin/login_zy_m.htm';
+            }
+            // 是否配置微信公众号登录信息
+            $wechat = tpSetting("OpenMinicode.conf_wechat") ? json_decode(tpSetting("OpenMinicode.conf_wechat"), true) : [];
+            $this->assign('wechat', $wechat);
+            return $this->fetch("{$viewfile}");
+        } else {
+            return $this->fetch(":{$viewfile}");
+        }
     }
 
+    // 后台管理插件（手机版）--微信公众号登录
+    public function ajax_admin_wechat_login()
+    {
+        if (is_dir('./weapp/Mbackend/') && isMobile()) {
+            // 调用逻辑层
+            $mbackendLogic = new \weapp\Mbackend\logic\MbackendLogic;
+            $url = $mbackendLogic->ajaxAdminWechatLogin();
+            $this->success('授权成功', $url);
+        } else {
+            $this->error('请先安装后台管理插件（手机版）');
+        }
+    }
+
+    // 后台管理插件（手机版）--获取微信登录用户信息
+    public function get_admin_wechat_users()
+    {
+        if (is_dir('./weapp/Mbackend/') && isMobile()) {
+            // 调用逻辑层
+            $mbackendLogic = new \weapp\Mbackend\logic\MbackendLogic;
+            $we_user = $mbackendLogic->getAdminWechatUsers();
+            $admin_info = adminLoginAfter($we_user['admin_id'], session_id());
+            if (!empty($admin_info)) {
+                adminLog('微信授权登录成功');
+                $this->success('登录成功', weapp_url('Mbackend/Mbackend/index'));
+            } else {
+                $this->success('404:您没有操作权限，请联系超级管理员分配权限');
+            }
+        } else {
+            $this->error('请先安装后台管理插件（手机版）');
+        }
+    }
+
+    private function wechatLogin()
+    {
+        $url = url('Admin/wechat_login', [], true, true);
+        $url = preg_replace('/^http(s?)/i', $this->request->scheme(), $url);
+        $this->redirect($url);
+        exit;
+    }
+
+    /**
+     * 解除锁定登录
+     * @return [type] [description]
+     */
+    public function ajax_unlock_login()
+    {
+        $admin_id = input('param.id/d');
+        if (!empty($admin_id) && IS_POST) {
+            if (!empty($this->admin_info['parent_id']) || -1 != $this->admin_info['role_id']) {
+                $this->error('该功能仅限于创始人操作！');
+            }
+            $clientIP = clientIP();
+            $user_name = Db::name('admin')->where(['admin_id'=>$admin_id])->value('user_name');
+            $login_errnum_key = 'adminlogin_'.md5('login_errnum_'.$user_name.$clientIP);
+            $login_errtime_key = 'adminlogin_'.md5('login_errtime_'.$user_name.$clientIP);
+            $login_lock_key = 'adminlogin_'.md5('login_lock_'.$user_name.$clientIP); // 是否被锁定
+            tpSetting('adminlogin', [$login_errnum_key => 0]);
+            tpSetting('adminlogin', [$login_errtime_key => 0]);
+            tpSetting('adminlogin', [$login_lock_key => 0]);
+            adminLog('解除锁定：'.$user_name);
+            $this->success('操作成功');
+        }
+        $this->error('操作失败');
+    }
+    
     /**
      * 验证码获取
      */
@@ -272,59 +408,6 @@ class Admin extends Base {
     }
     
     /**
-     * 修改管理员密码
-     * @return \think\mixed
-     */
-    public function admin_pwd()
-    {
-        $admin_id = input('admin_id/d',0);
-        $oldPwd = input('old_pw/s');
-        $newPwd = input('new_pw/s');
-        $new2Pwd = input('new_pw2/s');
-       
-        if(!$admin_id){
-            $admin_id = session('admin_id');
-        }
-        $info = Db::name('admin')->where("admin_id", $admin_id)->find();
-        $info['password'] =  "";
-        $this->assign('info',$info);
-        
-        if(IS_POST){
-            //修改密码
-            $enOldPwd = func_encrypt($oldPwd);
-            $enNewPwd = func_encrypt($newPwd);
-            $admin = Db::name('admin')->where('admin_id' , $admin_id)->find();
-            if(!$admin || $admin['password'] != $enOldPwd){
-                exit(json_encode(array('status'=>-1,'msg'=>'旧密码不正确')));
-            }else if($newPwd != $new2Pwd){
-                exit(json_encode(array('status'=>-1,'msg'=>'两次密码不一致')));
-            }else{
-                $data = array(
-                    'update_time'   => getTime(),
-                    'password'      => $enNewPwd,
-                );
-                $row = Db::name('admin')->where('admin_id' , $admin_id)->save($data);
-                if($row){
-                    /*检查密码复杂度*/
-                    $admin_login_pwdlevel = checkPasswordLevel($newPwd);
-                    session('admin_login_pwdlevel', $admin_login_pwdlevel);
-                    /*end*/
-                    adminLog('修改管理员密码');
-                    exit(json_encode(array('status'=>1,'msg'=>'操作成功')));
-                }else{
-                    exit(json_encode(array('status'=>-1,'msg'=>'操作失败')));
-                }
-            }
-        }
-
-        if (IS_AJAX) {
-            return $this->fetch('admin/admin_pwd_ajax');
-        } else {
-            return $this->fetch('admin/admin_pwd');
-        }
-    }
-    
-    /**
      * 退出登陆
      */
     public function logout()
@@ -334,6 +417,7 @@ class Admin extends Base {
         // session_destroy();
         session::clear();
         cookie('admin-treeClicked', null); // 清除并恢复栏目列表的展开方式
+        cookie('admin-treeClicked-1649642233', null); // 清除并恢复内容管理的展开方式
         $this->success("安全退出", request()->baseFile());
     }
 
@@ -369,27 +453,47 @@ class Admin extends Base {
         if (IS_POST) {
             $data = input('post.');
 
-            if (0 < intval(session('admin_info.role_id'))) {
+            if (0 < $this->admin_info['role_id']) {
                 $this->error("超级管理员才能操作！");
             }
 
-            if (empty($data['password'])) {
-                $this->error("密码不能为空！");
+            if (empty($data['password']) || !trim($data['password'])) {
+                $this->error("用户密码不能为空！", null, ['input_name'=>'password']);
+            } else {
+                /*等保密码复杂度验证 start*/
+                if (is_dir('./weapp/Equal/')) {
+                    $equalLogic = new \weapp\Equal\logic\EqualLogic;
+                    $eqData = $equalLogic->pwdValidate($data['password']);
+                    if (isset($eqData['code']) && empty($eqData['code'])) {
+                        $this->error($eqData['msg']);
+                    }
+                }
+                /*等保密码复杂度验证 end*/
             }
 
             $data['user_name'] = trim($data['user_name']);
-            $data['password'] = func_encrypt($data['password']);
+            $data['password'] = func_encrypt($data['password'], true, pwd_encry_type('bcrypt'));
             $data['role_id'] = intval($data['role_id']);
-            $data['parent_id'] = session('admin_info.admin_id');
+            $data['parent_id'] = $this->admin_info['admin_id'];
             $data['add_time'] = getTime();
             if (empty($data['pen_name'])) {
-                $data['pen_name'] = $data['user_name'];
+                $data['pen_name'] = '小编';
             }
-            if (Db::name('admin')->where("user_name", $data['user_name'])->count()) {
-                $this->error("此用户名已被注册，请更换",url('Admin/admin_add'));
+
+            // 处理数据验证
+            $error = handleEyouDataValidate('user_name', '__token_admin_add__', $data, '用户名不能为空！');
+            if (!empty($error)) $this->error($error);
+            
+            if (Db::name('admin')->where(['user_name'=>$data['user_name']])->count()) {
+                $this->error("此用户名已被注册，请更换", url('Admin/admin_add'), ['input_name'=>'user_name']);
             } else {
                 $admin_id = Db::name('admin')->insertGetId($data);
-                if ($admin_id) {
+                if ($admin_id !== false) {
+                    if (file_exists('./weapp/PasswordRemind/model/PasswordRemindModel.php')) {
+                        $PasswordRemindModel = new \weapp\PasswordRemind\model\PasswordRemindModel;
+                        $PasswordRemindModel->updateInfo($admin_id,'add');
+                    }
+
                     adminLog('新增管理员：'.$data['user_name']);
 
                     /*同步追加一个后台管理员到会员用户表*/
@@ -407,14 +511,18 @@ class Admin extends Base {
                                     'is_del'        => 0,
                                     'update_time'   => getTime(),
                                 ]);
-                            !empty($r) && $users_id = $usersInfo['users_id'];
+                            if ($r !== false) {
+                                $users_id = $usersInfo['users_id'];
+                            }
                         } else {
                             // 获取要添加的用户名
                             $username = $this->GetUserName($data['user_name']);
+                            $password = getTime();
+                            $password = func_encrypt($password, false, pwd_encry_type('bcrypt'));
                             $AddData = [
                                 'username' => $username,
                                 'nickname' => $username,
-                                'password' => func_encrypt(getTime()),
+                                'password' => $password,
                                 'level'    => 1,
                                 'lang'     => $this->admin_lang,
                                 'reg_time' => getTime(),
@@ -424,9 +532,9 @@ class Admin extends Base {
                             ];
                             $users_id = Db::name('users')->insertGetId($AddData);
                         }
-                        if (!empty($users_id)) {
+                        if ($users_id !== false) {
                             Db::name('admin')->where(['admin_id'=>$admin_id])->update([
-                                    'syn_users_id'  => $users_id,
+                                    'syn_users_id'  => intval($users_id),
                                     'update_time'   => getTime(),
                                 ]);
                         }
@@ -464,22 +572,57 @@ class Admin extends Base {
         $this->assign('auth_rule_list', $auth_rule_list);
 
         // 栏目
-        $arctype_data = $arctype_array = array();
-        $arctype = Db::name('arctype')->select();
-        if(! empty($arctype)){
-            foreach ($arctype as $item){
-                if($item['parent_id'] <= 0){
-                    $arctype_data[] = $item;
+        $arctype_list = Db::name('arctype')->where([
+            'is_del'    => 0,
+        ])->order("grade desc")->select();
+        $arctype_p_html = $arctype_child_html = "";
+        $arctype_all = list_to_tree($arctype_list);
+        foreach ($arctype_all as $key => $arctype) {
+            if (!empty($arctype['children'])) {
+                if ($key > 0) {
+                    $arctype_p_html .= '<em class="arctype_bg expandable"></em>';
+                } else {
+                    $arctype_p_html .= '<em class="arctype_bg collapsable"></em>';
                 }
-                $arctype_array[$item['parent_id']][] = $item;
+                $arctype_child_html .= '<div class="arctype_child" id="arctype_child_' . $arctype['id'] . '"';
+                if ($arctype_all[0]['id'] == $arctype['id']) {
+                    $arctype_child_html .= ' style="display: block;" ';
+                }
+                $arctype_child_html .= '>';
+                $arctype_child_html .= $this->get_arctype_child_html($arctype);
+                $arctype_child_html .= '</div>';
             }
+            $arctype_p_html .= '<label>';
+            $arctype_p_html .= '<img class="cboximg" src="'.ROOT_DIR.'/public/static/admin/images/ok.png" />';
+            $arctype_p_html .= '<input type="checkbox" class="arctype_cbox arctype_id_' . $arctype['id'] . ' none" name="permission[arctype][]" value="' . $arctype['id'] . '"';
+            $arctype_p_html .= ' checked="checked" ';
+            $arctype_p_html .= ' />' . $arctype['typename'] . '</label>&nbsp;';
         }
-        $this->assign('arctypes', $arctype_data);
-        $this->assign('arctype_array', $arctype_array);
+        $this->assign('arctype_p_html', $arctype_p_html);
+        $this->assign('arctype_child_html', $arctype_child_html);
 
         // 插件
         $plugins = model('Weapp')->getList(['status'=>1]);
         $this->assign('plugins', $plugins);
+
+        /*等保密码复杂度验证 start*/
+        $pwdJsCode = '';
+        if (is_dir('./weapp/Equal/')) {
+            $equalLogic = new \weapp\Equal\logic\EqualLogic;
+            $pwdJsCode = $equalLogic->pwdJsCode();
+        }
+        if ('close' == $pwdJsCode) {
+            $pwdJsCode =<<<EOF
+if (password.length < 5) {
+    showErrorMsg('用户密码至少5位或以上！');
+    $('input[name=password]').focus();
+    return false;
+}
+
+EOF;
+        }
+        $this->assign('pwdJsCode', $pwdJsCode);
+        /*等保密码复杂度验证 end*/
 
         return $this->fetch();
     }
@@ -491,54 +634,87 @@ class Admin extends Base {
     {
         if (IS_POST) {
             $data = input('post.');
-            $id = $data['admin_id'];
+            $id = $data['admin_id'] = intval($data['admin_id']);
+            $user_name = $data['user_name'] = isset($data['user_name']) ? trim($data['user_name']) : '';
+            empty($data['pen_name']) && $data['pen_name'] = '小编';
 
-            if ($id == session('admin_info.admin_id')) {
+            if ($id == $this->admin_info['admin_id']) {
                 unset($data['role_id']); // 不能修改自己的权限组
-            } else if (0 < intval(session('admin_info.role_id')) && session('admin_info.admin_id') != $id) {
+            } else if (0 < $this->admin_info['role_id'] && $this->admin_info['admin_id'] != $id) {
                 $this->error('禁止更改别人的信息！');
             }
 
+            if (empty($this->admin_info['parent_id'])) { // 创始人才可以修改所有管理员的用户名
+                if (empty($user_name)) {
+                    $this->error('用户名不能为空！', null, ['input_name'=>'user_name']);
+                } else {
+                    if ($user_name == $this->admin_info['user_name']) {
+                        unset($data['user_name']);
+                    } else {
+                        $count = Db::name('admin')->where(['user_name'=>$user_name, 'admin_id'=>['NEQ', $id]])->count();
+                        if (!empty($count)) {
+                            $this->error("此用户名已被注册，请更换", null, ['input_name'=>'user_name']);
+                        }
+                    }
+                }
+            } else {
+                unset($data['user_name']);
+            }
+
             $password = $data['password'];
-            $user_name = $data['user_name'];
-            if(empty($password)){
+            if (empty($password) || !trim($password)) {
                 unset($data['password']);
             }else{
-                $data['password'] = func_encrypt($password);
+                /*等保密码复杂度验证 start*/
+                if (is_dir('./weapp/Equal/')) {
+                    $equalLogic = new \weapp\Equal\logic\EqualLogic;
+                    $eqData = $equalLogic->pwdValidate($password);
+                    if (isset($eqData['code']) && empty($eqData['code'])) {
+                        $this->error($eqData['msg']);
+                    }
+                }
+                /*等保密码复杂度验证 end*/
+                
+                if (!empty($this->globalConfig['security_verifyfunc']) && in_array('edit_pwd', $this->globalConfig['security_verifyfunc'])) {
+                    if (true !== security_answer_verify()) {
+                        $this->error("请先密保答案验证");
+                    }
+                }
+                $entry = pwd_encry_type('bcrypt');
+                $data['password'] = func_encrypt($password, true, $entry);
             }
-            unset($data['user_name']);
-            
-            if (empty($data['pen_name'])) {
-                $data['pen_name'] = $user_name;
-            }
+
+            // 处理数据验证
+            $error = handleEyouDataValidate('admin_id', '__token_admin_edit__', $data, '用户名不能为空！');
+            if (!empty($error)) $this->error($error);
 
             /*不允许修改自己的权限组*/
             if (isset($data['role_id'])) {
-                if (0 < intval(session('admin_info.role_id')) && intval($data['role_id']) != session('admin_info.role_id')) {
-                    $data['role_id'] = session('admin_info.role_id');
+                if (0 < $this->admin_info['role_id'] && intval($data['role_id']) != $this->admin_info['role_id']) {
+                    $data['role_id'] = $this->admin_info['role_id'];
                 }
             }
             /*--end*/
             $data['update_time'] = getTime();
             $r = Db::name('admin')->where('admin_id', $id)->save($data);
-            if ($r) {
-                /*检查密码复杂度*/
-                if ($id == session('admin_info.admin_id')) {
-                    $admin_login_pwdlevel = checkPasswordLevel($password);
-                    session('admin_login_pwdlevel', $admin_login_pwdlevel);
-                }
-                /*end*/
-
-                /*过滤存储在session文件的敏感信息*/
-                if ($id == session('admin_info.admin_id')) {
-                    $admin_info = session('admin_info');
-                    $admin_info = array_merge($admin_info, $data);
-                    foreach (['user_name','true_name','password'] as $key => $val) {
-                        unset($admin_info[$val]);
+            if ($r !== false) {
+                if (!empty($data['password'])){
+                    if (file_exists('./weapp/PasswordRemind/model/PasswordRemindModel.php')) {
+                        $PasswordRemindModel = new \weapp\PasswordRemind\model\PasswordRemindModel;
+                        $PasswordRemindModel->updateInfo($id,'update');
                     }
-                    session('admin_info', $admin_info);
                 }
-                /*--end*/
+                if ($id == $this->admin_info['admin_id']) {
+                    // 检查密码复杂度
+                    session('admin_login_pwdlevel', checkPasswordLevel($password));
+
+                    // 过滤存储在session文件的敏感信息
+                    $this->admin_info = array_merge($this->admin_info, $data);
+                    foreach (['user_name','true_name','password'] as $key => $val) {
+                        unset($this->admin_info[$val]);
+                    }
+                    session('admin_info', $this->admin_info);
+                }
 
                 /*同步相同数据到会员表对应的会员*/
                 $syn_users_id = Db::name('admin')->where(['admin_id'=>$data['admin_id']])->getField('syn_users_id');
@@ -553,18 +729,45 @@ class Admin extends Base {
                 /*end*/
 
                 adminLog('编辑管理员：'.$user_name);
-                $this->success("操作成功",url('Admin/index'));
+                $this->success("操作成功", url('Admin/index'));
             } else {
                 $this->error("操作失败");
             }
         }
 
-        $id = input('get.id/d', 0);
-        $info = Db::name('admin')->field('a.*')
-            ->alias('a')
-            ->where("a.admin_id", $id)->find();
-        $info['password'] =  "";
+        $id = input('param.id/d', 0);
+        if (empty($id)) {
+            $this->error('数据不存在，退出尝试登录！');
+            exit;
+        }
+        $info = Db::name('admin')->field('password', true)->find($id);
+        if (empty($info)) {
+            $this->error('数据不存在，请联系管理员！');
+            exit;
+        }
         $this->assign('info',$info);
+
+        $iframe = input('param.iframe/d', 0);
+        $this->assign('iframe',$iframe);
+
+        // 有权限查看的管理员列表
+        $condition = array();
+        if (0 < intval($this->admin_info['role_id'])) {
+            $condition['a.admin_id|a.parent_id'] = $this->admin_info['admin_id'];
+        } else {
+            if (!empty($this->admin_info['parent_id'])) {
+                $condition['a.admin_id|a.parent_id'] = $this->admin_info['admin_id'];
+            }
+        }
+        $admin_list = Db::name('admin')->field('a.*')
+            ->alias('a')
+            ->where($condition)
+            ->order('a.admin_id asc')
+            ->getAllWithIndex('admin_id');
+        if (empty($admin_list[$info['admin_id']])) {
+            $this->error('您没有操作权限，请联系超级管理员分配权限');
+            exit;
+        }
 
         // 当前角色信息
         $admin_role_model = model('AuthRole');
@@ -595,26 +798,137 @@ class Admin extends Base {
         $this->assign('auth_rule_list', $auth_rule_list);
 
         // 栏目
-        $arctype_data = $arctype_array = array();
-        $arctype = Db::name('arctype')->select();
-        if(! empty($arctype)){
-            foreach ($arctype as $item){
-                if($item['parent_id'] <= 0){
-                    $arctype_data[] = $item;
+        $arctype_list = Db::name('arctype')->where([
+                'is_del'    => 0,
+            ])->order("grade desc")->select();
+        $arctype_p_html = $arctype_child_html = "";
+        $arctype_all = list_to_tree($arctype_list);
+        foreach ($arctype_all as $key => $arctype) {
+            if (!empty($arctype['children'])) {
+                if ($key > 0) {
+                    $arctype_p_html .= '<em class="arctype_bg expandable"></em>';
+                } else {
+                    $arctype_p_html .= '<em class="arctype_bg collapsable"></em>';
                 }
-                $arctype_array[$item['parent_id']][] = $item;
+                $arctype_child_html .= '<div class="arctype_child" id="arctype_child_' . $arctype['id'] . '"';
+                if ($arctype_all[0]['id'] == $arctype['id']) {
+                    $arctype_child_html .= ' style="display: block;" ';
+                }
+                $arctype_child_html .= '>';
+                $arctype_child_html .= $this->get_arctype_child_html($arctype,$role_info);
+                $arctype_child_html .= '</div>';
             }
+
+            $arctype_p_html .= '<label>';
+            if (!empty($role_info['permission']['arctype']) && in_array($arctype['id'], $role_info['permission']['arctype'])) {
+                $arctype_p_html .= '<img class="cboximg" src="'.ROOT_DIR.'/public/static/admin/images/ok.png" />';
+            }else{
+                $arctype_p_html .= '<img class="cboximg" src="'.ROOT_DIR.'/public/static/admin/images/del.png" />';
+            }
+            $arctype_p_html .= '<input type="checkbox" class="arctype_cbox arctype_id_' . $arctype['id'] . ' none" name="permission[arctype][]" value="' . $arctype['id'] . '"';
+            if (!empty($role_info['permission']['arctype']) && in_array($arctype['id'], $role_info['permission']['arctype'])) {
+                $arctype_p_html .= ' checked="checked" ';
+            }
+            $arctype_p_html .= ' />' . $arctype['typename'] . '</label>&nbsp;';
         }
-        $this->assign('arctypes', $arctype_data);
-        $this->assign('arctype_array', $arctype_array);
+        $this->assign('arctype_p_html', $arctype_p_html);
+        $this->assign('arctype_child_html', $arctype_child_html);
 
         // 插件
         $plugins = model('Weapp')->getList(['status'=>1]);
         $this->assign('plugins', $plugins);
 
+        // 是否使用第三方扫码登录
+        $wechatInfo = [];
+        $thirdata = login_third_type();
+        if ('WechatLogin' == $thirdata['type']) { // 扫码微信应用
+            if (!empty($thirdata['data']['security_wechat_open'])) {
+                $wechatInfo = Db::name('admin_wxlogin')->where(['admin_id'=>$id, 'type'=>2])->find();
+            }
+        }
+        else if ('EyouGzhLogin' == $thirdata['type']) { // 扫码官方公众号
+            if (!empty($thirdata['data']['switch'])) {
+                $wechatInfo = Db::name('admin_wxlogin')->where(['admin_id'=>$id, 'type'=>1])->find();
+            }
+        }
+        $this->assign('thirdata', $thirdata);
+        $this->assign('wechatInfo', $wechatInfo);
+
+        /*等保密码复杂度验证 start*/
+        $pwdJsCode = '';
+        if (is_dir('./weapp/Equal/')) {
+            $equalLogic = new \weapp\Equal\logic\EqualLogic;
+            $pwdJsCode = $equalLogic->pwdJsCode();
+        }
+        if ('close' == $pwdJsCode) {
+            $pwdJsCode =<<<EOF
+if (password.length < 5) {
+    showErrorMsg('用户密码至少5位或以上！');
+    $('input[name=password]').focus();
+    return false;
+}
+
+EOF;
+        }
+        $this->assign('pwdJsCode', $pwdJsCode);
+        /*等保密码复杂度验证 end*/
+
         return $this->fetch();
     }
-    
+    /*
+     *  递归生成$arctype_child_html
+     *  $vo             栏目tree
+     *  $info           权限集合（用于edit是否已经选中）
+     *  return          完整html
+     */
+    private function get_arctype_child_html($vo,$info = []){
+        $arctype_child_html = "";
+        if (!empty($vo['children'])) {
+            $arctype_child_html .= '<div class="arctype_child1" id="arctype_child_' . $vo['id'] . '">';
+            //判断当前下级是否还存在下级,true为竖着，false为横着
+            $has_chldren = true;
+            if ($vo['grade'] != 0 && !empty($vo['has_chldren']) && $vo['has_chldren'] == count($vo['children'])){
+                $has_chldren = false;
+            }
+            if ($has_chldren){
+                foreach ($vo['children'] as $vo1) {
+                    $arctype_child_html .= '<div class="arctype_child1">';
+                    $arctype_child_html .= ' <span class="button level1 switch center_docu"></span><label>';
+                    if (!empty($info['permission']['arctype']) && in_array($vo1['id'], $info['permission']['arctype'])) {
+                        $arctype_child_html .= '<img class="cboximg" src="'.ROOT_DIR.'/public/static/admin/images/ok.png" />';
+                    }else{
+                        $arctype_child_html .= '<img class="cboximg" src="'.ROOT_DIR.'/public/static/admin/images/del.png" />';
+                    }
+                    $arctype_child_html .= '<input type="checkbox" class="arctype_cbox arctype_id_' . $vo1['id'] . ' none" name="permission[arctype][]" value="' . $vo1['id'] . '" data-pid="' . $vo1['parent_id'] . '"';
+                    if (!empty($info['permission']['arctype']) && in_array($vo1['id'], $info['permission']['arctype'])) {
+                        $arctype_child_html .= ' checked="checked" ';
+                    }
+                    $arctype_child_html .= '/>' . $vo1['typename'] . '</label></div>';
+                    $arctype_child_html .= $this->get_arctype_child_html($vo1,$info);
+                }
+            }else{
+                $arctype_child_html .= '<div class="arctype_child2"> <span class="button level1 switch center_docu"></span>';
+                foreach ($vo['children'] as $vo1) {
+                    $arctype_child_html .= ' <label>';
+                    if (!empty($info['permission']['arctype']) && in_array($vo1['id'], $info['permission']['arctype'])) {
+                        $arctype_child_html .= '<img class="cboximg" src="'.ROOT_DIR.'/public/static/admin/images/ok.png" />';
+                    }else{
+                        $arctype_child_html .= '<img class="cboximg" src="'.ROOT_DIR.'/public/static/admin/images/del.png" />';
+                    }
+                    $arctype_child_html .= '<input type="checkbox" class="arctype_cbox arctype_id_' . $vo1['id'] . ' none" name="permission[arctype][]" value="' . $vo1['id'] . '" data-pid="' . $vo1['parent_id'] . '"';
+                    if (!empty($info['permission']['arctype']) && in_array($vo1['id'], $info['permission']['arctype'])) {
+                        $arctype_child_html .= ' checked="checked" ';
+                    }
+                    $arctype_child_html .= '/>' . $vo1['typename'] . '</label>';
+                    $arctype_child_html .= $this->get_arctype_child_html($vo1,$info);
+                }
+                $arctype_child_html .= '</div>';
+            }
+            $arctype_child_html .= '</div>';
+        }
+
+        return $arctype_child_html;
+    }
     /**
      * 删除管理员
      */
@@ -629,7 +943,7 @@ class Admin extends Base {
                 $this->error('禁止删除自己');
             }
             if (!empty($id_arr)) {
-                if (0 < intval(session('admin_info.role_id')) || !empty($parent_id) ) {
+                if (0 < $this->admin_info['role_id'] || !empty($this->admin_info['parent_id']) ) {
                     $count = Db::name('admin')->where("admin_id in (".implode(',', $id_arr).") AND role_id = -1")
                         ->count();
                     if (!empty($count)) {
@@ -642,6 +956,10 @@ class Admin extends Base {
 
                 $r = Db::name('admin')->where("admin_id",'IN',$id_arr)->delete();
                 if($r){
+                    if (file_exists('./weapp/PasswordRemind/model/PasswordRemindModel.php')) {
+                        $PasswordRemindModel = new \weapp\PasswordRemind\model\PasswordRemindModel;
+                        $PasswordRemindModel->updateInfo($id_arr,'del');
+                    }
                     adminLog('删除管理员：'.implode(',', $user_names));
 
                     /*同步删除管理员关联的前台会员*/
@@ -692,20 +1010,20 @@ class Admin extends Base {
      */
     public function ajax_setfield()
     {
-        if (IS_POST) {
-            $admin_id = session('admin_id');
-            $field  = input('field'); // 修改哪个字段
+        $field  = input('field'); // 修改哪个字段
+        $field = preg_replace('/([^\w\-])/i', '', $field);
+        $field = str_replace(['password'], '', $field);
+        if (IS_POST && !empty($field)) {
             $value  = input('value', '', null); // 修改字段值  
-            if (!empty($admin_id)) {
-                $r = Db::name('admin')->where('admin_id',intval($admin_id))->save([
+            if (!empty($this->admin_info['admin_id'])) {
+                $r = Db::name('admin')->where('admin_id', $this->admin_info['admin_id'])->save([
                         $field=>$value,
                         'update_time'=>getTime(),
                     ]); // 根据条件保存修改的数据
-                if ($r) {
+                if ($r !== false) {
                     /*更新存储在session里的信息*/
-                    $admin_info = session('admin_info');
-                    $admin_info[$field] = $value;
-                    session('admin_info', $admin_info);
+                    $this->admin_info[$field] = $value;
+                    session('admin_info', $this->admin_info);
                     /*--end*/
                     $this->success('操作成功');
                 }
@@ -777,10 +1095,12 @@ class Admin extends Base {
                 } else {
                     // 获取要添加的用户名
                     $username = $this->GetUserName($admin_info['user_name']);
+                    $password = getTime();
+                    $password = func_encrypt($password, false, pwd_encry_type('bcrypt'));
                     $AddData = [
                         'username' => $username,
                         'nickname' => $username,
-                        'password' => func_encrypt(getTime()),
+                        'password' => $password,
                         'level'    => 1,
                         'lang'     => $this->admin_lang,
                         'reg_time' => getTime(),
@@ -828,5 +1148,415 @@ class Admin extends Base {
                 GetUsersLatestData($users_id);
             }
         }
+    }
+
+    /*-----------------------------------扫码微信应用 start--------------------------*/
+
+    /**
+     * 微信应用登录
+     * @return [type] [description]
+     */
+    public function wechat_login()
+    {
+        $redirect_uri = url('Admin/wechat_callback', [], true, true);
+        $redirect_uri = urlencode($redirect_uri);//该回调需要url编码
+        $security     = tpSetting('security');
+        $scope        = "snsapi_login";//写死，微信暂时只支持这个值
+        //准备向微信发请求
+        $url = "https://open.weixin.qq.com/connect/qrconnect?appid=" . $security['security_wechat_appid'] . "&redirect_uri=" . $redirect_uri
+            . "&response_type=code&scope=" . $scope . "&state=STATE#wechat_redirect";
+        $this->redirect($url);
+        exit;
+    }
+
+    /**
+     * 立即绑定微信应用
+     * @return [type] [description]
+     */
+    public function wechat_bind()
+    {
+        $origin = input('param.origin/s');
+        $admin_id = input('param.admin_id/d');
+        $gourl = input('param.gourl/s');
+        $gourl = htmlspecialchars_decode($gourl);
+        $redirect_uri = url('Admin/wechat_callback', ['bind'=>1,'admin_id'=>$admin_id,'origin'=>$origin,'gourl'=>$gourl], true, true);
+        $redirect_uri = urlencode($redirect_uri);//该回调需要url编码
+        $security     = tpSetting('security');
+        $scope        = "snsapi_login";//写死，微信暂时只支持这个值
+        //准备向微信发请求
+        $url = "https://open.weixin.qq.com/connect/qrconnect?appid=" . $security['security_wechat_appid'] . "&redirect_uri=" . $redirect_uri
+            . "&response_type=code&scope=" . $scope . "&state=STATE&self_redirect=true#wechat_redirect";
+        $this->redirect($url);
+        exit;
+    }
+
+    /**
+     * 微信应用扫描回调
+     * @return [type] [description]
+     */
+    public function wechat_callback()
+    {
+        $code   = input('param.code/s');
+        $bind   = input('param.bind/d');
+        $isframe   = 0; // 是否在弹窗内跳转
+        if (!empty($bind)) {
+            $isframe = 1;
+        }
+
+        if (empty($code)) {
+            if (empty($isframe)) {
+                $this->error('微信回调参数错误');
+            } else {
+                $html = <<<EOF
+                    <script type="application/javascript" src="{$this->root_dir}/public/static/common/js/jquery.min.js?v={$this->version}"></script>
+                    <script type="application/javascript" src="{$this->root_dir}/public/plugins/layer-v3.1.0/layer.js"></script>
+                    <script type="text/javascript">
+                        var _parent = parent;
+                        _parent.layer.closeAll();
+                        _parent.layer.alert("微信回调参数错误", {icon: 5, title: false});
+                    </script>
+EOF;
+                echo $html;
+                exit;
+            }
+        }
+        $security     = tpSetting('security');
+        $appid = $security['security_wechat_appid'];
+        $secret = $security['security_wechat_secret'];
+        //通过code获得 access_token + openid
+        $url         = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=" . $appid
+            . "&secret=" . $secret . "&code=" . $code . "&grant_type=authorization_code";
+        $jsonResult  = httpRequest($url);
+        $resultArray = json_decode($jsonResult, true);
+        if (!empty($resultArray['errcode'])) {
+            if (empty($isframe)) {
+                $this->error($resultArray['errmsg']);
+            } else {
+                $html = <<<EOF
+                    <script type="application/javascript" src="{$this->root_dir}/public/static/common/js/jquery.min.js?v={$this->version}"></script>
+                    <script type="application/javascript" src="{$this->root_dir}/public/plugins/layer-v3.1.0/layer.js"></script>
+                    <script type="text/javascript">
+                        var _parent = parent;
+                        _parent.layer.closeAll();
+                        _parent.layer.alert("{$resultArray['errmsg']}", {icon: 5, title: false});
+                    </script>
+EOF;
+                echo $html;
+                exit;
+            }
+        }
+        $access_token = $resultArray["access_token"];
+        $openid       = $resultArray["openid"];
+        $unionid      = !empty($resultArray["unionid"]) ? $resultArray["unionid"] : '';
+
+        //通过access_token + openid 获得用户所有信息,结果全部存储在$infoArray里
+        $infoUrl    = "https://api.weixin.qq.com/sns/userinfo?access_token=" . $access_token . "&openid=" . $openid;
+        $infoResult = httpRequest($infoUrl);
+        $infoArray  = json_decode($infoResult, true);
+        empty($infoArray['nickname']) && $infoArray['nickname'] = '';
+        $nickname = $infoArray['nickname'] = filterNickname($infoArray['nickname']);
+
+        if (!empty($infoArray['errcode'])) {
+            if (empty($isframe)) {
+                $this->error($infoArray['errmsg']);
+            } else {
+                $html = <<<EOF
+                    <script type="application/javascript" src="{$this->root_dir}/public/static/common/js/jquery.min.js?v={$this->version}"></script>
+                    <script type="application/javascript" src="{$this->root_dir}/public/plugins/layer-v3.1.0/layer.js"></script>
+                    <script type="text/javascript">
+                        var _parent = parent;
+                        _parent.layer.closeAll();
+                        _parent.layer.alert("{$infoArray['errmsg']}", {icon: 5, title: false});
+                    </script>
+EOF;
+                echo $html;
+                exit;
+            }
+        }
+
+        if (!empty($bind)) { // 绑定
+            $admin_id = input('param.admin_id/d');
+            $origin = input('param.origin/s');
+            $origin = preg_replace('/([^\w\-]+)/i', '', $origin);
+            $this->wechat_bind_handle($openid, $unionid, $infoArray, $admin_id, $origin);
+            return true;
+        }
+        else { // 登录
+            $this->wechat_login_handle($openid);
+            return true;
+        }
+    }
+
+    /**
+     * 微信应用扫码登录处理
+     * @param  string $openid [description]
+     * @return [type]         [description]
+     */
+    private function wechat_login_handle($openid = '')
+    {
+        $web_adminbasefile = tpCache('global.web_adminbasefile');
+        $web_adminbasefile = !empty($web_adminbasefile) ? $web_adminbasefile : $this->root_dir.'/login.php';
+        $we_user = Db::name('admin_wxlogin')->field('a.openid, b.admin_id, b.user_name')
+            ->alias('a')
+            ->join('admin b', 'a.admin_id=b.admin_id', 'LEFT')
+            ->where(['a.openid'=>$openid, 'a.type'=>2])
+            ->find();
+        if (empty($we_user['user_name'])) {
+            adminLog('登录失败(微信用户不存在)');
+            $this->error('微信用户不存在！', $web_adminbasefile);
+        } else {
+            $admin_info = adminLoginAfter($we_user['admin_id'], session_id(), 'WechatLogin');
+            if (!empty($admin_info)) {
+                adminLog('扫码登录成功');
+                $this->success('登录成功', $web_adminbasefile);
+            }
+            adminLog('扫码登录失败');
+            $this->error('登录失败', $web_adminbasefile);
+        }
+    }
+
+    /**
+     * 微信应用绑定处理
+     * @param  string $openid  [description]
+     * @param  string $unionid [description]
+     * @param  array  $wx_info [description]
+     * @return [type]          [description]
+     */
+    private function wechat_bind_handle($openid = '', $unionid = '', $wx_info = [], $admin_id = 0, $origin = '')
+    {
+        if (empty($this->admin_info['parent_id']) && -1 == $this->admin_info['role_id']) { // 创始人
+            $is_founder = 1;
+            empty($admin_id) && $admin_id = $this->admin_info['admin_id'];
+            $admin_info = Db::name('admin')->where(['admin_id'=>$admin_id])->find();
+        } else {
+            $is_founder = 0;
+            $admin_info = $this->admin_info;
+            $admin_id = $this->admin_info['admin_id'];
+        }
+
+        if (empty($admin_info)) {
+            $html = <<<EOF
+                <script type="application/javascript" src="{$this->root_dir}/public/static/common/js/jquery.min.js?v={$this->version}"></script>
+                <script type="application/javascript" src="{$this->root_dir}/public/plugins/layer-v3.1.0/layer.js"></script>
+                <script type="text/javascript">
+                    var _parent = parent;
+                    _parent.layer.closeAll();
+                    _parent.layer.alert("查不到管理员信息", {icon: 5, title: false});
+                </script>
+EOF;
+            echo $html;
+            exit;
+        }
+
+        $row = Db::name('admin_wxlogin')->where(['openid'=>$openid, 'type'=>2])->find();
+        if(!empty($row))
+        {
+            if (!empty($row['admin_id'])) {
+                $count = Db::name('admin')->where(['admin_id'=>$row['admin_id']])->count();
+                if (!empty($count)) {
+                    $html = <<<EOF
+                        <script type="application/javascript" src="{$this->root_dir}/public/static/common/js/jquery.min.js?v={$this->version}"></script>
+                        <script type="application/javascript" src="{$this->root_dir}/public/plugins/layer-v3.1.0/layer.js"></script>
+                        <script type="text/javascript">
+                            var _parent = parent;
+                            _parent.layer.closeAll();
+                            _parent.layer.alert("当前微信已被绑定", {icon: 5, title: false});
+                        </script>
+EOF;
+                    echo $html;
+                    exit;
+                }
+            }
+            $saveData = [
+                'admin_id'   => $admin_id,
+                'nickname'   => $wx_info['nickname'],
+                'headimgurl' => $wx_info['headimgurl'],
+                'update_time'=> getTime(),
+            ];
+            $r = Db::name('admin_wxlogin')->where([
+                    'wx_id' => $row['wx_id'],
+                ])->update($saveData);
+        } else {
+            $saveData = [
+                'admin_id'  => $admin_id,
+                'nickname'  => $wx_info['nickname'],
+                'headimgurl'  => $wx_info['headimgurl'],
+                'type'  => 2,
+                'openid'    => $openid,
+                'unionid'    => $unionid,
+                'add_time'=> getTime(),
+                'update_time'=> getTime(),
+            ];
+            $r = Db::name('admin_wxlogin')->insert($saveData);
+        }
+
+        if ($r !== false) {
+            \think\Cache::clear("admin_wxlogin");
+            // 同步昵称、头像
+            $updateData = [
+                'update_time'=> getTime(),
+            ];
+            if (empty($admin_info['head_pic']) && !empty($wx_info['headimgurl'])) {
+                $updateData['head_pic'] = $wx_info['headimgurl'];
+                if ($admin_id == $this->admin_info['admin_id']) {
+                    $this->admin_info['head_pic'] = $wx_info['headimgurl'];
+                }
+            }
+            Db::name('admin')->where(['admin_id'=>$admin_id])->update($updateData);
+
+
+            if ($admin_id == $this->admin_info['admin_id']) {
+                $this->admin_info['openid'] = $openid;
+                session('admin_info', $this->admin_info);
+            } else {
+                if (1 == $is_founder) {
+                    $openid = Db::name('admin_wxlogin')->where(['admin_id'=>$this->admin_info['admin_id'], 'type'=>2])->value('openid');
+                    if (!empty($openid)) {
+                        $this->admin_info['openid'] = $openid;
+                        session('admin_info', $this->admin_info);
+                    }
+                }
+            }
+            $gourl = input('param.gourl/s');
+            $gourl = htmlspecialchars_decode($gourl);
+            $html = <<<EOF
+                <script type="application/javascript" src="{$this->root_dir}/public/static/common/js/jquery.min.js?v={$this->version}"></script>
+                <script type="application/javascript" src="{$this->root_dir}/public/plugins/layer-v3.1.0/layer.js"></script>
+                <script type="text/javascript">
+                    var origin = "{$origin}";
+                    var _parent = parent;
+                    if ('list' != origin) {
+                        var documentOjb = window.parent.document;
+                        $('#span_wechat_nickname', documentOjb).html("{$wx_info['nickname']}");
+                        $('#wechat_bind', documentOjb).hide();
+                        $('#wechat_unbind', documentOjb).show();
+                    }
+                    _parent.layer.closeAll();
+                    _parent.layer.msg("绑定成功", {time: 1000}, function(){
+                        if ('list' == origin) {
+                            _parent.window.location.reload();
+                        }
+                    });
+                </script>
+EOF;
+            echo $html;
+            exit;
+        }
+        $html = <<<EOF
+            <script type="application/javascript" src="{$this->root_dir}/public/static/common/js/jquery.min.js?v={$this->version}"></script>
+            <script type="application/javascript" src="{$this->root_dir}/public/plugins/layer-v3.1.0/layer.js"></script>
+            <script type="text/javascript">
+                var _parent = parent;
+                _parent.layer.closeAll();
+                _parent.layer.alert("绑定失败", {icon: 5, title: false});
+            </script>
+EOF;
+        echo $html;
+        exit;
+    }
+
+    /**
+     * 解除绑定微信应用
+     * @return [type] [description]
+     */
+    public function wechat_unbind_handle()
+    {
+        if (empty($this->admin_info['parent_id']) && -1 == $this->admin_info['role_id']) {
+            $admin_id = input('param.admin_id/d', $this->admin_info['admin_id']);
+        } else {
+            $admin_id = intval($this->admin_info['admin_id']);
+        }
+
+        if (IS_POST && !empty($admin_id)) {
+
+            $security_wechat_forcelogin = tpSetting('security.security_wechat_forcelogin');
+            if (!empty($security_wechat_forcelogin)) {
+                $this->error('检测已开启强制扫码登录，禁止解绑');
+            }
+
+            $r = Db::name('admin_wxlogin')->where(['admin_id'=>$admin_id, 'type'=>2])->delete();
+            if ($r !== false) {
+                \think\Cache::clear("admin_wxlogin");
+                if ($admin_id == $this->admin_info['admin_id'] && isset($this->admin_info['openid'])) {
+                    unset($this->admin_info['openid']);
+                }
+                session('admin_info', $this->admin_info);
+                $this->success("操作成功");
+            }
+        }
+        $this->error("操作失败");
+    }
+    /*-----------------------------------扫码微信应用 end--------------------------*/
+
+
+    /*--------------------------------扫码微信公众号 start--------------------------*/
+    //获取官方微信公众号二维码
+    public function mp_getqrcode()
+    {
+        $eyouGzhLoginLogic = new \weapp\EyouGzhLogin\logic\EyouGzhLoginLogic;
+        $eyouGzhLoginLogic->mp_getqrcode();
+    }
+
+    //绑定官方微信公众号openid
+    public function mp_bingwxgzhopenid()
+    {
+        $eyouGzhLoginLogic = new \weapp\EyouGzhLogin\logic\EyouGzhLoginLogic;
+        $eyouGzhLoginLogic->mp_bingwxgzhopenid();
+    }
+
+    //解绑官方微信公众号
+    public function mp_unbindwx()
+    {
+        $eyouGzhLoginLogic = new \weapp\EyouGzhLogin\logic\EyouGzhLoginLogic;
+        $eyouGzhLoginLogic->mp_unbindwx();
+    }
+    /*--------------------------------扫码微信公众号 end--------------------------*/
+
+    /*--------------------------------微信公众号扫码关注 start--------------------------*/
+    // 微信公众号扫码关注
+    public function wechat_followed()
+    {
+        $admin_id = input('post.admin_id/d', 0);
+        // 默认授权页面链接
+        $defaultAuthorize = request()->domain() . ROOT_DIR . '/index.php?m=api&c=Ajax&a=defaultAuthorize&admin_id=' . $admin_id;
+        // 二维码图片完整目录
+        $defaultAuthorizePic = UPLOAD_PATH . 'system/wechat_followed/' . $admin_id . '/';
+        // 创建文件夹
+        @mkdir($defaultAuthorizePic, 0777, true);
+        // 二维码图片完整链接
+        $defaultAuthorizePic = $defaultAuthorizePic . md5($admin_id) . '.png';
+        // 生成二维码
+        vendor('wechatpay.phpqrcode.phpqrcode');
+        $qrcode = new \QRcode;
+        $qrcode->png($defaultAuthorize, $defaultAuthorizePic);
+        $defaultAuthorizePic = handle_subdir_pic(get_default_pic('/' . $defaultAuthorizePic, true));
+        $this->success("获取成功", $defaultAuthorizePic);
+    }
+
+    public function polling_wechat_followed()
+    {
+        $admin_id = input('post.admin_id/d', 0);
+        if (!empty($admin_id)) {
+            $admin = Db::name('admin')->where('admin_id', $admin_id)->find();
+            if (!empty($admin['wechat_open_id'])) {
+                // 查询用户是否关注了公众号
+                $tokenData = get_wechat_access_token();
+                if (!empty($tokenData)) {
+                    $userInfo = 'https://api.weixin.qq.com/cgi-bin/user/info?access_token=' . $tokenData['access_token'] . '&openid=' . $admin['wechat_open_id'] . '&lang=zh_CN';
+                    $userInfo = json_decode(httpRequest($userInfo), true);
+                    // 关注则执行关联关注
+                    if (!empty($userInfo['subscribe']) && $userInfo['openid'] == $admin['wechat_open_id']) {
+                        $update = [
+                            'wechat_followed' => 1,
+                            'update_time' => getTime(),
+                        ];
+                        Db::name('admin')->where('admin_id', $admin_id)->update($update);
+                        // 显示成功信息
+                        $this->success("关注公众号成功！", null, ['code' => 1]);
+                    }
+                }
+            }
+        }   
+        $this->success("尚未关注", null, ['code' => 2]);
     }
 }

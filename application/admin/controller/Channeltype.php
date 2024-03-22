@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -37,17 +37,6 @@ class Channeltype extends Base
         $this->channeltype_system_id = $this->channeltype_db->where([
                 'ifsystem'  => 1,
             ])->column('id');
-
-        // 看查询条件就知道了
-        // $d2ViX2lzX2F1 = tpCache('web.'.$this->arrJoinStr(['d2ViX2lzX2F1','dGhvcnRva2Vu']));
-        // if (-1 == $d2ViX2lzX2F1) {
-        //     $this->channeltype_db->where(['id'=>5])
-        //         ->cache(true,null,"channeltype")
-        //         ->update([
-        //             'status'    => 0,
-        //             'update_time'   => getTime(),
-        //         ]);
-        // }
     }
 
     public function index()
@@ -59,6 +48,7 @@ class Channeltype extends Base
         $condition = array();
         // 应用搜索条件
         foreach (['keywords'] as $key) {
+            $param[$key] = !empty($param[$key]) ? addslashes(trim($param[$key])) : '';
             if (isset($param[$key]) && $param[$key] !== '') {
                 if ($key == 'keywords') {
                     $condition['a.title'] = array('LIKE', "%{$param[$key]}%");
@@ -72,6 +62,7 @@ class Channeltype extends Base
         if (2 > $this->php_servicemeal) array_push($nids, 'ask');
         if (1.5 > $this->php_servicemeal) array_push($nids, 'media');
         !empty($nids) && $condition['a.nid'] = ['NOTIN', $nids];
+        $condition['a.is_del'] = 0;
 
         $count = $this->channeltype_db->alias('a')->where($condition)->count('id');// 查询满足要求的总记录数
         $pageObj = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
@@ -96,6 +87,7 @@ class Channeltype extends Base
         if (is_array($channelfieldRow) && is_array($gbAttributeRow)) {
             $channelfieldRow = array_merge($channelfieldRow, $gbAttributeRow);
         }
+        $channelfieldRow = convert_arr_key($channelfieldRow,'channel_id');
         $this->assign('channelfieldRow', $channelfieldRow);
 
         $pageStr = $pageObj->show();// 分页显示输出
@@ -148,6 +140,7 @@ class Channeltype extends Base
                     'ntitle'        => $post['title'],
                     'nid'           => $nid,
                     'data'          => '',
+                    'is_release'    => 1,
                     'add_time'      => getTime(),
                     'update_time'   => getTime(),
                 );
@@ -182,7 +175,7 @@ class Channeltype extends Base
     /**
      * 同步自定义模型的快捷导航
      */
-    private function syn_custom_quickmenu($data = [], $insertId)
+    private function syn_custom_quickmenu($data, $insertId)
     {
         $saveData = [
             [
@@ -223,6 +216,7 @@ class Channeltype extends Base
         if (IS_POST) {
             $post = input('post.');
             if(!empty($post['id'])){
+                $post['id'] = intval($post['id']);
                 $post['title'] = trim($post['title']);
 
                 if (in_array($post['id'], $this->channeltype_system_id)) {
@@ -254,10 +248,18 @@ class Channeltype extends Base
                         $this->error('该模型标识已存在，请检查', url('Channeltype/index'));
                     }
                 }
-
+                $ori_data = $this->channeltype_db->where(['id'=>$post['id']])->value('data');
+                if (!empty($ori_data)){
+                    $ori_data = json_decode($ori_data,'true');
+                    if (!empty($post['data'])){
+                        $post['data'] = array_merge($ori_data,$post['data']);
+                    }else{
+                        $post['data'] = $ori_data;
+                    }
+                }
                 $nowData = array(
-                    'data'      => json_encode($post['data']),
-                    'update_time'       => getTime(),
+                    'data' => json_encode($post['data']),
+                    'update_time' => getTime(),
                 );
                 unset($post['nid']);
                 $data = array_merge($post, $nowData);
@@ -265,24 +267,31 @@ class Channeltype extends Base
                     ->where(['id'=>$post['id']])
                     ->cache(true,null,"channeltype")
                     ->update($data);
-                if ($r) {
+                if ($r !== false) {
+                    // 自动下载付费选择支付模板
+                    $ajaxLogic = new \app\admin\logic\AjaxLogic;
+                    $ajaxLogic->copy_tplpayfile($post['id']);
                     //下载模型开始投稿默认后自动勾选全部栏目
-                    if ($post['nid'] = 'download'){
+                    if ($post['nid'] == 'download'){
                         Db::name('arctype')->where([
                             'channeltype'    => $post['id'],
                         ])->update([
-                            'is_release'   => $post['is_release'],
+                            'is_release'   => !empty($post['is_release']) ? $post['is_release'] : 0,
                             'update_time'   => getTime(),
                         ]);
+                        if (!empty($post['data']['is_download_pay'])){
+                            //开启下载付费兼容旧数据   旧数据开始了会员限制的restric_type改为2
+                            Db::name('archives')->where(['channel'=>$post['id'],'restric_type'=>0])->where('arc_level_id','>',0)->update(['restric_type'=>2,'update_time'=>getTime()]);
+                        }
                     }
                     /*留言模型 - 同步邮箱模板的开启与关闭*/
                     if (8 == $post['id']) {
-                        Db::name('smtp_tpl')->where([
-                                'send_scene'    => 1,
-                            ])->update([
-                                'is_open'   => intval($post['smtp_is_open']),
-                                'update_time'   => getTime(),
-                            ]);
+                        // Db::name('smtp_tpl')->where([
+                        //         'send_scene'    => 1,
+                        //     ])->update([
+                        //         'is_open'   => intval($post['smtp_is_open']),
+                        //         'update_time'   => getTime(),
+                        //     ]);
                         
                         /*留言间隔时间 - 多语言*/
                         $paramData = [
@@ -304,6 +313,7 @@ class Channeltype extends Base
                     }
                     /*end*/
                     extra_cache('admin_channeltype_list_logic', NULL);
+                    empty($data['title']) && $data['title'] = "";
                     adminLog('编辑模型：'.$data['title']);
                     $this->success("操作成功", url('Channeltype/index'));
                 }
@@ -483,7 +493,7 @@ class Channeltype extends Base
             $dst = str_replace('custommodel', $post['nid'], $dst);
             $dst = str_replace('template/pc/', 'template/'.TPL_THEME.'pc/', $dst);
             /*记录相关文件*/
-            if (!stristr($dst, 'custom_model_path')) {
+            if (!stristr($dst, 'custom_model_path') && !stristr($dst, 'template/')) {
                 array_push($fileArr, $dst);
             }
             /*--end*/
@@ -563,7 +573,7 @@ EOF;
                 }
             }
         } catch (\Exception $e) {
-            $this->error('数据库表创建失败，请检查'.$table.'表是否存在并删除，不行就请求技术支持！');
+            $this->error("创建失败，数据库已存在{$table}表，请自行排查");
         }
     }
 
@@ -913,23 +923,28 @@ EOF;
                                                 $content = str_replace('<!-- #media# -->', $replace, $content);
                                             } else if ('special' == $row['nid']) {
                                                 $replace = <<<EOF
-<section class="article-list">
-                            {eyou:specnode code="default1" id="field"}
+{eyou:specnodelist id="list"}
+                        <section class="article-list special-article">
+                            <div class="special-title">{\$list.title}</div>
+                            {eyou:specnode code="\$list.code" id="field"}
                             <article>
                                 {eyou:notempty name="\$field.is_litpic"}
-                                <a href="{\$field.arcurl}" target="_blank" title="{\$field.title}" style="float: left; margin-right: 10px"> <img src="{\$field.litpic}" alt="{\$field.title}" height="100" /> </a>
+                                <a href="{\$field.arcurl}" target="_blank" title="{\$field.title}" style="float: left; margin-right: 10px"> <img src="{\$field.litpic}" alt="{\$field.title}"/> </a>
                                 {/eyou:notempty} 
-                                <h2><a href="{\$field.arcurl}" target="_blank">{\$field.title}</a><span>{\$field.click}°C</span></h2>
+                                <h2><a href="{\$field.arcurl}" target="_blank">{\$field.title}</a></h2>
                                 <div class="excerpt">
                                     <p>{\$field.seo_description}</p>
                                 </div>
                                 <div class="meta">
                                     <span class="item"><time>{\$field.add_time|MyDate='Y-m-d',###}</time></span>
                                     <span class="item"><a href="{\$field.typeurl}" target="_blank">{\$field.typename}</a></span>
+                                    <span>{\$field.click}°C</span>
                                 </div>
                             </article>
                             {/eyou:specnode}
                         </section>
+                        {/eyou:specnodelist}
+                        
 EOF;
                                                 $content = str_replace('<!-- #special# -->', $replace, $content);
                                             }
@@ -1113,7 +1128,7 @@ EOF;
 
             /*下载问答模板*/
             $icon = 2;
-            $msg = '下载问答中心模板包异常，请第一时间联系技术支持，排查问题！';
+            $msg = '下载问答中心模板包异常，请排查问题！';
             $askLogic = new \app\admin\logic\AskLogic;
             $data = $askLogic->syn_theme_ask();
             if (true !== $data) {

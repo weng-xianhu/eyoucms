@@ -1,7 +1,17 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 namespace think\cache\driver;
 
+use think\Config;
 use think\cache\Driver;
 
 /**
@@ -60,6 +70,9 @@ class File extends Driver
      */
     protected function getCacheKey($name, $auto = false)
     {
+        // if (true === Config::get('app_debug')) { // 运营模式才可以用数据缓存
+        //     return false;
+        // }
         $name = md5($name);
         if ($this->options['cache_subdir']) {
             // 使用子目录
@@ -245,13 +258,15 @@ class File extends Driver
                 if (is_array($matches)) {
                     array_map('unlink', $matches);
                 }
-                @rmdir($path); // 忽略报错目录不为空 by 小虎哥
+                del_all_dir($path);
+//                @rmdir($path); // 忽略报错目录不为空 by 小虎哥
             } else {
                 unlink($path);
             }
         }
         return true;
     }
+
 
     /**
      * 判断文件是否存在后，删除
@@ -267,7 +282,9 @@ class File extends Driver
             //清除缓存并再次检查文件权限
             clearstatcache();
             if (is_writable($path)) {
-                return @unlink($path);
+                try {
+                    return @unlink($path);
+                } catch (\Exception $e) {}
             }
         }
         /*--end*/

@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 namespace think;
 
@@ -58,20 +67,22 @@ class Log
      */
     public static function init($config = [])
     {
-        $type  = isset($config['type']) ? $config['type'] : 'File';
-        $class = false !== strpos($type, '\\') ? $type : '\\think\\log\\driver\\' . ucwords($type);
+        if (!empty($config['switch'])) {
+            $type  = isset($config['type']) ? $config['type'] : 'File';
+            $class = false !== strpos($type, '\\') ? $type : '\\think\\log\\driver\\' . ucwords($type);
 
-        self::$config = $config;
-        unset($config['type']);
+            self::$config = $config;
+            unset($config['type']);
 
-        if (class_exists($class)) {
-            self::$driver = new $class($config);
-        } else {
-            throw new ClassNotFoundException('class not exists:' . $class, $class);
+            if (class_exists($class)) {
+                self::$driver = new $class($config);
+            } else {
+                throw new ClassNotFoundException('class not exists:' . $class, $class);
+            }
+
+            // 记录初始化信息
+            App::$debug && Log::record('[ LOG ] INIT ' . $type, 'info');
         }
-
-        // 记录初始化信息
-        App::$debug && Log::record('[ LOG ] INIT ' . $type, 'info');
     }
 
     /**
@@ -94,10 +105,17 @@ class Log
      */
     public static function record($msg, $type = 'log')
     {
-        self::$log[$type][] = $msg;
+        if (empty(self::$config)) {
+            self::$config = Config::get('log');
+        }
+        if (!empty(self::$config['switch'])) {
+            self::$log[$type][] = $msg;
 
-        // 命令行下面日志写入改进
-        IS_CLI && self::save();
+            // 命令行下面日志写入改进
+            if (IS_CLI && count(self::$log[$type]) > 100) { // 定期100条批量保存一次日志到磁盘，同时释放Log by 小虎哥
+                self::save();
+            }
+        }
     }
 
     /**
@@ -144,13 +162,15 @@ class Log
             return true;
         }
 
-        is_null(self::$driver) && self::init(Config::get('log'));
-
-        /*是否开启日志记录 by 小虎哥*/
-        if(0 == self::$config['switch']){
-            return false;
+        if (is_null(self::$driver)) {
+            // 是否开启日志记录 by 小虎哥
+            $log_config = !empty(self::$config) ? self::$config : Config::get('log');
+            if(empty($log_config['switch'])){
+                self::clear();
+                return false;
+            }
+            self::init($log_config);
         }
-        /*--end*/
         
         // 检测日志写入权限
         if (!self::check(self::$config)) {

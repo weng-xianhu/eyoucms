@@ -1415,7 +1415,7 @@ div.edui-box {
 /*anchor-dialog*/
 .edui-default .edui-for-anchor .edui-dialog-content {
     width: 320px;
-    height: 60px;
+    height: 120px;
     overflow: hidden;
 }
 
@@ -1900,4 +1900,9 @@ div.edui-box {
 }
 .edui-default  .edui-pastecontainer .edui-button  .edui-state-hover .edui-plaintxticon{
     background-position: -72px -34px;
+}
+
+/*自定义-手机预览样式*/
+.edui-default .edui-for-previewmobile .edui-icon{
+    background-image: url("../images/previewMobile.png") !important;
 }

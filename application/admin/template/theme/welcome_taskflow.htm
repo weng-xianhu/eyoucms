@@ -1,0 +1,621 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Apple devices fullscreen -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- Apple devices fullscreen -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="__SKIN__/css/main.css?v={$version}" rel="stylesheet" type="text/css">
+    <link href="__SKIN__/font/css/font-awesome.min.css?v={$version}" rel="stylesheet"/>
+    <link href="__SKIN__/font/css/iconfont.css?v={$version}" rel="stylesheet"/>
+    <link href="__SKIN__/css/index.css?v={$version}" rel="stylesheet" type="text/css">
+    <link href="__SKIN__/css/welcome.css?v={$version}" rel="stylesheet" type="text/css">
+    <!--[if IE 7]>
+    <link rel="stylesheet" href="__SKIN__/font/css/font-awesome-ie7.min.css?v={$version}">
+    <![endif]-->
+    <link href="__SKIN__/css/diy_style.css?v={$version}" rel="stylesheet" type="text/css"/>
+    {include file="public/theme_css" /}
+    <script type="text/javascript">
+        var eyou_basefile = "{$Request.baseFile}";
+        var module_name = "{$Think.const.MODULE_NAME}";
+        var __root_dir__ = "__ROOT_DIR__";
+        var __lang__ = "{$admin_lang}";
+        var __main_lang__ = "{$main_lang}";
+        var VarSecurityPatch = "{$security_patch|default='0'}";
+    </script>
+    <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
+    <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js?v={$version}"></script>
+    <script src="__SKIN__/js/global.js?v={$version}"></script>
+    <!--任务流 start-->
+    <link href="__PUBLIC__/plugins/layui/css/layui.css?v={$version}" rel="stylesheet" type="text/css">
+    <link href="__ROOT_DIR__/weapp/TaskFlow/template/skin/css/common.css?v={$version}" rel="stylesheet" type="text/css">
+    <link href="__ROOT_DIR__/weapp/TaskFlow/template/skin/css/style.css?v={$version}" rel="stylesheet" type="text/css">
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+    <script type="text/javascript">
+        // 提供选择的成员数组
+        var NewAdmin = {$NewAdmin|json_encode};
+        // 当前登录者ID
+        var admin_id = {$admin_id};
+    </script>
+    <script type="text/javascript" src="__PUBLIC__/plugins/layui/layui.js?v={$version}"></script>
+    <script src="__ROOT_DIR__/weapp/TaskFlow/template/skin/js/xm-select.js?v={$version}"></script>
+    <!--任务流 end-->
+</head>
+<body style="background-color:#F4F4F4;padding:0px; overflow: auto;">
+    <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+    <div id="append_parent"></div>
+    <div id="ajaxwaitid"></div>
+    {if condition="empty($system_explanation_welcome_2)"}
+    <div id="explanation_welcome" style="margin:10px 10px 0px 10px;">
+        {if condition='empty($system_explanation_welcome_2)'}
+        <div class="explanation" style="color: rgb(44, 188, 163); background-color: #fff!important;  margin-top: 10px;">
+            <div class="title checkZoom" data-type="2">
+                <span title="不再提示" style="display: block;"></span>
+            </div>
+            <ul>
+                <li style="color: red;">后台登录密码强度：{$admin_login_pwdlevel|getPasswordLevelTitle}，容易被暴力破解，请及时
+                <a href="javascript:void(0);" data-href="{:url('Admin/admin_edit', ['id'=>$Think.session.admin_info.admin_id,'iframe'=>1])}" onclick="openFullframe(this, '管理员-修改密码');">【修改密码】</a>提高安全性。</li>
+            </ul>
+        </div>
+        {/if}
+    </div>
+    {/if}
+    <div class="warpper">
+        <div class="content start_content">
+            <div class="contentWarp">
+                {if condition="empty($weappList['TaskFlow']) || 1 != $weappList['TaskFlow']['status']"}
+                <div class="explanation" style="padding-top: 10px;text-align: center;">
+                    <ul>
+                        <li class="col-403f3f" style="background:unset;">此模块需安装<a href="https://www.eyoucms.com/mall/plus/10132.html" target="_blank" class="red">【工作任务流】</a>插件即可用</li>
+                    </ul>
+                </div>
+                {else /}
+                <div class="ey_box_container flex-dir-row flex-a-center" href="javascript:void(0);">
+                    <a href="javascript:void(0);" data-href="{:url('index/welcome')}" onclick="GoLocation(this);"><img class="ey_welcome_log_img" src="{$admin_info.head_pic|get_head_pic=###,true}"/></a>
+                    <div class="flex-dir-column">
+                        <p class="flex-dir-row flex-a-center col-202020">
+                            <span class="f-16 f-w">{$admin_info.true_name|default=$admin_info.user_name}</span>
+                            <span class="f-14 ml-xl">{$admin_info.role_name}</span>
+                        </p>
+                        <p class="mt-xl f-14 col-848484">工作内容：{$admin_info.desc}</p>
+                    </div>
+                </div>
+                <div class="ey_Group_members bg-fff flex-dir-column">
+                    <p class=" col-403f3f f-18 ">小组成员</p>
+                    <div class="flex-dir-row flex-a-center " >
+                        {foreach name="$admin_list" item="vo" key="k" }
+                            {neq name='$vo.admin_id' value='$admin_info.admin_id'}
+                            {/neq}
+                            <a class="flex-dir-column flex-just-center f-14 mr-l flex-a-center" href="javascript:void(0);" data-href="{:url('index/welcome', ['admin_id'=>$vo.admin_id])}" onclick="GoLocation(this);" style="position: relative;">
+                                <img class="ey_Group_members_img " src="{$vo.head_pic|get_head_pic=###,true}"/>
+                                <span class="col-373737 mt-xxl {eq name='$vo.admin_id' value='$admin_id'}name-cur{/eq}">{$vo.pen_name|default=$vo.user_name}</span>
+                                <span class="col-848484">{$vo.name}</span>
+                                {eq name='$vo.is_mvp' value='1'}<span><i class="name-mvp" title="本周之星" ></i></span>{/eq}
+                            </a>
+                        {/foreach}
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    function GoLocation(obj) {
+                        layer_loading('正在加载');
+                        window.location.href = $(obj).data('href');
+                    }
+                </script>
+                <!-- 状态修改 -->
+                <div class="mt-l">
+                    <!-- 这个要默认选择第一个 -->
+                    <div class="ey_changeList_hrader f-16 flex-dir-row flex-a-center">
+                        <a href="javascript:void(0);" onclick="changeTaskStatus(this)" data-status="all" class="ey_welcome_active">我的任务 <span>{$countRow.all}</span></a>
+                        <a href="javascript:void(0);" onclick="changeTaskStatus(this)" data-status="my">发起任务 <span>{$countRow.my}</span></a>
+                        <!-- <a href="javascript:void(0);" onclick="changeTaskStatus(this)" data-status="test">待测试 <span>{$countRow.test}</span></a> -->
+                        <a href="javascript:void(0);" onclick="changeTaskStatus(this)" data-status="done">已完成 <span>{$countRow.done}</span></a>
+                        <a href="javascript:void(0);" onclick="changeTaskStatus(this)" data-status="draft">草稿箱 <span>{$countRow.draft}</span></a>
+                    </div>
+                    <div class="flex-dir-column bg-fff">
+                        <div class="table-header flex-dir-row flex-a-center f-14">
+                            <span style="width: 110px;">状态</span>
+                            <span style="width: 59%;">任务名称</span>
+                            <span style="width: 10%;">发起人</span>
+                            <span style="width: 10%;">处理人</span>
+                            <span style="width: 10%;">验收人</span>
+                            <span style="width: 6%;" id="tab_update_time">
+                                {if condition="$vo['task_status'] == 3" /}
+                                    驳回日期
+                                {elseif condition="$vo['task_status'] == 4" /}
+                                    验收日期
+                                {elseif condition="$vo['task_status'] == 5" /}
+                                    完成日期
+                                {else /}
+                                    业务日期
+                                {/if}
+                            </span>
+                        </div>
+                        <div class="table-center flex-dir-column f-14" id="task_content_0104">
+                            {foreach name="task_list" item="vo" key="k" }
+                            <div class="flex-dir-row flex-a-center">
+                                <div style="width: 100px; padding-left: 10px;">
+                                    <div class="table-center-one task_status_{$vo.task_id} task_status_elem" data-task_status="{$vo.task_status}">
+                                        {if condition="$vo['task_status'] == 1"}
+                                            <div class="blue-bg">{$vo.status_name}</div>
+                                        {elseif condition="$vo['task_status'] == 6" /}
+                                            <div class="suspend-bg">{$vo.status_name}</div>
+                                        {elseif condition="$vo['task_status'] == 2" /}
+                                            <div class="{$vo.status_bg}-bg">{$vo.status_name}</div>
+                                        {elseif condition="$vo['task_status'] == 3" /}
+                                            <div class="red-bg">{$vo.status_name}</div>
+                                        {elseif condition="$vo['task_status'] == 4" /}
+                                            <div class="yellow-bg">{$vo.status_name}</div>
+                                        {elseif condition="$vo['task_status'] == 5" /}
+                                            <div class="teal-bg">{$vo.status_name}</div>
+                                        {/if}
+                                    </div>
+                                </div>
+                                <div class="table-center-ellipsis" style="width: 59%;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;">
+                                    <div class="table-center-two">
+                                        <span class="task_title curpoin task_title_{$vo.task_id}" onclick="GetTaskDetails({$vo.task_id});">{$vo.task_title}</span>
+                                        <span class="task_level_{$vo.task_id}">
+                                            {if condition="in_array($vo['task_level'], [1,5])"}
+                                                <label class="green-bt">{$vo.level_name}</label>
+                                            {elseif condition="$vo['task_level'] == 2" /}
+                                                <label class="red-bt">{$vo.level_name}</label>
+                                            {elseif condition="$vo['task_level'] == 3" /}
+                                                <label class="blue-bt">{$vo.level_name}</label>
+                                            {elseif condition="$vo['task_level'] == 4" /}
+                                                <label class="teal-bt">{$vo.level_name}</label>
+                                            {/if}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div style="width: 10%; margin-left: 38.5px;">
+                                    <div class="flex-dir-row flex-a-center" style="margin-top: -5px;">
+                                        <img class="table-center-image" src="{$vo['initiator_info']['head_pic']|get_head_pic=###,true}">{$vo['initiator_info']['pen_name']|default=$vo['initiator_info']['user_name']}
+                                    </div>
+                                </div>
+                                <div style="width: 10%;">
+                                    <div class="flex-dir-row flex-a-center" style="margin-top: -5px;">
+                                        <img class="table-center-image" src="{$vo['handler_info']['head_pic']|get_head_pic=###,true}">{$vo['handler_info']['pen_name']|default=$vo['handler_info']['user_name']}
+                                    </div>
+                                </div>
+                                <div style="width: 10%;">
+                                    <div class="flex-dir-row flex-a-center" style="margin-top: -5px;">
+                                        <img class="table-center-image" src="{$vo['auditors_info']['head_pic']|get_head_pic=###,true}">{$vo['auditors_info']['pen_name']|default=$vo['auditors_info']['user_name']}
+                                    </div>
+                                </div>
+                                <div style="width: 6%; margin-right: 30.2px">
+                                    <div class="flex-dir-row flex-a-center" style="margin-top: -5px;">
+                                        {$vo['new_time']}
+                                    </div>
+                                </div>
+                            </div>
+                            {/foreach}
+                        </div>
+                        <div class="ey-footer-line"></div>
+                        <div class="flex-dir-row flex-a-center flex-just-between" style="width: 51%;">
+                            <div class="ey-table-btn curpoin" onclick="addOpen(this)"><span>发起新任务</span></div>
+                            <a href="javascript:void(0);" {if condition="$countRow['all'] <= 8"}style="display: none;"{/if} id="moreTaskFlow" onclick="moreTaskFlow(this)" data-page="2" data-hasMorePage="1">点击查看更多</a>
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        var admin_id = "{$admin_id}";
+                        function changeTaskStatus(obj) {
+                            $('.ey_changeList_hrader a').removeClass('ey_welcome_active');
+                            $(obj).addClass('ey_welcome_active');
+                            var task_status = $(obj).attr('data-status');
+                            if ('done' == task_status) {
+                                $('#tab_update_time').html('完成日期');
+                            } else if ('draft' == task_status) {
+                                $('#tab_update_time').html('发起日期');
+                            } else {
+                                $('#tab_update_time').html('业务日期');
+                            }
+                            layer_loading('正在加载');
+                            $.ajax({
+                                type: "post",
+                                url: "{:url('Index/get_task_list', ['_ajax'=>1])}",
+                                data: {admin_id:admin_id, task_status:task_status, p:1},
+                                dataType: "JSON",
+                                success: function (res) {
+                                    if (0 == res.data.hasMorePage) {
+                                        $('#moreTaskFlow').attr('data-page', 2).attr('data-hasMorePage', res.data.hasMorePage).html('点击查看更多').hide();
+                                    } else {
+                                        $('#moreTaskFlow').attr('data-page', 2).attr('data-hasMorePage', res.data.hasMorePage).html('点击查看更多').show();
+                                    }
+                                    layer.closeAll();
+                                    if (1 == res.code) {
+                                        $('#task_content_0104').html(res.data.html);
+                                    }
+                                },
+                                error: function(e){
+                                    layer.closeAll();
+                                    showErrorAlert(e.responseText);
+                                }
+                            })
+                        }
+
+                        function moreTaskFlow(obj) {
+                            if (0 == $(obj).attr('data-hasMorePage')) {
+                                return false;
+                            }
+                            var page = $(obj).attr('data-page');
+                            var task_status = $('.ey_welcome_active').attr('data-status');
+                            layer_loading('正在加载');
+                            $.ajax({
+                                type: "post",
+                                url: "{:url('Index/get_task_list', ['_ajax'=>1])}",
+                                data: {admin_id:admin_id, task_status:task_status, p:page},
+                                dataType: "JSON",
+                                success: function (res) {
+                                    layer.closeAll();
+                                    if (1 == res.code) {
+                                        $(obj).attr('data-page', res.data.nextpage);
+                                        $('#task_content_0104').append(res.data.html);
+                                        $(obj).attr('data-hasMorePage', res.data.hasMorePage);
+                                        if (0 == res.data.hasMorePage) {
+                                            $(obj).html('没有数据了');
+                                        //     $(obj).hide();
+                                        }
+                                    }
+                                },
+                                error: function(e){
+                                    layer.closeAll();
+                                    showErrorAlert(e.responseText);
+                                }
+                            })
+                        }
+                    </script>
+                </div>
+                {/if}
+                <!-- 业务统计 -->
+                <div class="mt-l bg-fff">
+                    <div class="Statistics_header f-18">
+                        实时概况 <span class="f-12 color-grey">更新时间：{$current_time}</span>
+                        <div class="fr"><a href="javascript:void(0);" id="surveyQuickMenuAdd"><i style="font-size: 20px;" class="iconfont e-tianjia"></i></a></div>
+                    </div>
+                    <div class="Statistics_center flex-a-center flex-dir-row">
+                        <div class="Statistics_center_left flex-dir-row flex-a-center">
+                            {volist name="$surveyQuickMenu" id="vo"}
+                            <div class="flex-dir-column Statistics_center_left_item  ptl">
+                                <!-- <div class="Statistics_tag"></div>
+                                <span class="Statistics_tag_text" title="小编">编</span> -->
+                                <div class="f-18 col-403f3f ">{$vo.title}</div>
+                                <div class="flex-a-center  flex-dir-row flex-just-between Statistics_center_left_item_list">
+                                    <p class="flex-dir-column">
+                                        {if condition="in_array($vo.statistics_type,[3,5])"}
+                                        <span class="col-f97721 f-20">{$vo.data.today.total|floatval=###}</span>
+                                        {else /}
+                                        <span class="col-f97721 f-20">{$vo.data.today.num|floatval=###}</span>
+                                        {/if}
+                                        <span class="col-6a6a6a mt-xxl">今日数据</span>
+                                    </p>
+                                    <p class="flex-dir-column">
+                                        <a href="{$vo.url|default='javascript:void(0);'}"><span class="col-f97721 f-20">{$vo.data.total|floatval=###}</span></a>
+                                        <span class="col-6a6a6a mt-xxl">{$vo.laytext}</span>
+                                    </p>
+                                </div>
+                            </div>
+                            {/volist}
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-l bg-fff section system_section" style="float: none;width: inherit;display: none;">
+                    <div class="system_section_con">
+                        <div class="sc_title" style="padding: 26px 0 14px;">
+
+                            <h3><i class="iconfont e-xitongxinxi"></i>系统信息</h3>
+                        </div>
+                        <div class="sc_warp" id="system_warp" style="display: block;">
+                            <table cellpadding="0" cellspacing="0" class="system_table">
+                                <tbody>
+                                    <tr>
+                                        <td class="gray_bg">系统更新：</td>
+                                        <td id="td_upgrade_msg">
+                                            <div id="upgrade_filelist" style="display:none;"></div>
+                                            <div id="upgrade_intro" style="display:none;"></div>
+                                            <div id="upgrade_notice" style="display:none;"></div>
+                                            <a href="javascript:void(0);" id="a_upgrade" data-version="" data-max_version="" data-curent_version="{$sys_info.curent_version|default='v1.0'}" data-iframe="workspace" title="" data-tips_url="{:url('Upgrade/setPopupUpgrade')}" data-upgrade_url="{:url('Upgrade/OneKeyUpgrade')}" data-check_authority="{:url('Upgrade/check_authority')}">{if condition='!empty($security_patch)'}正在版本检测中……{else/}{eq name="upgrade" value="true"}正在版本检测中……{else/}已是最新版{/eq}{/if}</a>
+                                        </td>
+                                        <td class="gray_bg">当前版本：</td>
+                                        <td>{$sys_info.curent_version|default='v1.0'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="gray_bg">网站名称：</td>
+                                        <td>{$sys_info.web_name|default='Eyoucms企业网站管理系统'}</td>
+                                        <td class="gray_bg">版权所有：</td>
+                                        <td>{notempty name="$is_eyou_authortoken"}<a href="https://www.eyoucms.com/buy/" target="_blank">盗版必究</a>{else /}正版软件{/notempty}</td>
+                                    </tr>
+                                    {notempty name="$is_eyou_authortoken"}
+                                    <tr>
+                                        <td class="gray_bg">更新日志：</td>
+                                        <td><a href="https://www.eyoucms.com/rizhi/" target="_blank">查看</a></td>
+                                        <td class="gray_bg">帮助中心:</td>
+                                        <td><a href="https://www.eyoucms.com/ask/" target="_blank">查看</a></td>
+                                    </tr>
+                                    {/notempty}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="system_section_con">
+                        <div class="sc_title" style="padding: 26px 0 14px;">
+
+                            <h3><i class="iconfont e-fuwuqixinxi"></i>服务器信息</h3>
+                        </div>
+                        <div class="sc_warp" id="system_warp" style="display: block;padding-bottom: 20px;">
+                            <table cellpadding="0" cellspacing="0" class="system_table">
+                                <tbody><tr>
+                                    <td class="gray_bg">服务器系统：</td>
+                                    <td>{$sys_info.os}</td>
+                                    <td class="gray_bg">网站域名/IP：</td>
+                                    <td>{$sys_info.domain} [ {$sys_info.ip} ]</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray_bg">服务器环境：</td>
+                                    <td style="line-height: 28px;padding-right: 20px;">{$sys_info.web_server}</td>
+                                    <td class="gray_bg">PHP 版本：</td>
+                                    <td>{$sys_info.phpv}</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray_bg">Mysql 版本：</td>
+                                    <td>{$sys_info.mysql_version}</td>
+                                    <td class="gray_bg">GD 版本：</td>
+                                    <td>{$sys_info.gdinfo}</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray_bg">文件上传限制：</td>
+                                    <td>{$sys_info.fileupload}</td>
+                                    <td class="gray_bg">最大占用内存：</td>
+                                    <td>{$sys_info.memory_limit}</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray_bg">POST限制：</td>
+                                    <td>{$sys_info.postsize|default='unknown'}</td>
+                                    <td class="gray_bg">最大执行时间：</td>
+                                    <td>{$sys_info.max_ex_time}</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray_bg">Zip支持：</td>
+                                    <td>{$sys_info.zip}</td>
+                                    <td class="gray_bg">Zlib支持：</td>
+                                    <td>{$sys_info.zlib}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 任务流 -->
+    <style type="text/css">
+        .rightCon{
+            top: 0px;
+            z-index: 19891015;
+        }
+        .rightCon .layui-input, .rightCon .layui-textarea {
+            display: block;
+            width: 100%;
+            padding-left: 10px;
+        }
+        .rightCon .layui-input, .rightCon .layui-select, .rightCon .layui-textarea {
+            height: 38px;
+            line-height: 1.3;
+            border-width: 1px;
+            border-style: solid;
+            background-color: #fff;
+            border-radius: 2px;
+        }
+        .rightCon a.ncap-btn-green{
+            background-color: #F5F5F5;
+        }
+    </style>
+    <!-- 左侧遮罩层 -->
+    <div class="layui-layer-shade" id="layui-layer-shade-taskflow" times="1" style="z-index: 19891014; background-color: rgb(0, 0, 0); opacity: 0.3;display: none;"></div>
+    <!-- 右侧添加 -->
+    {include file="/weapp/TaskFlow/template/task_flow_add.htm" /}
+    <!-- 右侧详情 -->
+    {include file="/weapp/TaskFlow/template/task_flow_save.htm" /}
+    <!-- END -->
+    <div id="footer" style="position: static; bottom: 0px; font-size:14px;padding-top: 10px; padding-bottom: 10px;">
+        <p>
+            <b>{$global.web_copyright|htmlspecialchars_decode}</b>
+        </p>
+    </div>
+    <script src="__ROOT_DIR__/weapp/TaskFlow/template/skin/js/task_flow.js?v={$version}"></script>
+    <script type="text/javascript">
+        $(function () {
+            if (1 == VarSecurityPatch) {
+                checkUpgradeSecurityVersion();
+            } else {
+                {eq name="upgrade" value="true"}
+                check_upgrade_version();
+                {/eq}
+            }
+
+            $.get("{:url('Ajax/welcome_handle', ['_ajax'=>1])}"); // 进入欢迎页面需要异步处理的业务
+            check_language_tips();
+
+            // 检测语言版本
+            function check_language_tips()
+            {
+                if (__main_lang__ != __lang__) {
+                    var language_title = $('#language_title', window.parent.document).html();
+                    layer.msg('当前后台已切换至【'+language_title+'】编辑状态！', {time:3000});
+                }
+            }
+
+            // 检测系统安全补丁更新弹窗
+            function checkUpgradeSecurityVersion() {
+                $.ajax({
+                    type : "GET",
+                    url  : "{:url('Ajax/check_upgrade_version', ['_ajax'=>1])}",
+                    data : {},
+                    dataType : "JSON",
+                    success: function(res) {
+                        if (1 == res.code) {
+                            if (2 == res.data.code) {
+                                /*显示顶部导航更新提示*/
+                                try {
+                                    $("#upgrade_filelist", window.parent.document).html(res.data.msg.upgrade);
+                                    $("#upgrade_intro", window.parent.document).html(res.data.msg.intro);
+                                    $("#upgrade_notice", window.parent.document).html(res.data.msg.notice);
+                                    $('#a_upgrade', window.parent.document).attr('data-version',res.data.msg.key_num).attr('data-max_version',res.data.msg.max_version).show();
+                                } catch(e) {}
+
+                                $('#upgrade_filelist').html(res.data.msg.upgrade);
+                                $('#upgrade_intro').html(res.data.msg.intro);
+                                $('#upgrade_notice').html(res.data.msg.notice);
+                                $('#a_upgrade').attr('data-version', res.data.msg.key_num).attr('data-max_version', res.data.msg.max_version).attr('title', res.data.msg.tips);
+                                $('#a_upgrade').html('检测到安全补丁包'+res.data.msg.key_num+'[点击查看]').css('color', '#F00');
+                                /* END */
+
+                                var webShowPopupUpgrade = {$web_show_popup_upgrade|default=1};
+                                var adminInfoRoleID = {$Think.session.admin_info.role_id|default=0};
+                                var adminInfoAuthRoleInfoOnlineUpdate = {$Think.session.admin_info.auth_role_info.online_update|default=0};
+                                if (-1 != webShowPopupUpgrade && (0 >= adminInfoRoleID || 1 == adminInfoAuthRoleInfoOnlineUpdate)) {
+                                    btn_upgrade($("#a_upgrade"), 1);
+                                }
+                            } else if (0 == res.data.code) {
+                                layer.alert(res.data.msg, {title:false, closeBtn:0});
+                            } else {
+                                $('#td_upgrade_msg').html(res.data.msg);
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 版本检测更新弹窗
+            function check_upgrade_version() {
+                $.ajax({
+                    type : "GET",
+                    url  : "{:url('Ajax/check_upgrade_version', ['_ajax'=>1])}",
+                    data : {},
+                    dataType : "JSON",
+                    success: function(res) {
+                        if (1 == res.code) {
+                            if (2 == res.data.code) {
+                                /*显示顶部导航更新提示*/
+                                try {
+                                    $("#upgrade_filelist", window.parent.document).html(res.data.msg.upgrade);
+                                    $("#upgrade_intro", window.parent.document).html(res.data.msg.intro);
+                                    $("#upgrade_notice", window.parent.document).html(res.data.msg.notice);
+                                    $('#a_upgrade', window.parent.document).attr('data-version',res.data.msg.key_num).attr('data-max_version',res.data.msg.max_version).show();
+                                } catch(e) {}
+
+                                $('#upgrade_filelist').html(res.data.msg.upgrade);
+                                $('#upgrade_intro').html(res.data.msg.intro);
+                                $('#upgrade_notice').html(res.data.msg.notice);
+                                $('#a_upgrade').attr('data-version', res.data.msg.key_num).attr('data-max_version', res.data.msg.max_version).attr('title', res.data.msg.tips);
+                                $('#a_upgrade').html('检测到新版本'+res.data.msg.key_num+'[点击查看]').css('color', '#F00');
+                                /* END */
+
+                                {if condition="-1 != $web_show_popup_upgrade AND (0 >= $Think.session.admin_info.role_id OR 1 == $Think.session.admin_info.auth_role_info.online_update)"}
+                                    btn_upgrade($("#a_upgrade"), 1);
+                                {/if}
+                            } else {
+                                $('#td_upgrade_msg').html(res.data.msg);
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        $(function() {
+            //操作提示缩放动画
+            $(".checkZoom").click(function(){
+                $(this).parent().animate({
+                    color: "#FFF",
+                    backgroundColor: "#4FD6BE",
+                    width: "0",
+                    height: "0",
+                },300,function(){
+                    $(this).remove();
+                });
+                if(1 >= $('#explanation_welcome').find('div.explanation').length) {
+                    $('#explanation_welcome').remove();
+                }
+                var url = eyou_basefile+"?m=admin&c=Ajax&a=explanation_welcome&type="+$(this).attr('data-type')+"&lang="+__lang__+"&_ajax=1";
+                $.get(url);
+            });
+
+            {eq name='$main_lang' value='$admin_lang'}
+            checkInlet(); // 自动检测隐藏index.php
+            {/eq}
+        });
+
+        // 自动检测隐藏index.php
+        function checkInlet() {
+            layer.open({
+                type: 2,
+                title: false,
+                area: ['0px', '0px'],
+                shade: 0.0,
+                closeBtn: 0,
+                shadeClose: true,
+                content: '//{$website_host}__ROOT_DIR__/api/Rewrite/setInlet.html',
+                success: function(layero, index){
+                    layer.close(index);
+                    var body = layer.getChildFrame('body', index);
+                    var content = body.html();
+                    if (content.indexOf("Congratulations on passing") == -1)
+                    {
+                        $.ajax({
+                            type : "POST",
+                            url  : "__ROOT_DIR__/index.php?m=api&c=Rewrite&a=setInlet&_ajax=1",
+                            data : {seo_inlet:0},
+                            dataType : "JSON",
+                            success: function(res) {
+
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        // 新增实时概况快捷导航
+        $('#surveyQuickMenuAdd').click(function(){
+            var iframes = layer.open({
+                type: 2,
+                title: '实时概况',
+                fixed: true, //不固定
+                shadeClose: false,
+                shade: layer_shade,
+                // maxmin: false, //开启最大化最小化按钮
+                area: ['550px', '200px'],
+                content: "{:url('Index/ajax_surveyquickmenu_taskflow')}"
+            });
+        });
+
+        /**
+         * 更新组件库
+         * @return {[type]} [description]
+         */
+        var is_update_component_access = {$is_update_component_access|default=0};
+        function update_component_access()
+        {
+            if (1 == is_update_component_access) {
+                $.ajax({
+                    type : 'post',
+                    url : eyou_basefile+'?m=admin&c=Diyminipro&a=ajax_syn_component_access&lang='+__lang__,
+                    data : {mini_id:0, _ajax:1},
+                    dataType : 'json',
+                    success : function(res){
+                        if(res.code == 1) {
+                            console.log(res.msg);
+                        }
+                    }
+                });
+            }
+        }
+        update_component_access();
+    </script>
+    {include file="public/footer" /}

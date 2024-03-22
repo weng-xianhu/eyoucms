@@ -88,6 +88,16 @@ class WeappController
     public $version = null;
 
     /**
+     * 是否访问手机版
+     */
+    public $is_mobile = 0;
+
+    /**
+     * 站点域名，带端口号
+     */
+    public $website_host = '';
+
+    /**
      * 构造方法
      * @access public
      * @param Request $request Request 对象
@@ -103,8 +113,12 @@ class WeappController
             $request = Request::instance();
         }
         $this->request = $request;
-
         $this->root_dir = ROOT_DIR; // 子目录
+        $this->website_host = $this->request->host();
+        if (stristr($this->website_host, 'localhost')) {
+            $this->website_host = config('tpcache.web_basehost');
+        }
+        $this->website_host = preg_replace('/^(([^\:]+):)?(\/\/)?([^\/]*)(.*)$/i', '${4}', $this->website_host);
 
         $class = get_class($this); // 返回对象的类名
         $wmcArr = explode('\\', $class);
@@ -124,16 +138,17 @@ class WeappController
 
         $this->view    = View::instance($template);
 
-        /*多语言*/
         $this->home_lang = get_home_lang();
         $this->admin_lang = get_admin_lang();
         $this->main_lang = get_main_lang();
         null === $this->version && $this->version = getCmsVersion();
+        $this->is_mobile = isMobile() ? 1 : 0;
         $this->assign('home_lang', $this->home_lang);
         $this->assign('admin_lang', $this->admin_lang);
         $this->assign('main_lang', $this->main_lang);
         $this->assign('version', $this->version);
-        /*--end*/
+        $this->assign('is_mobile', $this->is_mobile);
+        $this->assign('website_host', $this->website_host);
         
         $this->weapp_path   =   WEAPP_DIR_NAME.DS.$this->weapp_module_name.DS;
         if(is_file($this->weapp_path.'config.php')){
@@ -264,6 +279,11 @@ class WeappController
     protected function fetch($template = '', $vars = [], $replace = [], $config = [])
     {
         $view_path = Config::get('template.view_path');
+        
+        if (!empty($this->root_dir)) {
+            $view_path = preg_replace('/^\.'.preg_quote($this->root_dir, '/').'\/weapp\//i', './weapp/', $view_path);
+            Config::set('template.view_path', $view_path);
+        }
 
         if (empty($template)) {
             $template = $this->weapp_action_name;

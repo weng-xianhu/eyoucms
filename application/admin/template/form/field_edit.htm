@@ -1,0 +1,81 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width: auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;box-shadow:none;padding-bottom: 0px;">
+    <form class="form-horizontal" id="post_form" action="{:url('Form/field_edit')}" method="post" onsubmit="return false;">
+        <input type="hidden" name="form_id" value="{$info.form_id}">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="form_name"><em>*</em>表单名称</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <input type="text" name="form_name" value="{$info.form_name}" id="form_name" class="w200" autocomplete="off">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>前台表单字段</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <label class="curpoin"><input type="radio" name="attr_auto" value="1" {notempty name='$info.attr_auto'} checked="checked" {/notempty}/>自动</label>&nbsp;&nbsp;
+                    <label class="curpoin"><input type="radio" name="attr_auto" value="0" {empty name='$info.attr_auto'} checked="checked" {/empty}/>手动</label>&nbsp;&nbsp;
+                    <p class="notic">前台表单字段会随着后台新增字段是否自动显示</p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+    $(function(){
+        $('input[name=form_name]').focus();
+    });
+
+    $(document).keydown(function (event) {
+        if (event.keyCode == 13) {
+            checkForm();
+        }
+    });
+
+    // 判断输入框是否为空
+    function checkForm(){
+        if($('input[name=form_name]').val() == ''){
+            showErrorMsg('表单名称不能为空！');
+            $('input[name=form_name]').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Form/field_edit', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

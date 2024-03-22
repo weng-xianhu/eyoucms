@@ -26,24 +26,24 @@ $(function() {
     });
 
     // 侧边导航三级级菜单点击
-    $('.sub-menu').find('a').click(function(){
-        if($(this).attr('data-param') != undefined){
-            openItem($(this).attr('data-param'));
+    $('.sub-menu').on('click','a',function(){
+        if ($(this).attr('data-param') != undefined) {
+            openItem($(this).attr('data-param'), $(this).attr('data-menu_id'), $(this).attr('data-click'), $(this).attr('data-click_url'));
         }
     });
     
     if ($.cookie('workspaceParam') == null) {
         // 默认选择第一个菜单
-        //$('.nc-module-menu').find('li:first > a').click();
-        openItem('Index|welcome');
+        // $('.nc-module-menu').find('li:first > a').click();
+        openItem('Index|welcome', '', '');
     } else {
         // openItem($.cookie('workspaceParam'));
-        openItem('Index|welcome');
+        openItem('Index|welcome', '', '');
     }
 });
 
 // 点击菜单，iframe页面跳转
-function openItem(param) {	
+function openItem(param, menu_id, click, click_url) {
     $('.sub-menu').find('li').removeClass('active');
     data_str = param.split('|');
     $this = $('div[id^="admincpNavTabs_"]').find('a[data-param="' + param + '"]');
@@ -52,7 +52,11 @@ function openItem(param) {
     }
     $('li[data-param="' + data_str[0] + '"]').addClass('active');
     $this.parent().addClass('active').parents('dl:first').addClass('active').parents('div:first').show();
-    var src = eyou_basefile + '?m='+module_name+'&c=' + data_str[0] + '&a=' + data_str[1];
+    if (click != '' && click != undefined && click != 'undefined') {
+        var src = click_url;
+    } else {
+        var src = eyou_basefile + '?m='+module_name+'&c=' + data_str[0] + '&a=' + data_str[1];
+    }
     if (data_str.length%2 == 0) {
         for (var i = 2; i < data_str.length; i++) {
             if (i%2 == 0) {
@@ -68,6 +72,20 @@ function openItem(param) {
     if (false != $.inArray('lang', data_str) && $.trim(lang) != '') {
         src = src + '&lang=' + lang;
     }
+    //商城样式特殊处理
+    var conceal_key = data_str.indexOf('conceal');
+    if(conceal_key >= 0 && data_str.hasOwnProperty(conceal_key+1)){  //存在下标
+        sessionStorage.setItem('conceal_1649209614', data_str[conceal_key+1]);   //sessionStorage保存点击状态
+    }else{
+        sessionStorage.setItem('conceal_1649209614', 0);
+    }
+    //栏目入口内页没有mt20（class）
+    var mt20_key = data_str.indexOf('mt20');
+    if(mt20_key >= 0 && data_str.hasOwnProperty(mt20_key+1)){  //存在下标
+        sessionStorage.setItem('mt20_1649209614', data_str[mt20_key+1]);   //sessionStorage保存点击状态
+    }else{
+        sessionStorage.setItem('mt20_1649209614', 0);
+    }
     $('#workspace').attr('src', src);
     $.cookie('workspaceParam', data_str[1] + '|' + data_str[0], { expires: 1 ,path:"/"});
 
@@ -75,18 +93,19 @@ function openItem(param) {
     var SubMenuA = $('.sub-menu a');
     SubMenuA.each(function(){
         // 其他参数处理
-        $('#'+this.id).removeClass('on');
+        $(this).removeClass('on');
         // 特殊参数处理
-        $('#'+this.id).parent().siblings().removeClass('on');
+        $(this).parent().siblings().removeClass('on');
     });
     // 拼装ID获取到点击的ID
-    var ColorId = data_str.join('_');
-    if (0 == $('#'+ColorId).attr('data-child')) {
+    // var ColorId = data_str.join('_');
+    var ColorId = data_str[0]+"_"+data_str[1]+"_"+ menu_id;
+    if (0 == $('.'+ColorId).attr('data-child')) {
         // 其他参数选项
-        $('#'+ColorId).addClass('on');
+        $('.'+ColorId).addClass('on');
     }else{
         // 特殊参数处理
-        $('#'+ColorId).parent().siblings().addClass('on');
+        $('.'+ColorId).parent().siblings().addClass('on');
     }
 }
 

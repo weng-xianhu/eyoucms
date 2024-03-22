@@ -1,0 +1,28 @@
+<div class="fixed-bar">
+    <div class="item-title">
+        <a class="back_xin" href="{:url('Index/switch_map')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+        <div class="subject">
+            <h3>验证码</h3>
+            <h5></h5>
+        </div>
+        <ul class="tab-base nc-row">
+            <li>
+                <a href="{:url('Vertify/index', ['inc_type'=>'admin_login'])}" class="tab {eq name='$inc_type' value='admin_login'}current{/eq}"><span>后台登录</span></a>
+            </li>
+            {if condition="!empty($global['web_users_switch'])"}
+            <li>
+                <a href="{:url('Vertify/index', ['inc_type'=>'users_reg'])}" class="tab {eq name='$inc_type' value='users_reg'}current{/eq}"><span>会员注册</span></a>
+            </li>
+            <li>
+                <a href="{:url('Vertify/index', ['inc_type'=>'users_login'])}" class="tab {eq name='$inc_type' value='users_login'}current{/eq}"><span>会员登录</span></a>
+            </li>
+            <li>
+                <a href="{:url('Vertify/index', ['inc_type'=>'users_retrieve_password'])}" class="tab {eq name='$inc_type' value='users_retrieve_password'}current{/eq}"><span>找回密码</span></a>
+            </li>
+            {/if}
+            <li>
+                <a href="{:url('Vertify/index', ['inc_type'=>'guestbook'])}" class="tab {eq name='$inc_type' value='guestbook'}current{/eq}"><span>留言模型</span></a>
+            </li>
+        </ul>
+    </div>
+</div>

@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -18,6 +18,7 @@ use think\Db;
 use app\common\logic\ArctypeLogic;
 use app\admin\logic\ProductLogic;
 use app\admin\logic\ProductSpecLogic; // 用于商品规格逻辑功能处理
+use app\admin\logic\ShopLogic;
 
 class ShopProduct extends Base
 {
@@ -27,12 +28,14 @@ class ShopProduct extends Base
     public $channeltype = '';
     // 表单类型
     public $attrInputTypeArr = array();
+    public $ShopLogic;
 
     public function _initialize()
     {
         parent::_initialize();
+        $this->ShopLogic = new ShopLogic;
 
-        if (!preg_match('/^attrlist_/i', ACTION_NAME) && !preg_match('/^attribute_/i', ACTION_NAME)) {
+        if (!preg_match('/^attrlist_/i', ACTION_NAME) && !preg_match('/^attribute_/i', ACTION_NAME) && !preg_match('/^ajax_/i', ACTION_NAME)) {
             $this->language_access(); // 多语言功能操作权限
         }
         
@@ -43,35 +46,36 @@ class ShopProduct extends Base
         $this->assign('nid', $this->nid);
         $this->assign('channeltype', $this->channeltype);
 
-        // 产品属性表
-        $this->product_attrlist_db = Db::name('product_attrlist');
         // 商城产品参数表
         $this->shop_product_attrlist_db = Db::name('shop_product_attrlist');
-        // 产品规格表
-        $this->product_spec_preset_db = Db::name('product_spec_preset');
-        // 产品规格值表
-        $this->product_spec_value_db = Db::name('product_spec_value');
+
         // 规格业务层
-        $this->ProductSpecLogic = new ProductSpecLogic;
-        // 规格名称模型层
-        $this->ProductSpecPresetModel = model('ProductSpecPreset');
-        // 规格值模型层
-        $this->ProductSpecValueModel = model('ProductSpecValue');
+        $this->productSpecLogic = new ProductSpecLogic;
+        
+        // 列出营销功能里已使用的模块
+        $marketFunc = $this->ShopLogic->marketLogic();
+        $this->assign('marketFunc', $marketFunc);
+
+        // 返回页面
+        $this->callback_url = url('ShopProduct/index', ['lang' => $this->admin_lang]);
+        $this->assign('callback_url', $this->callback_url);
     }
 
     /**
-     * 文章列表
+     * 商品列表
      */
     public function index()
     {
-        $assign_data = $condition = [];
-
+        $assign_data = [];
+        $condition = [
+            'a.merchant_id' => 0
+        ];
         // 获取到所有GET参数
         $param = input('param.');
         $typeid = input('typeid/d', 0);
 
         // 搜索、筛选查询条件处理
-        foreach (['keywords', 'typeid', 'flag', 'is_release'] as $key) {
+        foreach (['keywords', 'typeid', 'flag', 'is_release','province_id','city_id','area_id','arcrank'] as $key) {
             if ($key == 'typeid' && empty($param['typeid'])) {
                 $typeids = Db::name('arctype')->where('current_channel', $this->channeltype)->column('id');
                 $condition['a.typeid'] = array('IN', $typeids);
@@ -99,6 +103,20 @@ class ShopProduct extends Base
                     } else {
                         $FlagNew = $param[$key];
                         $condition['a.'.$param[$key]] = array('eq', 1);
+                    }
+                } else if (in_array($key, ['province_id','city_id','area_id'])) {
+                    if (!empty($param['area_id'])) {
+                        $condition['a.area_id'] = $param['area_id'];
+                    } else if (!empty($param['city_id'])) {
+                        $condition['a.city_id'] = $param['city_id'];
+                    } else if (!empty($param['province_id'])) {
+                        $condition['a.province_id'] = $param['province_id'];
+                    }
+                } else if ($key == 'arcrank' && !empty($param[$key])) {
+                    if (1 === intval($param[$key])) {
+                        $condition['a.arcrank'] = ['egt', 0];
+                    } else if (-1 === intval($param[$key])) {
+                        $condition['a.arcrank'] = ['eq', -1];
                     }
                 } else {
                     $condition['a.'.$key] = array('eq', $param[$key]);
@@ -144,7 +162,8 @@ class ShopProduct extends Base
         // 数据查询，搜索出主键ID的值
         $SqlQuery = Db::name('archives')->alias('a')->where($condition)->where($conditionNew)->fetchSql()->count('aid');
         $count = Db::name('sql_cache_table')->where(['sql_md5'=>md5($SqlQuery)])->getField('sql_result');
-        if (!isset($count)) {
+        $count = ($count < 0) ? 0 : $count;
+        if (empty($count)) {
             $count = Db::name('archives')->alias('a')->where($condition)->where($conditionNew)->count('aid');
             /*添加查询执行语句到mysql缓存表*/
             $SqlCacheTable = [
@@ -183,9 +202,14 @@ class ShopProduct extends Base
                     ->join('__ARCTYPE__ b', 'a.typeid = b.id', 'LEFT')
                     ->where('a.aid', 'in', $aids)
                     ->getAllWithIndex('aid');
+                // 查询商品是否开启规格
+                $goodsSpecArr = Db::name('product_spec_value')->field('aid, value_id')->where('aid', 'in', $aids)->select();
+                $goodsSpecArr = group_same_key($goodsSpecArr, 'aid');
+                // 处理商品信息
                 foreach ($list as $key => $val) {
                     $row[$val['aid']]['arcurl'] = get_arcurl($row[$val['aid']]);
                     $row[$val['aid']]['litpic'] = handle_subdir_pic($row[$val['aid']]['litpic']);
+                    $row[$val['aid']]['goodsSpec'] = $goodsSpecArr[$val['aid']] ? count($goodsSpecArr[$val['aid']]) : 0;
                     $list[$key] = $row[$val['aid']];
                 }
             }
@@ -202,8 +226,10 @@ class ShopProduct extends Base
         $where = ['current_channel' => 2, 'is_del' => 0, 'lang' => get_current_lang()];
         $assign_data['is_product_arctype'] = Db::name('arctype')->where($where)->count();
         $this->assign($assign_data);
-        $recycle_switch = tpSetting('recycle.recycle_switch');//回收站开关
-        $this->assign('recycle_switch', $recycle_switch);
+
+        // 返回页面
+        $callback_url = url('ShopProduct/index', ['lang' => $this->admin_lang, 'typeid' => $typeid]);
+        $this->assign('callback_url', $callback_url);
         return $this->fetch();
     }
 
@@ -212,13 +238,14 @@ class ShopProduct extends Base
      */
     public function add()
     {
-        $admin_info     = session('admin_info');
+        $admin_info = session('admin_info');
         $auth_role_info = $admin_info['auth_role_info'];
         $this->assign('auth_role_info', $auth_role_info);
         $this->assign('admin_info', $admin_info);
+
         if (IS_POST) {
             $post = input('post.');
-
+            model('Archives')->editor_auto_210607($post);
             /* 处理TAG标签 */
             if (!empty($post['tags_new'])) {
                 $post['tags'] = !empty($post['tags']) ? $post['tags'] . ',' . $post['tags_new'] : $post['tags_new'];
@@ -229,7 +256,7 @@ class ShopProduct extends Base
             $post['tags'] = implode(',', $post['tags']);
             /* END */
 
-            $content = input('post.addonFieldExt.content', '', null);
+            $content = empty($post['addonFieldExt']['content']) ? '' : htmlspecialchars_decode($post['addonFieldExt']['content']);
 
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
@@ -240,17 +267,9 @@ class ShopProduct extends Base
             }
 
             // 自动获取内容第一张图片作为封面图
-            $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
-            $litpic    = '';
-            if ($is_remote == 1) {
-                $litpic = $post['litpic_remote'];
-            } else {
-                $litpic = $post['litpic_local'];
+            if (empty($post['litpic'])) {
+                $post['litpic'] = get_html_first_imgurl($content);
             }
-            if (empty($litpic)) {
-                $litpic = get_html_first_imgurl($content);
-            }
-            $post['litpic'] = $litpic;
 
             /*是否有封面图*/
             if (empty($post['litpic'])) {
@@ -283,15 +302,27 @@ class ShopProduct extends Base
             //处理自定义文件名,仅由字母数字下划线和短横杆组成,大写强制转换为小写
             $htmlfilename = trim($post['htmlfilename']);
             if (!empty($htmlfilename)) {
-                $htmlfilename = preg_replace("/[^a-zA-Z0-9_-]+/", "-", $htmlfilename);
-                $htmlfilename = strtolower($htmlfilename);
+                $htmlfilename = preg_replace("/[^\x{4e00}-\x{9fa5}\w\-]+/u", "-", $htmlfilename);
+                // $htmlfilename = strtolower($htmlfilename);
                 //判断是否存在相同的自定义文件名
-                $filenameCount = Db::name('archives')->where([
-                    'htmlfilename' => $htmlfilename,
-                    'lang'         => $this->admin_lang,
-                ])->count();
+                $map = [
+                    'htmlfilename'  => $htmlfilename,
+                    'lang'  => $this->admin_lang,
+                ];
+                if (!empty($post['typeid'])) {
+                    $map['typeid'] = array('eq', $post['typeid']);
+                }
+                $filenameCount = Db::name('archives')->where($map)->count();
                 if (!empty($filenameCount)) {
-                    $this->error("自定义文件名已存在，请重新设置！");
+                    $this->error("同栏目下，自定义文件名已存在！");
+                } else if (preg_match('/^(\d+)$/i', $htmlfilename)) {
+                    $this->error("自定义文件名不能纯数字，会与文档ID冲突！");
+                }
+            } else {
+                // 处理外贸链接
+                if (is_dir('./weapp/Waimao/')) {
+                    $waimaoLogic = new \weapp\Waimao\logic\WaimaoLogic;
+                    $waimaoLogic->get_new_htmlfilename($htmlfilename, $post, 'add', $this->globalConfig);
                 }
             }
             $post['htmlfilename'] = $htmlfilename;
@@ -315,7 +346,28 @@ class ShopProduct extends Base
 
             //做自动通过审核判断
             if ($admin_info['role_id'] > 0 && $auth_role_info['check_oneself'] < 1) {
-                unset($post['arcrank']);
+                $post['arcrank'] = -1;
+            }
+
+            // 副栏目
+            if (isset($post['stypeid'])) {
+                $post['stypeid'] = preg_replace('/([^\d\,\，]+)/i', ',', $post['stypeid']);
+                $post['stypeid'] = str_replace('，', ',', $post['stypeid']);
+                $post['stypeid'] = trim($post['stypeid'], ',');
+                $post['stypeid'] = str_replace(",{$post['typeid']},", ',', ",{$post['stypeid']},");
+                $post['stypeid'] = trim($post['stypeid'], ',');
+            }
+
+            // 虚拟销量和总虚拟销量
+            $post['virtual_sales'] = empty($post['virtual_sales']) ? 0 : intval($post['virtual_sales']);
+            if (!empty($post['spec_type']) && $post['spec_type'] == 2) { // 多规格
+                $sales_all = 0;
+                $post['virtual_sales'] = 0; // 多规格不加上虚拟销量
+                foreach ($post['spec_sales'] as $key => $val) {
+                    $sales_all += intval($val['spec_sales_num']); // + $post['virtual_sales'];
+                }
+            } else { // 单规格
+                $sales_all = $post['virtual_sales'];
             }
 
             // --存储数据
@@ -329,38 +381,98 @@ class ShopProduct extends Base
                 'is_roll'         => empty($post['is_roll']) ? 0 : $post['is_roll'],
                 'is_slide'        => empty($post['is_slide']) ? 0 : $post['is_slide'],
                 'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
+                'editor_remote_img_local'=> empty($post['editor_remote_img_local']) ? 0 : $post['editor_remote_img_local'],
+                'editor_img_clear_link'  => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
                 'is_jump'         => $is_jump,
                 'is_litpic'       => $is_litpic,
                 'jumplinks'       => $jumplinks,
+                'origin'      => empty($post['origin']) ? '网络' : $post['origin'],
                 'seo_keywords'    => $seo_keywords,
                 'seo_description' => $seo_description,
                 'admin_id'        => session('admin_info.admin_id'),
+                'sales_all'    => $sales_all,
                 'stock_show'      => empty($post['stock_show']) ? 0 : $post['stock_show'],
                 'users_price'     => empty($post['users_price']) ? 0 : floatval($post['users_price']),
+                'crossed_price'     => empty($post['crossed_price']) ? 0 : floatval($post['crossed_price']),
                 'lang'            => $this->admin_lang,
                 'sort_order'      => 100,
-                'add_time'        => strtotime($post['add_time']),
-                'update_time'     => strtotime($post['add_time']),
+                'add_time'        => getTime(),
+                'update_time'     => getTime(),
             );
-            $data    = array_merge($post, $newData);
-
-            $aid          = Db::name('archives')->insertGetId($data);
+            $post['logistics_type'] = !empty($post['logistics_type']) && 0 === intval($post['prom_type']) ? implode(',', $post['logistics_type']) : 0;
+            $data = array_merge($post, $newData);
+            // if (!empty($post['param_type']) && 2 == $post['param_type']) {
+            //     $data['attrlist_id'] = 0;
+            // }
+            if (2 === intval($post['spec_type'])) {
+                $data['stock_show'] = 1;
+                $data['users_discount_type'] = 0;
+            }
+            // dump($data);exit;
+            $aid = Db::name('archives')->insertGetId($data);
             $_POST['aid'] = $aid;
-            if ($aid) {
+            if (!empty($aid)) {
+                // 单规格 且 选择指定会员级别 则 执行
+                if (1 === intval($post['spec_type']) && 1 === intval($post['users_discount_type'])) {
+                    model('ShopPublicHandle')->saveUsersDiscountPriceList($post['users_discount'], $aid);
+                }
+
                 // ---------后置操作
                 model('Product')->afterSave($aid, $data, 'add', true);
+
                 // 添加查询执行语句到mysql缓存表
                 model('SqlCacheTable')->InsertSqlCacheTable();
-                // ---------end
 
                 // 若选择多规格选项，则添加产品规格
-                if (!empty($post['spec_type']) && 2 == $post['spec_type']) {
-                    model('ProductSpecPreset')->ProductSpecInsertAll($aid, $data);
+                if (!empty($post['spec_type']) && 2 === intval($post['spec_type'])) {
+                    // 更新规格名称数据
+                    $data['aid'] = $aid;
+                    model('ProductSpecData')->ProducSpecNameEditSave($data, 'add');
+                    // 更新规格值及金额数据
+                    model('ProductSpecValue')->ProducSpecValueEditSave($data, 'add');
+                    // model('ProductSpecPreset')->ProductSpecInsertAll($aid, $data);
+                }
+
+                // 若选择自定义参数则执行
+                if (!empty($post['attr_name']) && !empty($post['attr_value'])) {
+                    // 新增商品参数
+                    $attrName = !empty($post['attr_name']) ? $post['attr_name'] : [];
+                    $attrValue = !empty($post['attr_value']) ? $post['attr_value'] : [];
+                    $sortOrder = !empty($post['sort_order']) ? $post['sort_order'] : 100;
+                    $productAttribute = $productAttr = [];
+                    $time = getTime();
+                    foreach ($attrName as $key => $value) {
+                        if (!empty($value)) {
+                            $productAttribute = [
+                                'aid' => $aid,
+                                'attr_name' => trim($value),
+                                'attr_values' => '',
+                                'sort_order' => 100,//intval($sortOrder[$key]),
+                                'lang' => $this->admin_lang,
+                                'is_custom' => 1,
+                                'add_time' => $time,
+                                'update_time' => $time,
+                            ];
+                            $attrID = Db::name('shop_product_attribute')->insertGetId($productAttribute);
+                            if (!empty($attrValue[$key])) {
+                                $productAttr = [
+                                    'aid' => $aid,
+                                    'attr_id' => $attrID,
+                                    'attr_value' => $attrValue[$key],
+                                    'is_custom' => 1,
+                                    'sort_order' => intval($sortOrder[$key]),
+                                    'add_time' => $time,
+                                    'update_time' => $time,
+                                ];
+                                Db::name('shop_product_attr')->insertGetId($productAttr);
+                            }
+                        }
+                    }
                 }
 
                 adminLog('新增产品：' . $data['title']);
 
-                //虚拟商品保存
+                // 虚拟商品保存
                 if (!empty($post['prom_type']) && in_array($post['prom_type'], [2, 3])) {
                     model('ProductNetdisk')->saveProductNetdisk($aid, $data);
                 }
@@ -375,18 +487,24 @@ class ShopProduct extends Base
             $this->error("操作失败!");
         }
 
-        $typeid                = input('param.typeid/d', 0);
+        $typeid = input('param.typeid/d', 0);
         $assign_data['typeid'] = $typeid; // 栏目ID
+
+        $firstrun = input('param.firstrun/d', 0);
+        if (empty($typeid) && !empty($firstrun)) {
+            $typeid = Db::name('arctype')->where(['current_channel'=>2,'status'=>1,'is_del'=>0,'lang'=>$this->admin_lang])->order('parent_id asc, sort_order asc, id asc')->value('id');
+            $url = url('ShopProduct/add', ['typeid'=>$typeid]);
+            $this->redirect($url);
+            exit;
+        }
 
         // 栏目信息
         $arctypeInfo = Db::name('arctype')->find($typeid);
 
-        /*允许发布文档列表的栏目*/
-        $arctype_html                = allow_release_arctype($typeid, array($this->channeltype));
-        $assign_data['arctype_html'] = $arctype_html;
-        /*--end*/
+        // 允许发布文档列表的栏目
+        $assign_data['arctype_html'] = allow_release_arctype($typeid, array($this->channeltype));
 
-        /*可控制的字段列表*/
+        // 可控制的字段列表
         $assign_data['ifcontrolRow'] = Db::name('channelfield')->field('id,name')->where([
             'channel_id' => $this->channeltype,
             'ifmain'     => 1,
@@ -396,52 +514,70 @@ class ShopProduct extends Base
         ])->getAllWithIndex('name');
 
         // 阅读权限
-        $arcrank_list                = get_arcrank_list();
-        $assign_data['arcrank_list'] = $arcrank_list;
+        $assign_data['arcrank_list'] = get_arcrank_list();
 
-        /*产品参数*/
+        // 产品参数
         $assign_data['canshu'] = $this->ajax_get_attr_input($typeid);
-        /*--end*/
 
-        /*模板列表*/
+        // 模板列表
         $archivesLogic = new \app\admin\logic\ArchivesLogic;
-        $templateList  = $archivesLogic->getTemplateList($this->nid);
-        $this->assign('templateList', $templateList);
-        /*--end*/
+        $assign_data['templateList'] = $archivesLogic->getTemplateList($this->nid);
 
-        /*默认模板文件*/
+        // 默认模板文件
         $tempview = 'view_' . $this->nid . '.' . config('template.view_suffix');
         !empty($arctypeInfo['tempview']) && $tempview = $arctypeInfo['tempview'];
-        $this->assign('tempview', $tempview);
-        /*--end*/
+        $assign_data['tempview'] = $tempview;
 
         // 商城配置
-        $shopConfig                = getUsersConfigData('shop');
+        $shopConfig = getUsersConfigData('shop');
         $assign_data['shopConfig'] = $shopConfig;
 
         // 商品规格
-        if (isset($shopConfig['shop_open_spec']) && 1 == $shopConfig['shop_open_spec']) {
+        if (isset($shopConfig['shop_open_spec']) && 1 === intval($shopConfig['shop_open_spec'])) {
+            // 删除商品添加时产生的废弃规格
+            $del_spec = session('del_spec') ? session('del_spec') : [];
+            if (!empty($del_spec)) {
+                $del_spec = array_unique($del_spec);
+                $where = [
+                    'spec_mark_id' => ['IN', $del_spec]
+                ];
+                Db::name('product_spec_data_handle')->where($where)->delete(true);
+                $where = [
+                    'aid' => session('handleAID')
+                ];
+                Db::name('product_spec_value_handle')->where($where)->delete(true);
+                // 清除 session
+                session('del_spec', null);
+            }
+            // 清除处理表的aid
+            session('handleAID', 0);
             // 预设值名称
-            $assign_data['preset_value'] = Db::name('product_spec_preset')->where('lang', $this->admin_lang)->field('preset_id,preset_mark_id,preset_name')->group('preset_mark_id')->order('preset_mark_id desc')->select();
+            $assign_data['preset_value'] = Db::name('product_spec_preset')->where('lang', $this->admin_lang)->field('preset_id, preset_mark_id, preset_name')->group('preset_mark_id')->order('preset_mark_id desc')->select();
+            // 读取规格预设库最大参数标记ID
+            $maxPresetMarkID = $assign_data['preset_value'][0]['preset_mark_id'];
+            $assign_data['maxPresetMarkID'] = $maxPresetMarkID + 1;
         }
 
-        /*商品参数列表*/
-        $where                   = [
-            'lang'  => $this->admin_lang,
+        // 商品参数列表
+        $where = [
             'status' => 1,
             'is_del' => 0,
+            'lang' => $this->admin_lang,
         ];
         $assign_data['AttrList'] = $this->shop_product_attrlist_db->where($where)->order('sort_order asc, list_id asc')->select();
-        /*END*/
+
+        // 最大参数属性ID值 +1
+        $maxAttrID = Db::name('shop_product_attribute')->max('attr_id');
+        $assign_data['maxAttrID'] = ++$maxAttrID;
 
         // URL模式
-        $tpcache                   = config('tpcache');
+        $tpcache = config('tpcache');
         $assign_data['seo_pseudo'] = !empty($tpcache['seo_pseudo']) ? $tpcache['seo_pseudo'] : 1;
 
         // 文档默认浏览量
-        $other_config = tpCache('other');
-        if (isset($other_config['other_arcclick']) && 0 <= $other_config['other_arcclick']) {
-            $arcclick_arr = explode("|", $other_config['other_arcclick']);
+        $globalConfig = tpCache('global');
+        if (isset($globalConfig['other_arcclick']) && 0 <= $globalConfig['other_arcclick']) {
+            $arcclick_arr = explode("|", $globalConfig['other_arcclick']);
             if (count($arcclick_arr) > 1) {
                 $assign_data['rand_arcclick'] = mt_rand($arcclick_arr[0], $arcclick_arr[1]);
             } else {
@@ -453,13 +589,24 @@ class ShopProduct extends Base
             $assign_data['rand_arcclick'] = mt_rand(500, 1000);
         }
 
-        /*文档属性*/
+        // 文档属性
         $assign_data['archives_flags'] = model('ArchivesFlag')->getList();
         $channelRow = Db::name('channeltype')->where('id', $this->channeltype)->find();
         $assign_data['channelRow'] = $channelRow;
 
-        $this->assign($assign_data);
+        // 来源列表
+        $system_originlist = tpSetting('system.system_originlist');
+        $system_originlist = json_decode($system_originlist, true);
+        $system_originlist = !empty($system_originlist) ? $system_originlist : [];
+        $assign_data['system_originlist_str'] = implode(PHP_EOL, $system_originlist);
+        $assign_data['system_originlist_0'] = !empty($system_originlist) ? $system_originlist[0] : "";
+        // 多站点，当用站点域名访问后台，发布文档自动选择当前所属区域
+        model('Citysite')->auto_location_select($assign_data);
 
+        // 获取核销插件数据
+        $assign_data['weappVerify'] = model('ShopPublicHandle')->getWeappVerifyInfo();
+
+        $this->assign($assign_data);
         return $this->fetch();
     }
 
@@ -468,13 +615,15 @@ class ShopProduct extends Base
      */
     public function edit()
     {
-        $admin_info     = session('admin_info');
+        $admin_info = session('admin_info');
         $auth_role_info = $admin_info['auth_role_info'];
         $this->assign('auth_role_info', $auth_role_info);
         $this->assign('admin_info', $admin_info);
 
         if (IS_POST) {
             $post = input('post.');
+            model('Archives')->editor_auto_210607($post);
+            $post['aid'] = intval($post['aid']);
 
             /* 处理TAG标签 */
             if (!empty($post['tags_new'])) {
@@ -487,7 +636,7 @@ class ShopProduct extends Base
             /* END */
 
             $typeid  = input('post.typeid/d', 0);
-            $content = input('post.addonFieldExt.content', '', null);
+            $content = empty($post['addonFieldExt']['content']) ? '' : htmlspecialchars_decode($post['addonFieldExt']['content']);
 
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
@@ -498,17 +647,9 @@ class ShopProduct extends Base
             }
 
             // 自动获取内容第一张图片作为封面图
-            $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
-            $litpic    = '';
-            if ($is_remote == 1) {
-                $litpic = $post['litpic_remote'];
-            } else {
-                $litpic = $post['litpic_local'];
+            if (empty($post['litpic'])) {
+                $post['litpic'] = get_html_first_imgurl($content);
             }
-            if (empty($litpic)) {
-                $litpic = get_html_first_imgurl($content);
-            }
-            $post['litpic'] = $litpic;
 
             /*是否有封面图*/
             if (empty($post['litpic'])) {
@@ -517,9 +658,23 @@ class ShopProduct extends Base
                 $is_litpic = !empty($post['is_litpic']) ? $post['is_litpic'] : 0; // 有封面图
             }
 
+            // 勾选后SEO描述将随正文内容更新
+            $basic_update_seo_description = empty($post['basic_update_seo_description']) ? 0 : 1;
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('basic', ['basic_update_seo_description'=>$basic_update_seo_description], $val['mark']);
+                }
+            } else {
+                tpCache('basic', ['basic_update_seo_description'=>$basic_update_seo_description]);
+            }
+            /*--end*/
+
             // SEO描述
             $seo_description = '';
-            if (empty($post['seo_description']) && !empty($content)) {
+            if (!empty($basic_update_seo_description) || empty($post['seo_description'])) {
                 $seo_description = @msubstr(checkStrHtml($content), 0, config('global.arc_seo_description_length'), false);
             } else {
                 $seo_description = $post['seo_description'];
@@ -539,7 +694,7 @@ class ShopProduct extends Base
             }
 
             // 产品类型
-            if (!empty($post['prom_type'])) {
+            if (!empty($post['prom_type']) && !in_array($post['prom_type'],[0,4])) {
                 if ($post['prom_type_vir'] == 2) {
                     $post['netdisk_url'] = trim($post['netdisk_url']);
                     if (empty($post['netdisk_url'])) {
@@ -558,16 +713,28 @@ class ShopProduct extends Base
             //处理自定义文件名,仅由字母数字下划线和短横杆组成,大写强制转换为小写
             $htmlfilename = trim($post['htmlfilename']);
             if (!empty($htmlfilename)) {
-                $htmlfilename = preg_replace("/[^a-zA-Z0-9_-]+/", "-", $htmlfilename);
-                $htmlfilename = strtolower($htmlfilename);
+                $htmlfilename = preg_replace("/[^\x{4e00}-\x{9fa5}\w\-]+/u", "-", $htmlfilename);
+                // $htmlfilename = strtolower($htmlfilename);
                 //判断是否存在相同的自定义文件名
-                $filenameCount = Db::name('archives')->where([
-                    'aid'          => ['NEQ', $post['aid']],
-                    'htmlfilename' => $htmlfilename,
-                    'lang'         => $this->admin_lang,
-                ])->count();
+                $map = [
+                    'aid'   => ['NEQ', $post['aid']],
+                    'htmlfilename'  => $htmlfilename,
+                    'lang'  => $this->admin_lang,
+                ];
+                if (!empty($post['typeid'])) {
+                    $map['typeid'] = array('eq', $post['typeid']);
+                }
+                $filenameCount = Db::name('archives')->where($map)->count();
                 if (!empty($filenameCount)) {
-                    $this->error("自定义文件名已存在，请重新设置！");
+                    $this->error("同栏目下，自定义文件名已存在！");
+                } else if (preg_match('/^(\d+)$/i', $htmlfilename)) {
+                    $this->error("自定义文件名不能纯数字，会与文档ID冲突！");
+                }
+            } else {
+                // 处理外贸链接
+                if (is_dir('./weapp/Waimao/')) {
+                    $waimaoLogic = new \weapp\Waimao\logic\WaimaoLogic;
+                    $waimaoLogic->get_new_htmlfilename($htmlfilename, $post, 'edit', $this->globalConfig);
                 }
             }
             $post['htmlfilename'] = $htmlfilename;
@@ -583,6 +750,27 @@ class ShopProduct extends Base
                 }
             }
 
+            // 副栏目
+            if (isset($post['stypeid'])) {
+                $post['stypeid'] = preg_replace('/([^\d\,\，]+)/i', ',', $post['stypeid']);
+                $post['stypeid'] = str_replace('，', ',', $post['stypeid']);
+                $post['stypeid'] = trim($post['stypeid'], ',');
+                $post['stypeid'] = str_replace(",{$typeid},", ',', ",{$post['stypeid']},");
+                $post['stypeid'] = trim($post['stypeid'], ',');
+            }
+
+            // 虚拟销量和总虚拟销量
+            $post['virtual_sales'] = empty($post['virtual_sales']) ? 0 : intval($post['virtual_sales']);
+            if (!empty($post['spec_type']) && $post['spec_type'] == 2) { // 多规格
+                $sales_all = 0;
+                $post['virtual_sales'] = 0; // 多规格不加上虚拟销量
+                foreach ($post['spec_sales'] as $key => $val) {
+                    $sales_all += intval($val['spec_sales_num']); // + $post['virtual_sales'];
+                }
+            } else { // 单规格
+                $sales_all = $post['virtual_sales'];
+            }
+
             // --存储数据
             $newData = array(
                 'typeid'          => $typeid,
@@ -594,47 +782,117 @@ class ShopProduct extends Base
                 'is_roll'         => empty($post['is_roll']) ? 0 : $post['is_roll'],
                 'is_slide'        => empty($post['is_slide']) ? 0 : $post['is_slide'],
                 'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
+                'editor_remote_img_local'=> empty($post['editor_remote_img_local']) ? 0 : $post['editor_remote_img_local'],
+                'editor_img_clear_link'  => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
                 'is_jump'         => $is_jump,
                 'is_litpic'       => $is_litpic,
                 'jumplinks'       => $jumplinks,
                 'seo_keywords'    => $seo_keywords,
                 'seo_description' => $seo_description,
+                'sales_all'    => $sales_all,
                 'stock_show'      => empty($post['stock_show']) ? 0 : $post['stock_show'],
                 'users_price'     => empty($post['users_price']) ? 0 : floatval($post['users_price']),
-                'add_time'        => strtotime($post['add_time']),
+                'crossed_price'     => empty($post['crossed_price']) ? 0 : floatval($post['crossed_price']),
+                // 'add_time'        => strtotime($post['add_time']),
                 'update_time'     => getTime(),
             );
-            $data    = array_merge($post, $newData);
-
-            $r = Db::name('archives')->where([
+            $post['logistics_type'] = !empty($post['logistics_type']) && 0 === intval($post['prom_type']) ? implode(',', $post['logistics_type']) : 0;
+            $data = array_merge($post, $newData);
+            // if (!empty($post['param_type']) && 2 == $post['param_type']) {
+            //     $data['attrlist_id'] = 0;
+            // }
+            // 更新商品信息
+            $where = [
                 'aid'  => $data['aid'],
                 'lang' => $this->admin_lang,
-            ])->update($data);
-
-            if ($r) {
+            ];
+            if (2 === intval($post['spec_type'])) {
+                $data['stock_show'] = 1;
+                $data['users_discount_type'] = 0;
+            }
+            $result = Db::name('archives')->where($where)->update($data);
+            if (!empty($result)) {
+                // 单规格 且 选择指定会员级别 则 执行
+                if (1 === intval($post['spec_type']) && 1 === intval($post['users_discount_type'])) {
+                    model('ShopPublicHandle')->saveUsersDiscountPriceList($post['users_discount'], $data['aid']);
+                }
+                
                 // ---------后置操作
                 model('Product')->afterSave($data['aid'], $data, 'edit', true);
 
-                // 更新规格名称数据
-                // model('ProductSpecData')->ProducSpecNameEditSave($data);
-
-                //虚拟商品保存
+                // 虚拟商品保存
                 if (!empty($post['prom_type']) && in_array($post['prom_type'], [2, 3])) {
                     model('ProductNetdisk')->saveProductNetdisk($data['aid'], $data);
                 }
 
+                // 若选择单规格则清理多规格数据
                 if (!empty($post['spec_type']) && 1 == $post['spec_type']) {
                     // 产品规格数据表
                     Db::name("product_spec_data")->where('aid', $data['aid'])->delete();
                     // 产品多规格组装表
                     Db::name("product_spec_value")->where('aid', $data['aid'])->delete();
-                } else if (!empty($post['spec_type']) && 2 == $post['spec_type']) {
+                    // 产品规格数据处理表
+                    Db::name("product_spec_data_handle")->where('aid', $data['aid'])->delete();
+                }
+                // 若选择多规格选项，则添加产品规格
+                else if (!empty($post['spec_type']) && 2 == $post['spec_type']) {
+                    // 更新规格名称数据
+                    model('ProductSpecData')->ProducSpecNameEditSave($data);
                     // 更新规格值及金额数据
                     model('ProductSpecValue')->ProducSpecValueEditSave($data);
                 }
 
-                // ---------end
+                // 若选择自定义参数则执行
+                if (!empty($post['attr_name']) && !empty($post['attr_value'])) {
+                    // 新增商品参数
+                    $attrName = !empty($post['attr_name']) ? $post['attr_name'] : [];
+                    $attrValue = !empty($post['attr_value']) ? $post['attr_value'] : [];
+                    $sortOrder = !empty($post['sort_order']) ? $post['sort_order'] : 100;
+                    $productAttribute = $productAttr = [];
+                    $time = getTime();
+                    foreach ($attrName as $key => $value) {
+                        if (!empty($value)) {
+                            $productAttribute = [
+                                'aid' => $post['aid'],
+                                'attr_name' => trim($value),
+                                'attr_values' => '',
+                                'sort_order' => 100,//intval($sortOrder[$key]),
+                                'lang' => $this->admin_lang,
+                                'is_custom' => 1,
+                                'add_time' => $time,
+                                'update_time' => $time,
+                            ];
+                            $attrID = Db::name('shop_product_attribute')->insertGetId($productAttribute);
+                            if (!empty($attrValue[$key])) {
+                                $productAttr = [
+                                    'aid' => $post['aid'],
+                                    'attr_id' => $attrID,
+                                    'attr_value' => $attrValue[$key],
+                                    'is_custom' => 1,
+                                    'sort_order' => intval($sortOrder[$key]),
+                                    'add_time' => $time,
+                                    'update_time' => $time,
+                                ];
+                                Db::name('shop_product_attr')->insertGetId($productAttr);
+                            }
+                        }
+                    }
+                }
+                // 删除指定的商品参数
+                if (!empty($post['del_attr_id'])) {
+                    $delAttrID = explode(',', $post['del_attr_id']);
+                    $where = [
+                        'is_custom' => 1,
+                        'attr_id' => ['IN', $delAttrID]
+                    ];
+                    Db::name('shop_product_attr')->where($where)->delete(true);
+                    Db::name('shop_product_attribute')->where($where)->delete(true);
+                }
+
                 adminLog('编辑产品：' . $data['title']);
+
+                // 系统商品操作时，积分商品的被动处理
+                model('ShopPublicHandle')->pointsGoodsPassiveHandle([$data['aid']]);
 
                 // 生成静态页面代码
                 $successData = [
@@ -648,45 +906,42 @@ class ShopProduct extends Base
 
         $assign_data = array();
 
-        $id   = input('id/d');
+        $id = input('id/d', 0);
         $info = model('Product')->getInfo($id);
-        if (empty($info)) {
-            $this->error('数据不存在，请联系管理员！');
-            exit;
-        }
+        if (empty($info)) $this->error('数据不存在，请联系管理员！');
 
         // 获取规格数据信息
         // 包含：SpecSelectName、HtmlTable、spec_mark_id_arr、preset_value
         $assign_data = model('ProductSpecData')->GetProductSpecData($id);
 
-        /*兼容采集没有归属栏目的文档*/
+        // 兼容采集没有归属栏目的文档
         if (empty($info['channel'])) {
-            $channelRow = Db::name('channeltype')->field('id as channel')
-                ->where('id', $this->channeltype)
-                ->find();
-            $info       = array_merge($info, $channelRow);
+            $channelRow = Db::name('channeltype')->field('id as channel')->where('id', $this->channeltype)->find();
+            $info = array_merge($info, $channelRow);
         }
-        /*--end*/
-        $typeid                = $info['typeid'];
+
+        // 栏目ID及栏目信息
+        $typeid = $info['typeid'];
         $assign_data['typeid'] = $typeid;
-
-        // 栏目信息
         $arctypeInfo = Db::name('arctype')->find($typeid);
-
         $info['channel'] = $arctypeInfo['current_channel'];
-        if (is_http_url($info['litpic'])) {
-            $info['is_remote']     = 1;
-            $info['litpic_remote'] = handle_subdir_pic($info['litpic']);
-        } else {
-            $info['is_remote']    = 0;
-            $info['litpic_local'] = handle_subdir_pic($info['litpic']);
+        $info['litpic'] = handle_subdir_pic($info['litpic']);
+
+        // 副栏目
+        $stypeid_arr = [];
+        if (!empty($info['stypeid'])) {
+            $info['stypeid'] = trim($info['stypeid'], ',');
+            $stypeid_arr = Db::name('arctype')->field('id,typename')->where(['id'=>['IN', $info['stypeid']],'is_del'=>0])->select();
         }
+        $assign_data['stypeid_arr'] = $stypeid_arr;
 
         // SEO描述
-        if (!empty($info['seo_description'])) {
-            $info['seo_description'] = @msubstr(checkStrHtml($info['seo_description']), 0, config('global.arc_seo_description_length'), false);
-        }
+        // if (!empty($info['seo_description'])) {
+        //     $info['seo_description'] = @msubstr(checkStrHtml($info['seo_description']), 0, config('global.arc_seo_description_length'), false);
+        // }
 
+        // 物流支持类型
+        $info['logistics_type'] = isset($info['logistics_type']) ? explode(',', $info['logistics_type']) : [];
         $assign_data['field'] = $info;
 
         // 产品相册
@@ -696,28 +951,10 @@ class ShopProduct extends Base
         }
         $assign_data['proimg_list'] = $proimg_list;
 
-        /*允许发布文档列表的栏目，文档所在模型以栏目所在模型为主，兼容切换模型之后的数据编辑*/
-        $arctype_html                = allow_release_arctype($typeid, array($info['channel']));
-        $assign_data['arctype_html'] = $arctype_html;
-        /*--end*/
+        // 允许发布文档列表的栏目，文档所在模型以栏目所在模型为主，兼容切换模型之后的数据编辑
+        $assign_data['arctype_html'] = allow_release_arctype($typeid, array($info['channel']));
 
-        /*自定义字段*/
-        // $addonFieldExtList   = model('Field')->getChannelFieldList($info['channel'], 0, $id, $info);
-        // $channelfieldBindRow = Db::name('channelfield_bind')->where([
-        //     'typeid' => ['IN', [0, $typeid]],
-        // ])->column('field_id');
-        // if (!empty($channelfieldBindRow)) {
-        //     foreach ($addonFieldExtList as $key => $val) {
-        //         if (!in_array($val['id'], $channelfieldBindRow)) {
-        //             unset($addonFieldExtList[$key]);
-        //         }
-        //     }
-        // }
-        // $assign_data['addonFieldExtList'] = $addonFieldExtList;
-        // $assign_data['aid']               = $id;
-        /*--end*/
-
-        /*可控制的主表字段列表*/
+        // 可控制的主表字段列表
         $assign_data['ifcontrolRow'] = Db::name('channelfield')->field('id,name')->where([
             'channel_id' => $this->channeltype,
             'ifmain'     => 1,
@@ -726,66 +963,84 @@ class ShopProduct extends Base
             'status'     => 1,
         ])->getAllWithIndex('name');
 
-        /*虚拟商品内容读取*/
+        // 虚拟商品内容读取
         $assign_data['netdisk'] = Db::name("product_netdisk")->where('aid', $id)->find();
-        /*end*/
 
         // 阅读权限
-        $arcrank_list                = get_arcrank_list();
-        $assign_data['arcrank_list'] = $arcrank_list;
+        $assign_data['arcrank_list'] = get_arcrank_list();
 
-        /*模板列表*/
+        // 模板列表
         $archivesLogic = new \app\admin\logic\ArchivesLogic;
         $templateList  = $archivesLogic->getTemplateList($this->nid);
-        $this->assign('templateList', $templateList);
-        /*--end*/
+        $assign_data['templateList'] = $templateList;
 
-        /*默认模板文件*/
+        // 默认模板文件
         $tempview = $info['tempview'];
         empty($tempview) && $tempview = $arctypeInfo['tempview'];
-        $this->assign('tempview', $tempview);
-        /*--end*/
+        $assign_data['tempview'] = $tempview;
 
         // 商城配置
-        $shopConfig                = getUsersConfigData('shop');
+        $shopConfig = getUsersConfigData('shop');
         $assign_data['shopConfig'] = $shopConfig;
 
-        // 处理产品价格属性
-        $IsSame = '';
-        if (empty($shopConfig['shop_type']) || 1 == $shopConfig['shop_type']) {
-            if ($shopConfig['shop_type'] == $assign_data['field']['prom_type']) {
-                $IsSame = '0'; // 相同
-            } else {
-                $IsSame = '1'; // 不相同
-            }
-        }
-        $assign_data['IsSame'] = $IsSame;
 
         // URL模式
-        $tpcache                   = config('tpcache');
+        $tpcache = config('tpcache');
         $assign_data['seo_pseudo'] = !empty($tpcache['seo_pseudo']) ? $tpcache['seo_pseudo'] : 1;
 
-        /*商品参数列表*/
-        $where                   = [
-            'lang'  => $this->admin_lang,
+        // 商品参数列表
+        $where = [
             'status' => 1,
             'is_del' => 0,
+            'lang' => $this->admin_lang,
         ];
         $assign_data['AttrList'] = $this->shop_product_attrlist_db->where($where)->order('sort_order asc, list_id asc')->select();
-        /*END*/
 
-        /*商品参数值*/
-        $assign_data['canshu'] = '';
+        // 商品参数值
+        $assign_data['canshu'] = $assign_data['customParam'] = '';
         if (!empty($info['attrlist_id'])) {
             $assign_data['canshu'] = $this->ajax_get_shop_attr_input($typeid, $id, $info['attrlist_id']);
         }
-        /*--end*/
 
-        /*文档属性*/
+        // 自定义参数
+        $where = [
+            'a.is_custom' => 1,
+            'b.is_custom' => 1,
+            'a.aid' => $info['aid'],
+        ];
+        $field = 'a.*, b.attr_name';
+        $order = 'a.sort_order asc, b.attr_id sac, a.product_attr_id asc';
+        $productAttr = Db::name('shop_product_attr')
+            ->alias('a')
+            ->where($where)
+            ->field($field)
+            ->order($order)
+            ->join('__SHOP_PRODUCT_ATTRIBUTE__ b', 'a.attr_id = b.attr_id', 'LEFT')
+            ->select();
+        $assign_data['customParam'] = $productAttr;
+        $delAttrID = get_arr_column($productAttr, 'attr_id');
+        $assign_data['delAttrID'] = !empty($delAttrID) ? implode(',', $delAttrID) : '';
+
+        // 最大参数属性ID值 +1
+        $maxAttrID = Db::name('shop_product_attribute')->max('attr_id');
+        $maxAttrID++;
+        $assign_data['maxAttrID'] = $maxAttrID;
+
+        // 文档属性
         $assign_data['archives_flags'] = model('ArchivesFlag')->getList();
         $channelRow = Db::name('channeltype')->where('id', $this->channeltype)->find();
         $assign_data['channelRow'] = $channelRow;
 
+        // 来源列表
+        $system_originlist = tpSetting('system.system_originlist');
+        $system_originlist = json_decode($system_originlist, true);
+        $system_originlist = !empty($system_originlist) ? $system_originlist : [];
+        $assign_data['system_originlist_str'] = implode(PHP_EOL, $system_originlist);
+
+        // 获取核销插件数据
+        $assign_data['weappVerify'] = model('ShopPublicHandle')->getWeappVerifyInfo();
+
+        // dump($assign_data);exit;
         $this->assign($assign_data);
         return $this->fetch();
     }
@@ -816,235 +1071,377 @@ class ShopProduct extends Base
         }
     }
 
-    // 商品规格列表
-    public function spec_index()
-    {
-        // 获取所有商品规格名称，分页返回
-        $PresetData = $this->ProductSpecPresetModel->GetAllSpecPreset(input('param.'));
-        $this->assign($PresetData);
-        return $this->fetch();
-    }
-
-    // 保存规格
-    public function spec_save()
+    public function goods_spec_detection()
     {
         if (IS_AJAX_POST) {
-            $param = input('param.');
-
-            $SaveData = [];
-            foreach ($param['preset_name'] as $key => $value) {
-                // 规格名称为空则跳过
-                if (empty($value)) continue;
-
-                // 可添加数据
-                $SaveData[$key] = [
-                    'preset_id'   => $param['preset_id'][$key],
-                    'preset_name' => $value,
-                    'preset_desc' => $param['preset_desc'][$key],
-                    'preset_type' => $param['preset_type'][$key],
-                    'sort_order'  => $param['sort_order'][$key],
-                    'update_time' => getTime()
-                ];
-
-                // 若为空则清除主键字段
-                if (empty($SaveData[$key]['preset_id'])) {
-                    $SaveData[$key]['add_time'] = getTime();
-                    unset($SaveData[$key]['preset_id']);
-                }
+            $post = input('post.');
+            // 验证规格名
+            $result = 0;
+            foreach ($post['spec_mark_id'] as $key => $value) {
+                if (empty($value['spec_name'])) $result = 1;
             }
+            !empty($result) && $this->error('请完善规格名');
 
-            $ResultID = $this->ProductSpecPresetModel->saveAll($SaveData);
-            if (!empty($ResultID)) {
-                $this->success('更新成功');
-            } else {
-                $this->error('更新失败');
+            // 验证规格值
+            $result = 0;
+            foreach ($post['spec_value_id'] as $key => $value) {
+                if (empty($value['spec_value'])) $result = 1;
             }
+            !empty($result) && $this->error('请完善规格值');
+
+            // 验证规格价
+            $result = 0;
+            foreach ($post['spec_price'] as $key => $value) {
+                if (empty($value['users_price']) || 0 >= floatval($value['users_price'])) $result = 1;
+            }
+            !empty($result) && $this->error('请完善规格价');
+            $this->success('验证成功');
         }
     }
 
-    // 删除规格值
-    public function spec_del()
-    {
-        $PresetID = input('del_id/a');
-        $PresetID = eyIntval($PresetID);
-        if (!empty($PresetID)) {
-            $Result = $this->product_spec_preset_db->where('preset_id', 'IN', $PresetID)->delete();
-            if ($Result) {
-                adminLog('删除商品规格-id：' . implode(',', $PresetID));
-                $this->success('删除成功');
-            } else {
-                $this->error('删除失败');
-            }
-        } else {
-            $this->error('参数有误');
-        }
-    }
-
-    // 规格值列表
-    public function spec_value_index()
-    {
-        $PresetID = input('id/d');
-        // 获取单条规格名称数据
-        $PresetData = $this->ProductSpecPresetModel->GetFindSpecPreset($PresetID);
-        if (empty($PresetData)) $this->error('请先添加规格名称');
-        $this->assign('PresetData', $PresetData);
-
-        $Where['preset_id'] = $PresetID;
-        $keywords           = input('keywords/s');
-        if (!empty($keywords)) $Where['preset_value'] = ['LIKE', "%{$keywords}%"];
-
-        // 分页
-        $count   = $this->product_spec_value_db->where($Where)->count('preset_id');
-        $pageObj = new Page($count, 10);
-        $pageStr = $pageObj->show();
-        $this->assign('pageObj', $pageObj);
-        $this->assign('pageStr', $pageStr);
-
-        // 查询规格数据
-        $ValueData = $this->product_spec_value_db
-            ->where($Where)
-            ->order('sort_order asc, value_id asc')
-            ->limit($pageObj->firstRow . ',' . $pageObj->listRows)
-            ->select();
-        foreach ($ValueData as $key => $value) {
-            $ValueData[$key]['value_img_src'] = get_default_pic($value['value_img']);
-            if (0 == $PresetData['preset_type']) unset($value['value_img']);
-        }
-
-        $this->assign('ValueData', $ValueData);
-        return $this->fetch();
-    }
-
-    // 保存规格值
-    public function spec_value_save()
+    public function goods_quick_edit()
     {
         if (IS_AJAX_POST) {
-            $param = input('param.');
-
-            $SaveData = [];
-            $AddNum   = 0;
-            foreach ($param['value_name'] as $key => $value) {
-                if (empty($value)) continue;
-
-                // 可添加数据
-                $SaveData[$key] = [
-                    'value_id'    => $param['value_id'][$key],
-                    'preset_id'   => $param['preset_id'],
-                    'value_name'  => $value,
-                    'value_img'   => !empty($param['value_img'][$key]) ? $param['value_img'][$key] : '',
-                    'sort_order'  => $param['sort_order'][$key],
-                    'update_time' => getTime()
-                ];
-
-                // 若为空则清除主键字段
-                if (empty($SaveData[$key]['value_id'])) {
-                    $AddNum++;
-                    $SaveData[$key]['add_time'] = getTime();
-                    unset($SaveData[$key]['value_id']);
+            $post = input('post.');
+            if (empty($post['aid']) || !isset($post['openSpec'])) $this->error('数据异常，刷新重试');
+            // 更新商品表数据
+            $where = [
+                'aid' => intval($post['aid']),
+                'lang' => $this->admin_lang,
+            ];
+            $update = [
+                'stock_show'  => empty($post['stock_show']) ? 0 : intval($post['stock_show']),
+                'stock_count' => empty($post['stock_count']) ? 0 : intval($post['stock_count']),
+                'users_price' => empty($post['users_price']) ? 0 : floatval($post['users_price']),
+                'users_discount_type'  => empty($post['users_discount_type']) ? 0 : intval($post['users_discount_type']),
+                'update_time' => getTime(),
+            ];
+            $update = array_merge($post, $update);
+            $result = Db::name('archives')->where($where)->update($update);
+            // 后续处理
+            if (!empty($result)) {
+                // 已开启规格的商品处理
+                if (1 === intval($update['openSpec'])) {
+                    // 更新规格值及金额数据
+                    model('ProductSpecValue')->ProducSpecValueEditSave($update, 'edit');
                 }
+                // 未开启规格的商品处理
+                else if (0 === intval($update['openSpec']) && 1 === intval($update['users_discount_type'])) {
+                    // 选择指定会员级别执行
+                    model('ShopPublicHandle')->saveUsersDiscountPriceList($update['users_discount'], $update['aid']);
+                }
+                // 系统商品操作时，积分商品的被动处理
+                model('ShopPublicHandle')->pointsGoodsPassiveHandle([$update['aid']]);
+                // 成功返回结束
+                $this->success("操作成功");
             }
-
-            $ResultID = $this->ProductSpecValueModel->saveAll($SaveData);
-            if (!empty($ResultID)) {
-                /*更新规格名称表的规格值数量*/
-                $this->product_spec_preset_db->where('preset_id', $param['preset_id'])->setInc('preset_value', $AddNum);
-                /*END*/
-                $this->success('更新成功');
-            } else {
-                $this->error('更新失败');
-            }
+            // 失败返回结束
+            $this->error("操作失败");
         }
-    }
 
-    // 删除规格值
-    public function spec_value_del()
-    {
-        $ValueID = input('del_id/a');
-        $ValueID = eyIntval($ValueID);
-        if (!empty($ValueID)) {
-            $Result = $this->product_spec_value_db->where('value_id', 'IN', $ValueID)->delete();
-            if ($Result) {
-                adminLog('删除商品规格值-id：' . implode(',', $ValueID));
-                /*更新规格名称表的规格值数量*/
-                $DelNum = count($ValueID);
-                $this->product_spec_preset_db->where('preset_id', input('post.preset_id/d'))->setDec('preset_value', $DelNum);
-                /*END*/
-                $this->success('删除成功');
-            } else {
-                $this->error('删除失败');
-            }
-        } else {
-            $this->error('参数有误');
-        }
-    }
-
-    // 规格模板
-    public function spec_template()
-    {
-        // 查询规格数据
-        $PresetData = $this->product_spec_preset_db->where('status', 1)->order('sort_order asc')->select();
-        $PresetID   = get_arr_column($PresetData, 'preset_id');
-
-        $where     = [
-            'status'    => 1,
-            'preset_id' => ['IN', $PresetID]
+        // 查询商品信息
+        $aid = input('param.aid/d', 0);
+        $where = [
+            'aid' => intval($aid),
         ];
-        $ValueData = $this->product_spec_value_db->where($where)->order('sort_order asc')->select();
-        $ValueData = group_same_key($ValueData, 'preset_id');
+        $field = 'aid, title, users_price, stock_count, stock_show, virtual_sales, users_discount_type';
+        $goods = Db::name('archives')->field($field)->where($where)->find();
+        $this->assign('goods', $goods);
 
-        foreach ($PresetData as $key => $value) {
-            $PresetData[$key]['SpecValue'] = !empty($ValueData[$value['preset_id']]) ? $ValueData[$value['preset_id']] : [];
+        // 查询商品的规格信息
+        $where = [
+            'aid' => intval($aid),
+            'spec_is_select' => 1,
+        ];
+        $field = 'spec_mark_id, spec_value_id';
+        // $order = 'spec_mark_id asc, spec_value_id asc, spec_id asc';
+        $order = 'spec_value_id asc, spec_id asc';
+        $spec = Db::name('product_spec_data')->where($where)->field($field)->order($order)->select();
+        $openSpec = 0;
+        $htmlTable = '';
+        if (!empty($spec)) {
+            $openSpec = 1;
+            // 处理规格数组
+            $specArray = [];
+            foreach ($spec as $key => $value) {
+                $specArray[$value['spec_mark_id']][] = $value['spec_value_id'];
+            }
+            $htmlTable = $this->productSpecLogic->SpecAssemblyEdit($specArray, $aid, true);
         }
+        $this->assign('openSpec', $openSpec);
+        $this->assign('htmlTable', $htmlTable);
 
-        $this->assign('PresetData', $PresetData);
-        return $this->fetch('spec_template');
+        // 商城配置
+        $this->assign('shopConfig', getUsersConfigData('shop'));
+
+        return $this->fetch();
     }
 
-    public function combi_spec_data()
+    public function goodsSpecImage()
+    {
+        if (IS_AJAX_POST) {
+            // 规格图片路径
+            $aid = input('param.aid/d', 0);
+            if (empty($aid)) $aid = session('handleAID');
+            $action = input('param.action/s', '');
+            $checked = input('param.checked/d', 0);
+            $spec_image = input('param.spec_image/s', '');
+            $spec_mark_id = input('param.spec_mark_id/d', 0);
+            $spec_value_id = input('param.spec_value_id/d', 0);
+            if ('open' == $action) {
+                // 更新同一类所有规格值为开启规格图片
+                $where = [
+                    // 'spec_is_select' => 1,
+                    'aid' => intval($aid),
+                    'spec_mark_id' => intval($spec_mark_id),
+                ];
+                $update = [
+                    'open_image' => intval($checked),
+                    'update_time' => getTime(),
+                ];
+                $result = Db::name('product_spec_data_handle')->where($where)->update($update);
+                if (!empty($result)) $this->success("操作成功");
+            } else {
+                $where = [
+                    // 'spec_is_select' => 1,
+                    'aid' => intval($aid),
+                    'spec_mark_id' => intval($spec_mark_id),
+                    'spec_value_id' => intval($spec_value_id),
+                ];
+                $update = [
+                    'spec_image' => $spec_image,
+                    'update_time' => getTime(),
+                ];
+                $result = Db::name('product_spec_data_handle')->where($where)->update($update);
+                if (!empty($result)) $this->success("操作成功");
+            }
+        }
+        $this->error("操作失败");
+    }
+
+    // 初始化规格信息
+    public function initialization_spec()
+    {
+        if (IS_AJAX_POST) {
+            $initialization = input('post.initialization');
+
+            // 刷新或重新进入产品添加页则清除关于产品session
+            if (!empty($initialization)) {
+                // session('handleAID', 0);
+                session('del_spec', null);
+                session('spec_arr', null);
+                $this->success('初始化完成');
+            }
+        }
+    }
+
+    // 添加商品自定义规格并返回规格表格
+    public function add_product_custom_spec()
     {
         if (IS_AJAX_POST) {
             $post = input('post.');
 
-            // 刷新或重新进入产品添加页则清除关于产品session
-            if (isset($post['initialization']) && !empty($post['initialization'])) {
-                session('SpecID', null);
-                $this->success('初始化完成');
-            }
+            // 添加自定义规格
+            $resultArray = $this->productSpecLogic->addProductCustomSpec($post);
+            if (!empty($resultArray['errorMsg'])) $this->error($resultArray['errorMsg']);
 
-            // 初始化变量
-            $HtmlTable = $SelectedSpec = null;
-
-            // 获取已选规格拼装及生成规格HTML的ID
-            if (!empty($post['preset_id'])) {
-                $ResultData   = $this->ProductSpecLogic->GetSelectedSpec($post);
-                $SelectedSpec = $ResultData['SelectedSpec'];
-            }
-
-            // 清除一整条规格信息，清除session中相应的数据
-            if (!empty($post['del_preset_id']) && empty($post['del_value_id'])) {
-                $ResultData = $this->ProductSpecLogic->ClearSpecPresetMarkID($post);
-            }
-
-            // 删除单个规格值则清除session对应的值
-            if (!empty($post['del_preset_id']) && !empty($post['del_value_id'])) {
-                $ResultData = $this->ProductSpecLogic->ClearSpecPresetValueID($post);
-            }
-
-            // 获取规格拼装后的html表格
-            if (isset($post['aid']) && !empty($post['aid'])) {
-                // 编辑
-                $HtmlTable = $this->ProductSpecLogic->SpecAssembly($ResultData['ResultID'], $post['aid']);
+            // 获取已选规格进行HTML代码拼装
+            if (!empty($post['aid'])) {
+                $htmlTable = $this->productSpecLogic->SpecAssemblyEdit($resultArray['spec_array'], $post['aid']);
             } else {
-                // 新增
-                $HtmlTable = $this->ProductSpecLogic->SpecAssembly($ResultData['ResultID'], $post['aid']);
+                $htmlTable = $this->productSpecLogic->SpecAssemblyEdit($resultArray['spec_array']);
             }
+            // 返回数据
+            if (in_array($post['action'], ['specName', 'specValue'])) {
+                $specData = $this->productSpecLogic->getProductSpecValueOption($resultArray['spec_mark_id'], $post);
+            }
+            $returnData = [
+                'htmlTable' => !empty($htmlTable) ? $htmlTable : ' ',
+                'spec_name' => !empty($specData['spec_name']) ? $specData['spec_name'] : '',
+                'spec_value' => !empty($specData['spec_value']) ? $specData['spec_value'] : '',
+                'spec_mark_id' => !empty($resultArray['spec_mark_id']) ? $resultArray['spec_mark_id'] : 0,
+                'spec_value_id' => !empty($resultArray['spec_value_id']) ? $resultArray['spec_value_id'] : 0,
+                'spec_value_option' => !empty($specData['spec_value_option']) ? $specData['spec_value_option'] : '',
+                'spec_mark_id_arr' => !empty($resultArray['spec_mark_id_arr']) ? $resultArray['spec_mark_id_arr'] : 0,
+                'preset_name_option' => !empty($specData['preset_name_option']) ? $specData['preset_name_option'] : '',
+            ];
+            
+            $this->success('加载成功！', null, $returnData);
+        }
+    }
+
+    // 添加自定义规格名称并返回规格表
+    public function add_product_custom_spec_name()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+
+            // 添加自定义规格名称
+            $resultArray = $this->productSpecLogic->addProductCustomSpecName($post);
+            if (!empty($resultArray['errorMsg'])) $this->error($resultArray['errorMsg']);
+
+            // 获取已选规格进行HTML代码拼装
+            if (!empty($post['aid'])) {
+                $htmlTable = $this->productSpecLogic->SpecAssemblyEdit($resultArray, $post['aid']);
+            } else {
+                $htmlTable = $this->productSpecLogic->SpecAssemblyEdit($resultArray);
+            }
+            // 返回数据
+            $returnData = [
+                'htmlTable' => !empty($htmlTable) ? $htmlTable : ' ',
+            ];
+            $this->success('加载成功！', null, $returnData);
+        }
+    }
+
+    // 添加自定义规格值并返回规格表
+    public function add_product_custom_spec_value()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+
+            // 添加自定义规格值
+            $resultArray = $this->productSpecLogic->addProductCustomSpecValue($post);
+            if (!empty($resultArray['errorMsg'])) $this->error($resultArray['errorMsg']);
+
+            // 获取已选规格进行HTML代码拼装
+            if (!empty($post['aid'])) {
+                $htmlTable = $this->productSpecLogic->SpecAssemblyEdit($resultArray, $post['aid']);
+            } else {
+                $htmlTable = $this->productSpecLogic->SpecAssemblyEdit($resultArray);
+            }
+            // 返回数据
+            $returnData = [
+                'htmlTable' => !empty($htmlTable) ? $htmlTable : ' ',
+            ];
+            $this->success('加载成功！', null, $returnData);
+        }
+    }
+
+    // 删除商品自定义规格并返回规格表格
+    public function del_product_custom_spec()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+
+            // 删除自定义规格
+            $resultArray = $this->productSpecLogic->delProductCustomSpec($post);
+            // 获取已选规格进行HTML代码拼装
+            if (!empty($post['aid'])) {
+                $htmlTable = $this->productSpecLogic->SpecAssemblyEdit($resultArray, $post['aid']);
+            } else {
+                $htmlTable = $this->productSpecLogic->SpecAssemblyEdit($resultArray);
+            }
+            if (in_array($post['del'], ['specName', 'specValue'])) {
+                $specData = $this->productSpecLogic->getProductSpecValueOption(0, $post);
+            }
+            // 返回数据
+            $returnData = [
+                'htmlTable' => !empty($htmlTable) ? $htmlTable : ' ',
+                'spec_value_option' => !empty($specData['spec_value_option']) ? $specData['spec_value_option'] : '',
+                'preset_name_option' => !empty($specData['preset_name_option']) ? $specData['preset_name_option'] : '',
+            ];
+            $this->success('加载成功！', null, $returnData);
+        }
+    }
+
+    public function edit_product_spec_price()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+            $result = model('ProductSpecValueHandle')->editProductSpecPrice($post);
+            if (!empty($result)) {
+                $htmlTable = $this->productSpecLogic->SpecAssemblyEdit($result['resultArray'], $result['aid']);
+                $this->success('操作成功', null, $htmlTable);
+            } else {
+                $this->error('数据异常，刷新重试');
+            }
+        }
+    }
+
+    // 获取会员折扣价格模板
+    public function get_users_discount_price_tpl()
+    {
+        if (IS_AJAX_POST) {
+            // 产品ID
+            $aid = input('post.aid/d', 0);
+            // 产品单价
+            $users_price = input('post.users_price/f', 0);
+            // 获取会员折扣价格模板
+            $result = model('ShopPublicHandle')->getUsersDiscountPriceTpl($aid, $users_price);
+            // 如果存在错误则返回提示
+            if (isset($result['code']) && 0 === intval($result['code'])) $this->error($result['data']);
+            // 返回数据
+            $this->success('加载成功！', null, $result['data']);
+        }
+    }
+
+    // 选中规格名称值，追加html到页面展示
+    public function spec_value_select()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+            // Post 数据
+            $aid = !empty($post['aid']) ? $post['aid'] : 0;
+            $spec_mark_id = !empty($post['spec_mark_id']) ? $post['spec_mark_id'] : 0;
+            $spec_value_id = !empty($post['spec_value_id']) ? $post['spec_value_id'] : 0;
+            if (empty($aid) || empty($spec_mark_id) || empty($spec_value_id)) $this->error('操作异常，请刷新重试...');
+
+            $spec_array = [];
+            // 执行更新
+            $where = [
+                'aid' => $aid,
+                'spec_mark_id' => $spec_mark_id,
+                'spec_value_id' => $spec_value_id,
+            ];
+            $update = [
+                'spec_is_select' => 1,
+                'update_time' => getTime()
+            ];
+            $Value = Db::name('product_spec_data_handle')->where($where)->getField('spec_value');
+            $isResult = Db::name('product_spec_data_handle')->where($where)->update($update);
+            if (!empty($isResult)) {
+                // 仅ID信息，二维数组形式
+                $where = [
+                    'aid' => $aid,
+                    'spec_is_select' => 1,
+                ];
+                $order = 'spec_value_id asc, spec_id asc, spec_mark_id asc';
+                $data = Db::name('product_spec_data_handle')->field('spec_mark_id, spec_value_id')->where($where)->order($order)->select();
+                if (!empty($data)) {
+                    foreach ($data as $key => $value) {
+                        $spec_array[$value['spec_mark_id']][] = $value['spec_value_id'];
+                    }
+                }
+            }
+
+            // 剔除已选择的规格值查询未选择的规格值组装成下拉返回
+            $notInPresetID = !empty($spec_array[$specMarkID]) ? $spec_array[$specMarkID] : [];
+            $where = [
+                'aid' => $aid,
+                'spec_is_select' => 0,
+                'spec_mark_id' => ['IN', $spec_mark_id],
+            ];
+            if (!empty($notInPresetID)) $where['spec_value_id'] = ['NOT IN', $notInPresetID];
+            $specData = Db::name('product_spec_data_handle')->where($where)->order('spec_value_id asc')->select();
+
+            // 拼装下拉选项
+            $Option = '<option value="0">选择规格值</option>';
+            if (!empty($specData)) {
+                foreach ($specData as $value) {
+                    $Option .= "<option value='{$value['spec_value_id']}'>{$value['spec_value']}</option>";
+                }
+            }
+
+            $htmlTable = $this->productSpecLogic->SpecAssemblyEdit($spec_array, $aid);
 
             // 返回数据
-            $ReturnData = [
-                'HtmlTable'    => $HtmlTable,
-                'SelectedSpec' => $SelectedSpec
+            $returnHtml = [
+                'Value' => $Value,
+                'Option' => $Option,
+                'htmlTable' => $htmlTable
             ];
-            $this->success('加载成功！', null, $ReturnData);
+            $this->success('加载成功！', null, $returnHtml);
         }
     }
 
@@ -1197,6 +1594,7 @@ class ShopProduct extends Base
     {
         if (IS_AJAX_POST) {
             $post              = input('post.');
+            $post['list_id'] = intval($post['list_id']);
             $post['list_name'] = trim($post['list_name']);
             if (empty($post['list_name'])) {
                 $this->error('参数名称不能为空！');
@@ -1359,6 +1757,7 @@ class ShopProduct extends Base
             $attr_values              = str_replace('@', '', $attr_values); // 替换特殊字符
             $attr_values              = trim($attr_values);
             $post_data                = input('post.');
+            $post_data['list_id'] = intval($post_data['list_id']);
             $post_data['attr_values'] = $attr_values;
 
             $SaveData = array(
@@ -1403,6 +1802,7 @@ class ShopProduct extends Base
             $attr_values              = str_replace('@', '', $attr_values); // 替换特殊字符
             $attr_values              = trim($attr_values);
             $post_data                = input('post.');
+            $post_data['list_id'] = intval($post_data['list_id']);
             $post_data['attr_values'] = $attr_values;
 
             $SaveData = array(
@@ -1510,8 +1910,9 @@ class ShopProduct extends Base
             }
             /*-----end*/
 
-            $data    = [
+            $data = [
                 'typeid' => $typeid,
+                'callback_url' => $this->callback_url,
             ];
             $jumpUrl = url("ShopProduct/add", $data, true, true);
             header('Location: ' . $jumpUrl);
@@ -1525,4 +1926,118 @@ class ShopProduct extends Base
 
         return $this->fetch();
     }
+    //帮助
+    public function help()
+    {
+        $system_originlist = tpSetting('system.system_originlist');
+        $system_originlist = json_decode($system_originlist, true);
+        $system_originlist = !empty($system_originlist) ? $system_originlist : [];
+        $assign_data['system_originlist_str'] = implode(PHP_EOL, $system_originlist);
+        $this->assign($assign_data);
+    
+        return $this->fetch();
+    }
+    
+    // 商品服务
+    public function goods_label()
+    {
+        // 商品服务标签列表
+        $goodsLabel = Db::name('shop_goods_label')->select();
+        foreach ($goodsLabel as $key => $value) {
+            $value['label_pic'] = handle_subdir_pic($value['label_pic']);
+            $goodsLabel[$key] = $value;
+        }
+        $this->assign('goodsLabel', $goodsLabel);
+
+        // 最大商品服务标签ID
+        $this->assign('maxGoodsLabelID', Db::name('shop_goods_label')->max('label_id'));
+
+        // 商品aid
+        $this->assign('aid', input('param.aid/d', 0));
+
+        return $this->fetch();
+    }
+
+    // 商品服务删除
+    public function goods_label_del()
+    {
+        if (IS_AJAX_POST) {
+            $this->error('删除功能暂停使用');
+            // $labelID = input('post.labelID/d', 0);
+            // $result = Db::name('shop_goods_label')->where('label_id', $labelID)->delete(true);
+            // if (!empty($result)) $this->success('删除成功');
+            // $this->error('删除失败');
+        }
+    }
+
+    // 商品服务保存更新
+    public function goods_label_save()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+            $saveAll = [];
+            $labelIds = [];
+            foreach ($post['label_id'] as $key => $value) {
+                $labelPic = !empty($post['label_pic'][$key]) ? $post['label_pic'][$key] : '';
+                $labelMark = !empty($post['label_mark'][$key]) ? $post['label_mark'][$key] : 0;
+                $labelTitle = !empty($post['label_title'][$key]) ? $post['label_title'][$key] : '';
+                $labelIntro = !empty($post['label_intro'][$key]) ? $post['label_intro'][$key] : '';
+                // 检测数据是否填写完整
+                if (!empty($labelTitle)) {
+                    if (empty($labelPic)) $this->error('请上传商品服务的图片', null, ['id' => '#labelClick_' . $labelMark]);
+                    if (empty($labelIntro)) $this->error('请填写商品服务的描述', null, ['id' => '#labelIntro_' . $labelMark]);
+                }
+                else if (!empty($labelPic)) {
+                    if (empty($labelTitle)) $this->error('请填写商品服务的标题', null, ['id' => '#labelTitle_' . $labelMark]);
+                    if (empty($labelIntro)) $this->error('请填写商品服务的描述', null, ['id' => '#labelIntro_' . $labelMark]);
+                }
+                else if (!empty($labelIntro)) {
+                    if (empty($labelTitle)) $this->error('请填写商品服务的标题', null, ['id' => '#labelTitle_' . $labelMark]);
+                    if (empty($labelPic)) $this->error('请上传商品服务的图片', null, ['id' => '#labelClick_' . $labelMark]);
+                }
+                if (!empty($labelPic) || !empty($labelTitle) || !empty($labelIntro)) {
+                    $saveAll[$key] = [
+                        'label_title' => trim($labelTitle),
+                        'label_pic' => trim($labelPic),
+                        'label_intro' => trim($labelIntro),
+                        'add_time' => getTime(),
+                        'update_time' => getTime(),
+                    ];
+                }
+                if (!empty($value)) {
+                    array_push($labelIds, $value);
+                    unset($saveAll[$key]['add_time']);
+                    $saveAll[$key] = array_merge(['label_id' => intval($value)], $saveAll[$key]);
+                }
+            }
+
+            // 商品标签删除处理
+            if (!empty($labelIds)) {
+                // 删除需要删除的ID
+                $labelIds = Db::name('shop_goods_label')->where(['label_id' => ['NOT IN', $labelIds]])->column('label_id');
+                if (!empty($labelIds)) {
+                    // 删除指定ID的商品标签
+                    $where = [
+                        'label_id' => ['IN', $labelIds]
+                    ];
+                    $result = Db::name('shop_goods_label')->where($where)->delete(true);
+                    // 删除指定ID的商品标签绑定信息
+                    if (!empty($result)) Db::name('shop_goods_label_bind')->where($where)->delete(true);
+                }
+            }
+
+            // 商品服务保存更新
+            if (!empty($saveAll)) {
+                // 商品服务保存更新
+                model('ShopGoodsLabel')->saveAll($saveAll);
+                // 查询商品服务列表
+                $data['goodsLabel'] = !empty($post['aid']) ? model('ShopGoodsLabel')->getGoodsLabelList($post['aid']) : [];
+                $this->success('更新成功', null, $data);
+            } else {
+                $this->error('更新失败');
+            }
+        }
+    }
+
+
 }

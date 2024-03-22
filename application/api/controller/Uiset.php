@@ -37,6 +37,9 @@ class Uiset extends Controller
         $this->theme_style = THEME_STYLE;
         $this->theme_style_path = THEME_STYLE_PATH;
         $this->uipath = RUNTIME_PATH.'ui/'.$this->theme_style_path.'/';
+        if (!file_exists(ROOT_PATH.'template/'.TPL_THEME.'pc/uiset.txt') && !file_exists(ROOT_PATH.'template/'.TPL_THEME.'mobile/uiset.txt')) {
+            abort(404,'页面不存在');
+        }
     }
     
     /*
@@ -137,9 +140,9 @@ class Uiset extends Controller
     /**
      * 同步外观调试的变量值到config，前提是变量名在config是存在
      */
-    public function synConfigVars($name, $value = '', $type = '')
+    private function synConfigVars($name, $value = '', $type = '')
     {
-        if (in_array($type, array('text', 'html'))) {
+        if (in_array($type, array('text', 'html')) && !in_array($name, ['image_type','file_type','media_type'])) {
             $count = M('config')->where([
                 'name'  => $name,
                 'lang'  => $this->home_lang,

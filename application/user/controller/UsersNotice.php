@@ -7,10 +7,9 @@
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
  * ============================================================================
- * Author: 陈风任 <491085389@qq.com>
- * Date: 2019-7-3
+ * Author: 小虎哥 <1105415366@qq.com>
+ * Date: 2018-4-3
  */
-
 namespace app\user\controller;
 
 use think\Db;
@@ -29,34 +28,6 @@ class UsersNotice extends Base
 
         $functionLogic = new \app\common\logic\FunctionLogic;
         $functionLogic->validate_authorfile(1);
-
-        //从notice表里同步新的数据到notice_read表
-        $this->update_notice_data();
-
-    }
-
-    protected function update_notice_data()
-    {
-        //查接收消息通知的会员id
-        $users_id = $this->users_id;
-        $last_read_notice_id = Db::name('users_notice_read')
-            ->where(['users_id'=>$users_id])
-            ->max("notice_id");
-
-        $no_add_data = Db::name('users_notice')
-            ->field("id as notice_id,lang,add_time,update_time")
-            ->where("users_id = '' OR users_id = '{$users_id}' OR FIND_IN_SET('{$users_id}', users_id)")
-            ->where(['id'=>['GT',$last_read_notice_id]])
-            ->order("id ASC")
-            ->select();
-
-        if ($no_add_data) {
-            foreach ($no_add_data as $k=>$v) {
-                $no_add_data[$k]['users_id'] = $users_id;
-            }
-
-            Db::name('users_notice_read')->insertAll($no_add_data);
-        }
     }
 
     public function index()
@@ -80,9 +51,9 @@ class UsersNotice extends Base
         // 多语言
         $condition['a.lang'] = $this->home_lang;
 
-        $count      = Db::name('users_notice_read')->alias('a')->where($condition)->count('id');// 查询满足要求的总记录数
+        $count = Db::name('users_notice_read')->alias('a')->where($condition)->count('id');
 
-        $Page       = $pager = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
+        $Page = $pager = new Page($count, config('paginate.list_rows'));
         $result['data'] = Db::name('users_notice_read')
             ->alias('a')
             ->field("a.id,a.users_id,a.notice_id,a.is_read,a.is_del,b.title,b.remark,b.add_time,b.update_time")
@@ -94,14 +65,15 @@ class UsersNotice extends Base
 
         $show = $Page->show();// 分页显示输出
         $result['delurl']  = url('user/UsersNotice/del');
+        $result['readurl'] = url('user/UsersNotice/batch_read');
 
         $eyou = array(
             'field' => $result,
         );
 
-        $this->assign('page', $show);// 赋值分页输出
-        $this->assign('eyou', $eyou);// 赋值数据集
-        $this->assign('pager', $pager);// 赋值分页对象
+        $this->assign('page', $show);
+        $this->assign('eyou', $eyou);
+        $this->assign('pager', $pager);
         return $this->fetch('users_notice_index');
     }
 
@@ -115,7 +87,7 @@ class UsersNotice extends Base
             $id_arr = eyIntval($id_arr);
             if (!empty($id_arr)) {
                 $unread_notice = Db::name('users_notice_read')->field("id")->where(['id'=>['IN',$id_arr],'is_read'=>0])->find();
-                if ($unread_notice) $this->error('不能删除未读消息');
+                if (!empty($unread_notice)) $this->error('不能删除未读消息');
 
                 //将状态值改为已删除
                 Db::name('users_notice_read')->where(['id'=>['IN',$id_arr]])->update(['is_del'=>1]);

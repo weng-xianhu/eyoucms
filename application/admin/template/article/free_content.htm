@@ -12,8 +12,7 @@
     <form class="form-horizontal" id="post_form" action="{:url('Article/add')}" method="post">
         <div class="ncap-form-default" style="overflow: unset;">
             <div id="free_content_dl">
-    <textarea class="span12 ckeditor" id="free_content" data-func="free_content" name="free_content"
-              title="">{$free_content}</textarea>
+                <textarea class="span12 ckeditor" id="free_content" data-func="free_content" name="free_content" title="">{$free_content}</textarea>
                 <div class="opt-moreOper" style="margin-top: 20px;">
                     <p>
                         <a href="javascript:void(0);" onclick="remote_to_local_free_content();" class="ncap-btn2">远程图片本地化</a>&nbsp;
@@ -25,8 +24,23 @@
         </div>
 
         <script type="text/javascript">
+            // 打开多图选择及上传界面
+            function OpenImagesList(e, obj) {
+                var OpenUrl = "{:url('Uploadimgnew/upload', ['num'=>30, 'path'=>'allimg', 'is_water'=>1])}";
+                OpenUrl += "&func=images_call_content";
+                top.layer.open({
+                    type: 2,
+                    title: '图片上传',
+                    shade: layer_shade,
+                    maxmin: false,
+                    shadeClose: false,
+                    area: ['1000px', '625px'],
+                    content: OpenUrl
+                });
+            }
+
             var ue_free_content = UE.getEditor('free_content', {
-                serverUrl: "{:url('Ueditor/index',array('savepath'=>'ueditor'))}",
+                serverUrl: "{:url('Ueditor/index',array('savepath'=>'allimg'))}",
                 zIndex: 999,
                 initialFrameWidth: "100%", //初化宽度
                 initialFrameHeight: 450, //初化高度
@@ -49,6 +63,33 @@
                     UE.getEditor("free_content").execCommand('source'); //切换到【设计】视图
                 }
             }
+
+            // 加载图片到编辑器指定位置
+            function images_call_content(fileurl_tmp,filename_tmp) {
+                var addBody = '';
+                $.each(fileurl_tmp, function(index, items) {
+                    addBody += '<p><img src="'+items+'" alt="'+filename_tmp[index]+'"></p>';
+                });
+                UE.getEditor("free_content").execCommand('inserthtml', addBody);
+            }
+
+            // 自动远程图片本地化/自动清除非本站链接
+            function ajax_auto_editor_content(local,link) {
+                var body = UE.getEditor("free_content").getContent();
+                $.ajax({
+                    type: 'POST',
+                    url: "{:url('Archives/ajax_auto_editor')}",
+                    data: {local:local,link:link,body:body,_ajax:1},
+                    dataType: "JSON",
+                    async:false,
+                    success: function(res){
+                        if (res.code == 1) {
+                            UE.getEditor("free_content").setContent(res.data.body);
+                        }
+                    }
+                });
+            }
+
 
             // 远程图片本地化
             function remote_to_local_free_content() {
@@ -102,8 +143,7 @@
         </script>
         <div class="ncap-form-default">
             <div>
-                <a href="JavaScript:void(0);" onclick="confirm();" class="ncap-btn-big ncap-btn-green"
-                   id="submitBtn">确认提交</a>
+                <a href="JavaScript:void(0);" onclick="confirm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
             </div>
         </div>
     </form>

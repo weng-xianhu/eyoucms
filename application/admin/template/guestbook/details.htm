@@ -10,8 +10,28 @@
     </div>
     {/foreach}
     <div style="display: flex;align-items: center;padding: 15px 0;">
+        <div style="width: 10%;min-width: 60px;"><strong>所属表单</strong></div>
+        <div style="width: 90%;">{$row.form_name|default=''}</div>
+    </div>
+    <div style="display: flex;align-items: center;padding: 15px 0;">
         <div style="width: 10%;min-width: 60px;"><strong>IP来源</strong></div>
-        <div style="width: 90%;">{$row.ip} {notempty name='$row.city'}[{$row.city}]{/notempty}</div>
+        <div style="width: 90%;">{$row.ip}&nbsp;&nbsp;
+            {notempty name='$row.city'}
+                ({$row.city})
+            {else /}
+                (<a href="https://www.baidu.com/s?wd={$row.ip}" target="_blank">查看地区</a>)
+            {/notempty}
+        </div>
+    </div>
+    <div style="display: flex;align-items: center;padding: 15px 0;">
+        <div style="width: 10%;min-width: 60px;"><strong>提交来源</strong></div>
+        <div style="width: 90%;">
+            {if condition="$row['source'] == 2"}
+                手机端
+            {else /}
+                电脑端
+            {/if}
+        </div>
     </div>
     <div style="display: flex;align-items: center;padding: 15px 0;">
         <div style="width: 10%;min-width: 60px;"><strong>提交时间</strong></div>

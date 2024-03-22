@@ -7,8 +7,8 @@
 <meta http-equiv="Content-Language" content="zh-cn"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
 <title><?php echo $Title; ?> - <?php echo $Powered; ?></title>
-<link rel="stylesheet" href="./css/install.css?v=v1.3.1" />
-<script src="./js/jquery.js?v=v1.3.1"></script> 
+<link rel="stylesheet" href="./css/install.css?v=v1.6.4" />
+<script src="./js/jquery.js?v=v1.6.4"></script> 
 <?php 
 $uri = $_SERVER['REQUEST_URI'];
 $root = substr($uri, 0,strpos($uri, "install"));

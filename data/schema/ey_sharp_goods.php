@@ -57,7 +57,7 @@ return array (
   'virtual_sales' => 
   array (
     'name' => 'virtual_sales',
-    'type' => 'tinyint(3)',
+    'type' => 'int(11)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

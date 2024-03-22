@@ -3,12 +3,16 @@
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width: auto;box-shadow:none;">
+<div class="page min-hg-c-i" style="min-width: auto;box-shadow:none;">
     <div class="fixed-bar">
         <div class="item-title">
             {neq name='$goback' value='off'}
-            <a class="back" href="{:url('System/api_conf')}" title="返回"><i class="fa fa-angle-double-left"></i>返回</a>
+            <a class="back_xin" href="{:url('System/api_conf')}" title="返回"><i class="iconfont e-fanhui"></i></a>
             {/neq}
+            <div class="subject">
+                <h3>电子邮箱</h3>
+                <h5></h5>
+            </div>
             <ul class="tab-base nc-row">
                 {eq name="'System@smtp'|is_check_access" value="1"}
                 <li><a href="{:url('System/smtp')}" {if condition="'smtp'==$Think.const.ACTION_NAME"}class="current"{/if}><span>邮箱配置</span></a></li>
@@ -27,7 +31,7 @@
                     <label for="smtp_server"><em>*</em>SMTP地址</label>
                 </dt>
                 <dd class="opt">
-                    <input id="smtp_server" name="smtp_server" value="{$smtp.smtp_server|default=''}" class="input-txt" type="text"/>
+                    <input id="smtp_server" name="smtp_server" value="{$smtp.smtp_server|default=''}" class="input-txt" type="text" autocomplete="off" />
                     <p class="notic2">发送邮箱的smtp地址。如: smtp.qq.com或smtp.gmail.com</p>
                 </dd>
             </dl>
@@ -36,11 +40,8 @@
                     <label for="smtp_port"><em>*</em>SMTP端口</label>
                 </dt>
                 <dd class="opt">
-                    <input id="smtp_port" name="smtp_port" value="{$smtp.smtp_port|default=465}" class="input-txt" type="text"/>
-                    <p class="notic">
-                        smtp的端口，默认为465，具体请参看各STMP服务商的设置说明。
-                    </p>
-                    <p class="notic2"><span style="color: red;">注意：如果使用阿里云服务器或Gmail，请将端口设为465，其他的可以尝试端口设为25</span>
+                    <input id="smtp_port" name="smtp_port" value="{if condition="isset($smtp['smtp_port'])"}{$smtp['smtp_port']|default=''}{else /}465{/if}" class="input-txt" type="text" autocomplete="off"/>
+                    <p class="notic2"><span style="color: red;">注意：大部分默认为465，具体请参看各STMP服务商的设置说明，极少部分是25或其他端口号。</span>
                     </p>
                 </dd>
             </dl>
@@ -49,7 +50,7 @@
                     <label for="smtp_user"><em>*</em>发信邮箱账号</label>
                 </dt>
                 <dd class="opt">
-                    <input id="smtp_user" name="smtp_user" value="{$smtp.smtp_user|default=''}" class="input-txt" type="text"/>
+                    <input id="smtp_user" name="smtp_user" value="{$smtp.smtp_user|default=''}" class="input-txt" type="text" autocomplete="off"/>
                 </dd>
             </dl>
             <dl class="row">
@@ -57,35 +58,34 @@
                     <label for="smtp_pwd"><em>*</em>邮箱授权码</label>
                 </dt>
                 <dd class="opt">
-                    <input id="smtp_pwd"  name="smtp_pwd" value="{$smtp.smtp_pwd|default=''}" class="input-txt" type="text"/>
-                    <p class="notic2">使用发送邮件的邮箱授权码。具体请点击参看【<a href="JavaScript:void(0);" data-href="https://www.eyoucms.com/plus/view.php?aid=5552" onclick="openFullframe(this,'获取邮箱授权码');">使用指南</a>】</p>
+                    <input id="smtp_pwd"  name="smtp_pwd" value="{$smtp.smtp_pwd|default=''}" class="input-txt" type="text" autocomplete="off"/>
+                    <p class="notic2">使用发送邮件的邮箱授权码。具体请点击参看【<a href="JavaScript:void(0);" data-href="https://www.eyoucms.com/plus/view.php?aid=5552&origin_eycms=1" onclick="openFullframe(this,'获取邮箱授权码');">使用指南</a>】</p>
                 </dd>
             </dl>
             <dl class="row">
-                <dt class="tit"><em>*</em>接收邮箱账号</dt>
+                <dt class="tit"><em>*</em>管理员邮箱账号</dt>
                 <dd class="opt">
-                    <input value="{$smtp.smtp_from_eamil|default=''}" name="smtp_from_eamil" id="smtp_from_eamil" class="input-txt" type="text">
+                    <input value="{$smtp.smtp_from_eamil|default=''}" name="smtp_from_eamil" id="smtp_from_eamil" placeholder="多个邮箱可以用逗号隔开" class="input-txt" type="text" onkeyup="this.value=this.value.replace(/，/g,',');" onpaste="this.value=this.value.replace(/，/g,',')" autocomplete="off">
                     <input value="测试发送" class="input-btn" onclick="sendEmail();" type="button">
                     <p class="notic">多个邮箱可以用逗号隔开</p>
                 </dd>
             </dl>
 
-            <!-- <dl class="row">
-                <dt class="tit">邮箱提醒</dt>
+            <dl class="row">
+                <dt class="tit">接收提醒选项</dt>
                 <dd class="opt">
                     <ul class="nc-row ncap-waybill-list">
                         <li style="width: 100%;">
-                            <label class="label" onmouseover="layer_tips = layer.tips('对管理员发送邮件提醒', this, {time:100000});" onmouseout="layer.close(layer_tips);">
-                                <input class="check" type="checkbox" name="smtp_shop_order_pay" {if condition="!empty($smtp.smtp_shop_order_pay)"} value="1" checked="checked" {/if}><span>订单付款</span>
+                            {foreach name="tpl_list" item="vo" key="k" }
+                            <label class="label">
+                                <input class="check" type="checkbox" name="tpl_id[]" value="{$vo.tpl_id}" {eq name="$vo.is_open" value="1" }checked="checked"{/eq}><span>{$vo.tpl_name}</span>
                             </label>
-                            &nbsp; &nbsp;
-                            <label class="label" onmouseover="layer_tips = layer.tips('对用户发送邮件提醒', this, {time:100000});" onmouseout="layer.close(layer_tips);">
-                                <input class="check" type="checkbox" name="smtp_shop_order_send" {if condition="!empty($smtp.smtp_shop_order_send)"} value="1" checked="checked" {/if}><span>订单发货</span>
-                            </label>
+                            &nbsp;
+                            {/foreach}
                         </li>
                     </ul>
                 </dd>
-            </dl> -->
+            </dl>
 
             <div class="bot">
                 <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="submit_smtp();">确认提交</a>
@@ -97,25 +97,32 @@
     var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     // 提交邮箱配置
     function submit_smtp() {
-        if ($('input[name="smtp_server"]').val() == '') {
-            showErrorMsg('邮件发送服务器不能为空！');
-            $('input[name=smtp_server]').focus();
-            return false;
-        }
-        if ($('input[name="smtp_user"]').val() == '' || !checkEmail($('input[name="smtp_user"]').val())) {
-            showErrorMsg('邮箱账号的格式不正确！');
-            $('input[name=smtp_user]').focus();
-            return false;
-        }
-        if ($('input[name="smtp_pwd"]').val() == '') {
-            showErrorMsg('邮箱授权码不能为空！');
-            $('input[name=smtp_pwd]').focus();
-            return false;
-        }
-        if ($('input[name="smtp_from_eamil"]').val() == '') {
-            showErrorMsg('接收的邮件地址不能为空！');
-            $('input[name=smtp_from_eamil]').focus();
-            return false;
+        var smtp_server = $.trim($('input[name="smtp_server"]').val());
+        var smtp_user = $.trim($('input[name="smtp_user"]').val());
+        var smtp_pwd = $.trim($('input[name="smtp_pwd"]').val());
+        var smtp_from_eamil = $.trim($('input[name="smtp_from_eamil"]').val());
+
+        if (smtp_server != '' || smtp_user != '' || smtp_pwd != '' || smtp_from_eamil != '') {
+            if (smtp_server == '') {
+                showErrorMsg('邮件发送服务器不能为空！');
+                $('input[name=smtp_server]').focus();
+                return false;
+            }
+            if (smtp_user == '' || !checkEmail(smtp_user)) {
+                showErrorMsg('邮箱账号的格式不正确！');
+                $('input[name=smtp_user]').focus();
+                return false;
+            }
+            if (smtp_pwd == '') {
+                showErrorMsg('邮箱授权码不能为空！');
+                $('input[name=smtp_pwd]').focus();
+                return false;
+            }
+            if (smtp_from_eamil == '') {
+                showErrorMsg('接收的邮件地址不能为空！');
+                $('input[name=smtp_from_eamil]').focus();
+                return false;
+            }
         }
         
         layer_loading("正在处理");
@@ -127,7 +134,7 @@
             success: function(res) {
                 layer.closeAll();
                 if (1 == res.code) {
-                    layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    layer.msg(res.msg, {shade: 0.1, time: 1000}, function(){
                         window.location.reload();
                     });
                 } else {

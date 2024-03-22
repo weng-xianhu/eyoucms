@@ -1,0 +1,127 @@
+<div class="sidebar-second order-navBox">
+    <ul id="accordion" class="accordion">
+        {if condition="isset($usersConfig['shop_open']) && 1 == $usersConfig['shop_open']"}
+        {eq name="'Shop@index'|is_check_access" value="1"}
+        <li class="open">
+            <a class="link">商城订单<i class="fa fa-angle-right"></i></a>
+            <ul class="submenu" {if condition="in_array($Request.param.c, ['Shop', 'ShopService'])"}style="display: show;"{else/}style="display: none;"{/if}>
+                <li>
+                    <a {eq name="$Request.param.order_status" value="1"}class="current"{/eq} href='{:url("Shop/index", ["order_status"=>1])}'>
+                        待发货
+                    </a>
+                </li>
+                <li>
+                    <a {eq name="$Request.param.order_status" value="10"}class="current"{/eq} href='{:url("Shop/index", ["order_status"=>10])}'>
+                        待付款
+                    </a>
+                </li>
+                <li>
+                    <a {eq name="$Request.param.order_status" value="2"}class="current"{/eq} href='{:url("Shop/index", ["order_status"=>2])}'>
+                        已发货
+                    </a>
+                </li>
+                <li>
+                    <a {eq name="$Request.param.order_status" value="3"}class="current"{/eq} href='{:url("Shop/index", ["order_status"=>3])}'>
+                        已完成
+                    </a>
+                </li>
+                {if condition="$php_servicemeal > 1"}
+                <li>
+                    <a {if condition="'ShopService' == $Think.const.CONTROLLER_NAME"}class="current"{/if} href='{:url("ShopService/after_service")}'>
+                        售后订单
+                    </a>
+                </li>
+                {/if}
+                <li>
+                    <a {if condition="'index' == $Think.const.ACTION_NAME and '' == $Request.param.order_status"}class="current"{/if} href='{:url("Shop/index")}'>
+                        全部订单
+                    </a>
+                </li>
+            </ul>
+        </li>
+        {/eq}
+        {/if}
+
+        <li>
+            <a class="link">会员订单<i class="fa fa-angle-right"></i></a>
+            <ul class="submenu" {if condition="in_array($Request.param.c, ['Member', 'Level'])"}style="display: show;"{else/}style="display: none;"{/if}>
+                {eq name="'Member@article_index'|is_check_access" value="1"}
+                    {if condition="!empty($channeltype_row[1]['status']) && !empty($channelRow.article.data.is_article_pay)"}
+                        <li>
+                            <a {if condition="in_array($Request.action, ['article_index'])"}class="current"{/if} href='{:url("Member/article_index", ["order_status"=>1])}'>
+                                文章订单
+                            </a>
+                        </li>
+                    {/if}
+                {/eq}
+                {eq name="'Member@download_index'|is_check_access" value="1"}
+                {if condition="!empty($channeltype_row[1]['status']) && !empty($channelRow.download.data.is_download_pay)"}
+                <li>
+                    <a {if condition="in_array($Request.action, ['download_index'])"}class="current"{/if} href='{:url("Member/download_index", ["order_status"=>1])}'>
+                    下载订单
+                    </a>
+                </li>
+                {/if}
+                {/eq}
+                {eq name="'Member@media_index'|is_check_access" value="1"}
+                    {if condition="!empty($channeltype_row[5]['status'])"}
+                        <li>
+                            <a {if condition="in_array($Request.action, ['media_index'])"}class="current"{/if} href='{:url("Member/media_index", ["order_status"=>1])}'>
+                                视频订单
+                            </a>
+                        </li>
+                    {/if}   
+                {/eq}
+                {eq name="'Level@index'|is_check_access" value="1"}
+                    {if condition="1 == $userConfig.level_member_upgrade"}
+                        {eq name="'Level@upgrade_index'|is_check_access" value="1"}
+                            <li>
+                                <a {if condition="in_array($Request.action, ['upgrade_index'])"}class="current"{/if} href='{:url("Level/upgrade_index")}'>
+                                    会员升级
+                                </a>
+                            </li>
+                        {/eq}
+                    {/if}   
+                {/eq}
+                {eq name="'Member@money_index'|is_check_access" value="1"}
+                <li>
+                    <a {if condition="in_array($Request.action, ['money_index'])"}class="current"{/if} href='{:url("Member/money_index", ["status"=>2])}'>
+                        余额充值
+                    </a>
+                </li>
+                {/eq}
+            </ul>
+        </li>
+    </ul>
+</div>
+<script>
+$(function() {
+	var Accordion = function(el, multiple) {
+		this.el = el || {};
+		this.multiple = multiple || false;
+
+		// Variables privadas
+		var links = this.el.find('.link');
+		// Evento
+		links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+	};
+
+	Accordion.prototype.dropdown = function(e) {
+		var $el = e.data.el;
+			$this = $(this);
+			$next = $this.next();
+
+		$next.slideToggle();
+		$this.parent().toggleClass('open');
+
+		if (!e.data.multiple) {
+			$el.find('.submenu').not($next).slideUp().parent().removeClass('open');
+		}
+	};
+
+	var accordion = new Accordion($('#accordion'), false);
+	$('.submenu li').click(function () {
+		$(this).addClass('current').siblings('li').removeClass('current');
+	});
+});
+</script>

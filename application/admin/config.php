@@ -21,8 +21,11 @@ $admin_ey_config = [
 $ey_config = array_merge(config('ey_config'), $admin_ey_config);
 
 // 分页数
-$system_paginate_pagesize = config('tpcache.system_paginate_pagesize');
-$system_paginate_pagesize = !empty($system_paginate_pagesize) ? intval($system_paginate_pagesize) : 20;
+$system_paginate_pagesize = input('param.pagesize/d', 0);
+if (empty($system_paginate_pagesize)) {
+    $system_paginate_pagesize = config('tpcache.system_paginate_pagesize');
+    $system_paginate_pagesize = !empty($system_paginate_pagesize) ? intval($system_paginate_pagesize) : 20;
+}
 
 $admin_config = array(
     'ey_config' => $ey_config,
@@ -32,12 +35,12 @@ $admin_config = array(
     ),
     // 默认全局过滤方法 用逗号分隔多个
     'default_filter'         => 'htmlspecialchars',
-    // 登录有效期
+    // 登录有效期，单位秒
     'login_expire' => 3600,
     // 登录错误最大次数
-    'login_errtotal'   => 8,
-    // 登录错误超过次数之后，锁定用户名有效时间 15 分钟
-    'login_errexpire'   => 900,
+    'login_errtotal'   => 5,
+    // 登录错误超过次数之后，锁定用户名有效时间，单位秒
+    'login_errexpire'   => 600,
     // +----------------------------------------------------------------------
     // | 模板设置
     // +----------------------------------------------------------------------
@@ -75,6 +78,10 @@ $admin_config = array(
         'Admin@login',
         'Admin@logout',
         'Admin@vertify',
+        'Admin@wechat_login', // 扫码微信应用登录
+        'Admin@wechat_callback', // 扫码微信应用回调
+        'Admin@mp_getqrcode', // 获取微信公众号二维码
+        'Admin@mp_bingwxgzhopenid', // 绑定微信公众号二维码
     ),
     
     // 无需验证权限的操作
@@ -84,6 +91,7 @@ $admin_config = array(
         'Ajax@*',
         'Ueditor@*',
         'Uploadify@*',
+        'Uploadimgnew@*',
     ),
 );
 

@@ -314,9 +314,9 @@
                         }
                     }catch(e){}
                 },
-                error:function(){
+                error:function(e){
                     _parent.layer.closeAll();
-                    _parent.layer.alert(ey_unknown_error, {icon: 2, title:false}, function(){
+                    _parent.layer.alert(e.responseText, {icon: 2, title:false}, function(){
                         _parent.layer.closeAll();
                         window.location.reload();
                     });
@@ -335,6 +335,7 @@
                         //询问框
                         var confirm = layer.confirm(res.data.msg, {
                                 title: false,
+                                shade: layer_shade,
                                 area: ['70%','80%'],
                                 btn: ['关闭'] //按钮
 
@@ -346,8 +347,8 @@
                         layer.alert(res.msg, {icon: 2, title:false});
                     }
                 },
-                error:function(){
-                    layer.alert(ey_unknown_error, {icon: 2, title:false});
+                error:function(e){
+                    layer.alert(e.responseText, {icon: 2, title:false});
                 }
             });
         }
@@ -374,6 +375,7 @@
 
                     var alert1 = layer.alert('会员投稿功能只限于授权域名！', {
                         icon: 4,
+                        shade: layer_shade,
                         title:false,
                         btn: ['购买授权']
                     }, function(){
@@ -400,6 +402,7 @@
 
                     var alert1 = layer.alert('订单功能只限于授权域名！', {
                         icon: 4,
+                        shade: layer_shade,
                         title:false,
                         btn: ['购买授权']
                     }, function(){
@@ -441,7 +444,7 @@
                 },
                 error: function(e){
                     parent.layer.closeAll();
-                    parent.layer.alert(ey_unknown_error, {icon: 2, title:false}, function(){
+                    parent.layer.alert(e.responseText, {icon: 2, title:false}, function(){
                         parent.layer.closeAll();
                         window.location.reload();
                     });
@@ -475,7 +478,7 @@
                 },
                 error: function(e){
                     parent.layer.closeAll();
-                    parent.layer.alert(ey_unknown_error, {icon: 2, title:false}, function(){
+                    parent.layer.alert(e.responseText, {icon: 2, title:false}, function(){
                         parent.layer.closeAll();
                         window.location.reload();
                     });

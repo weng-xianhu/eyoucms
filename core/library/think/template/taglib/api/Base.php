@@ -24,14 +24,19 @@ class Base
     /**
      * 主体语言（语言列表中最早一条）
      */
-    public $main_lang = 'cn';
+    static $main_lang = null;
+
+    /**
+     * 前台当前语言
+     */
+    static $home_lang = null;
 
     /**
      * 子目录
      */
     public $root_dir = '';
 
-    public $request = null;
+    static $request = null;
 
     /**
      * 当前栏目ID
@@ -42,6 +47,12 @@ class Base
      * 当前文档aid
      */
     public $aid = 0;
+
+    /**
+     * 系统配置
+     */
+    static $globalConfig = null;
+    static $usersConfig = null;
 
     //构造函数
     function __construct()
@@ -55,9 +66,18 @@ class Base
     {
         $this->tid = input("param.typeid/d", 0);
         $this->aid = input("param.aid/d", 0);
-        $this->main_lang = get_main_lang();
         $this->root_dir = ROOT_DIR;
-        if (null == $this->request) $this->request = Request::instance();
+        if (null == self::$request) {
+            self::$request = Request::instance();
+        }
+        if (null === self::$main_lang) {
+            self::$main_lang = get_main_lang();
+            self::$home_lang = get_main_lang();
+        }
+        if (null === self::$globalConfig) {
+            self::$globalConfig = tpCache('global');
+            self::$usersConfig = getUsersConfigData('all');
+        }
     }
 
     //查询虎皮椒支付有没有配置相应的(微信or支付宝)支付
@@ -92,6 +112,24 @@ class Base
 
         return $pic_url;
     }
+    
+    /**
+     * 默认头像
+     * @param  string  $head_pic [description]
+     * @param  boolean $is_admin [description]
+     * @param  string  $sex      [description]
+     * @return [type]            [description]
+     */
+    public function get_head_pic($head_pic = '', $is_admin = false, $sex = '保密')
+    {
+        $head_pic = get_head_pic($head_pic, $is_admin, $sex);
+        if (!is_http_url($head_pic)) {
+            $head_pic = preg_replace('#^(/[/\w\-]+)?(/public/upload/|/public/static/|/uploads/|/weapp/)#i', '$2', $head_pic); // 支持子目录
+            $head_pic = self::$request->domain() . ROOT_DIR . $head_pic;
+        }
+
+        return $head_pic;
+    }
 
     /**
      * html内容里的图片地址替换成http路径
@@ -108,15 +146,15 @@ class Base
 
             // 图片远程化
             $pregRule = "/<img(.*?)src(\s*)=(\s*)[\'|\"](\/[\/\w]+)?(\/public\/upload\/|\/uploads\/|\/\/)(.*?(?:[\.jpg|\.jpeg|\.png|\.gif|\.bmp|\.ico]))[\'|\"](.*?)[\/]?(\s*)>/i";
-            $content  = preg_replace($pregRule, '<img ${1} src="' . request()->domain().ROOT_DIR . '${5}${6}'.$t.'" ${7} />', $content);
+            $content  = preg_replace($pregRule, '<img ${1} src="' . self::$request->domain().ROOT_DIR . '${5}${6}'.$t.'" ${7} />', $content);
 
             // 视频远程化
             $pregRule = "/<source(.*?)src(\s*)=(\s*)[\'|\"](\/[\/\w]+)?(\/public\/upload\/|\/uploads\/|\/\/)(.*?(?:[\.mp4|\.mov|\.m4v|\.3gp|\.avi|\.m3u8|\.webm]))[\'|\"](.*?)[\/]?(\s*)>/i";
-            $content  = preg_replace($pregRule, '<source ${1} src="' . request()->domain().ROOT_DIR . '${5}${6}" ${7} />', $content);
+            $content  = preg_replace($pregRule, '<source ${1} src="' . self::$request->domain().ROOT_DIR . '${5}${6}" ${7} />', $content);
             $pregRule = "/<video(.*?)src(\s*)=(\s*)[\'|\"](\/[\/\w]+)?(\/public\/upload\/|\/uploads\/|\/\/)(.*?(?:[\.mp4|\.mov|\.m4v|\.3gp|\.avi|\.m3u8|\.webm]))[\'|\"](.*?)[\/]?(\s*)>/i";
-            $content  = preg_replace($pregRule, '<video ${1} src="' . request()->domain().ROOT_DIR . '${5}${6}" ${7} />', $content);
+            $content  = preg_replace($pregRule, '<video ${1} src="' . self::$request->domain().ROOT_DIR . '${5}${6}" ${7} />', $content);
 
-            $content = str_replace(request()->domain().ROOT_DIR.'//', 'http://', $content);
+            $content = str_replace(self::$request->domain().ROOT_DIR.'//', 'http://', $content);
         }
 
         return $content;
@@ -137,8 +175,10 @@ class Base
                 $web_name = tpCache('web.web_name');
                 $web_name = trim($web_name);
             }
-            static $seo_viewtitle_format = null;
-            null === $seo_viewtitle_format && $seo_viewtitle_format = tpCache('seo.seo_viewtitle_format');
+            static $seoConfig = null;
+            null === $seoConfig && $seoConfig = tpCache('seo');
+            $seo_viewtitle_format = !empty($seoConfig['seo_viewtitle_format']) ? intval($seoConfig['seo_viewtitle_format']) : 0;
+            $seo_title_symbol = isset($seoConfig['seo_title_symbol']) ? htmlspecialchars_decode($seoConfig['seo_title_symbol']) : '_';
             switch ($seo_viewtitle_format) {
                 case '1':
                     $seo_title = $title;
@@ -147,19 +187,65 @@ class Base
                 case '3':
                     $seo_title = $title;
                     if (!empty($typename)) {
-                        $seo_title .= '_'.$typename;
+                        $seo_title .= $seo_title_symbol.$typename;
                     }
-                    $seo_title .= '_'.$web_name;
+                    $seo_title .= $seo_title_symbol.$web_name;
                     break;
                 
                 case '2':
                 default:
-                    $seo_title = $title.'_'.$web_name;
+                    $seo_title = $title.$seo_title_symbol.$web_name;
                     break;
             }
         }
         /*--end*/
 
         return $seo_title;
+    }
+
+    /**
+     * 时间格式转换
+     * @param  integer $t [description]
+     * @return [type]        [description]
+     */
+    public function time_format($t = 0)
+    {
+        if (empty($t)) {
+            return [];
+        }
+        $arr = [
+            'time'   => $t,
+            'Ymd' => MyDate('Y-m-d', $t),
+            'md' => MyDate('m-d', $t),
+            'Hi' => MyDate('H-i', $t),
+            'YmdHis' => MyDate('Y-m-d H:i:s', $t),
+            'His' => MyDate('H:i:s', $t),
+        ];
+        return $arr;
+    }
+
+    //获取内容里所有的图片
+    public function get_content_img($content = '')
+    {
+        $arr = [];
+        if (!empty($content)) {
+            preg_match_all('/<img.*(\/)?>/iUs', $content, $imginfo);
+            $imginfo = !empty($imginfo[0]) ? $imginfo[0] : [];
+            if (!empty($imginfo)) {
+                foreach ($imginfo as $key => $imgstr) {
+                    $imgstrNew = $imgstr;
+                    $url  = preg_replace("/<img(.*?)src(\s*)=(\s*)[\'|\"](.*?)([^\/\'\"]*)[\'|\"](.*?)[\/]?(\s*)>/i", '${4}${5}', $imgstrNew);
+                    $url  =  handle_subdir_pic($url,'img',true);
+//                    $info = @getimagesize($url);
+//                    if ($info[0] >= 375 && $info[0] >= 250){
+                    $arr[] = $this->get_default_pic($url);
+//                    }
+//                    if (count($arr) == 3){
+//                        break;
+//                    }
+                }
+            }
+        }
+        return $arr;
     }
 }

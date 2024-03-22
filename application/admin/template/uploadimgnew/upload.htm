@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <!-- Apple devices fullscreen -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <!-- Apple devices fullscreen -->
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <title>图片选择 - {$version}</title>
+        <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/uploadimgnew/layui/css/layui.css?v={$version}">
+        <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/uploadimgnew/css/image-upload.css?v={$version}">
+        <link href="__SKIN__/font/css/font-awesome.min.css?v={$version}" rel="stylesheet" />
+        {if condition="file_exists(ROOT_PATH.'public/static/admin/css/theme_style.css')"}
+            <link href="__SKIN__/css/theme_style.css?v={$version}_{$global['web_theme_style_uptime']|default=0}" rel="stylesheet" type="text/css">
+        {elseif condition="file_exists(APP_PATH.'admin/template/public/theme_css.htm') && function_exists('hex2rgba')" /}
+            {include file="public/theme_css" /}
+        {/if}
+        <link href="__SKIN__/font/css/iconfont.css?v={$version}" rel="stylesheet" />
+        <link rel="stylesheet" href="__PUBLIC__/plugins/ztree/css/zTreeStyle/zTreeStyle.css?v={$version}" type="text/css">
+        <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js?v={$version}"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/uploadimgnew/layui/layui.js?v={$version}"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/uploadimgnew/js/jquery.cookie.js?v={$version}"></script>
+        
+        <style type="text/css">
+            .group-item .group-button {display: none;}
+            .group-item:hover .group-button {display: block;}
+            .group-item:hover .group-count {display: none;}
+            .ztree .node_name{
+                font-size: 13px !important;
+            }
+            .hover{
+                line-height: 22px;
+            }
+            .ui-layout-pane {   
+                background: #fff;   
+            } 
+            .ui-layout-center{
+                padding:0 15px 0 15px;
+            }
+            .ztree li a {
+                display: inline-block !important;
+            }
+            .ztree li a.curSelectedNode{
+                height: 20px;
+            }
+        </style>
+        <script type="text/javascript">
+            var eyou_basefile = "{$Request.baseFile}";
+            var module_name = "{$Think.const.MODULE_NAME}";
+            var __root_dir__ = "__ROOT_DIR__";
+            var __lang__ = "{$admin_lang}";
+        </script>
+    </head>
+
+    <body>
+        <div class="upload-box ui-layout-center">
+            <div class="upload-body">
+                <div class="upload-main">
+                    <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                        <ul class="layui-tab-title">
+                            <li id="bendi" class="layui-this">本地图片</li>
+                            <li id="tiqu">远程图片</li>
+                        </ul>
+                        <div class="layui-tab-content" style="height: 100%;">
+                            <div class="layui-tab-item layui-show" id="bendi_cont">
+                                <div class="upload-con">
+                                    <div class="upload-group">
+                                        <div>
+                                            <ul class="upload-nav" id="tab">
+                                                <li class="item active" id="li_tag_item_group" data-value="1">我的分组</li>
+                                                <li class="item" id="li_tag_item_imgdir" data-value="2">图片目录</li>
+                                            </ul>
+                                        </div>
+                                        <div id="container">
+                                            <div id="content1">
+                                                <div class="upload-group-add">
+                                                    <button onclick="addcate();" class="layui-btn layui-btn-primary layui-border-blue"><i class="iconfont e-wenjianjiatianjia"></i>添加分组</button>
+                                                </div>
+                                                <div class="upload-group-con">
+                                                    <div class="group-item {empty name='$type_id'} active {/empty}">
+                                                        <div class="group-item-l">
+                                                            <a href="javascript:void(0);" data-src="{$default_upload_list_url}" id="typename_0" data-type_id="0" onclick="openIframes(this);">默认分组
+                                                                {eyou:empty name="$admin_logic_1639031991"}
+                                                                <!-- <span style=" margin-left: 15px;"><i class="fa fa-refresh" onclick="syn_old_imgdata(true);" title="点击同步站点图片"></i></span> -->
+                                                                {/eyou:empty}
+                                                            </a>
+                                                        </div>
+                                                        <div class="group-item-r" id="count_0" style="text-align: right;margin: 0 auto;">{$uploads_total_list[0]['total']|default=0}</div>
+                                                    </div>
+                                                    {volist name="$uploads_type_list" id="vo"}
+                                                    <div class="group-item {eq name='$type_id' value='$vo.id'} active {/eq}">
+                                                        <div class="group-item-l"><a href="javascript:void(0);" data-src="{$vo.url}" id="typename_{$vo.id}" data-type_id="{$vo.id}" onclick="openIframes(this);">{$vo.upload_type}</a></div>
+                                                        <div class="group-item-r group-count" id="count_{$vo.id}" style="text-align: right;margin: 0 auto;">{$uploads_total_list[$vo['id']]['total']|default=0}</div>
+                                                        <div class="group-item-r group-button">
+                                                            <a href="javascript:void(0)" onclick="editcate(this, '{$vo.id}')">编辑</a> 
+                                                            <a href="javascript:void(0)" onclick="delcate(this, '{$vo.id}')">删除</a>
+                                                        </div>
+                                                    </div>
+                                                    {/volist}
+                                                </div>
+                                            </div>
+                                            <div id="content2" style="display: none">
+                                                <div class="upload-dirimg-con ui-layout-east">
+                                                    <div class="ztreeContent">
+                                                        <div id="tree" class="ztree"></div>
+                                                    </div>  
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <iframe name="content_body" id="content_body" src="{$current_upload_list_url}&unneed_syn={$Request.param.unneed_syn}" width="100%" height="100%" frameborder="0" style="height: 460px;"></iframe>
+                                </div>
+                            </div>
+                            <div class="layui-tab-item" id="tiqu_cont">
+                                <div class="upload-con">
+                                    <div class="image-selector-network">
+                                        <form class="layui-form" id="layui-form" action="{:url('Uploadimgnew/ajax_remote_to_imglocal')}" method="post">
+                                          <div class="layui-form-item">
+                                            <label class="layui-form-label"></label>
+                                            <div class="layui-input-inline" style="width: 400px;">
+                                              <input type="text" name="imgremoteurl" lay-verify="imgremoteurl" autocomplete="off" placeholder="请输入图片地址" class="layui-input">
+                                            </div>
+                                            <div class="layui-input-inline">
+                                              <a onclick="remote_to_imglocal();" class="layui-btn layui-btn-normal">提取图片</a>
+                                            </div>  
+                                          </div>
+                                          <div class="layui-form-item">
+                                            <label class="layui-form-label"></label>
+                                            <div class="layui-form-mid layui-word-aux">
+                                               需要http://.........大小不要超过{$basicConfig.file_size}{$basicConfig.max_sizeunit}，支持图片类型 {$basicConfig.image_type}
+                                            </div>
+                                          </div>
+                                        </form>  
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="upload-footer">
+                    <button type="button" class="layui-btn layui-btn-primary layui-btn-off">取消</button>
+                    <button type="button" class="layui-btn layui-btn-normal layui-btn-yes">确定</button>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" id="input_type_id" value="{$type_id|default=0}">
+        <input type="hidden" id="input_top_tab" value="bendi">
+        <script src="__SKIN__/js/jquery.layout-latest.min.js?v={$version}"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/ztree/js/jquery.ztree.core.min.js?v={$version}"></script>
+        <script type="text/javascript">
+            var callback = "{$info.func}";
+            var num = "{$info.num|default=1}";
+        </script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/uploadimgnew/js/upload.js?v={$version}1"></script>
+    </body>
+</html>

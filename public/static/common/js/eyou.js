@@ -50,9 +50,9 @@ jQuery(function($){
                 eyou_html(that);
             } else if (e_type == 'type') {
                 eyou_type(that);
-            } else if (e_type == 'arclist') {
+            } else if (e_type == 'arclist' || e_type == 'artlist') {
                 eyou_arclist(that);
-            } else if (e_type == 'channel') {
+            } else if (e_type == 'channel' || e_type == 'models') {
                 eyou_channel(that);
             } else if (e_type == 'upload') {
                 eyou_upload(that);

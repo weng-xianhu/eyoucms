@@ -1,0 +1,9 @@
+{if condition="$Request.param.callback_url"}
+    <a class="ncap-btn-big ncap-btn-no" href="javascript:void(0);" {if condition="$Request.param.parent"} onclick="parent.window.location.href = '{$Request.param.callback_url}'" {else/} onclick="window.location.href = '{$Request.param.callback_url}'" {/if} title="返回">返回</a>
+{elseif condition="$Request.param.referurl" /}
+    <a class="ncap-btn-big ncap-btn-no" href="javascript:void(0);" {if condition="$Request.param.parent"} onclick="parent.window.location.href = '{$Request.param.referurl}'" {else/} onclick="window.location.href = '{$Request.param.referurl}'" {/if} title="返回">返回</a>
+{elseif condition="$Request.param.gourl" /}
+    <a class="ncap-btn-big ncap-btn-no" href="javascript:void(0);" {if condition="$Request.param.parent"} onclick="parent.window.location.href = '{$Request.param.gourl}'" {else/} onclick="window.location.href = '{$Request.param.gourl}'" {/if} title="返回">返回</a>
+{else/}
+    <a class="ncap-btn-big ncap-btn-no" href="javascript:history.back();" title="返回">返回</a>
+{/if}

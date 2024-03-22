@@ -1,3 +1,112 @@
+{case value="imgs"}
+<script type="text/javascript" src="__STATIC__/admin/js/jquery-ui/jquery-ui.min.js"></script>
+<!-- 多张图 start -->
+<div class="ey-con ey-row mt10">
+    <div class="item-from-flex">
+        <div class="item-flex wb25">
+            <div class="item-tit">
+                {$vo.title|default=''}
+            </div>
+        </div>
+        <div class="item-flex-r wb75 ">
+            <div class="images_upload_main" >
+                <a href="javascript:void(0);" onclick="$('#upload_single_pic_{$vo.fieldArr}_{$vo.name|default=''}').trigger('click');" class="el-button el-button--primary is-plain el-button--small">
+
+                    <!--<a href="javascript:void(0);" onClick="Get_mobile_imguploads(1,'','{$vo.title}');" class="el-button el-button&#45;&#45;primary is-plain el-button&#45;&#45;small">-->
+                <!--<a href="javascript:void(0);" GetUploadify(100,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back', '', '{$vo.title}',1);" class="el-button el-button&#45;&#45;primary is-plain el-button&#45;&#45;small">-->
+                    <i class="el-icon-picture"></i>上传图片
+                </a>
+                <input type="file" id="upload_single_pic_{$vo.fieldArr}_{$vo.name|default=''}" onchange="upload_single_pic_1609837252(this,'{$vo.fieldArr}_{$vo.name|default=''}','{$vo.fieldArr}_{$vo.name|default=''}_call_back');" style="display: none;">
+
+            </div>
+            <!-- 上传图片显示的样板 start -->
+
+            <!-- 上传图片显示的样板 end -->
+        </div>
+        <div class="item-flex-r">
+            <i class="el-icon-arrow-right"></i>
+        </div>
+    </div>
+    <div class="item-from-flex" id="dl_{$vo.fieldArr}_{$vo.name|default=''}">
+        <div class="item-flex wb25">
+        </div>
+        <div class="item-flex-r wb75 " style="margin-left: 1px;">
+            <div class="images_upload_main" id="tab_{$vo.fieldArr}_{$vo.name|default=''}">
+
+                <div class="sort-list-{$vo.fieldArr}_{$vo.name|default=''}">
+                    {volist name="$vo[$vo['name'].'_eyou_imgupload_list']" id="v2" key="k2"}
+                    <div class="fieldext_upload fieldext_upload_html" >
+                        <div class="images_upload_item">
+                            <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2|default=''}">
+                            <a href="{$v2|default=''}" onclick="" target="_blank">
+                                <img src="{$v2|default=''}" width="70" height="70">
+                            </a>
+                            <a class="delete" href="javascript:void(0)" onclick="{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'{$v2|default=''}')">删除</a>
+                        </div>
+                    </div>
+                    {/volist}
+                    <div class="fieldext_upload" style="display:none;"></div>
+                </div>
+            </div>
+            <!-- 上传图片显示的样板 start -->
+            <div class="{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl" style="display: none;">
+                <div class="fieldext_upload fieldext_upload_html">
+                    <div class="images_upload_item">
+                        <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="" />
+                        <a href="javascript:void(0);" onClick="" >
+                            <img src="__STATIC__/admin/images/add-button.jpg" width="70" height="70" />
+                        </a>
+                        <a class="delete" href="javascript:void(0)">&nbsp;&nbsp;</a>
+                    </div>
+                </div>
+            </div>
+            <!-- 上传图片显示的样板 end -->
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    // 上传多图回调函数
+    function {$vo.fieldArr}_{$vo.name|default=''}_call_back(paths){
+        paths = [paths];
+        var  last_div = $(".{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl").html();
+        for (var i=0;i<paths.length ;i++ )
+        {
+            if ($(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html").length > 0) {
+                $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").after(last_div);  // 插入一个 新图片
+            } else {
+                $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload:last").before(last_div);  // 插入一个 新图片
+            }
+            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('img').attr('src',paths[i]);// 修改他的图片路径
+            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('删除');
+            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+        }
+    }
+    /*
+     * 上传之后删除组图input
+     * @access   public
+     * @val      string  删除的图片input
+     */
+    function {$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(obj,path)
+    {
+        $(obj).parent().remove(); // 删除完服务器的, 再删除 html上的图片
+    }
+
+    /** 以下 产品相册的拖动排序相关 js*/
+
+    $( ".sort-list-{$vo.fieldArr}_{$vo.name|default=''}" ).sortable({
+        start: function( event, ui) {
+
+        }
+        ,stop: function( event, ui ) {
+
+        }
+    });
+    $( ".sort-list-{$vo.fieldArr}_{$vo.name|default=''}" ).disableSelection();
+</script>
+<!-- 多张图 end -->
+{/case}
 <!-- 扩展 -->
 {eyou:case value="img"}
 <!-- 单张图 start -->
@@ -10,8 +119,8 @@
             </div>
             <div class="item-flex-r wb75">
                 <div class="item-flex-img">
-                    <img id="single_img_{$vo.fieldArr}_{$vo.name|default=''}" class="img-fluid img1_{$vo.fieldArr}_{$vo.name|default=''}"  onclick="$('#upload_single_pic_{$vo.fieldArr}_{$vo.name|default=''}').trigger('click');" src="{$vo.info|default='__PUBLIC__/static/common/images/not_upload_pic.png'}"/>
-                    <input type="file" name="upload_single_pic" id="upload_single_pic_{$vo.fieldArr}_{$vo.name|default=''}" onchange="upload_single_pic_1609837252(this,'{$vo.fieldArr}_{$vo.name|default=''}')" style="display: none;">
+                    <img id="single_img_{$vo.fieldArr}_{$vo.name|default=''}" class="img-fluid img1_{$vo.fieldArr}_{$vo.name|default=''}" onclick="$('#upload_single_pic_{$vo.fieldArr}_{$vo.name|default=''}').trigger('click');" src="{$vo.info|default='__PUBLIC__/static/common/images/not_upload_pic.png'}"/>
+                    <input type="file" name="upload_single_pic" id="upload_single_pic_{$vo.fieldArr}_{$vo.name|default=''}" onchange="upload_single_pic_1609837252(this,'{$vo.fieldArr}_{$vo.name|default=''}');" style="display: none;">
                     <input type="hidden" class="type-file-text" id="single_pic_input_{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.info|default=''}">
                 </div>
             </div>
@@ -23,7 +132,8 @@
     </div>
 <!-- 单张图 end -->
 {/eyou:case}
-{case value="fileddd"}
+
+{case value="file_tmp"}
     {eyou:static file="/public/plugins/layui/css/layui.css" /}
     {eyou:static file="/public/plugins/layui/layui.js" /}
     <!-- 单个文件 start -->
@@ -87,3 +197,42 @@
     </script>
     <!-- 单个文件 end -->
 {/case}
+
+{eyou:case value="datetime"}
+    <!-- 日期和时间 start -->
+    {eyou:static file="/public/plugins/layui/css/layui.css" /}
+    {eyou:static file="/public/plugins/layui/layui.js" /}
+    <div class="ey-con ey-row mt10">
+        <div class="item-from-flex">
+            <div class="item-flex-l">
+                <div class="item-tit fs16">
+                    {eyou:if condition="1 == $vo.is_required"}
+                        <span class="red">*</span>
+                    {eyou:else/}
+                        <span class="red"> </span>
+                    {/eyou:if}
+                    {$vo.title}
+                </div>
+                <div class="item-con">
+                    <input type="text" class="input-text fs16" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">{$vo.dfvalue_unit|default=''}
+                    <span class="err"></span>
+                    <p class="notic">{$vo.remark|default=''}</p>
+                </div>
+            </div>
+            <div class="item-flex-r">
+                <i class="el-icon-arrow-right"></i>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        layui.use('laydate', function() {
+            var laydate = layui.laydate;
+
+            laydate.render({
+                elem: "#{$vo.fieldArr}_{$vo.name|default=''}"
+                ,type: 'datetime'
+            });
+        })
+    </script>
+    <!-- 日期和时间 end -->
+{/eyou:case}

@@ -43,7 +43,7 @@ class TagPrenext extends Base
 
         $result = [];
         if ($get == 'pre' || $get == 'all') { // 上一篇
-            $preDetail = Db::name('archives')->field('a.aid, a.typeid, a.title')
+            $detail = Db::name('archives')->field('a.aid, a.typeid, a.title, a.litpic, a.click, a.channel')
                 ->alias('a')
                 ->where([
                     'a.typeid'  => $this->tid,
@@ -51,19 +51,20 @@ class TagPrenext extends Base
                     'a.arcrank' => ['EGT', 0],
                     'a.status'  => 1,
                     'a.is_del'  => 0,
-                    'a.lang'    => $this->main_lang,
+                    'a.lang'    => self::$home_lang,
                 ])
                 ->order('a.aid desc')
                 ->find();
-            if (!empty($preDetail)) {
-                $preDetail['title'] = text_msubstr($preDetail['title'], 0, $titlelen, false);
-                // $preDetail['arcurl'] = '/pages/article/view?aid='.$preDetail['aid'];
-                // $preDetail['typeurl'] = '/pages/article/list?typeid='.$preDetail['typeid'];
-                $result['preDetail'] = $preDetail;
+            if (!empty($detail)) {
+                $detail['title'] = text_msubstr($detail['title'], 0, $titlelen, false);
+                $detail['litpic'] = $this->get_default_pic($detail['litpic']);
+                // $detail['arcurl'] = '/pages/article/view?aid='.$detail['aid'];
+                // $detail['typeurl'] = '/pages/article/list?typeid='.$detail['typeid'];
+                $result['preDetail'] = $detail;
             }
         }
         if ($get == 'next' || $get == 'all') { // 下一篇
-            $nextDetail = Db::name('archives')->field('a.aid, a.typeid, a.title')
+            $detail = Db::name('archives')->field('a.aid, a.typeid, a.title, a.litpic, a.click, a.channel')
                 ->alias('a')
                 ->where([
                     'a.typeid'  => $this->tid,
@@ -71,15 +72,16 @@ class TagPrenext extends Base
                     'a.arcrank' => ['EGT', 0],
                     'a.status'  => 1,
                     'a.is_del'  => 0,
-                    'a.lang'    => $this->main_lang,
+                    'a.lang'    => self::$home_lang,
                 ])
                 ->order('a.aid asc')
                 ->find();
-            if (!empty($nextDetail)) {
-                $nextDetail['title'] = text_msubstr($nextDetail['title'], 0, $titlelen, false);
-                // $nextDetail['arcurl'] = '/pages/article/view?aid='.$nextDetail['aid'];
-                // $nextDetail['typeurl'] = '/pages/article/list?typeid='.$nextDetail['typeid'];
-                $result['nextDetail'] = $nextDetail;
+            if (!empty($detail)) {
+                $detail['title'] = text_msubstr($detail['title'], 0, $titlelen, false);
+                $detail['litpic'] = $this->get_default_pic($detail['litpic']);
+                // $detail['arcurl'] = '/pages/article/view?aid='.$detail['aid'];
+                // $detail['typeurl'] = '/pages/article/list?typeid='.$detail['typeid'];
+                $result['nextDetail'] = $detail;
             }
         }
 

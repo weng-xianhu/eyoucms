@@ -51,7 +51,7 @@ function AddAddress(){
                 if (res.data.url) {
                     parent.layer.close(parentObj);
                     parent.layer.msg(res.msg, {time: 1000}, function(){
-                        _parent.ReturnUrl(res.data.url);
+                        _parent.returnUrl(res.data.url);
                     });
                 } else {
                     parent.layer.close(parentObj);

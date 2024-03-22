@@ -22,7 +22,7 @@
                     <label for="password"><em>*</em>登录密码</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="password" id="password" class="input-txt">
+                    <input type="text" name="password" id="password" class="input-txt" autocomplete="off">
                     <p class="notic"></p>
                 </dd>
             </dl>
@@ -62,6 +62,7 @@
             <!-- 会员属性 结束 -->
             {/notempty}
             <div class="bot">
+                {:token('__token_users_batch_add__')}
                 <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
             </div>
         </div>
@@ -91,18 +92,19 @@
             }
         }
 
-        if($('input[name=username]').val() == ''){
+        if($('textarea[name=username]').val() == ''){
             showErrorMsg('用户名不能为空！');
-            $('input[name=username]').focus();
+            $('textarea[name=username]').focus();
             return false;
         }
 
         var password = $('#password').val();
         if(password == ''){
             showErrorMsg('登录密码不能为空！');
-            $('#password').focus();
+            $('input[name=password]').focus();
             return false;
         }
+        {$pwdJsCode|default=''}
 
         layer_loading('正在处理');
         $.ajax({
@@ -115,7 +117,7 @@
                 if(res.code == 1){
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {icon: 1, shade: layer_shade, time: 1000}, function(){
                         _parent.window.location.reload();
                     });
                 }else{

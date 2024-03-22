@@ -5,7 +5,7 @@
 </div>
 <div class="fbuttonr">
     <div class="total">
-        <h5>共有{$pager->totalRows}条,每页显示
+        <h5>共有{$pager->totalRows|default=0}条,每页显示
             <select name="pagesize" style="width: 60px;" onchange="ey_selectPagesize(this);">
                 <option {if condition="$pager->listRows == 20"} selected {/if} value="20">20</option>
                 <option {if condition="$pager->listRows == 50"} selected {/if} value="50">50</option>

@@ -52,7 +52,7 @@ function AddAddress(){
                 if (res.data.url) {
                     parent.layer.close(parentObj);
                     parent.layer.msg(res.msg, {time: 1000}, function(){
-                        _parent.ReturnUrl(res.data.url);
+                        _parent.returnUrl(res.data.url);
                     });
                 } else {
                     parent.layer.close(parentObj);
@@ -120,4 +120,9 @@ function AddHtml(data,types)
 function setOrderAddr(data)
 {
     parent.SelectEd('addr_id',data.addr_id,data);
+}
+
+function layer_colse() {
+    var parentObj = parent.layer.getFrameIndex(window.name);
+    parent.layer.close(parentObj);
 }

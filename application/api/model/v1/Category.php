@@ -108,7 +108,7 @@ class Category extends Base
      */
     public static function getALL($type = '', $showAllTxt = 'off')
     {
-        $cacheKey = "api-model-Category-getALL-".md5(json_encode(func_get_args()))."-".parent::$appId;
+        $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.json_encode(func_get_args())."-".parent::$appId);
         $returnData = Cache::get($cacheKey);
         if (empty($returnData)) {
             $data = Db::name('arctype')->field('id,current_channel,parent_id,typename,grade,litpic,seo_title,seo_keywords,seo_description,sort_order, 0 as sub_level')->where([
@@ -205,7 +205,7 @@ class Category extends Base
      */
     public static function getCacheAllName()
     {
-        $cacheKey = "api-model-Category-getCacheAllName-".parent::$appId;
+        $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.parent::$appId);
         $result = Cache::get($cacheKey);
         if (empty($result)) {
             $arctypeAll = self::getALL('all');
@@ -250,7 +250,7 @@ class Category extends Base
         if (empty($typeid)) {
             $result = $treeData;
         } else {
-            $cacheKey = "api-model-Category-getCacheTree-".md5(json_encode(func_get_args()));
+            $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.json_encode(func_get_args()));
             $result = Cache::get($cacheKey);
             if (empty($result)) {
                 if (isset($treeData[$typeid])) {

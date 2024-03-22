@@ -24,7 +24,6 @@
                         <th axis="col1" class="w120">
                             <div class="tc">操作</div>
                         </th>
-                       
                     </tr>
                     </thead>
                 </table>
@@ -37,7 +36,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -49,7 +50,7 @@
                                   <a href="{:url('Filemanager/index', array('activepath'=>replace_path($vo.filepath)))}"><img src="__SKIN__/images/{$vo.icon}" border="0" width="16" height="16" align="absmiddle" class="flt_u">&nbsp;{$vo.filename}</a>
                                   {else /}
                                     {notempty name="$vo.icon"}
-                                    <img class="flt_u" src="__SKIN__/images/{$vo.icon}" border="0" width="16" height="16" align="absmiddle" {if condition="!empty($vo.filepath) AND 'image' == $vo.filemine"}onmouseover="layer_tips=layer.tips('<img src=__ROOT_DIR__{$vo.filepath}?v={php}echo time();{/php} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/if} onmouseout="layer.close(layer_tips);">
+                                    <img class="flt_u" src="__SKIN__/images/{$vo.icon}" border="0" width="16" height="16" align="absmiddle" {if condition="!empty($vo.filepath) AND 'image' == $vo.filemine"}onmouseover="layer_tips=layer.tips('<img src=__ROOT_DIR__{$vo.filepath}?v={php}echo time();{/php} class=\'layer_tips_img\'>',this,{tips: [3, '#fff'],skin:'layer-yourskin-mt0'});"{/if} onmouseout="layer.close(layer_tips);">
                                     {/notempty}
                                     &nbsp;
                                     {eq name="$vo['filemine']" value='image'}
@@ -138,8 +139,16 @@
 
     function delfilename(obj, formid) {
         layer.confirm('此操作不可恢复，确认删除？', {
-                title: false,
-                btn: ['确定','取消'] //按钮
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['确定', '取消'] ,//按钮
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
             }, function(){
                 // 确定
                 var form = $('#post_del');

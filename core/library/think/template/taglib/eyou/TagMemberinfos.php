@@ -35,7 +35,7 @@ class TagMemberinfos extends Base
     {
         $aid = !empty($aid) ? $aid : $this->aid;
         if (empty($aid) && empty($users_id)) {
-            echo '标签memberinfos报错：缺少属性 mid 值。';
+//            echo '标签memberinfos报错：缺少属性 mid 值。';
             return false;
         } else if (!empty($aid) && empty($users_id)) {
             $archivesInfo = Db::name('archives')->field('users_id,admin_id')->where(['aid'=>$aid])->find();
@@ -82,7 +82,7 @@ class TagMemberinfos extends Base
             $result['last_login'] = Mydate('Y-m-d h:i:s', $result['last_login']);
             $result['open_level_time'] = Mydate('Y-m-d h:i:s', $result['open_level_time']);
             $result['update_time'] = Mydate('Y-m-d h:i:s', $result['update_time']);
-            $result['head_pic'] = get_head_pic($result['head_pic']);
+            $result['head_pic'] = get_head_pic($result['head_pic'], false, $result['sex']);
 
             /*组装会员属性字段值*/
             if (preg_match('#,para_(\d|\*){1,},#i', ','.$addfields.',')) {

@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>选择门店</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/tag_global.js"/}
+    </head>
+
+    <body class="centre">
+        <div class="ey-body-bg">
+            <div class="ey-body">
+                <div class="ey-container w1200">
+                    <div class="ey-con wb100 fr">
+                        <div class="el-main main-bg">
+                            <div class="shop-car">
+                                <div id="finance-list_wrapper" class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition"
+                                    style="width: 100%;">
+                                    <table class="el-table__body">
+                                        <thead>
+                                            <tr class="el-table__row">
+                                                <th style="width: 200px;"> <div class="cell ">名称</div> </th>
+                                                <th style="width: 200px;"> <div class="cell ">地址</div> </th>
+                                                <th style="width: 120px;"> <div class="cell tc">营业时间</div> </th>
+                                                <th style="width: 120px;"> <div class="cell tc">操作</div> </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {eyou:volist name="list" id="vo"}
+                                            <tr>
+                                                <td>
+                                                    <div class="cell ">{$vo.store_name}</div>
+                                                </td>
+                                                <td>
+                                                    <div class="cell ">{$vo.store_address}</div>
+                                                </td>
+                                                <td>
+                                                    <div class="cell tc">{$vo.store_business}</div>
+                                                </td>
+                                                <td>
+                                                    <div class="cell tc">
+                                                        <a href="JavaScript:void(0);" data-store_id="{$vo.store_id}" data-store_name="{$vo.store_name}" onclick="parent.selectVerifyStore(true, this);">选择</a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {/eyou:volist}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

@@ -2,10 +2,10 @@
 <body class="bodystyle">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width: auto;">
-    {include file="member/bar" /}
+{include file="member/left" /}
+<div class="page" style="min-width:auto;margin-left:100px;">
+    {include file="users_release/bar" /}
     <div class="flexigrid">
-        
         <form class="form-horizontal" id="post_form" action="{:url('UsersRelease/conf')}" method="post">
             <div class="ncap-form-default">
                 <dl class="row">
@@ -97,7 +97,7 @@
             title: '会员投稿次数设置',
             fixed: true, //不固定
             shadeClose: false,
-            shade: 0.3,
+            shade: layer_shade,
             maxmin: true, //开启最大化最小化按钮
             area: ['50%', '80%'],
             content: url

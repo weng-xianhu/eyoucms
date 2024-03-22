@@ -3,8 +3,7 @@
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-    
+<div class="page min-hg-c-10">
     <form class="form-horizontal" id="post_form" action="{:url('Channeltype/add')}" method="post">
         <div class="ncap-form-default">
             <dl class="row">
@@ -32,12 +31,9 @@
                     <label>文档标题重复</label>
                 </dt>
                 <dd class="opt">
-                    <div class="onoff">
-                        <label for="is_repeat_title1" class="cb-enable selected">允许</label>
-                        <label for="is_repeat_title0" class="cb-disable">不允许</label>
-                        <input id="is_repeat_title1" name="is_repeat_title" value="1" type="radio" checked="checked">
-                        <input id="is_repeat_title0" name="is_repeat_title" value="0" type="radio">
-                    </div>
+                    <label class="curpoin"><input id="is_repeat_title1" name="is_repeat_title" value="1" type="radio" checked="checked">允许</label>
+                    &nbsp;
+                    <label class="curpoin"><input id="is_repeat_title0" name="is_repeat_title" value="0" type="radio">不允许</label>
                     <p class="notic">新增/编辑文档时，是否允许标题的重复</p>
                 </dd>
             </dl>
@@ -81,7 +77,7 @@
                 if(res.code == 1){
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                         _parent.window.location.reload();
                     });
                 }else{

@@ -2,7 +2,7 @@
 <body class="bodystyle">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page atta">
+<div class="page min-hg-c-10 atta">
     {include file="seo/bar" /}
     <form method="post" id="handlepost" action="{:url('Seo/handle')}" enctype="multipart/form-data" name="form1">
         <div class="ncap-form-default">
@@ -12,10 +12,14 @@
                 </dt>
                 <dd class="opt">
                     {volist name="seo_pseudo_list" id="vo"}
-                    <label>
-                        <input type="radio" name="seo_pseudo" value="{$key}" {if condition='isset($config.seo_pseudo) && $config.seo_pseudo eq $key'}checked="checked"{/if}/>{$vo}&nbsp;
-                    </label>
+                        <label class="curpoin {if condition="!empty($global['web_citysite_open']) && $key == 2"}grey{/if}" {if condition="!empty($global['web_citysite_open']) && $key == 2"} title="你已开启城市分站，静态页面功能不可用" {/if}>
+                            <input type="radio" name="seo_pseudo" value="{$key}" {if condition='isset($config.seo_pseudo) && $config.seo_pseudo eq $key'}checked="checked"{/if} {if condition="((!empty($default_lang) && $default_lang != 'cn') || !empty($global['web_citysite_open'])) && $key == 2"}disabled class="grey"{/if} />{$vo}&nbsp;
+                        </label>
                     {/volist}
+                    {if condition="!empty($default_lang) && $default_lang != 'cn'"}
+                        <p class="notic">前台默认语言不是中文时，不允许使用静态模式！</p>
+                    {/if}
+                    <!-- &nbsp;&nbsp;<a id="a_seo_build" {if condition="empty($config['seo_pseudo']) || 2 != $config['seo_pseudo']"}style="display: none;"{/if} href="javascript:void(0);" data-url="{:url('Seo/build')}" onclick="seo_build(this);">[前往生成静态]</a> -->
                     <input type="hidden" id="seo_pseudo_old" value="{$config.seo_pseudo|default='1'}"/>
                     <input type="hidden" name="seo_html_arcdir_limit" value="{$seo_html_arcdir_limit}"/>
                     <input type="hidden" id="seo_inlet" value="{$config.seo_inlet}"/>
@@ -27,10 +31,10 @@
                     <label>动态格式</label>
                 </dt>
                 <dd class="opt">
-                    <label><input type="radio" name="seo_dynamic_format" value="1" {if condition="!isset($config.seo_dynamic_format) OR $config.seo_dynamic_format eq 1"}checked="checked"{/if}>完全兼容（<a href="javascript:void(0);" onclick="view_exp('view_1_1');">查看例子</a><span id="view_1_1" class="none">：__SITE_URL____ROOT_DIR__/index.php?m=home&amp;c=Lists&amp;a=index&amp;tid=1</span>）</label>&nbsp;
+                    <label class="curpoin"><input type="radio" name="seo_dynamic_format" value="1" {if condition="!isset($config.seo_dynamic_format) OR $config.seo_dynamic_format eq 1"}checked="checked"{/if}>完全兼容（<a href="javascript:void(0);" onclick="view_exp('view_1_1');">查看例子</a><span id="view_1_1" class="none">：__SITE_URL____ROOT_DIR__/index.php?m=home&amp;c=Lists&amp;a=index&amp;tid=1</span>）</label>&nbsp;
                     {if condition="isset($config.seo_dynamic_format) AND $config.seo_dynamic_format eq 2"}
                     <br/>
-                    <label><input type="radio" name="seo_dynamic_format" value="2" checked="checked">部分兼容&nbsp;<font color="red">[部分空间不支持]</font>（<a href="javascript:void(0);" onclick="view_exp('view_1_2');">查看例子</a><span id="view_1_2" class="none">：__SITE_URL____ROOT_DIR__/home/Lists/index.html?tid=1</span>）</label>&nbsp;
+                    <label class="curpoin"><input type="radio" name="seo_dynamic_format" value="2" checked="checked">部分兼容&nbsp;<font color="red">[部分空间不支持]</font>（<a href="javascript:void(0);" onclick="view_exp('view_1_2');">查看例子</a><span id="view_1_2" class="none">：__SITE_URL____ROOT_DIR__/home/Lists/index.html?tid=1</span>）</label>&nbsp;
                     {/if}
                     <span class="err"></span>
                     <p class="notic"></p>
@@ -43,8 +47,8 @@
                         <label for="seo_pseudo_lang">多语言URL</label>
                     </dt>
                      <dd class="opt">
-                        <label><input type="radio" name="seo_pseudo_lang" value="1" {if condition='!isset($seo_pseudo_lang) OR $seo_pseudo_lang neq 3'}checked="checked"{/if}/>动态URL</label>&nbsp;
-                        <label><input type="radio" name="seo_pseudo_lang" value="3" {if condition="isset($seo_pseudo_lang) AND $seo_pseudo_lang eq 3"}checked="checked"{/if}>伪静态化</label>&nbsp;
+                        <label class="curpoin"><input type="radio" name="seo_pseudo_lang" value="1" {if condition='!isset($seo_pseudo_lang) OR $seo_pseudo_lang neq 3'}checked="checked"{/if}/>动态URL</label>&nbsp;
+                        <label class="curpoin"><input type="radio" name="seo_pseudo_lang" value="3" {if condition="isset($seo_pseudo_lang) AND $seo_pseudo_lang eq 3"}checked="checked"{/if}>伪静态化</label>&nbsp;
                         <span class="err"></span>
                         <p class="notic"></p>
                     </dd>
@@ -63,14 +67,16 @@
                 </dl>
                 <dl class="row">
                     <dt class="tit">
-                        <label>列表页面名称</label>
+                        <label>栏目页面名称</label>
                     </dt>
                     <dd class="opt">
-                        <label><input type="radio" name="seo_html_listname" value="1" {if condition="isset($config.seo_html_listname) && $config.seo_html_listname eq 1"}checked="checked"{/if}>{notempty name='$root_dir'}子目录名称/{/notempty}顶级目录名称/lists_ID.html（<a href="javascript:void(0);" onclick="view_exp('lists_2_1');">查看例子</a><span id="lists_2_1" class="none">：__SITE_URL____ROOT_DIR__<span id="exp_seo_html_arcdir">{$seo_html_arcdir_1}</span>/news/lists_1.html</span>）</label>&nbsp;
+                        <label class="curpoin"><input type="radio" name="seo_html_listname" value="1" {if condition="isset($config.seo_html_listname) && $config.seo_html_listname eq 1"}checked="checked"{/if}>{notempty name='$root_dir'}子目录名称/{/notempty}顶级目录名称/lists_ID.html（<a href="javascript:void(0);" onclick="view_exp('lists_2_1');">查看例子</a><span id="lists_2_1" class="none">：__SITE_URL____ROOT_DIR__<span id="exp_seo_html_arcdir">{$seo_html_arcdir_1}</span>/news/lists_1.html</span>）</label>&nbsp;
                         <br/>
-                        <label><input type="radio" name="seo_html_listname" value="2" {if condition="!isset($config.seo_html_listname) || $config.seo_html_listname neq 1"}checked="checked"{/if}>{notempty name='$root_dir'}子目录名称/{/notempty}父级目录名称/子目录名称/（<a href="javascript:void(0);" onclick="view_exp('lists_2_2');">查看例子</a><span id="lists_2_2" class="none">：__SITE_URL____ROOT_DIR__<span id="exp_seo_html_arcdir">{$seo_html_arcdir_1}</span>/news/lol/</span>）</label>&nbsp;
+                        <label class="curpoin"><input type="radio" name="seo_html_listname" value="2" {if condition="!isset($config.seo_html_listname) || $config.seo_html_listname neq 1"}checked="checked"{/if}>{notempty name='$root_dir'}子目录名称/{/notempty}父级目录名称/子目录名称/（<a href="javascript:void(0);" onclick="view_exp('lists_2_2');">查看例子</a><span id="lists_2_2" class="none">：__SITE_URL____ROOT_DIR__<span id="exp_seo_html_arcdir">{$seo_html_arcdir_1}</span>/news/lol/</span>）</label>&nbsp;
                         <br/>
-                        <label><input type="radio" name="seo_html_listname" value="3" {if condition="isset($config.seo_html_listname) && $config.seo_html_listname eq 3"}checked="checked"{/if}>{notempty name='$root_dir'}子目录名称/{/notempty}子目录名称/（<a href="javascript:void(0);" onclick="view_exp('lists_2_3');">查看例子</a><span id="lists_2_3" class="none">：__SITE_URL____ROOT_DIR__<span id="exp_seo_html_arcdir">{$seo_html_arcdir_1}</span>/lol/</span>）</label>&nbsp;
+                        <label class="curpoin"><input type="radio" name="seo_html_listname" value="3" {if condition="isset($config.seo_html_listname) && $config.seo_html_listname eq 3"}checked="checked"{/if}>{notempty name='$root_dir'}子目录名称/{/notempty}子目录名称/（<a href="javascript:void(0);" onclick="view_exp('lists_2_3');">查看例子</a><span id="lists_2_3" class="none">：__SITE_URL____ROOT_DIR__<span id="exp_seo_html_arcdir">{$seo_html_arcdir_1}</span>/lol/</span>）</label>&nbsp;
+                        <br/>
+                        <label class="curpoin"><input type="radio" name="seo_html_listname" value="4" {if condition="isset($config.seo_html_listname) && $config.seo_html_listname eq 4"}checked="checked"{/if}>自定义（<a href="javascript:void(0);" onclick="view_exp('lists_2_4');">点击查看</a><span id="lists_2_4" class="none">：在【栏目管理】新增/编辑栏目可以自定义文件保存目录和列表命名规则</span>）</label>&nbsp;
                         <span class="err"></span>
                         <p class="notic"></p>
                     </dd>
@@ -80,11 +86,13 @@
                         <label>文档页面名称</label>
                     </dt>
                     <dd class="opt">
-                        <label><input type="radio" name="seo_html_pagename" value="1" {if condition="isset($config.seo_html_pagename) && $config.seo_html_pagename eq 1"}checked="checked"{/if}>{notempty name='$root_dir'}子目录名称/{/notempty}顶级目录名称/ID.html（<a href="javascript:void(0);" onclick="view_exp('view_2_3');">查看例子</a><span id="view_2_3" class="none">：__SITE_URL____ROOT_DIR__<span id="exp_seo_html_arcdir">{$seo_html_arcdir_1}</span>/news/10.html</span>）</label>&nbsp;
+                        <label class="curpoin"><input type="radio" name="seo_html_pagename" value="1" {if condition="isset($config.seo_html_pagename) && $config.seo_html_pagename eq 1"}checked="checked"{/if}>{notempty name='$root_dir'}子目录名称/{/notempty}顶级目录名称/ID.html（<a href="javascript:void(0);" onclick="view_exp('view_2_1');">查看例子</a><span id="view_2_1" class="none">：__SITE_URL____ROOT_DIR__<span id="exp_seo_html_arcdir">{$seo_html_arcdir_1}</span>/news/10.html</span>）</label>&nbsp;
                         <br/>
-                        <label><input type="radio" name="seo_html_pagename" value="2" {if condition="!isset($config.seo_html_pagename) || $config.seo_html_pagename neq 1"}checked="checked"{/if}>{notempty name='$root_dir'}子目录名称/{/notempty}父级目录名称/子目录名称/ID.html（<a href="javascript:void(0);" onclick="view_exp('view_2_4');">查看例子</a><span id="view_2_4" class="none">：__SITE_URL____ROOT_DIR__<span id="exp_seo_html_arcdir">{$seo_html_arcdir_1}</span>/news/lol/20.html</span>）</label>&nbsp;
+                        <label class="curpoin"><input type="radio" name="seo_html_pagename" value="2" {if condition="!isset($config.seo_html_pagename) || $config.seo_html_pagename neq 1"}checked="checked"{/if}>{notempty name='$root_dir'}子目录名称/{/notempty}父级目录名称/子目录名称/ID.html（<a href="javascript:void(0);" onclick="view_exp('view_2_2');">查看例子</a><span id="view_2_2" class="none">：__SITE_URL____ROOT_DIR__<span id="exp_seo_html_arcdir">{$seo_html_arcdir_1}</span>/news/lol/20.html</span>）</label>&nbsp;
                         <br/>
-                        <label><input type="radio" name="seo_html_pagename" value="3" {if condition="isset($config.seo_html_pagename) && $config.seo_html_pagename eq 3"}checked="checked"{/if}>{notempty name='$root_dir'}子目录名称/{/notempty}子目录名称/ID.html（<a href="javascript:void(0);" onclick="view_exp('view_2_5');">查看例子</a><span id="view_2_5" class="none">：__SITE_URL____ROOT_DIR__<span id="exp_seo_html_arcdir">{$seo_html_arcdir_1}</span>/lol/20.html</span>）</label>&nbsp;
+                        <label class="curpoin"><input type="radio" name="seo_html_pagename" value="3" {if condition="isset($config.seo_html_pagename) && $config.seo_html_pagename eq 3"}checked="checked"{/if}>{notempty name='$root_dir'}子目录名称/{/notempty}子目录名称/ID.html（<a href="javascript:void(0);" onclick="view_exp('view_2_3');">查看例子</a><span id="view_2_3" class="none">：__SITE_URL____ROOT_DIR__<span id="exp_seo_html_arcdir">{$seo_html_arcdir_1}</span>/lol/20.html</span>）</label>&nbsp;
+                        <br/>
+                        <label class="curpoin"><input type="radio" name="seo_html_pagename" value="4" {if condition="isset($config.seo_html_pagename) && $config.seo_html_pagename eq 4"}checked="checked"{/if}>自定义（<a href="javascript:void(0);" onclick="view_exp('view_2_4');">点击查看</a><span id="view_2_4" class="none">：在【栏目管理】新增/编辑栏目可以自定义文件保存目录和文档命名规则</span>）</label>&nbsp;
                         <span class="err"></span>
                         <p class="notic"></p>
                     </dd>
@@ -95,11 +103,11 @@
                     <label>URL格式</label>
                 </dt>
                 <dd class="opt">
-                    <label>
+                    <label class="curpoin">
                         <input type="radio" name="seo_rewrite_format" {if condition="!isset($config.seo_rewrite_format) OR $config.seo_rewrite_format eq 1"} value="1" checked="checked" {else if condition="isset($config.seo_rewrite_format) AND $config.seo_rewrite_format eq 3" /} value="3" checked="checked" {/if}>目录名称（<a href="javascript:void(0);" onclick="view_exp('view_3_1');">示例</a><span id="view_3_1" class="none">：__SITE_URL____ROOT_DIR__/news/</span>）
                     </label>&nbsp;
                     <br/>
-                    <label><input type="radio" name="seo_rewrite_format" value="2" {if condition="isset($config.seo_rewrite_format) AND $config.seo_rewrite_format eq 2"}checked="checked"{/if}>模型标识（<a href="javascript:void(0);" onclick="view_exp('view_3_2');">示例</a><span id="view_3_2" class="none">：__SITE_URL____ROOT_DIR__/article/news.html</span>）</label>&nbsp;
+                    <label class="curpoin"><input type="radio" name="seo_rewrite_format" value="2" {if condition="isset($config.seo_rewrite_format) AND $config.seo_rewrite_format eq 2"}checked="checked"{/if}>模型标识（<a href="javascript:void(0);" onclick="view_exp('view_3_2');">示例</a><span id="view_3_2" class="none">：__SITE_URL____ROOT_DIR__/article/news.html</span>）</label>&nbsp;
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
@@ -109,8 +117,11 @@
                     <label>文档隶属URL</label>
                 </dt>
                 <dd class="opt">
-                    <label><input type="radio" name="seo_rewrite_view_format" value="1" {if condition="(!isset($config.seo_rewrite_format) OR $config.seo_rewrite_format eq 1) OR (!isset($config.seo_rewrite_view_format) OR $config.seo_rewrite_view_format == 1)"}checked="checked"{/if}>父目录</label>&nbsp;
-                    <label><input type="radio" name="seo_rewrite_view_format" value="3" {if condition="(isset($config.seo_rewrite_format) AND $config.seo_rewrite_format eq 3) OR $config.seo_rewrite_view_format == 3"}checked="checked"{/if}>当前目录</label>&nbsp;
+                    <label class="curpoin"><input type="radio" name="seo_rewrite_view_format" value="1" {if condition="(!isset($config.seo_rewrite_format) OR $config.seo_rewrite_format eq 1) OR (!isset($config.seo_rewrite_view_format) OR $config.seo_rewrite_view_format == 1)"}checked="checked"{/if}>父目录（<a href="javascript:void(0);" onclick="view_exp('view_3_3');">示例</a><span id="view_3_3" class="none">：__SITE_URL____ROOT_DIR__/news/20.html</span>）</label>&nbsp;
+                    <br/>
+                    <label class="curpoin"><input type="radio" name="seo_rewrite_view_format" value="3" {if condition="(isset($config.seo_rewrite_format) AND $config.seo_rewrite_format eq 3) OR $config.seo_rewrite_view_format == 3"}checked="checked"{/if}>当前目录（<a href="javascript:void(0);" onclick="view_exp('view_3_4');">示例</a><span id="view_3_4" class="none">：__SITE_URL____ROOT_DIR__/lol/20.html</span>）</label>&nbsp;
+                    <br/>
+                    <label class="curpoin"><input type="radio" name="seo_rewrite_view_format" value="4" {if condition="(isset($config.seo_rewrite_format) AND $config.seo_rewrite_format eq 4) OR $config.seo_rewrite_view_format == 4"}checked="checked"{/if}>父目录/当前目录/（<a href="javascript:void(0);" onclick="view_exp('view_3_5');">示例</a><span id="view_3_5" class="none">：__SITE_URL____ROOT_DIR__/news/lol/20.html</span>）</label>&nbsp;
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
@@ -120,9 +131,13 @@
                     <label>栏目标题格式</label>
                 </dt>
                 <dd class="opt">
-                    <label><input type="radio" name="seo_liststitle_format" value="1" {if condition="isset($config.seo_liststitle_format) AND $config.seo_liststitle_format eq 1"}checked="checked"{/if}>栏目名称_第N页</label>&nbsp;
+                    <label class="curpoin"><input type="radio" name="seo_liststitle_format" value="3" {if condition="isset($config.seo_liststitle_format) AND $config.seo_liststitle_format eq 3"}checked="checked"{/if}>栏目名称</label>&nbsp;
                     <br/>
-                    <label><input type="radio" name="seo_liststitle_format" value="2" {if condition="!isset($config.seo_liststitle_format) OR $config.seo_liststitle_format eq 2"}checked="checked"{/if}>栏目名称_第N页_网站名称</label>&nbsp;
+                    <label class="curpoin"><input type="radio" name="seo_liststitle_format" value="1" {if condition="isset($config.seo_liststitle_format) AND $config.seo_liststitle_format eq 1"}checked="checked"{/if}>栏目名称<span class="sp_seo_title_symbol">{if condition="!isset($config['seo_title_symbol'])"}_{else /}{$config.seo_title_symbol|default=''}{/if}</span>网站名称</label>&nbsp;
+                    <br/>
+                    <label class="curpoin"><input type="radio" name="seo_liststitle_format" value="4" {if condition="isset($config.seo_liststitle_format) AND $config.seo_liststitle_format eq 4"}checked="checked"{/if}>栏目名称<span class="sp_seo_title_symbol">{if condition="!isset($config['seo_title_symbol'])"}_{else /}{$config.seo_title_symbol|default=''}{/if}</span>第N页</label>&nbsp;
+                    <br/>
+                    <label class="curpoin"><input type="radio" name="seo_liststitle_format" value="2" {if condition="!isset($config.seo_liststitle_format) OR $config.seo_liststitle_format eq 2"}checked="checked"{/if}>栏目名称<span class="sp_seo_title_symbol">{if condition="!isset($config['seo_title_symbol'])"}_{else /}{$config.seo_title_symbol|default=''}{/if}</span>第N页<span class="sp_seo_title_symbol">{if condition="!isset($config['seo_title_symbol'])"}_{else /}{$config.seo_title_symbol|default=''}{/if}</span>网站名称</label>&nbsp;
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
@@ -132,13 +147,61 @@
                     <label>文档标题格式</label>
                 </dt>
                 <dd class="opt">
-                    <label><input type="radio" name="seo_viewtitle_format" value="1" {if condition="isset($config.seo_viewtitle_format) AND $config.seo_viewtitle_format eq 1"}checked="checked"{/if}>内容标题</label>&nbsp;
+                    <label class="curpoin"><input type="radio" name="seo_viewtitle_format" value="1" {if condition="isset($config.seo_viewtitle_format) AND $config.seo_viewtitle_format eq 1"}checked="checked"{/if}>内容标题</label>&nbsp;
                     <br/>
-                    <label><input type="radio" name="seo_viewtitle_format" value="2" {if condition="!isset($config.seo_viewtitle_format) OR $config.seo_viewtitle_format eq 2"}checked="checked"{/if}>内容标题_网站名称</label>&nbsp;
+                    <label class="curpoin"><input type="radio" name="seo_viewtitle_format" value="2" {if condition="!isset($config.seo_viewtitle_format) OR $config.seo_viewtitle_format eq 2"}checked="checked"{/if}>内容标题<span class="sp_seo_title_symbol">{if condition="!isset($config['seo_title_symbol'])"}_{else /}{$config.seo_title_symbol|default=''}{/if}</span>网站名称</label>&nbsp;
                     <br/>
-                    <label><input type="radio" name="seo_viewtitle_format" value="3" {if condition="isset($config.seo_viewtitle_format) AND $config.seo_viewtitle_format eq 3"}checked="checked"{/if}>内容标题_栏目名称_网站名称</label>&nbsp;
+                    <label class="curpoin"><input type="radio" name="seo_viewtitle_format" value="3" {if condition="isset($config.seo_viewtitle_format) AND $config.seo_viewtitle_format eq 3"}checked="checked"{/if}>内容标题<span class="sp_seo_title_symbol">{if condition="!isset($config['seo_title_symbol'])"}_{else /}{$config.seo_title_symbol|default=''}{/if}</span>栏目名称<span class="sp_seo_title_symbol">{if condition="!isset($config['seo_title_symbol'])"}_{else /}{$config.seo_title_symbol|default=''}{/if}</span>网站名称</label>&nbsp;
                     <span class="err"></span>
                     <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="seo_title_symbol">标题连接符号</label>
+                </dt>
+                <dd class="opt">
+                    <input id="seo_title_symbol" name="seo_title_symbol" {if condition="!isset($config['seo_title_symbol'])"}value="_"{else /}value="{$config.seo_title_symbol|default=''}"{/if} type="text" />
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row {if condition='isset($config.seo_pseudo) && $config.seo_pseudo != 2'}none{/if}" id="dl_seo_uphtml_after">
+                <dt class="tit">
+                    <label>发布文档后</label>
+                </dt>
+                <dd class="opt">
+                    <label class="curpoin"><input type="checkbox" name="seo_uphtml_after_home" value="1" {if condition="!isset($config.seo_uphtml_after_home) OR $config.seo_uphtml_after_home eq 1"}checked="checked"{/if}>更新首页</label>&nbsp;&nbsp;
+                    <label class="curpoin"><input type="checkbox" name="seo_uphtml_after_channel" value="1" {if condition="!isset($config.seo_uphtml_after_channel) OR $config.seo_uphtml_after_channel eq 1"}checked="checked"{/if}>更新相关栏目</label>&nbsp;&nbsp;
+                    <label class="curpoin"><input type="checkbox" name="seo_uphtml_after_pernext" value="1" {if condition="!isset($config.seo_uphtml_after_pernext) OR $config.seo_uphtml_after_pernext eq 1"}checked="checked"{/if}>更新上下篇</label>&nbsp;&nbsp;
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row {if condition='isset($config.seo_pseudo) && $config.seo_pseudo != 2'}none{/if}" id="dl_seo_uphtml_editafter">
+                <dt class="tit">
+                    <label>编辑文档后</label>
+                </dt>
+                <dd class="opt">
+                    <label class="curpoin"><input type="checkbox" name="seo_uphtml_editafter_home" value="1" {if condition="!isset($config.seo_uphtml_editafter_home) OR $config.seo_uphtml_editafter_home eq 1"}checked="checked"{/if}>更新首页</label>&nbsp;&nbsp;
+                    <label class="curpoin"><input type="checkbox" name="seo_uphtml_editafter_channel" value="1" {if condition="!isset($config.seo_uphtml_editafter_channel) OR $config.seo_uphtml_editafter_channel eq 1"}checked="checked"{/if}>更新相关栏目</label>&nbsp;&nbsp;
+                    <label class="curpoin"><input type="checkbox" name="seo_uphtml_editafter_pernext" value="1" {if condition="!isset($config.seo_uphtml_editafter_pernext) OR $config.seo_uphtml_editafter_pernext eq 1"}checked="checked"{/if}>更新上下篇</label>&nbsp;&nbsp;
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row {if condition='isset($config.seo_pseudo) && $config.seo_pseudo == 2'}none{/if}" id="dl_seo_uphtml_after13">
+                <dt class="tit">
+                    <label>发布编辑文档后</label>
+                </dt>
+                <dd class="opt {if condition="$global['web_cmsmode'] != 1"}grey{/if}" {if condition="$global['web_cmsmode'] != 1"}title="开启运营模式生效" {/if}>
+                    <label class="curpoin {if condition="$global['web_cmsmode'] != 1"}grey{/if}"><input type="checkbox" name="seo_uphtml_after_home13" value="1" {if condition="!isset($config.seo_uphtml_after_home13) OR $config.seo_uphtml_after_home13 eq 1"}checked="checked"{/if} class="{if condition="$global['web_cmsmode'] != 1"}grey{/if}" {if condition="$global['web_cmsmode'] != 1"}disabled="disabled"{/if}>清除首页缓存</label>&nbsp;&nbsp;
+                    <label class="curpoin {if condition="$global['web_cmsmode'] != 1"}grey{/if}"><input type="checkbox" name="seo_uphtml_after_channel13" value="1" {if condition="!isset($config.seo_uphtml_after_channel13) OR $config.seo_uphtml_after_channel13 eq 1"}checked="checked"{/if} class="{if condition="$global['web_cmsmode'] != 1"}grey{/if}" {if condition="$global['web_cmsmode'] != 1"}disabled="disabled"{/if}>清除相关栏目缓存</label>&nbsp;&nbsp;
+                    <label class="curpoin {if condition="$global['web_cmsmode'] != 1"}grey{/if}"><input type="checkbox" name="seo_uphtml_after_pernext13" value="1" {if condition="!isset($config.seo_uphtml_after_pernext13) OR $config.seo_uphtml_after_pernext13 eq 1"}checked="checked"{/if} class="{if condition="$global['web_cmsmode'] != 1"}grey{/if}" {if condition="$global['web_cmsmode'] != 1"}disabled="disabled"{/if}>清除上下篇缓存</label>&nbsp;&nbsp;
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                    <input type="hidden" id="seo_uphtml_after_home13_old" value="{$config.seo_uphtml_after_home13|default=''}"/>
+                    <input type="hidden" id="seo_uphtml_after_channel13_old" value="{$config.seo_uphtml_after_channel13|default=''}"/>
+                    <input type="hidden" id="seo_uphtml_after_pernext13_old" value="{$config.seo_uphtml_after_pernext13|default=''}"/>
                 </dd>
             </dl>
             <!-- <dl class="row {if condition="empty($config['seo_inlet']) OR (1 == $config['seo_inlet'] AND 1 == $config['seo_force_inlet'])"}{else /}none{/if}" id="dl_seo_force_inlet"> -->
@@ -158,6 +221,18 @@
                 </dd>
             </dl>
             <div class="bot">
+                <input type="hidden" id="is_change_data" value="0">
+                <input type="hidden" id="seo_html_arcdir_old" value="{$config.seo_html_arcdir|default=''}"/>
+                <input type="hidden" id="seo_html_listname_old" value="{$config.seo_html_listname|default=''}"/>
+                <input type="hidden" id="seo_html_pagename_old" value="{$config.seo_html_pagename|default=''}"/>
+                <input type="hidden" id="seo_liststitle_format_old" value="{$config.seo_liststitle_format|default=''}"/>
+                <input type="hidden" id="seo_viewtitle_format_old" value="{$config.seo_viewtitle_format|default=''}"/>
+                <input type="hidden" id="seo_uphtml_after_home_old" value="{$config.seo_uphtml_after_home|default=''}"/>
+                <input type="hidden" id="seo_uphtml_after_channel_old" value="{$config.seo_uphtml_after_channel|default=''}"/>
+                <input type="hidden" id="seo_uphtml_after_pernext_old" value="{$config.seo_uphtml_after_pernext|default=''}"/>
+                <input type="hidden" id="seo_uphtml_editafter_home_old" value="{$config.seo_uphtml_editafter_home|default=''}"/>
+                <input type="hidden" id="seo_uphtml_editafter_channel_old" value="{$config.seo_uphtml_editafter_channel|default=''}"/>
+                <input type="hidden" id="seo_uphtml_editafter_pernext_old" value="{$config.seo_uphtml_editafter_pernext|default=''}"/>
                 <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">确认提交</a>
             </div>
         </div>
@@ -165,16 +240,248 @@
 </div>
 <script type="text/javascript">
 
+    // 静态模式下，是否改变任意配置
+    function change_html_confdata()
+    {
+        // 是否改变任意一项配置
+        var is_change_data = 0;
+        
+        var seo_pseudo = $('input[name=seo_pseudo]:checked').val();
+        var seo_pseudo_old = $('#seo_pseudo_old').val();
+        if (seo_pseudo == 2 && seo_pseudo_old != seo_pseudo) {
+            is_change_data = 1;
+        } else {
+            is_change_data = 0;
+        }
+
+        if (0 == is_change_data) {
+            var seo_html_arcdir_old = $('#seo_html_arcdir_old').val();
+            var seo_html_arcdir = $('#seo_html_arcdir').val();
+            if (seo_html_arcdir_old != seo_html_arcdir) {
+                is_change_data = 1;
+            } else {
+                is_change_data = 0;
+            }
+        }
+
+        if (0 == is_change_data) {
+            var seo_html_listname_old = $('#seo_html_listname_old').val();
+            var seo_html_listname = $('input[name=seo_html_listname]:checked').val();
+            if (seo_html_listname_old != seo_html_listname) {
+                is_change_data = 1;
+            } else {
+                is_change_data = 0;
+            }
+        }
+
+        if (0 == is_change_data) {
+            var seo_html_pagename_old = $('#seo_html_pagename_old').val();
+            var seo_html_pagename = $('input[name=seo_html_pagename]:checked').val();
+            if (seo_html_pagename_old != seo_html_pagename) {
+                is_change_data = 1;
+            } else {
+                is_change_data = 0;
+            }
+        }
+        
+        if (0 == is_change_data) {
+            var seo_liststitle_format_old = $('#seo_liststitle_format_old').val();
+            var seo_liststitle_format = $('input[name=seo_liststitle_format]:checked').val();
+            if (seo_liststitle_format_old != seo_liststitle_format) {
+                is_change_data = 1;
+            } else {
+                is_change_data = 0;
+            }
+        }
+        
+        if (0 == is_change_data) {
+            var seo_viewtitle_format_old = $('#seo_viewtitle_format_old').val();
+            var seo_viewtitle_format = $('input[name=seo_viewtitle_format]:checked').val();
+            if (seo_viewtitle_format_old != seo_viewtitle_format) {
+                is_change_data = 1;
+            } else {
+                is_change_data = 0;
+            }
+        }
+        
+        if (seo_pseudo == 2) {
+            if (0 == is_change_data) {
+                var seo_uphtml_after_home_old = $('#seo_uphtml_after_home_old').val();
+                if (0 == seo_uphtml_after_home_old) {
+                    seo_uphtml_after_home_old = undefined;
+                }
+                var seo_uphtml_after_home = $('input[name=seo_uphtml_after_home]:checked').val();
+                if (seo_uphtml_after_home_old != seo_uphtml_after_home) {
+                    is_change_data = 1;
+                } else {
+                    is_change_data = 0;
+                }
+            }
+            
+            if (0 == is_change_data) {
+                var seo_uphtml_after_channel_old = $('#seo_uphtml_after_channel_old').val();
+                if (0 == seo_uphtml_after_channel_old) {
+                    seo_uphtml_after_channel_old = undefined;
+                }
+                var seo_uphtml_after_channel = $('input[name=seo_uphtml_after_channel]:checked').val();
+                if (seo_uphtml_after_channel_old != seo_uphtml_after_channel) {
+                    is_change_data = 1;
+                } else {
+                    is_change_data = 0;
+                }
+            }
+            
+            if (0 == is_change_data) {
+                var seo_uphtml_after_pernext_old = $('#seo_uphtml_after_pernext_old').val();
+                if (0 == seo_uphtml_after_pernext_old) {
+                    seo_uphtml_after_pernext_old = undefined;
+                }
+                var seo_uphtml_after_pernext = $('input[name=seo_uphtml_after_pernext]:checked').val();
+                if (seo_uphtml_after_pernext_old != seo_uphtml_after_pernext) {
+                    is_change_data = 1;
+                } else {
+                    is_change_data = 0;
+                }
+            }
+
+            if (0 == is_change_data) {
+                var seo_uphtml_editafter_home_old = $('#seo_uphtml_editafter_home_old').val();
+                if (0 == seo_uphtml_editafter_home_old) {
+                    seo_uphtml_editafter_home_old = undefined;
+                }
+                var seo_uphtml_editafter_home = $('input[name=seo_uphtml_editafter_home]:checked').val();
+                if (seo_uphtml_editafter_home_old != seo_uphtml_editafter_home) {
+                    is_change_data = 1;
+                } else {
+                    is_change_data = 0;
+                }
+            }
+            
+            if (0 == is_change_data) {
+                var seo_uphtml_editafter_channel_old = $('#seo_uphtml_editafter_channel_old').val();
+                if (0 == seo_uphtml_editafter_channel_old) {
+                    seo_uphtml_editafter_channel_old = undefined;
+                }
+                var seo_uphtml_editafter_channel = $('input[name=seo_uphtml_editafter_channel]:checked').val();
+                if (seo_uphtml_editafter_channel_old != seo_uphtml_editafter_channel) {
+                    is_change_data = 1;
+                } else {
+                    is_change_data = 0;
+                }
+            }
+            
+            if (0 == is_change_data) {
+                var seo_uphtml_editafter_pernext_old = $('#seo_uphtml_editafter_pernext_old').val();
+                if (0 == seo_uphtml_editafter_pernext_old) {
+                    seo_uphtml_editafter_pernext_old = undefined;
+                }
+                var seo_uphtml_editafter_pernext = $('input[name=seo_uphtml_editafter_pernext]:checked').val();
+                if (seo_uphtml_editafter_pernext_old != seo_uphtml_editafter_pernext) {
+                    is_change_data = 1;
+                } else {
+                    is_change_data = 0;
+                }
+            }
+        } else {
+            if (0 == is_change_data) {
+                var seo_uphtml_after_home13_old = $('#seo_uphtml_after_home13_old').val();
+                if (0 == seo_uphtml_after_home13_old) {
+                    seo_uphtml_after_home13_old = undefined;
+                }
+                var seo_uphtml_after_home13 = $('input[name=seo_uphtml_after_home13]:checked').val();
+                if (seo_uphtml_after_home13_old != seo_uphtml_after_home13) {
+                    is_change_data = 1;
+                } else {
+                    is_change_data = 0;
+                }
+            }
+            
+            if (0 == is_change_data) {
+                var seo_uphtml_after_channel13_old = $('#seo_uphtml_after_channel13_old').val();
+                if (0 == seo_uphtml_after_channel13_old) {
+                    seo_uphtml_after_channel13_old = undefined;
+                }
+                var seo_uphtml_after_channel13 = $('input[name=seo_uphtml_after_channel13]:checked').val();
+                if (seo_uphtml_after_channel13_old != seo_uphtml_after_channel13) {
+                    is_change_data = 1;
+                } else {
+                    is_change_data = 0;
+                }
+            }
+            
+            if (0 == is_change_data) {
+                var seo_uphtml_after_pernext13_old = $('#seo_uphtml_after_pernext13_old').val();
+                if (0 == seo_uphtml_after_pernext13_old) {
+                    seo_uphtml_after_pernext13_old = undefined;
+                }
+                var seo_uphtml_after_pernext13 = $('input[name=seo_uphtml_after_pernext13]:checked').val();
+                if (seo_uphtml_after_pernext13_old != seo_uphtml_after_pernext13) {
+                    is_change_data = 1;
+                } else {
+                    is_change_data = 0;
+                }
+            }
+        }
+
+        $('#is_change_data').val(is_change_data);
+    }
+
     $(function(){
+        // 栏目页面名称
+        $('input[name=seo_html_listname]').click(function(){
+            var seo_html_listname = $(this).val();
+            var seo_html_pagename = $('input[name=seo_html_pagename]:checked').val();
+            if (4 == seo_html_listname && 4 != seo_html_pagename) {
+                layer.alert('文档页面名称也可以自定义哦！', {icon: 6, closeBtn:false, title: false});
+            }
+            // 静态模式下，是否改变任意一项配置
+            change_html_confdata();
+        });
+        // 文档页面名称
+        $('input[name=seo_html_pagename]').click(function(){
+            var seo_html_pagename = $(this).val();
+            var seo_html_listname = $('input[name=seo_html_listname]:checked').val();
+            if (4 == seo_html_pagename && 4 != seo_html_listname) {
+                layer.alert('栏目页面名称也可以自定义哦！', {icon: 6, closeBtn:false, title: false});
+            }
+            // 静态模式下，是否改变任意一项配置
+            change_html_confdata();
+        });
+        // 栏目标题格式
+        $('input[name=seo_liststitle_format]').click(function(){
+            // 静态模式下，是否改变任意一项配置
+            change_html_confdata();
+        });
+        // 文档标题格式
+        $('input[name=seo_viewtitle_format]').click(function(){
+            // 静态模式下，是否改变任意一项配置
+            change_html_confdata();
+        });
+        // 标题连接符号
+        $('#seo_title_symbol').keyup(function(){
+            var seo_title_symbol = $(this).val();
+            $('.sp_seo_title_symbol').html(seo_title_symbol);
+        });
+        // 发布文档后，更新哪些页面
+        $('input[name=seo_uphtml_after_home],input[name=seo_uphtml_after_channel],input[name=seo_uphtml_after_pernext],input[name=seo_uphtml_editafter_home],input[name=seo_uphtml_editafter_channel],input[name=seo_uphtml_editafter_pernext],input[name=seo_uphtml_after_home13],input[name=seo_uphtml_after_channel13],input[name=seo_uphtml_after_pernext13]').click(function(){
+            // 静态模式下，是否改变任意一项配置
+            change_html_confdata();
+        });
+
         $('input[name=seo_pseudo]').click(function(){
             var _this = this;
             $('#dl_seo_dynamic_format').hide();
             $('#dl_seo_html_format').hide();
+            $('#a_seo_build').hide();
+            $('#dl_seo_uphtml_after').hide();
+            $('#dl_seo_uphtml_editafter').hide();
+            $('#dl_seo_uphtml_after13').hide();
             // $('#tab_base_html').attr('style','display:none!important');
             $('#dl_seo_rewrite_format').hide();
             $('#seo_right_uphtml').hide();
             var seo_pseudo = $(_this).val();
             if (1 == seo_pseudo) {
+                $('#dl_seo_uphtml_after13').show();
                 $('#dl_seo_rewrite_view_format').hide();
                 if (1 != $('input[name=seo_dynamic_format]:checked').val()) {
                     $('#dl_seo_dynamic_format').show();
@@ -190,12 +497,16 @@
                 msg = "静态模式下注意几点：<br/>1、修改模板记得生成<br/>2、更新后台数据记得生成<br/>3、安装的插件需要更新至最新版本";
                 layer.alert(msg, {icon: 6, closeBtn:false, title: false});
                 $('#dl_seo_html_format').show();
+                $('#a_seo_build').show();
+                $('#dl_seo_uphtml_after').show();
+                $('#dl_seo_uphtml_editafter').show();
                 // $('#tab_base_html').show();
                 $('#seo_right_uphtml').show();
             } else {
+                $('#dl_seo_uphtml_after13').show();
                 $('#dl_seo_rewrite_format').show();
                 var seo_rewrite_format = $('input[name=seo_rewrite_format]:checked').val();
-                if (seo_rewrite_format == 1) {
+                if (seo_rewrite_format == 1 || seo_rewrite_format == 3) {
                     $('#dl_seo_rewrite_view_format').show();
                 } else {
                     $('#dl_seo_rewrite_view_format').hide();
@@ -207,6 +518,9 @@
                     $('#dl_seo_force_inlet').hide();
                 }
             }
+
+            // 静态模式下，是否改变任意一项配置
+            change_html_confdata();
 
             var seo_pseudo_old = $('#seo_pseudo_old').val();
             if (3 == seo_pseudo) {
@@ -231,13 +545,18 @@
                                     }
                                 })
                                 $('#dl_seo_html_format').show();
+                                $('#a_seo_build').show();
+                                $('#dl_seo_uphtml_after').show();
+                                $('#dl_seo_uphtml_editafter').show();
                                 $('#seo_right_uphtml').show();
                                 // $('#tab_base_html').show();
                                 var seo_pseudo = $(_this).val();
                                 //询问框
                                 var height = res.data.height + 116;
                                 if (350 <= height) height = 350;
-                                var confirm1 = layer.confirm(res.data.msg, {
+                                var intro = '<style type="text/css">.layui-layer-content{text-align:left!important;}</style>';
+                                intro += res.data.msg;
+                                var confirm1 = layer.confirm(intro, {
                                         title: false
                                         ,area: ['320px', height+'px']
                                         ,btn: ['手工删除','自动删除'] //按钮
@@ -263,6 +582,9 @@
                                                         }
                                                     })
                                                     $('#dl_seo_html_format').hide();
+                                                    $('#a_seo_build').hide();
+                                                    $('#dl_seo_uphtml_after').hide();
+                                                    $('#dl_seo_uphtml_editafter').hide();
                                                     $('#seo_right_uphtml').hide();
                                                     // $('#tab_base_html').attr('style','display:none!important');
                                                     layer.msg(res.msg, {icon: 1, time: 1500});
@@ -308,6 +630,9 @@
                 $('#tips_seo_html_arcdir_1').hide();
             }
             $('#exp_seo_html_arcdir').html(seo_html_arcdir);
+
+            // 静态模式下，是否改变任意一项配置
+            change_html_confdata();
         });
 
         $('input[name="seo_force_inlet"]').click(function(){
@@ -319,7 +644,7 @@
                     shade: 0.0,
                     closeBtn: 0,
                     shadeClose: true,
-                    content: '//{$Request.host}__ROOT_DIR__/api/Rewrite/testing.html',
+                    content: '//{$website_host}__ROOT_DIR__/api/Rewrite/testing.html',
                     success: function(layero, index){
                         layer.close(index);
                         var body = layer.getChildFrame('body', index);
@@ -330,14 +655,29 @@
                             $('#seo_force_inlet1').attr('checked','');
                             $('label[for=seo_force_inlet0]').addClass('selected');
                             $('#seo_force_inlet0').attr('checked','checked');
-                            layer.alert('不支持去除index.php，请<a href="javascript:void(0);" onclick="layer.closeAll();click_to_eyou_1575506523(\'https://www.eyoucms.com/plus/view.php?aid=7874\',\'去掉URL中的index.php教程\');">点击查看教程</a>', {icon: 2, title:false});
+                            layer.alert('不支持去除index.php，请<a href="javascript:void(0);" onclick="layer.closeAll();click_to_eyou_1575506523(\'https://www.eyoucms.com/plus/view.php?aid=7874&origin_eycms=1\',\'去掉URL中的index.php教程\');">点击查看教程</a>', {icon: 2, title:false});
                         }
                     }
                 });
             }
         });
 
-        checkInlet();
+        /**
+         * 初始化数据缓存
+         * @return {[type]} [description]
+         */
+        function init_data_cache() {
+            $.ajax({
+                url : "{:url('Seo/init_data_cache')}",
+                type: 'post',
+                data: {'_ajax': 1},
+                dataType: 'JSON',
+                success: function(res) {
+                    
+                }
+            });
+        }
+        init_data_cache();
 
         // 自动检测隐藏index.php
         function checkInlet() {
@@ -351,7 +691,7 @@
                 shade: 0.0,
                 closeBtn: 0,
                 shadeClose: true,
-                content: '//{$Request.host}__ROOT_DIR__/api/Rewrite/setInlet.html',
+                content: '//{$website_host}__ROOT_DIR__/api/Rewrite/setInlet.html',
                 success: function(layero, index){
                     layer.close(index);
                     var body = layer.getChildFrame('body', index);
@@ -386,6 +726,9 @@
                 }
             });
         }
+        {eq name='$main_lang' value='$admin_lang'}
+        checkInlet(); // 自动检测隐藏index.php
+        {/eq}
     });
 
     function adsubmit(){
@@ -425,19 +768,29 @@
                     if (2 == init_html || 2 != $("input[name='seo_pseudo']:checked").val()) {
                         // layer.closeAll();
                         layer.msg(res.msg, {icon: 1, time: 1000}, function(){
+                            if(parent.$('.left_menu_2003004').length > 0){
+                                $('.left_menu_2003004',window.parent.document).show();
+                            }
                             window.location.href = res.url;
                         });
                     } else {
                         layer.closeAll();
                         var confirm1 = layer.confirm('配置成功，是否要生成整站页面？', {
-                                title: false
-                                ,closeBtn: false
-                                ,btn: ['是','否'] //按钮
-
+                                shade: layer_shade,
+                                area: ['480px', '190px'],
+                                move: false,
+                                title: '提示',
+                                btnAlign:'r',
+                                closeBtn: 3,
+                                btn: ['是','否'] ,//按钮
+                                success: function () {
+                                      $(".layui-layer-content").css('text-align', 'left');
+                                  }
                             }, function(){
                                 var url = eyou_basefile+"?m=admin&c=Seo&a=site&lang="+__lang__;
                                 var index = layer.open({
                                     type: 2,
+                                    shade: layer_shade,
                                     title: '开始生成',
                                     area: ['500px', '300px'],
                                     fix: false, 
@@ -472,6 +825,36 @@
     {
         $('#'+id).toggle();
     }
+
+    function seo_build(obj)
+    {
+        var is_change_data = $('#is_change_data').val();
+        if (0 == is_change_data) {
+            window.location.href = $(obj).data('url');
+        } else {
+            $.ajax({
+                url: "{:url('Seo/handle', ['_ajax'=>1])}",
+                type: 'POST',
+                dataType: 'json',
+                data: $('#handlepost').serialize(),
+                beforeSend:function(){
+                    layer_loading('保存跳转');
+                },
+                success: function(res){
+                    layer.closeAll();
+                    if (0 == res.code) {
+                        showErrorAlert(res.msg);
+                    } else {
+                        window.location.href = $(obj).data('url');
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    layer.alert(e.responseText, {icon: 5, title:false});
+                }
+            });
+        }
+    }
 </script>
 
 <div class="seo-right {if condition='2 != $config.seo_pseudo'}none{/if}" id="seo_right_uphtml">
@@ -484,7 +867,7 @@
             margin-top: -185px;*/
             right: 30px;
             width: 350px;
-            height: 270px;
+            height: 280px;
             background-color:#fff;
             z-index:666666;
             border: 1px solid #ddd;
@@ -494,7 +877,7 @@
         }
         .seo-html dt.tit {
            width: 60px;
-           padding-left:20px;
+           padding-left:0px;
         }   
     </style>
     <div class="page">
@@ -536,35 +919,52 @@
                     <dd class="opt w0">
                         <select name="html_arc_typeid" id="html_arc_typeid" style="width: 150px;">
                             <option value="0">所有文档…</option>
-                            {$arc_select_html}
+                            {$select_html}
                         </select>
                         &nbsp;<a href="javascript:void(0);" id="up_article" class="ncap-btn ncap-btn-green">一键生成</a>
                         <p class="notic"></p>
                     </dd>
                 </dl>
+                <dl class="row">
+                    <dt class="tit" style="width: 100%;">
+                        <a id="a_seo_build" href="javascript:void(0);" data-url="{:url('Seo/build')}" onclick="seo_build(this);">更多静态生成配置>></a>
+                    </dt>
+                </dl>
             </div>
         </form>
     </div>
     <script type="text/javascript">
+
+        function check_index_file()
+        {
+            var is_index_file = {$is_index_file|default=0};
+            if (0 == is_index_file) {
+                showErrorAlert('网站根目录缺少 index.php 文件，请拷贝该文件上传到空间里！');
+                return false;
+            }
+            return true;
+        }
+
         $(function(){
             
             //生成整站
             $("#up_site").click(function(){
+                if (!check_index_file()) {return false;}
                 $.ajax({
-                    url: "{:url('Seo/handle', ['is_buildhtml'=>1,'_ajax'=>1])}",
+                    url: "{:url('Seo/handle', ['_ajax'=>1])}",
                     type: 'POST',
                     dataType: 'json',
                     data: $('#handlepost').serialize(),
                     beforeSend:function(){
-                        layer_loading('正在处理');
+                        layer.load(3, {shade: layer_shade});
                     },
                     success: function(res){
                         layer.closeAll();
                         if (0 == res.code) {
                             showErrorAlert(res.msg);
                         } else {
-                            var url = eyou_basefile+"?m=admin&c=Seo&a=site&lang="+__lang__;
-                            var index = layer.open({type: 2,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
+                            var url = eyou_basefile+"?m=admin&c=Seo&a=site&uphtmltype=0&lang="+__lang__;
+                            var index = layer.open({type: 2,shade: layer_shade,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
                         }
                     },
                     error: function(e){
@@ -576,13 +976,14 @@
 
             //生成首页
             $("#up_index").click(function(){
+                if (!check_index_file()) {return false;}
                 $.ajax({
-                    url: "{:url('Seo/handle', ['is_buildhtml'=>1,'_ajax'=>1])}",
+                    url: "{:url('Seo/handle', ['_ajax'=>1])}",
                     type: 'POST',
                     dataType: 'json',
                     data: $('#handlepost').serialize(),
                     beforeSend:function(){
-                        layer_loading('正在处理');
+                        layer.load(3, {shade: layer_shade});
                     },
                     success: function(res){
                         if (0 == res.code) {
@@ -591,17 +992,16 @@
                         } else {
                             var timestamp1 = Date.parse(new Date());
                             $.ajax({
-                                url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildIndex&lang="+__lang__,
-                                type:'POST',
+                                url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildIndex&lang="+__lang__+"&_ajax=1",
+                                type:'GET',
                                 dataType:'json',
-                                data: {_ajax:1},
+                                data: {},
                                 beforeSend:function(){
-                                    // layer_loading('正在处理');
-                                    // var index = layer.load(0, {shade: false}); 
+                                    // layer.load(3, {shade: [0.1,'#000']});
                                 },
-                                success:function(data){
-                                    if(data.msg !== ""){
-                                        layer.alert(data.msg, {icon: 5, title:false,closeBtn: 0 },function () {
+                                success:function(res1){
+                                    if(res1.msg !== "" && -1 == res1.msg.indexOf('浏览')){
+                                        layer.alert(res1.msg, {icon: 5, title:false,closeBtn: 0 },function () {
                                             layer.closeAll();
                                         } );
                                     }else{
@@ -631,13 +1031,14 @@
             
             //生成栏目页
             $("#up_channel").click(function(){
+                if (!check_index_file()) {return false;}
                 $.ajax({
-                    url: "{:url('Seo/handle', ['is_buildhtml'=>1,'_ajax'=>1])}",
+                    url: "{:url('Seo/handle', ['_ajax'=>1])}",
                     type: 'POST',
                     dataType: 'json',
                     data: $('#handlepost').serialize(),
                     beforeSend:function(){
-                        layer_loading('正在处理');
+                        layer.load(3, {shade: layer_shade});
                     },
                     success: function(res){
                         layer.closeAll();
@@ -646,7 +1047,7 @@
                         } else {
                             var typeid = $("#html_typeid").val();     //栏目id
                             var url = eyou_basefile+"?m=admin&c=Seo&a=channel&typeid="+typeid+"&lang="+__lang__;
-                            var index = layer.open({type: 2,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
+                            var index = layer.open({type: 2,shade: layer_shade,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
                         }
                     },
                     error: function(e){
@@ -658,13 +1059,14 @@
 
             //生成文章页
             $("#up_article").click(function(){
+                if (!check_index_file()) {return false;}
                 $.ajax({
-                    url: "{:url('Seo/handle', ['is_buildhtml'=>1,'_ajax'=>1])}",
+                    url: "{:url('Seo/handle', ['_ajax'=>1])}",
                     type: 'POST',
                     dataType: 'json',
                     data: $('#handlepost').serialize(),
                     beforeSend:function(){
-                        layer_loading('正在处理');
+                        layer.load(3, {shade: layer_shade});
                     },
                     success: function(res){
                         layer.closeAll();
@@ -673,7 +1075,7 @@
                         } else {
                             var typeid = $("#html_arc_typeid").val();     //栏目id
                             var url = eyou_basefile+"?m=admin&c=Seo&a=article&typeid="+typeid+"&lang="+__lang__;
-                            var index = layer.open({type: 2,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
+                            var index = layer.open({type: 2,shade: layer_shade,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
                         }
                     },
                     error: function(e){

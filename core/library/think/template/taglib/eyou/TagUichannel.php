@@ -37,7 +37,7 @@ class TagUichannel extends Base
 
         $result = false;
         $inc = get_ui_inc_params($e_page);
-        $inckey = $this->home_lang."_channel_{$e_id}";
+        $inckey = self::$home_lang."_channel_{$e_id}";
         if (empty($inc[$inckey])) {
             $inckey = "channel_{$e_id}"; // 兼容v1.2.1之前的数据
         }

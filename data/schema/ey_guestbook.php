@@ -9,6 +9,15 @@ return array (
     'primary' => true,
     'autoinc' => true,
   ),
+  'form_type' => 
+  array (
+    'name' => 'form_type',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'typeid' => 
   array (
     'name' => 'typeid',
@@ -22,6 +31,15 @@ return array (
   array (
     'name' => 'channel',
     'type' => 'smallint(5)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'users_id' => 
+  array (
+    'name' => 'users_id',
+    'type' => 'int(11)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,
@@ -48,6 +66,24 @@ return array (
   'is_read' => 
   array (
     'name' => 'is_read',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'is_star' => 
+  array (
+    'name' => 'is_star',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'source' => 
+  array (
+    'name' => 'source',
     'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '0',

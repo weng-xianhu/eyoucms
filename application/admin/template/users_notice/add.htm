@@ -21,19 +21,21 @@
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-10">
     
-    <form class="form-horizontal" id="post_form" action="{:url('Encodes/users_notice_add')}" method="post">
+    <form class="form-horizontal" id="post_form" action="{:url('UsersNotice/add')}" method="post">
         <div class="ncap-form-default">
             <dl class="row">
                 <dt class="tit">
                     <label for="usernames">通知对象</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="usernames" placeholder="可以多选，全站通知不选" id="justAnInputBox" class="input-txt" autocomplete="off">
-                    <input type="hidden" name="users_id" placeholder="可以多选，全站通知不选" id="ids" class="input-txt" autocomplete="off">
+                    <input type="text" name="users_id" placeholder="请输入会员ID或添加会员，可以多选，全站通知不选" id="users_id" class="input-txt" autocomplete="off" onkeyup="this.value=this.value.replace(/，/ig,',');" onpaste="this.value=this.value.replace(/，/ig,',');">
+                    &nbsp;
+                    <a href="javascript:void(0);" onclick="openFullframe(this, '会员选择', '90%', '90%');" data-cancel_callback="cancel_callback" data-href="{:url('UsersNotice/select_users')}" class="ncap-btn ncap-btn-green">添加会员</a>
                     <span class="err"></span>
                     <p class="notic"></p>
+                    <p class="notic2"></p>
                 </dd>
             </dl>
             <dl class="row">
@@ -70,28 +72,6 @@
     </form>
 </div>
 <script type="text/javascript">
-    var SampleJSONData = [
-	    {empty name="listname"}
-        {
-            id: 0,
-            title: '没有符合条件的记录'
-        }
-		{else/}
-		    {volist name="listname" id="vo"}
-		        {
-                    id: {$vo.users_id},
-                    title: '{$vo.username}',
-                },
-		    {/volist}
-        {/empty}
-    ];
-    var comboTree1, comboTree2;
-    jQuery(document).ready(function($) {
-		comboTree1 = $('#justAnInputBox').comboTree({
-			source : SampleJSONData,
-			isMultiple: true
-		});
-    });
     var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     // 判断输入框是否为空
     function checkForm(){
@@ -105,16 +85,11 @@
             $('textarea[name=remark]').focus();
             return false;
         }
-        var a = comboTree1.getSelectedItemsId();
-        if (false == a) {
-            a = '';
-        }
-        $("#ids").val(a);
 
         layer_loading('正在处理');
         $.ajax({
             type : 'post',
-            url : "{:url('Encodes/users_notice_add', ['_ajax'=>1])}",
+            url : "{:url('UsersNotice/add', ['_ajax'=>1])}",
             data : $('#post_form').serialize(),
             dataType : 'json',
             success : function(res){
@@ -122,7 +97,7 @@
                 if(res.code == 1){
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {shade: 0.1, time: 1000}, function(){
                         _parent.window.location.reload();
                     });
                 }else{
@@ -135,80 +110,51 @@
             }
         });
     }
-    
-</script>
-<script type="text/javascript">
-    /*
-    UE.getEditor('remark',{
-        serverUrl :"{:url('Ueditor/index',array('savepath'=>'ueditor'))}",
-        zIndex: 999,
-        initialFrameWidth: "100%", //初化宽度
-        initialFrameHeight: 450, //初化高度
-        focus: false, //初始化时，是否让编辑器获得焦点true或false
-        maximumWords: 99999,
-        removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
-        pasteplain:false, //是否默认为纯文本粘贴。false为不使用纯文本粘贴，true为使用纯文本粘贴
-        autoHeightEnabled: false,
-        toolbars: ueditor_toolbars
-    });
 
-    //必须在提交前渲染编辑器；
-    function remark() {
-        //判断编辑模式状态:0表示【源代码】HTML视图；1是【设计】视图,即可见即所得；-1表示不可用
-        if(UE.getEditor("remark").queryCommandState('source') != 0) {
-            UE.getEditor("remark").execCommand('source'); //切换到【设计】视图
+    // 会员选择页所需方法
+    var usersID = [];
+    var usersStr = '';
+    function usersSelect(obj, opt) {
+        // 当前点击会员ID
+        var users_id = $(obj).val();
+        if (users_id) {
+            // 数组去重
+            usersID = $.unique(usersID.sort());
+            // 判断是否已选择当前点击会员
+            var index = $.inArray(users_id, usersID);
+            if ('cut' == opt) {
+                    console.log(34)
+                // 去除已选
+                usersID.splice(index, 1);
+            } else if ('add' == opt) {
+                    console.log(56)
+                // 增加已选
+                usersID.push(users_id);
+            }
+            usersStr = usersID.join(',');
         }
     }
 
-    // 远程图片本地化
-    function remote_to_local_remark() {
-        var body = UE.getEditor("remark").getContent();
-        layer_loading('下载中');
-        $.ajax({
-            type: 'POST',
-            url: "{:url('Archives/ajax_remote_to_local')}",
-            data: {body:body,_ajax:1},
-            dataType: "JSON",
-            success: function(res){
-                layer.closeAll();
-                if (res.code == 1) {
-                    UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").setContent(res.data.body);
-                    layer.msg(res.msg, {icon: 1, time:1000});
-                } else {
-                    showErrorMsg(res.msg);
-                }
-            },
-            error: function(e){
-                layer.closeAll();
-                showErrorMsg(res.msg);
-            }
-        });
+    // 清空已选会员 并 关闭所有弹框
+    function closeUsersSelect(clear) {
+        // 清空已选会员
+        if (clear) usersID = [];
+        // 关闭所有弹框
+        layer.closeAll();
     }
 
-    // 清除非本站链接
-    function replace_links_remark() {
-        var body = UE.getEditor("remark").getContent();
-        layer_loading('正在处理');
-        $.ajax({
-            type: 'POST',
-            url: "{:url('Archives/ajax_replace_links')}",
-            data: {body:body,_ajax:1},
-            dataType: "JSON",
-            success: function(res){
-                layer.closeAll();
-                if (res.code == 1) {
-                    UE.getEditor("remark").setContent(res.data.body);
-                    layer.msg(res.msg, {icon: 1, time:1000});
-                } else {
-                    showErrorMsg(res.msg);
-                }
-            },
-            error: function(e){
-                layer.closeAll();
-                showErrorMsg(res.msg);
-            }
-        });
+    function cancel_callback()
+    {
+        usersID = [];
     }
-    */
+
+    // 处理已选会员 并 关闭所有弹框
+    function submitUsersSelect() {
+        if (usersID.length >= 1) {
+            $('#users_id').val(usersStr);
+        }
+        // 关闭所有弹框
+        closeUsersSelect(false);
+    }
 </script>
 {include file="public/footer" /}

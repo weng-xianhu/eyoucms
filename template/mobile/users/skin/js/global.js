@@ -1,4 +1,9 @@
-
+// 当分页不足以显示隐藏div
+$(function() {
+    if (parseInt($('.dataTables_paginate li').length) > 0) {
+        $('.dataTables_paginate').show();
+    }
+});
 function showErrorMsg(msg){
     layer.msg(msg, {icon: 5,time: 2000});
 }
@@ -201,7 +206,11 @@ function layer_loading(msg){
 }
 
 // 单图上传  2021.01.05
-function upload_single_pic_1609837252(e,input_id){
+function upload_single_pic_1609837252(e,input_id,callback,type){
+    var url = eyou_basefile + "?m=user&c=Uploadify&a=imageUp";
+    if (type){
+        url += '&resource=reg'
+    }
     var file = $(e)[0].files[0];
     if (!file) {
         return false;
@@ -209,18 +218,24 @@ function upload_single_pic_1609837252(e,input_id){
     var formData = new FormData();
     formData.append('file',file);
     formData.append('_ajax',1);
-    LoaDing('正在处理');
+    if (type != 'reg') {
+        LoaDing('正在处理');
+    }
     $.ajax({
         type: 'post',
-        url: eyou_basefile + "?m=user&c=Uploadify&a=imageUp",
+        url: url,
         data: formData,
         contentType: false,
         processData: false,
         dataType: 'json',
         success: function (res) {
             if (res.state == 'SUCCESS') {
-                $("#single_pic_input_"+input_id).val(res.url)
-                $(".img1_"+input_id).attr('src',res.url);
+                if (callback){
+                    eval(callback+"('"+res.url+"')");
+                } else {
+                    $("#single_pic_input_"+input_id).val(res.url)
+                    $(".img_a_"+input_id).append("<img src='"+res.url+"' class='pic_con'>");
+                }
                 layer.closeAll();
             } else {
                 layer.closeAll();

@@ -1,19 +1,28 @@
 {include file="public/layout" /}
 
-<link rel="stylesheet" type="text/css" href="__SKIN__/js/codemirror/codemirror.css">
-<script type="text/javascript" src="__SKIN__/js/codemirror/codemirror.js"></script>
-<script type="text/javascript" src="__SKIN__/js/codemirror/mode/xml/xml.js"></script>
-<script type="text/javascript" src="__SKIN__/js/codemirror/mode/javascript/javascript.js"></script>
-<script type="text/javascript" src="__SKIN__/js/codemirror/mode/css/css.js"></script>
-<script type="text/javascript" src="__SKIN__/js/codemirror/mode/php/php.js"></script>
-<script type="text/javascript" src="__SKIN__/js/codemirror/mode/clike/clike.js"></script>
-<script type="text/javascript" src="__SKIN__/js/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+<link rel="stylesheet" type="text/css" href="__SKIN__/js/codemirror/codemirror.css?v={$version}">
+<script type="text/javascript" src="__SKIN__/js/codemirror/codemirror.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/xml/xml.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/javascript/javascript.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/css/css.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/php/php.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/clike/clike.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/htmlmixed/htmlmixed.js?v={$version}"></script>
 
 <body class="bodystyle">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back_xin" href="JavaScript:history.back(-1);" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>模板编辑</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
     <form class="form-horizontal" id="post_form" action="{:url('Filemanager/edit')}" method="post">
         <div class="ncap-form-default">
             <dl class="row">

@@ -13,6 +13,7 @@
 
 namespace think\template\taglib\eyou;
 
+use \think\Db;
 use \think\Request;
 use \think\Config;
 
@@ -58,25 +59,20 @@ class TagGlobal extends Base
             $globalData = $globalArr['data'];
 
             switch ($name) {
-                case 'web_basehost':
-                    if (empty($value)) {
-                        $value = !empty($this->root_dir) ? $this->root_dir : '/';
-                    }
+                case 'web_title':
+                case 'web_keywords':
+                case 'web_description':
+                    $value = $this->site_seo($name, $value, $globalData);
                     break;
+
+                case 'web_basehost':
                 case 'web_cmsurl':
                     {
-                        $request = Request::instance();
-
-                        // if(empty($value)) {
-                        //     if (1 == $globalData['seo_pseudo']) {
-                        //         $value = '/';
-                        //     }
-                        // } && $value = url('home/Index/index');
-
-                        /*URL全局参数（比如：可视化uiset、多模板v、多语言lang）*/
-                        $urlParam = $request->param();
+                        /*URL全局参数（比如：可视化uiset、多模板v、多语言lang、多城市站点site）*/
+                        $parse_url_param = Config::get('global.parse_url_param');
+                        $urlParam = self::$request->param();
                         foreach ($urlParam as $key => $val) {
-                            if (in_array($key, Config::get('global.parse_url_param'))) {
+                            if (in_array($key, $parse_url_param)) {
                                 $urlParam[$key] = trim($val, '/');
                             } else {
                                 unset($urlParam[$key]);
@@ -96,10 +92,16 @@ class TagGlobal extends Base
                             if (empty($globalData['web_basehost'])) {
                                 $value = !empty($this->root_dir) ? $this->root_dir : '/';
                             } else {
-                                $value = $request->scheme().'://'.preg_replace('/^(([^\/]*)\/\/)?([^\/]+)(.*)$/i', '${3}', $globalData['web_basehost']).$this->root_dir;
+                                $value = self::$request->scheme().'://'.preg_replace('/^(([^\/]*)\/\/)?([^\/]+)(.*)$/i', '${3}', $globalData['web_basehost']).$this->root_dir;
                             }
+
                             $separate_mobile = config('ey_config.separate_mobile');
                             if (1 == $globalData['seo_pseudo'] || 1 == $separate_mobile) {
+                                if (self::$city_switch_on) { // 多城市站点
+                                    if (self::$request->subDomain() == self::$home_site) {
+                                        $value = self::$request->domain().$this->root_dir;
+                                    }
+                                }
                                 if (!empty($urlParam)) {
                                     /*是否隐藏小尾巴 index.php*/
                                     $seo_inlet = config('ey_config.seo_inlet');
@@ -117,13 +119,20 @@ class TagGlobal extends Base
                                     $value .= http_build_query($urlParam);
                                 }
                             } else {
-                                if (get_default_lang() != get_home_lang()) {
-                                    $value = rtrim(url('home/Index/index'), '/');
+                                if (self::$city_switch_on) { // 多城市站点
+                                    $value = self::$request->domain().$this->root_dir;
+                                    if (!empty(self::$home_site) && self::$request->subDomain() != self::$home_site) {
+                                        $value .= '/'.self::$home_site;
+                                    }
+                                } else {
+                                    if (get_default_lang() != self::$home_lang) {
+                                        $value = rtrim(url('home/Index/index'), '/');
+                                    }
                                 }
                             }
                         }
                         
-                        if (stristr($request->host(true), '.yiyocms.com')) {
+                        if (stristr(self::$request->host(true), '.yiyocms.com')) {
                             $value = preg_replace('/^(http:|https:)/i', '', $value);
                         }
                     }
@@ -136,6 +145,13 @@ class TagGlobal extends Base
                 case 'web_recordnum':
                     if (!empty($value) && empty($globalData['web_recordnum_mode'])) {
                         $value = '<a href="https://beian.miit.gov.cn/" rel="nofollow" target="_blank">'.$value.'</a>';
+                    }
+                    break;
+                
+                case 'web_garecordnum':
+                    if (!empty($value) && empty($globalData['web_garecordnum_mode'])) {
+                        $recordcode = preg_replace('/([^\d\-]+)/i', '', $value);
+                        $value = '<a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode='.$recordcode.'" rel="nofollow" target="_blank">'.$value.'</a>';
                     }
                     break;
 
@@ -153,7 +169,7 @@ class TagGlobal extends Base
                     break;
 
                 case 'ey_common_hidden':
-                    $baseFile = $this->request->baseFile();
+                    $baseFile = self::$request->baseFile();
                     $value = <<<EOF
     <script type="text/javascript">
         var __eyou_basefile__ = '{$baseFile}';
@@ -164,16 +180,28 @@ EOF;
 
                 case 'web_ico':
                     /*支持子目录*/
-                    $value = preg_replace('#^(/[/\w]+)?(/)#i', '$2', $value); // 支持子目录
+                    $value = preg_replace('#^(/[/\w\-]+)?(/)#i', '$2', $value); // 支持子目录
                     $value = $this->root_dir.$value;
                     /*--end*/
                     break;
 
                 default:
-                    /*支持子目录*/
-                    $value = handle_subdir_pic($value, 'html');
-                    $value = handle_subdir_pic($value);
-                    /*--end*/
+                    if (preg_match('/^web_attrname_(\d+)$/i', $name)) {
+                        static $config_attribute = null;
+                        if (null === $config_attribute) {
+                            $row = Db::name('config_attribute')->field('attr_id,attr_name,attr_var_name')->where(['lang'=>self::$home_lang])->select();
+                            foreach ($row as $key => $val) {
+                                $attr_id = str_replace('web_attr_', '', $val['attr_var_name']);
+                                $config_attribute['web_attrname_'.$attr_id] = $val;
+                            }
+                        }
+                        $value = !empty($config_attribute[$name]) ? $config_attribute[$name]['attr_name'] : '';
+                    } else {
+                        /*支持子目录*/
+                        $value = handle_subdir_pic($value, 'html');
+                        $value = handle_subdir_pic($value);
+                        /*--end*/
+                    }
                     break;
             }
 
@@ -181,21 +209,51 @@ EOF;
                 if ($key == 0) continue;
                 $value = $val($value);
             }
-            // $value = str_replace('"', '\"', $value);
-
-/*            switch ($name) {
-                case 'web_thirdcode_wap':
-                case 'web_thirdcode_pc':
-                    $value = htmlspecialchars_decode($value);
-                    break;
-                
-                default:
-                    # code...
-                    break;
-            }*/
+            
             $value = htmlspecialchars_decode($value);
         }
-        
+
+        return $value;
+    }
+
+    /**
+     * 多城市站点SEO逻辑
+     * @param  [type] $name       [description]
+     * @param  string $value      [description]
+     * @param  array  $globalData [description]
+     * @return [type]             [description]
+     */
+    private function site_seo($name, $value = '', $globalData = [])
+    {
+        if (!self::$city_switch_on || empty(self::$siteid)) {
+            $value = $this->citysite_replace_string($value);
+            return $value;
+        }
+
+        $site_info = self::$site_info;
+        $seoset = !empty($site_info['seoset']) ? intval($site_info['seoset']) : 0;
+        if (empty($seoset)) { // 当前分站启用分站的SEO
+            if (!empty($globalData['site_seoset'])) { // 启用分站SEO
+                if ('web_title' == $name) {
+                    $value = !empty($globalData['site_seo_title']) ? $globalData['site_seo_title'] : '';
+                } else if ('web_keywords' == $name) {
+                    $value = !empty($globalData['site_seo_keywords']) ? $globalData['site_seo_keywords'] : '';
+                } else if ('web_description' == $name) {
+                    $value = !empty($globalData['site_seo_description']) ? $globalData['site_seo_description'] : '';
+                }
+            }
+        } else if (1 == $seoset) { // 当前分站启用自定义SEO
+            if ('web_title' == $name) {
+                $value = self::$site_info['seo_title'];
+            } else if ('web_keywords' == $name) {
+                $value = self::$site_info['seo_keywords'];
+            } else if ('web_description' == $name) {
+                $value = self::$site_info['seo_description'];
+            }
+        }
+
+        $value = site_seo_handle($value, self::$site_info);
+
         return $value;
     }
 }

@@ -147,6 +147,7 @@ class LtTemplateView
 	{
 		$str = $this->removeComments($str);
 		$str = $this->parseIncludeComponent($str); 
+		return $str; // 疑似这里有漏洞，国家漏洞库反馈 by 小虎哥
 		// 回车 换行
 		$str = str_replace("{CR}", "<?php echo \"\\r\";?>", $str);
 		$str = str_replace("{LF}", "<?php echo \"\\n\";?>", $str); 

@@ -21,7 +21,7 @@ return array (
   'password' => 
   array (
     'name' => 'password',
-    'type' => 'varchar(32)',
+    'type' => 'varchar(255)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -75,7 +75,7 @@ return array (
   'paypwd' => 
   array (
     'name' => 'paypwd',
-    'type' => 'varchar(50)',
+    'type' => 'varchar(255)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -324,12 +324,39 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'sex' => 
+  array (
+    'name' => 'sex',
+    'type' => 'varchar(10)',
+    'notnull' => false,
+    'default' => '保密',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'coin' => 
   array (
     'name' => 'coin',
     'type' => 'int(11) unsigned',
     'notnull' => false,
     'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'union_id' => 
+  array (
+    'name' => 'union_id',
+    'type' => 'varchar(50)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'source' => 
+  array (
+    'name' => 'source',
+    'type' => 'tinyint(3)',
+    'notnull' => false,
+    'default' => '1',
     'primary' => false,
     'autoinc' => false,
   ),

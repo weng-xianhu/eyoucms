@@ -38,26 +38,42 @@ class TagAttribute extends Base
             return false;
         }
         $result = false;
-
         if ('newattr' == $type) {
-
-            if (empty($attrid)) {
-                $attrid = Db::name('archives')->where(['aid'=>$aid])->getField('attrlist_id');
+	
+            // 查询商品信息
+            $archives = Db::name('archives')->field('merchant_id, attrlist_id')->where(['aid'=>$aid])->find();
+            if (!empty($archives['merchant_id'])) {
+                // 多商家商品则查询自定义参数
+                $where = [
+                    'aid' => $aid,
+                ];
+                $order = 'sort_order asc, param_id asc';
+                $field = 'param_name as name, param_value as value';
+                $result = M('product_custom_param')->field($field)->where($where)->order($order)->select();
+            } else {
+                // 新版参数
+                $attrid = !empty($attrid) ? $attrid : $archives['attrlist_id'];
+                if (!empty($attrid)) {
+                    $where = [
+                        'b.aid' => $aid,
+                        'a.list_id' => ['IN', [0, $attrid]],
+                        'a.status' => 1,
+                    ];
+                }else{
+                    $where = [
+                        'b.aid' => $aid,
+                        'a.list_id' => 0,
+                        'a.status' => 1,
+                    ];
+                }
+                $result = M('shop_product_attribute')
+                    ->alias('a')
+                    ->field('a.attr_name as name, b.attr_value as value')
+                    ->join('__SHOP_PRODUCT_ATTR__ b', 'a.attr_id = b.attr_id', 'LEFT')
+                    ->where($where)
+                    ->order('a.sort_order asc, a.attr_id asc')
+                    ->select();
             }
-
-            // 新版参数
-            $where = [
-                'b.aid'     => $aid,
-                'a.list_id' => $attrid,
-                'a.status'  => 1,
-            ];
-            $result = M('shop_product_attribute')
-                ->alias('a')
-                ->field('a.attr_name as name, b.attr_value as value')
-                ->join('__SHOP_PRODUCT_ATTR__ b', 'a.attr_id = b.attr_id', 'LEFT')
-                ->where($where)
-                ->order('a.sort_order asc, a.attr_id asc')
-                ->select();
         } else {
             // 旧版参数
             /*当前栏目下的属性*/
@@ -66,7 +82,7 @@ class TagAttribute extends Base
                 ->join('__PRODUCT_ATTRIBUTE__ b', 'a.attr_id = b.attr_id', 'LEFT')
                 ->where([
                     'a.aid'     => $aid,
-                    'b.lang'    => $this->home_lang,
+                    'b.lang'    => self::$home_lang,
                     'b.is_del'  => 0,
                 ])
                 ->order('b.sort_order asc, a.attr_id asc')
@@ -76,7 +92,7 @@ class TagAttribute extends Base
                 return $result;
             } else {
                 /*获取多语言关联绑定的值*/
-                $row = model('LanguageAttr')->getBindValue($row, 'product_attribute', $this->main_lang); // 多语言
+                $row = model('LanguageAttr')->getBindValue($row, 'product_attribute', self::$main_lang); // 多语言
                 /*--end*/
 
                 if ('default' == $type) {

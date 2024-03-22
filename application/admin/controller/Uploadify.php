@@ -14,12 +14,12 @@
 namespace app\admin\controller;
 
 use think\Db;
-use app\common\logic\ArctypeLogic;
 
 class Uploadify extends Base
 {
     public $image_type = '';
     private $imageExt = '';
+    private $image_accept = '';
 
     /**
      * 析构函数
@@ -30,6 +30,7 @@ class Uploadify extends Base
         $this->imageExt = config('global.image_ext');
         $this->image_type = tpCache('basic.image_type');
         $this->image_type = !empty($this->image_type) ? str_replace('|', ',', $this->image_type) : $this->imageExt;
+        $this->image_accept = image_accept_arr($this->image_type);
     }
 
     /**
@@ -182,15 +183,10 @@ class Uploadify extends Base
         if(IS_AJAX_POST){
             $param = input('param.');
             if (!empty($param['images_array'])) {
+                $images_array = $param['images_array'];
                 $commonPic_db = Db::name('common_pic');
-
-                $where = '';
-                $data  = []; 
-                foreach ($param['images_array'] as $key => $value) {
-                    // 删除条件
-                    if ($key > '0') { $where .= ','; }
-                    $where .= $value;
-
+                $data  = [];
+                foreach ($images_array as $key => $value) {
                     // 添加数组
                     $data[$key] = [
                         'pic_path'    => $value,
@@ -201,7 +197,7 @@ class Uploadify extends Base
                 }
 
                 // 批量删除选中的图片
-                $commonPic_db->where('pic_path','IN',$where)->delete();
+                $commonPic_db->where('pic_path','IN',$images_array)->delete();
 
                 // 批量添加图片
                 !empty($data) && $commonPic_db->insertAll($data);
@@ -313,10 +309,10 @@ class Uploadify extends Base
             $action = input('action','del');  
             $filename= input('filename/s');
             $filename= empty($filename) ? input('url') : $filename;
-            $filename= str_replace(['(',')',',',' ','../'],'',$filename);
+            $filename= str_replace(['(',')',',',' ','../','..','./'],'',$filename);
             $filename= trim($filename,'.');
-            $filename = preg_replace('#^(/[/\w]+)?(/public/upload/|/uploads/|/public/static/admin/logo/)#i', '$2', $filename);
-            if(eyPreventShell($filename) && $action=='del' && !empty($filename) && file_exists('.'.$filename)){
+            $filename = preg_replace('#^(/[/\w\-]+)?(/public/upload/|/uploads/|/public/static/admin/logo/)#i', '$2', $filename);
+            if(eyPreventShell($filename) && $action=='del' && !empty($filename) && is_file('.'.$filename) && stristr($filename, 'uploads/')){
                 if (stristr($filename, '/admin/logo/')) {
                     $filetype = preg_replace('/^(.*)\.(\w+)$/i', '$2', $filename);
                     $phpfile = strtolower(strstr($filename,'.php'));  //排除PHP文件
@@ -587,10 +583,18 @@ class Uploadify extends Base
     {
         if (IS_AJAX_POST) {
             \think\Session::pause(); // 暂停session，防止session阻塞机制
-            $filename = input('post.filename/s');
+            $post = input('post.');
+            $filename = '';
+            if (!empty($post['filename'])) {
+                if (is_array($post['filename'])) {
+                    $filename = $post['filename'][0];
+                } else {
+                    $filename = $post['filename'];
+                }
+            }
             $filename = strstr($filename, "/uploads/");
             if (!empty($filename)){
-                $weappList = Db::name('weapp')->field('code,data,status,config')->where([
+                $weappList = Db::name('weapp')->where([
                     'status'    => 1,
                 ])->cache(true, EYOUCMS_CACHE_TIME, 'weapp')
                 ->getAllWithIndex('code');

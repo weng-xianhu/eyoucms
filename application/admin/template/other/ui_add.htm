@@ -129,7 +129,7 @@
             success: function(res){
                 layer.closeAll();
                 if (res.code == 1) {
-                    parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                         parent.window.location.reload();
                         parent.layer.close(parentObj);
                     });
@@ -158,8 +158,16 @@
 
     function ui_delfun(obj) {
         layer.confirm('此操作不可恢复，确认删除？', {
-                title: false,
-                btn: ['确定','取消'] //按钮
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['确定', '取消'] ,//按钮
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
             }, function(){
                 // 确定
                 layer_loading('正在处理');
@@ -171,7 +179,7 @@
                     success : function(data){
                         layer.closeAll();
                         if(data.code == 1){
-                            parent.layer.msg(data.msg, {shade: 0.3, time: 1000}, function(){
+                            parent.layer.msg(data.msg, {shade: layer_shade, time: 1000}, function(){
                                 parent.window.location.reload();
                                 parent.layer.close(parentObj);
                             });

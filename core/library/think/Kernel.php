@@ -4,9 +4,6 @@ namespace think;
 
 use think\db\driver\Driver;
 
-/**
- * 加密方式：by 小虎哥 <1105415366@qq.com>
- */
 class Kernel
 {
     /**

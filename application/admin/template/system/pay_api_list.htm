@@ -25,7 +25,9 @@
                     <tbody>
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -34,8 +36,30 @@
             <div class="iDiv" style="display: none;"></div>
         </div>
     {else /}
+        {foreach name="pay_api_list" item="vo" key="k" }
+        <div class="plug-item-content">
+            <div class="plug-item-top">
+                <div class="plug-img">
+                    <a href="JavaScript:void(0);" onclick="PayApiConfig({$vo.pay_id}, '{$vo.pay_name}');"><img src="{$vo.litpic|get_default_pic=###}"></a>
+                </div>
+                <div class="plug-text">
+                    <div class="plug-text-title">
+                        <a href="JavaScript:void(0);" onclick="PayApiConfig({$vo.pay_id}, '{$vo.pay_name}');">{$vo.pay_name}</a>
+                    </div>
+                    <div class="plug-text-versions">
+                        <span>{eq name="$vo.system_built" value="1"}系统内置{else/}插件应用{/eq}</span>
+                    </div>
+                    <!-- <div class="plug-text-des">暂无描述</div> -->
+                </div>
+            </div>
+            <div class="plug-item-bottm">
+                <a href="JavaScript:void(0);" onclick="PayApiConfig({$vo.pay_id}, '{$vo.pay_name}');">配置</a>
+            </div>
+        </div>
+        {/foreach}
+        
         <!-- 内置余额支付开关 - 陈风任 -->
-        <div class="plug-item-content" style="display: none;">
+        <div class="plug-item-content">
             <div class="plug-item-top">
                 <div class="plug-img">
                     <a href="JavaScript:void(0);"><img src="__SKIN__/images/balance.png?v={$version}"></a>
@@ -76,35 +100,13 @@
                     },
                     error: function(e){
                         layer.closeAll();
-                        showErrorMsg(ey_unknown_error);
+                        showErrorMsg(e.responseText);
                         return false;
                     }
                 });
             }
         </script>
         <!-- 内置余额支付开关 - END -->
-
-        {foreach name="pay_api_list" item="vo" key="k" }
-        <div class="plug-item-content">
-            <div class="plug-item-top">
-                <div class="plug-img">
-                    <a href="JavaScript:void(0);" onclick="PayApiConfig({$vo.pay_id}, '{$vo.pay_name}');"><img src="{$vo.litpic|get_default_pic=###}"></a>
-                </div>
-                <div class="plug-text">
-                    <div class="plug-text-title">
-                        <a href="JavaScript:void(0);" onclick="PayApiConfig({$vo.pay_id}, '{$vo.pay_name}');">{$vo.pay_name}</a>
-                    </div>
-                    <div class="plug-text-versions">
-                        <span>{eq name="$vo.system_built" value="1"}系统内置{else/}插件应用{/eq}</span>
-                    </div>
-                    <!-- <div class="plug-text-des">暂无描述</div> -->
-                </div>
-            </div>
-            <div class="plug-item-bottm">
-                <a href="JavaScript:void(0);" onclick="PayApiConfig({$vo.pay_id}, '{$vo.pay_name}');">配置</a>
-            </div>
-        </div>
-        {/foreach}
     {/empty}
 </div>
 
@@ -116,9 +118,10 @@
         var iframes = layer.open({
             type: 2,
             title: title,
+            area: ['100%', '100%'],
             fixed: true,
             shadeClose: false,
-            shade: 0.3,
+            shade: layer_shade,
             content: url + '&pay_id=' + pay_id
         });
         layer.full(iframes);

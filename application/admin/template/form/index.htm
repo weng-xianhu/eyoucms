@@ -1,0 +1,263 @@
+{include file="public/layout" /}
+<style type="text/css">
+    .layui-layer-btn .layui-layer-btn-star{
+        color: #666 !important;
+        background-color: #fff !important;
+    }
+</style>
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div id="page_div" class="page">
+{empty name="$iframe"}
+    {include file="form/bar" /}
+{/empty}
+    <div class="flexigrid">
+        <div class="mDiv pt0">
+            {include file="form/index_bar" /}
+            <form id="searchForm" class="navbar-form form-inline" action="{:url('Form/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <!-- <div class="sDiv2">
+                        <input type="text" name="add_time_begin" id="add_time_begin" value="{$Request.param.add_time_begin}" class="qsbox" autocomplete="off" placeholder="起始日期">
+                    </div>
+                    &nbsp;至&nbsp;
+                    <div class="sDiv2">
+                        <input type="text" name="add_time_end" id="add_time_end" value="{$Request.param.add_time_end}" class="qsbox" autocomplete="off" placeholder="结束日期">
+                    </div> -->
+                    <div class="sDiv2">
+                        <select name="count_type" class="select" style="margin: 0px 5px;" onchange="gbCountSubmit(this);">
+                            {volist name='$gbCountList' id='vo'}
+                            <option value="{$vo.type}" {eq name='$count_type' value='$vo.type'}selected{/eq}>{$vo.name}留言 ({$vo.count})</option>
+                            {/volist}
+                        </select>
+                    </div>
+                    <!-- <div class="sDiv2">
+                        <select name="source" class="select" style="margin:0px 5px;">
+                            <option value="">--全部来源--</option>
+                            <option value="1" {eq name="$source" value="1"}selected{/eq}>电脑端</option>
+                            <option value="2" {eq name="$source" value="2"}selected{/eq}>手机端</option>
+                        </select>
+                    </div> -->
+                    <div class="sDiv2">
+                        <input type="hidden" name="typeid" id="typeid" value="{$typeid|default=''}">
+                        <input type="hidden" name="form_type" id="form_type" value="{$form_type|default=''}">
+                        <!-- <input type="hidden" name="count_type" id="count_type" value="{$count_type|default=''}"> -->
+                        <input type="hidden" name="iframe" id="iframe" value="{$iframe|default=''}">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="模糊搜索..." autocomplete="off">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="iconfont e-sousuo"></i>
+                    </div>
+                    <!-- {eq name="'Guestbook@ajax_excel_export'|is_check_access" value="1"}
+                    <div class="fbutton ml10" style="float: right;">
+                        {if condition="$typeid > 0"}
+                        <a href="javascript:void(0);" onclick="excel_export(this, 'ids');" data-url="{:url('Guestbook/ajax_excel_export', ['form_type'=>'all','typeid'=>$typeid])}" class="bt-xin-xia">
+                            <i class="iconfont e-xiazai"></i>导出
+                        </a>
+                        {else /}
+                        <a href="javascript:void(0);" onclick="excel_export(this, 'ids');" data-url="{:url('Guestbook/ajax_excel_export', ['form_type'=>'all'])}" class="bt-xin-xia">
+                            <i class="iconfont e-xiazai"></i>导出
+                        </a>
+                        {/if}
+                    </div>
+                    {/eq} -->
+                </div>
+                
+            </form>
+            
+        </div>
+        <div class="hDiv" style="background-color: #fff;">
+            <div class="hDivBox">
+                {empty name="list"}
+                    <div class="no-data" >
+                        <div class="no_row">
+                            <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                        </div>
+                    </div>
+                {else/}
+                <div class="guestbook-boxes jsGridView">
+                    {foreach name="list" item="vo" key="k" }
+                    <div class="guestbook-box-wrapper">
+                      <div class="guestbook-box">
+                        <div class="guestbook-box-header">
+                            <span>
+                                <a href="{:url('Form/index', ['typeid'=>$vo.typeid,'form_type'=>$vo['form_type']])}">{$vo.form_name|default='<i class="red">数据出错！</i>'}</a>
+                            </span>
+                            <div class="more-wrapper">
+                                <div id="td_is_read_{$vo.aid}">
+                                    {eq name='$vo.is_read' value='1'}
+                                        <div class="days-yes">已读</div>
+                                    {else /}
+                                        <div class="days-no">未读</div>
+                                    {/eq}
+                                </div>
+								<div class="is_star_tag {empty name='$vo.is_star'} none {/empty}" id="is_star_tag_{$vo.aid}"><i class="iconfont e-xingxing"></i></div>
+                            </div>
+                        </div>
+                        <div class="guestbook-box-content">
+                        {if condition="!empty($tab_list[$vo['typeid']])"}
+                            {for start="0" end="count($tab_list[$vo['typeid']])"}
+                                {if condition="$i lt 4" }
+                                    <p>{$tab_list[$vo['typeid']][$i]['attr_name']}：{$vo['attr_list'][$i]['attr_value']}</p>
+                                {/if}
+                            {/for}
+                        {/if}
+                        </div>
+                        <div class="guestbook-box-footer">
+                          <div class="participants">
+                              <span>{$vo.add_time|date='Y-m-d H:i:s',###}</span>
+                          </div>
+                          <div class="guestbook-btn-more">
+                            <a href="javascript:void(0);" data-is_star="{$vo['is_star']}" data-btn1="{empty name='$vo.is_star'}设为星标{else /}取消星标{/empty}" data-href="{:url('Guestbook/details', ['aid'=>$vo['aid'],'form_type'=>$vo['form_type']])}" onclick="openDetails(this, {$vo.aid});">查看</a>
+                            {eq name="'Guestbook@del'|is_check_access" value="1"}
+                            <i></i>
+                            <a href="javascript:void(0);" data-url="{:url('Guestbook/del',['form_type'=>$vo['form_type']])}" data-id="{$vo.aid}" onClick="delfun(this);">删除</a>
+                            {/eq}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/foreach}
+                </div>
+                {/empty}
+            </div>
+        </div>
+        {notempty name="list"}
+        <div class="tDiv nobdb">
+            <div class="tDiv2">
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        {/notempty}
+    </div>
+</div>
+<script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+
+        $('#searchForm select[name=source]').change(function(){
+            $('#searchForm').submit();
+        });
+    });
+
+    function gbCountSubmit(obj, count_type) {
+        $('input[name=count_type]').val(count_type);
+        layer_loading('正在处理');
+        $('#searchForm').submit();
+    }
+
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#add_time_begin' //指定元素
+        });
+        laydate.render({
+            elem: '#add_time_end' //指定元素
+        });
+    });
+
+    $(document).ready(function(){
+
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+
+    function excel_export(obj,name) {
+        var url = $(obj).attr('data-url');
+        var aid = [];
+        var typeid =  $('input[name=typeid]').val();
+        var start_time =  $('input[name=add_time_begin]').val();
+        var end_time =  $('input[name=add_time_end]').val();
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                aid.push($(o).val());
+            }
+        });
+        url = url+"&aid="+aid+"&typeid="+typeid+"&start_time="+start_time+"&end_time="+end_time;
+        window.location.href = url;
+    }
+
+    //留言详情
+    function openDetails(obj,aid) {
+        var btn1 = $(obj).attr('data-btn1');
+        var is_star = $(obj).attr('data-is_star');
+        is_star = (is_star == 1) ? 0 : 1;
+        var iframes = layer.open({
+            type: 2
+            ,title: '查看详情'
+            ,fixed: true //不固定
+            ,shadeClose: false
+            ,shade: layer_shade
+            ,offset: 'auto'
+            // ,maxmin: true //开启最大化最小化按钮
+            ,area: ['800px','80%']
+            ,anim: 5
+            ,content: $(obj).data('href')
+            ,btn: ['加载中','关闭']
+            ,yes: function(index, layero){ // 设置/取消星标
+                layer_loading('正在处理');
+                $.ajax({
+                    type : 'post',
+                    url : "{:url('Guestbook/ajax_set_star', ['_ajax'=>1])}",
+                    data : {aid:aid, is_star:is_star},
+                    dataType : 'json',
+                    success : function(res){
+                        layer.closeAll();
+                        if(res.code == 1){
+                            if (is_star == 1) {
+                                $(obj).attr('data-is_star', '1');
+                                $(obj).attr('data-btn1', '取消星标');
+                                $('#is_star_tag_'+aid).show();
+                            } else {
+                                $(obj).attr('data-is_star', '0');
+                                $(obj).attr('data-btn1', '设为星标');
+                                $('#is_star_tag_'+aid).hide();
+                            }
+                            showSuccessMsg(res.msg, 1000);
+                        }else{
+                            showErrorMsg(res.msg);
+                        }
+                    },
+                    error: function(e){
+                        layer.closeAll();
+                        showErrorAlert(e.responseText);
+                    }
+                });
+            }
+            ,btn2: function(index, layero){
+
+            }
+            ,end: function() {
+
+            }
+            ,success: function(layero, index){
+                $('#td_is_read_'+aid).html('<div class=\'days-yes\'>已读</div>');
+                if (is_star == 1) {
+                    $('.layui-layer-btn0').html(btn1).removeClass('layui-layer-btn-star');
+                } else {
+                    $('.layui-layer-btn0').html(btn1).addClass('layui-layer-btn-star');
+                }
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

@@ -84,7 +84,7 @@ class Ask extends Model
     {
         // 返回参数
         $result = [];
-        $field  = 'a.ask_id, a.ask_title, a.click, a.replies, a.add_time, a.is_review, b.users_id, b.nickname';
+        $field  = 'a.ask_id, a.type_id, a.ask_title, a.click, a.replies, a.add_time, a.is_review, b.users_id, b.nickname';
         if (!empty($is_ask)) {
             // 提问问题查询列表
             $where = [
@@ -223,7 +223,7 @@ class Ask extends Model
             // 查询满足要求的总记录数
             $count = $this->ask_db->alias('a')->where($where)->count('ask_id');
             // 实例化分页类 传入总记录数和每页显示的记录数
-            $pageObj = new Page($count, 10);
+            $pageObj = new Page($count, $limit);
             /*问题表数据(问题表+会员表+问题分类表)*/
             $result['AskData'] = $this->ask_db->field($field)
                 ->alias('a')
@@ -319,7 +319,7 @@ class Ask extends Model
     // 加急问题列表(默认10条数据)
     public function GetUrgentAskData($limit = 10)
     {
-        $field = 'ask_id, ask_title, money';
+        $field = 'ask_id, type_id, ask_title, money';
         $where = [
             'is_del' => 0,
             'is_review' => 1,
@@ -454,7 +454,7 @@ class Ask extends Model
             return $return;
         } else {
             // 列表或内容页调用
-            $TidData = group_same_key($TidData, 'parent_id');
+            $TidData = !empty($TidData) ? group_same_key($TidData, 'parent_id') : [];
             
             // 一级栏目处理
             foreach ($PidData as $P_key => $PidValue) {
@@ -520,7 +520,7 @@ class Ask extends Model
     public function GetAskTotalListData()
     {
         $result['TotalList'] = [];
-        $TotalList           = $this->ask_db->field('a.ask_id, a.ask_title, a.click, a.replies, b.head_pic')
+        $TotalList           = $this->ask_db->field('a.ask_id, a.type_id, a.ask_title, a.click, a.replies, b.head_pic')
             ->alias('a')
             ->join('__USERS__ b', 'a.users_id = b.users_id', 'LEFT')
             ->order('click desc, replies desc')
@@ -987,7 +987,7 @@ class Ask extends Model
             'users_id'    => $users_id,
             'money'       => -$money,
             'info'        => $info,
-            'score'       => $score,
+            'score'       => !empty($score) ? '+' . $score : $score,
             'devote'      => $score,
             'type'        => $type,
             'add_time'    => getTime(),
@@ -1013,7 +1013,7 @@ class Ask extends Model
         if ($money > 0) {
             //退钱
             Db::name('users')->where('users_id', $users_id)->setInc('users_money', $money);
-//            adminLog($users_id . '删除问题,id:' . $ask_id . ',标题:' . $ask['ask_title']);
+            // adminLog($users_id . '删除问题,id:' . $ask_id . ',标题:' . $ask['ask_title']);
         }
 
         $count_score = Db::name('users_score')->where(['ask_id' => $ask_id, 'users_id' => $users_id])->sum('score');

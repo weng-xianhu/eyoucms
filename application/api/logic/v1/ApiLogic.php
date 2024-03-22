@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -13,6 +13,7 @@
 
 namespace app\api\logic\v1;
 
+use think\Config;
 use think\Model;
 use think\Db;
 use think\Request;
@@ -24,7 +25,11 @@ class ApiLogic extends Model
 {
     private $request = null; // 当前Request对象实例
     private $current_lang = 'cn'; // 当前多语言标识
-    public $taglib = ['apiType','apiChannel','apiList','apiArclist','apiArcview','apiPrenext','apiGuestbookform','apiAdv','apiAd','apiFlink','apiGlobal','apiCollect'];
+    public $taglib = ['apiType','apiChannel','apiList','apiArclist','apiArcview','apiPrenext','apiGuestbookform',
+        'apiAdv','apiAd','apiFlink','apiGlobal','apiCollect','apiDiscount','apiLikearticle','apiLike','apiForm',
+        'apiCommentlist','apiChannellist','apiDownloadpayList','apiSpecnode','apiNavigation','apiUsersTypeManage',
+        'apiMediaOrderList','apiMediaOrderDetails','apiPlayList','apiUpgradeLevelOrderList',
+        'apiWeappSeckillList','apiWeappSeckillView','apiCouponList','apiCouponGoodList'];
 
     /**
      * 析构函数
@@ -34,11 +39,12 @@ class ApiLogic extends Model
         $this->current_lang = get_current_lang();
     }
 
-    public function taglibData($users_id=0)
+    public function taglibData($users = [])
     {
         $result = [];
         $params = input('param.');
         $aid = input('param.aid/d');
+        $provider = input('param.provider/s', 'weixin');
         $typeid = input('param.typeid/d');
         $channelid = input('param.channelid/d');
         foreach ($params as $key => $val) {
@@ -48,18 +54,23 @@ class ApiLogic extends Model
             }
             $val = htmlspecialchars_decode($val);
             parse_str($val, $parse);
+            foreach ($parse as $_k => $_v) {
+                $parse[$_k] = trim($_v);
+            }
+            $parse['provider'] = $provider;
             $ekey = isset($parse['ekey']) ? intval($parse['ekey']) : 1; // 多个相同标签对应的每份不同数据
             $aid = !empty($parse['aid']) ? intval($parse['aid']) : $aid;
             $typeid = !empty($parse['typeid']) ? intval($parse['typeid']) : $typeid;
 
-            if ($key == 'apiType') { // 单个分类标签
+            if ($key == 'apiType') { // 单个栏目标签
                 $type = !empty($parse['type']) ? $parse['type'] : 'self';
                 $addfields = !empty($parse['addfields']) ? $parse['addfields'] : '';
                 $infolen = !empty($parse['infolen']) ? intval($parse['infolen']) : '';
+                $suffix = !empty($parse['suffix']) ? $parse['suffix'] : true;
                 $tagType = new \think\template\taglib\api\TagType;
-                $result[$key][$ekey] = $tagType->getType($typeid, $type, $addfields, $infolen);
+                $result[$key][$ekey] = $tagType->getType($typeid, $type, $addfields, $infolen,$suffix);
             }
-            else if ($key == 'apiChannel') { // 分类列表标签
+            else if ($key == 'apiChannel') { // 栏目列表标签
                 $type = !empty($parse['type']) ? $parse['type'] : 'top';
                 $currentstyle = !empty($parse['currentstyle']) ? $parse['currentstyle'] : '';
                 $showalltext = !empty($parse['showalltext']) ? $parse['showalltext'] : 'off';
@@ -68,8 +79,12 @@ class ApiLogic extends Model
                 } else {
                     $limit = !empty($parse['row']) ? intval($parse['row']) : 10;
                 }
+                $notypeid = !empty($parse['notypeid']) ? $parse['notypeid'] : '';
+                if (!empty($parse['channelid'])){
+                    $channelid = $parse['channelid'];
+                }
                 $tagChannel = new \think\template\taglib\api\TagChannel;
-                $result[$key][$ekey] = $tagChannel->getChannel($typeid, $type, $currentstyle, $showalltext, $channelid);
+                $result[$key][$ekey] = $tagChannel->getChannel($typeid, $type, $currentstyle, $showalltext, $channelid, $notypeid);
                 if (!empty($result[$key][$ekey]['data'])) {
                     /*指定获取的条数*/
                     $limitarr = explode(',', $limit);
@@ -89,24 +104,25 @@ class ApiLogic extends Model
                     $result[$key][$ekey]['data'] = $data;
                 }
             }
+            else if ($key == 'apiChannellist') { // 栏目列表分页标签
+                $tagChannellist = new \think\template\taglib\api\TagChannellist;
+                if (!empty($parse['channelid'])){
+                    $channelid = $parse['channelid'];
+                }
+                $result[$key][$ekey] = $tagChannellist->getChannellist($parse, $typeid, $channelid);
+            }
             else if ($key == 'apiList') { // 文档分页列表标签
                 $parse['typeid'] = $typeid;
                 $parse['channelid'] = $channelid;
                 $tagList = new \think\template\taglib\api\TagList;
                 $result[$key][$ekey] = $tagList->getList($parse);
             }
-            else if ($key == 'apiArclist') { // 文档不分页列表标签
+            else if ($key == 'apiArclist') { // 文档块列表标签
                 $parse['typeid'] = $typeid;
-                if (!empty($parse['limit'])) {
-                    $limit = !empty($parse['limit']) ? $parse['limit'] : 10;
-                } else {
-                    $limit = !empty($parse['row']) ? intval($parse['row']) : 10;
-                }
                 $tagArclist = new \think\template\taglib\api\TagArclist;
-                $result[$key][$ekey] = $tagArclist->getArclist($parse, $limit);
+                $result[$key][$ekey] = $tagArclist->getArclist($parse);
             }
             else if ($key == 'apiArcview') { // 文档详情页
-                $aid = !empty($parse['aid']) ? intval($parse['aid']) : $aid;
                 $typeid = !empty($parse['typeid']) ? intval($parse['typeid']) : $typeid;
                 $titlelen = !empty($parse['titlelen']) ? intval($parse['titlelen']) : 100;
                 $addfields = !empty($parse['addfields']) ? $parse['addfields'] : '';
@@ -114,7 +130,6 @@ class ApiLogic extends Model
                 $result[$key][$ekey] = $tagArcview->getArcview($aid, $typeid, $addfields, $titlelen);
             }
             else if ($key == 'apiPrenext') { // 上下篇
-                $aid = !empty($parse['aid']) ? intval($parse['aid']) : $aid;
                 $typeid = !empty($parse['typeid']) ? intval($parse['typeid']) : $typeid;
                 $get = !empty($parse['get']) ? $parse['get'] : 'all';
                 $titlelen = !empty($parse['titlelen']) ? intval($parse['titlelen']) : 100;
@@ -128,9 +143,10 @@ class ApiLogic extends Model
             }
             else if ($key == 'apiAdv') { // 广告位置
                 $pid = !empty($parse['pid']) ? intval($parse['pid']) : 0;
-                $orderby = !empty($parse['orderby']) ? intval($parse['orderby']) : '';
+                $orderby = !empty($parse['orderby']) ? $parse['orderby'] : '';
                 if (!empty($parse['limit'])) {
-                    $limit = !empty($parse['limit']) ? $parse['limit'] : 10;
+                    $parse['limit'] = preg_replace('/[^\d\,]/i', '', str_replace('，', ',', $parse['limit']));
+                    $limit = !empty($parse['limit']) ? trim($parse['limit']) : 10;
                 } else {
                     $limit = !empty($parse['row']) ? intval($parse['row']) : 10;
                 }
@@ -146,7 +162,8 @@ class ApiLogic extends Model
                 $type = !empty($parse['type']) ? $parse['type'] : 'text';
                 $groupid = !empty($parse['groupid']) ? intval($parse['groupid']) : 1;
                 if (!empty($parse['limit'])) {
-                    $limit = !empty($parse['limit']) ? $parse['limit'] : 10;
+                    $parse['limit'] = preg_replace('/[^\d\,]/i', '', str_replace('，', ',', $parse['limit']));
+                    $limit = !empty($parse['limit']) ? trim($parse['limit']) : 10;
                 } else {
                     $limit = !empty($parse['row']) ? intval($parse['row']) : 10;
                 }
@@ -159,73 +176,141 @@ class ApiLogic extends Model
                 $tagGlobal = new \think\template\taglib\api\TagGlobal;
                 $result[$key][$ekey] = $tagGlobal->getGlobal($name);
             }
-            else if ($key == 'apiCollect') { // 全局变量\自定义变量
+            else if ($key == 'apiCollect') { // 文档是否收藏标签
                 $type = !empty($parse['type']) ? $parse['type'] : 'default';
                 $tagCollect = new \think\template\taglib\api\TagCollect;
-                $result[$key][$ekey] = $tagCollect->getCollect($aid,$type,$users_id);
+                $result[$key][$ekey] = $tagCollect->getCollect($aid, $type, $users);
+            }
+            else if ($key == 'apiLike') { // 文档是否喜欢(点赞)标签
+                $type = !empty($parse['type']) ? $parse['type'] : 'default';
+                $tagLike = new \think\template\taglib\api\TagLike;
+                $result[$key][$ekey] = $tagLike->getLike($aid, $type, $users);
+            }
+            else if ($key == 'apiDiscount') { // 限时折扣
+                $result[$key][$ekey] = model('v1.Shop')->getOneDiscount($parse);
+            }
+            else if ($key == 'apiCommentlist') { // 文档评论列表
+                $tagCommentlist = new \think\template\taglib\api\TagCommentlist;
+                $result[$key][$ekey] = $tagCommentlist->getCommentlist($parse, $aid);
+            }
+            else if ($key == 'apiLikearticle') { // 相关文档列表
+                // 分页条数
+                if (!empty($parse['limit'])) {
+                    $parse['limit'] = preg_replace('/[^\d\,]/i', '', str_replace('，', ',', $parse['limit']));
+                    $limit = !empty($parse['limit']) ? $parse['limit'] : 10;
+                } else {
+                    $limit = !empty($parse['row']) ? intval($parse['row']) : 10;
+                }
+                if (!stristr($limit, ',')) $limit = "0, {$limit}";
+                
+                // 排序设置
+                $byabs = !empty($parse['byabs']) ? intval($parse['byabs']) : 0;
+                // 是否使用缩略图
+                $thumb = !empty($parse['thumb']) ? $parse['thumb'] : 'on';
+                if (!empty($parse['typeid'])){
+                    $typeid = $parse['typeid'];
+                }
+                if (!empty($parse['channelid'])){
+                    $channelid = $parse['channelid'];
+                }
+                // 查询数据
+                $tagLikearticle = new \think\template\taglib\api\TagLikearticle;
+                $result[$key][$ekey] = $tagLikearticle->getLikearticle($parse,$channelid, $typeid, $limit, $byabs, $thumb);
+            }
+            else if($key == 'apiDownloadpayList'){      //获取下载文档下载信息
+                empty($aid) && $aid = !empty($parse['aid']) ? intval($parse['aid']) : 0;
+                $tagDownloadlist = new \think\template\taglib\api\TagDownloadlist;
+                $result[$key][$ekey] = $tagDownloadlist->getDownloadlist($aid,$users);
+            }
+            else if($key == 'apiSpecnode'){  //获取指定专题节点文档列表
+                empty($aid) && $aid = !empty($parse['aid']) ? intval($parse['aid']) : 0;
+                $title = !empty($parse['title']) ? intval($parse['title']) : '';
+                $code = !empty($parse['code']) ? intval($parse['code']) : '';
+                $is_list = !empty($parse['is_list']) ? intval($parse['is_list']) : 0;
+                $addfields = !empty($parse['addfields']) ? $parse['addfields'] : '';
+                $tagSpecnode = new \think\template\taglib\api\TagSpecnode;
+                $result[$key][$ekey] = $tagSpecnode->getSpecnode($aid,$title, $code,'',$is_list,$addfields);
+            }
+            else if($key == 'apiNavigation'){  //获取导航列表
+                $position_id = !empty($parse['position_id']) ? intval($parse['position_id']) : null;
+                $nav_id = !empty($parse['nav_id']) ? intval($parse['nav_id']) : null;
+                $tagNavigation = new \think\template\taglib\api\TagNavigation;
+                $result[$key][$ekey] = $tagNavigation->getNavigation($position_id,$nav_id);
+            }else if ('apiUsersTypeManage' == $key){ //会员升级类型
+                $manage_data = Db::name('users_type_manage')
+                    ->alias('a')
+                    ->field('a.*,b.level_name')
+                    ->join('users_level b','a.level_id = b.level_id')
+                    ->order('a.activity asc')
+                    ->select();
+                if (!empty($manage_data))
+                $limit_arr = Config::get('global.admin_member_limit_arr');
+                foreach ($manage_data as $k => $v){
+                    $manage_data[$k]['time_name'] = $limit_arr[$v['limit_id']];
+                }
+                $result[$key][$ekey] = $manage_data;
+            }else if ('apiMediaOrderList' == $key){//视频订单列表
+                $users_id = session('users_id');
+                $result[$key][$ekey] = false;
+                if (!empty($users_id)){
+                    $result[$key][$ekey] = model('v1.Order')->mediaOrderList();
+                }
+            }else if ('apiMediaOrderDetails' == $key){//视频订单详情
+                $users_id = session('users_id');
+                $result[$key][$ekey] = false;
+                if (!empty($users_id)){
+                    $result[$key][$ekey] = model('v1.Order')->mediaOrderDetails();
+                }
+            }else if ('apiPlayList' == $key){//视频播放列表
+                $users_id = session('users_id');
+                $result[$key][$ekey] = false;
+                if (!empty($users_id)){
+                    $result[$key][$ekey] = model('v1.Order')->playList();
+                }
+            }else if ('apiUpgradeLevelOrderList' == $key){//会员升级订单列表
+                $users_id = session('users_id');
+                $result[$key][$ekey] = false;
+                if (!empty($users_id)){
+                    $result[$key][$ekey] = model('v1.Order')->getUpgradeLevelOrderList();
+                }
+            } else if ($key == 'apiForm') {
+                $formid = input('param.formid/d', 0);
+                $formid = !empty($parse['formid']) ? intval($parse['formid']) : $formid;
+                $tagGuestbookform = new \think\template\taglib\api\TagGuestbookform;
+                $result[$key][$ekey] = $tagGuestbookform->getGuestbookform($formid, 1);
+            }else if ($key == 'apiWeappSeckillList') {
+                $page = !empty($parse['page']) ? intval($parse['page']) : 1;
+                $pagesize = !empty($parse['pagesize']) ? intval($parse['pagesize']) : 10;
+                if (file_exists('./core/library/think/template/taglib/api/TagWeappSeckill.php')) {
+                    //获取秒杀列表
+                    $tagWeappSeckill = new \think\template\taglib\api\TagWeappSeckill;
+                    $result[$key][$ekey] = $tagWeappSeckill->getList($page,$pagesize);
+                } else {
+                    $result[$key][$ekey] = false;
+                }
+            }else if ($key == 'apiWeappSeckillView') {
+                $goods_id = !empty($parse['goods_id']) ? intval($parse['goods_id']) : 0;
+                if (file_exists('./core/library/think/template/taglib/api/TagWeappSeckill.php')) {
+                    //获取秒杀商品详情
+                    $tagWeappSeckill = new \think\template\taglib\api\TagWeappSeckill;
+                    $result[$key][$ekey] = $tagWeappSeckill->getProductView($goods_id,$users);
+                } else {
+                    $result[$key][$ekey] = false;
+                }
+            }else if ('apiCouponList' == $key){ //优惠券列表
+                $page = !empty($parse['page']) ? intval($parse['page']) : 1;
+                $pagesize = !empty($parse['pagesize']) ? intval($parse['pagesize']) : 10;
+                $users_id = session('users_id');
+
+                $tagCoupon = new \think\template\taglib\api\TagCoupon;
+                $result[$key][$ekey] = $tagCoupon->getList($page,$pagesize,$users_id,$parse);
+            }else if ('apiCouponGoodList' == $key){ //某优惠券可使用的商品列表
+                $tagCoupon = new \think\template\taglib\api\TagCoupon;
+                $result[$key][$ekey] = $tagCoupon->getGoodsList($parse);
             }
         }
 
         return $result;
-    }
-    
-    /**
-     * 接口转化
-     */
-    public function get_api_url($query_str)
-    {
-        $apiUrl = 'aHR0cHM6Ly9zZXJ2aWNlLmV5eXN6LmNu';
-        return base64_decode($apiUrl).$query_str;
-    }
-
-    /**
-     * 获取远程最新的小程序参数配置
-     */
-    public function synRemoteSetting()
-    {
-        $diyminiproMallSettingModel = new \weapp\DiyminiproMall\model\DiyminiproMallSettingModel;
-        $data = $diyminiproMallSettingModel->getSettingValue('setting');
-        if (!empty($data)) {
-            $vaules = [];
-            $vaules['appId'] = $data['appId'];
-            $query_str = http_build_query($vaules);
-            $url = "/index.php?m=api&c=MiniproClient&a=minipro&".$query_str;
-            $response = httpRequest($this->get_api_url($url));
-            $params = array();
-            $params = json_decode($response, true);
-            if (!empty($params) && $params['errcode'] == 0) {
-                $params['errmsg'] = array_merge($data, $params['errmsg']);
-                $bool = $diyminiproMallSettingModel->setSettingValue('setting', $params['errmsg']);
-                if ($bool) {
-                    $data = $diyminiproMallSettingModel->getSettingValue('setting');
-                } else {
-                    $data = $params['errmsg'];
-                }
-                // 同步远程上线模板ID的状态到本地模板
-                Db::name('weapp_diyminipro_mall')->where([
-                    'mini_id'=>intval($data['online_mini_id']),
-                ])->update([
-                    'status'    => 5,
-                    'update_time'   => getTime(),
-                ]);
-            }
-        
-            if (empty($data['authorizerStatus'])) {
-                session('show_qrcode_total_1589417597', 0);
-            }
-
-            if (isset($data['miniproStatus']) && 4 <= $data['miniproStatus']) {
-                // 清除没用的模板
-                $max_mini_id = Db::name('weapp_diyminipro_mall')->where(['status'=>['egt', 4]])->max('mini_id');
-                Db::name('weapp_diyminipro_mall')->where('mini_id','lt',$max_mini_id)->where('mini_id','neq',intval($data['online_mini_id']))->delete();
-            }
-        } else {
-            // 清除没用的模板
-            $max_mini_id = Db::name('weapp_diyminipro_mall')->where(['status'=>['egt', 4]])->max('mini_id');
-            Db::name('weapp_diyminipro_mall')->where(['mini_id'=>['lt', $max_mini_id]])->delete();
-        }
-
-        return $data;
     }
 
     // 验证微信商户配置的正确性
@@ -246,7 +331,7 @@ class ApiLogic extends Model
             'nonce_str'        => $nonceStr,
             'notify_url'       => url('api/Api/wxpay_notify', [], true, true, 1, 2),
             'out_trade_no'     => $out_trade_no,
-            'spbill_create_ip' => $this->clientIP(),
+            'spbill_create_ip' => clientIP(),
             'total_fee'        => 1,
             'trade_type'       => 'JSAPI'
         ];
@@ -270,18 +355,6 @@ class ApiLogic extends Model
         } else if ($ResultData['return_code'] == 'FAIL') {
             return ['code'=>0, 'msg'=>'支付商户号或支付密钥不正确！'];
         }
-    }
-
-    /**
-     * 客户端IP
-     */
-    private function clientIP()
-    {
-        $ip = request()->ip();
-        if (preg_match('/^((?:(?:25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(?:25[0-5]|2[0-4]\d|((1\d{2})|([1 -9]?\d))))$/', $ip))
-            return $ip;
-        else
-            return '';
     }
 
     private function ParamsSign($values, $apikey)

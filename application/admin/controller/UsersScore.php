@@ -41,7 +41,7 @@ class UsersScore extends Base
         $keywords = input('keywords/s');
 
         $condition = [
-            'type' => ['IN', [1, 2, 5]], // 1(提问)、2(回答)、5(签到)，不读取3(最佳答案)、4(悬赏退回)
+            'type' => ['IN', [1, 2, 5, 8, 10]], // 1(提问)、2(回答)、5(签到)、8(消费赠送)、10(登录赠送积分)
         ];
         //时间检索条件
         $begin    = strtotime(input('param.add_time_begin/s'));
@@ -65,7 +65,7 @@ class UsersScore extends Base
         $Page   = $pager = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
         $list   = Db::name('users_score')
             ->alias('a')
-            ->field('a.*,b.username')
+            ->field('a.*,b.username,b.head_pic,b.nickname')
             ->join('users b','a.users_id = b.users_id')
             ->where($condition)
             ->order('id desc')

@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -24,7 +24,7 @@ $channeltype_list = []; // 模型标识
 $allow_release_channel = []; // 发布文档的模型ID
 foreach ($channeltype_row as $key => $val) {
     $channeltype_list[$val['nid']] = $val['id'];
-    if (!in_array($val['nid'], ['guestbook','single'])) {
+    if (!in_array($val['nid'], ['guestbook','single','ask'])) {
         array_push($allow_release_channel, $val['id']);
     }
 }
@@ -44,6 +44,7 @@ if (file_exists(ROOT_PATH.'template/pc/uiset.txt') || file_exists(ROOT_PATH.'tem
 $lang_switch_on = \think\Config::get('lang_switch_on');
 $lang_switch_on == true && $parse_url_param[] = 'lang';
 $parse_url_param[] = 'goto';
+$parse_url_param[] = 'site';
 
 return array(
     // 小虎哥 
@@ -68,10 +69,10 @@ return array(
     'get_order_validity' => 7200,
     // 支付订单默认有效时间，商城中心用到，2小时
     'get_shop_order_validity' => 7200,
-    // 文档SEO描述截取长度，一个字符表示一个汉字或字母
-    'arc_seo_description_length' => 125,
+    // 文档SEO描述截取长度，一个汉字等于两个字符，其余的等于一个字符
+    'arc_seo_description_length' => 80,
     // 栏目最多级别
-    'arctype_max_level' => 3,
+    'arctype_max_level' => 10,
     // 模型标识
     'channeltype_list' => $channeltype_list,
     // 发布文档的模型ID
@@ -100,6 +101,8 @@ return array(
         7   => 'Email邮箱',
         8   => '附件类型',
         9   => '区域联动',
+        10  => '时间类型',
+        11  => '多张图',
     ),
     //留言属性正则规则管理（仅用于留言属性）
     'validate_type_list' => [
@@ -112,18 +115,45 @@ return array(
             'value' => '/^[A-Za-z0-9\u4e00-\u9fa5]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/'
         ],
     ],
+    //表单类型列表
+    "form_field_type_list" => [
+        'text'      => '单行文本',
+        'radio'     => '单选项',
+        'select'    => '下拉框',
+        'checkbox'  => '多选项',
+        'multitext' => '多行文本',
+        'datetime'  => '日期时间',
+        'img'   => '单张图',
+        'mobile'   => '手机号码',
+        'email'   => 'Email邮箱',
+        'file'   => '附件类型',
+        'region'   => '区域联动',
+    ],
+    //表单属性正则
+    'form_field_grep_list' => [
+        'mobile' => [
+            'name' => '手机号码',
+            'value' => '/^1\d{10}$/'
+        ],
+        'email' => [
+            'name' => 'Email邮箱',
+            'value' => '/^[A-Za-z0-9\u4e00-\u9fa5]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/'
+        ],
+    ],
     // 栏目自定义字段的channel_id值
     'arctype_channel_id' => -99,
-    // 栏目表原始字段
-    'arctype_table_fields' => array('id','channeltype','current_channel','parent_id','topid','typename','dirname','dirpath','englist_name','grade','typelink','litpic','templist','tempview','seo_title','seo_keywords','seo_description','sort_order','is_hidden','is_part','admin_id','is_del','del_method','status','is_release','weapp_code','lang','add_time','update_time'),
+    // 栏目表内置字段
+    'arctype_table_fields' => array('id','channeltype','current_channel','parent_id','topid','typename','dirname','dirpath','diy_dirpath','rulelist','ruleview','englist_name','grade','typelink','litpic','templist','tempview','seo_title','seo_keywords','seo_description','sort_order','is_hidden','is_part','admin_id','is_del','del_method','status','is_release','weapp_code','lang','add_time','update_time','target','nofollow','typearcrank','empty_logic','page_limit'),
     // 网络图片扩展名
-    'image_ext' => 'jpg,jpeg,gif,bmp,ico,png,webp',
+    'image_ext' => 'jpg,jpeg,gif,bmp,ico,png,webp,svg',
     // 网络多媒体扩展名
-    'media_ext' => 'ra,ram,vqf,wma,mp3,mid,cd,wave,aiff,au,mpeg-4,midi,vqf,amr,wav,mp4,swf,mov,rm,dat,mpeg,mpg,avi,wmv,rmvb,mp4,asf,3gp,mkv,flv,f4v,webm,ogg,ogv',
+    'media_ext' => 'ra,ram,vqf,wma,mp3,mid,cd,wave,aiff,au,mpeg-4,midi,vqf,amr,wav,mp4,swf,mov,rm,dat,mpeg,mpg,avi,wmv,rmvb,mp4,asf,3gp,mkv,flv,f4v,webm,ogg,ogv,m4a,m3u8',
     // 后台语言Cookie变量
     'admin_lang' => 'admin_lang',
     // 前台语言Cookie变量
     'home_lang' => 'home_lang',
+    // 多城市最多级别
+    'citysite_max_level' => 3,
     // URL全局参数（比如：可视化uiset、多模板v、多语言lang）
     'parse_url_param'   => $parse_url_param,
     // 会员金额明细类型
@@ -131,7 +161,14 @@ return array(
         0   => '升级消费',
         1   => '账户充值',
         2   => '订单退款',
-        // 3   => '后续添加',
+        3   => '订单支付',
+        4   => '后台操作', // 添加
+        5   => '后台操作', // 减少
+        6   => '问答悬赏',
+        7   => '问答获得悬赏',
+        8   => '分销商提现',
+        9   => '抽奖',
+        // 10   => '后续添加',
     ),
     // 充值状态
     'pay_status_arr' => array(
@@ -144,12 +181,18 @@ return array(
     ),
     // 支付方式
     'pay_method_arr' => array(
-        'wechat'     => '微信',
-        'alipay'     => '支付宝',
+        'wechat'     => '微信支付',
+        'alipay'     => '支付宝支付',
         'artificial' => '手工充值',
-        'balance'    => '余额',
-        'admin_pay'  => '管理员代付',
+        'balance'    => '余额支付',
+        'admin_pay'  => '后台支付',
         'delivery_pay' => '货到付款',
+        'Paypal'     => 'paypal支付',
+        'UnionPay'   => '银联支付',
+        'noNeedPay'  => '无需支付',
+        'tikTokPay'  => '抖音支付',
+        'baiduPay'   => '百度支付',
+        'Hupijiaopay' => '虎皮椒支付',
     ),
     // 缩略图默认宽高度
     'thumb' => [
@@ -165,7 +208,7 @@ return array(
         0   => '待付款',
         1   => '待发货',
         2   => '待收货',
-        3   => '订单完成',
+        3   => '已完成',
         4   => '订单过期',
         // 5   => '后续添加',
     ),
@@ -193,19 +236,19 @@ return array(
         -1  => '未审核',
         0   => '审核通过',
     ),
-    // 插件入口的问题列表
-    'weapp_askanswer_list' => [
-        1   => '您常用的手机号码是？',
-        2   => '您常用的电子邮箱是？',
-        3   => '您配偶的姓名是？',
-        4   => '您初中学校名是？',
-        5   => '您的出生地名是？',
-        6   => '您配偶的姓名是？',
-        7   => '您的身份证号后四位是？',
-        8   => '您高中班主任的名字是？',
-        9   => '您初中班主任的名字是？',
-        10   => '您最喜欢的明星名字是？',
-        11  => '对您影响最大的人名字是？',
+    // 二次安全验证的问题列表
+    'security_askanswer_list' => [
+        '您常用的手机号码是？',
+        '您常用的电子邮箱是？',
+        '您真实的姓名是？',
+        '您初中学校名是？',
+        '您的出生地名是？',
+        '您配偶的姓名是？',
+        '您的身份证号后八位是？',
+        '您高中班主任的名字是？',
+        '您初中班主任的名字是？',
+        '您最喜欢的明星名字是？',
+        '对您影响最大的人名字是？',
     ],
     // 会员期限，后台使用
     'admin_member_limit_arr' => array(
@@ -397,7 +440,7 @@ return array(
         5 => '商家已收货',
         6 => '换货完成',
         7 => '退款完成',
-        8 => '已取消'
+        8 => '已关闭'
     ),
     // 订单退换货服务类型 -- 陈风任
     'order_service_type' => array(
@@ -407,8 +450,25 @@ return array(
     ),
     // 商品评价评分 -- 陈风任
     'order_total_score' => array(
-        1 => '好评',
-        2 => '中评',
-        3 => '差评'
+        1 => '差评',
+        2 => '差评',
+        3 => '中评',
+        4 => '好评',
+        5 => '好评'
     ),
+    // 用户限制模式
+    'users_lock_model' => [
+        0   => [
+            'name'  => '正常用户',
+            'msg'   => '正常用户',
+        ],
+        -1   => [
+            'name'  => '禁止发言',
+            'msg'   => '禁止操作，你已被禁止发言！',
+        ],
+        -99   => [
+            'name'  => '永久黑名单',
+            'msg'   => '禁止操作，你已被加入黑名单！',
+        ],
+    ],
 );

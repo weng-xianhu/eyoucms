@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -40,21 +40,29 @@ class TagLoad extends Base
         // 文件方式导入
         $array = explode(',', $file);
         foreach ($array as $val) {
-            $type = strtolower(substr(strrchr($val, '.'), 1));
-            $version = getCmsVersion();
+            $type = preg_replace('/^(.*)\.([a-z]+)([^a-z]*)(.*)$/i', '${2}', strtolower($val));
+            $version = ''; // '?v='.getCmsVersion();
             switch ($type) {
                 case 'js':
                     if ($ver == 'on') {
                         $parseStr .= static_version($val);
                     } else {
-                        $parseStr .= '<script type="text/javascript" src="' . $val . '?v='.$version.'"></script>';
+                        $val = get_absolute_url($val);
+                        $parseStr =<<<EOF
+<script language="javascript" type="text/javascript" src="{$val}{$version}"></script>
+
+EOF;
                     }
                     break;
                 case 'css':
                     if ($ver == 'on') {
                         $parseStr .= static_version($val);
                     } else {
-                        $parseStr .= '<link rel="stylesheet" type="text/css" href="' . $val . '?v='.$version.'" />';
+                        $val = get_absolute_url($val);
+                        $parseStr =<<<EOF
+<link href="{$val}{$version}" rel="stylesheet" media="screen" type="text/css" />
+
+EOF;
                     }
                     break;
                 case 'php':

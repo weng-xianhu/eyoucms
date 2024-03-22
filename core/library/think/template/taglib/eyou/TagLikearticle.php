@@ -14,6 +14,7 @@
 namespace think\template\taglib\eyou;
 
 use think\Db;
+
 use app\home\logic\FieldLogic;
 
 /**
@@ -23,6 +24,7 @@ class TagLikearticle extends Base
 {
     public $fieldLogic;
     public $archives_db;
+    public $version = 'v1.0.0';
 
     //初始化
     protected function _initialize()
@@ -30,6 +32,7 @@ class TagLikearticle extends Base
         parent::_initialize();
         $this->fieldLogic  = new FieldLogic();
         $this->archives_db = Db::name('archives');
+        $this->version = getCmsVersion();
     }
 
     /**
@@ -83,8 +86,15 @@ class TagLikearticle extends Base
         //tag标签
         if (3 > count($keywords)) {
             $where_taglist = [];
-            !empty($this->aid) && $where_taglist['aid'] = $this->aid;
-            !empty($typeidArr) && $where_taglist['typeid'] = ['IN', $typeidArr];
+            if (!empty($typeidArr)) {
+                $where_taglist['typeid'] = ['IN', $typeidArr];
+                if (!empty($this->aid)) {
+                    $tids = Db::name('taglist')->where(['aid'=>$this->aid])->column('tid');
+                    $where_taglist['tid'] = ['IN', $tids];
+                }
+            } else {
+                !empty($this->aid) && $where_taglist['aid'] = $this->aid;
+            }
             $tag                  = Db::name('taglist')->field('tag')->where($where_taglist)->select();
             if (!empty($tag)) {
                 foreach ($tag as $key => $value) {
@@ -115,10 +125,20 @@ class TagLikearticle extends Base
 
                 if ($n > 3) break;
 
-                if (trim($k) == '') continue;
-                else $k = addslashes($k);
+                if (trim($k) == '') {
+                    continue;
+                }
+                else {
+                    $k = addslashes($k);
+                }
+
                 //关键词查询条件
-                $where_keyword .= ($where_keyword == '' ? " CONCAT(a.seo_keywords,' ',a.title) LIKE '%$k%' " : " OR CONCAT(a.seo_keywords,' ',a.title) LIKE '%$k%' ");
+                if (empty($LikearticleRow['data']['relationtitle_status'])) {
+                    $where_keyword .= ($where_keyword == '' ? " CONCAT(a.seo_keywords,' ',a.title) LIKE '%$k%' " : " OR CONCAT(a.seo_keywords,' ',a.title) LIKE '%$k%' ");
+                } else {
+                    $where_keyword .= ($where_keyword == '' ? " a.seo_keywords LIKE '%$k%' " : " OR a.seo_keywords LIKE '%$k%' ");
+                }
+
                 $n++;
             }
         } else {
@@ -150,7 +170,7 @@ class TagLikearticle extends Base
         $map['a.arcrank'] = ['gt', -1];
         $map['a.status'] = 1;
         $map['a.is_del'] = 0;
-        $map['a.lang'] = $this->home_lang;
+        $map['a.lang'] = ($this->version >= 'v1.5.5') ? self::$home_lang : $this->home_lang;
         $map['a.aid'] = ['NEQ', $this->aid];
         /*定时文档显示插件*/
         if (is_dir('./weapp/TimingTask/')) {
@@ -160,6 +180,19 @@ class TagLikearticle extends Base
             }
         }
         /*end*/
+
+        // 预定相关文档的数量
+        $limit_arr = explode(',', $limit);
+        if (!empty($limit_arr[1])){
+            $limit_start = current($limit_arr);
+            $limit_end = end($limit_arr);
+            $limit_num = abs(intval($limit_end - $limit_start));
+            $limit = $limit_start.','.$limit_num;
+        }else{
+            $limit_start = 0;
+            $limit_num = $limit;
+        }
+
 
         $result = $this->archives_db
             ->field($field)
@@ -171,11 +204,6 @@ class TagLikearticle extends Base
             ->limit($limit)
             ->select();
 
-        // 预定相关文档的数量
-        $limit_arr = explode(',', $limit);
-        $limit_start = current($limit_arr);
-        $limit_end = end($limit_arr);
-        $limit_num = intval($limit_end);
 
         /*文档条不够，取相同tag标签的文档补充*/
         if ($limit_num > count($result)) {
@@ -188,19 +216,20 @@ class TagLikearticle extends Base
                     'tag'   => ['IN', $tags_arr],
                     'aid'   => ['NOTIN', $aids],
                     'arcrank'   => ['gt', -1],
-                    'lang'  => $this->home_lang,
+                    'lang'  => ($this->version >= 'v1.5.5') ? self::$home_lang : $this->home_lang,
                 ];
                 if (!empty($typeidArr)) {
                     $tagmap['typeid'] = ['IN', $typeidArr];
                 }
-                $tag_aids = Db::name('taglist')->where($tagmap)->group('aid')->order('aid desc')->limit($limit_start,100)->column('aid');
+//                $tag_aids = Db::name('taglist')->where($tagmap)->group('aid')->order('aid desc')->limit($limit_start,100)->column('aid');
+                $tag_aids = Db::name('taglist')->where($tagmap)->group('aid')->order('aid desc')->column('aid');
 
                 $map = [];
                 $map['a.aid'] = ['IN', $tag_aids];
                 $map['a.arcrank'] = ['gt', -1];
                 $map['a.status'] = 1;
                 $map['a.is_del'] = 0;
-                $map['a.lang'] = $this->home_lang;
+                $map['a.lang'] = ($this->version >= 'v1.5.5') ? self::$home_lang : $this->home_lang;
                 if (!empty($channelid)) {
                     $map['a.channel'] = ['IN', explode(',', $channelid)];
                 } else {
@@ -239,7 +268,7 @@ class TagLikearticle extends Base
             $map['a.arcrank'] = ['gt', -1];
             $map['a.status'] = 1;
             $map['a.is_del'] = 0;
-            $map['a.lang'] = $this->home_lang;
+            $map['a.lang'] = ($this->version >= 'v1.5.5') ? self::$home_lang : $this->home_lang;
             $limit2 = $limit_num - count($result);
             $result2 = $this->archives_db
                 ->field($field)

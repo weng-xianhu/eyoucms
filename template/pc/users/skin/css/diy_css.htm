@@ -5,11 +5,7 @@
 /*
 {$theme_color}
 {$theme_color|hex2rgba=###,0.8} */
-    .ey-container .ey-nav ul .active a {
-        border-left: {$theme_color} 3px solid;
-        background-color:{$theme_color|hex2rgba=###,0.1};
-        color:{$theme_color};
-    }
+
     .ey-container .ey-nav ul li a:hover {
         color: {$theme_color};
     }
@@ -28,14 +24,10 @@
     a:hover {
         color: {$theme_color};
     }
-    .el-button:focus, .el-button:hover {
-        color: {$theme_color};
-        border-color: {$theme_color|hex2rgba=###,0.2};
-        background-color:{$theme_color|hex2rgba=###,0.1};
-    }
+
     .el-button--primary {
         background-color: {$theme_color};
-        border-color: {$theme_color};
+        border: 1px solid {$theme_color};
     }
     .ey-container .item-from-row .err a {
         color: {$theme_color};
@@ -82,9 +74,7 @@
         border-top: 50px solid {$theme_color};
     }
     .ey-container .ey-con .shop-oper .shop-oper-l .el-button.active {
-        color: #FFF;
-        background-color: {$theme_color};
-        border-color: {$theme_color};
+        color: {$theme_color};
     }
     .ey-container .goods-con .goods-item .goods-item-r .view a {
         color: {$theme_color};
@@ -148,18 +138,174 @@
     	border-color:{$theme_color};
     	background-color:{$theme_color};
     }
-    .login-link a {
-        color: {$theme_color};
-    }
     .register_index .login_link .login_link_register {
         color: {$theme_color};
     }
-
+    
+    .portal-content-box .user-card .link {
+        color: {$theme_color};
+    }
+    .portal-sub .info-list .info .num {
+        color: {$theme_color};
+    }
+    .ey-container .xin_mian .services-list li:hover .title_n a {
+        color: {$theme_color};
+    }
+    .address-list .address-action span {
+        color: {$theme_color};
+    }
+    .ey-container .ey-nav ul .active a {
+        color: {$theme_color};
+    }
+    
+    .ey-container .user-pay-con .user-pay-box .item-from-row .el-input__inner {
+        border: 1px solid {$theme_color};
+    }
+    .ey-container .item-from-row .pay-type-item.active {
+        border-color: {$theme_color|hex2rgba=###,0.4};
+    }
+    
+    .ey-container .item-from-row .pay-type-item.active::before {
+        color: {$theme_color};
+        border-bottom: 30px solid {$theme_color};
+    
+    }
+    .address-select-box {
+        border: 1px solid {$theme_color};
+    }
+    .address-selectd span {
+        color: {$theme_color};
+    }
+    .mi-user-favorite .xm-goods-list-wrap .xm-goods-item .price {
+        color: {$theme_color};
+    }
+    .mi-user-favorite .xm-goods-list-wrap .xm-goods-item .actions .btn-primary-xin {
+        background: {$theme_color};
+        border-color: {$theme_color};
+    }
+    .ey-container .ey-con .shop-oper .shop-oper-l .el-button-xin.active {
+        color: {$theme_color};
+    }
+    .comment-list .goods-list-detail .goods-list-li .goods-content .cont-r .btn2-xin {
+        border: 1px solid {$theme_color};
+        background: {$theme_color};
+    }
+    .cart-container .container-main .cart-wrap .cart-goods-list .col-check .icon-checkbox-selected, .cart-container .container-main .cart-wrap .cart-goods-list .col-check .check-mark {
+        border-color: {$theme_color};
+    }
+    .cart-container .container-main .cart-wrap .cart-goods-list .item-box .col-total, .cart-container .container-main .cart-wrap .cart-goods-list .item-sub-box .col-total {
+        color: {$theme_color};
+    }
+    .cart-container .container-main .cart-bar .total-price {
+        color: {$theme_color};
+    }
+    .recommend-price {
+    }
+    .btn-line-primary {
+        border-color: {$theme_color};
+        color: {$theme_color};
+    }
+    .btn-line-primary:hover {
+        background-color: {$theme_color};
+        border-color: {$theme_color};
+    }
+    .goods-list .good-item .good-total {
+        color: {$theme_color};
+    }
+    .checkout-detail .detail-section .section-options .options-list .selected span {
+        color: {$theme_color};
+    }
+    .checkout-detail .count-detail .section-bill .bill-item .bill-money {
+        color: {$theme_color};
+    }
+    /*消息通知标题*/
+    .ey-container .xin_mian .services-list li .title_n.cur a {
+        color: {$theme_color};
+    }
+    /*个人等级*/
+    .portal-content-box .user-actions .action-list .grade{
+       color: {$theme_color};
+    }
+    /*个人信息按钮*/
+    .ey-container .ey-con .user-info .user-info-button{
+        background: {$theme_color};
+        border: 1px solid {$theme_color};
+    }
+    /*订单*/
+   .ey-container .goods-con .order-list .uc-order-item-shipping {
+       border-color:{$theme_color|hex2rgba=###,0.3};
+    }
+    .ey-container .goods-con .order-list .uc-order-item-shipping .order-summary{
+        background-color: {$theme_color|hex2rgba=###,0.06};
+    }
+    .ey-container .goods-con .order-list .uc-order-item-shipping .order-status {
+         color: {$theme_color};
+     }
+     .ey-container .goods-con .order-list .uc-order-item-shipping .order-detail-table th {
+          background:{$theme_color|hex2rgba=###,0.06};
+          border-bottom:1px solid {$theme_color|hex2rgba=###,0.3};
+      }
+      .service-list-item .hd {
+        background:{$theme_color|hex2rgba=###,0.06};
+         border-bottom: 1px solid {$theme_color|hex2rgba=###,0.3};
+      }
+      .service-list-item {
+          border: 1px solid {$theme_color|hex2rgba=###,0.3};
+      }
+      .service-list-item .hd .status-xin{
+          color: {$theme_color};
+      }
+      .ey-container .mi-uc-box .order-detail-total .total-table td{
+           color: {$theme_color};
+      }
+    /*收货地址*/
+    .address-add .input-active{
+        border: 1px solid {$theme_color};
+    }
+    .address-add .input-active .input-label{
+        color: {$theme_color};
+    }
+    .address-add .input-active.input-focus{
+        border: 1px solid {$theme_color};
+    }
+    .address-add .input-active.input-focus .input-label{
+        color: {$theme_color};
+    }
+    .mip-reg-heading .nav-item.cur{
+        border-bottom-color:{$theme_color};
+        color: {$theme_color};
+    }
+    .reg .checkbox-label .checkbox:checked+.check-mark {
+        background-color: {$theme_color};
+        border-color: {$theme_color};
+    }
+    .reg .checkbox-label .checkbox:checked+.check-mark:after {
+        background: {$theme_color};
+    }
+    .popup-login-box .row-item .button{
+        background: {$theme_color};
+    }
+    .popup-login-box .popup-footer .popup-footer-l span {
+        color: {$theme_color};
+    }
+    .popup-login-box .popup-footer .popup-footer-r a{
+        color: {$theme_color};
+    }
+    .popup-login-box .popup-footer .popup-footer-l a i{
+        color: {$theme_color};
+    }
+    .popup-login-box .login_reg .reg_t{
+        color: {$theme_color};
+    }
+    
 </style>
 
 <script type="text/javascript">
+    var __isMobile__ = 0;
     var __root_dir__ = "__ROOT_DIR__";
     var __version__ = "{$version}";
     var __lang__ = "{$home_lang}";
     var eyou_basefile = "{$Request.baseFile}";
+    var GetUploadify_url = "{eyou:url link='user/Uploadify/upload' /}";
+    var delUploadify_url = "{eyou:url link='user/Uploadify/delupload' /}";
 </script>

@@ -38,43 +38,43 @@ class ProductSpecPreset extends Model
         return $PresetMarkId;
     }
 
-    public function GetPresetNewData($ApecArr = array(), $GetData = array())
+    public function GetPresetNewData($specArr = array(), $GetData = array())
     {
         $return = [
             'Option' => '',
             'Value'  => '',
         ];
-        $preset_ids = $ApecArr[$GetData['preset_mark_id']];
+        $preset_ids = $specArr[$GetData['preset_mark_id']];
         if (empty($GetData['aid'])) {
             $WhereNew = [
+                'preset_id' => ['NOT IN', $preset_ids],
                 'preset_mark_id' => $GetData['preset_mark_id'],
-                'preset_id' => ['NOT IN',$preset_ids],
             ];
             $return['Option'] = $this->where($WhereNew)->select();
             // 读取选中的规格值
-            $return['Value']  = $this->where('preset_id',$GetData['preset_id'])->getField('preset_value');
-        }else{
+            $return['Value'] = $this->where('preset_id', $GetData['preset_id'])->getField('preset_value');
+        } else {
             // 更新规格值
             $Where = [
-                'aid'           => $GetData['aid'],
-                'spec_mark_id'  => $GetData['preset_mark_id'],
+                'aid' => $GetData['aid'],
+                'spec_mark_id' => $GetData['preset_mark_id'],
                 'spec_value_id' => $GetData['preset_id'],
                 'spec_is_select'=> 0,
             ];
             // 查询添加的规格值
-            $return['Value'] = Db::name('product_spec_data')->where($Where)->getField('spec_value');
+            $return['Value'] = Db::name('product_spec_data_handle')->where($Where)->getField('spec_value');
             // 更新状态为选中
-            Db::name('product_spec_data')->where($Where)->update(['spec_is_select'=>1, 'update_time'=>getTime()]);
+            Db::name('product_spec_data_handle')->where($Where)->update(['spec_is_select'=>1, 'update_time'=>getTime()]);
 
             // 拼装新的下拉框数据
             $WhereNew = [
-                'aid'           => $GetData['aid'],
+                'aid' => $GetData['aid'],
                 'spec_mark_id'  => $GetData['preset_mark_id'],
                 'spec_is_select'=> 0,
             ];
-            $Data = Db::name('product_spec_data')->where($WhereNew)->field('spec_value_id,spec_value')->select();
+            $Data = Db::name('product_spec_data_handle')->where($WhereNew)->field('spec_value_id, spec_value')->select();
             $return['Option'] .= "<option value='0'>选择规格值</option>";
-            foreach($Data as $value){
+            foreach ($Data as $value) {
                 $return['Option'] .= "<option value='{$value['spec_value_id']}'>{$value['spec_value']}</option>";
             }
         }
@@ -122,12 +122,26 @@ class ProductSpecPreset extends Model
                     'spec_value_id' => $kkk,
                     'spec_price'    => $vvv['users_price'],
                     'spec_stock'    => $post['preset_stock'][$kkk]['stock_count'],
+                    'spec_sales_num' => $post['preset_sales'][$kkk]['spec_sales_num'],
                     'lang'          => get_admin_lang(),
                     'add_time'      => $time,
                     'update_time'   => $time,
                 ];
             }
             Db::name('product_spec_value')->insertAll($AddSpecValue);
+            
+            // 删除商品添加时产生的废弃规格
+            $del_spec = session('del_spec') ? session('del_spec') : [];
+            if (!empty($del_spec)) {
+                $del_spec = array_unique($del_spec);
+                $where = [
+                    'product_add' => 1,
+                    'preset_mark_id' => ['IN', $del_spec]
+                ];
+                Db::name('product_spec_preset')->where($where)->delete(true);
+                // 清除 session
+                session('del_spec', null);
+            }
         }
     }
 

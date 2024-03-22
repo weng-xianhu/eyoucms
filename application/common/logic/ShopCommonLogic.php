@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -105,21 +105,45 @@ class ShopCommonLogic extends Model
     public function AddOrderServiceLog($param = [], $IsUsers = 1)
     {
         if (empty($param)) return false;
-        if (2 == $param['status']) {
-            $LogNote = '商家通过申请，等待会员将货物寄回商家！';
-        } else if (3 == $param['status']) {
-            $LogNote = '商家拒绝申请，请联系商家处理！';
-        } else if (4 == $param['status']) {
-            $LogNote = '会员已将货物发出，等待商家收货！';
-        } else if (5 == $param['status']) {
-            $LogNote = '商家已收到货物，待管理员进行退换货处理！';
-        } else if (6 == $param['status']) {
-            $LogNote = '商家已将新货物重新发出，换货完成，服务结束！';
-        } else if (7 == $param['status']) {
-            $LogNote = '商家已将金额、余额、积分退回，退款完成，服务结束！';
-        } else if (8 == $param['status']) {
-            $LogNote = '服务单被取消，服务结束！';
+        // 维权类型
+        $service_type = '';
+        if (!empty($param['service_type']) && 1 === intval($param['service_type'])) {
+            $service_type = '换货';
+        } else if (!empty($param['service_type']) && 2 === intval($param['service_type'])) {
+            $service_type = '退货退款';
+        } else if (!empty($param['service_type']) && 3 === intval($param['service_type'])) {
+            $service_type = '退款';
         }
+        // 操作事由
+        $LogNote = '';
+        if (2 === intval($param['status'])) {
+            $LogNote = '同意' . $service_type . '申请！';
+        } else if (3 === intval($param['status'])) {
+            $LogNote = '拒绝' . $service_type . '申请！';
+        } else if (4 === intval($param['status'])) {
+            $LogNote = '已退货，商家待收货！';
+        } else if (5 === intval($param['status']) && 1 === intval($param['service_type'])) {
+            $LogNote = '已收到退货，待重新发货！';
+        } else if (5 === intval($param['status']) && 2 === intval($param['service_type'])) {
+            $LogNote = '已收到退货，待转账！';
+        } else if (6 === intval($param['status'])) {
+            $LogNote = '已重新发货，请买家注意查收新商品，维权完成！';
+        } else if (7 === intval($param['status']) && 1 === intval($param['service_type'])) {
+            $LogNote = '买家已确认收货，' . $service_type . '维权完成！';
+        } else if (7 === intval($param['status']) && in_array($param['service_type'], [2, 3]) && 1 === intval($param['refund_way'])) {
+            $LogNote = '商家已退款到余额，' . $service_type . '维权完成！';
+        } else if (7 === intval($param['status']) && in_array($param['service_type'], [2, 3]) && 2 === intval($param['refund_way'])) {
+            $LogNote = '商家已线下退款，' . $service_type . '维权完成！';
+        } else if (8 === intval($param['status'])) {
+            $LogNote = '关闭' . $service_type . '申请！';
+        } else if (9 === intval($param['status'])) {
+            $LogNote = '已拒绝收货，请与买家联系处理！';
+        }
+        // 手动退款
+        if (!empty($param['manual_refund']) && 1 === intval($param['manual_refund'])) {
+            $LogNote = '商家手动退款完成服务，手动退款原因:' . $param['refund_note'];
+        }
+        // 操作人
         if (1 == $IsUsers) {
             $users_id = $param['users_id'];
             $admin_id = 0;

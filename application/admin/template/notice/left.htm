@@ -1,0 +1,59 @@
+{php}
+    $firstrun = input('param.firstrun/d', 0);
+    $admin_1664273231_arr = cookie('admin-1664273231-arr');
+    $admin_1664273231_arr = json_decode($admin_1664273231_arr);
+    if (1 == $firstrun) $admin_1664273231_arr = null;
+{/php}
+<div class="sidebar-second order-navBox">
+    <ul id="accordion" class="accordion">
+        <li data-value="1" {if null === $admin_1664273231_arr || in_array(1, $admin_1664273231_arr)}class="open"{/if}>
+            <a class="link">消息通知<i class="fa fa-angle-right"></i></a>
+            <ul class="submenu" {if is_array($admin_1664273231_arr) && !in_array(1, $admin_1664273231_arr)}style="display: none;"{/if}>
+                <li>
+                    <a href="{:url('Notice/buyer_notice')}" {if condition="preg_match('/^notice_details_/i', $Request.action) || in_array($Request.action, ['buyer_notice','seller_notice'])"}class="active"{/if}>基础通知</a>
+                </li>
+            </ul>
+        </li>
+        <!-- <li data-value="2" {if null === $admin_1664273231_arr || in_array(2, $admin_1664273231_arr)}class="open"{/if}>
+            <a class="link">接口配置<i class="fa fa-angle-right"></i></a>
+            <ul class="submenu" {if is_array($admin_1664273231_arr) && !in_array(2, $admin_1664273231_arr)}style="display: none;"{/if}>
+                <li>
+                    <a href="{:url('Notice/conf_sms')}" {if condition="in_array($Request.action, ['conf_sms'])"}class="active"{/if}>短信配置</a>
+                </li>
+                <li>
+                    <a href="{:url('UsersNotice/conf_weixin')}" {if condition="in_array($Request.action, ['conf_weixin'])"}class="active"{/if}>微信小程序</a>
+                </li>
+                <li>
+                    <a href="{:url('UsersNotice/conf_wechat')}" {if condition="in_array($Request.action, ['conf_wechat'])"}class="active"{/if}>微信公众号</a>
+                </li>
+            </ul>
+        </li> -->
+    </ul>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        openClose();
+        $('#accordion > li > a.link').click(function() {
+            var $this = $(this);
+                $parent = $this.parent();
+                $next = $this.next();
+            $next.slideToggle();
+            $parent.toggleClass('open');
+            openClose();
+        });
+
+        function openClose() {
+            var arr = [];
+            var className = '';
+            $('#accordion > li').each(function(index, item){
+                className = " " + $(item).attr('class') + " ";
+                if (-1 < className.indexOf(' open ')) {
+                    arr.push($(item).data('value'));
+                }
+            });
+            arr = JSON.stringify(arr);
+            setCookies('admin-1664273231-arr', arr);
+        }
+    });
+</script>

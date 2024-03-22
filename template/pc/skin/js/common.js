@@ -97,12 +97,27 @@ function popup_login_submit()
     }
 
     $('form#popup_login_submit input[name=referurl]').val(window.location.href);
+    
+    var formData = $('#popup_login_submit').serialize();
+    if (document.getElementById("pop_equal_privkey")) {
+        //使用公钥加密
+        var encrypt = new JSEncrypt(); //创建加密对象实例
+        encrypt.getKey();
+        var privkey = encrypt.getPrivateKey(); //ssl生成的私钥
+        var pubkey = encrypt.getPublicKey(); //ssl生成的公钥
+        encrypt.setPublicKey(pubkey);
+        var password_value = $('form#popup_login_submit input[name=password]').val();
+        var rsaPassWord = encrypt.encrypt(password_value);
+
+        formData = eyou_replaceParamVal(formData, 'password', eyou_base64_encode(rsaPassWord));
+        formData = eyou_replaceParamVal(formData, 'equal_privkey', eyou_base64_encode(privkey));
+    }
 
     layer_loading('正在处理');
     $.ajax({
         // async:false,
         url : __eyou_basefile__ + "?m=user&c=Users&a=login",
-        data: $('#popup_login_submit').serialize(),
+        data: formData,
         type:'post',
         dataType:'json',
         success:function(res){

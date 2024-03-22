@@ -2,36 +2,41 @@
 	<div class="container-layout">
 		<div class="line">
 			<div class="copyright height text-center text-gray">
+                <!-- 底部版权 begin -->
 				<div class="xl12 xs12 flz12">
-					{eyou:global name='web_copyright' /}</br>　{eyou:global name='web_recordnum' /}
+					{eyou:global name='web_copyright' /}
+                    </br>
+                    {eyou:global name='web_recordnum' /}
+                    </br>
+                    {eyou:global name='web_garecordnum' /}
 				</div>
+                <!-- 底部版权 end -->
 			</div>
 		</div>
 	</div>
 </footer>
-<!--底部版权-->
 
-<!-- 移动端快捷菜单 -->
+<!-- 移动端快捷菜单 begin -->
 <div id="m-b-bar" class="layout text-center bg-yellow">
 	<div class="x3">
-		<a href="{eyou:global name='web_basehost' /}"><i class="fa fa-home"></i>首页</a>
+		<a href="{eyou:global name='web_basehost' /}"><i class="iconfont icon-home"></i>首页</a>
 	</div>
 	<div class="x3">
 	{eyou:type typeid='3'}
-		<a href="{$field.typeurl}"><i class="fa fa-cube"></i>产品</a>
+		<a href="{$field.typeurl}"><i class="iconfont icon-chanpin"></i>产品</a>
 	{/eyou:type}
 	</div>
 	<div class="x3">
-	{eyou:type typeid='4'}
-		<a href="{$field.typeurl}"><i class="fa fa-cog"></i>方案</a>
+	{eyou:type typeid='2'}
+		<a href="{$field.typeurl}"><i class="iconfont icon-zixun"></i>资讯</a>
 	{/eyou:type}
 	</div>		
 	<div class="x3">
-		<a href="tel:{eyou:global name='web_attr_1' /}"><i class="fa fa-phone"></i>电话</a>
+		<a href="tel:{eyou:global name='web_attr_1' /}"><i class="iconfont icon-dianhua"></i>电话</a>
 	</div>
 </div>
 <!-- 移动端快捷菜单 end -->
 
-<!-- 应用插件标签 start --> 
+<!-- 应用插件标签 begin --> 
 {eyou:weapp type='default' /} 
 <!-- 应用插件标签 end -->

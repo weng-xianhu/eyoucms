@@ -5,56 +5,60 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{$eyou.field.seo_title}</title>
-        <meta name="description" content="{$eyou.field.seo_description}" />
         <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+        <meta name="description" content="{$eyou.field.seo_description}" />
         <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
         {eyou:static file="skin/style/pintuer.css" /}
         {eyou:static file="skin/style/header.css" /}
         {eyou:static file="skin/style/style.css" /}
-        {eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+        {eyou:static file="skin/style/iconfont.css" /}
         <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
     </head>
     <body>
         <div id="mobile-mask">
-            <!--网站公用头部——开始-->
+            <!-- 公用头部 begin -->
             {eyou:include file="header.htm" /}
+            <!-- 公用头部 end -->    
+            <!-- 公用栏目图片 begin -->
             {eyou:include file="banner.htm" /}
+            <!-- 公用栏目图片 end -->
 
         <div class="layout text-center bg-white nav_menu">
             <div class="container-layout">
                 <div class="line">
                     <div class="wrapper" id="retr">
-                    <div class="scroller">
-                    <ul class="nav-tree text-center clearfix">
-                        {eyou:channel type="first" currentstyle="active"}
-                        {eyou:eq name='$eyou.field.grade' value='2'}
-                        {eyou:type typeid='$eyou.field.typeid' id='field1'}
-                        {eyou:eq name='$field1.parent_id' value='$field.id'}
-                        {eyou:assign name='$field.currentstyle' value='cur' /}
-                        {/eyou:eq}
-                        {/eyou:type}
-                        {/eyou:eq}
-                        <li>
-                            <a href={eyou:notempty name="$field.children" }"javascript:void(0);"{eyou:else /}"{$field.typeurl}"{/eyou:notempty} title="{$field.typename}" class="{$field.currentstyle}">{$field.typename} {eyou:notempty name="$field.children"}<i class="fa fa-angle-down margin-left"></i>{/eyou:notempty}</a>
-                            {eyou:notempty name="$field.children"}
-                            <ul>
-                                {eyou:channel name="$field.children" id="field2"}
-                                <li class="children">
-                                    <a href="{$field2.typeurl}" class="{$field2.currentstyle}" title="{$field2.typename}">{$field2.typename}</a>
-                                </li>
-                                {/eyou:channel}
-                            </ul>
-                            {/eyou:notempty}
-                        </li>
-                        {/eyou:channel}
-                    </ul>
-                    </div>
+                        <div class="scroller">
+                        <ul class="nav-tree text-center clearfix">
+                            {eyou:models type="first" currentstyle="active"}
+                            {eyou:eq name='$eyou.field.grade' value='2'}
+                            {eyou:type typeid='$eyou.field.typeid' id='field1'}
+                            {eyou:eq name='$field1.parent_id' value='$field.id'}
+                            {eyou:assign name='$field.currentstyle' value='cur' /}
+                            {/eyou:eq}
+                            {/eyou:type}
+                            {/eyou:eq}
+                            <li>
+                                <a href={eyou:notempty name="$field.children" }"javascript:void(0);"{eyou:else /}"{$field.typeurl}"{/eyou:notempty} title="{$field.typename}" class="{$field.currentstyle}">{$field.typename} {eyou:notempty name="$field.children"}<i class="iconfont icon-down margin-left"></i>{/eyou:notempty}</a>
+                                {eyou:notempty name="$field.children"}
+                                <ul>
+                                    {eyou:models name="$field.children" id="field2"}
+                                    <li class="children">
+                                        <a href="{$field2.typeurl}" class="{$field2.currentstyle}" title="{$field2.typename}">{$field2.typename}</a>
+                                    </li>
+                                    {/eyou:models}
+                                </ul>
+                                {/eyou:notempty}
+                            </li>
+                            {/eyou:models}
+                        </ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="layout bg-gray">
+            <!-- 筛选功能 begin -->
             <div class="blank"></div>
             <div class="container-layout">
                 <div class="line">
@@ -81,13 +85,12 @@
                     </div>
                 </div>
             </div>
+            <!-- 筛选功能 end -->
             <div class="blank"></div>
-
             <div class="container-layout">
                 <div class="line-big">
                     <div class="product-list">
                         {eyou:list pagesize='8' titlelen='20'}
-                        <!-- infolen='40' -->
                         <div class="xl6 xs6">
                             <div class="media media-y bg-white margin-bottom">
                                 <div class="padding">
@@ -100,7 +103,7 @@
                                                     <span class="Conv_DINCondensedC text-middle">￥{$field.users_price}</span>
                                                 </li>
                                                 <li class="v2-2 text-gray text-right float-right text-small">
-                                                    <i class="fa fa-eye margin-small-right margin-left"></i>{$field.click}
+                                                    <i class="iconfont icon-eye margin-small-right"></i>{$field.click}
                                                 </li>
                                                 <div class="clearfix"></div>
                                             </ul>
@@ -111,7 +114,7 @@
                         </div>
                         {/eyou:list}
                     </div>
-                    <!-- 分页 -->
+                    <!-- 分页 begin -->
                     <div class="blank-small"></div>
                     <div class="text-center">
                         <ul class="pagination">
@@ -119,14 +122,15 @@
                         </ul>
                     </div>
                     <div class="blank-small"></div>
-                    <!-- 分页 -->
+                    <!-- 分页 end -->
                 </div>
             </div>
 
         </div>
-        <!--网站公用底部——开始-->
+        <!-- 公用底部 begin -->
         {eyou:include file="footer.htm" /}
-        </div><!-- id="mobile-mask" -->
+        <!-- 公用底部 end -->
+        </div>
         {eyou:static file="skin/js/jquery.min.js" /}
         {eyou:static file="skin/js/pintuer.js" /}
         {eyou:static file="skin/js/common.js" /}

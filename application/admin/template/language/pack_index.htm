@@ -3,39 +3,45 @@
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit;min-width:auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width:auto;">
-    {include file="language/bar" /}
+<div class="page min-hg-c-10">
     <div class="flexigrid">
-        <div class="mDiv">
+        <div class="mDiv pt0">
             <div class="ftitle">
-                <h3>模板语言变量</h3>
-                <h5>(共{$pageObj->totalRows}条数据)</h5>
+                {eq name="'Language@pack_add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-href="{:url('Language/pack_add')}" onclick="openFullframe(this, '新增语言包变量', '600px', '480px');">
+                        <div class="add">
+                            <span><i class="layui-icon layui-icon-addition"></i>新增变量</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
+                {eq name="'Language@pack_batch_add'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-href="{:url('Language/pack_batch_add')}" onclick="openFullframe(this, '批量新增语言包变量', '600px', '550px');">
+                        <div class="adds">
+                            <span>批量新增</span>
+                        </div>
+                    </a>
+                </div>
+                {/eq}
             </div>
             <form class="navbar-form form-inline" action="{:url('Language/pack_index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
-                    {eq name="'Language@pack_add'|is_check_access" value="1"}
-                    <div class="fbutton" style="float: none;">
-                          <a href="{:url("Language/pack_add")}">
-                              <div class="add">
-                                  <span>新增变量</span>
-                              </div>
-                          </a>
-                    </div>
-                    {/eq}
                     {eq name="'Language@pack_syn'|is_check_access" value="1"}
                     <div class="fbutton check_pack_syn" style="float: none; display: none;">
                           <a href="{:url("Language/pack_syn")}">
-                              <div class="add">
+                              <div class="adds">
                                   <span><i class="fa fa-download"></i>同步官方语言包</span>
                               </div>
                           </a>
                     </div>
                     {/eq}
                     <div class="sDiv2">
-                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="标题搜索...">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="变量值搜索...">
                         <input type="submit" class="btn" value="搜索">
-                        <i class="fa fa-search"></i>
+                        <i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -46,7 +52,7 @@
                     <thead>
                     <tr>
                         <th class="sign w40" axis="col0">
-                            <div class="tc">选择</div>
+                            <div class="tc"><input type="checkbox" class="checkAll"></div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w200">
                             <div class="tl text-l10">变量名</div>
@@ -72,7 +78,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -103,7 +111,7 @@
                             <td class="operation">
                                 <div class="w160 tc">
                                     {eq name="'Language@pack_edit'|is_check_access" value="1"}
-                                    <a href="{:url('Language/pack_edit',array('id'=>$vo['id']))}" class="btn blue">编辑</a>
+                                    <a href="javascript:void(0);" data-href="{:url('Language/pack_edit',array('id'=>$vo['id']))}" onclick="openFullframe(this, '编辑模板语言变量', '600px', '480px');" class="btn blue">编辑</a>
                                     <i></i>
                                     {/eq}
                                     {eq name="'Language@pack_del'|is_check_access" value="1"}
@@ -126,31 +134,13 @@
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
-                    <input type="checkbox" autocomplete="off" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                    <input type="checkbox" class="checkAll">
                 </div>
                 {eq name="'Language@pack_del'|is_check_access" value="1"}
                 <div class="fbutton">
                     <a onclick="batch_del(this, 'ids');" data-url="{:url('Language/pack_del')}">
-                        <div class="add" title="批量删除">
+                        <div class="add">
                             <span>批量删除</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
-                {eq name="'Language@pack_add'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a href="{:url('Language/pack_add')}">
-                        <div class="add" title="新增变量">
-                            <span class="red">新增变量</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
-                {eq name="'Language@pack_batch_add'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a href="{:url('Language/pack_batch_add')}">
-                        <div class="add" title="批量新增变量">
-                            <span class="red">批量新增变量</span>
                         </div>
                     </a>
                 </div>
@@ -163,6 +153,18 @@
     </div>
 </div>
 <script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]:not(:disabled)').prop('checked',this.checked);
+        });
+    });
     $(document).ready(function(){
 
         // 表格行点击选中切换
@@ -184,8 +186,16 @@
     function delfun(obj){
       var title = $(obj).attr('data-typename');
       layer.confirm('<font color="#ff0000">将同步删除全部语言的该变量</font>，确认删除？', {
-          title: false,
-          btn: ['确定','取消'] //按钮
+          shade: layer_shade,
+          area: ['480px', '190px'],
+          move: false,
+          title: '提示',
+          btnAlign:'r',
+          closeBtn: 3,
+          btn: ['确定', '取消'] ,//按钮
+          success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
         }, function(){
           layer_loading('正在处理');
         // 确定

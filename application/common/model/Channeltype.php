@@ -82,7 +82,7 @@ class Channeltype extends Model
             $map,
             $index_key
         );
-        $cacheKey = json_encode($cacheKey);
+        $cacheKey = md5(json_encode($cacheKey));
         $result = cache($cacheKey);
         if (empty($result)) {
             $result = Db::name('channeltype')->field($field)

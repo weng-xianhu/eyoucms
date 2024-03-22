@@ -31,5 +31,23 @@ class Base extends Common {
     public function _initialize() 
     {
         parent::_initialize();
+        $users_id = session('users_id');
+        $users_id = intval($users_id);
+        if (!empty($users_id)) {
+            $users = GetUsersLatestData($users_id);
+            if (empty($users)) {
+                session('users_id', null);
+                session('users', null);
+                cookie('users_id', null);
+            } else {
+                if (0 > $users['is_lock'] && IS_POST) {
+                    $users_lock_model = config('global.users_lock_model');
+                    $users_lock_model_msg = !empty($users_lock_model[$users['is_lock']]) ? $users_lock_model[$users['is_lock']]['msg'] : '';
+                    $this->error($users_lock_model_msg);
+                }
+            }
+            $this->users = $users;
+            $this->users_id = $users['users_id'];
+        }
     }
 }

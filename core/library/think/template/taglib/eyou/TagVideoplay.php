@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -60,7 +60,7 @@ class TagVideoplay extends Base
             // 获取文档数据
             $archives  = Db::name('archives')->where(['aid' => $aid])->field('users_price, users_free, arc_level_id')->find();
             $UsersData = session('users');
-            $UsersID   = $UsersData['users_id'];
+            $UsersID   = !empty($UsersData['users_id']) ? $UsersData['users_id'] : 0;
 
             $MediaOrder = [];
             if (!empty($UsersID)) {
@@ -159,10 +159,24 @@ EOF;
     
     var video = document.getElementById('{$from_id}');
     var timeDisplay;
-
+    var times = 0;
      video.addEventListener('pause', function () { //暂停开始执行的函数
            submitPlayRecord();
     });
+   video.addEventListener('waiting', function() {
+       if(times == 1){
+           timeDisplay = this.duration;
+           submitPlayRecord();
+       }
+        times ++;
+    }, false);
+//   video.addEventListener('canplaythrough', function() {
+//         if(times == 1){
+//           timeDisplay = this.duration;
+//           submitPlayRecord();
+//       }
+//        times ++;
+//    }, false);
    
     video.addEventListener('ended', function () { //结束
           submitPlayRecord();
@@ -182,17 +196,11 @@ EOF;
         if (document.getElementById('fid1616057948')) {
             var fid = document.getElementById('fid1616057948').value;
             if (fid > 0) {
-                // 步骤一:创建异步对象
                 var ajax = new XMLHttpRequest();
-                //步骤二:设置请求的url参数,参数一是请求的类型,参数二是请求的url,可以带参数,动态的传递参数starName到服务端
                 ajax.open("post", "{$record_process_url}", true);
-                // 给头部添加ajax信息
                 ajax.setRequestHeader("X-Requested-With","XMLHttpRequest");
-                // 如果需要像 HTML 表单那样 POST 数据，请使用 setRequestHeader() 来添加 HTTP 头。然后在 send() 方法中规定您希望发送的数据：
                 ajax.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-                //步骤三:发送请求+数据
-                ajax.send('_ajax=1&aid=' + {$aid}+'&file_id=' + fid+'&timeDisplay='+timeDisplay);
-                //步骤四:注册事件 onreadystatechange 状态改变就会调用
+                ajax.send("aid={$aid}&file_id="+fid+"&timeDisplay="+timeDisplay);
                 ajax.onreadystatechange = function () {
                     
                 };
@@ -202,20 +210,13 @@ EOF;
    /**记录播放时长**/
 
     // 视频购买
-    function MediaOrderBuy_1592878548() {
-        // 步骤一:创建异步对象
+    function MediaOrderBuy_v878548() {
         var ajax = new XMLHttpRequest();
-        //步骤二:设置请求的url参数,参数一是请求的类型,参数二是请求的url,可以带参数,动态的传递参数starName到服务端
         ajax.open("post", '{$buy_url}', true);
-        // 给头部添加ajax信息
         ajax.setRequestHeader("X-Requested-With","XMLHttpRequest");
-        // 如果需要像 HTML 表单那样 POST 数据，请使用 setRequestHeader() 来添加 HTTP 头。然后在 send() 方法中规定您希望发送的数据：
         ajax.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-        //步骤三:发送请求+数据
-        ajax.send('_ajax=1&aid=' + {$aid});
-        //步骤四:注册事件 onreadystatechange 状态改变就会调用
+        ajax.send('aid={$aid}');
         ajax.onreadystatechange = function () {
-            //步骤五 请求成功，处理逻辑
             if (ajax.readyState==4 && ajax.status==200) {
                 var json = ajax.responseText;  
                 var res  = JSON.parse(json);
@@ -232,6 +233,9 @@ EOF;
                 }
           　}
         };
+    }
+    function MediaOrderBuy_1592878548() {
+        MediaOrderBuy_v878548();
     }
 
 </script>

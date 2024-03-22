@@ -14,6 +14,7 @@
 namespace think\template\taglib\eyou;
 
 use think\Db;
+use app\home\logic\FieldLogic;
 
 /**
  * 专题节点
@@ -24,13 +25,14 @@ class TagSpecnode extends Base
     protected function _initialize()
     {
         parent::_initialize();
+        $this->fieldLogic = new FieldLogic();
     }
 
     /**
      * 获取节点的文档列表
      * @author wengxianhu by 2018-4-20
      */
-    public function getSpecnode($tag = '', $aid = 0, $title = '', $code = '', $typeid = 0, $aidlist = '', $isauto = 0, $keyword = '', $titlelen = '', $infolen = '', $limit = 0, $thumb = '')
+    public function getSpecnode($tag = '', $aid = 0, $title = '', $code = '', $typeid = 0, $aidlist = '', $isauto = 0, $keyword = '', $titlelen = '', $bodylen = '', $limit = 0, $thumb = '')
     {
         $aid = !empty($aid) ? intval($aid) : $this->aid;
         if (empty($aid)) {
@@ -51,7 +53,7 @@ class TagSpecnode extends Base
         }
         $map['status'] = 1;
         $map['is_del'] = 0;
-        $map['lang'] = $this->home_lang;
+        $map['lang'] = self::$home_lang;
         $specialNodeInfo = Db::name('special_node')->where($map)->order('node_id asc')->find();
         if (empty($specialNodeInfo)) {
             return false;
@@ -62,12 +64,11 @@ class TagSpecnode extends Base
         !isset($tag['aidlist']) && $aidlist = !empty($specialNodeInfo['aidlist']) ? $specialNodeInfo['aidlist'] : '';
         !isset($tag['limit']) && $limit = !empty($specialNodeInfo['row']) ? $specialNodeInfo['row'] : 10;
         !isset($tag['titlelen']) && $titlelen = !empty($specialNodeInfo['titlelen']) ? $specialNodeInfo['titlelen'] : 100;
-        !isset($tag['infolen']) && $infolen = !empty($specialNodeInfo['infolen']) ? $specialNodeInfo['infolen'] : 160;
-
-        $typeid = intval($typeid);
+        !isset($tag['bodylen']) && $bodylen = !empty($specialNodeInfo['infolen']) ? $specialNodeInfo['infolen'] : 160;
+        
         $isauto = intval($isauto);
         $titlelen = intval($titlelen);
-        $infolen = intval($infolen);
+        $bodylen = intval($bodylen);
         $limit = str_replace('，', ',', $limit);
 
         $aidlistArr = [];
@@ -107,24 +108,31 @@ class TagSpecnode extends Base
                 return false;
             }
             $condition['a.aid'] = ['IN', $aidlistArr];
-            $limit = count($aidlistArr);
+            $limit = !empty($limit) ? $limit : count($aidlistArr);
             $aidlist = implode(',', $aidlistArr);
             $orderBy = "FIELD(a.aid, {$aidlist})";
         } else {
             if (!empty($typeid)) {
-                /*获取当前栏目下的所有同模型的子孙栏目*/
-                $arctype_info = M('arctype')->field('id,current_channel')->where('id', $typeid)->find();
-                $arctype_list = model("Arctype")->getHasChildren($typeid);
-                foreach ($arctype_list as $key => $val) {
-                    if ($arctype_info['current_channel'] != $val['current_channel']) {
-                        unset($arctype_list[$key]);
+                $typeid_new = [];
+                $typeid_arr = explode(',', $typeid);
+                foreach ($typeid_arr as $_k => $_v) {
+                    /*获取当前栏目下的所有同模型的子孙栏目*/
+                    $typeid_tmp = intval($_v);
+                    $arctype_info = M('arctype')->field('id,current_channel')->where('id', $typeid_tmp)->find();
+                    $arctype_list = model("Arctype")->getHasChildren($typeid_tmp);
+                    foreach ($arctype_list as $key => $val) {
+                        if ($arctype_info['current_channel'] != $val['current_channel']) {
+                            unset($arctype_list[$key]);
+                        }
                     }
+                    $typeids = get_arr_column($arctype_list, "id");
+                    !in_array($typeid_tmp, $typeids) && $typeids[] = $typeid_tmp;
+                    if (!empty($typeids)) {
+                        $typeid_new = array_merge($typeid_new, $typeids);
+                    }
+                    /*--end*/
                 }
-                $typeids = get_arr_column($arctype_list, "id");
-                !in_array($typeid, $typeids) && $typeids[] = $typeid;
-                $typeid = implode(",", $typeids);
-                /*--end*/
-                $condition['a.typeid'] = ['IN', $typeid];
+                $condition['a.typeid'] = ['IN', $typeid_new];
             }
             if (!empty($keywordArr)) {
                 $keyword = implode('|', $keywordArr);
@@ -135,7 +143,7 @@ class TagSpecnode extends Base
         $condition['a.arcrank'] = ['gt', -1];
         $condition['a.status'] = 1;
         $condition['a.is_del'] = 0;
-        $condition['a.lang'] = $this->home_lang;
+        $condition['a.lang'] = self::$home_lang;
 
         $allow_release_channel = config('global.allow_release_channel');
         $index = array_search(7, $allow_release_channel); // 过滤专题模型
@@ -163,7 +171,7 @@ class TagSpecnode extends Base
             'var_page' => config('paginate.var_page'),
             'query' => $query_get,
         );
-        $pages = Db::name('archives')->field("b.*, a.*")
+        $pages = Db::name('archives')->field("b.*, b.current_channel as channel_id, a.*")
             ->alias('a')
             ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
             ->where($condition)
@@ -177,7 +185,7 @@ class TagSpecnode extends Base
             array_push($aidArr, $val['aid']); // 收集文档ID
 
             $val['title'] = text_msubstr($val["title"], 0, $titlelen, false);
-            $val['seo_description'] = text_msubstr($val["seo_description"], 0, $infolen, true);
+            $val['seo_description'] = text_msubstr($val["seo_description"], 0, $bodylen, true);
 
             $controller_name = !empty($channeltype_row[$val['channel']]['ctl_name']) ? $channeltype_row[$val['channel']]['ctl_name'] : 'Article';
 
@@ -207,6 +215,57 @@ class TagSpecnode extends Base
 
             $list[$key] = $val;
         }
+
+        /*附加表*/
+        if (!empty($addfields) && !empty($list)) {
+            $channeltypeRow = model('Channeltype')->getAll('id,table', [], 'id'); // 模型对应数据表
+            $channelGroupRow = group_same_key($list, 'current_channel'); // 模型下的文档集合
+            foreach ($channelGroupRow as $channelid => $tmp_list) {
+                $addtableName = ''; // 附加字段的数据表名
+                $tmp_aid_arr = get_arr_column($tmp_list, 'aid');
+                $channeltype_table = $channeltypeRow[$channelid]['table']; // 每个模型对应的数据表
+                $addtableName = $channeltype_table.'_content';
+
+                $addfields = str_replace('，', ',', $addfields); // 替换中文逗号
+                $addfields = trim($addfields, ',');
+                /*过滤不相关的字段*/
+                $addfields_arr = explode(',', $addfields);
+                $extFields = Db::name($addtableName)->getTableFields();
+                $addfields_arr = array_intersect($addfields_arr, $extFields);
+                if (!empty($addfields_arr) && is_array($addfields_arr)) {
+                    $addfields = implode(',', $addfields_arr);
+                } else {
+                    $addfields = '';
+                }
+                /*end*/
+                if (!empty($addfields)) {
+                    $addfields = ','.$addfields;
+                    if (isMobile() && strstr(",{$addfields},", ',content,')){
+                        if (in_array($channelid, [1,2,3,4,5,6,7])) {
+                            $addfields .= ',content_ey_m';
+                        } else {
+                            if (in_array($extFields, ['content_ey_m'])) {
+                                $addfields .= ',content_ey_m';
+                            } 
+                        }
+                    }
+                    $resultExt = M($addtableName)->field("aid {$addfields}")->where('aid','in',$tmp_aid_arr)->getAllWithIndex('aid');
+                    /*自定义字段的数据格式处理*/
+                    $resultExt = $this->fieldLogic->getChannelFieldList($resultExt, $channelid, true);
+                    /*--end*/
+                    foreach ($list as $key2 => $val2) {
+                        $valExt = !empty($resultExt[$val2['aid']]) ? $resultExt[$val2['aid']] : array();
+                        if (isMobile() && strstr(",{$addfields},", ',content,') && !empty($valExt['content_ey_m'])){
+                            $valExt['content'] = $valExt['content_ey_m'];
+                        }
+                        if (isset($valExt['content_ey_m'])) {unset($valExt['content_ey_m']);}
+                        $val2 = array_merge($valExt, $val2);
+                        $list[$key2] = $val2;
+                    }
+                }
+            }
+        }
+        /*--end*/
 
         $result = [
             'pages' => $pages, // 分页显示输出

@@ -34,13 +34,13 @@ class Other extends Base
         $where = array(
             'pid'=>$pid,
             'status'=>1,
-            'start_time'=>array('lt', getTime()),
+            // 'start_time'=>array('lt', getTime()),
         );
         $ad = M("ad")->where($where)
-            ->where('end_time', ['>', getTime()], ['=', 0], 'or')
+            // ->where('end_time', ['>', getTime()], ['=', 0], 'or')
             ->order("sort_order asc")
             ->limit($row)
-            ->cache(true,EYOUCMS_CACHE_TIME, 'ad')
+            ->cache(true,EYOUCMS_CACHE_TIME, 'ad') // 如果查询条件有时间字段，一定要去掉这行，避免产生一堆缓存文件
             ->select();
         foreach ($ad as &$value) {
             $value['intro'] = htmlspecialchars_decode($value['intro']);

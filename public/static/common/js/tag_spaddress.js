@@ -44,7 +44,7 @@ function ShopEditAddress(addr_id){
     //iframe窗
     layer.open({
         type: 2,
-        title: '编辑收货地址',
+        title: '修改收货地址',
         shadeClose: false,
         maxmin: false, //开启最大化最小化按钮
         area: [width, height],
@@ -93,12 +93,12 @@ function ShopDelAddress(addr_id){
  * @param  {[type]} obj     [description]
  * @return {[type]}         [description]
  */
-function selectAddress_1610201146(addr_id, obj)
+function selectAddress_v201146(addr_id, obj)
 {
     event.stopPropagation();
-    setCookies_1610201146('PlaceOrderAddrid', addr_id);
+    setCookies_v201146('PlaceOrderAddrid', addr_id);
     var gourl = $('input[name=gourl]').val();
-    if (gourl.length > 0) {
+    if (gourl && gourl.length > 0) {
         window.location.href = gourl;
     }
 }
@@ -109,7 +109,7 @@ function selectAddress_1610201146(addr_id, obj)
  * @param {[type]} value [description]
  * @param {[type]} time  [description]
  */
-function setCookies_1610201146(name, value, time)
+function setCookies_v201146(name, value, time)
 {
     var cookieString = name + "=" + escape(value) + ";";
     if (time != 0) {

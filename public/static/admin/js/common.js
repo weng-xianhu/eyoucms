@@ -98,7 +98,7 @@ function checkInputNum(name,min,max,keep,def){
     $.fn.VMiddleImg = function(options) {
         var defaults={
             "width":null,
-"height":null
+            "height":null
         };
         var opts = $.extend({},defaults,options);
         return $(this).each(function() {
@@ -208,11 +208,11 @@ function setCookie(name,value,days){
         document.cookie=name+"="+escape(value)+";expires="+exp.toGMTString() +"path=/";
 }
 function getCookie(name){
-        var arr=document.cookie.match(new RegExp("(^| )"+name+"=([^;]*)(;|$)"));
-        if(arr!=null){
-                return unescape(arr[2]);
-                return null;
-        }
+    var arr=document.cookie.match(new RegExp("(^| )"+name+"=([^;]*)(;|$)"));
+    if(arr != null){
+        return unescape(arr[2]);
+    }
+    return null;
 }
 function delCookie(name){
         var exp=new Date();

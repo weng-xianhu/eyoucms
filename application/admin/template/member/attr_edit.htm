@@ -1,38 +1,37 @@
 {include file="public/layout" /}
 
-<body class="bodystyle" style="overflow-y: scroll;">
+<body class="bodystyle" style="overflow: auto;min-width:auto;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-i" style="min-width: auto;box-shadow:none;padding-bottom: 0px;">
     <form class="form-horizontal" id="post_form" action="{:url('Member/attr_edit')}" method="post">
         <!-- 常规选项 -->
         <div class="ncap-form-default tab_div_1">
             <dl class="row">
                 <dt class="tit">
-                    <label for="name"><em>*</em>属性标题</label>
+                    <label for="name"><em>*</em>字段标题</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" value="{$info.title|default=''}" name="title" id="title" class="input-txt">
+                    <input type="text" value="{$info.title|default=''}" name="title" id="title" class="input-txt" autocomplete="off">
                     <p class="notic"></p>
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="dtype"><em>*</em>属性类型</label>
+                    <label for="dtype"><em>*</em>字段类型</label>
                 </dt>
                 <dd class="opt">
                     {in name="$info.dtype" value="mobile,email"}
                         {$info.title}
                         <input type="hidden" name="dtype" value="{$info.dtype}">
                     {else /}
-                        <select name="dtype" id="dtype">
                         {volist name='$field' id='vo'}
-                            <option value="{$vo.name}" data-ifoption="{$vo.ifoption|default=0}" {eq name="$info.dtype" value="$vo.name"}selected{/eq}>
-                                {$vo.title}
-                            </option>
+                        <div style="width: 150px; float: left;">
+                            <label><input type="radio" name="dtype" value="{$vo.name}" data-ifoption="{$vo.ifoption|default=0}" {eq name="$info.dtype" value="$vo.name"} checked="checked" {/eq} data-text="{$vo.title}">{$vo.title}</label>&nbsp;
+                        </div>
+                        {if condition="$i % 4 == 0"}<br/>{/if}
                         {/volist}
-                        </select>
                     {/in}
                     <span class="err"></span>
                     <p class="notic"></p>
@@ -43,36 +42,53 @@
                     <label id="label_dfvalue">默认值</label>
                 </dt>
                 <dd class="opt">
-                    <textarea rows="5" cols="60" id="dfvalue" name="dfvalue" placeholder="如果定义属性类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。" style="height:60px;">{$info.dfvalue|default=''}</textarea>
+                    <textarea rows="5" cols="60" id="dfvalue" name="dfvalue" placeholder="前端将默认显示输入的默认值" style="height:60px;">{$info.dfvalue|default=''}</textarea>
                     <span class="err"></span>
-                    <p class="notic">如果定义属性类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。</p>
+                    <p class="notic">如字段类型为下拉框、单选项、多选项时，需要填写默认值。</p>
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label>是否禁用</label>
+                    <label>字段状态</label>
                 </dt>
                 <dd class="opt">
-                    <div class="onoff">
-                        <label for="is_hidden0" class="cb-enable {if condition='$info.is_hidden eq 1'}selected{/if}">是</label>
-                        <label for="is_hidden1" class="cb-disable {if condition='empty($info.is_hidden)'}selected{/if}">否</label>
-                        <input id="is_hidden0" name="is_hidden" value="1" type="radio" {if condition="$info.is_hidden eq 1"} checked="checked"{/if}>
-                        <input id="is_hidden1" name="is_hidden" value="0" type="radio" {if condition="empty($info.is_hidden)"} checked="checked"{/if}>
-                    </div>
+                    <label class="curpoin">
+                        <input type="radio" name="is_hidden" value="0" {if condition="empty($info.is_hidden)"} checked="checked"{/if}/>开启
+                    </label>
+                    &nbsp;&nbsp;&nbsp;
+                    <label class="curpoin">
+                        <input type="radio" name="is_hidden" value="1" {if condition="!empty($info.is_hidden)"} checked="checked"{/if}/>关闭
+                    </label>
                     <p class="notic"></p>
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label>是否必填</label>
+                    <label>字段必填</label>
                 </dt>
                 <dd class="opt">
-                    <div class="onoff">
-                        <label for="is_required1" class="cb-enable {if condition='$info.is_required eq 1'}selected{/if}">是</label>
-                        <label for="is_required0" class="cb-disable {if condition='empty($info.is_required)'}selected{/if}">否</label>
-                        <input id="is_required1" name="is_required" value="1" type="radio" {if condition="$info.is_required eq 1"} checked="checked"{/if}>
-                        <input id="is_required0" name="is_required" value="0" type="radio" {if condition="empty($info.is_required)"} checked="checked"{/if}>
-                    </div>
+                    <label class="curpoin">
+                        <input type="radio" name="is_required" value="1" {if condition="!empty($info.is_required)"} checked="checked"{/if}/>是
+                    </label>
+                    &nbsp;&nbsp;&nbsp;
+                    <label class="curpoin">
+                        <input type="radio" name="is_required" value="0" {if condition="empty($info.is_required)"} checked="checked"{/if}/>否
+                    </label>
+                    <p class="notic">只针对前台的会员属性有效。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>注册显示</label>
+                </dt>
+                <dd class="opt">
+                    <label class="curpoin">
+                        <input type="radio" name="is_reg" value="1" {if condition="!empty($info.is_reg)"} checked="checked"{/if}/>是
+                    </label>
+                    &nbsp;&nbsp;&nbsp;
+                    <label class="curpoin">
+                        <input type="radio" name="is_reg" value="0" {if condition="empty($info.is_reg)"} checked="checked"{/if}/>否
+                    </label>
                     <p class="notic">只针对前台的会员属性有效。</p>
                 </dd>
             </dl>
@@ -89,15 +105,28 @@
 <script type="text/javascript">
     $(function(){
         dtype_change($('#dtype'));
-        $('#dtype').change(function(){
+        $('input[name=dtype]').click(function(){
             dtype_change(this);
         });
-
+        dtype_change($('input[name=dtype]:checked'));
         function dtype_change(obj){
             var dtype = $(obj).val();
-            var ifoption = $(obj).find('option:selected').data('ifoption');
+            var ifoption = $(obj).data('ifoption');
+            if (0 <= $.inArray(dtype, ['datetime','switch','img','imgs','file','media'])) {
+                $('#dl_dfvalue').hide();
+                ClearAreaData();
+            } 
+            if (1 == ifoption) {
+                $('#label_dfvalue').html('<em>*</em>默认值');
+            } else {
+                $('#label_dfvalue').html('默认值');
+            }
+            
+            var dtype = $(obj).val()
+            var ifoption = $(obj).data('ifoption');
             if (0 <= $.inArray(dtype, ['datetime','switch','img','imgs','file'])) {
                 $('#dl_dfvalue').hide();
+                ClearAreaData();
             } else {
                 if (1 == ifoption) {
                     $('#label_dfvalue').html('<em>*</em>默认值');
@@ -105,6 +134,14 @@
                     $('#label_dfvalue').html('默认值');
                 }
                 $('#dl_dfvalue').show();
+            }
+            
+            if (0 <= $.inArray(dtype, ['text','multitext'])) {
+                $('#dfvalue').attr('placeholder', '前端将默认显示输入的默认值');
+            } else if (0 <= $.inArray(dtype, ['checkbox','radio','select'])) {
+                $('#dfvalue').attr('placeholder', '此处填写被选择的项目(用“,”分开，如“男,女”)。');
+            } else {
+                $('#dfvalue').attr('placeholder', '前端将默认显示输入的默认值');
             }
         }
     });
@@ -154,7 +191,7 @@
                 if(res.code == 1){
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                         _parent.window.location.reload();
                     });
                 }else{

@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -78,6 +78,19 @@ class Tools extends Base {
         /*--end*/
 
         if(IS_POST && !empty($tables) && is_array($tables) && empty($optstep)){ //初始化
+
+            /*多语言*/
+            $tpCacheData = ['php_atqueryrequest_time'=>0, 'php_atqueryrequest_time2'=>0];
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->order('id asc')->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('php', $tpCacheData, $val['mark']); // n
+                }
+            } else { // 单语言
+                tpCache('php', $tpCacheData); // n
+            }
+            /*--end*/
+
             $path = tpCache('global.web_sqldatapath');
             $path = !empty($path) ? $path : config('DATA_BACKUP_PATH');
             $path = trim($path, '/');
@@ -92,6 +105,11 @@ class Tools extends Base {
                 'compress' => config('DATA_BACKUP_COMPRESS'),
                 'level'    => config('DATA_BACKUP_COMPRESS_LEVEL'),
             );
+
+            //检查备份目录是否可写
+            if(!is_writeable($config['path'])){
+                return json(array('msg'=>'备份目录不存在或不可写，请检查后重试！', 'code'=>0, 'url'=>''));
+            }
             //检查是否有正在执行的任务
             $lock = "{$config['path']}backup.lock";
             if(is_file($lock)){
@@ -99,17 +117,12 @@ class Tools extends Base {
             } else {
                 //创建锁文件
                 file_put_contents($lock, $_SERVER['REQUEST_TIME']);
+                session('backup_config', $config);
             }
-
-            //检查备份目录是否可写
-            if(!is_writeable($config['path'])){
-                return json(array('msg'=>'备份目录不存在或不可写，请检查后重试！', 'code'=>0, 'url'=>''));
-            }
-            session('backup_config', $config);
 
             //生成备份文件信息
             $file = array(
-                'name' => date('Ymd-His', $_SERVER['REQUEST_TIME']),
+                'name' => date('Ymd-His'),
                 'part' => 1,
                 'version' => getCmsVersion(),
             );
@@ -139,45 +152,52 @@ class Tools extends Base {
                     $speed = sprintf("%.2f", $speed);
                     $tab = array('id' => $id, 'start' => 0, 'speed' => $speed, 'table'=>$tables[$id], 'optstep'=>1);
                     return json(array('tab' => $tab, 'msg'=>'备份完成！', 'code'=>1, 'url'=>''));
-                } else { //备份完成，清空缓存
+                }
+                else { //备份完成，清空缓存
+                    
                     /*自动覆盖安装目录下的eyoucms.sql*/
-                    $install_time = DEFAULT_INSTALL_DATE;
-                    $constsant_path = APP_PATH.MODULE_NAME.'/conf/constant.php';
-                    if (file_exists($constsant_path)) {
-                        require_once($constsant_path);
-                        defined('INSTALL_DATE') && $install_time = INSTALL_DATE;
-                    }
                     $install_path = ROOT_PATH.'install';
                     if (!is_dir($install_path) || !file_exists($install_path)) {
-                        $install_path = ROOT_PATH.'install_'.$install_time;
+                        $dirlist = glob('install_*');
+                        $install_dirname = current($dirlist);
+                        if (!empty($install_dirname)) {
+                            $install_path = ROOT_PATH.$install_dirname;
+                        }
                     }
                     if (is_dir($install_path) && file_exists($install_path)) {
                         $srcfile = session('backup_config.path').session('backup_file.name').'-'.session('backup_file.part').'-'.session('backup_file.version').'.sql';
                         $dstfile = $install_path.'/eyoucms.sql';
                         if(@copy($srcfile, $dstfile)){
                             /*替换所有表的前缀为官方默认ey_，并重写安装数据包里*/
-                            $eyouDbStr = file_get_contents($dstfile);
-                            $dbtables = Db::query('SHOW TABLE STATUS');
-                            $tableName = $eyTableName = [];
-                            foreach ($dbtables as $k => $v) {
-                                if (preg_match('/^'.PREFIX.'/i', $v['Name'])) {
-                                    $tableName[] = "`{$v['Name']}`";
-                                    $eyTableName[] = preg_replace('/^`'.PREFIX.'/i', '`ey_', "`{$v['Name']}`");
+                            $eyouDbStr = @file_get_contents($dstfile);
+                            if (!empty($eyouDbStr)) {
+                                $dbtables = Db::query('SHOW TABLE STATUS');
+                                $tableName = $eyTableName = [];
+                                foreach ($dbtables as $k => $v) {
+                                    if (preg_match('/^'.PREFIX.'/i', $v['Name'])) {
+                                        $tableName[] = "`{$v['Name']}`";
+                                        $eyTableName[] = preg_replace('/^`'.PREFIX.'/i', '`ey_', "`{$v['Name']}`");
+                                    }
                                 }
+                                foreach ($tableName as $key => $val) {
+                                    if ($val != $eyTableName[$key]) {
+                                        $eyouDbStr = str_replace($tableName, $eyTableName, $eyouDbStr);
+                                    }
+                                }
+                                @file_put_contents($dstfile, $eyouDbStr);
+                                unset($eyouDbStr);
                             }
-                            $eyouDbStr = str_replace($tableName, $eyTableName, $eyouDbStr);
-                            @file_put_contents($dstfile, $eyouDbStr);
-                            unset($eyouDbStr);
                             /*--end*/
                         } else {
                             @unlink($dstfile); // 复制失败就删掉，避免安装错误的数据包
                         }
                     }
                     /*--end*/
-                    unlink(session('backup_config.path') . 'backup.lock');
+                    @unlink(session('backup_config.path') . 'backup.lock');
                     session('backup_tables', null);
                     session('backup_file', null);
                     session('backup_config', null);
+                    adminLog('备份数据库');
                     return json(array('msg'=>'备份完成！', 'code'=>1, 'url'=>''));
                 }
             } else {
@@ -214,6 +234,7 @@ class Tools extends Base {
         if (!DB::query("OPTIMIZE TABLE {$strTable} ")) {
             $strTable = '';
         }
+        adminLog('优化数据库：'.$strTable);
         $this->success("操作成功" . $strTable, url('Tools/index'));
     
     }
@@ -239,7 +260,7 @@ class Tools extends Base {
         if (!DB::query("REPAIR TABLE {$strTable} ")) {
             $strTable = '';
         }
-    
+        adminLog('修复数据库：'.$strTable);
         $this->success("操作成功" . $strTable, url('Tools/index'));
   
     }
@@ -389,6 +410,7 @@ class Tools extends Base {
                     $rate = (floor((($start+1)/count($list))*10000)/10000*100).'%';
                     respose(array('code'=>1, 'msg'=>"正在还原#{$part}...", 'rate'=>$rate, 'data'=>$data));
                 } else {
+                    adminLog('还原数据库');
                     session('backup_list', null);
                     delFile(RUNTIME_PATH);
                     respose(array('code'=>1, 'msg'=>"还原完成...", 'rate'=>'100%'));
@@ -449,11 +471,22 @@ class Tools extends Base {
                     $this->error('sql不兼容当前版本：'.$version, url('Tools/restore'));
                 }
                 /*--end*/
+                $new_path = tpCache('web.web_sqldatapath');
                 $sqls = Backup::parseSql($file_path_full);
-                if(Backup::install($sqls)){
-                    /*清除缓存*/
-                    delFile(RUNTIME_PATH);
-                    /*--end*/
+                if (Backup::install($sqls)) {
+                    //修改数据库备份目录为原来的目录
+                    $tpCacheData = ['web_sqldatapath'=>$new_path, 'php_atqueryrequest_time'=>0, 'php_atqueryrequest_time2'=>0];
+                    if (is_language()) {
+                        $langRow = Db::name('language')->order('id asc')->select();
+                        foreach ($langRow as $key => $val) {
+                            tpCache('web', $tpCacheData, $val['mark']);
+                        }
+                    } else { // 单语言
+                        tpCache('web', $tpCacheData);
+                    }
+                    delFile(RUNTIME_PATH); // 清除缓存
+                    adminLog('还原数据库');
+                    verify_authortoken();
                     $this->success('操作成功', request()->baseFile(), '', 1, [], '_parent');
                 }else{
                     $this->error('操作失败！', url('Tools/restore'));
@@ -514,6 +547,7 @@ class Tools extends Base {
                     $this->error('备份文件删除失败，请检查目录权限！');
                 }
             }
+            adminLog('删除数据库备份文件');
             $this->success('删除成功！');
         } else {
             $this->error('参数有误');

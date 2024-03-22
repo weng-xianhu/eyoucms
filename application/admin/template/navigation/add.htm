@@ -1,0 +1,191 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="toolTipLayer"
+     style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <form class="form-horizontal" id="post_form" action="{:url('Navigation/add')}" method="post">
+        <div class="ncap-form-default tab_div_1">
+            <dl class="row">
+                <dt class="tit"><label for="typename"><em>*</em>导航位置</label></dt>
+                <dd class="opt">{$position_name}</dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit"><label>父级菜单</label></dt>
+                <dd class="opt">
+                    {$navListHtml}
+                </dd>
+                <input type="hidden" name="topid" id="topid" value="{$topid}">
+                <input type="hidden" name="parent_id" id="parent_id" value="{$nav_id}">
+            </dl>
+            <dl class="row">
+                <dt class="tit"><label>快速生成菜单</label></dt>
+                <dd class="opt">
+                    <select class="small form-control" onchange="functionData(this);">
+                        <option value="0" id="default" selected="true">功能页面</option>
+                        {volist name="$function" id="vo"}
+                        <option value="{$vo.url}" data-title="{$vo.title}">{$vo.title}</option>
+                        {/volist}
+                    </select>
+                    <span id="huozhe">或者</span>
+                    {$arctypeHtml}
+                    <label id="typeid_label" style="display: none;">
+                        <input type="checkbox" name="arctype_sync" id="arctype_sync" value="1" onclick="ArctypeSync(this);">栏目同步
+                    </label>
+                    <span class="err"></span>
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit"><label for="nav_name"><em>*</em>菜单名称</label></dt>
+                <dd class="opt">
+                    <input type="text" value="" name="nav_name" id="nav_name" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+
+            <dl class="row" id="dl_nav_url">
+                <dt class="tit"><label for="nav_url"><em>*</em>菜单链接</label></dt>
+                <dd class="opt">
+                    <input type="text" value="" name="nav_url" id="nav_url" class="input-txt">
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit"><label for="en_name">菜单副名</label></dt>
+                <dd class="opt">
+                    <input type="text" name="en_name" id="en_name" value="{$NavigList.englist_name}"
+                           class="input-txt">
+                    <p class="notic">副名可用作栏目英文名、副标题等用途，若不用可不必填写</p>
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit">
+                    <label>菜单图标</label>
+                </dt>
+                <dd class="opt">
+                    <div class="input-file-show div_litpic_local">
+                        <span class="show">
+                            <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="javascript:void(0);">
+                                <i id="img_i" class="fa fa-picture-o" onmouseover="" onmouseout="layer.close(layer_tips);"></i>
+                            </a>
+                        </span>
+                        <span class="type-file-box">
+                            <input type="text" id="nav_pic" name="nav_pic" value="" class="type-file-text" autocomplete="off">
+                            <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                            <input class="type-file-file" onClick="GetUploadifyFrame(1,'','allimg','img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo"
+                                   title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                        </span>
+                    </div>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+
+            <dl class="row">
+                <dt class="tit"><label>链接属性</label></dt>
+                <dd class="opt">
+                    <label><input type="checkbox" name="target" value="1">&nbsp;新窗口打开</label>
+                    &nbsp;&nbsp;
+                    <label><input type="checkbox" name="nofollow" value="1">&nbsp;nofollow</label>
+                </dd>
+            </dl>
+        </div>
+
+        <div class="ncap-form-default">
+            <div class="bot">
+                <input type="hidden" name="position_id" value="{$Request.param.position_id}">
+                <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green"
+                   id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function selectNav(obj) {
+        $('#parent_id').val($(obj).val());
+        $('#topid').val($(obj).find("option:selected").attr('data-topid'));
+    }
+
+    function check_submit() {
+        if ($('input[name="nav_name"]').val() == '') {
+            showErrorMsg('请填写菜单名称');
+            $('input[name=nav_name]').focus();
+            return false;
+        }
+
+        if ($('input[name="nav_url"]').val() == '') {
+            showErrorMsg('请填写菜单链接');
+            $('input[name=nav_url]').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url  : "{:url('Navigation/add', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(data){
+                layer.closeAll();
+                if(data.code == 1){
+                    layer.msg(data.msg, {icon: 1, time:1000}, function(){
+                        parent.window.location.reload();
+                    });
+                }else{
+                    layer.alert(data.msg, {icon: 2, title:false});
+                }
+            }
+        });
+    }
+
+    // 图片回调
+    function img_call_back(fileurl_tmp) {
+        $("#nav_pic").val(fileurl_tmp);
+        $("#img_a").attr('href', fileurl_tmp);
+        $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src=" + fileurl_tmp + " class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+    }
+
+    // 加载栏目信息
+    function SyncData(obj) {
+        var type_name = $(obj).find("option:selected").attr('data-typename');
+        var type_url = $(obj).find("option:selected").attr('data-typeurl');
+        if (type_name) $('#nav_name').val(type_name);
+        if (type_url) $('#nav_url').val(type_url);
+        $('#nav_name').attr('readonly',true);
+        $('#dl_nav_url').hide();
+    }
+
+    // 加载前台功能信息
+    function functionData(obj) {
+        $('#typeid_label').css('display','none');
+        var title = $(obj).find("option:selected").attr('data-title');
+        if (title) $('#nav_name').val(title);
+
+        $("#arctype_default").attr("selected", true);
+        $('#arctype_sync').attr("checked", false);
+
+        $('#nav_name').attr("readonly", false);
+        $('#nav_url').attr("readonly", false);
+
+        var url = $(obj).find("option:selected").val();
+        if (0 == url || 'external_link' == url){
+            $('#nav_url').val('');
+            $('#dl_nav_url').show();
+        }else{
+            $('#nav_url').val(url);
+            $('#dl_nav_url').hide()
+        }
+        if (0 == url){
+            $('#type_id').show();
+            $('#huozhe').show();
+        } else{
+            $('#type_id').hide();
+            $('#huozhe').hide();
+        }
+    }
+</script>
+{include file="public/footer" /}

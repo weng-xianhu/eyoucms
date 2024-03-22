@@ -1,0 +1,122 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="overflow-x: hidden;padding: 0;min-width: 674px;background: #fff;">
+<style type="text/css">
+    .ncap-form-default dd.opt { width: 79%; }
+    .select-express {border: 1px solid red !important; color: red !important;}
+</style>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="width: 810px;margin: 0 auto;">
+    <div class="flexigrid">
+        <form class="form-horizontal" id="postForm">
+            <input type="hidden" name="order_id" value="{$order_id}">
+            <div class="ncap-form-default">
+                <div>
+                    <dl class="row">
+                        <dt class="tit"> <label><em>*</em>收货人姓名</label> </dt>
+                        <dd class="opt"> <input type="text" value="{$address.consignee}" name="consignee" id="consignee" class="input-txt"> </dd>
+                    </dl>
+                    <dl class="row">
+                        <dt class="tit"> <label><em>*</em>收货人手机</label> </dt>
+                        <dd class="opt"> <input type="text" value="{$address.mobile}" name="mobile" id="mobile" class="input-txt"> </dd>
+                    </dl>
+                    <dl class="row">
+                        <dt class="tit"> <label><em>*</em>收货地址</label> </dt>
+                        <dd class="opt">
+                            <select name="province" id='province' style="width: 148px;" onchange="getSpecifyRegion(this, 'province');">
+                                <option value="0">请选择省份</option>
+                                {volist name="$provinceList" id="vo"}
+                                <option value="{$vo.id}" {eq name="$vo.id" value="$address.province"}selected{/eq}>{$vo.name}</option>
+                                {/volist}
+                            </select>
+                            <select name="city" id='city' style="width: 148px;" onchange="getSpecifyRegion(this, 'city');">
+                                <option value="0">请选择城市</option>
+                                {volist name="$cityList" id="vo"}
+                                <option value="{$vo.id}" {eq name="$vo.id" value="$address.city"}selected{/eq}>{$vo.name}</option>
+                                {/volist}
+                            </select>
+                            <select name="district" id='district' style="width: 148px;">
+                                <option value="0">请选择区/县</option>
+                                {volist name="$areaList" id="vo"}
+                                <option value="{$vo.id}" {eq name="$vo.id" value="$address.district"}selected{/eq}>{$vo.name}</option>
+                                {/volist}
+                            </select>
+                        </dd>
+                    </dl>
+                    <dl class="row">
+                        <dt class="tit"> <label><em>*</em>详细地址</label> </dt>
+                        <dd class="opt"> <textarea rows="5" cols="60" name="address" style="height:60px;">{$address.address}</textarea> </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="ncap-form-default">
+                <div class="bot" style="padding-bottom:0px;">
+                    <a href="JavaScript:void(0);" onclick="submitForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">修改保存</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+    // 关闭自身弹窗
+    function closeIframes() {
+        var parentObj = parent.layer.getFrameIndex(window.name);
+        if (parentObj) parent.window.location.reload();
+    }
+
+    // 获取联动地址
+    function getSpecifyRegion(obj, type) {
+        var parent_id = $(obj).val();
+        if (!parent_id > 0) return false;
+
+        var url = "{:url('Shop/ajaxGetSpecifyRegion')}";
+        $.ajax({
+            url : url,
+            data: {parent_id: parent_id, _ajax: 1},
+            type:'post',
+            dataType:'json',
+            success:function(res) {
+                if ('province' == type) {
+                    res.data = '<option value="0">请选择城市</option>'+ res.data;
+                    $('#city').empty().html(res.data);
+                    $('#district').empty().html('<option value="0">请选择县/区/镇</option>');
+                } else if ('city' == type) {
+                    res.data = '<option value="0">请选择县/区/镇</option>'+ res.data;
+                    $('#district').empty().html(res.data);
+                }
+            },
+            error : function(e) {
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5});
+            }
+        });
+    }
+
+    // 表单提交
+    function submitForm() {
+        layer_loading('正在处理');
+        $.ajax({
+            type: "POST",
+            url : "{:url('Shop/order_address', ['_ajax'=>1])}",
+            data: $('#postForm').serialize(),
+            dataType: 'json',
+            success: function (res) {
+                layer.closeAll();
+                if (1 == res.code) {
+                    layer.msg(res.msg, {time: 1000}, function() {
+                        closeIframes();
+                    });
+                } else {
+                    layer.alert(res.msg, {icon: 2, title: false, closeBtn: 0});
+                }
+            },
+            error:function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 2, title: false, closeBtn: 0});
+            }
+        });
+    }
+</script>

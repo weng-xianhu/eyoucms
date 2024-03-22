@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -20,15 +20,22 @@ use think\Cookie;
 /**
  * 订单明细
  */
+load_trait('controller/Jump');
 class TagSporder extends Base
-{   
+{
+    use \traits\controller\Jump;
+
     public $users_id = 0;
+    public $usersTplVersion    = '';
     
     //初始化
     protected function _initialize()
     {
         parent::_initialize();
         $this->users_id = session('users_id');
+        $this->usersTplVersion = getUsersTplVersion();
+        // 是否安装核销插件
+        $this->weappInfo = model('ShopPublicHandle')->getWeappVerifyInfo();
     }
 
     /**
@@ -45,11 +52,50 @@ class TagSporder extends Base
             $Where = [
                 'a.order_id' => $order_id,
                 'a.users_id' => $this->users_id,
-                'a.lang'     => $this->home_lang,
+                'a.lang'     => self::$home_lang,
             ];
 
             // 订单主表
             $result['OrderData'] = Db::name("shop_order")->alias('a')->where($Where)->find();
+            if (empty($result['OrderData'])) $this->error('订单不存在');
+
+            $jsStr = '';
+            $result['OrderData']['verifyData'] = [];
+            if (!empty($this->weappInfo) && 2 === intval($result['OrderData']['logistics_type'])) {
+                // 调用核销逻辑层方法
+                $verifyLogic = new \weapp\Verify\logic\VerifyLogic;
+                $result['OrderData']['verifyData'] = $verifyLogic->verifyOrderShowHandle($this->users_id, $result['OrderData'], $this->weappInfo);
+                if (1 === intval($result['OrderData']['order_status'])) {
+                    $jsStr = "<script language='javascript' type='text/javascript' src='{$this->root_dir}/public/static/common/js/qrcode.js'></script>
+                    <script language='javascript' type='text/javascript' src='{$this->root_dir}/public/static/common/js/qrcode.min.js'></script>
+                    <script type='text/javascript'>
+                        outputQRCod('{$result['OrderData']['verifyData']['verify_code']}');
+                    </script>";
+                }
+            }
+            // dump($result);exit;
+
+            // 如果是未付款订单则执行
+            $result['OrderData']['paymentExpire'] = 0;
+            $result['OrderData']['eyCountdownTimes'] = 'eyCountdownTimes';
+            if (isset($result['OrderData']['order_status']) && 0 === intval($result['OrderData']['order_status'])) {
+                // 查询 自动关闭未付款订单 时长
+                $orderUnpayCloseTime = getUsersConfigData('order.order_unpay_close_time');
+                if (!empty($orderUnpayCloseTime)) {
+                    // 未付款过期时间
+                    $result['OrderData']['paymentExpire'] = $result['OrderData']['add_time'] + (intval($orderUnpayCloseTime) * 60) - getTime();
+                }
+            }
+            //  else if (isset($result['OrderData']['order_status']) && 2 === intval($result['OrderData']['order_status'])) {
+            //     // 查询 自动关闭未付款订单 时长
+            //     $orderAutoReceiptTime = getUsersConfigData('order.order_auto_receipt_time');
+            //     if (!empty($orderAutoReceiptTime)) {
+            //         // 未付款过期时间
+            //         $express_time = getTime() - $result['OrderData']['express_time'];
+            //         $result['OrderData']['autoReceipt'] = (intval($orderAutoReceiptTime) * 86400) - $express_time;
+            //     }
+            // }
+
             //虚拟商品拼接回复
             $virtual_delivery = '';
             // 获取当前链接及参数，用于手机端查询快递时返回页面
@@ -70,10 +116,13 @@ class TagSporder extends Base
             }
             // 是否移动端，1表示移动端，0表示PC端
             $result['OrderData']['IsMobile'] = isMobile() ? 1 : 0;
-            
+
             // 获取订单状态列表
             $order_status_arr = Config::get('global.order_status_arr');
             $result['OrderData']['order_status_name'] = $order_status_arr[$result['OrderData']['order_status']];
+            if (!empty($this->weappInfo) && 2 === intval($result['OrderData']['logistics_type']) && 1 === intval($result['OrderData']['order_status'])) {
+                $result['OrderData']['order_status_name'] = '待核销';
+            }
             $result['OrderData']['TotalAmount'] = '0';
             
             if (!empty($result['OrderData'])) {
@@ -131,8 +180,21 @@ class TagSporder extends Base
                     }
                     // 产品属性处理
                     $ValueData = unserialize($value['data']);
+                    $result['DetailsData'][$key]['pointsGoodsBuyField'] = !empty($ValueData['pointsGoodsBuyField']) ? json_decode($ValueData['pointsGoodsBuyField'], true) : [];
                     $spec_value = !empty($ValueData['spec_value']) ? htmlspecialchars_decode($ValueData['spec_value']) : '';
                     $spec_value = htmlspecialchars_decode($spec_value);
+                    $product_spec_list = [];
+                    $spec_value_arr = explode('<br/>', $spec_value);
+                    foreach ($spec_value_arr as $sp_key => $sp_val) {
+                        $sp_arr = explode('：', $sp_val);
+                        if (trim($sp_arr[0]) && !empty($sp_arr[0])) {
+                            $product_spec_list[] = [
+                                'name'  => !empty($sp_arr[0]) ? trim($sp_arr[0]) : '',
+                                'value' => !empty($sp_arr[1]) ? trim($sp_arr[1]) : '',
+                            ];
+                        }
+                    }
+                    $result['DetailsData'][$key]['product_spec_list'] = $product_spec_list;
 
                     // 旧参数+规格值
                     $attr_value = !empty($ValueData['attr_value']) ? htmlspecialchars_decode($ValueData['attr_value']) : '';
@@ -159,55 +221,50 @@ class TagSporder extends Base
                     $result['DetailsData'][$key]['arcurl'] = $arcurl;
                     $result['DetailsData'][$key]['has_deleted'] = $has_deleted;
                     $result['DetailsData'][$key]['msg_deleted'] = $msg_deleted;
+                    $result['DetailsData'][$key]['product_price'] = floatval($value['product_price']);
 
                     // 图片处理
                     $result['DetailsData'][$key]['litpic'] = handle_subdir_pic(get_default_pic($value['litpic']));
 
                     // 小计
                     $result['DetailsData'][$key]['subtotal'] = $value['product_price'] * $value['num'];
-                    $result['DetailsData'][$key]['subtotal'] = sprintf("%.2f", $result['DetailsData'][$key]['subtotal']);
+                    $result['DetailsData'][$key]['subtotal'] = floatval(sprintf("%.2f", $result['DetailsData'][$key]['subtotal']));
                     // 合计金额
                     $result['OrderData']['TotalAmount'] += $result['DetailsData'][$key]['subtotal'];
-                    $result['OrderData']['TotalAmount'] = sprintf("%.2f", $result['OrderData']['TotalAmount']);
+                    $result['OrderData']['TotalAmount'] = floatval(sprintf("%.2f", $result['OrderData']['TotalAmount']));
+
+                    // 去掉金额小数点末尾的0
+                    $result['OrderData']['shipping_fee'] = floatval(sprintf("%.2f", $result['OrderData']['shipping_fee']));
+                    $result['OrderData']['order_amount'] = floatval(sprintf("%.2f", $result['OrderData']['order_amount']));
                 }
                 if (!empty($virtual_delivery)){
                     $result['OrderData']['virtual_delivery'] = $virtual_delivery;
                 }
                 if (empty($result['OrderData']['order_status'])) {
                     // 付款地址处理，对ID和订单号加密，拼装url路径
-                    // $querydata = [
-                    //     'order_id'   => $result['OrderData']['order_id'],
-                    //     'order_code' => $result['OrderData']['order_code'],
-                    // ];
-                    // /*修复1.4.2漏洞 -- 加密防止利用序列化注入SQL*/
-                    // $querystr = '';
-                    // foreach($querydata as $_qk => $_qv)
-                    // {
-                    //     $querystr .= $querystr ? "&$_qk=$_qv" : "$_qk=$_qv";
-                    // }
-                    // $querystr = str_replace('=', '', mchStrCode($querystr));
-                    // $auth_code = tpCache('system.system_auth_code');
-                    // $hash = md5("payment".$querystr.$auth_code);
-                    // /*end*/
-                    // $result['OrderData']['PaymentUrl'] = urldecode(url('user/Pay/pay_recharge_detail', ['querystr'=>$querystr,'hash'=>$hash]));
-
-                    // 付款地址处理，对ID和订单号加密，拼装url路径
                     $Paydata = [
                         'order_id'   => $result['OrderData']['order_id'],
                         'order_code' => $result['OrderData']['order_code'],
                     ];
-
                     // 先 json_encode 后 md5 加密信息
                     $Paystr = md5(json_encode($Paydata));
-
                     // 清除之前的 cookie
                     Cookie::delete($Paystr);
-
                     // 存入 cookie
                     cookie($Paystr, $Paydata);
-
                     // 跳转链接
                     $result['OrderData']['PaymentUrl'] = urldecode(url('user/Pay/pay_recharge_detail',['paystr'=>$Paystr]));
+                }
+
+                // 存在积分商城订单则执行
+                if (!empty($result['OrderData']['points_shop_order'])) {
+                    $weappInfo = model('ShopPublicHandle')->getWeappPointsShop();
+                    if (!empty($weappInfo)) {
+                        $list = !empty($result['OrderData']) ? $result['OrderData'] : [];
+                        $list['Details'] = !empty($result['DetailsData']) ? $result['DetailsData'] : [];
+                        $pointsShopLogic = new \weapp\PointsShop\logic\PointsShopLogic();
+                        $pointsShopLogic->pointsShopOrderDataHandle([$list], $result['OrderData'], $result['DetailsData']);
+                    }
                 }
 
                 // 处理订单主表的地址数据
@@ -230,16 +287,41 @@ class TagSporder extends Base
                 // 封装取消订单JS
                 $result['OrderData']['CancelOrder']   = " onclick=\"CancelOrder('{$order_id}');\" ";
                 // 封装收货地址
-                $result['OrderData']['ConsigneeInfo'] = $result['OrderData']['consignee'].' '.$result['OrderData']['mobile'].' '.$result['OrderData']['country'].' '.$result['OrderData']['province'].' '.$result['OrderData']['city'].' '.$result['OrderData']['district'].' '.$result['OrderData']['address'];
+                if ($this->usersTplVersion == 'v3') {
+                    $result['OrderData']['ConsigneeInfo'] = $result['OrderData']['province'].' '.$result['OrderData']['city'].' '.$result['OrderData']['district'].' '.$result['OrderData']['address'];
+                } else {
+                    $result['OrderData']['ConsigneeInfo'] = $result['OrderData']['consignee'].' '.$result['OrderData']['mobile'].' '.$result['OrderData']['country'].' '.$result['OrderData']['province'].' '.$result['OrderData']['city'].' '.$result['OrderData']['district'].' '.$result['OrderData']['address'];
+                }
+                //售后
+                $result['OrderData']['ServiceList'] = urldecode(url('user/Shop/service_list', ['order_id' => $order_id]));
+                // 封装订单催发货JS
+                $result['OrderData']['OrderRemind'] = " onclick=\"OrderRemind('{$order_id}','{$result['OrderData']['order_code']}');\" ";
+                //评价
+                $result['OrderData']['AddProduct'] = urldecode(url('user/ShopComment/comment_list', ['order_id' => $order_id]));
+                //确认收货
+                $result['OrderData']['Confirm'] = " onclick=\"Confirm('{$order_id}','{$result['OrderData']['order_code']}');\" ";
 
                 // 传入JS参数
-                $data['shop_order_cancel'] = url('user/Shop/shop_order_cancel');
+                $data['is_wap'] = isWeixin() || isMobile() ? 1 : 0;
+                $data['shop_centre'] = url('user/Shop/shop_centre');
+                $data['shop_order_cancel'] = url('user/Shop/shop_order_cancel', ['_ajax'=>1], true, false, 1, 1, 0);
+                $data['shop_order_remind'] = url('user/Shop/shop_order_remind', ['_ajax'=>1], true, false, 1, 1, 0);
+                $data['shop_member_confirm'] = url('user/Shop/shop_member_confirm', ['_ajax'=>1], true, false, 1, 1, 0);
+                // $data['autoReceipt'] = $result['OrderData']['autoReceipt'];
+                $data['paymentExpire'] = $result['OrderData']['paymentExpire'];
+                $data['eyCountdownTimes'] = $result['OrderData']['eyCountdownTimes'];
                 $data_json = json_encode($data);
                 $version   = getCmsVersion();
+                if (empty($this->usersTplVersion) || 'v1' == $this->usersTplVersion) {
+                    $jsfile = "tag_sporder.js";
+                } else {
+                    $jsfile = "tag_sporder_{$this->usersTplVersion}.js";
+                }
                 // 循环中第一个数据带上JS代码加载
-                if ($result['OrderData']['prom_type'] == 0 && $virtual_delivery_status){
-                $result['OrderData']['hidden'] = <<<EOF
-<div style="display: none;" id="virtual_delivery_1575423534">
+                if ($result['OrderData']['prom_type'] == 0 && $virtual_delivery_status) {
+                    $srcurl = get_absolute_url("{$this->root_dir}/public/static/common/js/tag_sporder.js?v={$version}");
+                    $result['OrderData']['hidden'] = <<<EOF
+<div style="display: none;" id="virtual_delivery_v423534">
 <div class='col-xs-4 col-md-3 col-xl-2 text-sm-left order-info-name'>商家回复 :</div><div class='col-xs-8 col-md-9 col-xl-10' >{$result['OrderData']['virtual_delivery']}</div>
 </div>
 <script type="text/javascript">
@@ -247,19 +329,22 @@ class TagSporder extends Base
     var panel_body = document.getElementsByClassName("panel-body order-info")[0];
     var dom=document.createElement('div');
     dom.className='row m-t-10';
-    dom.innerHTML=document.getElementById('virtual_delivery_1575423534').innerHTML;
+    dom.innerHTML=document.getElementById('virtual_delivery_v423534').innerHTML;
     panel_body.appendChild(dom);
 </script>
-<script type="text/javascript" src="{$this->root_dir}/public/static/common/js/tag_sporder.js?v={$version}"></script>
+<script language="javascript" type="text/javascript" src="{$srcurl}"></script>
 EOF;
                 }else{
+                    $srcurl = get_absolute_url("{$this->root_dir}/public/static/common/js/{$jsfile}?v={$version}");
                     $result['OrderData']['hidden'] = <<<EOF
 <script type="text/javascript">
     var eeb8a85ee533f74014310e0c0d12778 = {$data_json};
 </script>
-<script type="text/javascript" src="{$this->root_dir}/public/static/common/js/tag_sporder.js?v={$version}"></script>
+<script language="javascript" type="text/javascript" src="{$srcurl}"></script>
+{$jsStr}
 EOF;
                 }
+                // dump($result);exit;
                 return $result;
             }else{
                 return false;

@@ -81,6 +81,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'ip' => 
+  array (
+    'name' => 'ip',
+    'type' => 'varchar(20)',
+    'notnull' => false,
+    'default' => 'IP地址',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'lang' => 
   array (
     'name' => 'lang',

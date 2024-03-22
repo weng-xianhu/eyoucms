@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>下载订单-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/eyoucms.css"/}
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/tag_global.js"/}
+    </head>
+
+    <body class="centre">
+        {eyou:include file="users/users_header.htm" /}
+        <div class="breadcrumbs"></div>
+        <div class="ey-body-bg">
+            <div class="ey-body pd0">
+                <div class="ey-container w1226">
+                    {eyou:include file="users/users_left.htm" /}
+                    <div class="ey-con fr" >
+                        <div class="xin_mian user-pay-con main-bg">
+                            <div class="user-pay-box">
+                                <div class="el-row shop-oper">
+                                    <h1 class="title">会员订单</h1>
+                                </div>
+                                <div class="el-row shop-oper mt20">
+                                    <div class="shop-oper-bottom">
+                                        <div class="shop-oper-l">
+                                            <div class="el-button-group">
+                                                {if condition="isset($partChannel['article']['data']['is_article_pay']) && $partChannel['article']['data']['is_article_pay'] == 1"}
+                                                <a class="el-button-xin el-button--default {if $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'article_index'} active {/if}" href="{eyou:url link='user/Users/article_index'/}"> 文章订单 </a>
+                                                {/if}
+                                                {if condition="isset($partChannel['download']['data']['is_download_pay']) && $partChannel['download']['data']['is_download_pay'] == 1"}
+                                                <a class="el-button-xin el-button--default {if $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'download_index'} active {/if}" href="{eyou:url link='user/Users/download_index'/}"> 下载订单 </a>
+                                                {/if}
+                                                {if condition="isset($partChannel['media']['data']['is_media_pay']) && $partChannel['media']['data']['is_media_pay'] == 1"}
+                                                <a class="el-button-xin el-button--default {if $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'media_index'} active {/if}" href="{eyou:url link='user/Users/media_index'/}"> 视频订单 </a>
+                                                {/if}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ey-con-inside mt20">
+                                    <div id="finance-list_wrapper" class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition" style="width: 100%;">
+                                        <table class="pay_details" cellspacing="0" cellpadding="0" style="width: 100%">
+                                            <thead>
+                                                <tr role="row">
+                                                    <th><div class="cell tl">文档标题</div></th>
+                                                    <th class="w200"><div class="cell">订单编号</div></th>
+                                                    <th class="w150"><div class="cell">订单金额</div></th>
+                                                    <th class="w200"><div class="cell tc">付款时间</div></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {empty name="$eyou.field.data"}
+                                                <tr>
+                                                    <td align="center" axis="col0" colspan="50">
+                                                        <div class="cell pt100 tc">
+                                                            <span class="mb10"><img id='litpic_img' src="{eyou:static file='users/skin/images/null-data.png' /}"/></span>
+                                                            <p>当前暂无订单哦~</p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {else/}
+                                                {eyou:volist name="$eyou.field.data" id="vo"}
+                                                <tr>
+                                                    <td>
+                                                        <div class="cell tl">
+                                                            <a href="{$vo.arcurl}" target="_blank" class="arc-name">
+                                                                <div class="arc-pic">
+                                                                    <img src="{$vo.product_litpic|default='__PUBLIC__/static/common/images/not_adv.jpg'}">
+                                                                </div>
+                                                                <div class="arc-title">{$vo.product_name}</div>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="cell">{$vo.order_code}</div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="cell">
+                                                            <p class="red">￥{$vo.order_amount}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="cell tc">{$vo.pay_time|date='Y-m-d H:i:s',###}</div>
+                                                    </td>
+                                                </tr>
+                                                {/eyou:volist}
+                                                {/empty}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {$page}
+                                    {eyou:if condition="!empty($pager->totalRows)"}
+                                    <div class="fytotal">共{$pager->totalRows}条记录</div>
+                                    {/eyou:if}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {eyou:include file="users/users_footer.htm" /}

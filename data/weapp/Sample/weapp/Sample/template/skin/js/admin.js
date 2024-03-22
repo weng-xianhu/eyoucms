@@ -1,16 +1,10 @@
 $(function() {
     //操作提示缩放动画
-    $("#checkZoom").toggle(
-        function() {
-            $("#explanation").animate({
-                color: "#FFF",
-                backgroundColor: "#4FD6BE",             
-                width: "80",
-                height: "20",				              
-            },300);
-            $("#explanationZoom").hide();
-        },
-        function() {
+    $("#checkZoom").prop('data-showOrHide', 'show');
+    $("#checkZoom").on('click', function(){
+        var showOrHide = $(this).attr('data-showOrHide');
+        if ('hide' == showOrHide) {
+            $(this).attr('data-showOrHide', 'show');
             $("#explanation").animate({
                 color: "#2CBCA3",
                 backgroundColor: "#EDFBF8",
@@ -20,17 +14,26 @@ $(function() {
                 $(this).css('height', '100%');
             });
             $("#explanationZoom").show();
+        } else {
+            $(this).attr('data-showOrHide', 'hide');
+            $("#explanation").animate({
+                color: "#FFF",
+                backgroundColor: "#4FD6BE",             
+                width: "80",
+                height: "20",                              
+            },300);
+            $("#explanationZoom").hide();
         }
-    );
+    });
 
     //自定义radio样式
-    $(".cb-enable").click(function(){
+    $(".cb-enable").on('click', function(){
         var parent = $(this).parents('.onoff');
         $('.cb-disable',parent).removeClass('selected');
         $(this).addClass('selected');
         $('.checkbox',parent).attr('checked', true);
     });
-    $(".cb-disable").click(function(){
+    $(".cb-disable").on('click', function(){
         var parent = $(this).parents('.onoff');
         $('.cb-enable',parent).removeClass('selected');
         $(this).addClass('selected');

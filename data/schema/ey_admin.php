@@ -57,7 +57,7 @@ return array (
   'password' => 
   array (
     'name' => 'password',
-    'type' => 'varchar(32)',
+    'type' => 'varchar(255)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -150,6 +150,33 @@ return array (
     'type' => 'int(10)',
     'notnull' => false,
     'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'desc' => 
+  array (
+    'name' => 'desc',
+    'type' => 'varchar(500)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'wechat_followed' => 
+  array (
+    'name' => 'wechat_followed',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'wechat_open_id' => 
+  array (
+    'name' => 'wechat_open_id',
+    'type' => 'varchar(50)',
+    'notnull' => false,
+    'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),

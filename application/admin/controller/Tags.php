@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -22,10 +22,19 @@ class Tags extends Base
     public function index()
     {
         $list = array();
+        $param = input('param.');
         $keywords = input('keywords/s');
-        $condition = array();
-        if (!empty($keywords)) {
-            $condition['tag'] = array('LIKE', "%{$keywords}%");
+        $keywords = trim($keywords);
+        $condition = [];
+        // 应用搜索条件
+        foreach (['keywords'] as $key) {
+            if (isset($param[$key]) && $param[$key] !== '') {
+                if ($key == 'keywords') {
+                    $condition['tag'] = array('LIKE', "%{$keywords}%");
+                } else {
+                    $condition[$key] = array('eq', trim($param[$key]));
+                }
+            }
         }
         $condition['lang'] = array('eq', $this->admin_lang);
 
@@ -78,6 +87,7 @@ class Tags extends Base
         if (IS_POST) {
             $post = input('post.');
             if (!empty($post['id'])) {
+                $post['id'] = intval($post['id']);
                 $tag = !empty($post['tag_tag']) ? trim($post['tag_tag']) : '';
                 if (empty($tag)) {
                     $this->error('标签名称不能为空！');
@@ -106,6 +116,7 @@ class Tags extends Base
                     'seo_title' => !empty($post['tag_seo_title']) ? trim($post['tag_seo_title']) : '',
                     'seo_keywords' => !empty($post['tag_seo_keywords']) ? trim($post['tag_seo_keywords']) : '',
                     'seo_description' => !empty($post['tag_seo_description']) ? trim($post['tag_seo_description']) : '',
+                    'sort_order' => !empty($post['tag_sort_order']) ? trim($post['tag_sort_order']) : '100',
                     'update_time' => getTime(),
                 ];
                 $ResultID = Db::name('tagindex')->where('id', $post['id'])->update($updata);
@@ -117,6 +128,7 @@ class Tags extends Base
                                 'tag'   => trim($post['tag_tag']),
                                 'update_time'   => getTime(),
                             ]);
+                        \think\Cache::clear('taglist');
                     }
                     $this->success('操作成功');
                 }
@@ -162,6 +174,7 @@ class Tags extends Base
                         'tid'    => ['IN', $id_arr],
                         'lang'  => $this->admin_lang,
                     ])->delete();
+                    \think\Cache::clear('taglist');
                     adminLog('删除Tags标签：'.implode(',', $title_list));
                     $this->success('删除成功');
                 }else{
@@ -183,6 +196,7 @@ class Tags extends Base
             Db::name('taglist')->where([
                 'lang'  => $this->admin_lang,
             ])->delete();
+            \think\Cache::clear('taglist');
             adminLog('清空Tags标签');
             $this->success('操作成功');
         }else{
@@ -195,28 +209,29 @@ class Tags extends Base
      */
     private function correct($IndexID = [])
     {
-        $where = [
-            'tid' => ['IN', $IndexID],
-            'lang' => $this->admin_lang
-        ];
-        $taglistRow = Db::name('taglist')->field('count(tid) as total, tid, add_time')
-            ->where($where)
-            ->group('tid')
-            ->getAllWithIndex('tid');
-        $updateData = [];
-        $weekup = getTime();
-        foreach ($taglistRow as $key => $val) {
-            $updateData[] = [
-                'id'    => $val['tid'],
-                'total' => $val['total'],
-                'weekup'    => $weekup,
-                'add_time'  => $val['add_time'] + 1,
+        if (!empty($IndexID)) {
+            $where = [
+                'tid' => ['IN', $IndexID],
+                'lang' => $this->admin_lang
             ];
-        }
-        if (!empty($updateData)) {
-            $r = model('Tagindex')->saveAll($updateData);
-            if (false !== $r) {
-                // Db::name('tagindex')->where(['weekup'=>['lt', $weekup],'lang'=>$this->admin_lang])->delete();
+            $taglistRow = Db::name('taglist')->field('count(tid) as total, tid')
+                ->where($where)
+                ->group('tid')
+                ->getAllWithIndex('tid');
+            $updateData = [];
+            $weekup = getTime();
+            foreach ($taglistRow as $key => $val) {
+                $updateData[] = [
+                    'id'    => $val['tid'],
+                    'total' => $val['total'],
+                    'weekup'    => $weekup,
+                ];
+            }
+            if (!empty($updateData)) {
+                $r = model('Tagindex')->saveAll($updateData);
+                if (false !== $r) {
+                    // Db::name('tagindex')->where(['weekup'=>['lt', $weekup],'lang'=>$this->admin_lang])->delete();
+                }
             }
         }
     }
@@ -238,7 +253,7 @@ class Tags extends Base
             $newTagList = [];
             $newtids = [];
             if (empty($tags)){
-                $taglistRow = Db::name('taglist')->field('tid,tag')->order('aid desc')->limit(20)->select();
+                $taglistRow = Db::name('taglist')->field('tid,tag')->where(['lang'=>$this->admin_lang])->order('aid desc')->limit(20)->select();
                 foreach ($taglistRow as $key => $val) {
                     if (3 <= count($newTagList)) {
                         break;
@@ -322,7 +337,7 @@ class Tags extends Base
                 if (empty($html)) {
                     $html .= "没有找到记录";
                 }
-                $html .= "<a href='javascript:void(0);' onclick='tags_list_1610411887(this);' style='float: right;'>[设置]</a>";
+                // $html .= "<a href='javascript:void(0);' onclick='tags_list_1610411887(this);' style='float: right;'>[设置]</a>";
             }
             $data['html']   = $html;
 
@@ -337,6 +352,52 @@ class Tags extends Base
 
     public function batch_add()
     {
+        if (IS_POST) {
+            $post = input('post.');
+
+            $tags = trim($post['tags']);
+            if (empty($tags)) {
+                $this->error('Tag列表不能为空！');
+            }
+
+            $tagsArr = explode("\r\n", $tags);
+            $tagsArr = array_filter($tagsArr);//去除数组空值
+            $tagsArr = array_unique($tagsArr); //去重
+            foreach ($tagsArr as $key => $val) {
+                $tagsArr[$key] = trim($val);
+            }
+
+            $addData = [];
+            $tagsList = Db::name('tagindex')->where([
+                    'tag'  => ['IN', $tagsArr],
+                    'lang'      => $this->admin_lang,
+                ])->column('tag');
+            foreach ($tagsArr as $key => $val) {
+                if(empty($val) || in_array($val, $tagsList)) continue;
+
+                $addData[] = [
+                    'tag'               => $val,
+                    'typeid'            => 0,
+                    'seo_description'   => '',
+                    'lang'              => $this->admin_lang,
+                    'add_time'          => getTime(),
+                    'update_time'       => getTime(),
+                ];
+            }
+            if (!empty($addData)) {
+                $r = model('Tagindex')->saveAll($addData);
+                if ($r !== false) {
+                    eyou_statistics_data(8, count($addData)); // 统计tags数
+                    Cache::clear('taglist');
+                    adminLog('批量新增Tag标签：'.get_arr_column($addData, 'tag'));
+                    $this->success('操作成功！');
+                } else {
+                    $this->error('操作失败');
+                }
+            } else {
+                $this->success('操作成功！');
+            }
+        }
         return $this->fetch();
     }
 
@@ -560,10 +621,13 @@ class Tags extends Base
         $tagaids = '';
         $filename = ROOT_PATH . 'data/conf/tagaids_1619141574.txt';
         if (file_exists($filename)) {
-            $fp      = fopen($filename, 'r');
-            $tagaids = fread($fp, filesize($filename));
-            fclose($fp);
-            $tagaids = $tagaids ? $tagaids : '';
+            $len     = filesize($filename);
+            if (!empty($len) && $len > 0) {
+                $fp      = fopen($filename, 'r');
+                $tagaids = fread($fp, $len);
+                fclose($fp);
+                $tagaids = $tagaids ? $tagaids : '';
+            }
         }
         return $tagaids;
     }

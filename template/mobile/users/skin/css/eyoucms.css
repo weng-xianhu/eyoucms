@@ -94,6 +94,7 @@ body {
 .ey-member .btn {
 	border-radius: 0px;
 }
+
 .ey-form-choice {
 	padding: 10px;
 }
@@ -152,6 +153,57 @@ body {
 .has-success .input-group-addon {
 	border-color: #ccc;
 }
+
+
+.tab_list {
+    font-size: 0
+}
+
+.tab_list ul {
+    margin: 0;
+    padding: 0;
+}
+
+.tab_list li {
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    font-size: 17px;
+    width: 105px;
+    color: #666;
+    margin: 0 0 0 10px
+}
+
+.tab_list li::before {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    transition: transform .3s;
+}
+
+.tab_list li.current {
+    color: #ff9600
+}
+
+.tab_list li.current::before {
+    background: #ff9600;
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    transition: transform .3s;
+}
+
+.tab_con .item {
+    display: none;
+}
 /*登录界面*/
 
 .login_index {
@@ -185,6 +237,51 @@ body {
 }
 .login_index .form-control {
 	border: 0;
+}
+
+.reg .images_upload_main .images_upload{
+	display: inline-block;
+	margin-right: 10px;
+    float: left;
+}
+.reg .images_upload_main .images_upload:last-child{
+    margin-right: 0;
+}
+.reg .images_upload_main .fieldext_upload {
+    display: inline-block;
+    margin-right: 10px;
+    display: inline-block;
+}
+.reg .images_upload_main .images_upload_item{
+	position: relative;
+	width: 60px;
+	height: 60px;
+	overflow: hidden;
+	border: 1px solid #eee;
+}
+.reg .images_upload_main .images_upload_item img {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+}
+
+.reg .images_upload_main .images_upload_item .delete{ 
+    position: absolute;
+    top:0;
+    right: 0;
+    z-index: 2;
+    width: 0px;
+    height: 0px;
+    border-top:30px solid rgba(0,0,0,0.5);
+    border-left:30px solid transparent; 
+}
+.reg .images_upload_main .images_upload_item .delete::after {
+    position: relative;
+    content: "\d7";
+    font-size: 20px;
+    color: white;
+    top: -33px;
+    right: 14px;
 }
 /*注册页面*/
 
@@ -402,7 +499,7 @@ li.list-group-item {
 	border-radius: 0;
 	height: 36px;
 	box-sizing: border-box;
-	font-size: 12px;
+	font-size: 13px;
 	color: #333;
 }
 .btn-primary {
@@ -797,9 +894,9 @@ h1.text-xs-center{ font-size: 2rem; margin-top: 10px !important; }
 .form-group a.login_link{position: absolute;right: 0; top: 0;}
 
 .login-link {
-    text-align: right;
-	margin-top: 10px;
+    margin-top: 30px;
     margin-bottom: 10px;
+    text-align: center;
 }
 .login-link span {
     color: #CACAD9;
@@ -823,7 +920,7 @@ em,i{ font-style:normal}
 .mip-reg-heading {
     font-size: 18px;
     color: #333;
-    margin-top: 0px;
+    margin-top: 15px;
     margin-bottom: 40px;
     padding: 0;
 	text-align:center
@@ -915,5 +1012,149 @@ i.fa-power-off{ margin-right: 6px; margin-left: 2px; }
 .fa-power-off:before{ font-size:17px; color: #aaa;content: "\f127"; }
 /*第三方登录样式*/
 .login_type{ padding-top: 15px; }
-.login_type ul li i{ font-size:3rem; }
+.login_type ul li i{ font-size:2.8rem; }
 
+
+
+/* 新增微信端登录 */
+
+.login-reg .wrapper {
+    padding: 0 44px;
+}
+.login-reg .wrapper .hend-box {
+    padding-top: calc(30px);
+}
+.login-reg .wrapper .hend-box .title {
+    padding-top: calc(57px);
+    font-style: normal;
+    font-size: 33px;
+    font-weight: 700;
+    color: #333;
+    line-height: 1.8;
+}
+.login-reg .wrapper .hend-box .desc {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #333;
+}
+.login-reg .wrapper .cont-box{
+}
+.login-reg .wrapper .cont-box .wx-form-group{
+    position: relative;
+    flex: 1;
+    display: flex;
+    margin-top: 33px;
+}
+.login-reg .wrapper .cont-box .wx-form-group .wx-form-control{
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    min-height: 33px;
+    height: 33px;
+    border: none;
+    border-bottom: 1px solid #eee;
+    letter-spacing: 1px;
+    font-size: 15px;
+    line-height: 33px;
+    color: rgb(51, 51, 51);
+}
+.login-reg .wrapper .cont-box .wx-form-group .password-icon{
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  background-color: #ccc;
+  z-index: 10;
+  cursor: pointer;
+}
+.login-reg .wrapper .cont-box .wx-form-group .password-icon.pass-show{
+  background: url(../images/password_show.png) no-repeat center center;
+}
+.login-reg .wrapper .cont-box .wx-form-group .password-icon.pass-hide{
+  background: url(../images/password_hide.png) no-repeat center center;
+}
+.login-reg .wrapper .cont-box .wx-form-group .wx-form-control:focus{
+    border-bottom: 1px solid #eee;
+    outline:none
+}
+.login-reg .wrapper .cont-box .wx-form-group .wx-form-control::-webkit-input-placeholder {
+    color: #6E6E6E !important;
+}
+
+.login-reg .wrapper .cont-box .wx-form-group .wx-form-control:-moz-placeholder {
+    color: #6E6E6E !important;
+}
+
+.login-reg .wrapper .cont-box .wx-form-group .wx-form-control::-moz-placeholder {
+    color: #6E6E6E !important;
+}
+
+.login-reg .wrapper .cont-box .wx-form-group .wx-form-control:-ms-input-placeholder {
+    color: #6E6E6E !important;
+}
+.login-reg .wrapper .cont-box .wx-form-group .field {
+    position: relative;
+    width: 100%;
+}
+.login-reg .wrapper .cont-box .wx-form-group .field img{
+    width: 77px;
+    height: 28px;
+    position: absolute;
+    right: 1px;
+    bottom: 4px;
+    z-index: 10;
+    top: 0px;
+}
+.login-reg .wrapper .cont-box .wx-form-group .field .sento{
+    width: 77px;
+    height: 33px;
+    position: absolute;
+    right: 0;
+    z-index: 10;
+    top: 0px;
+    line-height: 33px;
+    font-size: 13px;
+    color: #f4391c;
+    border: none;
+    background: none;
+}
+
+.login-reg .wrapper .cont-box .clause-box{
+    position: relative;
+    margin: 15px 0 15px 0;
+    display: flex;
+}
+.login-reg .wrapper .cont-box .clause-box a{
+    color: #999;
+}
+.login-reg .wrapper .cont-box .clause-box .checkbox-label .check-mark{
+    top: 0;
+}
+.login-reg .wrapper .cont-box .clause-box .checkbox-label{
+    padding-right: 2px;
+}
+.login-reg .wrapper .cont-box .clause-box .checkbox-label .check-mark{
+    width: 18px;
+    height: 18px;
+}
+.login-reg .wrapper .cont-box .btn-lg{
+    background: linear-gradient(57.72deg,#ff8a19 18.14%,#ff5e00 98.44%);
+    border-radius:25px
+}
+.login-reg .wrapper .cont-box .account-login{
+    margin-top: 35px;
+}
+.account-login { text-align: center; }
+
+.account-login a { display: inline-block; }
+
+.account-login .weibo-login, .account-login .wechat-login, .account-login .qq-login { width: 42px; height: 42px; margin: 0 10px; background-repeat: no-repeat; background-position: center; border-radius: 50%; cursor: pointer; }
+
+.account-login .wechat-login { background-image: url("../images/login-wechat.png");background-color: #58bc46; }
+
+
+.account-login .weibo-login { background-image: url("../images/login-weibo.png");background-color: #e90e24; }
+
+
+.account-login .qq-login { background-image: url("../images/login-qq.png");background-color: #3caae3; }

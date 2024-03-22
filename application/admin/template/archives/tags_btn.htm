@@ -1,7 +1,8 @@
 <!-- 扩展 -->
     {eq name="$Think.const.CONTROLLER_NAME.'@add'|is_check_access" value="1"}
         <div class="fbutton" style="float: none;">
-            <a href="{gt name="$Request.param.typeid" value="0"}{:url($Think.const.CONTROLLER_NAME.'/add', ['channel'=>$Request.param.channel, 'typeid'=>$Request.param.typeid])}{else /}javascript:quick_release({$is_arctype|default='1'});{/gt}">
+            <input type="hidden" id="releaseUrl" value="{:url($Think.const.CONTROLLER_NAME.'/add', ['channel'=>$Request.param.channel, 'typeid'=>$Request.param.typeid, 'callback_url'=>$callback_url], true, $website_host)}">
+            <a href="javascript:void(0);" onclick="{gt name='$Request.param.typeid' value='0'}archivesRelease('{$Think.const.CONTROLLER_NAME}', {$shopOpen|default='0'}, '', {$Request.param.typeid});{else /}quick_release({$is_arctype|default='1'});{/gt}">
                 <div class="add">
                     {eq name="$Think.const.CONTROLLER_NAME" value="Special"}
                     <span><i class="layui-icon layui-icon-addition"></i>发布专题</span>
@@ -14,14 +15,95 @@
     {/eq}
 
     <script type="text/javascript">
+        function archivesRelease(controller, shopOpen, url, typeid) {
+            // 提示是否前往商城中心
+            var releaseUrl = url == '' || url === undefined || url === 'undefined' ? $('#releaseUrl').val() : url;
+            if ('Product' == controller && 1 === parseInt(shopOpen)) {
+                confirmRelease(releaseUrl, 'add');
+                return false;
+            } else if ('Archives' == controller && 1 === parseInt(shopOpen)) {
+                var goodsTypeIds = "{$goodsTypeIds|default=''}";
+                if (0 <= $.inArray(String(typeid), goodsTypeIds.split(','))) {
+                    confirmRelease(releaseUrl, 'add');
+                    return false;
+                }
+            }
+
+            // 默认跳转路径
+            window.location.href = releaseUrl;
+        }
+
+        function productEdit(obj, shopOpen, goodsID) {
+            // 提示是否前往商城中心
+            var releaseUrl = $(obj).attr('data-url');
+            if (1 === parseInt(shopOpen)) {
+                confirmRelease(releaseUrl, 'edit', goodsID);
+                return false;
+            }
+
+            // 默认跳转路径
+            window.location.href = releaseUrl;
+        }
+
+        var neverAgainPrompt = {$neverAgainPrompt|default=0};
+        function confirmRelease(url, opt, goodsID) {
+            if (0 === parseInt(neverAgainPrompt)) {
+                var btn1 = '前往商城中心';
+                var btn2 = 'add' == opt ? '继续发布' : '继续编辑';
+                var msg = '如需体验更好的商品发布请使用商城中心管理商品 <br/>' + '<label><input type="checkbox" id="neverAgainPrompt"> 不再提示</label>';
+                layer.confirm(msg, {
+                    move: false,
+                    closeBtn: 3,
+                    title: '提示',
+                    btnAlign: 'r',
+                    btn: [btn1, btn2],
+                    shade: layer_shade,
+                    area: ['480px', '190px'],
+                    success: function () {
+                        $(".layui-layer-content").css('text-align', 'left');
+                    }
+                }, function (index) {
+                    // 是否确认永久不再提示
+                    ajaxNeverAgainPrompt();
+
+                    layer.close(index);
+                    // 前往商城中心
+                    var click_url = eyou_basefile + '?m=admin&c=ShopProduct&a=index';
+                    if ('add' == opt) click_url = eyou_basefile + '?m=admin&c=ShopProduct&a=add';
+                    if ('edit' == opt && goodsID) click_url = eyou_basefile + '?m=admin&c=ShopProduct&a=edit&id=' + goodsID;
+                    top.$('#Shop_home').attr('data-click', true).attr('data-click_url', click_url).click();
+                }, function (index) {
+                    // 是否确认永久不再提示
+                    ajaxNeverAgainPrompt();
+
+                    layer.close(index);
+                    // 默认跳转路径
+                    window.location.href = url;
+                });
+            } else {
+                window.location.href = url;
+            }
+        }
+
+        // 是否确认永久不再提示
+        function ajaxNeverAgainPrompt() {
+            neverAgainPrompt = true == $('#neverAgainPrompt').is(':checked') ? 1 : 0;
+            if (1 === parseInt(neverAgainPrompt)) {
+                $.ajax({
+                    url : "{:url('System/neverAgainPrompt')}",
+                    type: "POST",
+                    data: {neverAgainPrompt: neverAgainPrompt, _ajax: 1},
+                });
+            }
+        }
+        
         $(document).ready(function(){
             $('#searchForm select[name=flag]').change(function(){
                 $('#searchForm').submit();
             });
         });
 
-        function jump_is_release()
-        {
+        function jump_is_release() {
             var is_release = $('#searchForm input[name=is_release]').val();
             if (1 == is_release) {
                 $('#searchForm input[name=is_release]').val('');
@@ -31,8 +113,7 @@
             $('#searchForm').submit();
         }
 
-        function quick_release(is_arctype)
-        {
+        function quick_release(is_arctype) {
             if (is_arctype && 0 < is_arctype) {
                 //iframe窗
                 layer.open({
@@ -40,10 +121,10 @@
                     title: '快捷发布文档',
                     fixed: true, //不固定
                     shadeClose: false,
-                    shade: 0.3,
-                    maxmin: true, //开启最大化最小化按钮
-                    area: ['600px', '520px'],
-                    content: "//{$Request.host}{$Request.baseFile}?m=admin&c=Archives&a=release&iframe=2&lang={$Request.param.lang}",
+                    shade: layer_shade,
+                    maxmin: false, //开启最大化最小化按钮
+                    area: ['600px', '552px'],
+                    content: "//{$website_host}{$Request.baseFile}?m=admin&c=Archives&a=release&iframe=2&lang={$Request.param.lang}",
                     success: function(layero, index){
                         // var body = layer.getChildFrame('body', index);
                         // var gourl = $('.curSelectedNode').attr('href');
@@ -54,7 +135,7 @@
                     }
                 });
             } else {
-                layer.alert('至少要新增一个栏目！', {icon: 5, title: false, btn: ['进入栏目管理']}, function(index){
+                layer.alert('至少要新增一个栏目！', {shade:layer_shade, icon: 5, title: false, btn: ['进入栏目管理']}, function(index){
                     layer.close(index);
                     /*左侧菜单焦点定位*/
                     $('.eycms_cont_left .sub-menu a', window.parent.document).removeClass('on');

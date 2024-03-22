@@ -1,0 +1,32 @@
+<div class="fixed-bar">
+    <div class="item-title">
+        <a class="back_xin" href="{eq name='$info.group' value='seller'}{:url('Notice/seller_notice')}{else /}{:url('Notice/buyer_notice')}{/eq}" title="返回"><i class="iconfont e-fanhui"></i></a>
+        <div class="subject">
+            <h3>{if condition='$info.tpl_name'}{$info.tpl_name}{else/}{$info.tpl_title}{/if}</h3>
+            <h5></h5>
+        </div>
+        <ul class="tab-base nc-row">
+            {if condition="!empty($notice_sms_tpl)"}
+            <li><a href="{:url('Notice/notice_details_sms', ['send_type'=>$send_type])}" {if condition="in_array($Request.action, ['notice_details_sms'])"}class="tab current"{/if}><span>云短信{empty name="$php_servicemeal"} <i class="anchor-icon anchor-icon-biao" title="限基础授权以上可用"></i>{/empty}</span></a></li>
+            {/if}
+
+            {if condition="!empty($notice_smtp_tpl)"}
+            <li><a href="{:url('Notice/notice_details_smtp', ['send_type'=>$send_type])}" {if condition="in_array($Request.action, ['notice_details_smtp'])"}class="tab current"{/if}><span>电子邮箱</span></a></li>
+            {/if}
+
+            {if condition="$php_servicemeal < 1 || $php_servicemeal >= 2"}
+                {if condition="!empty($notice_applets_tpl)"}
+                <li><a href="{:url('Notice/notice_details_applets', ['send_type'=>$send_type])}" {if condition="in_array($Request.action, ['notice_details_applets'])"}class="tab current"{/if}><span>微信小程序{empty name="$php_servicemeal"} <i class="anchor-icon anchor-icon-biao-zy" title="限专业授权以上可用"></i>{/empty}</span></a></li>
+                {/if}
+
+                {if condition="!empty($notice_wechat_tpl)"}
+                <li><a href="{:url('Notice/notice_details_wechat', ['send_type'=>$send_type])}" {if condition="in_array($Request.action, ['notice_details_wechat'])"}class="tab current"{/if}><span>微信公众号{empty name="$php_servicemeal"} <i class="anchor-icon anchor-icon-biao-zy" title="限专业授权以上可用"></i>{/empty}</span></a></li>
+                {/if}
+            {/if}
+
+            {if condition="!empty($notice_notice_tpl)"}
+            <li><a href="{:url('Notice/notice_details_notice', ['send_type'=>$send_type])}" {if condition="in_array($Request.action, ['notice_details_notice'])"}class="tab current"{/if}><span>站内信</span></a></li>
+            {/if}
+        </ul>
+    </div>
+</div>

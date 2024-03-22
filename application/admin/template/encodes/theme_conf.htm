@@ -269,7 +269,7 @@
                 if(res.code == 1){
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                         _parent.top.window.location.reload();
                     });
                 }else{

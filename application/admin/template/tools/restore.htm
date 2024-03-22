@@ -2,10 +2,10 @@
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-10">
     {include file="tools/bar" /}
     <!-- 操作说明 -->
-    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+    <div id="explanation" class="explanation">
         <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
             <h4 title="提示相关设置操作时应注意的要点">提示</h4>
             <span title="收起提示" id="explanationZoom" style="display: block;"></span>
@@ -59,7 +59,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -182,9 +184,17 @@
                 return false;
             }
 
-            layer.confirm('此操作不可恢复，确认执行？', {
-                title: false,//'<font color="red">重要提示</font>',
-                btn: ['确定', '取消'] //按钮
+            layer.confirm('确认执行？', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['确定', '取消'] ,//按钮
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                }
             }, function () {
                 layer_loading('正在处理');
                 $('#change_System').submit();
@@ -201,8 +211,25 @@
     $(".db-import").click(function(){
         var url = $(this).attr('data-url');
         $('#form_tmp').attr('action', url);
-        layer_loading('正在处理');
-        $('#form_tmp').submit();
+        layer.confirm('恢复数据不可逆，确定执行？', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
+        }, function () {
+            layer_loading('正在处理');
+            $('#form_tmp').submit();
+            return false;
+        }, function (index) {
+            layer.closeAll();
+            return false;
+        });
     });
 </script>
 

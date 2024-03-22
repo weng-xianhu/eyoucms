@@ -14,7 +14,10 @@
             overflow: hidden;
         }
     </style>
-    <script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=Wq6eXvkq0DTxpvvwwMVG8ARF2bskGnzo&s=1"></script>
+    <script type="text/javascript" src="bdmap_ak.js"></script>
+    <script type="text/javascript">
+        document.write(unescape("%3Cscript src='https://api.map.baidu.com/api?v=2.0&ak="+bdmap_ak+"' type='text/javascript'%3E%3C/script%3E"));
+    </script>
 </head>
 
 <body onload="initMap();">

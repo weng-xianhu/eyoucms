@@ -4,7 +4,7 @@
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-10">
     <form class="form-horizontal" id="post_form" action="{:url('AdPosition/edit')}" method="post">
         <div class="ncap-form-default">
             <dl class="row">
@@ -36,7 +36,7 @@
                                             {eq name="$vo.media_type" value="1"}
                                                 <div class="images_upload">
                                                     <div class="ic">
-                                                        <div class='upimg' title="拖动修改排序" >
+                                                        <div class='upimg' title="拖动修改排序" onmouseover="upimgMouseover(this);" onmouseout="upimgMouseout(this);">
                                                             <div class='icaction' style="display: none" >
                                                                 <span class="load_images" onclick="Images('{$vo['litpic']}', 900, 600);">
                                                                     <a href="javascript:void(0);" style="color:white">
@@ -52,13 +52,13 @@
                                                             </div>
                                                             <div class='cover-bg' style="display: none" ></div>
                                                             <img id="{$vo['id']}_Id" src="{$vo['litpic']}"/>
-                                                            {eq name='$main_lang' value='$admin_lang'}
+                                                            {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
                                                                 <a class="delect" href="javascript:void(0);" onclick="ClearPicArr(this,'{$vo['litpic']}','{$vo['id']}');" title="删除">
                                                                 </a>
-                                                            {/eq}
+                                                            {/if}
                                                         </div>
                                                         
-                                                        <div class="load_input" id="{$vo['id']}_ShowInput" >
+                                                        <div class="load_input" id="{$vo['id']}_ShowInput" data-showOrHide="hide">
                                                             <input type="hidden" name="img_id[]" value="{$vo['id']}"/>
                                                             <span class="span_input">
                                                                 <input type="hidden" id="{$vo['id']}_Litpic" name="img_litpic[]" value="{$vo['litpic']}"/>
@@ -85,12 +85,12 @@
                                         {/volist}
                                         <div class="images_upload"></div>
                                     </div> 
-                                    {eq name='$main_lang' value='$admin_lang'}
+                                    {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
                                         <a href="javascript:void(0);" onClick="GetUploadify(30,'','allimg','imgupload_call_back');" class="img-upload b-img-upload mb15" title="点击上传">
                                             <div class="y-line"></div>
                                             <div class="x-line"></div>
                                         </a>
-                                    {/eq}
+                                    {/if}
                                     <input type="hidden" id="ImagesId">
                                 </td>
                             </tr>
@@ -101,7 +101,7 @@
                     <div class="images_upload_tpl none">
                         <div class="images_upload ic">
                             <div class="ic">
-                                <div class='upimg' title="拖动修改排序" >
+                                <div class='upimg' title="拖动修改排序" onmouseover="upimgMouseover(this);" onmouseout="upimgMouseout(this);">
                                     <div class='icaction' style="display: none">
                                         <span class="load_images" onclick="">
                                             <a href="javascript:void(0);" style="color: white">
@@ -117,7 +117,7 @@
                                     <a class="delect" href="javascript:void(0);" title="删除"></a>
                                 </div>
 
-                                <div class="load_input" >
+                                <div class="load_input" data-showOrHide="hide">
                                     <input type="hidden"/>
                                     <span class="span_input"> <input type="hidden"/> </span>
                                     <textarea placeholder="请输入标题..." style="height: 28px;"></textarea>
@@ -190,7 +190,7 @@
     var SelectedType = '{$field.type}';
     $(function() {
         // 新增时，广告类型默认选中图片类型
-        // $('#type'+SelectedType).attr('checked', 'checked');
+        // $('#type'+SelectedType).prop('checked', 'checked');
         // 新增时，默认显示图片上传
         $('#1615775137_'+SelectedType).show();
         // 多媒体类型 && 广告内容不为空 则执行显示 否则 执行隐藏
@@ -271,7 +271,7 @@
                         title: false,
                         fixed: true, //不固定
                         shadeClose: false,
-                        shade: 0.3,
+                        shade: layer_shade,
                         area: ['80%', '80%'],
                         content: PreviewVideo
                     });
@@ -625,7 +625,6 @@
 </script>
 
 <script type="text/javascript">
-    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     // 勾选新窗口打开链接
     function CheckedTarget(t){
         if ($(t).is(':checked')) {
@@ -634,17 +633,17 @@
             $(t).parent().find('input[name="img_target[]"]').val(0);
         }
     }
-
     // 鼠标事件，加载查看大图和更新图片
-    $(document).ready(function(){
-       $(".upimg").live('mouseover', function(){
-            $(this).find('div.icaction').show();
-            $(this).find('div.cover-bg').show();
-       }).live('mouseout', function(){
-            $(this).find('div.icaction').hide();
-            $(this).find('div.cover-bg').hide();
-       });
-    });
+    function upimgMouseover(obj)
+    {
+        $(obj).find('div.icaction').show();
+        $(obj).find('div.cover-bg').show();
+    }
+    function upimgMouseout(obj)
+    {
+        $(obj).find('div.icaction').hide();
+        $(obj).find('div.cover-bg').hide();
+    }
 
     // 检测广告名称是否存在重复
     function DetectionTitleRepeat(obj) {
@@ -687,7 +686,7 @@
             success : function(res){
                 layer.closeAll();
                 if (res.code == 1) {
-                    layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                    layer.msg(res.msg, {icon: 1, shade: layer_shade, time: 1000}, function(){
                         window.location.reload();
                     });
                 } else {
@@ -721,12 +720,18 @@
 
     // 显示信息输入框
     function ShowInput(id) {
-       $("#"+id+"_ShowInput").toggle('show'); 
+        var obj = $("#"+id+"_ShowInput");
+        var showOrHide = obj.attr('data-showOrHide');
+        if ('hide' == showOrHide) {
+            obj.show().attr('data-showOrHide', 'show');
+        } else {
+            obj.hide().attr('data-showOrHide', 'hide');
+        }
     }
 
     // 隐藏信息输入
     function HideInput(id) {
-        $("#"+id+"_ShowInput").toggle('show');
+        $("#"+id+"_ShowInput").hide().attr('data-showOrHide', 'hide');
     }
 
     // 上传图集相册回调函数
@@ -782,7 +787,7 @@
                 $(obj).parent().parent().parent().remove(); // 删除完服务器的, 再删除 html上的图片
                 $.ajax({
                     type:'POST',
-                    url:"{:url('Uploadify/delupload')}",
+                    url:"{:url('Uploadimgnew/delupload')}",
                     data:{action:"del", filename:path,_ajax:1},
                     success:function(){}
                 }); 
@@ -799,6 +804,7 @@
         layer.open({
             title: '代码调用',
             type: 1,
+            shade: layer_shade,
             skin: 'layui-layer-demo',
             area: ['480px', '260px'], //宽高
             content: contentdiv
@@ -815,7 +821,7 @@
         }
     });
     //因为他们要拖动，所以尽量设置他们的文字不能选择。  
-    $( ".sort-list" ).disableSelection();
+    // $( ".sort-list" ).disableSelection();
 </script>
 
 {include file="public/footer" /}

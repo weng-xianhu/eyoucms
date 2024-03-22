@@ -1,10 +1,10 @@
 {include file="public/layout" /}
 
-<body class="bodystyle" style=" padding:0; overflow: hidden;">
-<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<body class="bodystyle">
+<div id="toolTipLayer"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-10">
     <form class="form-horizontal" id="editpostForm">
         <input type="hidden" name="id" value="{$tag.id}">
         <div class="ncap-form-default">
@@ -27,7 +27,7 @@
                     <div class="input-file-show div_litpic_local" {neq name="$tag.is_remote" value="0"}style="display: none;"{/neq}>
                         <span class="show">
                             <a id="img_a" target="_blank" class="nyroModal" rel="gal" href="{$tag.litpic_local|default='javascript:void(0);'}">
-                                <i id="img_i" class="fa fa-picture-o" {notempty name="$tag.litpic_local"}onmouseover="layer_tips=layer.tips('<img src={$tag.litpic_local} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                                <i id="img_i" class="fa fa-picture-o" {notempty name="$tag.litpic_local"}onmouseover="layer_tips=layer.tips('<img src={$tag.litpic_local} class=\'layer_tips_img\'>',this,{tips: [3, '#fff'],skin:'layer-yourskin-mt0'});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
                             </a>
                         </span>
                         <span class="type-file-box">
@@ -60,7 +60,7 @@
                     <label for="tag_seo_keywords">SEO关键词</label>
                 </dt>
                 <dd class="opt">
-                    <textarea rows="5" cols="60" name="tag_seo_keywords" id="tag_seo_keywords" style="height: 40px;">{$tag.seo_keywords}</textarea>
+                    <textarea rows="5" cols="60" name="tag_seo_keywords" id="tag_seo_keywords" style="height: 20px;">{$tag.seo_keywords}</textarea>
                     <p class="notic">标签调用方法：{literal}{$eyou.field.seo_keywords}{/literal}</p>
                 </dd>
             </dl>
@@ -96,7 +96,7 @@
                 if (1 == res.code) {
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {icon: 1, shade: 0.1, time: 1000}, function(){
                         _parent.window.location.reload();
                     });
                 } else {

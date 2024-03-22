@@ -7,35 +7,31 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
         <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-        {eyou:static file="users/skin/css/bootstrap.min.css"/}
         {eyou:static file="users/skin/css/basic.css"/}
         {eyou:static file="users/skin/css/eyoucms.css"/}
-        {eyou:static file="users/skin/css/shop.css"/}
-        {eyou:static  file="users/skin/css/tb_style.css"/}
         <!-- 新样式 2020-12-8 -->
         {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/userfont/iconfont.css" /}
         {eyou:static file="users/skin/css/e-user.css" /}
         {eyou:include file="users/skin/css/diy_css.htm"/}
-
         {eyou:static file="/public/static/common/js/jquery.min.js"/}
         {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
         {eyou:static file="/public/static/common/js/tag_global.js"/}
+        {eyou:static file="/public/static/common/js/mobile_global.js"/}
     </head>
 
     <body>
-        <!-- 头部信息 -->
         <div class="ey-header-status">
             <div class="header-status-l">
-                <a href="javascript:history.go(-1)"><i class="el-icon-arrow-left"></i></a>
+                <a href="javascript:history.go(-1);"><i class="el-icon-arrow-left"></i></a>
             </div> 
             <div class="header-status-m">评价商品</div> 
             <div class="header-status-r">
                 <a href="{eyou:url link='user/Users/index' /}"><i class="el-icon-user"></i></a>
             </div>
         </div>
-        <!-- 头部信息结束 -->
-
         <div class="h50"></div>
+
         <div class="ey-container">
             <form id="post_form">
                 <input type="hidden" name="order_id" value="{$eyou.field.order_id}" />
@@ -48,20 +44,24 @@
                         <div class="column-title-l">订单信息</div>
                         <div class="column-title-r">订单号：{$eyou.field.order_code}</div> 
                     </div>
-                    <div class="mt20 mb10 order-goods goods-con">
+                    <div class="mb10 order-goods goods-con">
                         <div class="goods-item">
                             <div class="item-main">
                                 <div class="item-con">
                                     <div class="item-con-l">
-                                        <a href="{$eyou.field.arcurl}"><img src="{$eyou.field.litpic}"></a>
+                                        <a href="{$eyou.field.arcurl}"><img src="{$eyou.field.litpic}" style="width: 75px; height: 75px;"></a>
                                     </div>
                                     <div class="item-con-m">
-                                        <a href="{$eyou.field.arcurl}"> {$eyou.field.product_name} </a>
-                                        <div class="info mt5"> {$eyou.field.spec_value} </div>
-                                    </div>
-                                    <div class="item-con-r">
-                                        <span class="price_flag">￥</span><span>{$eyou.field.product_price}</span>
-                                        <p class="number">x{$eyou.field.num}</p>
+                                        <a href="{$eyou.field.arcurl}">{$eyou.field.product_name}</a>
+                                        <div class="f12 fc9">
+                                            {eyou:volist name='$eyou.field.product_spec_list' id='spec'}
+                                                {$spec.value}&nbsp;
+                                            {/eyou:volist}
+                                        </div>
+                                        <div class="price-info mt5">
+                                            <span class="users_price"><i class="f12">￥</i>{$eyou.field.product_price}</span>
+                                            <span class="product_num"><i class="f12">x</i>{$eyou.field.num}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -71,35 +71,30 @@
 
                 <div class="el-row p10 bgfff mt10">
                     <div class="column-title"><div class="column-title-l">评价信息</div> <div class="column-title-r"></div></div>
-                    <div class="mt20 mb10 order-goods goods-con">
+                    <div class="mb10 order-goods goods-con">
                         <div class="item-from-flex">
-                            <div class="item-tit"> 评价评分：</div>
+                            <div class="item-tit">评价评分：</div>
                             <div class="item-con">
-                                <label class="radio-label">
-                                    <input type="radio" class="radio" name="total_score" value="1" checked="checked">
-                                    <span class="check-mark"></span><span class="text">好评</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" class="radio" name="total_score" value="2">
-                                    <span class="check-mark"></span><span class="text">中评</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" class="radio" name="total_score" value="3">
-                                    <span class="check-mark"></span><span class="text">差评</span>
-                                </label>
+                                <div class="ey-start-ment curpoin">
+                                    <input type="hidden" name="newCommnet" value="1">
+                                    <input type="hidden" name="total_score" id="total_score" value="5">
+                                    <i class="iconfont icon-xingxing active" onclick="totalScore(0);"></i>
+                                    <i class="iconfont icon-xingxing active" onclick="totalScore(1);"></i>
+                                    <i class="iconfont icon-xingxing active" onclick="totalScore(2);"></i>
+                                    <i class="iconfont icon-xingxing active" onclick="totalScore(3);"></i>
+                                    <i class="iconfont icon-xingxing active" onclick="totalScore(4);"></i>
+                                </div>
                             </div>
                         </div>
 
                         <div class="item-from-flex">
-                            <div class="item-tit"> 评价内容：</div>
                             <div class="item-con">
-                                <textarea rows="5" cols="35" name="content" class="fs16" style="height: 100%; width: 100%; font-size: 16px;" maxlength="400" onkeyup="setval(this, '400')" placeholder="商品是否给力？快分享你的购买心得吧~"></textarea>
+                                <textarea rows="5" cols="35" name="content" class="fs16" style="height: 100%; width: 100%; font-size: 16px;" maxlength="400" onkeyup="setval(this, '400')" placeholder="请在此处输入您的评价"></textarea>
                             </div>
                         </div>
-                        <div style="text-align: right;"> <b id="CommentContentWordCount">400</b> / 400</div>
+                        <div class="fcb f12" style="text-align: right;"> <i id="CommentContentWordCount">400</i> / 400</div>
 
                         <div class="item-from-flex">
-                            <div class="item-tit"> 评价晒单：</div> 
                             <div class="item-con ">
                                 <div class="images_upload_main" id="tab_dl_upload_img">
                                     <a href="javascript:void(0);" onclick="GetUploadify(6, '', 'allimg', 'UploadImgCallBack', '', '评价晒单', 1);" class="el-button el-button--primary is-plain el-button--small">
@@ -107,9 +102,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="item-from-flex" id="dl_upload_img" data-numlimit="6">
-                            <div class="item-flex wb25"></div>
-                            <div class="item-flex-r wb75 " style="margin-left: 1px;">
+                        <div class="item-from-flex border-b-no" id="dl_upload_img" data-numlimit="6">
+                            <div class="item-con" style="margin-left: 1px;">
                                 <div class="images_upload_main" id="tab_dl_upload_img">
                                     <div class="sort-list ui-sortable">
                                         <div class="fieldext_upload ui-sortable-handle" style="display: none;"></div>
@@ -154,6 +148,20 @@
         }
         var num = sum - len;
         num <= 0 ? textarea.text(0): textarea.text(num);  //防止出现负数
+    }
+
+    // 评分设置
+    function totalScore(score) {
+        // 删除所有评分选中效果
+        $('.icon-xingxing').removeClass('active');
+        // 追加当选评分
+        $('.icon-xingxing').each(function(idx, ele) {
+            $('.icon-xingxing').eq(idx).addClass('active');
+            if (idx == score) {
+                $('#total_score').val(score+1);
+                return false;
+            }
+        });
     }
 
     // 上传多图回调函数

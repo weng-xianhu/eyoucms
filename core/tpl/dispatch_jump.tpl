@@ -17,8 +17,9 @@
 		.status-ico-error{background-position: -97px 0}
         @media (max-width: 767px) {.system-message{width: 90%;box-shadow:none!important;}}
     </style>
-    <script type="text/javascript" src="__STATIC__/common/js/jquery.tools.min.js"></script>
+    <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version|default='v1.6.4'}"></script>
     <script type="text/javascript">
+        var __root_dir__ = "__ROOT_DIR__";
         $(function(){
             var height2=$('.system-message').height();
             var height1=$(window).height();
@@ -33,11 +34,23 @@
         {switch name="$code"}
             {case value="1"}
             <div class="status-ico status-ico-ok"></div>
-            <p class="success">{$msg|strip_tags=###}</p>
+            <p class="success">
+                {if condition="stristr($msg, '__html__')"}
+                    {$msg|str_replace='__html__','',###}
+                {else /}
+                    {$msg|strip_tags=###}
+                {/if}
+            </p>
             {/case}
             {case value="0"}
             <div class="status-ico status-ico-error"></div>
-            <p class="error">{$msg|strip_tags=###}</p>
+            <p class="error">
+                {if condition="stristr($msg, '__html__')"}
+                    {$msg|str_replace='__html__','',###}
+                {else /}
+                    {$msg|strip_tags=###}
+                {/if}
+            </p>
             {/case}
         {/switch}
         <p class="jump">页面自动 <a id="href" href="{$url}" target="{empty name='$target'}_self{else /}{$target}{/empty}">跳转</a> 等待时间：<b id="wait">{$wait}</b>
@@ -60,6 +73,21 @@
                 };
             }, 1000);
         })();
+
+        // 保存后，生成首页
+        function uphtml_index()
+        {
+            $.ajax({
+                url:__root_dir__+"/index.php?clear=1",
+                type:'GET',
+                dataType:'html',
+                data:{},
+                success:function(res){
+
+                }
+            });
+        }
+        uphtml_index();
     </script>
 </body>
 </html>

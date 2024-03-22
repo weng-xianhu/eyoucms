@@ -278,6 +278,10 @@ a:focus, a:hover {
 	text-decoration:underline;
 	color:#89bceb
 }
+.login_type a {
+	text-decoration:none;
+	color:#62a8ea
+}
 a:focus {
 	outline:5px auto -webkit-focus-ring-color;
 	outline-offset:-2px
@@ -19790,40 +19794,6 @@ img.imgloading:not([src*="base64"]), img.slick-loading:not([src*="base64"]) {
 object-fit:scale-down;
 background:#fff
 }
-/*编辑器*/
-.met-editor {
-	width:100%;
-	max-width:100%;
-	font-size:16px;
-	font-weight:300;
-	line-height:1.8
-}
-.met-editor p {
-	margin-bottom:.8em
-}
-.met-editor img {
-	max-width:100%!important;
-	vertical-align:top
-}
-.met-editor img[src]:not(.imgloading) {
-height:auto!important
-}
-.met-editor .table-saw {
-	overflow-x:auto
-}
-.met-editor .metvideobox, .met-editor video, .met-editor .metvideo, .met-editor iframe, .met-editor embed {
-	max-width:100%!important;
-	margin:auto;
-	display:block
-}
-.met-editor .lg-item-box {
-	display:inline-block
-}
-@media (max-width:767px) {
- .met-editor {
-font-size:14px
-}
-}
 /*表格*/
 .table {
 	margin-bottom:0;
@@ -19939,13 +19909,6 @@ padding:5px 10px
 .form-inline .form-group {
 	margin-right:0
 }
-/* 返回顶部 */
-.met-scroll-top {
-	position:fixed;
-	right:10px;
-	bottom:10px;
-	z-index:10
-}
 /*其它*/
 .nav-tabs .nav-link {
 	color:#333
@@ -19962,13 +19925,10 @@ pre {
 .clockpicker-popover .popover-title {
 	font-weight:normal!important
 }
-.met-fixed, .fixed-b-l {
+.fixed-b-l {
 	position:fixed;
 	left:0;
 	z-index:1000
-}
-.met-fixed {
-	top:0
 }
 .fixed-b-l {
 	bottom:0
@@ -20427,67 +20387,8 @@ white-space:normal
 display:none
 }
 }
-/*应用侧栏*/
-.met-sidebar-nav .list-group-item a {
-	color:#76838f
-}
-.met-sidebar-nav .list-group-item a:hover {
-	color:#000;
-	text-decoration:none
-}
-.met-sidebar-nav .list-group-item.active a {
-	color:#62a8ea
-}
-/*public/ui/v2/static/css/template.css*/
-@charset "utf-8";
-/*模板公用样式*/
-/*图片画廊皮肤*/
-.met-lightgallery .lg-backdrop, .met-lightgallery .lg-toolbar {
-	background:#fff
-}
-.met-lightgallery .lg-actions .lg-icon {
-	padding:10px 0;
-	background:rgba(255, 255, 255, 0.5)
-}
-.met-lightgallery .lg-actions .lg-icon:before, .met-lightgallery .lg-actions .lg-icon:after {
-	content:''
-}
-.met-lightgallery .lg-actions .lg-icon i {
-	font-size:40px
-}
-.met-lightgallery .lg-sub-html {
-	background:rgba(255, 255, 255, 0.7)
-}
-.met-lightgallery .lg-toolbar.opacity0 {
-	-webkit-transform:translateY(-50px);
-	-ms-transform:translateY(-50px);
-	transform:translateY(-50px)
-}
-.met-lightgallery .lg-outer {
-	z-index:1602;
-	background:#fff
-}
-.met-lightgallery .lg-outer.lg-pull-caption-up.lg-thumb-open .lg-sub-html {
-	bottom:84px
-}
-.met-lightgallery .lg-outer .lg-thumb-outer, .met-lightgallery .lg-outer .lg-toogle-thumb {
-	background:#fff
-}
-.met-lightgallery .lg-outer .lg-thumb-outer {
-	padding:0 10px
-}
-.met-lightgallery .lg-outer .lg-thumb-outer .lg-thumb-item {
-	margin-bottom:0
-}
-.met-lightgallery .lg-outer .lg-thumb-outer .lg-thumb-item.active, .met-lightgallery .lg-outer .lg-thumb-outer .lg-thumb-item:hover {
-	border-color:#62a8ea
-}
-.met-lightgallery .lg-toolbar .lg-icon:hover, .met-lightgallery .lg-actions .lg-next:hover, .met-lightgallery .lg-actions .lg-prev:hover, .met-lightgallery .lg-outer .lg-toogle-thumb:hover {
-	color:#2a333c
-}
-.met-lightgallery .lg-sub-html {
-	color:#5e7387
-}
+
+
 /*swiper水平滚动导航*/
 .swiper-navtab.swiper-container-horizontal .swiper-scrollbar {
 	width:100%;
@@ -20542,26 +20443,7 @@ display:none
 	width:auto!important;
 	max-width:100%!important
 }
-/*内页侧栏*/
-.met-sidebar {
-	margin-left:30px
-}
-@media (max-width:991px) {
- .met-sidebar {
-margin-left:0px;
-margin-top:20px
-}
-}
-@media (max-width:767px) {
- .met-sidebar {
-margin-top:15px
-}
-}
-.met-sidebar >:not(:first-child) {
-margin:20px 0 0;
-padding:20px 0 0;
-border-top:1px solid #f0f2f5
-}
+
 .leftsidebar {
 	margin-left:0!important;
 	margin-right:30px!important

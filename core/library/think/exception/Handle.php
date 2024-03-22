@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006-2016 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: yunwuxin <448901948@qq.com>
+// +----------------------------------------------------------------------
 
 namespace think\exception;
 
@@ -52,7 +61,7 @@ class Handle
                 $log .= "\r\n" . $exception->getTraceAsString();
             }
 
-            Log::record($log, 'error');
+            App::$debug && Log::record($log, 'error');
         }
     }
 
@@ -181,10 +190,12 @@ class Handle
         extract($data);
         
         /*调试模式与运营模式的错误页面不同 by 小虎哥*/
-        if(true == Config::get('app_debug'))
-        include Config::get('exception_tmpl');
-        else 
-        include Config::get('error_tmpl');	
+        if (true === Config::get('app_debug') || defined('BIND_MODULE')) {
+            include Config::get('exception_tmpl');
+        }
+        else {
+            include Config::get('error_tmpl');	
+        }
         /*--end*/
         
         // 获取并清空缓存

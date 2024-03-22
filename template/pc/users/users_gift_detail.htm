@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>积分商品详情-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm" /}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="users/skin/js/global.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    <style>
+        
+        .b_box{display: flex;justify-content: left;margin: 20px;color: #666666;padding: 20px 0 30px 0;border-bottom: 1px solid #e8e8e8;}
+        .b_img{    display: table-cell;position: relative;width: 150px;height: 150px;margin-right: 20px;overflow: hidden;text-align: center;vertical-align: middle;border: 1px solid #eee;}
+        .b_img img{position: absolute;top: 50%;left: 50%;transform: translate(-50%,-50%);max-width: 100%;max-height: 100%;}
+        .b_div{display: flex;flex-flow: column; justify-content: space-around;}
+        .flex-content{display: flex;flex-direction: row;align-items: center;justify-content: left;font-size: 16px;}
+        .flex-title{margin-right: 10px;}
+        .flex-val{}
+        a.okgo{display: flex;flex-direction: row;align-items: center;justify-content: center;text-align: center;margin-top: 8px;height: 30px;width: 110px;color: #fe690f;font-size: 14px;border: solid 1px #fe690f;cursor: pointer;}
+        a.okgo:hover{ background:#fe690f; color:#fff; }
+        a.nones{color: #ccc;border: solid 1px #ccc; cursor:default;}
+        .giftcontent{
+            margin-bottom: 20px;
+            padding: 30px;
+        }
+        .giftcontent img {
+            max-width:100%!important;
+        }
+    </style>
+</head>
+<body>
+<div class="b_box">
+    <div class="b_img"><img src="{$field.litpic}" ></div>
+    <div class="b_div">
+        <div class="flex-content">
+            <div class="flex-title">名称:</div>
+            <div class="flex-val">{$field.giftname}</div>
+        </div>
+        <div class="flex-content">
+            <div class="flex-title">类型:</div>
+            <div class="flex-val">
+                {eyou:if condition="$field.type eq -1"}
+                实物
+                {else /}
+                虚拟
+                {/eyou:if}
+            </div>
+        </div>
+        <div class="flex-content">
+            <div class="flex-title">库存:</div>
+            <div class="flex-val">{$field.stock}</div>
+        </div>
+        <div class="flex-content">
+            <div class="flex-title">价格:</div>
+            <div class="flex-val" style="color: #fe690f;">
+                {$field.score}{$score_name}
+            </div>
+        </div>
+        <div>
+            {eyou:if condition="$field.score elt $users.scores"}
+                {eq name='$field.type' value='-1'}
+                <a href="javascript:void(0)" class="okgo" data-url="{:url('user/Memgift/users_gift_shiwu',['gift_id'=>$field.gift_id])}" onclick="jumpInfo(this)">立即兑换</a>
+                {else/}
+                <a href="javascript:void(0)" class="okgo" data-url="{:url('user/Memgift/users_gift_vip',['gift_id'=>$field.gift_id])}" onclick="jumpVip(this)">立即兑换</a>
+                {/eq}
+            {else /}
+                <a class="okgo nones">{$score_name}不足</a>
+            {/eyou:if}
+
+        </div>
+    </div>
+</div>
+<div class="giftcontent">
+    {$field.content|htmlspecialchars_decode}
+</div>
+<script type="text/javascript">
+    //兑换实物
+    function jumpInfo(obj){
+        var url = $(obj).data('url');
+        var index = layer.open({
+            type: 2,
+            id: 'iframe_goinfo',
+            title: '填写收货信息',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: [0.3,'#000'],
+            maxmin: false, //开启最大化最小化按钮
+            closeBtn: 1,
+            area: ['388px','288px'],
+            content: url
+        });
+    }
+    //兑换会员
+    function jumpVip(obj) {
+        var url = $(obj).data('url');
+        layer.confirm('确定要兑换商品？', {
+            title: false,
+            closeBtn: false
+        }, function() {
+            $.ajax({
+                url: url,
+                type: 'POST',
+                dataType: 'JSON',
+                data: {
+                    long: 0
+                },
+                success: function(res) {
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {
+                            icon: 1,
+                            time: 1000
+                        }, function() {
+                            location.href = res.url;
+                        });
+                    } else if (res.code == 2) {
+                        layer.confirm(res.msg, {
+                            btn: ['继续兑换', '取消'] //按钮
+                        }, function() {
+                            $.ajax({
+                                url: url,
+                                type: 'POST',
+                                dataType: 'JSON',
+                                data: {
+                                    long: 1
+                                },
+                                success: function(res) {
+                                    if (1 == res.code) {
+                                        layer.msg(res.msg, {
+                                            icon: 1,
+                                            time: 1000
+                                        }, function() {
+                                            location.href = res.url;
+                                        });
+                                    } else {
+                                        layer.msg(res.msg, {
+                                            icon: 2,
+                                            time: 2000
+                                        });
+                                    }
+                                },
+                                error: function(e) {
+                                    layer.closeAll();
+                                    layer.alert(e.responseText, {
+                                        icon: 5,
+                                        title: false
+                                    });
+                                }
+                            })
+                        });
+                    } else {
+                        layer.msg(res.msg, {
+                            icon: 2,
+                            time: 2000
+                        });
+                    }
+                },
+                error: function(e) {
+                    layer.closeAll();
+                    layer.alert(e.responseText, {
+                        icon: 5,
+                        title: false
+                    });
+                }
+            })
+        }, function(index) {
+            layer.closeAll(index);
+        });
+    }
+</script>
+
+</body>
+</html>
+

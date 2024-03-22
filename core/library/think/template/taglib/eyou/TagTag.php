@@ -35,20 +35,27 @@ class TagTag extends Base
         $aid = !empty($aid) ? $aid : $this->aid;
         $getall = intval($getall);
         $result = false;
-        $condition = array();
+        $condition = [];
+
+        $args = [$aid, $getall, $typeid, $row, $sort, $type, self::$home_lang];
+        $cacheKey = 'taglib-'.md5(__CLASS__.__FUNCTION__.json_encode($args));
+        $result = cache($cacheKey);
+        if (!empty($result) && 'rand' != $sort) {
+            return $result;
+        }
 
         if ($getall == 0 && $aid > 0) {
-            $condition['aid'] = array('eq', $aid);
+            $condition['a.aid'] = $aid;
             $result = Db::name('taglist')
-                ->field('*, tid AS tagid')
+                ->alias('a')
+                ->field('a.*, a.tid AS tagid')
                 ->where($condition)
-                ->where('lang', $this->home_lang)
                 ->limit($row)
                 ->select();
 
         } else {
             /*多语言*/
-            if (!empty($typeid)) {
+            if (!empty($typeid) && self::$lang_switch_on) {
                 $typeid = model('LanguageAttr')->getBindValue($typeid, 'arctype');
             }
             /*--end*/
@@ -58,7 +65,7 @@ class TagTag extends Base
                 $tid_list = Db::name('taglist')
                     ->where([
                         'typeid'    => ['IN', $typeid],
-                        'lang'      => $this->home_lang,
+                        'lang'      => self::$home_lang,
                     ])
                     ->group('tid')
                     ->column('tid');
@@ -69,27 +76,50 @@ class TagTag extends Base
             else if($sort == 'month') $orderby=' a.monthcc DESC ';
             else if($sort == 'hot') $orderby=' a.count DESC ';
             else if($sort == 'total') $orderby=' a.total DESC ';
-            else $orderby = 'a.add_time DESC  ';
+            else if($sort == 'aid') $orderby=' a.id ASC ';
+            else $orderby = 'a.id DESC  ';
 
-            $condition['b.arcrank'] = ['gt', -1];
-            $condition['a.lang'] = $this->home_lang;
+            $condition['a.lang'] = self::$home_lang;
 
             $result = Db::name('tagindex')
                 ->alias('a')
-                ->field('a.*, a.id AS tagid')
-                ->join('taglist b','a.id=b.tid')
+                ->field('a.*, a.id AS tagid, 0 as arcrank')
                 ->where($condition)
-                ->group('a.id')
                 ->orderRaw($orderby)
                 ->limit($row)
                 ->select();
+            if (!empty($result)) {
+                $tid_arr = get_arr_column($result, 'id');
+                $result_2 = Db::name('taglist')
+                    ->field('tid,arcrank')
+                    ->where(['tid'=>['IN', $tid_arr]])
+                    ->order('arcrank asc')
+                    ->getAllWithIndex('tid');
+                foreach($result as $key => $val){
+                    $val['arcrank'] = !empty($result_2[$val['id']]) ? $result_2[$val['id']]['arcrank'] : 0;
+                    $result[$key] = $val;
+                }
+            }
         }
 
+        $city_switch_on = config('city_switch_on');
+        $domain = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${1}${3}${4}', tpCache('web.web_basehost'));
         foreach ($result as $key => $val) {
-            $val['link'] = tagurl('home/Tags/lists', array('tagid'=>$val['tagid']));
+            if (is_numeric($val['arcrank']) && 0 > $val['arcrank']) {
+                unset($result[$key]);
+                continue;
+            }
+            if (empty($city_switch_on)) {
+                $link = tagurl('home/Tags/lists', array('tagid'=>$val['tagid']));
+            } else {
+                $link = tagurl('home/Tags/lists', array('tagid'=>$val['tagid']), true, $domain);
+            }
+            $val['link'] = $link;
             $val['target'] = ' target="_blank" ';
             $result[$key] = $val;
         }
+
+        cache($cacheKey, $result, null, 'taglist');
 
         return $result;
     }

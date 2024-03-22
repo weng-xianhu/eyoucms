@@ -39,7 +39,7 @@ return array (
   'data' => 
   array (
     'name' => 'data',
-    'type' => 'text',
+    'type' => 'longtext',
     'notnull' => false,
     'default' => NULL,
     'primary' => false,
@@ -121,6 +121,24 @@ return array (
   array (
     'name' => 'update_time',
     'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'quick_sort' => 
+  array (
+    'name' => 'quick_sort',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '100',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'checked' => 
+  array (
+    'name' => 'checked',
+    'type' => 'tinyint(4)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

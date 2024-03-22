@@ -45,7 +45,7 @@
                 success: function(res){
                     layer.closeAll();
                     if (res.code == 1) {
-                        parent.layer.msg(res.msg, {shade: 0.3, time: 500}, function(){
+                        parent.layer.msg(res.msg, {shade: layer_shade, time: 500}, function(){
                             parent.window.location.reload();
                             parent.layer.close(parentObj);
                         });

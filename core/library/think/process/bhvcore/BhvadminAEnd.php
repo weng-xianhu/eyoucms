@@ -51,7 +51,7 @@ class BhvadminAEnd {
         $md5Str = md5('~'.base64_decode(\think\Config::get($keys)).'~');
 
         if ($tokenStr != $md5Str) {
-            $tmp = 'I+aguOW/g+eoi+W6j+iiq+evoeaUue+8jOivt+WwveW/q+i/mOWOn++8jOaEn+iwouS6q+eUqOW8gOa6kOWFjei0uUV5b3VDbXPkvIHkuJrlu7rnq5nns7vnu58uIw==';
+            $tmp = 'I+aguOW/g+eoi+W6j+iiq+evoeaUue+8jOivt+WwveW/q+i/mOWOn++8jOaEn+iwouS6q+eUqOW8gOa6kEV5b3VDbXPkvIHkuJrlu7rnq5nns7vnu58uIw==';
             $msg = base64_decode($tmp);
             $msg = trim($msg, '#');
             die($msg);

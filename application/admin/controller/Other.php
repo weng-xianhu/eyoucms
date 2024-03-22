@@ -142,6 +142,7 @@ class Other extends Base
         if (IS_POST) {
             $post = input('post.');
             if(!empty($post['id'])){
+                $post['id'] = intval($post['id']);
                 $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
                 $litpic = '';
                 if ($is_remote == 1) {
@@ -314,6 +315,7 @@ class Other extends Base
         if (IS_POST) {
             $post = input('post.');
             if(!empty($post['id'])){
+                $post['id'] = intval($post['id']);
                 $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
                 $litpic = '';
                 if ($is_remote == 1) {

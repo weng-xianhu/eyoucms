@@ -1,0 +1,109 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width: auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;box-shadow:none;">
+    <!-- 操作说明 -->
+    <div id="explanation" class="explanation">
+        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+        </div>
+        <ul>
+            <li>安全验证：请设置并记住安全问题/答案，部分功能将进行答案验证。</li>
+        </ul>
+    </div>
+    <form class="form-horizontal" id="post_form" method="post" onsubmit="return false;">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="ask"><em>*</em>安全问题列表</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <select name="ask" id="ask" class="w210">
+                        <option value="-1">请选择…</option>
+                        {volist name='$security_askanswer_list' id='vo'}
+                        <option value="{$key}">{$vo}</option>
+                        {/volist}
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="answer"><em>*</em>设置答案内容</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <input type="text" name="answer" value="" id="answer" class="w200" autocomplete="off">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <div class="bot" style="padding-bottom:0px;">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+    $("body").bind('keydown', function(event){
+        if(event.keyCode ==13){
+            checkForm();
+        }
+    });
+
+    var security_ask = '';
+    $(function(){
+        $('#ask').change(function(){
+            $('input[name=answer]').focus();
+            security_ask = $(this).find("option:selected").text();
+        });
+    });
+
+    function checkForm()
+    {
+        if($('select[name=ask]').val() < 0){
+            showErrorMsg('请选择安全问题…');
+            $('select[name=ask]').focus();
+            return false;
+        }
+        if($('input[name=answer]').val() == ''){
+            showErrorMsg('答案内容不能为空！');
+            $('input[name=answer]').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            url: "{:url('Security/second_verify_add', ['_ajax'=>1])}",
+            type: 'POST',
+            dataType: 'JSON',
+            data: $('#post_form').serialize(),
+            success: function(res) {
+                layer.closeAll();
+                if (res.code == 1) {
+                    var _parent = parent;
+                    var documentOjb = window.parent.document;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.1, time: 1000}, function(){
+                        $("#second_verify_add", documentOjb).hide();
+                        $("#second_verify_edit", documentOjb).show();
+                        $("#is_ask_add_edit", documentOjb).val('edit');
+                        $("#security_ask_content", documentOjb).val(security_ask);
+                    });
+                } else {
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

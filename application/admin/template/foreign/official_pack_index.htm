@@ -1,0 +1,117 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page min-hg-c-10">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <ul class="tab-base nc-row">
+                <li>
+                    <a href="{:url('Foreign/official_pack_index', ['type'=>1])}" {if condition="$type == 1"}class=" current"{/if}><span>列表分页</span></a>
+                </li>
+                <li>
+                    <a href="{:url('Foreign/official_pack_index', ['type'=>2])}" {if condition="$type == 2"}class=" current"{/if}><span>留言提示</span></a>
+                </li>
+                <li>
+                    <a href="{:url('Foreign/official_pack_index', ['type'=>3])}" {if condition="$type == 3"}class=" current"{/if}><span>更多变量</span></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="flexigrid">
+        <form class="form-horizontal" id="post_form" method="post">
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th abbr="article_time" axis="col6" class="w150">
+                                <div class="tl text-l10">变量名</div>
+                            </th>
+                            <th abbr="article_time" axis="col6" class="w350">
+                                <div class="tl text-l10">中文默认值</div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="">
+                                <div class="tl text-l10">英语变量值</div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="bDiv" style="height: auto;">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%;">
+                        <tbody>
+                            {volist name="$list" id="vo"}
+                            <tr>
+                                <td class="">
+                                    <div class="w150 tl text-l10">
+                                        {$key}
+                                    </div>
+                                </td>
+                                <td class="">
+                                    <div class="w350 tl text-l10">
+                                        {$vo['cn']['value']}
+                                    </div>
+                                </td>
+                                <td class="" style="width: 100%;">
+                                    <div class="tl text-l10" >
+                                        <input type="text" name="data[{$vo['en']['id']}]" value="{$vo['en']['value']}" style="width:600px;" placeholder="{$vo['en']['value']}" autocomplete="off" onchange="changeTableVal('foreign_pack','id','{$vo['en']['id']}','value',this);">
+                                    </div>
+                                </td>
+                            </tr>
+                            {/volist}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="iDiv" style="display: none;"></div>
+            </div>
+            <div class="tDiv">
+                <div class="tDiv2">
+                    {include file="public/page" /}
+                </div>
+                <div style="clear:both"></div>
+            </div>
+            <!-- <div style="display: block;height: 50px;"></div>
+            <div class="bot3 wm100">
+                <a href="javascript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green"><span>确认保存</span></a>
+            </div> -->
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+    });
+
+    // 判断输入框是否为空
+    function checkForm(){
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Foreign/official_pack_save', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                        window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

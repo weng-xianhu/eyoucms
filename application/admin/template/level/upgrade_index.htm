@@ -1,129 +1,163 @@
 {include file="public/layout" /}
-<body class="bodystyle">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-	{include file="member/bar" /}
-	<div class="flexigrid">
-		<div class="mDiv">
-            <div class="ftitle">
-                {include file="member/order_bar" /}
-            </div>
-			
-			<form class="navbar-form form-inline" action="{:url('Level/upgrade_index')}" method="get" onsubmit="layer_loading('正在处理');">
-				{$searchform.hidden|default=''}
-				<div class="sDiv">
-                    <div class="fl">
-                        <!-- #weapp_ExportOrder_btn# -->
+{include file="order/left" /}
+<div class="page" style="min-width:auto;margin-left:100px;padding-bottom: 0;">
+    <div class="flexigrid flexigrid-xin">
+        <div class="header-bar">
+            <div class="more">
+                <div class="search">
+                    <div class="content">
+                        <form id="postForm" action="{:url('Level/upgrade_index')}" method="get" onsubmit="layer_loading('正在处理');" style="display: unset;">
+                            {$searchform.hidden|default=''}
+                            <div class="ey-form-item"><label class="users-form-item-label">关键词：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="sDiv2">
+                                                <input type="text" size="50" name="keywords" value="{$Request.param.keywords}" class="qsbox" style="width: 170px;" placeholder="订单号或用户名">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ey-form-item"><label class="users-form-item-label">支付方式：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="">
+                                                <select name="pay_method" id="pay_method">
+                                                    <option value="" {if condition="!$Request.param.pay_method"}selected{/if}>全部</option>
+                                                    <option value="balance" {eq name="$Request.param.pay_method" value="balance"}selected{/eq}>余额支付</option>
+                                                    <option value="wechat" {eq name="$Request.param.pay_method" value="wechat"}selected{/eq}>微信支付</option>
+                                                    <option value="alipay" {eq name="$Request.param.pay_method" value="alipay"}selected{/eq}>支付宝支付</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ey-form-item"><label class="users-form-item-label">升级类别：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="">
+                                                <select name="level_id" id="level_id">
+                                                    <option value="" {if condition="!$Request.param.level_id"}selected{/if}>全部</option>
+                                                    {volist name="$usersLevel" id="ul"}
+                                                    <option value="{$ul.level_id}" {if condition='$Request.param.level_id == $ul.level_id'}selected{/if}>{$ul.level_name}</option>
+                                                    {/volist}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ey-form-item"><label class="users-form-item-label">下单时间：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="sDiv2">
+                                                <input type="text" name="add_time_begin" id="add_time_begin" autocomplete="off" value="{$Request.param.add_time_begin}" class="qsbox" placeholder="起始日期">
+                                            </div>
+                                            &nbsp;至&nbsp;
+                                            <div class="sDiv2">
+                                                <input type="text" name="add_time_end" id="add_time_end" autocomplete="off" value="{$Request.param.add_time_end}" class="qsbox" placeholder="结束日期">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ey-form-item">
+                                <div class="users-form-item-content">
+                                    <span class="bt-xin" onclick="OrderQuery();">查询</span>
+                                    <span class="bt-xin-no" onclick="OrderQuery('reset');">重置</span>
+                                    <div class="fbutton">
+                                        <a href="javascript:void(0);" onclick="OrderExcelExport(this);" data-url="{:url('Order/ajax_order_excel_export')}" class="bt-xin-xia"><i class="iconfont e-xiazai"></i>导出</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-					<div class="sDiv2">
-						<input type="text" name="add_time_begin" id="add_time_begin" value="{$Request.param.add_time_begin}" class="qsbox" autocomplete="off" placeholder="起始日期">
-					</div>
-					&nbsp;至&nbsp;
-					<div class="sDiv2">
-						<input type="text" name="add_time_end" id="add_time_end" value="{$Request.param.add_time_end}" class="qsbox" autocomplete="off" placeholder="结束日期">
-					</div>
-					<div class="sDiv2" >
-						<input type="text" size="30" name="order_number" value="{$Request.param.order_number}" class="qsbox" placeholder="搜索订单号...">
-						<input type="submit" class="btn" value="搜索">
-						<i class="fa fa-search"></i>
-					</div>
-					
-				</div>
-			</form>
-		</div>
-		<div class="hDiv" style="height: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="page" style="min-width:auto;margin-left:100px;">
+    <div class="flexigrid  flexigrid-xin">
+		<div class="tableDiv " style="height: auto;">
 			<div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
                     <thead style="background-color: #f7f7f7; height: 40px;line-height: 40px;">
                     <tr>
-                       <th class="sign w40" axis="col0">
-                           <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                       <th abbr="article_title" class="w200">
+                           <div class="" class="">订单号</div>
                        </th>
-                        <th abbr="article_title" axis="col3" class="">
-                            <div class="text-l10" class="">订单号</div>
-                        </th>
-                        <th abbr="article_time" axis="col6" class="w160">
-                            <div class="tc">产品名称</div>
-                        </th>
-                        <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">订单金额<span class="hint" data-hint="当前列表订单总金额：￥{$total_money|default='0.00'}"><i class="fa fa-jpy ml5"></i></span></div>
-                        </th>
-                        <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">支付方式</div>
-                        </th>
-                        <th axis="col1" class="w100">
-                            <div class="tc">会员</div>
-                        </th>
-                        <th abbr="article_time" axis="col6" class="w160">
-                            <div class="tc">升级时间</div>
-                        </th>
-                        <th axis="col1" class="w100">
+                       <th abbr="article_time" class="">
+                           <div class="">升级类别</div>
+                       </th>
+                       <th abbr="article_time" class="w160">
+                           <div class="">订单金额</div>
+                       </th>
+                       <th abbr="article_title" class="w160">
+                           <div class="">用户</div>
+                       </th>
+                       <th abbr="article_time" class="w160">
+                           <div class="tc">升级时间</div>
+                       </th>
+                        <th class="w100">
                             <div class="tc">状态</div>
                         </th>
                     </tr>
                     </thead>
-                </table>
-                
-                    </div>
-                </div>
-                <div class="bDiv" style="height: auto;">
-                    <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
-                        <table style="width: 100%">
-                            <tbody>
+                    <tbody class="no-border">
 					{empty name="list"}
 						<tr>
-							<td class="no-data" align="center" axis="col0" colspan="50">
-								<i class="fa fa-exclamation-circle"></i>没有符合条件的记录
-							</td>
+						    <td class="no-data" align="center" axis="col0" colspan="50">
+						    <div class="">
+						        <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+						    </div>
+						    </td>
 						</tr>
 					{else/}
 						{foreach name="list" item="vo" key="k" }
 						<tr>
-                            <td class="sign w40">
-                                <div class="tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.moneyid}"></div>
-                            </td>
-                            <td >
-                                <div class="text-l10">
+                            <td>
+                                <div class="">
+                                    <!-- 此处判断余额支付，微信支付，支付宝支付 -->
+                                    {if condition='$vo.pay_method == "wechat"'}
+                                    <i class="iconfont e-weixinzhifu zhifu"></i>
+                                    {elseif condition='$vo.pay_method == "alipay"'/}
+                                    <i class="iconfont e-zhifubaozhifu zhifu"></i>
+                                    {else /}
+                                    <i class="iconfont e-yuezhifu zhifu"></i>
+                                    {/if}
                                     {$vo.order_number}
                                 </div>
                             </td>
-							<td class="w160">
-								<div class="tc">
-									{$vo.cause.type_name}
-								</div>
-							</td>
-							
-							<td class="w100">
-								<div class="tc">
-									￥{$vo.money}
-								</div>
-							</td>
-							<td class="w100">
-								<div class="tc">
-								{notempty name="$pay_method_arr[$vo['pay_method']]"}
-									{$pay_method_arr[$vo['pay_method']]}
-								{else /}
-									————
-								{/notempty}
-								</div>
-							</td>
-                            <td class="w100">
-                            	<div class="tc ">
-                            		<a href="{:url('Member/users_edit', ['id'=>$vo.users_id,'from'=>'money_index'])}">{$vo.username}</a>
-                            	</div>
+                            
+                            <td class=""> <div class=""> {$vo.cause.type_name} </div> </td>
+
+                            <td class=""> <div class="red"> ￥{$vo.money} </div> </td>
+
+                            <td class="sort">
+                                <div class="d-flex" style=" padding-left: 10px;">
+                                    <img id="img_head_pic" style="margin-right: 5px;float: unset;border: 1px solid #e9edef;width: 24px;height: 24px;border-radius: 50%;" src="{$vo.head_pic|get_head_pic=###,false,$vo['sex']}" />
+                                    <a href="javascript:void(0);" data-href="{:url('Member/users_edit', ['id'=>$vo.users_id,'from'=>'money_index','iframe'=>1])}" onclick="openFullframe(this, '会员资料','100%','100%');" class="l-height-24">{$vo.username}</a>
+                                </div>
                             </td>
-                            <td class="sort w160">
-                            	<div class="tc">
-                            		{$vo.add_time|date='Y-m-d H:i:s',###}
-                            	</div>
-                            </td>
-							<td class="w100">
-								<div class="tc">
-								{$pay_status_arr[$vo['status']]}
-								</div>
-							</td>
-							
+                            
+                            <td class="sort "> <div class="tc"> {$vo.add_time|date='Y-m-d H:i:s',###} </div> </td>
+                            
+							<td> <div class="tc"> {$pay_status_arr[$vo['status']]} </div> </td>
 						</tr>
 						{/foreach}
 					{/empty}
@@ -132,37 +166,27 @@
 			</div>
 			<div class="iDiv" style="display: none;"></div>
 		</div>
-        <div class="tDiv">
-            <div class="tDiv2">
-                <div class="fbutton checkboxall">
-                    <input type="checkbox" autocomplete="off" class="checkAll">
-                </div>
-                <div class="fbutton">
-                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Level/upgrade_del')}" class="layui-btn layui-btn-primary">
-                            <span>批量删除</span>
-                    </a>
-                </div>
-                {include file="public/page" /}
-            </div>
-            <div style="clear:both"></div>
-        </div>
+        {notempty name="list"}
+        <div class="tDiv"> <div class="tDiv2"> {include file="public/page" /} </div> <div style="clear:both"></div> </div>
+        {/notempty}
 	</div>
 </div>
-<script>
-    $(function(){
-        $('input[name*=ids]').click(function(){
+
+<script type="text/javascript">
+    $(function() {
+        $('input[name*=ids]').click(function() {
             if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
                 $('.checkAll').prop('checked','checked');
             } else {
                 $('.checkAll').prop('checked', false);
             }
         });
-        $('input[type=checkbox].checkAll').click(function(){
-            $('input[type=checkbox]').prop('checked',this.checked);
+        $('input[type=checkbox].checkAll').click(function() {
+            $('input[type=checkbox]').prop('checked', this.checked);
         });
     });
 
-    layui.use('laydate', function(){
+    layui.use('laydate', function() {
         var laydate = layui.laydate;
         //执行一个laydate实例
         laydate.render({
@@ -173,15 +197,96 @@
         });
     });
 
-	$(document).ready(function(){
+	$(document).ready(function() {
 		// 表格行点击选中切换
 		$('#flexigrid > table>tbody >tr').click(function(){
 			$(this).toggleClass('trSelected');
 		});
-		// 点击刷新数据
-		$('.fa-refresh').click(function(){
-			location.href = location.href;
-		});
 	});
+
+    // 订单查询
+    function OrderQuery(isReset) {
+        if (isReset && 'reset' == isReset) {
+            window.location.href = "{:url('Level/upgrade_index')}";
+        } else {
+            $('#postForm').submit();
+        }
+    }
+
+    // AJAX调用下载
+    function OrderExcelExport(obj) {
+        layer_loading('订单导出中');
+        $.ajax({
+            type: 'post',
+            url : $(obj).attr('data-url'),
+            data: {
+                _ajax: 1,
+                // 导出类型，升级订单固定值3
+                export_type: 3,
+                // 搜索条件信息，可为空
+                level_id: "{$Request.param.level_id}",
+                keywords: "{$Request.param.keywords}",
+                pay_method: "{$Request.param.pay_method}",
+                end_time: "{$Request.param.add_time_end}",
+                start_time: "{$Request.param.add_time_begin}"
+            },
+            dataType: 'json',
+            success: function(res) {
+                layer.closeAll();
+                if (1 == res.code) {
+                    window.location.href = res.url;
+                } else {
+                    showErrorAlert(res.msg);
+                }
+            },
+            error: function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    function push_shipping(obj) {
+        var order_code = $(obj).data('ordercode');
+        var source = $(obj).data('source');
+        var users_id = $(obj).data('usersid');
+        layer.confirm($(obj).data('title')+"<p>(提示:如重试一直失败请在在微信小程序后台手动发货)</p>", {
+            btn: ['重试', '手动发货标记成功'] //按钮
+        }, function(){
+            $.ajax({
+                url: "{:url('Shop/push_shipping')}",
+                data: {order_code: order_code, source: source, users_id:users_id, action:'retry', _ajax: 1},
+                type:'post',
+                dataType:'json',
+                success:function(res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {time: 1500},function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        layer.alert(res.msg);
+                    }
+                }
+            });
+        }, function(){
+            $.ajax({
+                url: "{:url('Shop/push_shipping')}",
+                data: {order_code: order_code, source: source, users_id:users_id, action:'mark', _ajax: 1},
+                type:'post',
+                dataType:'json',
+                success:function(res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {time: 1500},function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        layer.alert(res.msg);
+                    }
+                }
+            });
+        });
+    }
 </script>
 {include file="public/footer" /}

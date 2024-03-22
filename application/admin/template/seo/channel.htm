@@ -7,7 +7,7 @@
         var __root_dir__ = "__ROOT_DIR__";
         var __lang__ = "{$admin_lang}";
     </script>
-    <script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
+    <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
     <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
 </head>
 <style>
@@ -83,7 +83,12 @@
         </div>
         <div style="text-align:center" class="success">
             <div class="finash" style="">
-                <span><font id="title">正在生成</font><span class="filepath"></span>，</span>
+                <span>
+                    <font id="title">正在生成</font>
+                    <span class="filetypename"></span>
+                    <span class="filetypeid"></span>，
+                </span>
+                <span class="filefindex"></span>
                 已完成<span class="percent" style="color:#ff0000 ;font-size:14px;">0</span>%
             </div>
         </div>
@@ -95,31 +100,47 @@
 
 <script type="text/javascript">
     $('#a_close_pop').hide();
-    var typeid = "{$typeid}";
-    var findex = 0;   //本次执行的下标
+    var typeid = {$typeid|default=0};
+    var findex = index = 0;   //本次执行的下标
     var achieve = 0;
     var allpagetotal = 0;
     var msg = "";
     var timestamp1 = Date.parse(new Date());
     function send(){
         $.ajax({
-            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildChannel&lang="+__lang__,
-            type:'POST',
+            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildChannel&lang="+__lang__+"&id="+typeid+"&index="+index+"&findex="+findex+"&achieve="+achieve+"&_ajax=1",
+            type:'GET',
             dataType:'json',
-            data:{'id':typeid,'findex':findex,'achieve':achieve,_ajax:1},
+            data:{},
+            timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
             beforeSend:function(){
+                if (achieve == 0) {
+                    $("#title").html('数据优化中');
+                    $(".progress-bar").css('width','0.5%');
+                    $(".percent").text('0.5');
+                }
             },
             success:function(res){
+                index = res.data.index;
                 findex = res.data.findex;
                 achieve = res.data.achievepage;
                 allpagetotal = res.data.allpagetotal;
+                channeltypeid = res.data.typeid;
+                typename = res.data.typename;
                 msg += res.msg;
                 progress = ((achieve/allpagetotal)*100).toFixed(1);
-                $('#title').html('成功创建栏目：');
-                $(".filepath").html(res.data.findex);
+                $('#title').html('正在创建栏目：');
+                // $(".filetypename").html(res.data.typename);
+                // $(".filetypeid").html('（'+res.data.typeid+'）');
+                $(".filetypeid").html((res.data.findex+1));
+                if (res.data.index > 1) {
+                    $(".filefindex").html('第'+res.data.index+'页，');
+                } else {
+                    $(".filefindex").html('');
+                }
                 $(".progress-bar").css('width',progress+'%');
                 $(".percent").text(progress);
-                if (achieve === allpagetotal){
+                if (achieve >= allpagetotal){
                     var timestamp2 = Date.parse(new Date());
                     var timestamp3 = (timestamp2 - timestamp1) / 1000;
                     if (timestamp3 < 1) timestamp3 = 1;

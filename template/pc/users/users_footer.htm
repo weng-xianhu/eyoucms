@@ -3,5 +3,17 @@
     <footer class="container">
         <p>{eyou:global name='web_copyright' /}</p>
     </footer>
+    <script>
+        //pc左侧菜单栏
+        $(".sidebar-box a").click(function () {
+            var menuid = $(this).data('menuid');
+            console.log(menuid)
+            if ('undefined' != menuid && 0 < menuid ){
+                ey_setCookies('left_menu_2024',menuid)
+            }else{
+                ey_setCookies('left_menu_2024',0)
+            }
+        })
+    </script>
 </body>
 </html>

@@ -60,7 +60,7 @@ class TagArcview extends Base
         }
 
         /*文档信息*/
-        $field = 'a.aid,a.title,a.litpic,a.click,a.channel,a.users_price,a.old_price,a.seo_title,a.seo_description,a.add_time,a.is_litpic,a.typeid,b.typename';
+        $field = 'a.*,b.typename';
         $result = Db::name("archives")->field($field)
             ->alias('a')
             ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
@@ -71,6 +71,10 @@ class TagArcview extends Base
         /*--end*/
         $result['title'] = text_msubstr($result['title'], 0, $titlelen, false);
         $result['litpic'] = $this->get_default_pic($result['litpic']); // 默认封面图
+        $result['add_time_format'] = $this->time_format($result['add_time']);
+        $result['add_time'] = date('Y-m-d', $result['add_time']);
+        $result['real_sales'] = $result['sales_num']; // 真实总销量
+        $result['sales_num'] = $result['sales_all']; // 总虚拟销量
         // 获取查询的控制器名
         $channelInfo = model('Channeltype')->getInfo($result['channel']);
         $channeltype_table = $channelInfo['table'];
@@ -85,6 +89,9 @@ class TagArcview extends Base
             $addfields_arr = array_intersect($addfields_arr, $extFields);
             if (!empty($addfields_arr) && is_array($addfields_arr)) {
                 $addfields = implode(',', $addfields_arr);
+                if (strstr(",{$addfields},", ',content,')){
+                    $addfields .= ',content_ey_m';
+                }
             } else {
                 $addfields = '*';
             }
@@ -106,8 +113,44 @@ class TagArcview extends Base
         }
         $result = $this->fieldLogic->getChannelFieldList($result, $result['channel']); // 自定义字段的数据格式处理
         /*--end*/
-
+        $result['users_discount_price'] = $result['users_price'];
+        $users = session('users');
+        if (!empty($result['users_price']) && !empty($users['users_id'])){
+            $discount = Db::name('users_level')->where('level_id',$users['level'])->value('discount');
+            if (100 > $discount){
+                $result['users_discount_price'] = sprintf("%.2f",$result['users_price']*($discount/100));
+            }
+        }
         $result = view_logic($aid, $result['channel'], $result, true);
+        // 手机端详情内容
+        if (isset($result['content_ey_m'])) {
+            if (!empty($result['content_ey_m'])) {
+                $result['content'] = $result['content_ey_m'];
+            }
+            unset($result['content_ey_m']);
+        }
+
+        //检测是否安装秒杀插件
+        if (is_dir('./weapp/Seckill/')) {
+            $SeckillRow = model('Weapp')->getWeappList('Seckill');
+            if (!empty($SeckillRow) && 1 != intval($SeckillRow['status'])) {
+                $result['seckill_goods_id'] = false;
+            }else{
+                $tagWeappSeckill = new \think\template\taglib\api\TagWeappSeckill;
+                $result['seckill_goods_id'] = $tagWeappSeckill->guideSeckill($aid);
+            }
+        } else {
+            $result['seckill_goods_id'] = false;
+        }
+
+        // 是否安装积分商城插件
+        $result['points_goods_id'] = false;
+        $weappInfo = model('ShopPublicHandle')->getWeappPointsShop();
+        if (!empty($weappInfo)) {
+            // 调用积分商城逻辑层方法
+            $pointsGoodsModel = new \app\plugins\model\PointsGoods();
+            $result['points_goods_id'] = $pointsGoodsModel->getPointsShopGoodsID($aid);
+        }
 
         return [
             'data'=> !empty($result) ? $result : false,
@@ -124,7 +167,7 @@ class TagArcview extends Base
             return false;
         }
 
-        $cacheKey = 'think\template\taglib\api\TagArcview-getSingleView-'.json_encode(func_get_args());
+        $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.json_encode(func_get_args()));
         $redata = cache($cacheKey);
         if (empty($redata['data'])) {
             $result = $this->getSingleInfo($typeid, $addfields);
@@ -148,6 +191,13 @@ class TagArcview extends Base
         if (!empty($result)) {
             $result['seo_title'] = $this->set_arcseotitle($result['typename'], $result['seo_title']);
             $result['add_time'] = date('Y-m-d H:i:s', $result['update_time']); // 格式化更新时间
+            // 手机端详情内容
+            if (isset($result['content_ey_m'])) {
+                if (!empty($result['content_ey_m'])) {
+                    $result['content'] = $result['content_ey_m'];
+                }
+                unset($result['content_ey_m']);
+            }
             $result['content'] = $this->html_httpimgurl($result['content'], true); // 转换内容图片为http路径
             if (empty($result['litpic'])) {
                 $result['is_litpic'] = 0; // 无封面图
@@ -155,8 +205,8 @@ class TagArcview extends Base
                 $result['is_litpic'] = 1; // 有封面图
             }
             $result['litpic'] = $this->get_default_pic($result['litpic']); // 默认封面图
-            $result['typeurl'] = '/pages/article/single?typeid='.$result['typeid'];
-            $result['arcurl'] = '/pages/article/single?typeid='.$result['typeid'];
+            // $result['typeurl'] = '/pages/article/single?typeid='.$result['typeid'];
+            // $result['arcurl'] = '/pages/article/single?typeid='.$result['typeid'];
             unset($result['id']);
             unset($result['aid']);
             unset($result['update_time']);
@@ -225,6 +275,9 @@ class TagArcview extends Base
                     $addfields_arr[$key] = 'c.'.$val;
                 }
                 $addfields = implode(',', $addfields_arr);
+                if (strstr(",{$addfields},", ',c.content,')){
+                    $addfields .= ',c.content_ey_m';
+                }
             } else {
                 $addfields = 'c.*';
             }
@@ -238,6 +291,13 @@ class TagArcview extends Base
             ->where(['a.id'=>$typeid,'a.current_channel'=>6])
             ->cache(true,EYOUCMS_CACHE_TIME,"arctype")
             ->find();
+        // 手机端详情内容
+        if (isset($result['content_ey_m'])) {
+            if (!empty($result['content_ey_m'])) {
+                $result['content'] = $result['content_ey_m'];
+            }
+            unset($result['content_ey_m']);
+        }
 
         return $result;
     }

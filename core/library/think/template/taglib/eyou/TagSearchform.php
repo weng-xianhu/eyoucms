@@ -32,7 +32,7 @@ class TagSearchform extends Base
      */
     public function getSearchform($typeid = '', $channelid = '', $notypeid = '', $flag = '', $noflag = '', $type = '')
     {
-        $searchurl = url('home/Search/lists');
+        $searchurl = url("home/Search/lists");
 
         $hidden = '';
         $ey_config = config('ey_config'); // URL模式
@@ -41,8 +41,16 @@ class TagSearchform extends Base
             $hidden .= '<input type="hidden" name="c" value="Search" />';
             $hidden .= '<input type="hidden" name="a" value="lists" />';
             /*多语言*/
-            $lang = Request::instance()->param('lang/s');
-            !empty($lang) && $hidden .= '<input type="hidden" name="lang" value="'.$lang.'" />';
+            if (config('lang_switch_on')) {
+                $lang = Request::instance()->param('lang/s');
+                !empty($lang) && $hidden .= '<input type="hidden" name="lang" value="'.$lang.'" />';
+            }
+            /*--end*/
+            /*多城市站点*/
+            if (config('city_switch_on')) {
+                $site = Request::instance()->param('site/s');
+                !empty($site) && $hidden .= '<input type="hidden" name="site" value="'.$site.'" />';
+            }
             /*--end*/
         }
         /*手机端域名*/
@@ -50,7 +58,13 @@ class TagSearchform extends Base
         $goto = trim($goto, '/');
         !empty($goto) && $hidden .= '<input type="hidden" name="goto" value="'.$goto.'" />';
         /*--end*/
-        !empty($typeid) && $hidden .= '<input type="hidden" name="typeid" id="typeid" value="'.$typeid.'" />';
+        if (!empty($typeid)) {
+            /*多语言*/
+            $typeid = model('LanguageAttr')->getBindValue($typeid, 'arctype');
+            /*--end*/
+            $hidden .= '<input type="hidden" name="typeid" id="typeid" value="'.$typeid.'" />';
+        }
+        $hidden .= '<input type="hidden" name="method" value="1" />';
         !empty($channelid) && $hidden .= '<input type="hidden" name="channelid" id="channelid" value="'.$channelid.'" />';
         !empty($notypeid) && $hidden .= '<input type="hidden" name="notypeid" id="notypeid" value="'.$notypeid.'" />';
         !empty($flag) && $hidden .= '<input type="hidden" name="flag" id="flag" value="'.$flag.'" />';

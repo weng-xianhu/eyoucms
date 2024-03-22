@@ -192,7 +192,7 @@
                                         <div class="fieldext_upload" style="display:inline-block;">
                                             <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}">
                                             <a href="{$v2}" onclick="" class="upimg" target="_blank">
-                                                <img src="{$v2}" width="100" height="100">
+                                                <img src="{$v2}">
                                             </a>
                                             <br>
                                             <a href="javascript:void(0)" onclick="{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'{$v2}')">删除</a>
@@ -216,7 +216,7 @@
                             <div class="fieldext_upload" style="display:inline-block;">
                                 <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="" />
                                 <a href="javascript:void(0);" onClick="" class="upimg">
-                                    <img src="__STATIC__/admin/images/add-button.jpg" width="100" height="100" />
+                                    <img src="__STATIC__/admin/images/add-button.jpg"/>
                                 </a>
                                 <br/>
                                 <a href="javascript:void(0)">&nbsp;&nbsp;</a>
@@ -360,7 +360,7 @@
                 </div>
                 <script type="text/javascript">
                     UE.getEditor('{$vo.fieldArr}_{$vo.name|default=''}',{
-                        serverUrl :"{:url('Uploadify/index',array('savepath'=>'ueditor'))}",
+                        serverUrl :"{:url('Uploadify/index',array('savepath'=>'allimg'))}",
                         zIndex: 999,
                         initialFrameWidth: "100%", //初化宽度
                         initialFrameHeight: 450, //初化高度            

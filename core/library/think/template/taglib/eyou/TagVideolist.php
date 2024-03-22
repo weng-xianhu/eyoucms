@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -58,7 +58,7 @@ class TagVideolist extends Base
                     }
                     
                     $row[$key]['file_time']  = gmSecondFormat(intval($val['file_time']), ':');
-                    $row[$key]['onclick'] = " onclick=\"changeVideoUrl1586341922('{$row[$key]['file_id']}', '{$row[$key]['aid']}', '{$row[$key]['uhash']}', '{$player}')\" ";
+                    $row[$key]['onclick'] = " onclick=\"changeVideoUrl341922('{$row[$key]['file_id']}', '{$row[$key]['aid']}', '{$row[$key]['uhash']}', '{$player}')\" ";
                     //列表页
                     $row[$key]['hidden'] = '';
                     if ($key == count($row) - 1) {
@@ -72,11 +72,12 @@ class TagVideolist extends Base
                         ];
                         $data_json = json_encode($data);
                         $version = getCmsVersion();
+                        $srcurl = get_absolute_url("{$this->root_dir}/public/static/common/js/tag_videolist.js?v={$version}");
                         $row[$key]['hidden'] = <<<EOF
 <script type="text/javascript">
 var vars1612143009 = {$data_json};
 </script>
-<script type="text/javascript" src="{$this->root_dir}/public/static/common/js/tag_videolist.js?v={$version}"></script>
+<script language="javascript" type="text/javascript" src="{$srcurl}"></script>
 EOF;
                     }
                     $result[] = $row[$key];

@@ -20,6 +20,7 @@ return array(
     'description' => '#DESCRIPTION#', // 插件描述
     'litpic'    => '/weapp/#CODE#/logo.png',
     'scene' => '#SCENE#',  // 使用场景 0 PC+手机 1 手机 2 PC
+    'subroot' => 'on',
     'permission' => [],
     'management' => [],
 );

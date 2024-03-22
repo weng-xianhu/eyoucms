@@ -36,19 +36,29 @@
 <link href="__PUBLIC__/plugins/colpick/css/colpick.css" rel="stylesheet" type="text/css"/>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width: auto;box-shadow:none;">
+<div class="page min-hg-c-10">
+    <div class="fixed-bar">
+        <div class="item-title">
+            {eq name='$Request.param.source' value='archives'}
+            <a class="back_xin" href="javascript:history.back();"  title="返回"><i class="iconfont e-fanhui"></i></a>
+            {else /}
+            <a class="back_xin" href="{:url('Index/switch_map')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            {/eq}
+            <div class="subject">
+                <h3>缩略图设置</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
     <div class="flexigrid">
-        <form class="form-horizontal" method="post" id="handlepost" action="{:url('System/thumb')}">
+        <form class="" method="post" id="handlepost" action="{:url('System/thumb')}">
             <div class="ncap-form-default">
                 <dl class="row">
                     <dt class="tit">缩略图功能</dt>
                     <dd class="opt" style="width: auto;">
-                        <div class="onoff">
-                            <label for="thumb_open1" class="cb-enable {if condition='isset($config.thumb_open) && $config.thumb_open eq 1'}selected{/if}" >开启</label>
-                            <label for="thumb_open0" class="cb-disable {if condition='!isset($config.thumb_open) || $config.thumb_open eq 0'}selected{/if}" >关闭</label>
-                            <input id="thumb_open1" name="thumb_open" onclick="setthumb(this);" value="1" {if condition="isset($config.thumb_open) && $config.thumb_open eq 1"}checked{/if} type="radio">
-                            <input id="thumb_open0" name="thumb_open" onclick="setthumb(this);" value="0" {if condition="!isset($config.thumb_open) || $config.thumb_open eq 0"}checked{/if} type="radio">
-                        </div>
+                        <label class="curpoin"><input id="thumb_open1" name="thumb_open" onclick="setthumb(this);" value="1" {if condition="isset($config.thumb_open) && $config.thumb_open eq 1"}checked{/if} type="radio">开启</label>
+                        &nbsp;
+                        <label class="curpoin"><input id="thumb_open0" name="thumb_open" onclick="setthumb(this);" value="0" {if condition="!isset($config.thumb_open) || $config.thumb_open eq 0"}checked{/if} type="radio">关闭</label>
                         <p class="notic">全站图片进行缩略图处理</p>
                     </dd>
                 </dl>
@@ -133,7 +143,7 @@
                 if(res.code == 1){
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {shade: 0.1, time: 1000}, function(){
                         // _parent.window.location.reload();
                     });
                 }else{
@@ -187,9 +197,12 @@
                 if(res.code == 1){
                     //询问框
                     var confirm = layer.confirm(res.data.msg, {
+                            shade: layer_shade,
                             title: false,
-                            area: ['70%','80%'],
-                            btn: ['关闭'] //按钮
+                            title: '缩略图标签',
+                            closeBtn: 3,
+                            area: ['800px','520px'],
+                            btn: ['关闭'] ,//按钮
 
                         }, function(){
                             layer.close(confirm);
@@ -199,8 +212,8 @@
                     layer.alert(res.msg, {icon: 2, title:false});
                 }
             },
-            error:function(){
-                layer.alert(ey_unknown_error, {icon: 2, title:false});
+            error:function(e){
+                layer.alert(e.responseText, {icon: 2, title:false});
             }
         });
     }

@@ -42,7 +42,7 @@ class MediaFile extends Model
         if ($result !== false) {
             Db::name('media_log')->where(['aid'=>['IN', $aid]])->delete();
             foreach ($file_url_list as $key => $val) {
-                $file_url_tmp = preg_replace('#^(/[/\w]+)?(/uploads/media/)#i', '.$2', $val);
+                $file_url_tmp = preg_replace('#^(/[/\w\-]+)?(/uploads/media/)#i', '.$2', $val);
                 if (!is_http_url($val) && file_exists($file_url_tmp)) {
                     @unlink($file_url_tmp);
                 }
@@ -59,10 +59,40 @@ class MediaFile extends Model
      */
     public function getMediaFile($aid, $field = '*')
     {
-        $result = Db::name('media_file')->field($field)
-            ->where('aid', $aid)
-            ->order('file_id asc')
-            ->select();
+        if (!is_dir('./weapp/Videogroup/')) {
+            $result = Db::name('media_file')->field($field)
+                ->where('aid', $aid)
+                ->order('sort_order asc,file_id asc')
+                ->select();
+        } else { // 安装了视频章节分组插件
+            $videogroupLogic = new \weapp\Videogroup\logic\VideogroupLogic;
+            $weappData = $videogroupLogic->getWeappData();
+            if (!empty($weappData['is_open'])) { // 开启
+                $result = Db::name('media_file')->alias('a')
+                    ->field('a.*, b.group_id as video_group_id,c.sort_order as c_sort,c.group_name')
+                    ->join('weapp_videogroup_file b', 'a.file_id = b.file_id', 'LEFT')
+                    ->join('weapp_videogroup c', 'c.aid = a.aid and c.group_id = b.group_id', 'LEFT')
+                    ->where('a.aid', $aid)
+                    ->order('c_sort asc,a.sort_order asc,a.file_id asc')
+                    ->select();
+                if (!empty($result)){
+                    foreach ($result as $k => $v){
+                        if (empty($v['video_group_id'])){
+                            $result[] = $v;
+                            unset($result[$k]);
+                        }else{
+                            break;
+                        }
+                    }
+                    $result = array_merge($result);
+                }
+            } else { // 关闭
+                $result = Db::name('media_file')->field($field)
+                    ->where('aid', $aid)
+                    ->order('sort_order asc,file_id asc')
+                    ->select();
+            }
+        }
 
         return $result;
     }
@@ -75,8 +105,26 @@ class MediaFile extends Model
     {
         if (!empty($video_files)) {
             if ('add' == $opt) {
-                Db::name('media_file')->insertAll($video_files);
+                $redata = self::saveAll($video_files);
+                // 视频章节分组插件
+                if (is_dir('./weapp/Videogroup/')) {
+                    $videogroupfiles = [];
+                    foreach ($redata as $k1 => $v1) {
+                        $video_group_id = $v1->getData('video_group_id');
+                        $videogroupfiles[] = [
+                            'file_id' => $v1->getData('file_id'),
+                            'aid' => $v1->getData('aid'),
+                            'group_id' => intval($video_group_id),
+                            'add_time' => getTime(),
+                            'update_time' => getTime(),
+                        ];
+                    }
+                    if (!empty($videogroupfiles)) {
+                        Db::name('weapp_videogroup_file')->insertAll($videogroupfiles);
+                    }
+                }
             } else if ('edit' == $opt) {
+                $videogroupfiles = [];
                 $file_ids = [];
                 $insert = [];
                 foreach ($video_files as $k =>$v){
@@ -91,11 +139,31 @@ class MediaFile extends Model
 
                 $file_url_list = Db::name('media_file')->where('aid',$aid)->column('file_url');
                 Db::name('media_file')->where('aid',$aid)->where('file_id','not in',$file_ids)->delete();
-                //更新
+                // 更新
                 $update = self::saveAll($video_files);
+                foreach ($update as $k1 => $v1) {
+                    $video_group_id = $v1->getData('video_group_id');
+                    $videogroupfiles[] = [
+                        'file_id' => $v1->getData('file_id'),
+                        'aid' => $v1->getData('aid'),
+                        'group_id' => intval($video_group_id),
+                        'add_time' => getTime(),
+                        'update_time' => getTime(),
+                    ];
+                }
                 //插入
-                $insert = Db::name('media_file')->insertAll($insert);
+                $insert = self::saveAll($insert);
                 if (!empty($update) || !empty($insert)) {
+                    foreach ($insert as $k1 => $v1) {
+                        $video_group_id = $v1->getData('video_group_id');
+                        $videogroupfiles[] = [
+                            'file_id' => $v1->getData('file_id'),
+                            'aid' => $v1->getData('aid'),
+                            'group_id' => intval($video_group_id),
+                            'add_time' => getTime(),
+                            'update_time' => getTime(),
+                        ];
+                    }
                     \think\Cache::clear('media_file');
                     foreach ($video_files as $k => $v) {
                         $index_key = array_search($v['file_url'], $file_url_list);
@@ -105,17 +173,28 @@ class MediaFile extends Model
                     }
                     try {
                         foreach ($file_url_list as $key => $val) {
-                            $file_url_tmp = preg_replace('#^(/[/\w]+)?(/uploads/media/)#i', '.$2', $val);
+                            $file_url_tmp = preg_replace('#^(/[/\w\-]+)?(/uploads/media/)#i', '.$2', $val);
                             if (!is_http_url($val) && file_exists($file_url_tmp)) {
                                 @unlink($file_url_tmp);
                             }
                         }
                     } catch (\Exception $e) {}
                 }
+                // 视频章节分组插件
+                if (is_dir('./weapp/Videogroup/')) {
+                    Db::name('weapp_videogroup_file')->where('aid',$aid)->delete();
+                    if (!empty($videogroupfiles)) {
+                        Db::name('weapp_videogroup_file')->insertAll($videogroupfiles);
+                    }
+                }
             }
         }else{
             if ('edit' == $opt) {
                 Db::name('media_file')->where('aid',$aid)->delete();
+                // 视频章节分组插件
+                if (is_dir('./weapp/Videogroup/')) {
+                    Db::name('weapp_videogroup_file')->where('aid',$aid)->delete();
+                }
             }
         }
     }

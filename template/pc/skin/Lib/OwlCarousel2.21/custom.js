@@ -8,7 +8,7 @@ $(".slides-arrow").owlCarousel({
 	dots:true,
 	mouseDrag:true,
 	slideSpeed:800,
-	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	navText: ["<i class='iconfont icon-left'></i>", "<i class='iconfont icon-right'></i>"],
 	items : 1,
 });
 $(".history").owlCarousel({
@@ -21,7 +21,7 @@ $(".history").owlCarousel({
 	dots:false,
 	mouseDrag:true,
 	slideSpeed:500,
-	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	navText: ["<i class='iconfont icon-left'></i>", "<i class='iconfont icon-right'></i>"],
 	items : 1,
 	responsive:{
 		0:{
@@ -53,7 +53,7 @@ $(".honour").owlCarousel({
 	dots:true,
 	mouseDrag:true,
 	slideSpeed:500,
-	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	navText: ["<i class='iconfont icon-left'></i>", "<i class='iconfont icon-right'></i>"],
 	items : 1,
 	responsive:{
 		0:{
@@ -84,7 +84,7 @@ $(".owl-album").owlCarousel({
 	dots:true,
 	mouseDrag:true,
 	slideSpeed:500,
-	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	navText: ["<i class='iconfont icon-left'></i>", "<i class='iconfont icon-right'></i>"],
 	items : 1,
 	responsive:{
 		0:{
@@ -109,7 +109,7 @@ $(".carousel-news").owlCarousel({
 	dots:true,
 	mouseDrag:true,
 	slideSpeed:800,
-	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	navText: ["<i class='iconfont icon-left'></i>", "<i class='iconfont icon-right'></i>"],
 	items : 2,
 	responsive:{
 		0:{
@@ -140,7 +140,7 @@ $(".carousel-pro").owlCarousel({
 	dots:true,
 	mouseDrag:true,
 	slideSpeed:800,
-	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	navText: ["<i class='iconfont icon-left'></i>", "<i class='iconfont icon-right'></i>"],
 	items : 2,
 	responsive:{
 		0:{
@@ -167,7 +167,7 @@ $(".product-list").owlCarousel({
 	dots:true,
 	mouseDrag:true,
 	slideSpeed:800,
-	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	navText: ["<i class='iconfont icon-left'></i>", "<i class='iconfont icon-right'></i>"],
 	items : 2,
 	responsive:{
 		0:{
@@ -198,7 +198,7 @@ $(".pro-thumb").owlCarousel({
 	dots:false,
 	mouseDrag:true,
 	slideSpeed:800,
-	navText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	navText: ["<i class='iconfont icon-left'></i>", "<i class='iconfont icon-right'></i>"],
 	items : 2,
 	responsive:{
 		0:{

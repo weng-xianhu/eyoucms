@@ -33,7 +33,7 @@ class ArctypeLogic extends Model
      * @param   array   $map      查询条件
      * @return  mix
      */
-    public function arctype_list($id = 0, $selected = 0, $re_type = true, $level = 0, $map = array(), $is_cache = true)
+    public function arctype_list($id = 0, $selected = 0, $re_type = true, $level = 0, $map = array(), $is_cache = true,$group_user_where = '')
     {
         static $res = NULL;
         // $res = NULL;
@@ -71,15 +71,35 @@ class ArctypeLogic extends Model
                 unset($where[$key]);
             }
             $fields = "c.*, c.id as typeid, count(s.id) as has_children, '' as children";
-            $res = Db::name('arctype')
-                ->field($fields)
-                ->alias('c')
-                ->join('__ARCTYPE__ s','s.parent_id = c.id','LEFT')
-                ->where($where)
-                ->group('c.id')
-                ->order('c.parent_id asc, c.sort_order asc, c.id')
-                ->cache($is_cache,EYOUCMS_CACHE_TIME,"arctype")
-                ->select();
+            $args = [$fields, $group_user_where, $where, $is_cache];
+            $cacheKey = md5('arctype-'.md5(__CLASS__.__FUNCTION__.json_encode($args)));
+            $res = cache($cacheKey);
+            if (empty($res) || empty($is_cache)) {
+                if (empty($group_user_where)){
+                    $res = Db::name('arctype')
+                        ->field($fields)
+                        ->alias('c')
+                        ->join('__ARCTYPE__ s','s.parent_id = c.id','LEFT')
+                        ->where($where)
+                        ->group('c.id')
+                        ->order('c.parent_id asc, c.sort_order asc, c.id')
+                        ->cache($is_cache,EYOUCMS_CACHE_TIME,"arctype")
+                        ->select();
+                }else{
+                    $res = Db::name('arctype')
+                        ->field($fields)
+                        ->alias('c')
+                        ->join('__ARCTYPE__ s','s.parent_id = c.id','LEFT')
+                        ->join("weapp_users_group_arctype b",'c.id = b.type_id','left')
+                        ->where($where)
+                        ->where($group_user_where)
+                        ->group('c.id')
+                        ->order('c.parent_id asc, c.sort_order asc, c.id')
+                        ->cache($is_cache,EYOUCMS_CACHE_TIME,"arctype")
+                        ->select();
+                }
+                cache($cacheKey, $res, null, 'arctype');
+            }
         }
 
         if (empty($res) == true)
@@ -90,7 +110,8 @@ class ArctypeLogic extends Model
         $options = $this->arctype_options($id, $res); // 获得指定栏目下的子栏目的数组
 
         /* 截取到指定的缩减级别 */
-        if ($level > 0)
+        $arctype_max_level = intval(config('global.arctype_max_level'));
+        if ($level > 0 && $level < $arctype_max_level)
         {
             if ($id == 0)
             {
@@ -113,6 +134,7 @@ class ArctypeLogic extends Model
         }
     
         $pre_key = 0;
+        $select = '';
         foreach ($options AS $key => $value)
         {
             $options[$key]['has_children'] = 0;
@@ -124,31 +146,22 @@ class ArctypeLogic extends Model
                 }
             }
             $pre_key = $key;
-        }
-    
-        if ($re_type == true)
-        {
-            $select = '';
-            foreach ($options AS $var)
-            {
-                $select .= '<option value="' . $var['id'] . '" ';
-                $select .= ($selected == $var['id']) ? "selected='true'" : '';
+
+            if ($re_type == true) {
+                $select .= '<option value="' . $value['id'] . '" ';
+                $select .= ($selected == $value['id']) ? "selected='true'" : '';
                 $select .= '>';
-                if ($var['level'] > 0)
+                if ($value['level'] > 0)
                 {
-                    $select .= str_repeat('&nbsp;', $var['level'] * 4);
+                    $select .= str_repeat('&nbsp;', $value['level'] * 4);
                 }
-                $select .= htmlspecialchars_decode(addslashes($var['typename'])) . '</option>';
+                $select .= htmlspecialchars_decode(addslashes($value['typename'])) . '</option>';
             }
-    
-            return $select;
         }
-        else
-        {
-            foreach ($options AS $key => $value)
-            {
-                ///$options[$key]['url'] = build_uri('article_cat', array('acid' => $value['id']), $value['cat_name']);
-            }
+    
+        if ($re_type == true) {
+            return $select;
+        } else {
             return $options;
         }
     }
@@ -316,8 +329,8 @@ class ArctypeLogic extends Model
      */
     public function syn_add_language_attribute($typeid)
     {
-        /*单语言情况下不执行多语言代码*/
-        if (!is_language()) {
+        /*单语言 | 语言分离 情况下不执行多语言代码*/
+        if (!is_language() || tpCache('language.language_split')) {
             return true;
         }
         /*--end*/

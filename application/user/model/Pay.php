@@ -39,7 +39,7 @@ class Pay extends Model
      * @throws \think\db\exception\ModelNotFoundException
      * @throws \think\exception\DbException
      */
-    public function afterVirtualProductPay($orderData = [])
+    public function afterVirtualProductPay($orderData = [], $config = [])
     {
         //判断是否为需要自动发货的虚拟商品  archives表prom_type=2,3
         $details_data = \think\Db::name('shop_order_details')->where([
@@ -48,7 +48,7 @@ class Pay extends Model
         ])->select();
         $autoSendGoods       = true;//多商品合并的订单，需要先判断是否都是需要自动发货的
         foreach ($details_data as &$key) {
-            if ($key['prom_type'] == 0 || $key['prom_type'] == 1) {
+            if ($key['prom_type'] == 0 || $key['prom_type'] == 1 || $key['prom_type'] == 4) {
                 $autoSendGoods = false;
                 break;    //只要存在一个需要手动发货的就结束循环，并且不进入自动发货
             }
@@ -71,6 +71,10 @@ class Pay extends Model
                 AddOrderAction($orderData['order_id'], 0, session('admin_id'), 2, 1, 1, '虚拟商品自动发货成功！', '发货成功');
                 AddOrderAction($orderData['order_id'], 0, session('admin_id'), 3, 1, 1, '虚拟商品自动收货成功！', '确认订单已收货');
                 if (function_exists('diy_push_buy_cloudminipro')) diy_push_buy_cloudminipro($orderData);
+            }
+            // 推送微信发货推送表记录
+            if ('wechat' === trim($orderData['pay_name'])) {
+                // model('ShopPublicHandle')->pushWxShippingInfo($orderData['users_id'], $orderData['order_code'], 2, '', $config);
             }
         }
 
@@ -102,6 +106,11 @@ class Pay extends Model
      */
     public function getWechatPay($openid, $out_trade_no, $total_fee, $PayInfo, $is_applets = 0, $transaction_type = 2)
     {
+        if (isMobile() && isWeixin()) {
+            $thirdparty = Db::name('users')->where(['users_id'=>session('users_id')])->getField('thirdparty');
+            if (0 === intval($thirdparty)) $openid = model('ShopPublicHandle')->weChatauthorizeCookie(session('users_id'));
+        }
+        
         // 获取微信配置信息
         $where = [
             'pay_id' => 1,

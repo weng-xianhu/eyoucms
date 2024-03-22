@@ -1,65 +1,314 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-    <meta charset="utf-8" />
-    <title>订单支付-{eyou:global name='web_name' /}</title>
-    <meta name="renderer" content="webkit">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
-    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-    {eyou:static file="users/skin/css/basic.css" /}
-    {eyou:static file="users/skin/css/eyoucms.css" /}
-	<!-- 新样式 2020-11-25 -->
-	{eyou:static file="users/skin/css/element/index.css" /}
-	{eyou:static file="users/skin/css/e-user.css" /}
-    {eyou:include file="users/skin/css/diy_css.htm" /}
-	
-    {eyou:static file="/public/static/common/js/jquery.min.js"/}
-    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
-    {eyou:static file="users/skin/js/global.js" /}
-</head>
+    <head>
+        <meta charset="utf-8" />
+        <title>支付订单</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/pay.css" /}
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm" /}
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/tag_global.js" /}
+        <style>
+            #yezf_balance_tips {
+                position: absolute;
+                bottom: 0;
+            }
+        </style>
+    </head>
 
-<body>
-{eyou:include file="users/users_header.htm" /}
-
-<div class="ey-body-bg">
-    <div class="ey-body">
-        <div class="ey-container w1200">
-            <div class="el-main main-bg">
-				<div class="order-row pt50 pb50">
-					<div class="order-row-l">
-						<div class="order-row-lt">
-							<i class="el-icon-success"></i>订单提交成功！去付款咯~
-						</div> 
-						<div class="order-row-lb">
-							订单号： <span class="red">{$data.unified_number}</span> 
-							商品名称：<span class="red">{$data.cause}</span>
-						</div>
-					</div> 
-					<div class="order-row-r">
-						应付总额：￥<span class="red">{$data.unified_amount}</span>元
-					    {eyou:eq name="$data.transaction_type" value="1"}
-							<a class="el-button el-button--primary el-button--small is-plain ml10" href="{:url('user/Pay/pay_account_recharge', ['unified_number'=>$data['unified_number'],'money'=>$data['unified_amount']])}">更改</a>
-						{/eyou:eq}
-					</div>
-				</div>
-								
+    <body>
+        <div class="ey-cart-header">
+            <div class="ey-cart-header-con">
+            <div class="ey-logo">
+                <!-- <a href="{eyou:global name='web_cmsurl' /}"><img src="{eyou:global name='web_logo'/}" /></a> -->
+            </div>
+            <div class="ey-cart-title">
+                <h2> 支付订单 </h2> 
+            </div>
+            <div class="ey-cart-header-r">
+                {egt name='$php_servicemeal' value='1'}
+                <div class="right-item user-news">
+                    <a href="{:url('user/UsersNotice/index')}">
+                        {gt name="$unread_num" value="0"}
+                        <span class="num" id="users_unread_num">{$unread_num}</span>
+                        {/gt}
+                        <span class="icon"><i class="el-icon-bell"></i></span>
+                    </a>
+                </div>
+                {/egt}
+                <div class="right-item user-photo">
+                    <a href="{eyou:Diyurl link='user/Users/index' /}"><img src="{$users.head_pic|get_head_pic=###}"/></a>
+                    <div class="user-drop">
+                        <ul>
+                            <li><a href="{eyou:Diyurl link='user/Users/index' /}">个人中心</a></li>
+                            {eyou:if condition="getUsersConfigData('shop.shop_open') == 1"}
+                            <li><a href="{eyou:Diyurl link='user/Shop/shop_centre' /}">我的订单</a></li>
+                            {/eyou:if}
+                            <li><a href="{eyou:Diyurl link='user/Users/collection_index' /}">我的收藏</a></li>
+                            <li><a href="{eyou:Diyurl link='user/Users/logout' /}">安全退出</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
             </div>
         </div>
-		
-		<div class="ey-container w1200">
-		    <div class="el-main main-bg">
-				<div class="el-form-item">
-					<label class="el-form-item__label">选择支付方式:</label>
-					<div class="el-form-item__content pay-type-select">
-						<!-- 支付方式 -->
-						{eyou:include file="/public/static/template/users_v2/pay_recharge_type.htm" /}
-						<!-- 支付方式 -->
-					</div>
-				</div>
-		    </div>
-		</div>
-    </div>
-</div>
 
+        <div class="page-main">
+            <div class="container confirm-box">
+                <div class="confirm-context">
+                    <div class="confirm-order">
+                        <div class="section section-order">
+                            <div class="order-info clearfix">
+                                <div class="fl">
+                                    <h2 class="title">订单提交成功！去付款咯～</h2>
+                                    {eyou:if condition="!empty($data.eyCountdownTimes) && !empty($data.paymentExpire)"}
+                                    <p class="order-time">
+                                        <span>请在<span id="{$data.eyCountdownTimes}" style="color: red;"></span><span>内完成支付, 超时后将取消订单</span></span>
+                                    </p>
+                                    {/eyou:if}
+                                    <p class="post-info" id="address_info">收货信息：{$data.consignee} {$data.mobile} {$data.addressInfo}</p>
+                                </div>
+                                <div class="fr">
+                                    {eyou:if condition="!empty($data.points_shop_order)"}
+                                    <div class="total">应付总额：<span class="money"><em>{$data.order_amount}</em></span></div>
+                                    {eyou:else/}
+                                    <div class="total">应付总额：<span class="money"><em>{$data.unified_amount}</em><span>元</span></span></div>
+                                    {/eyou:if}
+                                    <a href="javascript:void(0);" class="show-detail" data-showhide="hide" onclick="showOrderDetail(this);">订单详情<i class="iconfont"></i></a>
+                                </div>
+                            </div>
+                            <i class="iconfont icon-right">√</i>
+                            <div class="order-detail J_showOrderDetail" id="J_showOrderDetail">
+                                <ul>
+                                    <li class="clearfix">
+                                        <div class="label"> 订单号：</div>
+                                        <div class="content"><span class="order-num">{$data.unified_number}</span></div>
+                                    </li>
+                                    <li class="clearfix">
+                                        <div class="label"> 收货信息：</div>
+                                        <div class="content">{$data.consignee} {$data.mobile} {$data.addressInfo}</div>
+                                    </li>
+                                    <li class="clearfix">
+                                        <div class="label"> 商品名称：</div>
+                                        <div class="content">
+                                        {eq name='$data.transaction_type' value='2'}
+                                            {volist name='$data.order_details' id='goods'}
+                                            <span>
+                                                {$goods.product_name}&nbsp;
+                                                {volist name='$goods.product_spec_list' id='spec'}{$spec.value}&nbsp;{/volist}
+                                            </span>
+                                            {/volist}
+                                        {else /}
+                                            <span class="red">{$data.cause}</span>
+                                        {/eq}
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="confirm-pay">
+                        <div class="section section-payment mb0">
+                            <div class="cash-title">
+                                <div>{eyou:eq name="$data.use_pay_type" value="0"}未开启支付方式{eyou:else/}选择以下支付方式付款{/eyou:eq}</div>
+                            </div>
+                            <div class="payment-box">
+                                <div class="payment-body">
+                                    <ul class="clearfix payment-list J_paymentList">
+                                        {$data.payTypeHidden}
+                                        {eyou:sppayapilist id='vo'}
+                                        {eyou:notempty name="$vo.pay_id"}
+                                        <div>
+                                            <li class="pay-type-item" data-type="zxzf_{$vo.pay_mark}" data-id="{$vo.pay_id}" data-mark="{$vo.pay_mark}" onclick="selectPayType(this);">
+                                                <img src="{$vo.pay_img}">
+                                                <i class="el-icon-check"></i>
+                                            </li>
+                                        </div>
+                                        {/eyou:notempty}
+                                        {$vo.hidden}
+                                        {/eyou:sppayapilist}
+                                        <input type="hidden" id="PayID">
+                                        <input type="hidden" id="PayMark">
+                                        <input type="hidden" id="PayType">
+                                        {eyou:if condition="empty($data.shop_open_offline) && empty($data.PromType) && empty($data.onlyVerify) && 2 == $data.transaction_type"}
+                                        <div>
+                                            <li class="pay-type-item" data-type="hdfk_payOnDelivery" data-id="0" data-mark="payOnDelivery" onclick="selectPayType(this);">
+                                                <img src="{eyou:static file='users/skin/images/pay_hdfk.png' /}">
+                                                <i class="el-icon-check"></i>
+                                            </li>
+                                        </div>
+                                        {/eyou:if}
+                                        {eyou:if condition="1 != $data.transaction_type && 1 == $data.pay_balance_open"}
+                                        <div style="position: relative;display: flex;">
+                                            <li class="pay-type-item" data-type="yezf_balance" data-id="0" data-mark="balance" onclick="selectPayType(this);">
+                                                <img src="{eyou:static file='users/skin/images/pay_yiyou.png' /}">
+                                                <i class="el-icon-check"></i>
+                                            </li>
+                                            <div class="fc9" id="yezf_balance_tips" style="display: none;">可用{$users.users_money}元</div>
+                                        </div>
+                                        {/eyou:if}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-section footer-detail clearfix">
+                            <div class="handle-action">
+                                <div class="operating-button">
+                                    <a href="javascript:void(0);" class="btn btn-primary" onclick="submitSelectPay(this);">去结算</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            // 头像框移入移出事件
+            $(".user-photo").mouseover(function(){
+               $(".user-drop").show();
+            });
+            $(".user-photo").mouseout(function(){
+               $(".user-drop").hide();
+            });
+
+            // 倒计时
+            var paymentExpire = "{$data.paymentExpire}";
+            var eyCountdownTimes = "{$data.eyCountdownTimes}";
+            if (paymentExpire > 0) {
+                executeCountdownTimes(paymentExpire);
+            }
+            function executeCountdownTimes(ey_totalSeconds) {
+                // 取模（余数）
+                var modulo = parseInt(ey_totalSeconds) % (60 * 60 * 24);
+                // 小时数
+                var hours = Math.floor(modulo / (60 * 60));
+                modulo = modulo % (60 * 60);
+                // 分钟
+                var minutes = Math.floor(modulo / 60);
+                // 秒数
+                var seconds = parseInt(ey_totalSeconds % 60, 10);
+                // 输出到页面
+                $('#' + eyCountdownTimes).html(hours + "小时" + minutes + "分" + seconds + "秒");
+                // 剩余秒数
+                ey_totalSeconds--;
+                // 倒计时结束则刷新页面
+                if (parseInt(ey_totalSeconds) <= -1) {
+                    window.location.reload();
+                } else {
+                    // 延迟一秒执行自己
+                    setTimeout(function () {
+                        executeCountdownTimes(ey_totalSeconds);
+                    }, 1000);
+                }
+            }
+
+            function submitSelectPay(obj) {
+                // 禁止再次点击提交
+                $(obj).prop("disabled", true).css("pointer-events", "none");
+
+                // 支付参数
+                var pay_id = $('#PayID').val();
+                var pay_mark = $('#PayMark').val();
+                // 微信支付、支付宝支付、第三方支付
+                if (parseInt(pay_id) > 0 && pay_mark) SelectPayMethod(pay_id, pay_mark);
+                // 余额支付、货到付款
+                if (parseInt(pay_id) === 0 && pay_mark) {
+                    // 余额支付
+                    if ('balance' == pay_mark) {
+                        if (!unified_id || !unified_number || !transaction_type) layer.msg('订单支付参数缺失，刷新重试', {time: 1500});
+                        $.ajax({
+                            type: 'post',
+                            data: {unified_id: unified_id, unified_number: unified_number, transaction_type: transaction_type},
+                            url : '{$RootDir}/index.php?m=user&c=PayApi&a=balance_payment&_ajax=1',
+                            dataType: 'json',
+                            success: function(res) {
+                                layer.closeAll();
+                                if (1 === parseInt(res.code)) {
+                                    if (res.data.email) eyUnifiedSendRemind(res.data.email);
+                                    if (res.data.mobile) eyUnifiedSendRemind(res.data.mobile);
+                                    layer.msg(res.msg, {time: 1500}, function() {
+                                        window.location.href = res.url;
+                                    });
+                                } else {
+                                    payIsRecharge(obj, res.msg, res.url);
+                                }
+                            },
+                            error: function (e) {
+                                layer.closeAll();
+                                showErrorAlert(e.responseText);
+                            }
+                        });
+                    }
+                    // 货到付款
+                    else if ('payOnDelivery' == pay_mark) {
+                        if (!unified_id || !unified_number || !transaction_type) layer.msg('订单支付参数缺失，刷新重试', {time: 1500});
+                        $.ajax({
+                            type: 'post',
+                            data: {unified_id: unified_id, unified_number: unified_number, transaction_type: transaction_type},
+                            url : '{$RootDir}/index.php?m=user&c=PayApi&a=payOnDelivery&_ajax=1',
+                            dataType: 'json',
+                            success: function(res) {
+                                layer.closeAll();
+                                if (1 === parseInt(res.code)) {
+                                    if (res.data.email) eyUnifiedSendRemind(res.data.email);
+                                    if (res.data.mobile) eyUnifiedSendRemind(res.data.mobile);
+                                    layer.msg(res.msg, {time: 1500}, function() {
+                                        window.location.href = res.url;
+                                    });
+                                } else {
+                                    showErrorAlert(res.msg);
+                                }
+                            },
+                            error: function (e) {
+                                layer.closeAll();
+                                showErrorAlert(e.responseText);
+                            }
+                        });
+                    }
+                }
+
+                // 解除再次点击提交
+                $(obj).prop("disabled", false).css("pointer-events", "");
+            }
+
+            // 是否要去充值
+            function payIsRecharge(obj, msg ,url) {
+                unifiedConfirmBox(msg, '', '', function() {
+                    // 去充值
+                    window.open(url);
+                    unifiedConfirmBox('是否充值成功，立即支付？', '', '', function() {
+                        // 立即支付
+                        submitSelectPay(obj);
+                    }, ['立即支付', '其他方式支付'], function(index) {
+                        $(obj).prop("disabled", false).css("pointer-events", "");
+                        layer.closeAll(index);
+                    });
+                }, ['去充值', '其他方式支付'], function(index) {
+                    $(obj).prop("disabled", false).css("pointer-events", "");
+                    layer.closeAll(index);
+                });
+            }
+
+            function showOrderDetail(obj) {
+                var showhide = $(obj).attr('data-showhide');
+                if ('hide' == showhide) {
+                    $(obj).attr('data-showhide', 'show');
+                    $('#address_info').hide();
+                    $('#J_showOrderDetail').animate({ height: $('#J_showOrderDetail ul').height() + 30 }, 50);
+                } else {
+                    $(obj).attr('data-showhide', 'hide');
+                    $('#address_info').show();
+                    $('#J_showOrderDetail').animate({ height: '0' }, 50);
+                }
+            }
+        </script>
 {eyou:include file="users/users_footer.htm" /}

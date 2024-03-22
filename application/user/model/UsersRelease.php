@@ -7,8 +7,8 @@
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
  * ============================================================================
- * Author: 陈风任 <491085389@qq.com>
- * Date: 2019-7-3
+ * Author: 小虎哥 <1105415366@qq.com>
+ * Date: 2018-4-3
  */
 namespace app\user\model;
 
@@ -49,17 +49,26 @@ class UsersRelease extends Model
             $this->saveimg($aid, $post);
         } else if ($post['channel'] == 4) {
             model('DownloadFile')->savefile($aid, $post);
+        } else if ($post['channel'] == 5) {
+            model('MediaFile')->savefile($aid, $post,$opt);
         }
 
         // 处理TAG标签
         model('Taglist')->savetags($aid, $post['typeid'], $post['tags'], $post['arcrank'], $opt);
-
-        if (isset($post['arcrank']) && 0 <= $post['arcrank']) {
-            // 投稿已审核
-            model('SqlCacheTable')->UpdateSqlCacheTable($post, $opt, $table, true);
-        } else if (isset($post['arcrank']) && -1 == $post['arcrank']) {
-            // 投稿待审核
-            model('SqlCacheTable')->UpdateDraftSqlCacheTable($post, $opt);
+        
+        if ('edit' == $opt) {
+            // 清空sql_cache_table数据缓存表 并 添加查询执行语句到mysql缓存表
+            Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
+            model('SqlCacheTable')->InsertSqlCacheTable(true);
+        } else {
+            // 处理mysql缓存表数据
+            if (isset($post['arcrank']) && 0 <= $post['arcrank']) {
+                // 投稿已审核
+                model('SqlCacheTable')->UpdateSqlCacheTable($post, $opt, $table, true);
+            } else if (isset($post['arcrank']) && -1 == $post['arcrank']) {
+                // 投稿待审核
+                model('SqlCacheTable')->UpdateDraftSqlCacheTable($post, $opt, true);
+            }
         }
     }
 
@@ -160,6 +169,9 @@ class UsersRelease extends Model
             $tableName = M('channeltype')->where('id','eq',$result['channel'])->getField('table');
             $result['addonFieldExt'] = Db::name($tableName.'_content')->where('aid',$aid)->find();
         }
+        if (!empty($result['channel']) && 5 === intval($result['channel'])) {
+            $result['courseware'] = Db::name('media_content')->where('aid',$aid)->value('courseware');
+        }
 
         // 文章TAG标签
         if (!empty($result)) {
@@ -199,6 +211,14 @@ class UsersRelease extends Model
             $nowDataExt = array();
             $fieldTypeList = model('Channelfield')->getListByWhere(array('channel_id'=>$channel_id), 'name,dtype', 'name');
             foreach ($dataExt as $key => $val) {
+                /*处理复选框取消选中的情况下*/
+                if (preg_match('/^(.*)(_eyempty)$/', $key) && empty($val)) {
+                    $key = preg_replace('/^(.*)(_eyempty)$/', '$1', $key);
+                    $nowDataExt[$key] = '';
+                    continue;
+                }
+                /*end*/
+
                 $key = preg_replace('/^(.*)(_eyou_is_remote|_eyou_remote|_eyou_local)$/', '$1', $key);
                 $dtype = !empty($fieldTypeList[$key]) ? $fieldTypeList[$key]['dtype'] : '';
                 switch ($dtype) {
@@ -208,7 +228,43 @@ class UsersRelease extends Model
                         $val = implode(',', $val);
                         break;
                     }
-
+                    case 'region':
+                    {
+                        if (!is_numeric($val)) { // 三级联动
+                            //选择全国的时候干掉城市区域的值
+                            if ($val[0] == 0){
+                                if (isset($val[1])) unset($val[1]);
+                                if (isset($val[2])) unset($val[2]);
+                            }else{
+                                $parent_data = Db::name('region')->where('id',$val[0])->find();
+                                if (!empty($parent_data) && !empty($parent_data['parent_id'])){
+                                    //只有市级和区域能选择
+                                    array_unshift($val,$parent_data['parent_id']);
+                                    //只有区域能选择
+                                    if (3 == $parent_data['level']){
+                                        $parent_id = Db::name('region')->where('id',$val[0])->value('parent_id');
+                                        array_unshift($val,$parent_id);
+                                    }
+                                }
+                            }
+                            //三级联动的需要选择
+                            $val = implode(',', $val);
+                        } else {
+                            if (is_array($val)) {
+                                $new_val = [];
+                                foreach ($val as $_k => $_v) {
+                                    $_v = trim($_v);
+                                    if (!empty($_v)) {
+                                        $new_val[] = $_v;
+                                    }
+                                }
+                                $val = $new_val;
+                            } else {
+                                $val = trim($val);
+                            }
+                        }
+                        break;
+                    }
                     case 'switch':
                     case 'int':
                     {
@@ -223,6 +279,20 @@ class UsersRelease extends Model
                     }
 
                     case 'imgs':
+                    {
+                        $eyou_imgupload_list = [];
+                        foreach ($val as $k2 => $v2) {
+                            $v2 = trim($v2);
+                            if (empty($v2)) continue;
+                            $eyou_imgupload_list[] = [
+                                'image_url' => handle_subdir_pic($v2),
+                                'intro'     => '',
+                            ];
+                        }
+                        $val = serialize($eyou_imgupload_list);
+                        break;
+                    }
+
                     case 'files':
                     {
                         foreach ($val as $k2 => $v2) {
@@ -262,7 +332,18 @@ class UsersRelease extends Model
 
                     default:
                     {
-                        $val = trim($val);
+                        if (is_array($val)) {
+                            $new_val = [];
+                            foreach ($val as $_k => $_v) {
+                                $_v = trim($_v);
+                                if (!empty($_v)) {
+                                    $new_val[] = $_v;
+                                }
+                            }
+                            $val = $new_val;
+                        } else {
+                            $val = trim($val);
+                        }
                         break;
                     }
                 }
@@ -293,17 +374,9 @@ class UsersRelease extends Model
      */
     public function GetUsersReleaseData($channel_id = null, $typeid = null, $aid = null, $method = 'add')
     {
-//        $typeid = 0;distinct
-        // 不显示在发布表单的字段
-        $hideField = array('id','aid','add_time','update_time');
-
-        // 查询指定的自定义字段
-        $id = Db::name('channelfield_bind')->where('typeid', 'in',[0,$typeid])->column('field_id');
-
-        // 模型ID
+        $hideField = array('id','aid','add_time','update_time','content_ey_m'); // 不显示在发布表单的字段
         $channel_id = intval($channel_id);
         $map = array(
-            'id'            => ['IN', $id],
             'channel_id'    => array('eq', $channel_id),
             'name'          => array('notin', $hideField),
             'ifmain'        => 0,
@@ -311,26 +384,26 @@ class UsersRelease extends Model
             'is_release'    => 1,
         );
         $row = model('Channelfield')->getListByWhere($map, '*');
-//        $map2 = array(
-//            'name' => 'content',
-//            'channel_id' => $channel_id
-//        );
-//        $row2 = model('Channelfield')->getListByWhere($map2, '*');
-//
-//        $row = array_merge($row, $row2);
 
         /*编辑时显示的数据*/
         $addonRow = array();
         if ('edit' == $method) {
             if (6 == $channel_id) {
-                $aid = M('archives')->where(array('typeid'=>$typeid, 'channel'=>$channel_id))->getField('aid');
+                $aid = Db::name('archives')->where(array('typeid'=>$typeid, 'channel'=>$channel_id))->getField('aid');
             }
-            $tableExt = M('channeltype')->where('id', $channel_id)->getField('table');
+            $tableExt = Db::name('channeltype')->where('id', $channel_id)->getField('table');
             $tableExt .= '_content';
-            $addonRow = M($tableExt)->field('*')->where('aid', $aid)->find();
+            $addonRow = Db::name($tableExt)->field('*')->where('aid', $aid)->find();
         }
         /*--end*/
-
+        $channelfieldBindRow = Db::name('channelfield_bind')->where([
+            'typeid'    => ['IN', [0, $typeid]],
+        ])->column('field_id');
+        foreach ($row as $key=>$val){
+            if (!in_array($val['id'], $channelfieldBindRow) && !in_array($val['name'], ['content','content_ey_m'])) {
+                unset($row[$key]);
+            }
+        }
         $list = $this->showViewFormData($row, 'addonFieldExt', $addonRow);
         return $list;
     }
@@ -444,8 +517,48 @@ class UsersRelease extends Model
                         if (isset($addonRow[$val['name']])) {
                             $val['trueValue'] = explode(',', $addonRow[$val['name']]);
                         } else {
-                            $dfTrueValue = !empty($dfvalueArr[0]) ? $dfvalueArr[0] : '';
-                            $val['trueValue'] = array($dfTrueValue);
+                            if ( !empty($val['set_type']) && 1 == $val['set_type']){
+                                $val['trueValue'] = [];
+                            }else {
+                                $dfTrueValue = !empty($dfvalueArr[0]) ? $dfvalueArr[0] : '';
+                                $val['trueValue'] = array($dfTrueValue);
+                            }
+                        }
+                        if ( !empty($val['set_type']) && 1 == $val['set_type']){
+                            //三级联动的需要处理
+                            $rid = $val['dfvalue'][0]['id'];
+                            $region_data = Db::name('region')->where('id',$rid)->find();//这里查出来的只能是省级1或者市级2
+                            $val['region_level'] = $region_data['level'];
+                            $region_arr = [['id'=>-1,'name'=>'请选择']];
+                            if (2 == $region_data['level']){
+                                $province_list = get_province_list();
+                                $val['city_list'] = array_merge($region_arr,$val['dfvalue']);
+                                $val['trueValue'][0] = $region_data['parent_id'];
+                                $val['dfvalue'] = $province_list;
+                            }elseif (3 == $region_data['level']){
+                                $province_list = get_province_list();
+                                $province_id = Db::name('region')->where('id',$region_data['parent_id'])->value('parent_id');
+                                $val['area_list'] = array_merge($region_arr,$val['dfvalue']);
+                                $val['dfvalue'] = $province_list;
+                                $val['trueValue'][0] = $province_id;
+                                $val['trueValue'][1] = $region_data['parent_id'];
+                                if (empty($val['trueValue'][2])) $val['trueValue'][2] = -1;
+                            }
+                            if (!empty($val['trueValue'][1])){
+                                $field_region_type = config('global.field_region_type');
+                                //如果是4个特殊的直辖市,市的数据直接显示到区
+                                if (in_array($val['trueValue'][0],$field_region_type)){
+                                    $city_ids = Db::name('region')->where(['level'=>2,'parent_id'=>$val['trueValue'][0]])->column('id');
+                                    $city_list = Db::name('region')->where(['level'=>3])->where('parent_id','in',$city_ids)->select();
+                                }else{
+                                    $city_list = Db::name('region')->where(['level'=>2,'parent_id'=>$val['trueValue'][0]])->select();
+                                }
+                                $val['city_list'] = array_merge($region_arr,$city_list);
+                            }
+                            if (!empty($val['trueValue'][2])){
+                                $area_list = Db::name('region')->where(['level'=>3,'parent_id'=>$val['trueValue'][1]])->select();
+                                $val['area_list'] = array_merge($region_arr,$area_list);
+                            }
                         }
                         break;
                     }
@@ -504,10 +617,20 @@ class UsersRelease extends Model
                     {
                         $val[$val['name'].'_eyou_imgupload_list'] = array();
                         if (isset($addonRow[$val['name']]) && !empty($addonRow[$val['name']])) {
-                            $eyou_imgupload_list = explode(',', $addonRow[$val['name']]);
+                            if (preg_match('/^a\:(\d+)\:\{/', $addonRow[$val['name']])) {
+                                $eyou_imgupload_list = unserialize($addonRow[$val['name']]);
+                            } else {
+                                $eyou_imgupload_list = explode(',', $addonRow[$val['name']]);
+                                foreach ($eyou_imgupload_list as $_k => $_v) {
+                                    $eyou_imgupload_list[$_k] = [
+                                        'image_url' => $_v,
+                                        'intro'     => '',
+                                    ];
+                                }
+                            }
                             //支持子目录
                             foreach ($eyou_imgupload_list as $k1 => $v1) {
-                                $eyou_imgupload_list[$k1] = handle_subdir_pic($v1);
+                                $eyou_imgupload_list[$k1]['image_url'] = handle_subdir_pic($v1['image_url']);
                             }
                             $val[$val['name'].'_eyou_imgupload_list'] = $eyou_imgupload_list;
                         }

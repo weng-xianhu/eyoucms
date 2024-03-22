@@ -1,0 +1,527 @@
+<style type="text/css">
+	.evalute {
+		text-align: left;
+	}
+	
+	.box1 h3.title {
+		padding: 0 15px;
+		font-size: 14px;
+		line-height: 40px;
+		color: #666;
+		font-weight: 700;
+		border: 1px solid #eee;
+		background-color: #f7f7f7;
+		margin-top: 30px;
+		text-align: left;
+	}
+	
+	.box1 h3.attrtitle {
+		padding: 0 15px;
+		font-size: 14px;
+		line-height: 40px;
+		color: #666;
+		font-weight: 700;
+		border: 1px solid #eee;
+		background-color: #f7f7f7;
+		margin-top: 30px;
+		text-align: left;
+	}
+	
+	.percentgood {
+		overflow: hidden;
+		clear: both;
+		padding: 15px;
+		border: 1px solid #eeeeee;
+	}
+	
+	.percentgood .comment-percent {
+		display: table-cell;
+		min-width: 200px;
+		text-align: center;
+		border-right: 1px solid #f0f0f0;
+		vertical-align: middle;
+	}
+	
+	.percentgood .comment-percent .comment-star {
+		width: 78px;
+		height: 14px;
+		margin: 0 auto;
+		background: url(__PUBLIC__/static/common/images/star.png) no-repeat
+	}
+	
+	.percentgood .comment-percent .star0 {
+		background-position: -80px 0
+	}
+	
+	.percentgood .comment-percent .star1 {
+		background-position: -64px 0
+	}
+	
+	.percentgood .comment-percent .star2 {
+		background-position: -48px 0
+	}
+	
+	.percentgood .comment-percent .star3 {
+		background-position: -32px 0
+	}
+	
+	.percentgood .comment-percent .star4 {
+		background-position: -16px 0
+	}
+	
+	.percentgood .comment-percent .star5 {
+		background-position: 0 0
+	}
+	
+	.percentgood .comment-body {
+		width: 100%;
+		display: table-cell;
+		vertical-align: middle;
+	}
+	
+	.percentgood .comment-body .graph {
+		width: 440px;
+		margin: 0 auto;
+	}
+	
+	.percentgood .comment-body .graph .graph-scroller {
+		width: 400px;
+		margin-top: 30px;
+		position: relative;
+		background: url(__PUBLIC__/static/common/images/graph-scroller.png) 0 no-repeat;
+	}
+	
+	.percentgood .comment-body .graph .graph-scroller em {
+		width: 28px;
+		height: 18px;
+		line-height: 18px;
+		display: block;
+		margin-left: -18px;
+		position: relative;
+		top: -24px;
+		color: #ffffff;
+		font-style: normal;
+		text-align: center;
+		/* background-color: #ed0014; */
+		/* background: -webkit-linear-gradient(55deg, #ed0014, #fa5252); */
+		background: -moz-linear-gradient(55deg, #ed0014, #fa5252);
+		background: linear-gradient(55deg, #ed0014, #fa5252);
+	}
+	
+	.percentgood .comment-body .graph .graph-scroller em .caret {
+		display: inline-block;
+		width: 0;
+		height: 0;
+		margin-left: -4px;
+		position: absolute;
+		bottom: -4px;
+		left: 50%;
+		color: #ed0014;
+		vertical-align: middle;
+		border-top: 4px dashed;
+		border-right: 4px solid transparent;
+		border-left: 4px solid transparent;
+	}
+	
+	.percentgood .comment-body .graph .graph-description {
+		display: flex;
+		padding-left: 40px;
+	}
+	
+	.percentgood .comment-body .graph .graph-description li {
+		width: 80px;
+		color: #999999;
+		text-align: center;
+	}
+	
+	.percentgood .comment-right {
+		min-width: 200px;
+		text-align: center;
+		display: table-cell;
+		border-left: 1px solid #f0f0f0;
+		vertical-align: middle;
+        color: #666;
+	}
+	
+	.percentgood .percent-tit {
+		font-size: 12px;
+		color: #666;
+		font-weight: 400
+	}
+	
+	.percentgood .percent-con {
+		font-size: 28px;
+		color: #e4393c;
+		font-family: arial
+	}
+	
+	.percentgood .percent-con span {
+		font-size: 23px;
+	}
+	
+	.percentgood .pgbox {
+		width: 15%;
+		float: left;
+		margin: 2% 7% 0;
+	}
+	
+	.percentgood dl.total {
+		text-align: center;
+	}
+	
+	.percentgood dl.total dt {
+		font-size: 40px;
+		color: #e4393c;
+		line-height: initial;
+		margin-top: 0;
+	}
+	
+	.pgbox dd.percentjd {
+		background-color: #eeeeee;
+		height: 10px;
+		width: 100%;
+		margin-top: 10px;
+	}
+	
+	/*.pgbox dl{margin-top:25px;}*/
+	.pgbox dl dt {
+		margin-top: 14px;
+	}
+	
+	dd.percentjd i {
+		background-color: #e4393c;
+		display: block;
+		height: 10px;
+		width: 50%;
+	}
+	
+	ul.evalute-titleul {
+		overflow: hidden;
+		border: 1px solid #F5F5F5;
+		background-color: #FAFAFA;
+		height: 30px;
+		line-height: 30px;
+	}
+	
+	ul.evalute-titleul li {
+		float: left;
+		padding: 0 20px;
+	}
+	
+	ul.evalute-titleul li.check a {
+		color: #e4393c;
+		font-weight: bold;
+	}
+	
+	ul.evalute-titleul li.check a em.embold {
+		font-weight: bold;
+	}
+	
+	/*.evalute-detail {margin-top:30px;}*/
+	.evalute-detail ul .lie {
+		overflow: hidden;
+		padding: 20px 0 10px 0;
+		border-bottom: 1px solid #eeeeee;
+	}
+	
+	.evalute-detail ul .lie:hover a.receivea {
+		display: inline-block;
+		visibility: visible;
+	}
+	
+	.showvisi {
+		visibility: visible !important;
+	}
+	
+	.evalute-detail li div.column {
+		float: left;
+	}
+	
+	.evalute-detail li div.starevalute {
+		width: 12%;
+	}
+	
+	.evalute-detail li div.personeva {
+		width: 88%;
+	}
+	
+	.evalute-detail .reply {
+		display: flex;
+		padding-left: 12%;
+		font-size: 12px;
+	}
+    .evalute-detail .reply .reply-con {
+    	display: flex;
+    	font-size: 12px;
+        border-top: 1px solid #eeeeee;
+    }
+	
+	.evalute-detail .reply .reply-con>p {
+		padding: 10px 0;
+	}
+	
+	.evalute-detail .reply .reply-con ul {
+		flex: 1;
+		margin-left: 10px;
+	}
+	
+	.evalute-detail .reply .reply-con ul li {
+		display: flex;
+		justify-content: space-between;
+		padding: 10px 0;
+	}
+	
+	.evalute-detail .reply .reply-con ul li span {
+		flex: 1;
+		color: #ed0014;
+		line-height: 24px;
+        margin-right: 10px;
+        text-align: justify;
+        word-break:break-all;
+        word-wrap:break-word;
+	}
+	
+	.evalute-detail .reply .reply-con ul li p {
+		color: #bfbfbf;
+	}
+	
+	.evalute-detail .replylist {
+		display: none;
+	}
+	
+	.evalute-detail .replylist .receive {
+		border-top: dashed 1px #DDDDDD;
+		padding-top: 10px;
+		padding-bottom: 10px;
+		clear: both;
+	}
+	
+	.evalute-detail .replylist .receive a.receivea {
+		visibility: visible;
+		clear: both;
+		padding-top: 5px;
+		display: inline-block;
+	}
+	
+	.evalute-detail .replylist .receive .content {
+		width: 670px;
+		float: left;
+	}
+	
+	.evalute-detail .receive .user-name {
+		color: #005ea7;
+	}
+	
+	.otherbox {
+		text-align: left;
+		padding: 20px 0;
+	}
+	
+	.personeva .comment-star {
+		width: 78px;
+		height: 14px;
+		background: url(__PUBLIC__/static/common/images/star.png) no-repeat
+	}
+	
+	.personeva .star0 {
+		background-position: -80px 0
+	}
+	
+	.personeva .star1 {
+		background-position: -64px 0
+	}
+	
+	.personeva .star2 {
+		background-position: -48px 0
+	}
+	
+	.personeva .star3 {
+		background-position: -32px 0
+	}
+	
+	.personeva .star4 {
+		background-position: -16px 0
+	}
+	
+	.personeva .star5 {
+		background-position: 0 0
+	}
+	
+	.personeva .comment {
+		padding: 10px 0;
+		line-height: 23px;
+        text-align: justify;
+	}
+	
+	.personeva .comment .description {
+		margin: 0 0 5px 0;
+		font-size: 12px;
+	}
+	
+	.personeva .comment dd {
+		float: left;
+		margin-right: 10px;
+	}
+	
+	.personeva .comment .show-pic {
+		display: inline-block;
+		margin-top: 5px;
+	}
+	
+	.personeva .comment .show-pic dd {
+		position: relative;
+	}
+	
+	/*.personeva .comment .show-pic dd a{cursor: url(../images/fd.png),auto;display: block;border:1px solid #fff;}*/
+	.personeva .comment .show-pic dd a.on {
+		border: 1px solid #DE342F;
+	}
+	
+	.personeva .comment .show-pic a.sc_prev,
+	.personeva .comment .show-pic a.sc_next {
+		font-size: 40px;
+		display: block;
+		background-color: #ccc;
+		width: 30px;
+		;
+		text-align: center;
+		padding: 29px 0;
+		float: left;
+	}
+	
+	.personeva .comment .show-pic a.sc_prev {}
+	
+	.personeva .comment .show-pic a.sc_next {}
+	
+	.personeva .comment .show-pic .sc_bd {
+		float: left;
+		width: 100%;
+	}
+	
+	.personeva .comment-ge {
+		font-size: 12px;
+		color: #9c9c9c;
+		margin-bottom: 10px;
+	}
+	
+	.personeva .comment-ge span {
+		float: right;
+	}
+	
+	
+	.evalute-detail li div.rankevalute {
+		width: 72%;
+		padding: 0 2%
+	}
+	
+	.evalute-detail li div.rankevalute .member {
+		width: 50px;
+		height: 50px;
+		border-radius: 100%;
+		overflow: hidden;
+		margin: auto;
+	}
+	
+	.evalute-detail li div.rankevalute .member img {
+		width: 100%;
+	}
+    .evalute-detail li div.rankevalute .menber-name{
+    	white-space:nowrap; 
+        overflow:hidden; 
+        text-overflow:ellipsis;
+    }
+	.evalute-detail li div.rankevalute .menber-level{
+		color: #9c9c9c;
+	}
+	.loadmore {
+		border-radius: 3px;
+		cursor: pointer;
+	}
+</style>
+<div class="percentgood">
+	<div class="comment-percent"> <strong class="percent-tit">评分</strong> <div class="percent-con">{$averageRating}</div> </div>
+	<div class="comment-body">
+		<div class="graph">
+			<div class="graph-scroller"> <em style="left: {$averageRatingRate}%;"> {$averageRating} <span class="caret"></span> </em> </div>
+			<ul class="graph-description">
+				<li>非常不满</li>
+				<li>不满意</li>
+				<li>一般</li>
+				<li>满意</li>
+				<li>非常满意</li>
+			</ul>
+		</div>
+	</div>
+	<div class="comment-right"> <p style="line-height: 75px;">评论数: {$totalScoreRows}</p> </div>
+</div>
+
+<div class="tab-gbw">
+	<div class="bd">
+		<div class="evalute-detail" id="all">
+			<ul>
+				{eyou:commentlist name="$Comment" id="field"}
+				<li class="lie" id="{$field.comment_id}">
+					<div class="column starevalute">
+						<div class="column rankevalute">
+							<div class="member"> <img src="{$field.head_pic}"/> </div>
+							<div class="menber-rank" style="text-align: center">
+								<div class="menber-name">{$field.nickname}</div> <div class="menber-level">{$field.level_name}</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="column personeva">
+						<div class="comment-star star{$field.total_score}"></div>
+						<div class="comment"> 
+							<div class="description"> {$field.content} </div>
+							{eyou:notempty name="$field.upload_img"}
+							<div class="show-pic" id="show-pic">
+								<div class="sc_bd">
+									<dl>
+									{eyou:volist name="$field.upload_img" id="img"}
+										{eyou:notempty name="$img"}
+										<dd><a target="_blank" href="{$img}"><img src="{$img}" width="80" height="80"/></a></dd>
+										{/eyou:notempty}
+									{/eyou:volist}
+									</dl>
+								</div>
+							</div>
+							{/eyou:notempty}
+						</div>
+						<div class="comment-ge">
+							{notempty name="$field.spec_value"}[ {$field.spec_value} ]{else/}&nbsp;{/notempty} 
+							<span class="fr">{$field.add_time|date='Y-m-d H:i:s',###}</span>
+						</div>
+					</div>
+					{notempty name="$field.admin_reply.adminReply"}
+                    <div class="reply">
+                        <div class="reply-con">
+                            <p>商家回复:</p>
+                            <ul>
+                                <li>
+                                    <span class="">{$field.admin_reply.adminReply}</span><p class="">{$field.admin_reply.replyTime}</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    {/notempty}
+				</li>
+				{/eyou:commentlist}
+			</ul>
+		</div>
+	</div>
+	<div style="text-align: center; margin-top: 30px;" id="comment_page">{$Page}</div>
+</div>
+
+<script type="text/javascript">
+	$(".evalute-titleul li").each(function() {
+		var obj = $(this);
+		obj.click(function() {
+			obj.addClass("check").siblings().removeClass("check");
+			obj.find("em").addClass("embold").siblings().removeClass("embold");
+			var level = obj.data("level");
+			$('#eyou_comment_type_1571216382').val(level);
+			AjaxComment(level, 1);
+		});
+	});
+</script>

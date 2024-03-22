@@ -453,7 +453,9 @@
                                 text = lang.errorUploadRetry;
                                 break;
                         }
-                        $info.text(text).show();
+                        setTimeout(function(){
+                            $info.text(text).show();
+                        },1);
                     };
 
                 if (file.getStatus() === 'invalid') {

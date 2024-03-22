@@ -1,0 +1,770 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll;min-width:auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;box-shadow:none;">
+    {include file="canal/bar" /}
+    <!-- 操作说明 -->
+    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); margin-bottom: 15px;">
+        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+        </div>
+        <ul>
+            <li>1，API接口：API接口不限于：原生小程序、uni-app小程序、vue制作的h5端等可想象的应用场景。为防止API接口被盗用，建议大家开启接口密钥，且一定要<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=28345','API接口密钥的验证逻辑代码教程')" class="red">【查看教程】</a>加入这段验证逻辑。本系统推荐一款 <a href="https://gitee.com/weng_xianhu/eymini" target="_blank">易优微信开源小程序</a>，有基础能力的可以下载体验。</li>
+            <li>2，微信小程序：登录 <a href="https://mp.weixin.qq.com" target="_blank">微信小程序平台</a> ，在“开发管理->开发设置”里获取AppID、AppSecret的值。微信支付配置：登录 <a href="https://pay.weixin.qq.com" target="_blank">微信支付商户平台</a> ，具体点击<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=8829&origin_eycms=1','微信支付配置教程')" class="red">查看教程</a>操作。配置主要用于开源微信小程序。</li>
+            <li>3，百度小程序：登录 <a href="https://smartprogram.baidu.com" target="_blank">智能小程序平台</a>，在“管理->基础设置->开发设置”里获取AppID、AppKey、AppSecret的值。配置主要用于开源微信小程序。</li>
+        </ul>
+    </div>
+    <div class="flexigrid htitx">
+        <form class="form-horizontal" id="post_form" action="{:url('Canal/conf_api')}" method="post">
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th class="sign w10" axis="col0">
+                                    <div class="tc"></div>
+                                </th>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tc">API接口</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <dl class="row none">
+                    <dt class="tit">
+                        <label for="apiopen">API接口</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin"><input id="apiopen1" name="apiopen" value="0" type="radio" {if condition="empty($data['apiopen'])"}checked="checked"{/if}>开启</label>
+                        &nbsp;
+                        <label class="curpoin"><input id="apiopen0" name="apiopen" value="1" type="radio" {if condition="!empty($data['apiopen'])"}checked="checked"{/if}>关闭</label>
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <div id="div_apiverify" {if condition="false && !empty($data['apiopen'])"}class="none"{/if}>
+                    <dl class="row">
+                        <dt class="tit">
+                            <label for="apiverify">接口验证</label>
+                        </dt>
+                        <dd class="opt">
+                            <label class="curpoin"><input id="apiverify1" name="apiverify" value="1" type="radio" {if condition="!empty($data['apiverify'])"}checked="checked"{/if}>验证</label>
+                            &nbsp;
+                            <label class="curpoin"><input id="apiverify0" name="apiverify" value="0" type="radio" {if condition="empty($data['apiverify'])"}checked="checked"{/if}>忽略</label>
+                            <span class="err"></span>
+                            <p class="notic"></p>
+                        </dd>
+                    </dl>
+                    <dl class="row {if condition="empty($data['apiverify'])"}none{/if}" id="dl_apikey">
+                        <dt class="tit">
+                            <label for="apikey"><em>*</em>接口密钥</label>
+                        </dt>
+                        <dd class="opt">
+                            <input type="text" name="apikey" id="apikey" value="{$data['apikey']|default=''}" class="input-txt" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\w]/g,'');" onpaste="this.value=this.value.replace(/[^\w]/g,'')">
+                            <input type="hidden" name="old_apikey" id="old_apikey" value="{$data['apikey']|default=''}" class="input-txt" autocomplete="off">
+                            &nbsp;<a href="javascript:void(0);" onclick="reset_apikey();" class="ncap-btn ncap-btn-green">刷新</a>
+                            <p class="notic">必须为英文或数字，长度至少32位字符</p>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="bot">
+                    <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+        $(function(){
+            $('input[name=apiopen]').click(function(){
+                var apiopen = $(this).val();
+                if (1 == apiopen) {
+                    $('#div_apiverify').hide();
+                } else {
+                    $('#div_apiverify').show();
+                }
+            });
+    
+            $('input[name=apiverify]').click(function(){
+                var apiverify = $(this).val();
+                if (1 == apiverify) {
+                    $('#dl_apikey').show();
+                } else {
+                    $('#dl_apikey').hide();
+                }
+            });
+        });
+    
+        // 判断输入框是否为空
+        function checkForm(){
+            var apikey = $.trim($('#apikey').val());
+            if(apikey == ''){
+                showErrorMsg('接口密钥不能为空！');
+                $('#apikey').focus();
+                return false;
+            } else if (apikey.length < 32) {
+                showErrorMsg('接口密钥长度至少32位字符！');
+                $('#apikey').focus();
+                return false;
+            }
+            layer_loading('正在处理');
+            $.ajax({
+                url: "{:url('Canal/conf_api', ['_ajax'=>1])}",
+                type: 'POST',
+                dataType: 'JSON',
+                data: $('#post_form').serialize(),
+                success: function (res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        showErrorAlert(res.msg);
+                        return false;
+                    }
+                },
+                error: function (e) {
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                    return false;
+                }
+            });
+        }
+    
+        // 重置接口密钥
+        function reset_apikey(){
+            var title = '您确定要刷新当前密钥吗？<br/><span style="color: red; ">一旦保存后，已关联密钥的小程序将失效，请重新添加新密钥到小程序里，并发布上线。</span>';
+            title += '<style type="text/css">.layui-layer-content{text-align:left!important;}</style>';
+            layer.confirm(title, {
+                area: ['480px', '190px'],
+                move: false,
+                title: '刷新密钥',
+                icon: 3,
+                shade: layer_shade,
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['刷新', '取消'], //按钮
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                }
+            }, function () {
+                $.ajax({
+                    url: "{:url('Canal/reset_apikey')}",
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: {_ajax:1},
+                    success: function (res) {
+                        layer.closeAll();
+                        if (1 == res.code) {
+                            $('#apikey').val(res.data.apikey);
+                            // layer.msg(res.msg, {time: 1000});
+                        } else {
+                            showErrorAlert(res.msg);
+                            return false;
+                        }
+                    },
+                    error: function (e) {
+                        layer.closeAll();
+                        showErrorAlert(e.responseText);
+                        return false;
+                    }
+                });
+            }, function (index) {
+                layer.closeAll(index);
+            });
+        }
+    </script>
+    
+    <div class="flexigrid htitx">
+        <form class="form-horizontal" id="weixin_post_form" action="{:url('Canal/conf_weixin')}" method="post">
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th class="sign w10" axis="col0">
+                                    <div class="tc"></div>
+                                </th>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tc">微信小程序</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default" style="position: sticky;">
+                <dl class="row"><dt class="tit"><label><b>微信登录</b></label></dt></dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="weixin_appid"><em id="em_weixin_appid" {empty name='$weixin_data.appid'}style="display: none;"{/empty}>*</em>AppID</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="weixin_appid" id="weixin_appid" value="{$weixin_data.appid|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">小程序ID</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="weixin_appsecret"><em id="em_weixin_appsecret" {empty name='$weixin_data.appsecret'}style="display: none;"{/empty}>*</em>AppSecret</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="weixin_appsecret" id="weixin_appsecret" value="{$weixin_data.appsecret|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">小程序密钥</p>
+                    </dd>
+                </dl>
+                <dl class="row"><dt class="tit"><label><b>微信支付</b></label></dt></dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="weixin_mchid">商户号</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="weixin_mchid" id="weixin_mchid" value="{$weixin_data.mchid|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">商户ID</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="apikey">APIv2密钥</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="weixin_apikey" id="weixin_apikey" value="{$weixin_data.apikey|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">APIv2密钥</p>
+                    </dd>
+                </dl>
+                
+                <div class="bot">
+                    <a href="JavaScript:void(0);" onclick="checkFormWeixin();" class="ncap-btn-big ncap-btn-green" id="submitWeixinBtn">确认提交</a>
+                </div>
+            </div>
+            <div class="" style="position: absolute;top: 53px;left: 750px;">
+                <dl class="row {empty name='$weixin_qrcodeurl'}none{/empty}" id="dl_weixin_qrcode" style="background: #fff;">
+                    <dd class="opt">
+                        <span id="weixin_span_qrcode"></span>
+                        <div class="ercodepic">
+                            <img id="weixin_img_qrcode" src="__STATIC__/common/images/loading.gif" width="23" height="23" />
+                        </div>
+                        <p class="notic"></p>
+                    </dd>
+                    <dt class="tit" style="text-align: center;line-height: 32px;font-size: 16px;">
+                        <label for="baidu_qrcode">扫码浏览小程序</label>
+                    </dt>
+                </dl>
+            </div>
+            
+        </form>
+    </div>
+    <script type="text/javascript">
+        $(function() {
+            //操作提示缩放动画
+            $("#weixin_checkZoom").toggle(
+                function() {
+                    $("#weixin_explanation").animate({
+                        color: "#FFF",
+                        backgroundColor: "#4FD6BE",
+                        width: "80",
+                        height: "20",
+                    },300);
+                    $("#weixin_explanationZoom").hide();
+                },
+                function() {
+                    $("#weixin_explanation").animate({
+                        color: "#2CBCA3",
+                        backgroundColor: "#EDFBF8",
+                        width: "99%",
+                        height: "20",
+                    },300,function() {
+                        $(this).css('height', '100%');
+                    });
+                    $("#weixin_explanationZoom").show();
+                }
+            );
+            $('#weixin_appid, #weixin_appsecret').keyup(function(){
+                var weixin_appid = $.trim($('#weixin_appid').val());
+                var weixin_appsecret = $.trim($('#weixin_appsecret').val());
+                if (weixin_appid != '' || weixin_appsecret != '') {
+                    $('#em_weixin_appid').show();
+                    $('#em_weixin_appsecret').show();
+                } else {
+                    $('#em_weixin_appid').hide();
+                    $('#em_weixin_appsecret').hide();
+                }
+            });
+    
+            function ajax_get_weixin_qrcode()
+            {
+                var weixin_appid = $.trim($('#weixin_appid').val());
+                var weixin_appsecret = $.trim($('#weixin_appsecret').val());
+                if (weixin_appid != '' && weixin_appsecret != '') {
+                    $('#dl_weixin_qrcode').show();
+    
+                    var weixin_qrcodeurl = "{$weixin_qrcodeurl}";
+                    if (weixin_qrcodeurl != '') {
+                        $('#weixin_img_qrcode').attr('src', weixin_qrcodeurl);
+                        setTimeout(function(){
+                            $('#weixin_img_qrcode').attr('width', 122).attr('height', 122);
+                        },100);
+                    }
+                }
+    
+                $.ajax({
+                    url: "{:url('Canal/ajax_get_weixin_qrcode', ['_ajax'=>1])}",
+                    type: 'GET',
+                    dataType: 'JSON',
+                    data: {},
+                    success: function (res) {
+                        if (1 == res.code) {
+                            $('#weixin_span_qrcode').hide();
+                            $('#weixin_img_qrcode').attr('src', '');
+                            $('#weixin_img_qrcode').attr('src', res.data.qrcodeurl).attr('width', 122).attr('height', 122).show();
+                        } else {
+                            $('#weixin_span_qrcode').html(res.msg);
+                            $('#weixin_img_qrcode').hide();
+                            return false;
+                        }
+                    },
+                    error: function (e) {
+                        $('#weixin_span_qrcode').html(e.responseText);
+                        $('#weixin_img_qrcode').hide();
+                        return false;
+                    }
+                });
+            }
+            ajax_get_weixin_qrcode();
+        });
+        // 判断输入框是否为空
+        function checkFormWeixin(){
+            var weixin_appid = $.trim($('#weixin_appid').val());
+            var weixin_appsecret = $.trim($('#weixin_appsecret').val());
+            if (weixin_appid != '' || weixin_appsecret != '') {
+                if(weixin_appid == ''){
+                    showErrorMsg('AppID不能为空！');
+                    $('#weixin_appid').focus();
+                    return false;
+                }
+                if(weixin_appsecret == ''){
+                    showErrorMsg('AppSecret不能为空！');
+                    $('#weixin_appsecret').focus();
+                    return false;
+                }
+                if($.trim($('#weixin_mchid').val()) == '' && $.trim($('#weixin_apikey').val()) != ''){
+                    showErrorMsg('微信支付商户号不能为空！');
+                    $('#weixin_mchid').focus();
+                    return false;
+                }
+                if($.trim($('#weixin_mchid').val()) != '' && $.trim($('#weixin_apikey').val()) == ''){
+                    showErrorMsg('微信支付API密钥不能为空！');
+                    $('#weixin_apikey').focus();
+                    return false;
+                }
+            }
+            layer_loading('正在处理');
+            $.ajax({
+                url: "{:url('Canal/conf_weixin', ['_ajax'=>1])}",
+                type: 'POST',
+                dataType: 'JSON',
+                data: $('#weixin_post_form').serialize(),
+                success: function (res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        showErrorAlert(res.msg);
+                        return false;
+                    }
+                },
+                error: function (e) {
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                    return false;
+                }
+            });
+        }
+    </script>
+    
+    <div class="flexigrid htitx">
+        <form class="form-horizontal" id="baidu_post_form" action="{:url('Canal/conf_baidu')}" method="post">
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th class="sign w10" axis="col0">
+                                    <div class="tc"></div>
+                                </th>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tc">百度小程序</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default" style="position: sticky;">
+                <dl class="row"><dt class="tit"><label><b>百度登录</b></label></dt><dd class="opt">[开发者平台 - 管理 - 基础设置 - 开发设置]</dd></dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="baidu_appid"><em id="em_baidu_appid" {empty name='$baidu_data.appid'}style="display: none;"{/empty}>*</em>App ID</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="baidu_appid" id="baidu_appid" value="{$baidu_data.appid|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">App ID(智能小程序ID)</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="baidu_appkey"><em id="em_baidu_appkey" {empty name='$baidu_data.appkey'}style="display: none;"{/empty}>*</em>App Key</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="baidu_appkey" id="baidu_appkey" value="{$baidu_data.appkey|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">App Key</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="baidu_appsecret"><em id="em_baidu_appsecret" {empty name='$baidu_data.appsecret'}style="display: none;"{/empty}>*</em>App Secret</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="baidu_appsecret" id="baidu_appsecret" value="{$baidu_data.appsecret|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">App Secret(智能小程序密匙)</p>
+                    </dd>
+                </dl>
+                <div class="bot">
+                    <a href="JavaScript:void(0);" onclick="checkBaiduForm();" class="ncap-btn-big ncap-btn-green" id="submitBaiduBtn">确认提交</a>
+                </div>
+            </div>
+            <div class="" style="position: absolute;top: 53px;left: 750px;">
+                <dl class="row {empty name='$baidu_qrcodeurl'}none{/empty}" id="baidu_dl_qrcode" style="background: #fff;">
+                    
+                    <dd class="opt">
+                        <span id="baidu_span_qrcode"></span>
+                        <div class="ercodepic">
+                            <img id="img_baidu_qrcode" src="__STATIC__/common/images/loading.gif" width="23" height="23" />
+                        </div>
+                        <p class="notic"></p>
+                    </dd>
+                    <dt class="tit" style="text-align: center;line-height: 32px;font-size: 16px;">
+                        <label for="baidu_qrcode">扫码浏览小程序</label>
+                    </dt>
+                </dl>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+        $(function() {
+            //操作提示缩放动画
+            $("#baidu_checkZoom").toggle(
+                function() {
+                    $("#baidu_explanation").animate({
+                        color: "#FFF",
+                        backgroundColor: "#4FD6BE",
+                        width: "80",
+                        height: "20",
+                    },300);
+                    $("#baidu_explanationZoom").hide();
+                },
+                function() {
+                    $("#baidu_explanation").animate({
+                        color: "#2CBCA3",
+                        backgroundColor: "#EDFBF8",
+                        width: "99%",
+                        height: "20",
+                    },300,function() {
+                        $(this).css('height', '100%');
+                    });
+                    $("#baidu_explanationZoom").show();
+                }
+            );
+            $('#baidu_appid, #baidu_appkey, #baidu_appsecret').keyup(function(){
+                var baidu_appid = $.trim($('#baidu_appid').val());
+                var baidu_appkey = $.trim($('#baidu_appkey').val());
+                var baidu_appsecret = $.trim($('#baidu_appsecret').val());
+                if (baidu_appid != '' || baidu_appkey != '' || baidu_appsecret != '') {
+                    $('#em_baidu_appid').show();
+                    $('#em_baidu_appkey').show();
+                    $('#em_baidu_appsecret').show();
+                } else {
+                    $('#em_baidu_appid').hide();
+                    $('#em_baidu_appkey').hide();
+                    $('#em_baidu_appsecret').hide();
+                }
+            });
+    
+            function ajax_get_baidu_qrcode()
+            {
+                var baidu_appkey = $.trim($('#baidu_appkey').val());
+                var baidu_appsecret = $.trim($('#baidu_appsecret').val());
+                if (baidu_appkey != '' && baidu_appsecret != '') {
+                    $('#dl_baidu_qrcode').show();
+    
+                    var baidu_qrcodeurl = "{$baidu_qrcodeurl}";
+                    if (baidu_qrcodeurl != '') {
+                        $('#img_baidu_qrcode').attr('src', baidu_qrcodeurl);
+                        setTimeout(function(){
+                            $('#img_baidu_qrcode').attr('width', 122).attr('height', 122);
+                        },100);
+                    }
+                }
+    
+                $.ajax({
+                    url: "{:url('Canal/ajax_get_baidu_qrcode', ['_ajax'=>1])}",
+                    type: 'GET',
+                    dataType: 'JSON',
+                    data: {},
+                    success: function (res) {
+                        if (1 == res.code) {
+                            $('#span_baidu_qrcode').hide();
+                            $('#img_baidu_qrcode').attr('src', '');
+                            $('#img_baidu_qrcode').attr('src', res.data.qrcodeurl).attr('width', 122).attr('height', 122).show();
+                        } else {
+                            $('#span_baidu_qrcode').html(res.msg);
+                            $('#img_baidu_qrcode').hide();
+                            return false;
+                        }
+                    },
+                    error: function (e) {
+                        $('#span_baidu_qrcode').html(e.responseText);
+                        $('#img_baidu_qrcode').hide();
+                        return false;
+                    }
+                });
+            }
+            ajax_get_baidu_qrcode();
+        });
+        // 判断输入框是否为空
+        function checkBaiduForm(){
+            var baidu_appid = $.trim($('#baidu_appid').val());
+            var baidu_appkey = $.trim($('#baidu_appkey').val());
+            var baidu_appsecret = $.trim($('#baidu_appsecret').val());
+            if (baidu_appid != '' || baidu_appkey != '' || baidu_appsecret != '') {
+                if(baidu_appid == ''){
+                    showErrorMsg('App ID不能为空！');
+                    $('input[name=baidu_appid]').focus();
+                    return false;
+                }
+                if(baidu_appkey == ''){
+                    showErrorMsg('App Key不能为空！');
+                    $('input[name=baidu_appkey]').focus();
+                    return false;
+                }
+                if(baidu_appsecret == ''){
+                    showErrorMsg('App Secret不能为空！');
+                    $('input[name=baidu_appsecret]').focus();
+                    return false;
+                }
+            }
+            layer_loading('正在处理');
+            $.ajax({
+                url: "{:url('Canal/conf_baidu', ['_ajax'=>1])}",
+                type: 'POST',
+                dataType: 'JSON',
+                data: $('#baidu_post_form').serialize(),
+                success: function (res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        showErrorAlert(res.msg);
+                        return false;
+                    }
+                },
+                error: function (e) {
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                    return false;
+                }
+            });
+        }
+    </script>
+    
+    <div class="flexigrid htitx">
+        <form class="form-horizontal" id="toutiao_post_form">
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th class="sign w10" axis="col0">
+                                    <div class="tc"></div>
+                                </th>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tc">抖音小程序</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default" style="position: sticky;">
+                <dl class="row"><dt class="tit"><label><b>抖音登录</b></label></dt></dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="toutiao_appid">
+                            <em id="em_toutiao_appid" {empty name='$toutiao_data.appid'} style="display: none;" {/empty}>*</em>AppID
+                        </label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="toutiao_appid" id="toutiao_appid" value="{$toutiao_data.appid|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">小程序ID</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="toutiao_appsecret">
+                            <em id="em_toutiao_appsecret" {empty name='$toutiao_data.secret'} style="display: none;" {/empty}>*</em>AppSecret
+                        </label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="toutiao_appsecret" id="toutiao_appsecret" value="{$toutiao_data.secret|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">小程序密钥</p>
+                    </dd>
+                </dl>
+                <dl class="row"><dt class="tit"><label><b>抖音支付</b></label></dt></dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="toutiao_salt">SALT</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="toutiao_salt" id="toutiao_salt" value="{$toutiao_data.salt|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">请在抖音开放平台-【某某小程序】-【能力】-【支付】-【支付方式管理】-【支付设置】中查看支付系统秘钥 SALT</p>
+                    </dd>
+                </dl>
+                <div class="bot">
+                    <a href="JavaScript:void(0);" onclick="checkFormToutiao();" class="ncap-btn-big ncap-btn-green">确认提交</a>
+                </div>
+            </div>
+            <!-- <div class="" style="position: absolute;top: 53px;left: 750px;">
+                <dl class="row {empty name='$weixin_qrcodeurl'}none{/empty}" id="dl_weixin_qrcode" style="background: #fff;">
+                    <dd class="opt">
+                        <span id="weixin_span_qrcode"></span>
+                        <div class="ercodepic">
+                            <img id="weixin_img_qrcode" src="__STATIC__/common/images/loading.gif" width="23" height="23" />
+                        </div>
+                        <p class="notic"></p>
+                    </dd>
+                    <dt class="tit" style="text-align: center;line-height: 32px;font-size: 16px;">
+                        <label for="baidu_qrcode">扫码浏览小程序</label>
+                    </dt>
+                </dl>
+            </div> -->
+        </form>
+    </div>
+    <script type="text/javascript">
+        $(function() {
+            $('#toutiao_appid, #toutiao_appsecret').keyup(function(){
+                var toutiao_appid = $.trim($('#toutiao_appid').val());
+                var toutiao_appsecret = $.trim($('#toutiao_appsecret').val());
+                if (toutiao_appid != '' || toutiao_appsecret != '') {
+                    $('#em_toutiao_appid').show();
+                    $('#em_toutiao_appsecret').show();
+                } else {
+                    $('#em_toutiao_appid').hide();
+                    $('#em_toutiao_appsecret').hide();
+                }
+            });
+    
+            // function ajax_get_weixin_qrcode() {
+            //     var weixin_appid = $.trim($('#weixin_appid').val());
+            //     var weixin_appsecret = $.trim($('#weixin_appsecret').val());
+            //     if (weixin_appid != '' && weixin_appsecret != '') {
+            //         $('#dl_weixin_qrcode').show();
+    
+            //         var weixin_qrcodeurl = "{$weixin_qrcodeurl}";
+            //         if (weixin_qrcodeurl != '') {
+            //             $('#weixin_img_qrcode').attr('src', weixin_qrcodeurl);
+            //             setTimeout(function(){
+            //                 $('#weixin_img_qrcode').attr('width', 122).attr('height', 122);
+            //             },100);
+            //         }
+            //     }
+            //     $.ajax({
+            //         url: "{:url('Canal/ajax_get_weixin_qrcode', ['_ajax'=>1])}",
+            //         type: 'GET',
+            //         dataType: 'JSON',
+            //         data: {},
+            //         success: function (res) {
+            //             if (1 == res.code) {
+            //                 $('#weixin_span_qrcode').hide();
+            //                 $('#weixin_img_qrcode').attr('src', '');
+            //                 $('#weixin_img_qrcode').attr('src', res.data.qrcodeurl).attr('width', 122).attr('height', 122).show();
+            //             } else {
+            //                 $('#weixin_span_qrcode').html(res.msg);
+            //                 $('#weixin_img_qrcode').hide();
+            //                 return false;
+            //             }
+            //         },
+            //         error: function (e) {
+            //             $('#weixin_span_qrcode').html(e.responseText);
+            //             $('#weixin_img_qrcode').hide();
+            //             return false;
+            //         }
+            //     });
+            // }
+            // ajax_get_weixin_qrcode();
+        });
+
+        // 判断输入框是否为空
+        function checkFormToutiao() {
+            var toutiao_appid = $.trim($('#toutiao_appid').val());
+            var toutiao_appsecret = $.trim($('#toutiao_appsecret').val());
+            if (toutiao_appid == '') {
+                showErrorMsg('AppID不能为空！');
+                $('#toutiao_appid').focus();
+                return false;
+            }
+            if (toutiao_appsecret == '') {
+                showErrorMsg('AppSecret不能为空！');
+                $('#toutiao_appsecret').focus();
+                return false;
+            }
+            layer_loading('正在处理');
+            $.ajax({
+                url: "{:url('Canal/conf_toutiao', ['_ajax'=>1])}",
+                type: 'POST',
+                dataType: 'JSON',
+                data: $('#toutiao_post_form').serialize(),
+                success: function (res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        showErrorAlert(res.msg);
+                        return false;
+                    }
+                },
+                error: function (e) {
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                    return false;
+                }
+            });
+        }
+    </script>
+    
+</div>
+
+{include file="public/footer" /}

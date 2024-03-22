@@ -15,6 +15,7 @@ namespace app\admin\controller;
 
 use think\Page;
 use think\Db;
+use think\Cache;
 
 class AdPosition extends Base
 {
@@ -32,6 +33,7 @@ class AdPosition extends Base
         $condition = [];
         // 应用搜索条件
         foreach (['keywords', 'type'] as $key) {
+            $get[$key] = addslashes(trim($get[$key]));
             if (isset($get[$key]) && $get[$key] !== '') {
                 if ($key == 'keywords') {
                     $condition['a.title'] = array('LIKE', "%{$get[$key]}%");
@@ -93,6 +95,37 @@ class AdPosition extends Base
         $this->assign('page',$show);// 赋值分页输出
         $this->assign('list',$list);// 赋值数据集
         $this->assign('pager',$Page);// 赋值分页对象
+
+        /*多语言模式下，广告位ID显示主体语言的ID和属性title名称*/
+        $main_adv_list = [];
+        if ($this->admin_lang != $this->main_lang && empty($this->globalConfig['language_split'])) {
+            $attr_values = get_arr_column($list, 'id');
+            $languageAttrRow = Db::name('language_attr')->field('attr_name,attr_value')->where([
+                    'attr_value'    => ['IN', $attr_values],
+                    'attr_group'    => 'ad_position',
+                    'lang'          => $this->admin_lang,
+                ])->getAllWithIndex('attr_value');
+            $ids = [];
+            foreach ($languageAttrRow as $key => $val) {
+                $tid_tmp = str_replace('adp', '', $val['attr_name']);
+                array_push($ids, intval($tid_tmp));
+            }
+            $main_advRow = Db::name('ad_position')->field("id,title,CONCAT('adp', id) AS attr_name")
+                ->where([
+                    'id'    => ['IN', $ids],
+                    'lang'  => $this->main_lang,
+                ])->getAllWithIndex('attr_name');
+            foreach ($list as $key => $val) {
+                $key_tmp = !empty($languageAttrRow[$val['id']]['attr_name']) ? $languageAttrRow[$val['id']]['attr_name'] : '';
+                $main_adv_list[$val['id']] = [
+                    'id'        => !empty($main_advRow[$key_tmp]['id']) ? $main_advRow[$key_tmp]['id'] : '',
+                    'title'  => !empty($main_advRow[$key_tmp]['title']) ? $main_advRow[$key_tmp]['title'] : '',
+                ];
+            }
+        }
+        $this->assign('main_adv_list', $main_adv_list);
+        /*end*/
+
         return $this->fetch();
     }
     
@@ -104,7 +137,9 @@ class AdPosition extends Base
         //防止php超时
         function_exists('set_time_limit') && set_time_limit(0);
 
-        $this->language_access(); // 多语言功能操作权限
+        if (is_language() && empty($this->globalConfig['language_split'])) {
+            $this->language_access(); // 多语言功能操作权限
+        }
 
         if (IS_POST) {
             $post = input('post.');
@@ -209,6 +244,7 @@ class AdPosition extends Base
                     $this->syn_add_ad_language_attribute($ad_id);
 
                 }
+                Cache::clear('ad');
                 adminLog('新增广告：'.$post['title']);
                 $this->success("操作成功", url('AdPosition/index'));
             } else {
@@ -235,7 +271,7 @@ class AdPosition extends Base
         $this->assign('upload_max_filesize', $upload_max_filesize);
 
         // 视频类型
-        $media_type = tpCache('basic.media_type');
+        $media_type = tpCache('global.media_type');
         $media_type = !empty($media_type) ? $media_type : config('global.media_ext');
         $media_type = str_replace(",", "|", $media_type);
         $this->assign('media_type', $media_type);
@@ -252,6 +288,7 @@ class AdPosition extends Base
         if (IS_POST) {
             $post = input('post.');
             if (!empty($post['id'])) {
+                $post['id'] = intval($post['id']);
                 if (array_key_exists($post['id'], $this->ad_position_system_id)) {
                     $this->error("不可更改系统预定义位置", url('AdPosition/edit',array('id'=>$post['id'])));
                 }
@@ -426,6 +463,7 @@ class AdPosition extends Base
                     }
                     
                 }
+                Cache::clear('ad');
                 adminLog('编辑广告：'.$post['title']);
                 $this->success("操作成功", url('AdPosition/index'));
             } else {
@@ -454,7 +492,7 @@ class AdPosition extends Base
         // 广告
         $ad_data = Db::name('ad')->where(array('pid'=>$field['id']))->order('sort_order asc')->select();
         foreach ($ad_data as $key => $val) {
-            if (1 == $val['type']) {
+            if (1 == $val['media_type']) {
                 $ad_data[$key]['litpic'] = get_default_pic($val['litpic']); // 支持子目录
             }
         }
@@ -475,7 +513,7 @@ class AdPosition extends Base
         $this->assign('WeappOpen', $WeappOpen);
 
         // 系统最大上传视频的大小
-        $file_size  = tpCache('basic.file_size');
+        $file_size  = tpCache('global.file_size');
         $postsize   = @ini_get('file_uploads') ? ini_get('post_max_size') : -1;
         $fileupload = @ini_get('file_uploads') ? ini_get('upload_max_filesize') : -1;
         $min_size   = strval($file_size) < strval($postsize) ? $file_size : $postsize;
@@ -484,7 +522,7 @@ class AdPosition extends Base
         $assign_data['upload_max_filesize'] = $upload_max_filesize;
 
         // 视频类型
-        $media_type = tpCache('basic.media_type');
+        $media_type = tpCache('global.media_type');
         $media_type = !empty($media_type) ? $media_type : config('global.media_ext');
         $media_type = str_replace(",", "|", $media_type);
         $assign_data['media_type'] = $media_type;
@@ -498,31 +536,40 @@ class AdPosition extends Base
      */
     public function del_imgupload()
     {
-        $this->language_access(); // 多语言功能操作权限
+        if (is_language() && empty($this->globalConfig['language_split'])) {
+            $this->language_access(); // 多语言功能操作权限
+        }
+
         $id_arr = input('del_id/a');
         $id_arr = eyIntval($id_arr);
         if(IS_POST && !empty($id_arr)){
             /*多语言*/
             $attr_name_arr = [];
-            foreach ($id_arr as $key => $val) {
-                $attr_name_arr[] = 'ad'.$val;
-            }
-
-            if (is_language()) {
-                $new_id_arr = Db::name('language_attr')->where([
-                        'attr_name'  => ['IN', $attr_name_arr],
-                        'attr_group'    => 'ad',
-                    ])->column('attr_value');
-                !empty($new_id_arr) && $id_arr = $new_id_arr;
+            if (empty($this->globalConfig['language_split'])) {
+                foreach ($id_arr as $key => $val) {
+                    $attr_name_arr[] = 'ad'.$val;
+                }
+                if (is_language()) {
+                    $new_id_arr = Db::name('language_attr')->where([
+                            'attr_name'  => ['IN', $attr_name_arr],
+                            'attr_group'    => 'ad',
+                        ])->column('attr_value');
+                    !empty($new_id_arr) && $id_arr = $new_id_arr;
+                }
+            } else {
+                if (get_admin_lang() == get_main_lang()) {
+                    foreach ($id_arr as $key => $val) {
+                        $attr_name_arr[] = 'ad'.$val;
+                    }
+                }
             }
             /*--end*/
 
             $r = Db::name('ad')->where([
                     'id' => ['IN', $id_arr],
                 ])
-                ->cache(true,null,'ad')
                 ->delete();
-            if ($r) {
+            if ($r !== false) {
                 /*多语言*/
                 if (!empty($attr_name_arr)) {
                     Db::name('language_attr')->where([
@@ -536,6 +583,7 @@ class AdPosition extends Base
                         ])->delete();
                 }
                 /*--end*/
+                Cache::clear('ad');
                 adminLog('删除广告-id：'.implode(',', $id_arr));
             }
         }
@@ -546,7 +594,9 @@ class AdPosition extends Base
      */
     public function del()
     {
-        $this->language_access(); // 多语言功能操作权限
+        if (is_language() && empty($this->globalConfig['language_split'])) {
+            $this->language_access(); // 多语言功能操作权限
+        }
 
         $id_arr = input('del_id/a');
         $id_arr = eyIntval($id_arr);
@@ -562,7 +612,7 @@ class AdPosition extends Base
             foreach ($id_arr as $key => $val) {
                 $attr_name_arr[] = 'adp'.$val;
             }
-            if (is_language()) {
+            if (is_language() && empty($this->globalConfig['language_split'])) {
                 $new_id_arr = Db::name('language_attr')->where([
                         'attr_name' => ['IN', $attr_name_arr],
                         'attr_group'    => 'ad_position',
@@ -570,25 +620,62 @@ class AdPosition extends Base
                 !empty($new_id_arr) && $id_arr = $new_id_arr;
             }
             /*--end*/
-
             $r = Db::name('ad_position')->where('id','IN',$id_arr)->delete();
-            if ($r) {
+            if ($r !== false) {
 
                 /*多语言*/
                 if (!empty($attr_name_arr)) {
-                    Db::name('language_attr')->where([
-                            'attr_name' => ['IN', $attr_name_arr],
-                            'attr_group'    => 'ad_position',
-                        ])->delete();
-                    Db::name('language_attribute')->where([
-                            'attr_name' => ['IN', $attr_name_arr],
-                            'attr_group'    => 'ad_position',
-                        ])->delete();
+                    if (get_admin_lang() == get_main_lang()) {
+                        Db::name('language_attribute')->where([
+                                'attr_name' => ['IN', $attr_name_arr],
+                                'attr_group'    => 'ad_position',
+                            ])->delete();
+                    }
+                    if (empty($this->globalConfig['language_split'])) {
+                        Db::name('language_attr')->where([
+                                'attr_name' => ['IN', $attr_name_arr],
+                                'attr_group'    => 'ad_position',
+                            ])->delete();
+                    } else {
+                        Db::name('language_attr')->where([
+                                'attr_value' => ['IN', $id_arr],
+                                'attr_group'    => 'ad_position',
+                            ])->delete();
+                    }
                 }
                 /*--end*/
 
-                Db::name('ad')->where('pid','IN',$id_arr)->delete();
+                $ad_ids = Db::name('ad')->where(['pid'=>['IN', $id_arr]])->column('id');
+                $attr_name_arr = [];
+                foreach ($ad_ids as $key => $val) {
+                    $attr_name_arr[] = "ad{$val}";
+                }
+                $r1 = Db::name('ad')->where('pid','IN',$id_arr)->delete();
+                if ($r1 !== false) {
+                    /*多语言*/
+                    if (!empty($attr_name_arr)) {
+                        if (get_admin_lang() == get_main_lang()) {
+                            Db::name('language_attribute')->where([
+                                    'attr_name' => ['IN', $attr_name_arr],
+                                    'attr_group'    => 'ad',
+                                ])->delete();
+                        }
+                        if (empty($this->globalConfig['language_split'])) {
+                            Db::name('language_attr')->where([
+                                    'attr_name' => ['IN', $attr_name_arr],
+                                    'attr_group'    => 'ad',
+                                ])->delete();
+                        } else {
+                            Db::name('language_attr')->where([
+                                    'attr_value' => ['IN', $ad_ids],
+                                    'attr_group'    => 'ad',
+                                ])->delete();
+                        }
+                    }
+                    /*--end*/
+                }
 
+                Cache::clear('ad');
                 adminLog('删除广告-id：'.implode(',', $id_arr));
                 $this->success('删除成功');
             } else {
@@ -639,7 +726,7 @@ class AdPosition extends Base
     private function syn_add_language_attribute($adp_id)
     {
         /*单语言情况下不执行多语言代码*/
-        if (!is_language()) {
+        if (!is_language() || tpCache('language.language_split')) {
             return true;
         }
         /*--end*/
@@ -696,7 +783,7 @@ class AdPosition extends Base
    private function syn_add_ad_language_attribute($ad_id)
     {
         /*单语言情况下不执行多语言代码*/
-        if (!is_language()) {
+        if (!is_language() || tpCache('language.language_split')) {
             return true;
         }
         /*--end*/

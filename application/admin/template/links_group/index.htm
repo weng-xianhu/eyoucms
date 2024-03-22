@@ -2,10 +2,10 @@
 <body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-10">
     <div class="flexigrid">
         <!-- 操作说明 -->
-        <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+        <div id="explanation" class="explanation">
             <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
                 <h4 title="提示相关设置操作时应注意的要点">提示</h4>
                 <span title="收起提示" id="explanationZoom" style="display: block;"></span>
@@ -45,14 +45,23 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
                         {foreach name="list" item="vo" key="k" }
                         <tr class="tr">
                             <td class="sort">
-                                <div class="w40 tc"><input type="hidden" name="id[]" value="{$vo.id}">{$vo.id}</div>
+                                <div class="w40 tc">
+                                    <input type="hidden" name="id[]" value="{$vo.id}">
+                                    {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                                        {$vo.id}
+                                    {else /}
+                                        {$main_group_list[$vo['id']]['id']|default=$vo['id']}
+                                    {/if}
+                                </div>
                             </td>
                             <td style="width: 100%">
                                 <div class="text-l10">
@@ -74,15 +83,17 @@
                             </td>
                             <td class="operation">
                                 <div class="w120 tc">
-                                    {neq name="$vo.id" value="1"}
-                                        {eq name="'LinksGroup@del'|is_check_access" value="1"}
-                                            <a class="btn red"  href="javascript:void(0);" data-url="{:url('LinksGroup/del')}" data-title="{$vo.group_name}" data-id="{$vo.id}" onClick="delGroup(this);">删除</a>
-                                        {/eq}
-                                    {else/}
-                                        {eq name="'LinksGroup@del'|is_check_access" value="1"}
-                                            <a class="btn grey"  href="javascript:void(0);">删除</a>
-                                        {/eq}
-                                    {/neq}
+                                    {eq name="'LinksGroup@del'|is_check_access" value="1"}
+                                        {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                                            {if condition="$vo['id'] == $min_group_id"}
+                                                <a class="btn grey" href="javascript:void(0);">删除</a>
+                                            {else/}
+                                                <a class="btn red" href="javascript:void(0);" data-url="{:url('LinksGroup/del')}" data-title="{$vo.group_name}" data-id="{$vo.id}" onClick="delGroup(this);">删除</a>
+                                            {/if}
+                                        {else /}
+                                            <a class="btn grey" href="javascript:void(0);" title="请切换到主语言删除">删除</a>
+                                        {/if}
+                                    {/eq}
                                 </div>
                             </td>
                         </tr>
@@ -94,21 +105,25 @@
             </form>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        {notempty name="list"}
         <div class="footer-oper">
             {eq name="$Think.const.CONTROLLER_NAME.'@linksgroup_save'|is_check_access" value="1"}
-            <div class="fbutton">
-                <a href="javascript:void(0);" data-url="{:url('LinksGroup/linksgroup_save', ['_ajax'=>1])}" onclick="linksgroup_save(this);" class="layui-btn layui-btn-primary">
-                    <span class="">保存</span>
-                </a>
-            </div>
-            <div class="fbutton">
-                <a href="javascript:void(0);" onclick="link_group_add();" class="layui-btn layui-btn-primary">
-                    <span>新增分组</span>
-                </a>
-            </div>
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-url="{:url('LinksGroup/linksgroup_save', ['_ajax'=>1])}" onclick="linksgroup_save(this);" class="layui-btn layui-btn-primary">
+                        <span class="">保存</span>
+                    </a>
+                </div>
+                {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                <div class="fbutton">
+                    <a href="javascript:void(0);" onclick="link_group_add();" class="layui-btn layui-btn-primary">
+                        <span>新增分组</span>
+                    </a>
+                </div>
+                {/if}
             {/eq}
             {include file="public/page" /}
         </div>
+        {/notempty}
     </div>
 </div>
 <script>
@@ -143,7 +158,7 @@
 
                 '<td class="sort">'+
                     '<div class="w60 tc">'+
-                        '<input class="tc" type="text" name="sort_order[]" size="4" value="100" onkeyup="this.value=this.value.replace(/[^\d]/g,\'\');" onpaste="this.value=this.value.replace(/[^\d]/g,\'\')" />'+
+                        '<input class="tc" type="text" name="sort_order[]" size="4" value="100" onkeyup="this.value=this.value.replace(/[^\\d]/g,\'\');" onpaste="this.value=this.value.replace(/[^\\d]/g,\'\')" />'+
                     '</div>'+
                 '</td>' +
 
@@ -164,9 +179,17 @@
 
     // 删除
     function delGroup(obj){
-        layer.confirm('<font color="#ff0000">该链接分组的数据将一起清空</font>，确认彻底删除？', {
-            title: false, // $(obj).data('title'),
-            btn: ['确定','取消'] //按钮
+        layer.confirm('确认彻底删除？该链接分组的数据将一起清空。', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function(){
             layer_loading('正在处理');
             // 确定
@@ -194,7 +217,17 @@
     // 提交
     function linksgroup_save(obj){
         if ($('input[name*=group_name]').length == 0) {
-            showErrorAlert('至少新增一个分组！');
+            layer.alert('至少新增一个分组！', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
             return false;
         } else {
             var is_empty = true;
@@ -205,7 +238,17 @@
                 }
             });
             if (true == is_empty) {
-                showErrorAlert('分组名称不能为空！');
+                layer.alert('分组名称不能为空！', {
+                    shade: layer_shade,
+                    area: ['480px', '190px'],
+                    move: false,
+                    title: '提示',
+                    btnAlign:'r',
+                    closeBtn: 3,
+                    success: function () {
+                          $(".layui-layer-content").css('text-align', 'left');
+                      }
+                });
                 return false;
             }
         }

@@ -1,0 +1,347 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" >
+    {if condition='!$Request.param.gift_id'}
+    <div class="fixed-bar">
+        <div class="item-title">
+			<a class="back_xin" href="{:url('Index/switch_map')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+			<div class="subject">
+			    <h3>积分兑换</h3>
+			    <h5></h5>
+			</div>
+            <ul class="tab-base nc-row">
+                {eq name="'Memgift@gift_exchange_list'|is_check_access" value="1"}
+                    <li>
+                        <a {if condition="in_array($Request.action, ['gift_exchange_list'])"}class="current"{/if} href="{:url('Memgift/gift_exchange_list')}">
+                            <span>兑换列表</span>
+                        </a>
+                    </li>
+                {/eq}
+        
+                {eq name="'Memgift@index'|is_check_access" value="1"}
+                    <li>
+                        <a {if condition="in_array($Request.action, ['index'])"}class="current"{/if} href="{:url('Memgift/index')}">
+                            <span>商品列表</span>
+                        </a>
+                    </li>
+                {/eq}   
+            </ul>
+        </div>
+    </div>
+    {/if}
+    <div class="flexigrid" style="min-height: 600px;">
+        <div class="mDiv pt0">
+            <div class="ftitle_nav">
+                <div class="fbutton">
+                    <a href="{:url('Memgift/gift_exchange_list')}">
+                        <div class="{if condition='!$Request.param.status'}cur{/if}" title="全部">
+                            全部<span>{$count.0.count+$count.1.count+$count.2.count+$count.3.count}</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="fbutton">
+                    <a href="{:url('Memgift/gift_exchange_list', ['status'=>-1])}">
+                        <div class="{eq name='$Request.param.status' value='-1'}cur{/eq}" title="全部">
+                            待处理<span>{$count.0.count|default=0}</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="fbutton">
+                    <a href="{:url('Memgift/gift_exchange_list', ['status'=>1])}">
+                        <div class="{eq name='$Request.param.status' value='1'}cur{/eq}" title="全部">
+                            已发货<span>{$count.1.count|default=0}</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="fbutton">
+                    <a href="{:url('Memgift/gift_exchange_list', ['status'=>2])}">
+                        <div class="{eq name='$Request.param.status' value='2'}cur{/eq}" title="全部">
+                            已退回<span>{$count.2.count|default=0}</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="fbutton">
+                    <a href="{:url('Memgift/gift_exchange_list', ['status'=>3])}">
+                        <div class="{eq name='$Request.param.status' value='3'}cur{/eq}" title="全部">
+                            已重发<span>{$count.3.count|default=0}</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <form class="navbar-form form-inline" id="searchForm" action="{:url('Memgift/gift_exchange_list')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2" style="margin: 0 6px;">
+                        <input type="hidden" name="status" value="{$Request.param.status|default=''}">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="用户名/昵称">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="iconfont e-sousuo"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th abbr="download_title" axis="col3" class="w70">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="download_title" axis="col3" class="w150">
+                            <div class="tl text-l10">商品名称</div>
+                        </th>
+                        <th align="center"  axis="col6" class="">
+                            <div class="tl text-l10">收货信息</div>
+                        </th>
+                        <th abbr="download_time" axis="col6" class="w100">
+                            <div class="tc">{$score.score_name}</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w150">
+                            <div class="tl" style="margin-left: 5px;">用户</div>
+                        </th>
+                        <th abbr="download_time" axis="col6" class="w150">
+                            <div class="tc">兑换时间</div>
+                        </th>
+
+                        <th axis="col1" class="w160">
+                            <div class="tc">管理操作</div>
+                        </th>
+
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                    <tr>
+                        <td class="no-data" align="center" axis="col0" colspan="50">
+                            <div class="no_row">
+                                <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {else/}
+                    {foreach name="list" item="vo" key="k" }
+                    <tr>
+                        <td class="sort">
+                            <div class="tc w70">
+                                {$vo.gid}
+                            </div>
+                        </td>
+                        <td  >
+                            <div class="tl text-l10 w150" >
+                                {$vo.giftname}
+                            </div>
+                        </td>
+                        
+                        <td style="width: 100%;">
+                            <div class="tl text-l10">
+                                {if condition="$vo.type eq -1"}
+                                姓名：{$vo.name}  手机号：{$vo.mobile}  地址：{$vo.address}
+                                {else/}
+                                虚拟商品，无需发货
+                                {/if}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="w100 tc">
+                                {$vo.score}
+                            </div>
+                        </td>
+                        <td class="sort">
+                            <div class="w150 tl ellipsis">
+                                <img style="height: 26px; width: 26px; margin:0px 5px!important;float: unset;margin: auto;" src="{$vo.head_pic|get_head_pic=###,false,$vo['sex']}" />
+                                {$vo.nickname|default=$vo.username}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="tc w150">
+                                {$vo.add_time|MyDate="Y-m-d H:i:s",###}
+                            </div>
+                        </td>
+                        <td class="operation">
+                            <div class="w160 tc">
+                                {eyou:if condition="$vo.status eq 0"}
+                                    {eyou:notempty name="$syb"}
+                                        <a class="btn blue" href="{:url('Memgift/give',['gid'=>$vo.gid,'do'=>'give','syb'=>1])}"><u>发货</u></a>
+                                        <!--<a href="gift_add.php?action=give&gid={$vo.gid}&do=give&syb=1"><u>发货</u></a>-->
+                                    {else /}
+                                         <a class="btn blue" href="{:url('Memgift/give',['gid'=>$vo.gid,'do'=>'give'])}"><u>发货</u></a>
+                                    {/eyou:notempty}
+                                {elseif condition="$vo.status eq 1"}
+                                    {eyou:if condition="in_array($vo.type, [-1])"}
+                                        <a class="btn blue" href="{:url('Memgift/give',['gid'=>$vo.gid])}"><u>退回</u></a>
+                                        <i></i>
+                                        <a class="btn blue" href="{:url('Memgift/again',['gift_id'=>$vo.gift_id,'gid'=>$vo.gid])}"><u>重发</u></a>
+                                    {else /}
+                                        已发货
+                                    {/eyou:if}
+                                {elseif condition="$vo.status eq 2"}
+                                    <font color="red">已退回</font>
+                                {elseif condition="$vo.status eq 3"}
+                                    已重发
+                                {/eyou:if}
+                            </div>
+                        </td>
+                    </tr>
+                    {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="footer-oper">
+            <div class="nav-dropup">
+            </div>
+            {include file="public/page" /}
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    // 修改指定表的指定字段值 包括有按钮点击切换是否 或者 排序 或者输入框文字
+    function changeMemgiftTableVal(table,id_name,id_value,field,obj)
+    {
+        var src = "";
+        if($(obj).hasClass('no')) // 图片点击是否操作
+        {
+            //src = '/public/images/yes.png';
+            var text = "隐藏";
+            if ($(obj).attr('data-yestext')) {
+                text = $(obj).attr('data-yestext');
+            }
+            var value = 0;
+            try {
+                if ($(obj).attr('data-value')) {
+                    value = $(obj).attr('data-value');
+                    if ('weapp' == table && 'status' == field) {
+                        $(obj).attr('data-value', -1); // 插件的禁用
+                        if ('Diyminipro' == $(obj).attr('data-weapp_code')) {
+                            $('#Diyminipro_theme_index', window.parent.document).show();
+                        }
+                    }
+                }
+            } catch(e) {
+                // 出现异常以后执行的代码
+                // e:exception，用来捕获异常的信息
+            }
+
+        }else if($(obj).hasClass('yes')){ // 图片点击是否操作
+            var text = "显示";
+            if ($(obj).attr('data-notext')) {
+                text = $(obj).attr('data-notext');
+            }
+            var value = 1;
+            try {
+                if ($(obj).attr('data-value')) {
+                    value = $(obj).attr('data-value');
+                    if ('weapp' == table && 'status' == field) {
+                        $(obj).attr('data-value', 1); // 插件的启用
+                        if ('Diyminipro' == $(obj).attr('data-weapp_code')) {
+                            $('#Diyminipro_theme_index', window.parent.document).hide();
+                        }
+                    }
+                }
+            } catch(e) {
+                // 出现异常以后执行的代码
+                // e:exception，用来捕获异常的信息
+            }
+        }else{ // 其他输入框操作
+            var value = $(obj).val();
+        }
+
+        var url = eyou_basefile + "?m="+module_name+"&c=Index&a=changeTableVal&_ajax=1";
+        var lang = $.cookie('admin_lang');
+        if (!lang) lang = __lang__;
+        if ($.trim(lang) != '') {
+            url = url + '&lang=' + lang;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {table:table,id_name:id_name,id_value:id_value,field:field,value:value},
+            dataType: 'json',
+            success: function(res){
+                if (res.code == 1) {
+                    var inputype = $(obj).attr('data-inputype');
+                    if ('int' == inputype) {
+                        $(obj).val(parseInt($(obj).val()));
+                    }
+                    if ($(obj).hasClass('no')) {
+                        $(obj).removeClass('no').addClass('yes');
+                        $(obj).html(text);
+                    }else if($(obj).hasClass('yes')) {
+                        $(obj).removeClass('yes').addClass('no');
+                        $(obj).html(text);
+                    }
+                    var seo_pseudo = $(obj).attr('data-seo_pseudo');
+                    if(table == 'archives' && 2 == seo_pseudo){
+                        /*生成静态页面代码*/
+                        layer_loading('生成页面');
+                        var typeid = $(obj).attr('data-typeid');
+                        $.ajax({
+                            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
+                            type:'POST',
+                            dataType:'json',
+                            data:{aid:id_value,typeid:typeid,type:'view',ctl_name:'Archives',_ajax:1},
+                            success:function(res1){
+                                $.ajax({
+                                    url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
+                                    type:'POST',
+                                    dataType:'json',
+                                    data:{aid:id_value,typeid:typeid,type:'lists',ctl_name:'Archives',_ajax:1},
+                                    success:function(res2){
+                                        layer.closeAll();
+                                        layer.msg('生成完成', {icon: 1, time: 1500});
+                                    },
+                                    error: function(e){
+                                        layer.closeAll();
+                                        layer.alert('生成当前栏目HTML失败，请手工生成栏目静态！', {icon: 5, title: false});
+                                    }
+                                });
+                            },
+                            error: function(e){
+                                layer.closeAll();
+                                layer.alert('生成HTML失败，请手工生成静态HTML！', {icon: 5, title: false});
+                            }
+                        });
+                        /*end*/
+                    } else {
+                        if(!$(obj).hasClass('no') && !$(obj).hasClass('yes')){
+                            var time = 1500;
+                            if (res.data.time && 0 < res.data.time) {
+                                time = res.data.time;
+                            }
+                            layer.msg(res.msg, {icon: 1, time: time}, function(){
+                                if (1 == res.data.refresh) {
+                                    window.location.reload();
+                                }
+                            });
+                        } else {
+                            if (1 == res.data.refresh) {
+                                window.location.reload();
+                            }
+                        }
+                    }
+                } else {
+                    var time = parseFloat(res.wait) * 1000;
+                    layer.msg(res.msg, {icon: 5, time: time}, function(){
+                        window.location.reload();
+                    });
+                }
+            }
+        });
+    }
+
+</script>
+
+{include file="public/footer" /}

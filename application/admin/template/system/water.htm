@@ -36,43 +36,47 @@
 <link href="__PUBLIC__/plugins/colpick/css/colpick.css" rel="stylesheet" type="text/css"/>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width:auto;">
+<div class="page min-hg-c-10">
+    <div class="fixed-bar">
+        <div class="item-title">
+            {eq name='$Request.param.source' value='archives'}
+            <a class="back_xin" href="javascript:history.back();"  title="返回"><i class="iconfont e-fanhui"></i></a>
+            {else /}
+            <a class="back_xin" href="{:url('Index/switch_map')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            {/eq}
+            <div class="subject">
+                <h3>图片水印</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
     <div class="flexigrid">
         <form method="post" id="handlepost" action="{:url('System/water')}">
             <div class="ncap-form-default">
                 <dl class="row">
                     <dt class="tit">水印功能</dt>
                     <dd class="opt">
-                        <div class="onoff">
-                            <label for="is_mark1" class="cb-enable {if condition='isset($config.is_mark) && $config.is_mark eq 1'}selected{/if}" >开启</label>
-                            <label for="is_mark0" class="cb-disable {if condition='!isset($config.is_mark) || $config.is_mark eq 0'}selected{/if}" >关闭</label>
-                            <input id="is_mark1" name="is_mark" value="1" {if condition="isset($config.is_mark) && $config.is_mark eq 1"}checked{/if} type="radio">
-                            <input id="is_mark0" name="is_mark" value="0" {if condition="!isset($config.is_mark) || $config.is_mark eq 0"}checked{/if} type="radio">
-                        </div>
+                        <label class="curpoin"><input id="is_mark1" name="is_mark" value="1" {if condition="isset($config.is_mark) && $config.is_mark eq 1"}checked{/if} type="radio">开启</label>
+                        &nbsp;
+                        <label class="curpoin"><input id="is_mark0" name="is_mark" value="0" {if condition="!isset($config.is_mark) || $config.is_mark eq 0"}checked{/if} type="radio">关闭</label>
                         <p class="notic">全站图片添加水印</p>
                     </dd>
                 </dl>
                 <dl class="row none">
                     <dt class="tit">缩略图水印</dt>
                     <dd class="opt">
-                        <div class="onoff">
-                            <label for="is_thumb_mark1" class="cb-enable {if condition='isset($config.is_thumb_mark) && $config.is_thumb_mark eq 1'}selected{/if}" >开启</label>
-                            <label for="is_thumb_mark0" class="cb-disable {if condition='!isset($config.is_thumb_mark) || $config.is_thumb_mark eq 0'}selected{/if}" >关闭</label>
-                            <input id="is_thumb_mark1" name="is_thumb_mark" value="1" {if condition="isset($config.is_thumb_mark) && $config.is_thumb_mark eq 1"}checked{/if} type="radio">
-                            <input id="is_thumb_mark0" name="is_thumb_mark" value="0" {if condition="!isset($config.is_thumb_mark) || $config.is_thumb_mark eq 0"}checked{/if} type="radio">
-                        </div>
+                        <label class="curpoin"><input id="is_thumb_mark1" name="is_thumb_mark" value="1" {if condition="isset($config.is_thumb_mark) && $config.is_thumb_mark eq 1"}checked{/if} type="radio">开启</label>
+                        &nbsp;
+                        <label class="curpoin"><input id="is_thumb_mark0" name="is_thumb_mark" value="0" {if condition="!isset($config.is_thumb_mark) || $config.is_thumb_mark eq 0"}checked{/if} type="radio">关闭</label>
                         <p class="notic">开启之后，满足水印条件的缩略图会自动打上水印</p>
                     </dd>
                 </dl>
                 <dl class="row">
                     <dt class="tit">水印类型</dt>
                     <dd class="opt">
-                        <div class="onoff">
-                            <label for="mark_type1" class="cb-enable {if condition="isset($config.mark_type) && $config.mark_type eq 'text'"}selected{/if}" >文字</label>
-                            <label for="mark_type0" class="cb-disable {if condition="isset($config.mark_type) && $config.mark_type eq 'img'"}selected{/if}" >图片</label>
-                            <input id="mark_type1" onclick="setwarter('text')" name="mark_type" value="text" {if condition="isset($config.mark_type) && $config.mark_type eq 'text'"}checked{/if} type="radio">
-                            <input id="mark_type0" onclick="setwarter('img')" name="mark_type"  value="img" {if condition="isset($config.mark_type) && $config.mark_type eq 'img'"}checked{/if} type="radio">
-                        </div>
+                        <label class="curpoin"><input id="mark_type1" onclick="setwarter('text')" name="mark_type" value="text" {if condition="isset($config.mark_type) && $config.mark_type eq 'text'"}checked{/if} type="radio">文字</label>
+                        &nbsp;
+                        <label class="curpoin"><input id="mark_type0" onclick="setwarter('img')" name="mark_type" value="img" {if condition="isset($config.mark_type) && $config.mark_type eq 'img'"}checked{/if} type="radio">图片</label>
                         <p class="notic"></p>
                     </dd>
                 </dl>
@@ -107,21 +111,18 @@
                         <label for="mark_img">水印图片</label>
                     </dt>
                     <dd class="opt">
-                        <div class="input-file-show div_mark_img_local" {if condition="isset($config.mark_img_is_remote) AND $config.mark_img_is_remote == 1"}style="display: none;"{/if}>
+                        <div class="input-file-show div_mark_img_local">
                             <span class="show">
-                                <a id="img_a" class="nyroModal" rel="gal" href="{$config.mark_img_local|default='javascript:void(0);'}" target="_blank">
-                                    <i id="img_i" class="fa fa-picture-o" {notempty name="$config.mark_img_local"}onmouseover="layer_tips=layer.tips('<img src={$config.mark_img_local|default=''}>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                                <a id="img_a" class="nyroModal" rel="gal" href="{$config.mark_img|default='javascript:void(0);'}" target="_blank">
+                                    <i id="img_i" class="fa fa-picture-o" {notempty name="$config.mark_img"}onmouseover="layer_tips=layer.tips('<img src={$config.mark_img|default=''}>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
                                 </a>
                             </span>
                             <span class="type-file-box">
-                                <input type="text"  name="mark_img_local" id="mark_img_local" value="{$config.mark_img_local|default=''}" class="type-file-text" autocomplete="off">
+                                <input type="text"  name="mark_img" id="mark_img" value="{$config.mark_img|default=''}" class="type-file-text" autocomplete="off">
                                 <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
-                                <input class="type-file-file" onClick="GetUploadify(1,'','allimg','call_back','water');" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                                <input class="type-file-file" onClick="GetUploadimgnew(1,'','allimg','call_back','water');" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
                             </span>
                         </div>
-                        <input type="text" id="mark_img_remote" name="mark_img_remote" value="{$config.mark_img_remote|default=''}" placeholder="http://" class="input-txt" {if condition="!isset($config.mark_img_is_remote) OR empty($config.mark_img_is_remote)"}style="display: none;"{/if}>
-                        &nbsp;
-                        <label><input type="checkbox" name="mark_img_is_remote" id="mark_img_is_remote" value="1" {if condition="isset($config.mark_img_is_remote) AND $config.mark_img_is_remote == 1"}checked="checked"{/if} onClick="clickRemote(this, 'mark_img');">远程图片</label>
                         <span class="err"></span>
                         <p class="notic">最佳显示尺寸为240*60像素</p>
                     </dd>
@@ -271,7 +272,7 @@
                 if(res.code == 1){
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {shade: 0.1, time: 1000}, function(){
                         // _parent.window.location.reload();
                     });
                 }else{
@@ -287,7 +288,7 @@
 
     // 上传水印图片成功回调函数
     function call_back(fileurl_tmp){
-        $("#mark_img_local").val(fileurl_tmp);
+        $("#mark_img").val(fileurl_tmp);
         $("#img_a").attr('href', fileurl_tmp);
         $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+">',this,{tips: [1, '#fff']});");
     }

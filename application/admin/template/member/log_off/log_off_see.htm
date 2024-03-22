@@ -1,0 +1,41 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit; min-width:400px;overflow: hidden;">
+<div class="page" style="min-width: 400px;">
+    <!--<div style="display: flex;align-items: center;padding: 15px 0;">-->
+        <!--<div style="width: 15%;min-width: 60px;"><strong>会员账号</strong></div>-->
+        <!--<div style="width: 90%;">{$info.username}</div>-->
+    <!--</div>-->
+    <!--<div style="display: flex;align-items: center;padding: 15px 0;">-->
+        <!--<div style="width: 15%;min-width: 60px;"><strong>昵称</strong></div>-->
+        <!--<div style="width: 90%;">{$info.nickname}</div>-->
+    <!--</div>-->
+    <!--<div style="display: flex;align-items: center;padding: 15px 0;">-->
+        <!--<div style="width: 15%;min-width: 60px;"><strong>联系电话</strong></div>-->
+        <!--<div style="width: 90%;">{$info.mobile}</div>-->
+    <!--</div>-->
+    <div style="display: flex;align-items: center;padding: 15px 0;">
+        <div style="width: 15%;min-width: 60px;"><strong>审核人账号</strong></div>
+        <div style="width: 90%;">{$info.user_name}</div>
+    </div>
+    <div style="display: flex;align-items: center;padding: 15px 0;">
+        <div style="width: 15%;min-width: 60px;"><strong>审核时间</strong></div>
+        <div style="width: 90%;">{notempty name="$info.handle_time"}{$info.handle_time|MyDate='Y-m-d H:i:s',###}{/notempty}</div>
+    </div>
+    <!--<div style="display: flex;align-items: center;padding: 15px 0;">-->
+        <!--<div style="width: 15%;min-width: 60px;"><strong>状态</strong></div>-->
+        <!--<div style="width: 90%;">-->
+            <!--{if condition="0 == $info.status"}-->
+            <!--待审核-->
+            <!--{elseif condition="1 == $info.status"}-->
+            <!--注销成功-->
+            <!--{elseif condition="2 == $info.status"}-->
+            <!--审核成功-->
+            <!--{/if}-->
+        <!--</div>-->
+    <!--</div>-->
+    <!--<div style="display: flex;align-items: center;padding: 15px 0;">-->
+        <!--<div style="width: 15%;min-width: 60px;"><strong>申请时间</strong></div>-->
+        <!--<div style="width: 90%;">{$info.add_time|MyDate='Y-m-d H:i:s',###}</div>-->
+    <!--</div>-->
+</div>
+{include file="public/footer" /}

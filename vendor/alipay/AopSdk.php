@@ -24,7 +24,7 @@ if (!defined("AOP_SDK_WORK_DIR"))
  */
 if (!defined("AOP_SDK_DEV_MODE"))
 {
-	define("AOP_SDK_DEV_MODE", true);
+	define("AOP_SDK_DEV_MODE", false);
 }
 /**
  * 定义常量结束

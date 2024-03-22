@@ -5,7 +5,7 @@
 <div id="ajaxwaitid"></div>
 <div class="page">
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="{:url("Weapp/index")}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a></a>
+        <div class="item-title"><a class="back_xin" href="{:url("Weapp/index")}" title="返回"><i class="iconfont e-fanhui"></i></a></a>
             <div class="subject">
                 <h3>插件应用</h3>
                 <h5></h5>
@@ -28,7 +28,7 @@
                     <label for="code"><em>*</em>插件标识</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="code" placeholder="比如：Demo" id="code" class="input-txt" onkeyup="this.value=this.value.replace(/[^a-zA-Z0-9]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^a-zA-Z0-9]/g,''));">
+                    <input type="text" name="code" placeholder="比如：Demo" id="code" class="input-txt" onkeyup="this.value=this.value.replace(/[^a-zA-Z0-9]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^a-zA-Z0-9]/g,''));" autocomplete="off">
                     <input type="button" class="btn" value="生成文件列表" onclick="createPackfiles();">
                     <span class="err"></span>
                     <p class="notic"></p>

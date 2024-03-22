@@ -33,7 +33,7 @@ class Weapp extends Model
      */
     public function getWeappList($code = '')
     {
-        $result = extra_cache('common_weapp_getWeappList');
+        $result = cache('common_weapp_getWeappList');
         if (empty($result)) {
             $result = Db::name('weapp')->getAllWithIndex('code');
             foreach ($result as $key => &$value) {
@@ -50,10 +50,12 @@ class Weapp extends Model
                     }
                 } catch (\Exception $e) {}
             }
-            extra_cache('common_weapp_getWeappList', $result);
+            cache('common_weapp_getWeappList', $result, null, 'weapp');
         }
 
-        !empty($code) && $result = $result[$code];
+        if (!empty($code)) {
+            $result = !empty($result[$code]) ? $result[$code] : [];
+        }
 
         return $result;
     }

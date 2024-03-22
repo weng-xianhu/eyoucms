@@ -7,7 +7,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
     <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-    {eyou:static file="users/skin/css/basic.css" /}
     {eyou:static file="users/skin/css/eyoucms.css" /}
     <!-- 新样式 2020-11-25 -->
     {eyou:static file="users/skin/css/element/index.css" /}
@@ -17,138 +16,83 @@
     {eyou:static file="/public/static/common/js/jquery.min.js"/}
     {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
     {eyou:static file="users/skin/js/global.js"/}
-    <style type="text/css">
-        .ey-container .item-from-row .pay-type-item{
-            float: left;
-            width: 120px;
-            height: 42px;
-            margin: 0 10px 10px 0;
-            border: 1px solid #efefef;
-            text-align: center;
-            margin-left: 10px;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-        }
-        .ey-container .item-from-row .pay-type-item i {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            display: block;
-            color: #fff;
-            z-index: 12;
-			font-size: 10px;
-            display: none;
-        }
-        .ey-container .item-from-row .pay-type-item.active:before{
-            position: absolute;
-            content: "";
-            right: 0;
-            bottom: 0;
-            color: #1890FF;
-            width: 0;
-            height: 0;
-            border-bottom: 20px solid #1890FF;
-            border-left: 22px solid transparent;
-            z-index: 10;
-        }
-        .ey-container .item-from-row .pay-type-item.active i{
-            display: block;
-        }
-        .ey-container .item-from-row .pay-type-item.active{
-            border-color: #90BAFF;
-        }
-    </style>
+    
 </head>
 
 <body>
-<!-- 头部 -->
 {eyou:include file="users/users_header.htm" /}
-<!-- 头部结束 -->
-
+<div class="breadcrumbs"> </div>
 <div class="ey-body-bg">
-    <div class="ey-body">
-        <div class="ey-container w1200">
-            <!-- 侧边 -->
+    <div class="ey-body pd0">
+        <div class="ey-container w1226">
             {eyou:include file="users/users_left.htm" /}
-            <!-- 侧边结束 -->
-
-            <!-- 中部 -->
             <div class="ey-con fr">
-                <div class="el-main main-bg">
-                    <div class="column-title mb20">
-                        <div class="column-name">账户充值</div>
-                    </div>
-                    <form id="postForm" action="{eyou:url link='user/Pay/pay_account_recharge' /}" method="post">
-                        <div class="item-from-row">
-                            <div class="from-row-l">
-                                账户余额 : 
-                            </div>
-                            <div class="from-row-r">
-                                ￥<span class="red fb">{$users.users_money}</span>元
-                            </div>
+                <div class="xin_mian user-pay-con main-bg">
+                    
+                    <div class="user-pay-box">
+                        <div class="el-row shop-oper">
+                            <h1 class="title">账户充值</h1>
                         </div>
-                        <div class="item-from-row">
-                            <div class="from-row-l">
-                                充值金额 :
+                        <form id="postForm" action="{eyou:url link='user/Pay/pay_account_recharge' /}" method="post">
+                            <div class="item-from-row">
+                                <div class="from-row-l">
+                                    账户余额 : 
+                                </div>
+                                <div class="from-row-r">
+                                    <span class="red">{$users.users_money}</span>元
+                                </div>
                             </div>
-                            <div class="from-row-r">
-                                <span>￥ <input type="text" class="el-input__inner w100" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'')" onafterpaste="this.value=this.value.replace(/[^0-9\.]/g,'')" name="money" value="{$money}"> 元</span>
+                            <div class="item-from-row">
+                                <div class="from-row-l">
+                                    充值金额 :
+                                </div>
+                                <div class="from-row-r">
+                                    <span><input type="text" class="el-input__inner w100" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'')" onafterpaste="this.value=this.value.replace(/[^0-9\.]/g,'')" name="money" value="{$money}"> 元</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="item-from-row" id="div_zhifufangshi" style="display: none;">
-                            <div class="from-row-l">
-                                支付方式 : 
-                            </div>
-                            <div class="from-row-r">
-                                <!-- 支付API列表，套板请务必将整块代码一起复制，包含隐藏域 -->
-                                <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
-                                {eyou:sppayapilist id='vo'}
+                            <div class="item-from-row" id="div_zhifufangshi" style="min-height: 60px;line-height: 60px; display: none;">
+                                <div class="from-row-l">
+                                    支付方式 : 
+                                </div>
+                                <div class="from-row-r">
+                                    <!-- 支付API列表，套板请务必将整块代码一起复制，包含隐藏域 -->
+                                    {eyou:sppayapilist id='vo'}
                                     {eyou:notempty name="$vo.pay_id"}
-                                        {neq name="$vo.pay_mark" value="Hupijiaopay"}
-                                            {eyou:php}$pay_mark_vars = "users/skin/images/".$vo['pay_mark']."_120x60.png";{/eyou:php}
-                                            <div class="pay-type-item {eq name='$key' value='0'} active {/eq}" data-type="zxzf_{$vo.pay_mark}">
-                                                <img src="{eyou:empty name='$vo.pay_img'}{eyou:static file='$pay_mark_vars' /}{eyou:else/}{$vo.pay_img}{/eyou:empty}" alt="{$vo.pay_name}">
-                                                <i class="el-icon-check"></i>
-                                            </div>
-                                        {/neq}
+                                    <div class="pay-type-item {eq name='$key' value='0'} active {/eq}" data-type="zxzf_{$vo.pay_mark}">
+                                        <img src="{$vo.pay_img}" alt="{$vo.pay_name}">
+                                        <i class="el-icon-check"></i>
+                                    </div>
                                     {/eyou:notempty}
                                     {$vo.hidden}
-                                {/eyou:sppayapilist}
-                                <input type="hidden" id="PayID">
-                                <input type="hidden" id="PayMark">
-                                <!-- END -->
-
-                                <script type="text/javascript">
-                                    $(function(){
-                                        if ($('#div_zhifufangshi').find('.pay-type-item').length > 0) {
-                                            $('#div_zhifufangshi').show();
-                                        }
-                                    });
-                                </script>
+                                    {/eyou:sppayapilist}
+                                    <input type="hidden" id="PayID">
+                                    <input type="hidden" id="PayMark">
+                                    <script type="text/javascript">
+                                        $(function(){
+                                            if ($('#div_zhifufangshi').find('.pay-type-item').length > 0) $('#div_zhifufangshi').show();
+                                        });
+                                    </script>
+                                    <!-- END -->
+                                </div>
                             </div>
-                        </div>
-                        <div class="el-row mt20 ">
-                            <input type="hidden" name="payment_type" value="zxzf_wechat">
-                            <input type="hidden" name="unified_number" value="{$unified_number}">
-                            <a href="JavaScript:void(0);" id='pay_btn' onclick="pay_money();" class="button2 el-button--primary">
-                                立即支付
-                            </a>
-                        </div>
-                    </form>
+                            <div class="el-row mt20 ">
+                                <input type="hidden" name="payment_type" value="zxzf_wechat">
+                                <input type="hidden" name="unified_number" value="{$unified_number}">
+                                <a href="JavaScript:void(0);" id='pay_btn' onclick="pay_money();" class="button2 el-button--primary">
+                                    立即支付
+                                </a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            
             </div>
-            <!-- 中部结束 -->
         </div>
     </div>
-
     <input type="hidden" id="unified_id">
     <input type="hidden" id="unified_number">
     <input type="hidden" id="transaction_type">
 </div>
 
-<script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
 <script type="text/javascript">
     $(document).keydown(function(event){
         if(event.keyCode ==13){
@@ -188,6 +132,7 @@
 
         layer_loading('正在处理');
         $.ajax({
+            async: false,
             url: "{:url('user/Pay/pay_account_recharge', ['version'=>'v2', '_ajax'=>1])}",
             data: $('#postForm').serialize(),
             type:'post',

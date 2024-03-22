@@ -1,0 +1,220 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;">
+    <div class="flexigrid member_lt">
+
+        <div class="mDiv" style=" padding-top: 0; ">
+            <div class="ftitle_nav">
+                {volist name='$levelCountList' id='vo'}
+                <div class="fbutton">
+                    <a href="{:url('UsersNotice/select_users', ['level'=>$vo.level_id])}">
+                        <div class="{eq name='$Request.param.level' value='$vo.level_id'}cur{/eq}">
+                            {$vo.level_name}<span>{$vo.level_count}</span>
+                        </div>
+                    </a>
+                </div>
+                {/volist}
+            </div>
+            <form class="navbar-form form-inline" id="searchForm" action="{:url('UsersNotice/select_users')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+
+                    <div class="sDiv2" style="margin: 0 6px;">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索用户名...">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="iconfont e-sousuo"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="w50">
+                            <div class="tc">头像</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="tl text-l10">昵称/绑定</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w100">
+                            <div class="tc">级别</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w150">
+                            <div class="tc">注册</div>
+                        </th>
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                    <tr>
+                        <div class="no_row">
+                            <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                        </div>
+                    </tr>
+                    {else/}
+                    {foreach name="list" item="vo" key="k" }
+                    <tr>
+                        <td class="sign">
+                            <div class="w40 tc">
+                                <input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.users_id}" id="u_{$vo.users_id}" onclick="parent.choose('{$vo.users_id}');" >
+                            </div>
+                        </td>
+                        <td class="sort">
+                            <div class="w40 tc">{$vo.users_id}</div>
+                        </td>
+                        <td class="sign">
+                            <div class="w50 tc">
+                                <img id="img_head_pic" style="height: 40px;margin-right: 5px;float: unset;margin: auto;" src="{$vo.head_pic|get_head_pic=###,false,$vo['sex']}" />
+                            </div>
+                        </td>
+                        <td style="width: 100%">
+                            <div class="text-l10">
+                                <p style="margin-top: -5px;">
+                                    {eq name="'Member@users_edit'|is_check_access" value="1"}
+                                    <a href="{:url('Member/syn_users_login', ['users_id'=>$vo.users_id, 'mca'=>'user/Users/index'])}" target="_blank">{$vo.nickname|default=$vo.username}</a>
+                                    {else /}
+                                    {$vo.nickname|default=$vo.username}
+                                    {/eq}
+                                </p>
+
+                                <p class="binding">
+                                    {eq name='$vo.is_mobile' value='1'}
+                                    <img src="__STATIC__/admin/images/r_phone.png">
+                                    {/eq}
+                                    {if condition="in_array($vo['thirdparty'], [5]) || !empty($wxlogin[$vo['users_id']]['openid'])"}
+                                    <img src="__STATIC__/admin/images/r_weixin.png">
+                                    {/if}
+                                    {if condition="in_array($vo['thirdparty'], [6])"}
+                                    <img src="__STATIC__/admin/images/r_wechat.png">
+                                    {/if}
+                                    {if condition="!empty($qqlogin[$vo['users_id']])"}
+                                    <img src="__STATIC__/admin/images/r_qq.png">
+                                    {/if}
+                                    {if condition="in_array($vo['thirdparty'], [4])"}
+                                    <img src="__STATIC__/admin/images/r_wxapp.png">
+                                    {/if}
+                                    {if condition="!empty($wblogin[$vo['users_id']])"}
+                                    <img src="__STATIC__/admin/images/r_wb.png">
+                                    {/if}
+                                </p>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="w100 tc">
+                                <p>{$vo.level_name}</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="w150 tc">
+                                <p>{$vo.reg_time|MyDate='Y-m-d H:i:s',###}</p>
+                            </div>
+                        </td>
+                        <td class="operation">
+                            <div class="w120 tc">
+                                <a href="javascript:void(0);" onclick="choose_user(this);" data-users_id="{$vo.users_id}" class="btn blue" id="a_{$vo.users_id}" >选择</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="footer-oper">
+            <span class="ml15">
+                <input type="checkbox" autocomplete="off" class="checkAll">
+            </span>
+
+            {include file="public/page" /}
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+            $("input[name*=ids]").each(function(){
+                parent.choose($(this).val());
+            });
+        });
+
+        var u_str = $('#users_id',window.parent.document).val();
+        if (u_str) {
+            var u_arr = u_str.split(',');
+            u_arr.forEach(function( val, index ) {
+                if ($('#u_'+val)) {
+                    $('#u_'+val).attr('checked','checked');
+                    $('#a_'+val).text('取消');
+
+                }
+            });
+        }
+        var all = 1;
+        $("input[name*=ids]").each(function(){
+            if ($(this).attr('checked') != 'checked'){
+                all = 0;
+            }
+        });
+        if (1 == all){
+            $('input[type=checkbox].checkAll').each(function(){
+                $(this).prop('checked','checked');
+            });
+        }
+    });
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+    function choose_user(obj) {
+        var uid = $(obj).attr('data-users_id');
+        var c_uid = $('#u_'+uid);
+        if('checked' == c_uid.attr('checked')){
+            c_uid.prop('checked',false);
+            $(obj).text('选择');
+        }else{
+            c_uid.prop('checked','checked');
+            $(obj).text('取消');
+        }
+        parent.choose(uid);
+    }
+</script>
+
+{include file="public/footer" /}

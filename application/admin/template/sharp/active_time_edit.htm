@@ -161,7 +161,7 @@
             title: '选择秒杀商品',
             fixed: true, //不固定
             shadeClose: false,
-            shade: 0.3,
+            shade: layer_shade,
             maxmin: true, //开启最大化最小化按钮
             area: ['80%', '90%'],
             content: "{:url('Sharp/goods_list')}"
@@ -186,7 +186,7 @@
             success: function(res) {
                 layer.closeAll();
                 if (res.code == 1) {
-                    layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                    layer.msg(res.msg, {icon: 1, shade: 0.1, time: 1000}, function(){
                         window.location.reload();
                     });
                 } else {

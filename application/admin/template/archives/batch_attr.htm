@@ -7,6 +7,14 @@
     <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/bootstrap/css/bootstrap.min.css">
     {load href="__STATIC__/common/js/jquery.min.js" /}
     {load href="__PUBLIC__/plugins/layer-v3.1.0/layer.js" /}
+    <script type="text/javascript">
+        var eyou_basefile = "{$Request.baseFile}";
+        var module_name = "{$Think.const.MODULE_NAME}";
+        var __root_dir__ = "__ROOT_DIR__";
+        var __lang__ = "{$admin_lang}";
+        var __main_lang__ = "{$main_lang}";
+    </script>
+    <script src="__SKIN__/js/global.js?v={$version}"></script>
     <style type="text/css">
         .container-fluid {
             padding: 10px 10px;
@@ -100,7 +108,6 @@
     </div>
     <script type="text/javascript">
         var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
-
         function check_submit()
         {
             layer_loading('正在处理');
@@ -112,7 +119,7 @@
                 success: function(res){
                     layer.closeAll();
                     if (res.code == 1) {
-                        parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                             parent.window.location.reload();
                             parent.layer.close(parentObj);
                         });

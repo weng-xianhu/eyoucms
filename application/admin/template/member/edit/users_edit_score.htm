@@ -1,0 +1,126 @@
+{include file="public/layout" /}
+
+<body style="background-color: #FFF; overflow: auto;min-width:auto;">
+
+<div class="users-modal-body">
+    <div class="content">
+        <div class="recharge-balance-modal">
+            <form id="postForm" autocomplete="off" class="users-form users-form-label-right">
+                {:token('__token_users_edit_score__')}
+                <div class="users-form-item">
+                    <label class="users-form-item-label" style="width: 120px;">当前余额：</label>
+                    <div class="users-form-item-content" style="margin-left: 120px;">
+                        <div class="balance-data">{$users.scores}</div>
+                    </div>
+                </div>
+                <div class="r-form-item-checkbox users-form-item">
+                    <label class="users-form-item-label" style="width: 120px;"><em style="color: red;">*</em>积分变化：</label>
+                    <div class="users-form-item-content" style="margin-left: 120px;">
+                        <label class="users-radio-wrapper users-radio-group-item users-radio-wrapper-checked users-radio-default">
+                            <span class="users-radio">
+                                <input type="radio" class="users-radio-input" name="type" value="1">
+                                <span class="users-radio-input-tit">增加</span>
+                            </span>
+                        </label>
+                        <label class="users-radio-wrapper users-radio-group-item users-radio-default">
+                            <span class="users-radio">
+                                <input type="radio" class="users-radio-input" name="type" value="2">
+                                <span class="users-radio-input-tit">减少</span>
+                            </span>
+                        </label>
+                        <label class="users-radio-wrapper users-radio-group-item users-radio-default">
+                            <span class="users-radio">
+                                <input type="radio" class="users-radio-input" name="type" value="3">
+                                <span class="users-radio-input-tit">最终积分</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                <div class="users-form-item users-form-item-required">
+                    <label class="users-form-item-label" style="width: 120px;"><em style="color: red;">*</em>变动数值：</label>
+                    <div class="users-form-item-content" style="margin-left: 120px;">
+                        <div class="users-input-wrapper users-input-group">
+                            <input autocomplete="off" type="text" name="money" id="money" placeholder="请输入变动数值" class="users-input" onpaste="this.value=this.value.replace(/[\。]/g,'.');this.value=this.value.replace(/[^\d.]/g, '');" onkeyup="this.value=this.value.replace(/[\。]/g,'.');this.value=this.value.replace(/[^\d.]/g, '');">
+                        </div>
+                        <div class="users-input-group-append" style="">
+                            <span>积分</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="users-form-item users-form-item-required">
+                    <label class="users-form-item-label" style="width: 120px;">操作备注：</label>
+                    <div class="users-form-item-content" style="margin-left: 120px;">
+                        <div class="users-input-wrapper users-input-type-textarea">
+                            <textarea wrap="soft" autocomplete="off" spellcheck="false" name="remark" placeholder="请输入备注" rows="2" class="users-input"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <input name="users_id" type="hidden" value="{$Request.param.users_id}">
+            </form>
+        </div>
+    </div>
+</div>
+<div class="users-modal-footer">
+    <div>
+        <button type="button" class="default-long users-btn" onclick="cancel();">
+            <span>取消</span>
+        </button>
+        <button type="button" class="primary-long users-btn" onclick="confirm();">
+            <span>确定</span>
+        </button>
+    </div>
+</div>
+<script>
+    var parentObj = parent.layer.getFrameIndex(window.name);
+
+    // $(function () {
+    //     var h = $('html').height();
+    //     parent.layer.style(parentObj, {
+    //         height: h+'px'
+    //     });
+    // })
+    function cancel() {
+        parent.layer.closeAll();
+    }
+    function confirm() {
+        var type = parseInt($("input[name='type']:checked").val());
+        if (-1 == $.inArray(type,[1,2,3])) {
+            showErrorMsg('请选择变化！');
+            return false;
+        }
+        if('' == $('#money').val()){
+            showErrorMsg('变动数值不能为空！');
+            $('#money').focus();
+            return false;
+        }
+        if (2 == type && $('#money').val() > {$users.scores|default=0}) {
+            showErrorMsg('积分减少值不能大于剩余积分！');
+            $('#money').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            url : "{:url('Member/users_edit_score')}",
+            data: $('#postForm').serialize(),
+            type: 'post',
+            dataType: 'json',
+            success: function(res) {
+                layer.closeAll();
+                if (res.code == 1) {
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        _parent.location.reload();
+                    });
+                } else {
+                    layer.alert(res.msg, {icon: 2, title: false, closeBtn: 0});
+                }
+            },
+            error: function(e) {
+                layer.closeAll();
+                showErrorMsg(e.responseText);
+            }
+        })
+    }
+</script>

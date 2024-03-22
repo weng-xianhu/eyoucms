@@ -1,0 +1,63 @@
+{include file="public/layout" /}
+<body class="bodystyle ey-iframes-webkit" style="cursor: default; -moz-user-select: inherit;min-width:auto;background: #fff;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="padding: 0;background-color:transparent;">
+    <div class="flexigrid">
+        <div class="mb20"> <textarea placeholder="请输入" id="order_remarks" style="width: 100%;height: 94px;-webkit-box-sizing: border-box;-moz-box-sizing: border-box;box-sizing: border-box;"></textarea> </div>
+        <div class="fr">
+            <!-- <a href="JavaScript:void(0);" onclick="closeIframes();" style="height: 20px; padding: 7px 19px;">取消</a> -->
+            <a href="JavaScript:void(0);" onclick="orderRemarks();" class="ncap-btn-big ncap-btn-green">确定</a>
+        </div>
+    </div>
+    <div class="remarks-list">
+        {volist name="$remarksList" id="vo"}
+        <div class="item">
+            <div class="line"></div>
+            <div class="time fr"> {$vo.times}&nbsp;&nbsp;{$vo.admin_name}</div>
+            <div class="remarks"> {$vo.remarks} </div>
+        </div>
+        {/volist}
+    </div>
+</div>
+<script type="text/javascript">
+    // 关闭自身弹窗
+    function closeIframes(isAjax) {
+        var parentObj = parent.layer.getFrameIndex(window.name);
+        if (parentObj) {
+            if (isAjax) {
+                parent.window.location.reload();
+            } else {
+                parent.layer.close(parentObj);
+            }
+        }
+    }
+
+    function orderRemarks() {
+        var order_id = {$order_id};
+        var order_remarks = $('#order_remarks').val();
+        if (!order_remarks || undefined == order_remarks) {
+            $('#order_remarks').focus();
+            layer.msg('请填写备注', {time: 1500});
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            type: 'post',
+            url : "{:url('Shop/order_remarks')}",
+            data: {order_id: order_id, order_remarks: order_remarks, _ajax: 1},
+            dataType: 'json',
+            success: function(res) {
+                layer.closeAll();
+                if (1 == res.code) {
+                    layer.msg(res.msg, {time: 1000}, function() {
+                        closeIframes(true);
+                    });
+                } else {
+                    layer.alert(res.msg, {title: false, closeBtn: 0});
+                }
+            }
+        });
+    }
+</script>

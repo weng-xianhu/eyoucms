@@ -9,6 +9,13 @@
  * 当升级编辑器时，可直接使用旧版配置文件替换新版配置文件,不用担心旧版配置文件中因缺少新功能所需的参数而导致脚本报错。
  **************************提示********************************/
 
+if (typeof __web_xss_filter__ === 'undefined') {
+    var __web_xss_filter__ = 0;
+}
+if (typeof __is_mobile__ === 'undefined') {
+    var __is_mobile__ = navigator.userAgent.toLowerCase().match(/(ipod|iphone|android|coolpad|mmp|smartphone|midp|wap|xoom|symbian|j2me|blackberry|wince)/i) != null;
+}
+
 (function () {
 
     /**
@@ -25,6 +32,24 @@
         URL = URL.replace(/([^\/]+)\/\/([^\/]+)/ig, "");//把'is'替换为空字符串
     }
     /*--end*/
+
+    var web_xss_filter = false;
+    /* 防注入xss */
+    try {
+        if (__web_xss_filter__ == 1) {
+            web_xss_filter = true;
+        }
+    }catch(err){}
+    /*--end*/
+
+    // 手机端禁止右键功能，电脑端默认放开右键
+    var enableContextMenu_bool = true;
+    // 检测手机端的标识
+    try {
+        if (1 === __is_mobile__) {
+            enableContextMenu_bool = false;
+        }
+    }catch(err){}
 
     /**
      * 配置项主体。注意，此处所有涉及到路径的配置别遗漏URL变量。
@@ -49,12 +74,14 @@
             'simpleupload', 'insertimage', 'emotion', 'scrawl', 'insertvideo', 'music', 'attachment', 'map', 'gmap', 'insertframe', 'insertcode', 'webapp', 'pagebreak', 'template', 'background', '|',
             'horizontal', 'date', 'time', 'spechars', 'snapscreen', 'wordimage', '|',
             'inserttable', 'deletetable', 'insertparagraphbeforetable', 'insertrow', 'deleterow', 'insertcol', 'deletecol', 'mergecells', 'mergeright', 'mergedown', 'splittocells', 'splittorows', 'splittocols', 'charts', '|',
-            'print', 'preview', 'searchreplace', 'drafts', 'help'
+            'print', 'preview', 'searchreplace', 'drafts', 'help','previewmobile'
         ]]
         //当鼠标放在工具栏上时显示的tooltip提示,留空支持自动多语言配置，否则以配置值为准
-        //,labelMap:{
-        //    'anchor':'', 'undo':''
-        //}
+        ,labelMap:{
+            'previewmobile':'手机预览'
+            // ,'anchor':''
+            // ,'undo':''
+        }
 
         //语言配置项,默认是zh-cn。有需要的话也可以使用如下这样的方式来自动多语言切换，当然，前提条件是lang文件夹下存在对应的语言文件：
         //lang值也可以通过自动获取 (navigator.language||navigator.browserLanguage ||navigator.userLanguage).toLowerCase()
@@ -233,7 +260,7 @@
         //]
 
         //打开右键菜单功能
-        //,enableContextMenu: true
+        ,enableContextMenu: enableContextMenu_bool
         //右键菜单的内容，可以参考plugins/contextmenu.js里边的默认菜单的例子，label留空支持国际化，否则以此配置为准
         //,contextMenu:[
         //    {
@@ -361,14 +388,14 @@
         //,rgb2Hex:true               //默认产出的数据中的color自动从rgb格式变成16进制格式
 
         // xss 过滤是否开启,inserthtml等操作
-        ,xssFilterRules: false
+        ,xssFilterRules: web_xss_filter
         //input xss过滤
-        ,inputXssFilter: false
+        ,inputXssFilter: web_xss_filter
         //output xss过滤
-        ,outputXssFilter: false
+        ,outputXssFilter: web_xss_filter
         // xss过滤白名单 名单来源: https://raw.githubusercontent.com/leizongmin/js-xss/master/lib/default.js
         ,whitList: {
-            a:      ['target', 'href', 'title', 'class', 'style'],
+            a:      ['target', 'href', 'title', 'class', 'style', 'name'],
             abbr:   ['title', 'class', 'style'],
             address: ['class', 'style'],
             area:   ['shape', 'coords', 'href', 'alt'],
@@ -405,7 +432,7 @@
             header: [],
             hr:     [],
             i:      ['class', 'style'],
-            img:    ['src', 'alt', 'title', 'width', 'height', 'id', '_src', '_url', 'loadingclass', 'class', 'data-latex'],
+            img:    ['src', 'alt', 'title', 'width', 'height', 'id', '_src', '_url', 'loadingclass', 'class', 'data-latex', 'anchorname'],
             ins:    ['datetime'],
             li:     ['class', 'style'],
             mark:   [],

@@ -57,7 +57,7 @@ function checkdir(obj,filelist) {
         data : {filelist:filelist,_ajax:1},
         error: function(request) {
             layer.closeAll();
-            layer.alert("检测不通过，可能被服务器防火墙拦截，请添加白名单，或者联系技术协助！", {icon: 2, title:false}, function(){
+            layer.alert("检测不通过，可能被服务器防火墙拦截，请添加白名单！", {icon: 2, title:false}, function(){
                 top.location.reload();
             });
         },
@@ -100,7 +100,7 @@ function upgrade(obj){
         data : {_ajax:1},
         error: function(request) {
             layer.closeAll();
-            layer.alert("模板升级失败，请第一时间联系技术协助！", {icon: 2, title:false}, function(){
+            layer.alert("模板升级失败！", {icon: 2, title:false}, function(){
                 top.location.reload();
             });
         },

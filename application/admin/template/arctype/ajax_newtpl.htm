@@ -127,9 +127,9 @@
                     return false;
                 }
             },
-            error:function(){
+            error:function(e){
                 layer.closeAll();
-                layer.alert(ey_unknown_error, {icon: 2, title:false});
+                layer.alert(e.responseText, {icon: 2, title:false});
             }
         });
     }

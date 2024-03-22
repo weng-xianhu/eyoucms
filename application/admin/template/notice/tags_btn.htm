@@ -1,0 +1,13 @@
+<div class="member-nav-group">
+    <label class="member-nav-item">
+        <input type="button" class="btn {if condition="!in_array($Request.action, ['admin_notice_index'])"}current{else/}selected{/if}" value="站长通知" onclick="window.location.href='{:url("UsersNotice/admin_notice_index")}';">
+    </label>
+    
+    <label class="member-nav-item">
+        <input type="button" class="btn {if condition="!in_array($Request.action, ['index'])"}current{else/}selected{/if}" value="会员通知" onclick="window.location.href='{:url("UsersNotice/index")}';">
+    </label>
+    
+    <label class="member-nav-item">
+        <input type="button" class="btn {if condition="!in_array($Request.action, ['notify_tpl'])"}current{else/}selected{/if}" value="自定义模板" onclick="window.location.href='{:url("Notify/notify_tpl")}';">
+    </label>
+</div>

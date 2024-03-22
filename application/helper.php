@@ -243,15 +243,58 @@ if (!function_exists('typeurl')) {
      */
     function typeurl($url = '', $param = '', $suffix = true, $domain = false, $seo_pseudo = null, $seo_pseudo_format = null)
     {
+        $root_dir = ROOT_DIR;
+        $domain_old = $domain;
+        if (!$domain){
+            static $absolute_path_open = null;
+            null === $absolute_path_open && $absolute_path_open = tpCache('web.absolute_path_open'); //是否开启绝对链接
+            if ($absolute_path_open){
+                $domain = true;
+            }
+        }
+
         $eyouUrl = '';
         static $uiset = null;
         null === $uiset && $uiset = input('param.uiset/s', 'off');
         $uiset = trim($uiset, '/');
-        $seo_pseudo = !empty($seo_pseudo) ? $seo_pseudo : config('ey_config.seo_pseudo');
+
+        static $static_seo_pseudo = null;
+        null === $static_seo_pseudo && $static_seo_pseudo = tpCache('seo.seo_pseudo');
+        $seo_pseudo = !empty($seo_pseudo) ? $seo_pseudo : $static_seo_pseudo;
+
+        //开启会员,查看权限限制，静态强制转动态
+        static $web_users_switch = null;
+        null === $web_users_switch && $web_users_switch = tpCache('web.web_users_switch');
+        $param['page_limit'] = !empty($param['page_limit']) ? explode(',', $param['page_limit']) : [];
+        if (!empty($web_users_switch) && !empty($param['typearcrank']) && $param['typearcrank'] > 0 && in_array(1,$param['page_limit']) && $seo_pseudo == 2){
+            $seo_pseudo = 1;
+        }
+
         if (empty($seo_pseudo_format)) {
             if (1 == $seo_pseudo) {
                 $seo_pseudo_format = config('ey_config.seo_dynamic_format');
             }
+        }
+
+        // 多站点 - 静态模式下默认以动态URL访问
+        static $web_basehost = null;
+        null === $web_basehost && $web_basehost = tpCache('web.web_basehost');
+        $full_domain = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${4}', $web_basehost);
+        static $city_switch_on = null;
+        null === $city_switch_on && $city_switch_on = config('city_switch_on');
+        if (true === $city_switch_on) {
+            $domain = $domain_old;
+            if ((1 == $seo_pseudo && 2 == $seo_pseudo_format) || (2 == $seo_pseudo)) {
+                $seo_pseudo = 1;
+                $seo_pseudo_format = 1;
+            }
+        }
+        static $site_default_home = null;
+        null === $site_default_home && $site_default_home = tpCache('site.site_default_home');
+        $siteinfo = [];
+        if (isset($param['site'])) {
+            $siteinfo = $param['site'];
+            unset($param['site']);
         }
 
         if ('on' != $uiset && 1 == $seo_pseudo && 2 == $seo_pseudo_format) {
@@ -259,10 +302,44 @@ if (!function_exists('typeurl')) {
                 $vars = array(
                     'tid'   => $param['id'],
                 );
-                $vars = http_build_query($vars);
             } else {
-                $vars = $param;
+                parse_str($param, $vars);
             }
+
+            /*城市站点的域名路径*/
+            if (true === $city_switch_on && !empty($siteinfo['id'])) {
+                static $subDomain = null;
+                if (null === $subDomain) {
+                    $subDomain = request()->subDomain();
+                }
+                static $rootDomain = null;
+                if (null === $rootDomain) {
+                    $rootDomain = request()->rootDomain();
+                }
+                static $citysiteList = null;
+                if (null === $citysiteList) {
+                    $citysiteList = get_citysite_list();
+                }
+                $domain = $domain_old;
+                $is_open_domain = 0;
+                if (!empty($siteinfo['id']) && !empty($citysiteList[$siteinfo['id']])) {
+                    if ($site_default_home != $siteinfo['id']) {
+                        $vars['site'] = $citysiteList[$siteinfo['id']]['domain'];
+                        $is_open_domain = $citysiteList[$siteinfo['id']]['is_open'];
+                        if (!empty($is_open_domain)) {
+                            $domain = $vars['site'].'.'.$rootDomain;
+                            $vars['site'] = true;
+                        }
+                    }
+                } else if (!empty($subDomain) && 'www' != $subDomain && $subDomain == get_home_site()) {
+                    $vars['site'] = true;
+                    $domain = $full_domain;
+                } else {
+                    $vars['site'] = true;
+                }
+            }
+            /*--end*/
+
             $eyouUrl = url($url, array(), $suffix, $domain, $seo_pseudo, $seo_pseudo_format);
             $urlParam = parse_url($eyouUrl);
             $query_str = isset($urlParam['query']) ? $urlParam['query'] : '';
@@ -271,34 +348,97 @@ if (!function_exists('typeurl')) {
             } else {
                 $eyouUrl .= '&';
             }
+            $vars = http_build_query($vars);
             $eyouUrl .= $vars;
+
+            if (true === $city_switch_on && !empty($siteinfo['id'])) {
+                if (empty($is_open_domain)) {
+                    if (is_http_url($eyouUrl)) {
+                        $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${1}${3}'.$full_domain.'${5}', $eyouUrl);
+                    } else {
+                        $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/]*)(.*)$/i', '${1}${3}${4}', $web_basehost) . $eyouUrl;
+                    }
+                }
+            }
         } elseif ('on' != $uiset && 2 == $seo_pseudo) { // 生成静态页面代码
-            
-            if (isMobile()) { // 手机端访问非静态页面
+            static $is_mobile = null;
+            null === $is_mobile && $is_mobile = isMobile();
+            static $response_type = null;
+            null === $response_type && $response_type = config('ey_config.response_type', $response_type);
+            if (!empty($response_type) && $is_mobile) { // 手机端访问非静态页面
                 if (is_array($param)) {
                     $vars = array(
                         'tid'   => $param['id'],
                     );
-                    $vars = http_build_query($vars);
                 } else {
-                    $vars = $param;
+                    parse_str($param, $vars);
                 }
+
+                /*城市站点的域名路径*/
+                if (true === $city_switch_on && !empty($siteinfo['id'])) {
+                    static $subDomain = null;
+                    if (null === $subDomain) {
+                        $subDomain = request()->subDomain();
+                    }
+                    static $rootDomain = null;
+                    if (null === $rootDomain) {
+                        $rootDomain = request()->rootDomain();
+                    }
+                    static $citysiteList = null;
+                    if (null === $citysiteList) {
+                        $citysiteList = get_citysite_list();
+                    }
+                    $domain = $domain_old;
+                    $is_open_domain = 0;
+                    if (!empty($siteinfo['id']) && !empty($citysiteList[$siteinfo['id']])) {
+                        if ($site_default_home != $siteinfo['id']) {
+                            $vars['site'] = $citysiteList[$siteinfo['id']]['domain'];
+                            $is_open_domain = $citysiteList[$siteinfo['id']]['is_open'];
+                            if (!empty($is_open_domain)) {
+                                $domain = $vars['site'].'.'.$rootDomain;
+                                $vars['site'] = true;
+                            }
+                        }
+                    } else if (!empty($subDomain) && 'www' != $subDomain && $subDomain == get_home_site()) {
+                        $vars['site'] = true;
+                        $domain = $full_domain;
+                    } else {
+                        $vars['site'] = true;
+                    }
+                }
+                /*--end*/
+
                 static $home_lang = null;
                 null == $home_lang && $home_lang = get_home_lang(); // 前台语言 by 小虎哥
                 static $main_lang = null;
                 null == $main_lang && $main_lang = get_main_lang(); // 前台主体语言 by 小虎哥
                 if ($home_lang != $main_lang) {
-                    $vars .= "&lang=".get_home_lang();
+                    $vars['lang'] = get_home_lang();
                 }
                 $eyouUrl = url('home/Lists/index', $vars, true, false, 1);
-            }
-            else
-            { // PC端访问是静态页面
+
+                /*城市站点的域名路径*/
+                if (true === $city_switch_on && !empty($siteinfo['id'])) { // 全国站显示城市文档时的URL处理
+                    if (true !== $vars['site'] && !empty($vars['site']) && $vars['site'] != $subDomain) {
+                        $eyouUrl .= "&site={$vars['site']}";
+                    }
+                    if (empty($is_open_domain)) {
+                        if (is_http_url($eyouUrl)) {
+                            $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${1}${3}'.$full_domain.'${5}', $eyouUrl);
+                        } else {
+                            $eyouUrl = rtrim($web_basehost, '/') . $eyouUrl;
+                        }
+                    }
+                }
+                /*--end*/
+            }else{
+                // PC端访问是静态页面
                 static $seo_html_listname = null;
                 null === $seo_html_listname && $seo_html_listname = tpCache('seo.seo_html_listname');
                 static $seo_html_arcdir = null;
                 null === $seo_html_arcdir && $seo_html_arcdir = tpCache('seo.seo_html_arcdir');
-                if($seo_html_listname == 1){//存放顶级目录
+
+                if ($seo_html_listname == 1) {//存放顶级目录
                     $dirpath = explode('/',$param['dirpath']);
                     if($param['parent_id'] == 0){
                         $url = $seo_html_arcdir.'/'.$dirpath[1].'/';
@@ -308,11 +448,29 @@ if (!function_exists('typeurl')) {
                 } else if ($seo_html_listname == 3) { // 存放子级目录
                     $dirpath = explode('/',$param['dirpath']);
                     $url = $seo_html_arcdir.'/'.end($dirpath).'/';
-                }else{
+                } else if ($seo_html_listname == 4) { // 自定义存放目录
+                    $url = $seo_html_arcdir;
+                    $diy_dirpath = !empty($param['diy_dirpath']) ? $param['diy_dirpath'] : '';
+                    if (!empty($param['rulelist'])) {
+                        $rulelist = ltrim($param['rulelist'], '/');
+                        $rulelist = str_replace("{tid}", $param['id'], $rulelist);
+                        $rulelist = str_replace("{page}", '', $rulelist);
+                        $rulelist = preg_replace('/{(栏目目录|typedir)}(\/?)/i', $diy_dirpath.'/', $rulelist);
+                        $rulelist = '/'.ltrim($rulelist, '/');
+                        if (in_array($param['current_channel'], [6,8]) && !preg_match('/^{(栏目目录|typedir)}\/(list_{tid}_{page}|index)\.html$/i', $param['rulelist'])) {
+                            $rulelist = preg_replace('/\/([\/]*)/i', '/', $rulelist);
+                        } else {
+                            $rulelist = preg_replace('/\/([\/]*)([^\/]*)$/i', '/', $rulelist);
+                        }
+                        $url .= $rulelist;
+                    }else{
+                        $url .= $diy_dirpath."/";
+                    }
+                } else {
                     $url = $seo_html_arcdir.$param['dirpath'].'/';
                 }
                 
-                $eyouUrl = ROOT_DIR.$url;
+                $eyouUrl = $root_dir.$url;
                 if (false !== $domain) {
                     static $re_domain = null;
                     null === $re_domain && $re_domain = request()->domain();
@@ -330,8 +488,43 @@ if (!function_exists('typeurl')) {
                     'tid'   => $param['dirname'],
                 );
             } else {
-                $vars = $param;
+                parse_str($param, $vars);
             }
+
+            /*城市站点的域名路径*/
+            if (true === $city_switch_on && !empty($siteinfo['id'])) {
+                static $subDomain = null;
+                if (null === $subDomain) {
+                    $subDomain = request()->subDomain();
+                }
+                static $rootDomain = null;
+                if (null === $rootDomain) {
+                    $rootDomain = request()->rootDomain();
+                }
+                static $citysiteList = null;
+                if (null === $citysiteList) {
+                    $citysiteList = get_citysite_list();
+                }
+                $domain = $domain_old;
+                $is_open_domain = 0;
+                if (!empty($siteinfo['id']) && !empty($citysiteList[$siteinfo['id']])) {
+                    if ($site_default_home != $siteinfo['id']) {
+                        $vars['site'] = $citysiteList[$siteinfo['id']]['domain'];
+                        $is_open_domain = $citysiteList[$siteinfo['id']]['is_open'];
+                        if (!empty($is_open_domain)) {
+                            $domain = $vars['site'].'.'.$rootDomain;
+                            $vars['site'] = true;
+                        }
+                    }
+                } else if (!empty($subDomain) && 'www' != $subDomain && $subDomain == get_home_site()) {
+                    $vars['site'] = true;
+                    $domain = $full_domain;
+                } else {
+                    $vars['site'] = true;
+                }
+            }
+            /*--end*/
+
             /*伪静态格式*/
             $seo_rewrite_format = config('ey_config.seo_rewrite_format');
             if (1 == intval($seo_rewrite_format)) {
@@ -344,8 +537,54 @@ if (!function_exists('typeurl')) {
                 if (!strstr($eyouUrl, '.htm')){
                     $eyouUrl .= '/';
                 }
+            } else if (4 == intval($seo_rewrite_format)) {
+                $dirname = str_replace($param['dirname'],"",$param['dirpath']);
+                if (!empty($dirname)){
+                    $dirname = str_ireplace("/", "-", $dirname);
+                    if(!empty($dirname)){
+                        $dirname = trim($dirname,"-");
+                    }
+                }
+                if (!empty($dirname)){
+                    $eyouUrl = url('home/Lists/index?'.$dirname, $vars, $suffix, $domain, $seo_pseudo, $seo_pseudo_format);
+                }else{
+                    $eyouUrl = url('home/Lists/index', $vars, $suffix, $domain, $seo_pseudo, $seo_pseudo_format);
+                }
+                $eyouUrl = urldecode($eyouUrl);
+                if (!strstr($eyouUrl, '.htm')){
+                    $eyouUrl .= '/';
+                }
             } else {
                 $eyouUrl = url($url, $vars, $suffix, $domain, $seo_pseudo, $seo_pseudo_format); // 兼容v1.1.6之前被搜索引擎收录的URL
+            }
+            /*--end*/
+
+            /*城市站点的域名路径*/
+            if (true === $city_switch_on && !empty($siteinfo['id'])) { // 全国站显示城市文档时的URL处理
+                if (true !== $vars['site'] && !empty($vars['site']) && $vars['site'] != $subDomain && !strstr($eyouUrl, $vars['site'])) {
+                    if (stristr($eyouUrl, 'index.php')) {
+                        $eyouUrl = str_ireplace('index.php', "index.php/{$vars['site']}", $eyouUrl);
+                    } else if (!empty($root_dir)) {
+                        if (is_http_url($eyouUrl)) {
+                            $eyouUrl = preg_replace('/(\.([^\.\/]+))'.preg_quote($root_dir, '/').'/i', '${1}'.$root_dir.'/'.$vars['site'], $eyouUrl);
+                        } else {
+                            $eyouUrl = preg_replace('/^'.preg_quote($root_dir, '/').'/i', $root_dir.'/'.$vars['site'], $eyouUrl);
+                        }
+                    } else if (empty($root_dir)) {
+                        if (is_http_url($eyouUrl)) {
+                            $eyouUrl = preg_replace('/^(\.([^\.\/]+))\//i', '${1}/'.$vars['site'].'/', $eyouUrl);
+                        } else {
+                            $eyouUrl = preg_replace('/^\//i', '/'.$vars['site'].'/', $eyouUrl);
+                        }
+                    }
+                }
+                if (empty($is_open_domain)) {
+                    if (is_http_url($eyouUrl)) {
+                        $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${1}${3}'.$full_domain.'${5}', $eyouUrl);
+                    } else {
+                        $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/]*)(.*)$/i', '${1}${3}${4}', $web_basehost) . $eyouUrl;
+                    }
+                }
             }
             /*--end*/
         } else {
@@ -354,9 +593,59 @@ if (!function_exists('typeurl')) {
                     'tid'   => $param['id'],
                 );
             } else {
-                $vars = $param;
+                parse_str($param, $vars);
             }
+
+            /*城市站点的域名路径*/
+            if (true === $city_switch_on && !empty($siteinfo['id'])) {
+                static $subDomain = null;
+                if (null === $subDomain) {
+                    $subDomain = request()->subDomain();
+                }
+                static $rootDomain = null;
+                if (null === $rootDomain) {
+                    $rootDomain = request()->rootDomain();
+                }
+                static $citysiteList = null;
+                if (null === $citysiteList) {
+                    $citysiteList = get_citysite_list();
+                }
+                $domain = $domain_old;
+                $is_open_domain = 0;
+                if (!empty($siteinfo['id']) && !empty($citysiteList[$siteinfo['id']])) {
+                    if ($site_default_home != $siteinfo['id']) {
+                        $vars['site'] = $citysiteList[$siteinfo['id']]['domain'];
+                        $is_open_domain = $citysiteList[$siteinfo['id']]['is_open'];
+                        if (!empty($is_open_domain)) {
+                            $domain = $vars['site'].'.'.$rootDomain;
+                            $vars['site'] = true;
+                        }
+                    }
+                } else if (!empty($subDomain) && 'www' != $subDomain && $subDomain == get_home_site()) {
+                    $vars['site'] = true;
+                    $domain = $full_domain;
+                } else {
+                    $vars['site'] = true;
+                }
+            }
+            /*--end*/
+            
             $eyouUrl = url('home/Lists/index', $vars, $suffix, $domain, $seo_pseudo, $seo_pseudo_format);
+
+            /*城市站点的域名路径*/
+            if (true === $city_switch_on && !empty($siteinfo['id'])) { // 全国站显示城市文档时的URL处理
+                if (true !== $vars['site'] && !empty($vars['site']) && $vars['site'] != $subDomain) {
+                    $eyouUrl .= "&site={$vars['site']}";
+                }
+                if (empty($is_open_domain)) {
+                    if (is_http_url($eyouUrl)) {
+                        $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${1}${3}'.$full_domain.'${5}', $eyouUrl);
+                    } else {
+                        $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/]*)(.*)$/i', '${1}${3}${4}', $web_basehost) . $eyouUrl;
+                    }
+                }
+            }
+            /*--end*/
         }
 
         return $eyouUrl;
@@ -376,26 +665,111 @@ if (!function_exists('arcurl')) {
      */
     function arcurl($url = '', $param = '', $suffix = true, $domain = false, $seo_pseudo = '', $seo_pseudo_format = null)
     {
+        $root_dir = ROOT_DIR;
+        $domain_old = $domain;
+        if (!$domain){
+            static $absolute_path_open = null;
+            null === $absolute_path_open && $absolute_path_open = tpCache('web.absolute_path_open'); //是否开启绝对链接
+            if ($absolute_path_open){
+                $domain = true;
+            }
+        }
+
         $eyouUrl = '';
         static $uiset = null;
         null === $uiset && $uiset = input('param.uiset/s', 'off');
         $uiset = trim($uiset, '/');
-        $seo_pseudo = !empty($seo_pseudo) ? $seo_pseudo : config('ey_config.seo_pseudo');
+        
+        static $static_seo_pseudo = null;
+        null === $static_seo_pseudo && $static_seo_pseudo = tpCache('seo.seo_pseudo');
+        $seo_pseudo = !empty($seo_pseudo) ? $seo_pseudo : $static_seo_pseudo;
+
+        //开启会员,查看权限限制，静态强制转动态
+        static $web_users_switch = null;
+        null === $web_users_switch && $web_users_switch = tpCache('web.web_users_switch');
+        if (!empty($web_users_switch) && ((!empty($param['typearcrank']) && $param['typearcrank'] > 0) || (!empty($param['arcrank']) && $param['arcrank'] > 0)) && $seo_pseudo == 2){
+            $seo_pseudo = 1;
+        }
+
         if (empty($seo_pseudo_format)) {
             if (1 == $seo_pseudo) {
                 $seo_pseudo_format = config('ey_config.seo_dynamic_format');
             }
         }
-        
+        // 多站点 - 静态模式下默认以动态URL访问
+        static $web_basehost = null;
+        null === $web_basehost && $web_basehost = tpCache('web.web_basehost');
+        $full_domain = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${4}', $web_basehost);
+        static $city_switch_on = null;
+        null === $city_switch_on && $city_switch_on = config('city_switch_on');
+        if (true === $city_switch_on) {
+            if ((1 == $seo_pseudo && 2 == $seo_pseudo_format) || (2 == $seo_pseudo)) {
+                $seo_pseudo = 1;
+                $seo_pseudo_format = 1;
+            }
+        }
+        static $site_default_home = null;
+        null === $site_default_home && $site_default_home = tpCache('site.site_default_home');
+
         if ('on' != $uiset && 1 == $seo_pseudo && 2 == $seo_pseudo_format) {
             if (is_array($param)) {
                 $vars = array(
                     'aid'   => $param['aid'],
                 );
-                $vars = http_build_query($vars);
             } else {
-                $vars = $param;
+                parse_str($param, $vars);
             }
+            /*城市站点的域名路径*/
+            if (true === $city_switch_on) {
+                static $subDomain = null;
+                if (null === $subDomain) {
+                    $subDomain = request()->subDomain();
+                }
+                static $rootDomain = null;
+                if (null === $rootDomain) {
+                    $rootDomain = request()->rootDomain();
+                }
+                static $citysiteList = null;
+                if (null === $citysiteList) {
+                    $citysiteList = get_citysite_list();
+                }
+                $domain = $domain_old;
+                $is_open_domain = 0;
+                if (!empty($param['area_id']) && !empty($citysiteList[$param['area_id']])) {
+                    if ($site_default_home != $param['area_id']) {
+                        $vars['site'] = $citysiteList[$param['area_id']]['domain'];
+                        $is_open_domain = $citysiteList[$param['area_id']]['is_open'];
+                        if (!empty($is_open_domain)) {
+                            $domain = $vars['site'].'.'.$rootDomain;
+                            $vars['site'] = true;
+                        }
+                    }
+                } else if (!empty($param['city_id']) && !empty($citysiteList[$param['city_id']])) {
+                    if ($site_default_home != $param['city_id']) {
+                        $vars['site'] = $citysiteList[$param['city_id']]['domain'];
+                        $is_open_domain = $citysiteList[$param['city_id']]['is_open'];
+                        if (!empty($is_open_domain)) {
+                            $domain = $vars['site'].'.'.$rootDomain;
+                            $vars['site'] = true;
+                        }
+                    }
+                } else if (!empty($param['province_id']) && !empty($citysiteList[$param['province_id']])) {
+                    if ($site_default_home != $param['province_id']) {
+                        $vars['site'] = $citysiteList[$param['province_id']]['domain'];
+                        $is_open_domain = $citysiteList[$param['province_id']]['is_open'];
+                        if (!empty($is_open_domain)) {
+                            $domain = $vars['site'].'.'.$rootDomain;
+                            $vars['site'] = true;
+                        }
+                    }
+                } else if (!empty($subDomain) && 'www' != $subDomain && $subDomain == get_home_site()) {
+                    $vars['site'] = true;
+                    $domain = $full_domain;
+                } else {
+                    $vars['site'] = true;
+                }
+            }
+            /*--end*/
             $eyouUrl = url($url, array(), $suffix, $domain, $seo_pseudo, $seo_pseudo_format);
             $urlParam = parse_url($eyouUrl);
             $query_str = isset($urlParam['query']) ? $urlParam['query'] : '';
@@ -404,26 +778,105 @@ if (!function_exists('arcurl')) {
             } else {
                 $eyouUrl .= '&';
             }
+            $vars = http_build_query($vars);
             $eyouUrl .= $vars;
+
+            if (true === $city_switch_on) {
+                if (empty($is_open_domain)) {
+                    if (is_http_url($eyouUrl)) {
+                        $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${1}${3}'.$full_domain.'${5}', $eyouUrl);
+                    } else {
+                        $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/]*)(.*)$/i', '${1}${3}${4}', $web_basehost) . $eyouUrl;
+                    }
+                }
+            }
         } elseif ($seo_pseudo == 2 && $uiset != 'on') { // 生成静态页面代码
-            
-            if (isMobile()) { // 手机端访问非静态页面
+            static $is_mobile = null;
+            null === $is_mobile && $is_mobile = isMobile();
+            static $response_type = null;
+            null === $response_type && $response_type = config('ey_config.response_type', $response_type);
+            if (!empty($response_type) && $is_mobile) { // 手机端访问非静态页面
                 if (is_array($param)) {
                     $vars = array(
                         'aid'   => $param['aid'],
                     );
-                    $vars = http_build_query($vars);
                 } else {
-                    $vars = $param;
+                    parse_str($param, $vars);
                 }
+                /*城市站点的域名路径*/
+                if (true === $city_switch_on) {
+                    static $subDomain = null;
+                    if (null === $subDomain) {
+                        $subDomain = request()->subDomain();
+                    }
+                    static $rootDomain = null;
+                    if (null === $rootDomain) {
+                        $rootDomain = request()->rootDomain();
+                    }
+                    static $citysiteList = null;
+                    if (null === $citysiteList) {
+                        $citysiteList = get_citysite_list();
+                    }
+                    $domain = $domain_old;
+                    $is_open_domain = 0;
+                    if (!empty($param['area_id']) && !empty($citysiteList[$param['area_id']])) {
+                        if ($site_default_home != $param['area_id']) {
+                            $vars['site'] = $citysiteList[$param['area_id']]['domain'];
+                            $is_open_domain = $citysiteList[$param['area_id']]['is_open'];
+                            if (!empty($is_open_domain)) {
+                                $domain = $vars['site'].'.'.$rootDomain;
+                                $vars['site'] = true;
+                            }
+                        }
+                    } else if (!empty($param['city_id']) && !empty($citysiteList[$param['city_id']])) {
+                        if ($site_default_home != $param['city_id']) {
+                            $vars['site'] = $citysiteList[$param['city_id']]['domain'];
+                            $is_open_domain = $citysiteList[$param['city_id']]['is_open'];
+                            if (!empty($is_open_domain)) {
+                                $domain = $vars['site'].'.'.$rootDomain;
+                                $vars['site'] = true;
+                            }
+                        }
+                    } else if (!empty($param['province_id']) && !empty($citysiteList[$param['province_id']])) {
+                        if ($site_default_home != $param['province_id']) {
+                            $vars['site'] = $citysiteList[$param['province_id']]['domain'];
+                            $is_open_domain = $citysiteList[$param['province_id']]['is_open'];
+                            if (!empty($is_open_domain)) {
+                                $domain = $vars['site'].'.'.$rootDomain;
+                                $vars['site'] = true;
+                            }
+                        }
+                    } else if (!empty($subDomain) && 'www' != $subDomain && $subDomain == get_home_site()) {
+                        $vars['site'] = true;
+                        $domain = $full_domain;
+                    } else {
+                        $vars['site'] = true;
+                    }
+                }
+                /*--end*/
                 static $home_lang = null;
                 null == $home_lang && $home_lang = get_home_lang(); // 前台语言 by 小虎哥
                 static $main_lang = null;
                 null == $main_lang && $main_lang = get_main_lang(); // 前台主体语言 by 小虎哥
                 if ($home_lang != $main_lang) {
-                    $vars .= "&lang=".get_home_lang();
+                    $vars['lang'] = get_home_lang();
                 }
                 $eyouUrl = url('home/View/index', $vars, true, false, 1);
+
+                /*城市站点的域名路径*/
+                if (true === $city_switch_on) { // 全国站显示城市文档时的URL处理
+                    if (true !== $vars['site'] && !empty($vars['site']) && $vars['site'] != $subDomain) {
+                        $eyouUrl .= "&site={$vars['site']}";
+                    }
+                    if (empty($is_open_domain)) {
+                        if (is_http_url($eyouUrl)) {
+                            $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${1}${3}'.$full_domain.'${5}', $eyouUrl);
+                        } else {
+                            $eyouUrl = rtrim($web_basehost, '/') . $eyouUrl;
+                        }
+                    }
+                }
+                /*--end*/
             }
             else
             { // PC端访问是静态页面
@@ -432,7 +885,6 @@ if (!function_exists('arcurl')) {
                 }else{
                     $aid = $param['aid'];
                 }
-                $url = $param['dirpath']."/{$aid}.html";
                 static $seo_html_pagename = null;
                 null === $seo_html_pagename && $seo_html_pagename = tpCache('seo.seo_html_pagename');
                 static $seo_html_arcdir = null;
@@ -440,14 +892,35 @@ if (!function_exists('arcurl')) {
                 if($seo_html_pagename == 1){//存放顶级目录
                     $dirpath = explode('/',$param['dirpath']);
                     $url = $seo_html_arcdir.'/'.$dirpath[1].'/'.$aid.'.html';
-                } else if ($seo_html_pagename == 3) {
+                } else if ($seo_html_pagename == 3) { // 存放子级目录
                     $dirpath = explode('/',$param['dirpath']);
                     $url = $seo_html_arcdir.'/'.end($dirpath).'/'.$aid.'.html';
+                } else if ($seo_html_pagename == 4) { // 自定义存放目录
+                    $url = $seo_html_arcdir;
+                    $diy_dirpath = !empty($param['diy_dirpath']) ? $param['diy_dirpath'] : '';
+                    if (!empty($param['ruleview'])) {
+                        $y = $m = $d = 1;
+                        if (!empty($param['add_time'])){
+                            $y = date('Y', $param['add_time']);
+                            $m = date('m', $param['add_time']);
+                            $d = date('d', $param['add_time']);
+                        }
+                        $ruleview = ltrim($param['ruleview'], '/');
+                        $ruleview = str_ireplace("{aid}", $aid, $ruleview);
+                        $ruleview = str_ireplace("{Y}", $y, $ruleview);
+                        $ruleview = str_ireplace("{M}", $m, $ruleview);
+                        $ruleview = str_ireplace("{D}", $d, $ruleview);
+                        $ruleview = preg_replace('/{(栏目目录|typedir)}(\/?)/i', $diy_dirpath.'/', $ruleview);
+                        $ruleview = '/'.ltrim($ruleview, '/');
+                        $url .= $ruleview;
+                    }else{
+                        $url .= $diy_dirpath."/" . $aid.'.html';
+                    }
                 }else{
                     $url = $seo_html_arcdir.$param['dirpath'].'/'.$aid.'.html';
                 }
                 
-                $eyouUrl = ROOT_DIR.$url;
+                $eyouUrl = $root_dir.$url;
                 if (false !== $domain) {
                     static $re_domain = null;
                     null === $re_domain && $re_domain = request()->domain();
@@ -473,27 +946,185 @@ if (!function_exists('arcurl')) {
                 /*--end*/
             } else if (3 == intval($seo_rewrite_format)) {
                 $url = 'home/View/index';
+            }else if(4 == intval($seo_rewrite_format)){
+                $dirname = str_replace($param['dirname'],"",$param['dirpath']);
+                if (!empty($dirname)){
+                    $dirname = str_ireplace("/", "-", $dirname);
+                    if(!empty($dirname)){
+                        $dirname = trim($dirname,"-");
+                    }
+                }
+                if (!empty($dirname)){
+                    $url = 'home/View/index?'.$dirname;
+                }else{
+                    $url = 'home/View/index';
+                }
             }
             /*--end*/
             if (is_array($param)) {
                 $vars = array(
-                    'aid'   => $param['aid'],
+                    'aid'   => !empty($param['htmlfilename']) ? $param['htmlfilename'] : $param['aid'],
                     'dirname'   => $param['dirname'],
                 );
             } else {
-                $vars = $param;
+                parse_str($param, $vars);
             }
+            /*城市站点的域名路径*/
+            if (true === $city_switch_on) {
+                static $subDomain = null;
+                if (null === $subDomain) {
+                    $subDomain = request()->subDomain();
+                }
+                static $rootDomain = null;
+                if (null === $rootDomain) {
+                    $rootDomain = request()->rootDomain();
+                }
+                static $citysiteList = null;
+                if (null === $citysiteList) {
+                    $citysiteList = get_citysite_list();
+                }
+                $domain = $domain_old;
+                $is_open_domain = 0;
+                if (!empty($param['area_id']) && !empty($citysiteList[$param['area_id']])) {
+                    if ($site_default_home != $param['area_id']) {
+                        $vars['site'] = $citysiteList[$param['area_id']]['domain'];
+                        $is_open_domain = $citysiteList[$param['area_id']]['is_open'];
+                        if (!empty($is_open_domain)) {
+                            $domain = $vars['site'].'.'.$rootDomain;
+                            $vars['site'] = true;
+                        }
+                    }
+                } else if (!empty($param['city_id']) && !empty($citysiteList[$param['city_id']])) {
+                    if ($site_default_home != $param['city_id']) {
+                        $vars['site'] = $citysiteList[$param['city_id']]['domain'];
+                        $is_open_domain = $citysiteList[$param['city_id']]['is_open'];
+                        if (!empty($is_open_domain)) {
+                            $domain = $vars['site'].'.'.$rootDomain;
+                            $vars['site'] = true;
+                        }
+                    }
+                } else if (!empty($param['province_id']) && !empty($citysiteList[$param['province_id']])) {
+                    if ($site_default_home != $param['province_id']) {
+                        $vars['site'] = $citysiteList[$param['province_id']]['domain'];
+                        $is_open_domain = $citysiteList[$param['province_id']]['is_open'];
+                        if (!empty($is_open_domain)) {
+                            $domain = $vars['site'].'.'.$rootDomain;
+                            $vars['site'] = true;
+                        }
+                    }
+                } else if (!empty($subDomain) && 'www' != $subDomain && $subDomain == get_home_site()) {
+                    $vars['site'] = true;
+                    $domain = $full_domain;
+                } else {
+                    $vars['site'] = true;
+                }
+            }
+            /*--end*/
             $eyouUrl = url($url, $vars, $suffix, $domain, $seo_pseudo, $seo_pseudo_format);
+
+            /*城市站点的域名路径*/
+            if (true === $city_switch_on) { // 全国站显示城市文档时的URL处理
+                if (true !== $vars['site'] && !empty($vars['site']) && $vars['site'] != $subDomain && !strstr($eyouUrl, $vars['site'])) {
+                    if (stristr($eyouUrl, 'index.php')) {
+                        $eyouUrl = str_ireplace('index.php', "index.php/{$vars['site']}", $eyouUrl);
+                    } else if (!empty($root_dir)) {
+                        if (is_http_url($eyouUrl)) {
+                            $eyouUrl = preg_replace('/(\.([^\.\/]+))'.preg_quote($root_dir, '/').'/i', '${1}'.$root_dir.'/'.$vars['site'], $eyouUrl);
+                        } else {
+                            $eyouUrl = preg_replace('/^'.preg_quote($root_dir, '/').'/i', $root_dir.'/'.$vars['site'], $eyouUrl);
+                        }
+                    } else if (empty($root_dir)) {
+                        if (is_http_url($eyouUrl)) {
+                            $eyouUrl = preg_replace('/^(\.([^\.\/]+))\//i', '${1}/'.$vars['site'].'/', $eyouUrl);
+                        } else {
+                            $eyouUrl = preg_replace('/^\//i', '/'.$vars['site'].'/', $eyouUrl);
+                        }
+                    }
+                }
+                if (empty($is_open_domain)) {
+                    if (is_http_url($eyouUrl)) {
+                        $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${1}${3}'.$full_domain.'${5}', $eyouUrl);
+                    } else {
+                        $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/]*)(.*)$/i', '${1}${3}${4}', $web_basehost) . $eyouUrl;
+                    }
+                }
+            }
+            /*--end*/
         } else {
             if (is_array($param)) {
                 $vars = array(
                     'aid'   => $param['aid'],
                 );
-                $vars = http_build_query($vars);
             } else {
-                $vars = $param;
+                parse_str($param, $vars);
             }
+            /*城市站点的域名路径*/
+            if (true === $city_switch_on) {
+                static $subDomain = null;
+                if (null === $subDomain) {
+                    $subDomain = request()->subDomain();
+                }
+                static $rootDomain = null;
+                if (null === $rootDomain) {
+                    $rootDomain = request()->rootDomain();
+                }
+                static $citysiteList = null;
+                if (null === $citysiteList) {
+                    $citysiteList = get_citysite_list();
+                }
+                $domain = $domain_old;
+                $is_open_domain = 0;
+                if (!empty($param['area_id']) && !empty($citysiteList[$param['area_id']])) {
+                    if ($site_default_home != $param['area_id']) {
+                        $vars['site'] = $citysiteList[$param['area_id']]['domain'];
+                        $is_open_domain = $citysiteList[$param['area_id']]['is_open'];
+                        if (!empty($is_open_domain)) {
+                            $domain = $vars['site'].'.'.$rootDomain;
+                            $vars['site'] = true;
+                        }
+                    }
+                } else if (!empty($param['city_id']) && !empty($citysiteList[$param['city_id']])) {
+                    if ($site_default_home != $param['city_id']) {
+                        $vars['site'] = $citysiteList[$param['city_id']]['domain'];
+                        $is_open_domain = $citysiteList[$param['city_id']]['is_open'];
+                        if (!empty($is_open_domain)) {
+                            $domain = $vars['site'].'.'.$rootDomain;
+                            $vars['site'] = true;
+                        }
+                    }
+                } else if (!empty($param['province_id']) && !empty($citysiteList[$param['province_id']])) {
+                    if ($site_default_home != $param['province_id']) {
+                        $vars['site'] = $citysiteList[$param['province_id']]['domain'];
+                        $is_open_domain = $citysiteList[$param['province_id']]['is_open'];
+                        if (!empty($is_open_domain)) {
+                            $domain = $vars['site'].'.'.$rootDomain;
+                            $vars['site'] = true;
+                        }
+                    }
+                } else if (!empty($subDomain) && 'www' != $subDomain && $subDomain == get_home_site()) {
+                    $vars['site'] = true;
+                    $domain = $full_domain;
+                } else {
+                    $vars['site'] = true;
+                }
+            }
+            /*--end*/
             $eyouUrl = url('home/View/index', $vars, $suffix, $domain, $seo_pseudo, $seo_pseudo_format);
+
+            /*城市站点的域名路径*/
+            if (true === $city_switch_on) { // 全国站显示城市文档时的URL处理
+                if (true !== $vars['site'] && !empty($vars['site']) && $vars['site'] != $subDomain) {
+                    $eyouUrl .= "&site={$vars['site']}";
+                }
+                if (empty($is_open_domain)) {
+                    if (is_http_url($eyouUrl)) {
+                        $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${1}${3}'.$full_domain.'${5}', $eyouUrl);
+                    } else {
+                        $eyouUrl = preg_replace('/^(http(s)?:)?(\/\/)?([^\/]*)(.*)$/i', '${1}${3}${4}', $web_basehost) . $eyouUrl;
+                    }
+                }
+            }
+            /*--end*/
         }
 
         return $eyouUrl;
@@ -513,25 +1144,72 @@ if (!function_exists('tagurl')) {
      */
     function tagurl($url = '', $param = '', $suffix = true, $domain = false, $seo_pseudo = '', $seo_pseudo_format = null)
     {
-        $eyouUrl = '';
-        $seo_pseudo = !empty($seo_pseudo) ? $seo_pseudo : config('ey_config.seo_pseudo');
-        if (empty($seo_pseudo_format)) {
-            if (1 == $seo_pseudo) {
-                $seo_pseudo_format = config('ey_config.seo_dynamic_format');
+        if (!$domain){
+            static $absolute_path_open = null;
+            null === $absolute_path_open && $absolute_path_open = tpCache('web.absolute_path_open'); //是否开启绝对链接
+            if ($absolute_path_open){
+                $domain = true;
             }
         }
         
+        $eyouUrl = '';
+        static $is_plus_tags = null;
+        if (null === $is_plus_tags) {
+            if (is_dir('./weapp/Tags/')) {
+                $is_plus_tags = 1;
+            } else {
+                $is_plus_tags = 0;
+            }
+        }
+
         static $tags_html = null;
-        null === $tags_html && $tags_html = config('tpcache.plus_tags_html');
-        if (!empty($tags_html)) {
-            $eyouUrl = ROOT_DIR."/tags/{$param['tagid']}.html";
+        if (null === $tags_html && !empty($is_plus_tags)) {
+            $tags_html = config('tpcache.plus_tags_html');    //tags插件是否开启，1：开启，0：关闭
+        }
+        static $tags_seo_pseudo = null;
+        if (!empty($tags_html)){
+            $tagsModel = new \weapp\Tags\model\TagsModel;
+            $tagsConfData = $tagsModel->getWeappData();
+            if (!empty($tagsConfData['data']['seo_pseudo'])){
+                $tags_seo_pseudo = $tagsConfData['data']['seo_pseudo'];
+            }
+        }
+        if (!empty($tags_html) && (empty($tags_seo_pseudo) || $tags_seo_pseudo == 2)) {   //插件静态模式
+            static $tagsConf = null;
+            null === $tagsConf && $tagsConf = tpCache('tags');
+            if (!empty($param['tagid'])){   //内页
+                $eyouUrl = ROOT_DIR."/tags/{$param['tagid']}.html";
+                if (!empty($tagsConf['tags_mobile_dir']) && isMobile()){
+                    $eyouUrl = ROOT_DIR."/{$tagsConf['tags_mobile_dir']}/{$param['tagid']}.html";
+                }else if (!empty($tagsConf['tags_pc_dir']) && !isMobile()){
+                    $eyouUrl = ROOT_DIR."/{$tagsConf['tags_pc_dir']}/{$param['tagid']}.html";
+                }
+            }else{      //列表页
+                $eyouUrl = ROOT_DIR."/tags/";
+                if (!empty($tagsConf['tags_mobile_dir']) && isMobile()){
+                    $eyouUrl = ROOT_DIR."/{$tagsConf['tags_mobile_dir']}/";
+                }else if (!empty($tagsConf['tags_pc_dir']) && !isMobile()){
+                    $eyouUrl = ROOT_DIR."/{$tagsConf['tags_pc_dir']}/";
+                }
+            }
+
             if (false !== $domain) {
                 static $re_domain = null;
                 null === $re_domain && $re_domain = request()->domain();
                 if (true === $domain) {
                     $eyouUrl = $re_domain.$eyouUrl;
                 } else {
-                    $eyouUrl = rtrim($domain, '/').$eyouUrl;
+                    $host       = Config::get('app_host') ?: request()->host();
+                    $rootDomain = substr_count($host, '.') > 1 ? substr(strstr($host, '.'), 1) : $host;
+                    if (substr_count($domain, '.') < 2 && !strpos($domain, $rootDomain)) {
+                        $domain .= '.' . $rootDomain;
+                    }
+                    if (false !== strpos($domain, '://')) {
+                        $scheme = '';
+                    } else {
+                        $scheme = request()->isSsl() || Config::get('is_https') ? 'https://' : 'http://';
+                    }
+                    $eyouUrl = $scheme.rtrim($domain, '/').$eyouUrl;
                 }
             }
         } else {
@@ -543,7 +1221,25 @@ if (!function_exists('tagurl')) {
             } else {
                 $vars = $param;
             }
-            $eyouUrl = url('home/Tags/lists', $vars, $suffix, $domain, $seo_pseudo, $seo_pseudo_format);
+
+            if (empty($seo_pseudo)) {
+                if (!empty($tags_seo_pseudo)) { // tag静态化插件的伪静态和动态URL
+                    $seo_pseudo = $tags_seo_pseudo;
+                    $seo_pseudo_format = 1;
+                } else {
+                    static $seo_config = null;
+                    null === $seo_config && $seo_config = tpCache('seo');
+                    $seo_pseudo = !empty($seo_config['seo_pseudo']) ? $seo_config['seo_pseudo'] : config('ey_config.seo_pseudo');
+                    $seo_dynamic_format = !empty($seo_config['seo_dynamic_format']) ? $seo_config['seo_dynamic_format'] : config('ey_config.seo_dynamic_format');
+                    if (1 == $seo_pseudo) {
+                        $seo_pseudo_format = $seo_dynamic_format;
+                    }
+                }
+            } else if (empty($seo_pseudo_format)) {
+                $seo_pseudo_format = config('ey_config.seo_dynamic_format');
+            }
+            $eyouUrl = url($url, $vars, $suffix, $domain, $seo_pseudo, $seo_pseudo_format);
+            $eyouUrl = auto_hide_index($eyouUrl);
         }
 
         return $eyouUrl;
@@ -564,26 +1260,30 @@ if (!function_exists('askurl')) {
     function askurl($url = '', $param = '', $suffix = true, $domain = false, $seo_pseudo = '', $seo_pseudo_format = null, $seo_inlet = null)
     {
         $eyouUrl    = '';
-        $seo_pseudo = !empty($seo_pseudo) ? $seo_pseudo : config('ey_config.seo_pseudo');
+        static $static_seo_pseudo = null;
+        null === $static_seo_pseudo && $static_seo_pseudo = tpCache('seo.seo_pseudo');
+        $seo_pseudo = !empty($seo_pseudo) ? $seo_pseudo : $static_seo_pseudo;
         if (empty($seo_pseudo_format)) {
             if (1 == $seo_pseudo) {
                 $seo_pseudo_format = config('ey_config.seo_dynamic_format');
             }
         }
+        
+        // 多站点 - 静态模式下默认以动态URL访问
+        static $city_switch_on = null;
+        null === $city_switch_on && $city_switch_on = config('city_switch_on');
+        if (true === $city_switch_on) {
+            if ((1 == $seo_pseudo && 2 == $seo_pseudo_format) || (2 == $seo_pseudo)) {
+                $seo_pseudo = 1;
+                $seo_pseudo_format = 1;
+            }
+        }
 
         if ($seo_pseudo == 3 || $seo_pseudo == 2) {
-            // static $askdirnameArr = null;
-            // null === $askdirnameArr && $askdirnameArr = \think\Db::name('arctype')->where(['current_channel' => 51, 'is_del' => 0])->getField('dirname');
             if (is_array($param)) {
                 $vars         = $param;
-                // $vars['code'] = $askdirnameArr;
             } else {
                 $vars = $param;
-                if (!empty($vars)) {
-                    // $vars .= '&code='.$askdirnameArr;
-                } else {
-                    // $vars = 'code='.$askdirnameArr;
-                }
             }
             $eyouUrl = url($url, $vars, $suffix, $domain,3, $seo_pseudo_format, $seo_inlet);
             if (!strstr($eyouUrl, '.htm')){
@@ -591,6 +1291,89 @@ if (!function_exists('askurl')) {
             }
         } else {
             $eyouUrl = url($url, $param, $suffix, $domain, $seo_pseudo, $seo_pseudo_format, $seo_inlet);
+        }
+
+        return $eyouUrl;
+    }
+}
+
+if (!function_exists('siteurl')) {
+    /**
+     * 多城市站点Url生成
+     * @param string|array $siteinfo 城市站点信息
+     * @return string
+     */
+    function siteurl($siteinfo = '')
+    {
+        $eyouUrl = '';
+        // 是否支持去掉index.php小尾巴
+        static $seo_inlet = null;
+        null === $seo_inlet && $seo_inlet = tpCache('seo.seo_inlet');
+        // URL模式
+        static $seo_pseudo = null;
+        null === $seo_pseudo && $seo_pseudo = tpCache('seo.seo_pseudo');
+        // http/https协议
+        static $scheme = null;
+        null === $scheme && $scheme = request()->scheme();
+        // 网站根域名
+        static $root_domain = null;
+        null === $root_domain && $root_domain = request()->rootDomain();
+        // 当前域名带端口
+        static $host = null;
+        null === $host && $host = request()->host();
+        // 端口号
+        static $port = null;
+        null === $port && $port = request()->port();
+        // 网站域名
+        static $full_domain = null;
+        if (null === $full_domain) {
+            $web_basehost = tpCache('web.web_basehost');
+            $full_domain = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${4}', $web_basehost);
+            $full_domain = $scheme.'://'.$full_domain;
+            if (stristr($host, ':')) {
+                $full_domain .= ":{$port}";
+            }
+        }
+
+        // 多站点 - 静态模式下默认以动态URL访问
+        static $city_switch_on = null;
+        null === $city_switch_on && $city_switch_on = config('city_switch_on');
+        if (true === $city_switch_on) {
+            if (2 == $seo_pseudo) {
+                $seo_pseudo = 1;
+            }
+        }
+
+        /*去掉入口文件*/
+        $inletStr = '/index.php';
+        1 == intval($seo_inlet) && $inletStr = '';
+        /*--end*/
+
+        if (is_array($siteinfo)) {
+            $vars         = $siteinfo;
+        } else {
+            parse_str($siteinfo, $vars);
+        }
+
+        if (1 == $seo_pseudo) {
+            if (empty($vars['is_open'])) {
+                $url = $full_domain.ROOT_DIR.$inletStr;
+                if (!empty($inletStr)) {
+                    $url .= '?';
+                } else {
+                    $url .= '/?';
+                }
+                $eyouUrl = $url.http_build_query(['site'=>$vars['domain']]);
+            } else {
+                $url = $scheme.'://'.$vars['domain'].'.'.$root_domain.ROOT_DIR;
+                $eyouUrl = $url;
+            }
+        } else {
+            if (empty($vars['is_open'])) {
+                $eyouUrl = $full_domain.ROOT_DIR.$inletStr.'/'.$vars['domain'].'/';
+            } else {
+                $eyouUrl = $scheme.'://'.$vars['domain'].'.'.$root_domain.ROOT_DIR.'/';
+            }
         }
 
         return $eyouUrl;

@@ -1,8 +1,6 @@
 <?php
 
 include 'auto.php';
-if(IS_SAE)
-header("Location: index_sae.php");
 
 // php最低版本要求
 $mini_php = '5.4.0';
@@ -19,7 +17,9 @@ if (file_exists('./install.lock')) {
         </html>';
     exit;
 }
-@set_time_limit(1000);
+//防止备份数据过程超时
+function_exists('set_time_limit') && set_time_limit(0);
+@ini_set('memory_limit','-1');
 if (phpversion() <= $mini_php)
     @set_magic_quotes_runtime(0);
 if ($mini_php > phpversion()){
@@ -32,10 +32,13 @@ date_default_timezone_set('PRC');
 error_reporting(E_ALL & ~E_NOTICE);
 header('Content-Type: text/html; charset=UTF-8');
 define('SITEDIR', _dir_path(substr(dirname(__FILE__), 0, -8)));
-define("SERVICE_URL", 'aHR0cDovL3NlcnZpY2UuZXlvdWNtcy5jb20=');
+define("SERVICE_URL", 'aHR0cDovL3NlcnZpY2UuNWZhLmNu');
 //define('SITEDIR2', substr(SITEDIR,0,-7));
 //echo SITEDIR2;
 //exit;
+
+$step = isset($_GET['step']) ? intval($_GET['step']) : 1;
+
 //数据库
 $sqlFile = 'eyoucms.sql';
 $configFile = 'config.php';
@@ -52,7 +55,6 @@ $steps = array(
     '4' => '安装详细过程',
     '5' => '安装完成',
 );
-$step = isset($_GET['step']) ? intval($_GET['step']) : 1;
 
 //地址
 $scriptName = !empty($_SERVER["REQUEST_URI"]) ? $scriptName = $_SERVER["REQUEST_URI"] : $scriptName = $_SERVER["PHP_SELF"];
@@ -164,14 +166,14 @@ switch ($step) {
         exit();
 
     case '3':
-        $dbName = trim(addslashes($_POST['dbName']));
-        $dbUser = trim(addslashes($_POST['dbUser']));
+        $dbName = !empty($_POST['dbName']) ? trim(addslashes($_POST['dbName'])) : '';
+        $dbUser = !empty($_POST['dbUser']) ? trim(addslashes($_POST['dbUser'])) : '';
         $dbport = !empty($_POST['dbport']) ? trim(addslashes($_POST['dbport'])) : '3306';
-        $dbPwd = trim($_POST['dbPwd']);
-        $dbHost = addslashes($_POST['dbHost']);
-        if ($_GET['testdbpwd']) {
-            $conn = @mysqli_connect($dbHost, $dbUser, $dbPwd,NULL,$dbport);     
-            if (mysqli_connect_errno($conn)){
+        $dbPwd = !empty($_POST['dbPwd']) ? trim($_POST['dbPwd']) : '';
+        $dbHost = !empty($_POST['dbHost']) ? addslashes($_POST['dbHost']) : '';
+        if (!empty($_GET['testdbpwd'])) {
+            $conn = @mysqli_connect($dbHost, $dbUser, $dbPwd,NULL,$dbport); 
+            if (mysqli_connect_error()) {
                 die(json_encode(array(
                     'errcode'   => 0,
                     'dbpwmsg'    => "<span for='dbname' generated='true' class='tips_error'>数据库连接失败，请重新设定</span>",
@@ -218,7 +220,7 @@ switch ($step) {
                 )));
             }
         }
-        else if ($_GET['check']) 
+        else if (!empty($_GET['check'])) 
         {
             if (!function_exists('mysqli_connect')) {
                 $arr = array(
@@ -229,7 +231,7 @@ switch ($step) {
             }
 
             $conn = @mysqli_connect($dbHost, $dbUser, $dbPwd,NULL,$dbport);
-            if (mysqli_connect_errno($conn)){
+            if (mysqli_connect_error()){
                 $arr = array(
                     'code'   => -1,
                     'msg'   => "请检查数据库连接信息，".iconv('gbk', 'utf-8', mysqli_connect_error($conn)),
@@ -239,12 +241,14 @@ switch ($step) {
 
             mysqli_set_charset($conn, "utf8"); //,character_set_client=binary,sql_mode='';
             $version = mysqli_get_server_info($conn);
-            if ($version < 5.1) {
-                $arr = array(
-                    'code'   => -1,
-                    'msg'   => '数据库版本('.$version.')太低！必须 >= 5.1',
-                );
-                die(json_encode($arr));
+            if (!stristr($version, 'mariadb')) {
+                if ($version < 5.1) {
+                    $arr = array(
+                        'code'   => -1,
+                        'msg'   => '数据库版本('.$version.')太低！必须 >= 5.1',
+                    );
+                    die(json_encode($arr));
+                }
             }
 
             if (!@mysqli_select_db($conn,$dbName)) {
@@ -296,7 +300,7 @@ switch ($step) {
         }           
         
         $conn = @mysqli_connect($dbHost, $dbUser, $dbPwd,NULL,$dbport);
-        if (mysqli_connect_errno($conn)){
+        if (mysqli_connect_error()){
             $arr['code'] = 0;
             $arr['msg'] = "连接数据库失败!".mysqli_connect_error($conn);           
             echo json_encode($arr);
@@ -304,11 +308,13 @@ switch ($step) {
         }
         mysqli_set_charset($conn, "utf8"); //,character_set_client=binary,sql_mode='';
         $version = mysqli_get_server_info($conn);
-        if ($version < 5.1) {
-            $arr['code'] = 0;
-            $arr['msg'] = '数据库版本('.$version.')太低! 必须 >= 5.1';
-            echo json_encode($arr);
-            exit;
+        if (!stristr($version, 'mariadb')) {
+            if ($version < 5.1) {
+                $arr['code'] = 0;
+                $arr['msg'] = '数据库版本('.$version.')太低! 必须 >= 5.1';
+                echo json_encode($arr);
+                exit;
+            }
         }
 
         if (!@mysqli_select_db($conn,$dbName)) {
@@ -423,7 +429,7 @@ switch ($step) {
         $max_i = 999999999;
         if ($max_i == $i) {
             $arr['code'] = 0;
-            $arr['msg'] = "数据库文件过大，执行条数超过{$max_i}条，请联系技术协助！";
+            $arr['msg'] = "数据库文件过大，执行条数超过{$max_i}条！";
             echo json_encode($arr);
             exit;
             // exit('-1');
@@ -473,9 +479,22 @@ switch ($step) {
             mysqli_query($conn, "truncate table `{$dbPrefix}admin`"); // 清空admin表
 
             // 密码加密串，新安装程序，或者没有用户的程序，才随机给密码加密串
-            $result2 = @mysqli_query($conn, "SELECT users_id FROM `{$dbPrefix}users`");
+            $result2 = @mysqli_query($conn, "SELECT admin_id FROM `{$dbPrefix}users`");
+            if (!empty($result2->num_rows) && 1 == $result2->num_rows) {
+                while($row = mysqli_fetch_array($result2))
+                {
+                    if (!empty($row['admin_id'])) {
+                        $result2 = false;
+                        break;
+                    }
+                }
+            }
             if (empty($result2) || empty($result2->num_rows)) {
-                $auth_code = sp_random_string(20);
+                mysqli_query($conn, "truncate table `{$dbPrefix}users`"); // 清空users表
+                $rand_str = md5(uniqid(rand(), true));
+                $rand_str = substr($rand_str, 0, 23);
+                $auth_code = '$2y$11$'.$rand_str;  //30位盐
+                mysqli_query($conn, "UPDATE `{$dbPrefix}config` SET `value` = '$auth_code' WHERE name = 'system_crypt_auth_code' AND inc_type = 'system'");
                 mysqli_query($conn, "UPDATE `{$dbPrefix}config` SET `value` = '$auth_code' WHERE name = 'system_auth_code' AND inc_type = 'system'");
             }
 
@@ -484,9 +503,14 @@ switch ($step) {
         }
 
         //插入管理员表ey_admin
+        $encry_type = pwd_encry_type($conn, $dbPrefix);
+        if ('bcrypt' == $encry_type) {
+            $password = crypt(trim($_POST['manager_pwd']), $auth_code);
+        } else {
+            $password = md5($auth_code.trim($_POST['manager_pwd']));
+        }
         $ip = get_client_ip();
         $ip = empty($ip) ? "0.0.0.0" : $ip;
-        $password = md5($auth_code.trim($_POST['manager_pwd']));
         mysqli_query($conn, " INSERT INTO `{$dbPrefix}admin` (`user_name`,`true_name`,`password`,`last_login`,`last_ip`,`login_cnt`,`status`,`add_time`) VALUES ('$username','$username','$password','0','$ip','1','1','$time')");
 
         $url = $_SERVER['PHP_SELF']."?step=5";
@@ -510,6 +534,21 @@ switch ($step) {
         $ajax_url = 'L2luZGV4LnBocD9tPWFwaSZjPVNlcnZpY2UmYT11c2VyX3B1c2g=';
         $str_constant = "<?php".PHP_EOL."define('INSTALL_DATE',".$time.");".PHP_EOL."define('SERIALNUMBER','".$mt_rand_str."');";
         @file_put_contents(SITEDIR . 'application/admin/conf/constant.php', $str_constant);
+
+        // 还原sqldata目录名
+        try {
+            $dirlist = glob(SITEDIR . 'data/sqldata_*');
+            $sqldata_path = current($dirlist);
+            if (!empty($sqldata_path)) {
+                $sqldata_path_tmp = str_replace('\\', '/', $sqldata_path);
+                $arr = explode('/', $sqldata_path_tmp);
+                $sqldata_dirname = end($arr);
+                if ($sqldata_dirname != 'sqldata') {
+                    @rename(SITEDIR."data/{$sqldata_dirname}", SITEDIR."data/sqldata");
+                }
+            }
+        } catch (\Exception $e) {}
+
         include_once ("./templates/step5.php");
         @touch('./install.lock');
         exit();
@@ -612,8 +651,15 @@ function get_client_ip() {
 }
 
 // 服务器端IP
-function get_server_ip(){   
-    return gethostbyname($_SERVER["SERVER_NAME"]);   
+function get_server_ip()
+{
+    // 会因为解析问题导致后台卡
+    if (!empty($_SERVER['SERVER_ADDR']) && !in_array($_SERVER['SERVER_ADDR'], ['127.0.0.1'])) {
+        $serviceIp = $_SERVER['SERVER_ADDR'];
+    } else {
+        $serviceIp = @gethostbyname($_SERVER["SERVER_NAME"]);
+    }
+    return $serviceIp;
 }  
 
 function dir_create($path, $mode = 0777) {
@@ -768,23 +814,219 @@ function getLocalDbTable($sqldata = '')
 }
 
 /**
+ * 获取密码加密方式
+ * @return [type]            [description]
+ */
+function pwd_encry_type($conn, $dbPrefix)
+{
+    // 识别admin表的字段长度是否支持新版加密方式
+    $is_newpwd_field = 0;
+    $ret = @mysqli_query($conn, "DESCRIBE `{$dbPrefix}admin`");
+    while($row = mysqli_fetch_array($ret))
+    {
+        if (!empty($row['Field']) && $row['Field'] == 'password') {
+            if (!stristr($row['Type'], '(32)')) {
+                $is_newpwd_field = 1;
+                break;
+            }
+        }
+    }
+
+    if (!empty($is_newpwd_field) && defined('CRYPT_BLOWFISH') && CRYPT_BLOWFISH == 1) {
+        $entry = 'bcrypt';
+    } else {
+        $entry = 'md5';
+    }
+
+    return $entry;
+}
+
+/**
  * 密码加密串
  */
 function get_auth_code($conn, $dbPrefix)
 {
-    $auth_code = '!*&^eyoucms<>|?';
-    $result = mysqli_query($conn, " SELECT value FROM `{$dbPrefix}config` WHERE name = 'system_auth_code' AND inc_type = 'system' LIMIT 1 ");
-    if (0 < $result->num_rows) {
-        while($row = mysqli_fetch_array($result))
-        {
-            $auth_code = $row['value'];
+    $encry_type = pwd_encry_type($conn, $dbPrefix);
+
+    if ('bcrypt' == $encry_type) {
+        $rand_str = md5(uniqid(rand(), true));
+        $rand_str = substr($rand_str, 0, 23);
+        $auth_code = '$2y$11$'.$rand_str;  //30位盐
+        $result = mysqli_query($conn, " SELECT value FROM `{$dbPrefix}config` WHERE name = 'system_crypt_auth_code' AND inc_type = 'system' LIMIT 1 ");
+        if (0 < $result->num_rows) {
+            while($row = mysqli_fetch_array($result))
+            {
+                $auth_code = $row['value'];
+            }
+        } else {
+            $time = time();
+            mysqli_query($conn, " INSERT INTO `{$dbPrefix}config` (`name`,`value`,`inc_type`,`update_time`) VALUES ('system_crypt_auth_code','$auth_code','system','$time')");
         }
     } else {
-        $time = time();
-        mysqli_query($conn, " INSERT INTO `{$dbPrefix}config` (`name`,`value`,`inc_type`,`update_time`) VALUES ('system_auth_code','$auth_code','system','$time')");
+        $auth_code = '!*&^eyoucms<>|?';
+        $result = mysqli_query($conn, " SELECT value FROM `{$dbPrefix}config` WHERE name = 'system_auth_code' AND inc_type = 'system' LIMIT 1 ");
+        if (0 < $result->num_rows) {
+            while($row = mysqli_fetch_array($result))
+            {
+                $auth_code = $row['value'];
+            }
+        } else {
+            $time = time();
+            mysqli_query($conn, " INSERT INTO `{$dbPrefix}config` (`name`,`value`,`inc_type`,`update_time`) VALUES ('system_auth_code','$auth_code','system','$time')");
+        }
     }
 
     return $auth_code;
+}
+
+/**
+ *  加密函数
+ *
+ * @access    public
+ * @param     string $string 字符串
+ * @param     string $operation 操作
+ * @return    string
+ */
+function mchStrCode($string, $operation = 'ENCODE')
+{
+    $key_length = 4;
+    $expiry     = 0;
+    $key        = md5('0701-eyoucms');
+    $fixedkey   = md5($key);
+    $egiskeys   = md5(substr($fixedkey, 16, 16));
+    $runtokey   = $key_length ? ($operation == 'ENCODE' ? substr(md5(microtime(true)), -$key_length) : substr($string, 0, $key_length)) : '';
+    $keys       = md5(substr($runtokey, 0, 16) . substr($fixedkey, 0, 16) . substr($runtokey, 16) . substr($fixedkey, 16));
+    $string     = $operation == 'ENCODE' ? sprintf('%010d', $expiry ? $expiry + time() : 0) . substr(md5($string . $egiskeys), 0, 16) . $string : base64_decode(substr($string, $key_length));
+
+    $i             = 0;
+    $result        = '';
+    $string_length = strlen($string);
+    for ($i = 0; $i < $string_length; $i++) {
+        $result .= chr(ord($string[$i]) ^ ord($keys[$i % 32]));
+    }
+    if ($operation == 'ENCODE') {
+        return $runtokey . str_replace('=', '', base64_encode($result));
+    } else {
+        if ((substr($result, 0, 10) == 0 || substr($result, 0, 10) - time() > 0) && substr($result, 10, 16) == substr(md5(substr($result, 26) . $egiskeys), 0, 16)) {
+            return substr($result, 26);
+        } else {
+            return '';
+        }
+    }
+}
+
+/**
+ * CURL请求
+ *
+ * @param $url 请求url地址
+ * @param $method 请求方法 get post
+ * @param null $postfields post数据数组
+ * @param array $headers 请求header信息
+ * @param bool|false $debug 调试开启 默认false
+ * @return mixed
+ */
+function httpRequest($url, $method = "GET", $postfields = null, $headers = array(), $timeout = 30, $debug = false)
+{
+    $method = strtoupper($method);
+    $ci     = curl_init();
+    /* Curl settings */
+    // curl_setopt($ci, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
+    curl_setopt($ci, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:34.0) Gecko/20100101 Firefox/34.0");
+    curl_setopt($ci, CURLOPT_CONNECTTIMEOUT, 60); /* 在发起连接前等待的时间，如果设置为0，则无限等待 */
+    // curl_setopt($ci, CURLOPT_TIMEOUT, 7); /* 设置cURL允许执行的最长秒数 */
+    curl_setopt($ci, CURLOPT_TIMEOUT, $timeout); /* 设置cURL允许执行的最长秒数 */
+    curl_setopt($ci, CURLOPT_RETURNTRANSFER, true);
+    switch ($method) {
+        case "POST":
+            curl_setopt($ci, CURLOPT_POST, true);
+            if (!empty($postfields)) {
+                $tmpdatastr = is_array($postfields) ? http_build_query($postfields) : $postfields;
+                curl_setopt($ci, CURLOPT_POSTFIELDS, $tmpdatastr);
+            }
+            break;
+        default:
+            curl_setopt($ci, CURLOPT_CUSTOMREQUEST, $method); /* //设置请求方式 */
+            break;
+    }
+    $ssl = preg_match('/^https:\/\//i', $url) ? TRUE : FALSE;
+    curl_setopt($ci, CURLOPT_URL, $url);
+    if ($ssl) {
+        curl_setopt($ci, CURLOPT_SSL_VERIFYPEER, FALSE); // https请求 不验证证书和hosts
+        curl_setopt($ci, CURLOPT_SSL_VERIFYHOST, FALSE); // 不从证书中检查SSL加密算法是否存在
+    }
+    //curl_setopt($ci, CURLOPT_HEADER, true); /*启用时会将头文件的信息作为数据流输出*/
+    if (ini_get('open_basedir') == '' && ini_get('safe_mode' == 'Off')) {
+        curl_setopt($ci, CURLOPT_FOLLOWLOCATION, 1);
+    }
+    curl_setopt($ci, CURLOPT_MAXREDIRS, 2);/*指定最多的HTTP重定向的数量，这个选项是和CURLOPT_FOLLOWLOCATION一起使用的*/
+    curl_setopt($ci, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ci, CURLINFO_HEADER_OUT, true);
+    /*curl_setopt($ci, CURLOPT_COOKIE, $Cookiestr); * *COOKIE带过去** */
+    $response    = curl_exec($ci);
+    $requestinfo = curl_getinfo($ci);
+    $http_code   = curl_getinfo($ci, CURLINFO_HTTP_CODE);
+    if ($debug) {
+        echo "=====post data======\r\n";
+        var_dump($postfields);
+        echo "=====info===== \r\n";
+        print_r($requestinfo);
+        echo "=====response=====\r\n";
+        print_r($response);
+    }
+    curl_close($ci);
+    return $response;
+    //return array($http_code, $response,$requestinfo);
+}
+
+/**
+ * 读取被禁止外部访问的配置文件
+ *
+ */
+function read_bidden_inc($phpfilepath = '')
+{
+    $data = @file($phpfilepath);
+    if ($data) {
+        $data = !empty($data[1]) ? json_decode(mchStrCode($data[1], 'DECODE'), true) : [];
+    }
+    return $data;
+}
+
+/**
+ * 写入被禁止外部访问的配置文件
+ */
+function write_bidden_inc($arr = array(), $phpfilepath = '')
+{
+    $r = tp_mkdir(dirname($phpfilepath));
+    if ($r) {
+        $setting = "<?php die('forbidden'); ?>\n";
+        $setting .= mchStrCode(json_encode($arr), 'ENCODE');
+        $setting = str_replace("\/", "/", $setting);
+        $incFile = fopen($phpfilepath, "w+");
+        if (fwrite($incFile, $setting)) {
+            fclose($incFile);
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
+/**
+ * 递归创建目录
+ *
+ * @param string $path 目录路径，不带反斜杠
+ * @param intval $purview 目录权限码
+ * @return boolean
+ */
+function tp_mkdir($path, $purview = 0777)
+{
+    if (!is_dir($path)) {
+        tp_mkdir(dirname($path), $purview);
+        if (!mkdir($path, $purview)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 ?>

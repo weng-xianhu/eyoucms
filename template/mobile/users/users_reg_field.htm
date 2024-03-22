@@ -15,31 +15,90 @@
 
             {eyou:case value="mobile"}
                 <!-- 手机文本框 start -->
-                {eyou:include file="/public/static/template/users_v2/users_reg_field_mobile_m.htm" /}
+                <div class="wx-form-group">
+                    <input type="text" class="wx-form-control" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" maxlength="11" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}">
+                </div>
+                {eyou:if condition="isset($usersConfig['users_verification']) && 3 == $usersConfig['users_verification']"}
+                <div class="wx-form-group">
+                    <div class="field">
+                        <input type="hidden" name="__mobile_1_token__" value="{$Request.token.__mobile_1_token__}" />
+                        <input type="text" class="wx-form-control" id="{$vo.fieldArr}_{$vo.name|default=''}_code" name="{$vo.fieldArr}[{$vo.name|default=''}_code]" placeholder="手机验证码" autocomplete="off">
+                        <input type="button" id="{$vo.fieldArr}_{$vo.name|default=''}_button" onclick="get_{$vo.fieldArr}{$vo.name|default=''}_code();" class="sento" value="获取验证码"/>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    function get_{$vo.fieldArr}{$vo.name|default=''}_code() {
+                        var mobile = $("#{$vo.fieldArr}_{$vo.name|default=''}").val();
+                        // 手机号是否为空
+                        if (!mobile) {
+                            $("#{$vo.fieldArr}_{$vo.name|default=''}").focus();
+                            layer.msg('请输入{$vo.title}！', {time: 1500});
+                            return false;
+                        }
+                        
+                        // 手机格式不正确
+                        var reg = /^1[0-9]{10}$/i;
+                        if (!reg.test(mobile)) {
+                            $("#{$vo.fieldArr}_{$vo.name|default=''}").focus();
+                            layer.msg('请输入正确的{$vo.title}！', {time: 1500});
+                            return false;
+                        }
+                
+                        // 设置为不可点击
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('获取中…').attr('disabled', 'disabled');
+                
+                        var __mobile_1_token__ = $('input[name=__mobile_1_token__]').val();
+                        $.ajax({
+                            url: "{eyou:url link='api/Ajax/SendMobileCode' /}",
+                            data: {type:'reg', mobile:mobile, is_mobile:true, title:'账号注册', source:0, __mobile_1_token__:__mobile_1_token__},
+                            type:'post',
+                            dataType:'json',
+                            success:function(res){
+                                if (res.code == 1) {
+                                    {$vo.fieldArr}{$vo.name|default=''}_countdown();
+                                    layer.msg(res.msg, {time: 1500});
+                                } else {
+                                    $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('获取验证码').removeAttr("disabled");
+                                    layer.alert(res.msg, {icon: 2, title: false, closeBtn: 0});
+                                }
+                            },
+                            error : function() {
+                                $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('获取验证码').removeAttr("disabled");
+                                layer.alert('发送失败，请尝试重新发送！', {icon: 5, title: false, closeBtn: 0});
+                            }
+                        });
+                    }
+                
+                    function {$vo.fieldArr}{$vo.name|default=''}_countdown(){
+                        // 倒计时
+                        var setTime;
+                        var time = 120;
+                        setTime = setInterval(function() {
+                            if(0 >= time) {
+                                clearInterval(setTime);
+                                return false;
+                            }
+                
+                            time--;
+                            $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val(time + '秒').attr('disabled', 'disabled');
+                            if(time == 0) $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('获取验证码').removeAttr("disabled");
+                        }, 1000);
+                    }
+                </script>
+                {/eyou:if}
                 <!-- 手机文本框 end -->
             {/eyou:case}
 
             {eyou:case value="email"}
                 <!-- 邮箱文本框 start -->
-                <div class="form-group">
-                    <div class="input-group">
-                        <span class="input-group-addon">
-                            <i class="fa fa-envelope-o"></i>
-                        </span>
-                        {eyou:eq name="$vo.is_required" value="1"}<em class="tis">(必填)</em>{/eyou:eq}
-                        <input type="text" class="form-control" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}" >
-                    </div>
+                <div class="wx-form-group">
+                    <input type="text" class="wx-form-control" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}" >
                 </div>
-
                 {eyou:if condition="isset($usersConfig['users_verification']) && 2 == $usersConfig['users_verification']"}
-                <div class="form-group">
-                    <div class="input-group btn-direction">
-                        <span class="input-group-addon">
-                            <i class="fa fa-shield"></i>
-                            <!-- <span style="color:red;">*</span> -->
-                        </span>
-                        <input type="text" class="form-control" id="{$vo.fieldArr}_{$vo.name|default=''}_code" name="{$vo.fieldArr}[{$vo.name|default=''}_code]" value="" placeholder="邮箱验证码">
-                        <input type="button" id="{$vo.fieldArr}_{$vo.name|default=''}_button" onclick="get_{$vo.fieldArr}{$vo.name|default=''}_code();" class="btn btn-primary sento" value="点击发送" />
+                <div class="wx-form-group">
+                    <div class="field">
+                        <input type="text" class="wx-form-control" id="{$vo.fieldArr}_{$vo.name|default=''}_code" name="{$vo.fieldArr}[{$vo.name|default=''}_code]" value="" placeholder="邮箱验证码">
+                        <input type="button" id="{$vo.fieldArr}_{$vo.name|default=''}_button" onclick="get_{$vo.fieldArr}{$vo.name|default=''}_code();" class="sento" value="点击发送" />
                     </div>
                 </div>
                 <script type="text/javascript">
@@ -102,80 +161,5 @@
                 <!-- 邮箱文本框 end -->
             {/eyou:case}
 
-            {eyou:case value="text"}
-                <!-- 单行文本框 start -->
-                <div class="form-group">
-                    <div class="input-group">
-                        <span class="input-group-addon">
-                            <i class="fa fa-paper-plane-o"></i>
-                        </span>
-                        {eyou:eq name="$vo.is_required" value="1"}<em class="tis">(必填)</em>{/eyou:eq}
-                        <input type="text" class="form-control" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}">
-                    </div>
-                </div>
-                <!-- 单行文本框 end -->
-            {/eyou:case}
-
-            {eyou:case value="multitext"}
-                <!-- 多行文本框 start -->
-                <div class="form-group">
-                    <div class="input-group">
-                        <textarea rows="5" cols="60" class="form-control" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" {eyou:eq name="$vo.is_required" value="1"} placeholder="{$vo.title}（必填)" {eyou:else/} placeholder="{$vo.title}" {/eyou:eq}>{$vo.dfvalue|default=''}</textarea>
-                    </div>
-                </div>
-                <!-- 多行文本框 end -->
-            {/eyou:case}
-
-            {eyou:case value="checkbox"}
-                <!-- 复选框 start -->
-                <div class="form-group">
-                    <fieldset>
-                        <legend>{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</legend>
-                        {eyou:volist name="$vo.dfvalue" id="v2"}
-                            <div class="checkbox-custom checkbox-primary">
-                                <input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/eyou:if}><label>{$v2}</label>
-                            </div>
-                        {/eyou:volist}
-                    </fieldset>
-                </div>
-                <!-- 复选框 end -->
-            {/eyou:case}
-
-            {eyou:case value="radio"}
-                <!-- 单选项 start -->
-                <div class="form-group">
-                    <fieldset>
-                        <legend>{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</legend>
-                            {eyou:volist name="$vo.dfvalue" id="v2"}
-                            <div class="radio-custom radio-primary">
-                                <input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/eyou:if}>
-                                <label>{$v2}</label>
-                            </div>
-                         {/eyou:volist}
-                    </fieldset>
-                </div>
-                <!-- 单选项 end -->
-            {/eyou:case}
-
-            {eyou:case value="select"}
-                <!-- 下拉框 start -->
-                <div class="form-group">
-                    <div class="select">
-                    <div class="dt">{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</div>
-                        <div class="dd">
-                            <select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" class="form-control">
-                                <option value="">请选择</option>
-                                {eyou:volist name="$vo.dfvalue" id="v2"}
-                                    <option value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}selected{/eyou:if}>{$v2}</option>
-                                {/eyou:volist}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <!-- 下拉框 end -->
-            {/eyou:case}
-            <!-- 扩展 start -->
-            {eyou:include file="/public/static/template/users_v2/users_reg_field_extend_m.htm" /}
-            <!-- 扩展 end -->
         {/eyou:switch}
 {/eyou:volist}

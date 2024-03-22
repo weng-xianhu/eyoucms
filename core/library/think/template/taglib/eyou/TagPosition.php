@@ -13,21 +13,20 @@
 
 namespace think\template\taglib\eyou;
 
+use think\Db;
 
 /**
  * 栏目位置
  */
 class TagPosition extends Base
 {
-    public $tid = '';
-    
     //初始化
     protected function _initialize()
     {
         parent::_initialize();
         /*应用于文档列表*/
         if ($this->aid > 0) {
-            $this->tid = M('archives')->where('aid', $this->aid)->getField('typeid');
+            $this->tid = $this->get_aid_typeid($this->aid);
         }
         /*--end*/
     }
@@ -55,37 +54,79 @@ class TagPosition extends Base
         $seo_inlet = config('ey_config.seo_inlet');
         1 == intval($seo_inlet) && $inletStr = '';
 
-        $lang = input('param.lang/s', '');
-        if (empty($lang)) {
-            $home_url = $this->root_dir.'/'; // 支持子目录
-        } else {
-            $seoConfig = tpCache('seo', [], $lang);
-            $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
-            if (1 == $seo_pseudo) {
-                $home_url = request()->domain().$this->root_dir.$inletStr; // 支持子目录
-                if (!empty($inletStr)) {
-                    $home_url .= '?';
-                } else {
-                    $home_url .= '/?';
-                }
-                $home_url .= http_build_query(['lang'=>$lang]);
-            } else if (2 == $seo_pseudo) { // 生成静态页面代码
-                if ($lang == $this->main_lang) {
-                    $home_url = $this->root_dir.'/';
-                } else {
-                    $home_url = $this->root_dir.'/'.$lang;
-                }
+        if (self::$city_switch_on) { // 多城市站点
+            if (empty(self::$home_site)) {
+                $home_url = $this->root_dir.'/'; // 支持子目录
             } else {
-                $home_url = $this->root_dir.$inletStr.'/'.$lang; // 支持子目录
+                $seoConfig = tpCache('seo');
+                $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
+                if (1 == $seo_pseudo) {
+                    $home_url = self::$request->domain().$this->root_dir; // 支持子目录
+                    if (!self::$site_info['is_open']) {
+                        $home_url .= $inletStr; // 支持子目录
+                        if (!empty($inletStr)) {
+                            $home_url .= '?';
+                        } else {
+                            $home_url .= '/?';
+                        }
+                        $home_url .= http_build_query(['site'=>self::$home_site]);
+                    }
+                } else if (2 == $seo_pseudo) { // 生成静态页面代码
+                    $site_default_home = config('ey_config.site_default_home');
+                    if (!empty($site_default_home) && self::$siteid == $site_default_home) {
+                        $home_url = $this->root_dir.'/';
+                    } else {
+                        $home_url = $this->root_dir.'/'; // 支持子目录
+                        if (!self::$site_info['is_open']) {
+                            $home_url .= self::$home_site.'/';
+                        }
+                    }
+                } else {
+                    $home_url = $this->root_dir.$inletStr.'/'; // 支持子目录
+                    if (!self::$site_info['is_open']) {
+                        $home_url .= self::$home_site.'/';
+                    }
+                }
+            }
+        }
+        else { // 多语言
+            $lang = input('param.lang/s', '');
+            if (empty($lang)) {
+                $home_url = $this->root_dir.'/'; // 支持子目录
+            } else {
+                $seoConfig = tpCache('seo', [], $lang);
+                $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
+                if (1 == $seo_pseudo) {
+                    $home_url = self::$request->domain().$this->root_dir.$inletStr; // 支持子目录
+                    if (!empty($inletStr)) {
+                        $home_url .= '?';
+                    } else {
+                        $home_url .= '/?';
+                    }
+                    $home_url .= http_build_query(['lang'=>$lang]);
+                } else if (2 == $seo_pseudo) { // 生成静态页面代码
+                    if ($lang == self::$main_lang) {
+                        $home_url = $this->root_dir.'/';
+                    } else {
+                        $home_url = $this->root_dir.'/'.$lang;
+                    }
+                } else {
+                    $home_url = $this->root_dir.$inletStr.'/'.$lang; // 支持子目录
+                }
             }
         }
         /*--end*/
-
+		
+        $home_url = get_absolute_url($home_url,'url');
         // $symbol = htmlspecialchars_decode($symbol);
         $str = "<a href='{$home_url}' class='{$style}'>{$basic_indexname}</a>";
         $result = model('Arctype')->getAllPid($typeid);
         $i = 1;
         foreach ($result as $key => $val) {
+            if (self::$city_switch_on && self::$site_info) {
+                $val['typename'] = self::$site_info['name'].$val['typename'];
+            }
+            
             if ($i < count($result)) {
                 $str .= " {$symbol} <a href='{$val['typeurl']}' class='{$style}'>{$val['typename']}</a>";
             } else {

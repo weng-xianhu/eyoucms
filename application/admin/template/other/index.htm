@@ -77,7 +77,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -108,7 +110,7 @@
                             </td>
                             <td class="w120">
                                 <div class="tc">
-                                    <img src="{$vo.litpic|default='__STATIC__/common/images/not_adv.jpg'}" width="60" onmouseover="layer_tips=layer.tips('<img src={$vo.litpic|default='__STATIC__/common/images/not_adv.jpg'} width=150 style=\'max-height:250px;\'>',this,{tips: [1, '#fff']});" onmouseout="layer.close(layer_tips);">&nbsp;
+                                    <img src="{$vo.litpic|default='__STATIC__/common/images/not_adv.jpg'}" width="60" onmouseover="layer_tips=layer.tips('<img src={$vo.litpic|default='__STATIC__/common/images/not_adv.jpg'} width=150 style=\'max-height:250px;\'>',this,{tips: [3, '#fff'],skin:'layer-yourskin-mt0'});" onmouseout="layer.close(layer_tips);">&nbsp;
                                 </div>
                             </td>
 <!--                             <td align="center" class="">
@@ -232,6 +234,7 @@
       layer.open({
         title: '代码调用',
         type: 1,
+        shade: layer_shade,
         skin: 'layui-layer-demo',
         area: ['480px', '240px'], //宽高
         content: contentdiv

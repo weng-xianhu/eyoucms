@@ -64,7 +64,7 @@ class Member extends Model
     // $post_users:会员属性信息数组
     // $users_id:会员ID，注册时不需要传入，修改时需要传入。
     // return 存在项
-    public function isRequired($post_users = [],$users_id='')
+    public function isRequired($post_users = [],$users_id=0)
     {
         if (empty($post_users)) {
             return false;
@@ -72,10 +72,10 @@ class Member extends Model
         
         // 匹配手机和邮箱数据
         $where_1 = [
-            'name'     => ['LIKE', ["email_%","mobile_%"], 'OR'],
             'is_system'=> 1,
             'lang'     => $this->admin_lang,
         ];
+        $where_1[] = Db::raw(" ( name LIKE 'email_%' OR name LIKE 'mobile_%' ) ");
         $users_parameter = Db::name('users_parameter')->where($where_1)->field('para_id,title,name')->getAllWithIndex('name');
 
         // 判断手机和邮箱格式是否正确
@@ -135,6 +135,7 @@ class Member extends Model
             ];
             $listData = Db::name('users_list')->where($listwhere)->field('users_id,info')->find();
             $Data['email'] = !empty($listData['info']) ? $listData['info'] : '';
+            $Data['is_email'] = !empty($Data['email']) ? 1 : 0;
         }
 
         if ('mobile' == $field || '*' == $field) {
@@ -152,6 +153,7 @@ class Member extends Model
             ];
             $listData_1 = Db::name('users_list')->where($listwhere_1)->field('users_id,info')->find();
             $Data['mobile'] = !empty($listData_1['info']) ? $listData_1['info'] : '';
+            $Data['is_mobile'] = !empty($Data['mobile']) ? 1 : 0;
         }
 
         return $Data;
@@ -293,18 +295,7 @@ class Member extends Model
 
                     case 'img':
                     {
-                        $val[$val['name'].'_eyou_is_remote'] = 0;
-                        $val[$val['name'].'_eyou_remote'] = '';
-                        $val[$val['name'].'_eyou_local'] = '';
-                        if (isset($addonRow[$val['name']])) {
-                            if (is_http_url($addonRow[$val['name']])) {
-                                $val[$val['name'].'_eyou_is_remote'] = 1;
-                                $val[$val['name'].'_eyou_remote'] = handle_subdir_pic($addonRow[$val['name']]);
-                            } else {
-                                $val[$val['name'].'_eyou_is_remote'] = 0;
-                                $val[$val['name'].'_eyou_local'] = handle_subdir_pic($addonRow[$val['name']]);
-                            }
-                        }
+                        $val['dfvalue'] = handle_subdir_pic($addonRow[$val['name']]);
                         break;
                     }
 
@@ -325,7 +316,15 @@ class Member extends Model
 
                     case 'datetime':
                     {
-                        $val['dfvalue'] = !empty($addonRow[$val['name']]) ? date('Y-m-d H:i:s', $addonRow[$val['name']]) : date('Y-m-d H:i:s');
+                        if (!empty($addonRow[$val['name']])) {
+                            if (is_numeric($addonRow[$val['name']])) {
+                                $val['dfvalue'] = date('Y-m-d H:i:s', $addonRow[$val['name']]);
+                            } else {
+                                $val['dfvalue'] = $addonRow[$val['name']];
+                            }
+                        } else {
+                            $val['dfvalue'] = date('Y-m-d H:i:s');
+                        }
                         break;
                     }
 
@@ -361,5 +360,160 @@ class Member extends Model
             }
         }
         return $list;
+    }
+
+    /**
+     * 后置操作方法
+     * 自定义的一个函数 用于数据删除之后做的相应处理操作, 使用时手动调用
+     */
+    public function afterDel($users_ids = [])
+    {
+        if (!empty($users_ids)) {
+            eyou_statistics_data(4, count($users_ids), '', 'dec');//统计新增会员数
+            try {
+                /*同步删除会员投稿数据*/
+                Db::name('archives')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除文章订单表数据*/
+                Db::name('article_order')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除内置问答表数据*/
+                Db::name('ask')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除内置问答表数据*/
+                Db::name('ask_answer')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除问答点赞表数据*/
+                Db::name('ask_answer_like')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除下载记录表数据*/
+                Db::name('download_log')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除下载订单表数据*/
+                Db::name('download_order')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除留言表数据*/
+                Db::name('guestbook')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除视频播放记录表数据*/
+                Db::name('media_log')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除视频订单表数据*/
+                Db::name('media_order')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除视频播放时长表数据*/
+                Db::name('media_play_record')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除礼品兑换记录表数据*/
+                Db::name('memgiftget')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除搜索锁定表数据*/
+                Db::name('search_locking')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除搜索关键词表数据*/
+                Db::name('search_word')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除商城收货地址表数据*/
+                Db::name('shop_address')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除购物车表数据*/
+                Db::name('shop_cart')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除优惠券领券记录表数据*/
+                Db::name('shop_coupon_use')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除商城订单表数据*/
+                Db::name('shop_order')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除商城订单评论表数据*/
+                Db::name('shop_order_comment')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除商城订单详情表数据*/
+                Db::name('shop_order_details')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除商城订单日志表数据*/
+                Db::name('shop_order_log')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除商城订单售后表数据*/
+                Db::name('shop_order_service')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除商城订单售后日志表数据*/
+                Db::name('shop_order_service_log')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除商城订单统一支付表数据*/
+                Db::name('shop_order_unified_pay')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除邮件发送记录表数据*/
+                Db::name('smtp_record')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除我的收藏表数据*/
+                Db::name('users_collection')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除我的足迹数据*/
+                Db::name('users_footprint')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除转发记录表数据*/
+                Db::name('users_forward')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除我喜欢的表数据*/
+                Db::name('users_like')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除会员属性表数据*/
+                Db::name('users_list')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除会员登录日志表数据*/
+                Db::name('users_login_log')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除金额明细表数据*/
+                Db::name('users_money')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除站内通知表数据*/
+                Db::name('users_notice')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除用户已读站内通知表数据*/
+                Db::name('users_notice_read')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除站内信发送接收记录表数据*/
+                Db::name('users_notice_tpl_content')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除积分详情表数据*/
+                Db::name('users_score')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除用户签到表数据*/
+                Db::name('users_signin')->where("users_id",'IN',$users_ids)->delete();
+                /*同步删除微信小程序用户表数据*/
+                Db::name('wx_users')->where("users_id",'IN',$users_ids)->delete();
+                // 同步删除插件数据
+                $Prefix = config('database.prefix');
+                if (is_dir('./weapp/Ask/')) {
+                    $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'weapp_ask\'');
+                    if (!empty($isTable)) {
+                        /*同步删除内置问答表数据*/
+                        Db::name('weapp_ask')->where("users_id",'IN',$users_ids)->delete();
+                        /*同步删除内置问答表数据*/
+                        Db::name('weapp_ask_answer')->where("users_id",'IN',$users_ids)->delete();
+                        /*同步删除问答点赞表数据*/
+                        Db::name('weapp_ask_answer_like')->where("users_id",'IN',$users_ids)->delete();
+                    }
+                }
+                if (is_dir('./weapp/Comment/')) {
+                    $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'weapp_comment\'');
+                    if (!empty($isTable)) {
+                        /*同步删除插件评论表数据*/
+                        Db::name('weapp_comment')->where(['users_id'=>['IN', $users_ids]])->delete();
+                        /*同步删除插件评论点赞表数据*/
+                        Db::name('weapp_comment_like')->where("users_id",'IN',$users_ids)->delete();
+                    }
+                }
+            } catch (\Exception $e) {
+                
+            }
+        }
+    }
+
+    /**
+     * 批量更新会员过期等级
+     * @return [type] [description]
+     */
+    public function batch_update_userslevel()
+    {
+        $redata = [
+            'code' => 1,
+            'msg'  => '没开启会员中心，不需要执行',
+        ];
+        $web_users_switch = tpCache('web.web_users_switch');
+        if (!empty($web_users_switch)) {
+            /*查询系统初始的默认级别*/
+            $level_id = Db::name('users_level')->where([
+                    'level_id'  => 1,
+                    'is_system' => 1,
+                ])->value('level_id');
+            $level_id = empty($level_id) ? 1 : intval($level_id);
+            /* END */
+            $time = getTime();
+            $where_str = "`level` <> {$level_id} AND (`level_maturity_days` < 36600 AND (`open_level_time` <> 0 OR `level_maturity_days` <> 0)) AND ((`open_level_time` + (`level_maturity_days` * 86400) - {$time}) <= 0)";
+            $r = Db::name('users')->where($where_str)->update([
+                    'level'           => $level_id,
+                    'open_level_time' => 0,
+                    'level_maturity_days' => 0,
+                    'update_time'     => $time,
+                ]);
+            if ($r !== false) {
+                $redata = [
+                    'code' => 1,
+                    'msg'  => '会员过期更新成功',
+                ];
+            } else {
+                $redata = [
+                    'code' => 1,
+                    'msg'  => '会员过期更新失败',
+                ];
+            }
+        }
+        return $redata;
     }
 }

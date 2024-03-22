@@ -1,5 +1,4 @@
 {include file="public/layout" /}
-<script type="text/javascript" src="__PUBLIC__/plugins/laydate/laydate.js"></script>
 
 {eq name="$editor.editor_select" value="1"}
     {load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
@@ -9,18 +8,26 @@
     {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
 {/eq}
 
-<body style="background-color: #FFF; overflow: auto;min-width:auto;">
+<body class="bodysy-w">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width:auto;box-shadow:none;">
+<div id="geduan_div" class="h10"></div>
+<div id="page_div" class="page min-hg-c mb-20" style="min-width:auto;box-shadow:none;">
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
-            
+        <div class="item-title">
+            {include file="public/callback_page_1" /}<!-- 返回箭头 -->
+            <a class="back_sz" href="javascript:void(0);"  data-href="{:url('Images/help')}" onclick="openHelpframe(this, '设置与帮助', '500px', '100%', 'r');" title="设置与帮助"><i class="iconfont e-shezhi-tongyong"></i></a>
+            <div class="subject">
+                <h3>发布文档</h3>
+                <h5></h5>
+            </div>
             <ul class="tab-base nc-row">
-                <li><a href="javascript:void(0);" data-index='1' class="tab current"><span>常规选项</span></a></li>
-                <li><a href="javascript:void(0);" data-index='2' class="tab"><span>SEO选项</span></a></li>
-                <li><a href="javascript:void(0);" data-index='3' class="tab"><span>其他选项</span></a></li>
+                <li><a href="javascript:void(0);" data-index='1' class="tab current"><span>基础内容</span></a></li>
+                <li><a href="javascript:void(0);" data-index='2' class="tab"><span>SEO优化</span></a></li>
+                <li><a href="javascript:void(0);" data-index='3' class="tab"><span>更多设置</span></a></li>
+                <!-- #weapp_demontrate_li# -->
+                <!-- #weapp_li# -->
             </ul>
         </div>
     </div>
@@ -29,17 +36,18 @@
         <div class="ncap-form-default tab_div_1">
             <dl class="row">
                 <dt class="tit">
-                    <label for="title"><em>*</em>标题</label>
+                    <label for="title"><em>*</em>文档标题</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="title" value="" id="title" class="input-txt" maxlength="100" {eq name="$channelRow.is_repeat_title" value="0"} oninput="check_title_repeat(this,0);" {/eq}>
+                    <input type="text" name="title" value="" id="title" class="input-txt" maxlength="200" {eq name="$channelRow.is_repeat_title" value="0"} oninput="check_title_repeat(this,0);" {/eq}>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    副标题：<input type="text" name="subtitle" value="" id="subtitle" class="w200">
                     <span class="err"></span>
-                    <p class="notic"></p>
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="title"><em>*</em>所属栏目</label>
+                    <label for="title"><em>*</em>栏目分类</label>
                 </dt>
                 <dd class="opt"> 
                     <select name="typeid" id="typeid">
@@ -50,16 +58,30 @@
                     <p class="notic">谨慎切换，自定义字段的内容会随着栏目切换而清空，在保存之前不受影响！</p>
                 </dd>
             </dl>
+            {notempty name='$global.web_stypeid_open'}
+            <dl class="row">
+                <dt class="tit">
+                    <label for="stypeid">副栏目分类</label>
+                </dt>
+                <dd class="opt"> 
+                    <input type="hidden" name="stypeid" id="stypeid" value="" class="input-txt" onkeyup="this.value=this.value.replace(/[^\d\,]/g,'');" onpaste="this.value=this.value.replace(/[^\d\,]/g,'');">
+                    &nbsp;<a href="javascript:void(0);" data-channel="{$channeltype}" onclick="select_stypeid(this);" class="ncap-btn ncap-btn-green">选择副栏目</a>
+                    <span class="err"></span>
+                    <p class="notic">支持同频道模型的栏目</p>
+                    <div id="stypeid_txt" class="pt5"></div>
+                </dd>
+            </dl>
+            {/notempty}
             <dl class="row">
                 <dt class="tit">
                     <label>文档属性</label>
                 </dt>
                 <dd class="opt">
                     {volist name="archives_flags" id="vo"}
-                        <label><input type="checkbox" name="{$vo.flag_fieldname}" value="1">{$vo.flag_name}[{$vo.flag_attr}]</label>
+                        <label><input type="checkbox" name="{$vo.flag_fieldname}" value="1">{$vo.flag_name}<!-- [{$vo.flag_attr}] --></label>&nbsp;
                     {/volist}
                     <span class="err"></span>
-                    <p class="notic"></p>
+                    <p class="notic">如需管理，请点击右上角设置与帮助按钮</p>
                 </dd>
             </dl>
             <dl class="row none dl_jump">
@@ -72,9 +94,41 @@
                     <p class="notic">请输入完整的URL网址（包含http或https），设置后访问该条信息将直接跳转到设置的网址</p>
                 </dd>
             </dl>
+            <dl class="row" style="z-index:2;">
+                <dt class="tit">
+                    <label>文档标签</label>
+                </dt>
+                <dd class="opt">          
+                    <input type="text" value="" name="tags" id="tags" class="input-txt" placeholder="多个标签之间以逗号隔开" autocomplete="off" oninput="get_common_tagindex_input(this);" onfocus="$('#often_tags').hide();" onkeyup="this.value=this.value.replace(/[\，]/g,',');" onpaste="this.value=this.value.replace(/[\，]/g,',')">&nbsp;
+                    <a href="javascript:void(0);" onclick="get_common_tagindex(this);">显示常用标签</a>&nbsp;<img id="tag_loading" src="__STATIC__/common/images/loading.gif" style="display: none;" />
+                    <div class="often_tags" id="often_tags" data-opt="add" style="display: none;"></div>
+                    <div class="often_tags" id="often_tags_input" style="display: none;"></div>
+                    <input type="hidden" id="tags_click_count">
+                </dd>
+            </dl>
+            <dl class="row {empty name="$global.web_citysite_open"} none {/empty} ">
+                <dt class="tit">
+                    <label for="title">所属区域</label>
+                </dt>
+                <dd class="opt"> 
+                    <select name="province_id" id="province_id" onchange="set_city_list(0);">
+                        <option value="0">全国</option>
+                        {volist name=':get_site_province_list()' id='vo'}
+                        <option value="{$vo.id}" {eq name="$Request.param.province_id" value="$vo.id" } selected="true" {/eq}>{$vo.name}</option>
+                        {/volist}
+                    </select>
+                    <select name="city_id" id="city_id" class="none ml5" onchange="set_area_list(0);">
+                        <option value="">--请选择--</option>
+                    </select>
+                    <select name="area_id" id="area_id" class="none ml5">
+                        <option value="">--请选择--</option>
+                    </select>
+                    <span class="err"></span>
+                </dd>
+            </dl>
             <dl class="row">
                 <dt class="tit">
-                  <label>缩略图</label>
+                  <label>封面图片</label>
                 </dt>
                 <dd class="opt">
                     <div class="input-file-show div_litpic_local">
@@ -110,7 +164,7 @@
                             <tbody>
                             <tr>
                                 <td>
-                                    <div class="sort-list">
+                                    <div class="sort-list-img">
                                         <div class="images_upload">
                                         </div>
                                     </div>
@@ -125,15 +179,15 @@
                     </div>
                     <!-- 上传图片显示的样板 start -->
                     <div class="images_upload_tpl none">
-                        <div class="images_upload">
-                            <div style="position: relative; height: 130px;">
+                        <div class="images_upload images_upload_html">
+                            <div class="images_upload_box">
                                 <input type="hidden" name="imgupload[]" value="" />
                                 <a href="javascript:void(0);" onClick="" class="upimg" title="拖动修改排序">
-                                    <img src="__STATIC__/admin/images/add-button.jpg" width="136" height="136" />
+                                    <img src="__STATIC__/admin/images/add-button.jpg"/>
                                 </a>
                                 <a href="javascript:void(0)" class="delect" title="删除">&nbsp;&nbsp;</a>
                             </div>
-                            <textarea rows="5" cols="60" name="imgintro[]" style="height:28px; width: 136px;" placeholder="图片注释" title="标签调用：{literal}{$field.intro}{/literal}"></textarea>
+                            <textarea rows="5" cols="60" name="imgintro[]" placeholder="图片注释" title="标签调用：{literal}{$field.intro}{/literal}"></textarea>
                         </div>
                     </div>
                     <!-- 上传图片显示的样板 end -->
@@ -145,18 +199,6 @@
         <!-- 常规信息 -->
         <!-- SEO设置 -->
         <div class="ncap-form-default tab_div_2" style="display:none;">
-            <dl class="row" style="z-index:2;">
-                <dt class="tit">
-                    <label>TAG标签</label>
-                </dt>
-                <dd class="opt">          
-                    <input type="text" value="" name="tags" id="tags" class="input-txt" placeholder="多个标签之间以逗号隔开" autocomplete="off" oninput="get_common_tagindex_input(this);" onfocus="$('#often_tags').hide();" onkeyup="this.value=this.value.replace(/[\，]/g,',');" onpaste="this.value=this.value.replace(/[\，]/g,',')">&nbsp;
-                    <a href="javascript:void(0);" onclick="get_common_tagindex(this);">显示常用标签</a>&nbsp;<img id="tag_loading" src="__STATIC__/common/images/loading.gif" style="display: none;" />
-                    <div class="often_tags" id="often_tags" style="display: none;"></div>
-                    <div class="often_tags" id="often_tags_input" style="display: none;"></div>
-                    <input type="hidden" id="tags_click_count">
-                </dd>
-            </dl>
             <dl class="row">
                 <dt class="tit">
                     <label for="seo_title">SEO标题</label>
@@ -171,7 +213,7 @@
                     <label>SEO关键词</label>
                 </dt>
                 <dd class="opt">          
-                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:40px;"></textarea>
+                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:20px;"></textarea>
                     <span class="err"></span>
                     <p class="notic">一般不超过100个字符，多个关键词请用英文逗号（,）隔开，建议3到5个关键词。</p>
                 </dd>
@@ -181,9 +223,10 @@
                     <label>SEO描述</label>
                 </dt>
                 <dd class="opt">          
-                    <textarea rows="5" cols="60" id="seo_description" name="seo_description" style="height:60px;"></textarea>
+                    <textarea rows="5" cols="60" id="seo_description" name="seo_description" style="height:54px;" class="keywordsTextarea" onkeyup="monitorInputStr();" onkeypress="monitorInputStr();"></textarea>
                     <span class="err"></span>
-                    <p class="notic">一般不超过200个字符，不填写时系统自动提取正文的前200个字符</p>
+                    <p class="notic">一般不超过100个字符，不填写时系统自动提取正文的前100个字符</p>
+                    <p class="notic2 none" id="beenWritten">你已输入<span id="beenWrittenStr">0</span>个字符</p>
                 </dd>
             </dl>
         </div>
@@ -196,18 +239,30 @@
                 </dt>
                 <dd class="opt">
                     <input type="text" value="{$Think.session.admin_info.pen_name|default='小编'}" name="author" id="author" class="input-txt">
-                    &nbsp;<a href="javascript:void(0);" onclick="set_author();" class="ncap-btn ncap-btn-green">设置</a>
+					<span class="err"></span>
                     <p class="notic">设置作者默认名称（将同步至管理员笔名）</p>
+                </dd>
+            </dl>
+            <dl class="row dl_origin">
+                <dt class="tit">
+                    <label>来源</label>
+                </dt>
+                <dd class="opt origin-hot">
+                    <input type="text" value="{$system_originlist_0}" name="origin" id="origin" class="input-txt" onclick="searchOrigin(this);" autocomplete="off">
+                    <div class="origin-hot-list" style="display: none;" id="search_keywords_list_origin"></div>
+                    <textarea id="system_originlist_str" style="display: none;">{$system_originlist_str}</textarea>
+                    <span class="setting" onclick="set_originlist();">设置</span>
+                    <span class="err"></span>
+                    <p class="notic">为空时默认“网络”</p>
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label>浏览量</label>
+                    <label>点击数</label>
                 </dt>
                 <dd class="opt">    
                     <input type="text" value="{$rand_arcclick}" name="click" id="click" class="input-txt">
                     <span class="err"></span>
-                    <p class="notic"></p>
                 </dd>
             </dl>
             <dl class="row">
@@ -221,9 +276,9 @@
                         {/volist}
                     </select>
                     <span class="err"></span>
-                    <p class="notic"></p>
                 </dd>
             </dl>
+            <!-- #weapp_UsersGroup_content_users_id={$field.users_id}#--><!-- #weapp_UsersGroup_content# -->
             <dl class="row">
                 <dt class="tit">
                     <label for="articleForm">发布时间</label>
@@ -250,30 +305,51 @@
                     <span class="err"></span>
                 </dd>
             </dl>
-            <dl class="row" {notin name='$seo_pseudo' value='2'}style="display: none;"{/notin}>
+            <dl class="row {notin name='$seo_pseudo' value='2,3'}no-grey{/notin}">
                 <dt class="tit">
                     <label>自定义文件名</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" value="" name="htmlfilename" id="htmlfilename" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\w\-]/g,'-');" onpaste="this.value=this.value.replace(/[^\w\-]/g,'-');" class="input-txt">.html
+                    <input type="text" {notin name='$seo_pseudo' value='2,3'}readonly="readonly" title="动态模式下不支持自定义文档url"{/notin} value="" name="htmlfilename" id="htmlfilename" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\u4E00-\u9FA5\w\-]/g,'-');" onpaste="this.value=this.value.replace(/[^\u4E00-\u9FA5\w\-]/g,'-');" class="input-txt {notin name='$seo_pseudo' value='2,3'}no-drop{/notin}">.html
                     <span class="err"></span>
                     <p class="notic">自定义文件名可由字母、数字、下划线(_)、连接符(-)等符号组成，除此之外其他字符将自动转为连接符(-)</p>
                 </dd>
             </dl>
         </div>
         <!-- 其他参数 -->
+		<!-- #weapp_demontrate_div# -->
+        <!-- #weapp_div# -->
         <div class="ncap-form-default">
-            <div class="bot">
+            <div class="bot2">
                 <input type="hidden" name="gourl" value="{$gourl|default=''}">
+                <input type="hidden" name="editor_addonFieldExt" id="editor_addonFieldExt" value="">
                 <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                {include file="public/callback_page_2" /}<!-- 返回按钮 -->
             </div>
         </div> 
     </form>
 </div>
 <script type="text/javascript">
+    layui.use('laydate', function() {
+        var laydate = layui.laydate;
 
+        laydate.render({
+            elem: '#add_time'
+            ,type: 'datetime'
+        });
+    })
     $(function () {
-        $('#add_time').layDate();   
+        try {
+            var web_citysite_open = {$global['web_citysite_open']|default=0};
+            var site_province_id = {$site_province_id|default=0};
+            var site_city_id = {$site_city_id|default=0};
+            var site_area_id = {$site_area_id|default=0};
+            if (web_citysite_open > 0 && site_province_id > 0) {
+                $('select[name=province_id]').val(site_province_id);
+                set_city_list(site_city_id);
+                set_area_list(site_area_id);
+            }
+        }catch(e){}
      
         //选项卡切换列表
         $('.tab-base').find('.tab').click(function(){
@@ -284,6 +360,7 @@
             var tab_index = $(this).data('index');          
             $(".tab_div_1, .tab_div_2, .tab_div_3").hide();          
             $(".tab_div_"+tab_index).show();
+            layer.closeAll();
         });
 
         $('input[name=is_jump]').click(function(){
@@ -316,33 +393,50 @@
             $('#often_tags').show();
             event.stopPropagation();
         });
+
+        $('input[name=tags]').keyup(function(){
+            var tags = $.trim($(this).val());
+            $('#seo_keywords').val(tags);
+        });
     });
 
     // 判断输入框是否为空
     function check_submit(){
         if($.trim($('input[name=title]').val()) == ''){
-            showErrorMsg('标题不能为空！');
             $($('.tab-base').find('.tab')[0]).trigger('click'); 
+            showErrorMsg('标题不能为空！');
             $('input[name=title]').focus();
             return false;
         }
         if ($('#typeid').val() == 0) {
-            showErrorMsg('请选择栏目…！');
             $($('.tab-base').find('.tab')[0]).trigger('click'); 
+            showErrorMsg('请选择栏目…！');
             $('#typeid').focus();
             return false;
+        }
+        
+        var htmlfilename = $.trim($('input[name=htmlfilename]').val());
+        if (htmlfilename != '') {
+            var exp = /^\d{1,}$/;
+            if (exp.test(htmlfilename)) {
+                showErrorAlert('自定义文件名不能纯数字，会与文档ID冲突！');
+                $('input[name=htmlfilename]').focus();
+                return false;
+            }
         }
         
         layer_loading('正在处理');
         if(!ajax_check_htmlfilename())
         {
             layer.closeAll();
-            showErrorMsg('自定义文件名已存在！');
+            showErrorMsg('同栏目下，自定义文件名已存在！');
             $('input[name=htmlfilename]').focus();
             return false;
         }
-
-        $('#post_form').submit();
+        setTimeout(function (){
+            editor_auto_210607();
+            $('#post_form').submit();
+        }, 1);
     }
 
     function img_call_back(fileurl_tmp)
@@ -355,16 +449,18 @@
 
     // 上传图集相册回调函数
     function imgupload_call_back(paths){
-        
         var  last_div = $(".images_upload_tpl").html();
-        // var  last_div = $(".images_upload:last").prop("outerHTML");  
         for (var i=0;i<paths.length ;i++ )
         {
-            $(".images_upload:eq(0)").before(last_div);  // 插入一个 新图片
-            $(".images_upload:eq(0)").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
-            $(".images_upload:eq(0)").find('img').attr('src',paths[i]);// 修改他的图片路径
-            $(".images_upload:eq(0)").find('a:eq(1)').attr('onclick',"ClearPicArr2(this,'"+paths[i]+"')").text('');
-            $(".images_upload:eq(0)").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+            if ($(".sort-list-img .images_upload_html").length > 0) {
+                $(".sort-list-img .images_upload_html:last").after(last_div);  // 插入一个 新图片
+            } else {
+                $(".sort-list-img .images_upload:last").before(last_div);  // 插入一个 新图片
+            }
+            $(".sort-list-img .images_upload_html:last").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+            $(".sort-list-img .images_upload_html:last").find('img').attr('src',paths[i]);// 修改他的图片路径
+            $(".sort-list-img .images_upload_html:last").find('a:eq(1)').attr('onclick',"ClearPicArr2(this,'"+paths[i]+"')").text('');
+            $(".sort-list-img .images_upload_html:last").find('input').val(paths[i]); // 设置隐藏域 要提交的值
         }              
     }
     /*
@@ -377,7 +473,7 @@
         $(obj).parent().parent().remove(); // 删除完服务器的, 再删除 html上的图片
         $.ajax({
             type:'POST',
-            url:"{:url('Uploadify/delupload', ['_ajax'=>1])}",
+            url:"{:url('Uploadimgnew/delupload', ['_ajax'=>1])}",
             data:{action:"del", filename:path},
             success:function(){}
         });
@@ -385,7 +481,7 @@
 
     /** 以下 图集相册的拖动排序相关 js*/
 
-    $( ".sort-list" ).sortable({
+    $( ".sort-list-img" ).sortable({
         start: function( event, ui) {
         
         }
@@ -405,8 +501,17 @@
         }
     });
     //因为他们要拖动，所以尽量设置他们的文字不能选择。 
-    $( ".sort-list" ).disableSelection();
+    // $( ".sort-list-img" ).disableSelection();
 
 </script>
-
+<script>
+    try{
+        var mt20_1649209614 = sessionStorage.getItem("mt20_1649209614");
+        if (mt20_1649209614 == 1){
+            $("#geduan_div").removeClass("h10");
+        }else{
+            $("#geduan_div").addClass("h10");
+        }
+    }catch(e){}
+</script>
 {include file="public/footer" /}

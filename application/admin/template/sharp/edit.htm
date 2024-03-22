@@ -129,11 +129,14 @@
                 // 批量设置价格
                 function BulkSetPrice(obj) {
                     layer.prompt({
-                        title: false,
                         formType: 3,
+                        shade: layer_shade,
+                        move: false,
+                        title: '提示',
                         id: 'BulkSetPrice',
+                        btnAlign:'r',
+                        closeBtn: 3,
                         btn: ['确定', '关闭'],
-                        closeBtn: 0,
                         success: function(layero, index){
                             $("#BulkSetPrice").find('input').attr('placeholder', '批量设置秒杀价格');
                             $("#BulkSetPrice").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
@@ -148,11 +151,14 @@
                 // 批量设置库存
                 function BulkSetStock(obj) {
                     layer.prompt({
-                        title: false,
                         formType: 3,
+                        shade: layer_shade,
+                        move: false,
+                        title: '提示',
                         id: 'BulkSetStock',
+                        btnAlign:'r',
+                        closeBtn: 3,
                         btn: ['确定', '关闭'],
-                        closeBtn: 0,
                         success: function(layero, index){
                             $("#BulkSetStock").find('input').attr('placeholder', '批量设置秒杀库存');
                             $("#BulkSetStock").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
@@ -253,7 +259,7 @@
             success : function(res){
                 layer.closeAll();
                 if(res.code == 1){
-                    layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                    layer.msg(res.msg, {icon: 1, shade: 0.1, time: 1000}, function(){
                         window.location.reload();
                     });
                 }else{

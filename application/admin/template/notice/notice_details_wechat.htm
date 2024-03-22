@@ -1,0 +1,111 @@
+{include file="public/layout" /}
+
+<body class="eyou_body_xin">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div id="geduan_div" class="h10"></div>
+<div class="page" style="min-width: auto; padding-bottom: 15px;">
+    <div class="flexigrid">
+        {include file="notice/notice_details_bar" /}
+        <!-- 操作说明 -->
+        <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); margin-bottom: 15px;">
+            <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+                <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+            </div>
+            <ul>
+                <li>1.登录 <a href="https://mp.weixin.qq.com" target="_blank">微信公众号</a>，在模板消息里的所在行业设置为： <font color="#fe7300">IT科技/互联网|电子商务、其他/其他</font></li>
+                <li>2.如果所选服务类目的行业和以上不一致，将会导致模板消息不可用</li>
+                <li style="color: red;">3.请先把登录账号与您的微信进行绑定关联，否则接收不到推送信息！<a href="javascript:void(0);"  data-href="{:url('Admin/admin_edit', ['id'=>$admin_id,'iframe'=>1])}" onclick="openHelpframe(this, '个人信息', '100%', '100%');">打开个人信息</a></li>
+            </ul>
+        </div>
+        <form class="form-horizontal pl10 pr10" id="post_form" action="" method="post">
+            <div class="ncap-form-default tab_div_1">
+            <!-- 微信模板消息 -->
+                <dl class="row">
+                    <dt class="tit">是否开启</dt>
+                    <dd class="opt">
+                        <ul class="nc-row ncap-waybill-list">
+                            <li style="width: 100%;">
+                                <label class="label" >
+                                    <input class="check" type="radio" name="is_open" value="1" {notempty name="$info.is_open"}checked="checked"{/notempty}><span>开启</span>
+                                </label>
+                                &nbsp; &nbsp;
+                                <label class="label" >
+                                    <input class="check" type="radio" name="is_open" value="0" {empty name="$info.is_open"}checked="checked"{/empty}><span>关闭</span>
+                                </label>
+                            </li>
+                        </ul>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit"> <label for="">模板演示</label> </dt>
+                    <dd class="opt"> 
+                         <div class="default-template-content"><img src="__STATIC__/admin/images/notice_template_wxapp_bg.png" alt="" class="bg-img">
+                             <div class="line"></div>
+                             <div class="wxapp-notice">
+                                 <div class="title">
+                                     <div class="logo">
+                                         <div>公众号名称</div>
+                                     </div>
+                                 </div>
+                                 <div class="content">
+                                     <div class="template-title">{$info.template_title}</div>
+                                     <div class="template-html">
+                                        {volist name="$info['tpl_data']['keywordsList']" id="vo"}
+                                        <div class="flex">
+                                            <div class="label">{$vo.name}</div>
+                                            <div>{$vo.example}</div>
+                                        </div>
+                                        {/volist}
+                                     </div>
+                                 </div>
+                                 {notempty name="$weixin_data['appid']"}
+                                 <div class="template-link">小程序名称 <i class="iconfont e-right" style="float: right;"></i></div>
+                                 {else /}
+                                 <div class="template-link">查看详情 <i class="iconfont e-right" style="float: right;"></i></div>
+                                 {/notempty}
+                             </div>
+                         </div>
+                     </dd>
+                </dl>
+                <!-- 微信模板消息 -->
+            </div>
+            <div class="ncap-form-default">
+                <div class="bot2" style="padding-left: 160px;">
+                    <input type="hidden" name="tpl_id" value="{$info.tpl_id}">
+                    <input type="hidden" name="send_type" value="{$send_type}">
+                    <input type="hidden" name="send_scene" value="{$info.send_scene}">
+                    <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">保存</a>
+                    <a class="ncap-btn-big ncap-btn-no" href="javascript:history.back();" title="返回">返回</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    function checkForm() {
+        layer_loading('正在处理');
+        $.ajax({
+            type: 'post',
+            url : "{:url('Notice/notice_details_wechat', ['_ajax'=>1])}",
+            data: $('#post_form').serialize(),
+            dataType: 'json',
+            success: function(res) {
+                layer.closeAll();
+                if (res.code == 1) {
+                    layer.msg(res.msg, {shade: layer_shade, time: 1000}, function() {
+                        window.location.reload();
+                    });
+                } else {
+                    showErrorAlert(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

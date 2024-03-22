@@ -99,6 +99,12 @@ function changeTableVal(table,id_name,id_value,field,obj)
         var value = $(obj).val();
     }
 
+    if (parseInt($(obj).attr('data-value')) === 0) {
+        $(obj).attr('data-value', 1);
+    } else if (parseInt($(obj).attr('data-value')) === 1) {
+        $(obj).attr('data-value', 0);
+    }
+
     var url = eyou_basefile + "?m="+module_name+"&c=Index&a=changeTableVal&_ajax=1";
     var lang = $.cookie('admin_lang');
     if (!lang) lang = __lang__;
@@ -130,16 +136,16 @@ function changeTableVal(table,id_name,id_value,field,obj)
                     layer_loading('生成页面');
                     var typeid = $(obj).attr('data-typeid');
                     $.ajax({
-                        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
-                        type:'POST',
+                        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__+"&id="+id_value+"&t_id="+typeid+"&type=view&ctl_name=Archives&_ajax=1",
+                        type:'GET',
                         dataType:'json',
-                        data:{aid:id_value,typeid:typeid,type:'view',ctl_name:'Archives',_ajax:1},
+                        data:{},
                         success:function(res1){
                             $.ajax({
-                                url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
-                                type:'POST',
+                                url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__+"&id="+id_value+"&t_id="+typeid+"&type=lists&ctl_name=Archives&_ajax=1",
+                                type:'GET',
                                 dataType:'json',
-                                data:{aid:id_value,typeid:typeid,type:'lists',ctl_name:'Archives',_ajax:1},
+                                data:{},
                                 success:function(res2){
                                     layer.closeAll();
                                     layer.msg('生成完成', {icon: 1, time: 1500});
@@ -157,6 +163,7 @@ function changeTableVal(table,id_name,id_value,field,obj)
                     });
                     /*end*/
                 } else {
+                    uphtml_index_20221207();
                     if(!$(obj).hasClass('no') && !$(obj).hasClass('yes')){
                         var time = 1500;
                         if (res.data.time && 0 < res.data.time) {
@@ -183,6 +190,20 @@ function changeTableVal(table,id_name,id_value,field,obj)
     }); 
 }
 
+// 保存后，生成首页
+function uphtml_index_20221207()
+{
+    $.ajax({
+        url:__root_dir__+"/index.php?clear=1",
+        type:'GET',
+        dataType:'html',
+        data:{},
+        success:function(res){
+            console.log('生成首页html')
+        }
+    });
+}
+
 // 修改指定表的指定字段值 包括有按钮点击切换是否 或者 排序 或者输入框文字
 function ProductStatus(table,id_name,id_value,field,obj)
 {   
@@ -191,7 +212,7 @@ function ProductStatus(table,id_name,id_value,field,obj)
     {          
         //src = '/public/images/yes.png';
         $(obj).removeClass('no').addClass('yes');
-        $(obj).html("<i class='fa fa-check-circle'></i>正常");
+        $(obj).html("<i class='fa fa-check-circle'></i>启用");
         var value = 1;
         try {  
             if ($(obj).attr('data-value')) {
@@ -207,7 +228,7 @@ function ProductStatus(table,id_name,id_value,field,obj)
             
     }else if($(obj).hasClass('yes')){ // 图片点击是否操作                     
         $(obj).removeClass('yes').addClass('no');
-        $(obj).html("<i class='fa fa-ban'></i>停用");
+        $(obj).html("<i class='fa fa-ban'></i>禁用");
         var value = 0;
         try {  
             if ($(obj).attr('data-value')) {
@@ -242,16 +263,16 @@ function ProductStatus(table,id_name,id_value,field,obj)
                     layer_loading('生成页面');
                     var typeid = $(obj).attr('data-typeid');
                     $.ajax({
-                        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
-                        type:'POST',
+                        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__+"&id="+id_value+"&t_id="+typeid+"&type=view&ctl_name=Archives&_ajax=1",
+                        type:'GET',
                         dataType:'json',
-                        data:{aid:id_value,typeid:typeid,type:'view',ctl_name:'Archives',_ajax:1},
+                        data:{},
                         success:function(res1){
                             $.ajax({
-                                url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
-                                type:'POST',
+                                url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__+"&id="+id_value+"&t_id="+typeid+"&type=lists&ctl_name=Archives&_ajax=1",
+                                type:'GET',
                                 dataType:'json',
-                                data:{aid:id_value,typeid:typeid,type:'lists',ctl_name:'Archives',_ajax:1},
+                                data:{},
                                 success:function(res2){
                                     layer.closeAll();
                                     layer.msg('生成完成', {icon: 1, time: 1500});

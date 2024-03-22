@@ -3,7 +3,7 @@
         <div class="item-title">
             <ul class="tab-base nc-row">
                 {eq name="$Think.const.CONTROLLER_NAME.'@web'|is_check_access" value="1"}
-                <li><a href="{:url('System/web')}" {if condition="'web'==$Think.const.ACTION_NAME"}class="current"{/if}><span>网站设置</span></a></li>
+                <li><a href="{:url('System/web')}" {if condition="'web'==$Think.const.ACTION_NAME"}class="current"{/if}><span>网站信息</span></a></li>
                 {/eq}
 
                 {eq name='$main_lang' value='$admin_lang'}
@@ -13,21 +13,18 @@
                 {/eq}
 
                 {eq name="$Think.const.CONTROLLER_NAME.'@basic'|is_check_access" value="1"}
-                <li><a href="{:url('System/basic')}" {if condition="'basic'==$Think.const.ACTION_NAME"}class="current"{/if}><span>附件设置</span></a></li>
+                <li><a href="{:url('System/basic')}" {if condition="'basic'==$Think.const.ACTION_NAME"}class="current"{/if}><span>附件扩展</span></a></li>
                 {/eq}
 
                 {eq name='$main_lang' value='$admin_lang'}
                     {eq name="$Think.const.CONTROLLER_NAME.'@api_conf'|is_check_access" value="1"}
-                    <li><a href="{:url('System/api_conf')}" {if condition="preg_match('/^api_conf/i', $Think.const.ACTION_NAME)"}class="current"{/if}><span>接口配置</span></a></li>
+                    <li><a href="{:url('System/api_conf')}" {if condition="preg_match('/^api_conf/i', $Think.const.ACTION_NAME)"}class="current"{/if}><span>接口API</span></a></li>
                     {/eq}
                 {/eq}
-<!-- 
-                {eq name='$main_lang' value='$admin_lang'}
-                    {eq name="$Think.const.CONTROLLER_NAME.'@pay_api_index'|is_check_access" value="1"}
-                        <li><a href="{:url('PayApi/pay_api_index')}" {if condition="'pay_api_index'==$Think.const.ACTION_NAME"}class="current"{/if}><span>支付接口</span></a></li>
-                    {/eq}
+
+                {eq name="$Think.const.CONTROLLER_NAME.'@customvar_index'|is_check_access" value="1"}
+                <li><a href="{:url('System/customvar_index')}" {if condition="'customvar_index'==$Think.const.ACTION_NAME"}class="current"{/if}><span>自定义变量</span></a></li>
                 {/eq}
- -->
             </ul>
         </div>
     </div>

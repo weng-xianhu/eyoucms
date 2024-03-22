@@ -85,7 +85,7 @@
         </div>
     </div>
 </div>
-<script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version|default='1.2.9'}"></script>
+{load href="__STATIC__/common/js/jquery.min.js" /}
 <script type="text/javascript" src="__PUBLIC__/plugins/webuploader/webuploader.min.js?v={$version|default='1.2.9'}"></script>
 <script type="text/javascript" src="__PUBLIC__/plugins/webuploader/upload.js?v={$version|default='1.2.9'}"></script>
 <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js?v={$version|default='1.2.9'}"></script>
@@ -134,7 +134,8 @@ $(function(){
         var fileurl_tmp = [];
         if(callback != "undefined"){    
             if(num > 1){
-                 $("input[name^='fileurl_tmp']").each(function(index,dom){
+                var src = '';
+                $("input[name^='fileurl_tmp']").each(function(index,dom){
                     /*禁止篡改上传图片为远程地址*/
                     remsg = checkUrl(dom.value);
                     if (remsg) {
@@ -143,8 +144,9 @@ $(function(){
                         return false;
                     }
                     /*--end*/
-                    fileurl_tmp[index] = dom.value;
-                 });    
+                    src = $('.WU_FILE_'+index).find("input[name^='fileurl_tmp']").val() || dom.value;
+                    fileurl_tmp[index] = src;
+                });    
             }else{
                 fileurl_tmp = $("input[name^='fileurl_tmp']").val();
                 /*禁止篡改上传图片为远程地址*/

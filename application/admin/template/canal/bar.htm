@@ -1,0 +1,22 @@
+
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back_xin" href="{:url('System/api_conf')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>
+                    {if condition="$Think.const.ACTION_NAME == 'conf_weixin'"}
+                        微信小程序
+                    {elseif condition="$Think.const.ACTION_NAME == 'conf_baidu'" /}
+                        百度小程序
+                    {elseif condition="$Think.const.ACTION_NAME == 'conf_wechat'" /}
+                        微信公众号
+                    {elseif condition="$Think.const.ACTION_NAME == 'microsite'" /}
+                        微站点
+                    {else /}
+                        开放API
+                    {/if}
+                </h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>

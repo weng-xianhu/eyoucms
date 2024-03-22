@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -50,7 +50,7 @@ class Taglist extends Model
             'tid_arr'   => '',
         ];
         $result = Db::name('Taglist')->field($field)
-            ->where(array('aid'=>$aid, 'typeid'=>$typeid))
+            ->where(array('aid'=>$aid))
             ->order('aid asc')
             ->select();
         if ($result) {
@@ -100,6 +100,7 @@ class Taglist extends Model
         if ($opt == 'add') {
             $tag = str_replace('，', ',', $tag);
             $tags = explode(',', $tag);
+            $tags = array_map('trim', $tags);
             $tags = array_unique($tags);
 
             foreach($tags as $tag)
@@ -114,6 +115,8 @@ class Taglist extends Model
         } else if ($opt == 'edit') {
             $this->UpdateOneTag($aid, $typeid, $tag,$arcrank);
         }
+
+        \think\Cache::clear('taglist');
     }
 
     /**
@@ -128,12 +131,10 @@ class Taglist extends Model
     private function InsertOneTag($tag, $aid, $typeid = 0, $arcrank = 0)
     {
         $tag = trim($tag);
-        if(empty($tag))
-        {
+        if (empty($tag)) {
             return true;
         }
-        if(empty($typeid))
-        {
+        if (empty($typeid)) {
             $typeid = 0;
         }
         $rs = false;
@@ -142,47 +143,43 @@ class Taglist extends Model
                 'tag'   => $tag,
                 'lang'  => get_admin_lang(),
             ])->find();
-        if(empty($row))
-        {
+        if (empty($row)) {
             $rs = $tid = Db::name('tagindex')->insertGetId([
-                    'tag'       => $tag,
-                    'typeid'    => $typeid,
-                    'seo_title' => '',
-                    'seo_keywords' => '',
-                    'seo_description' => '',
-                    'total'     => 1,
-                    'weekup'    => $addtime,
-                    'monthup'   => $addtime,
-                    'lang'      => get_admin_lang(),
-                    'add_time'  => $addtime,
-                    'update_time'=> $addtime,
-                ]);
-        }
-        else
-        {
+                'tag' => $tag,
+                'typeid' => $typeid,
+                'seo_title' => '',
+                'seo_keywords' => '',
+                'seo_description' => '',
+                'total' => 1,
+                'weekup' => $addtime,
+                'monthup' => $addtime,
+                'lang' => get_admin_lang(),
+                'add_time' => $addtime,
+                'update_time' => $addtime,
+            ]);
+        } else {
             $rs = Db::name('tagindex')->where([
-                    'tag'   => $tag,
-                    'lang'  => get_admin_lang(),
-                ])->update([
-                    'total'     => Db::raw('total + 1'),
-                    'update_time'  => $addtime,
-                    'lang'      => get_admin_lang(),
-                ]);
+                'tag' => $tag,
+                'lang' => get_admin_lang(),
+            ])->update([
+                'total' => Db::raw('total + 1'),
+                'update_time' => $addtime,
+                'lang' => get_admin_lang(),
+            ]);
             $tid = $row['id'];
         }
 
-        if($rs)
-        {
+        if ($rs) {
             Db::name('taglist')->insert([
-                    'tid'       => $tid,
-                    'aid'       => $aid,
-                    'typeid'    => $typeid,
-                    'tag'       => $tag,
-                    'arcrank'   => $arcrank,
-                    'lang'      => get_admin_lang(),
-                    'add_time'  => $addtime,
-                    'update_time'=> $addtime,
-                ]);
+                'tid' => $tid,
+                'aid' => $aid,
+                'typeid' => $typeid,
+                'tag' => $tag,
+                'arcrank' => $arcrank,
+                'lang' => get_admin_lang(),
+                'add_time' => $addtime,
+                'update_time' => $addtime,
+            ]);
         }
     }
 
@@ -286,23 +283,25 @@ class Taglist extends Model
                 foreach ($tags as $key => $tag) {
                     if (empty($tagsgroup[$tag])) {
                         Db::name('tagindex')->where(['tag'=>$tag])->update([
-                            'typeid'    => 0,
-                            'update_time'  => getTime(),
+                            'total' => 0,
+                            'typeid' => 0,
+                            'update_time' => getTime(),
                         ]);
                         // Db::name('tagindex')->where(['tag'=>$tag])->delete(); // 此逻辑作废
                     } else {
                         $total = Db::name('taglist')->where(['tag'=>$tag])->count();
                         Db::name('tagindex')->where([
-                                'tag'=>$tag,
-                                'total'=>['gt', 0],
-                                'lang'=>get_admin_lang()
+                                'tag' =>$tag,
+                                'total' =>['gt', 0],
+                                'lang' =>get_admin_lang()
                             ])
                             ->update([
                                 'total' => $total,
-                                'update_time'  => getTime(),
+                                'update_time' => getTime(),
                             ]);
                     }
                 }
+                \think\Cache::clear('taglist');
             }
         }
     }

@@ -2970,9 +2970,12 @@
 
 .el-table td,
 .el-table th.is-leaf {
-    border-bottom: 1px solid #EBEEF5
+    border: 1px solid #EBEEF5
 }
-
+.users_notice td,
+.users_notice th.is-leaf {
+    border: unset!important;
+}
 .el-table th.is-sortable {
     cursor: pointer
 }
@@ -12754,7 +12757,7 @@
     -webkit-appearance: none;
     background-color: #FFF;
     background-image: none;
-    border-radius: 4px;
+    /* border-radius: 4px; */
     border: 1px solid #DCDFE6;
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
@@ -13854,33 +13857,36 @@
     line-height: 1;
     white-space: nowrap;
     cursor: pointer;
-    background: #FFF;
+    background: #fff;
     border: 1px solid #DCDFE6;
+    border-color: #DCDFE6;
     color: #606266;
     -webkit-appearance: none;
     text-align: center;
-    -webkit-box-sizing: border-box;
     box-sizing: border-box;
-    outline: 0;
+    outline: none;
     margin: 0;
-    -webkit-transition: .1s;
     transition: .1s;
     font-weight: 500;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
     padding: 12px 20px;
     font-size: 14px;
-    border-radius: 4px
+    border-radius: 4px;
 }
-
+.el-button-xin {
+    float: left;
+    padding: 0 20px;
+    margin: 10px 0;
+    border-left: 1px solid #e0e0e0;
+    font-size: 15px;
+    color: #757575;
+}
 .el-button+.el-button {
     margin-left: 10px
 }
 
-.el-button:focus,
-.el-button:hover {
-    color: #FF7600;
-    border-color: #ffd6b3;
-    background-color: #fff1e6
-}
 
 .el-button:active {
     color: #e66a00;
@@ -14301,7 +14307,7 @@
 
 .el-button--small,
 .el-button--small.is-round {
-    padding: 9px 15px
+    padding: 8px 12px
 }
 
 .el-button--small.is-circle {

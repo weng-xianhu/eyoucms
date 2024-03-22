@@ -1,5 +1,4 @@
 {include file="public/layout" /}
-<script type="text/javascript" src="__PUBLIC__/plugins/laydate/laydate.js"></script>
 
 {eq name="$editor.editor_select" value="1"}
     {load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
@@ -9,18 +8,26 @@
     {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
 {/eq}
 
-<body style="background-color: #FFF; overflow: auto;min-width:auto;">
+<body class="bodysy-w">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width:auto;box-shadow:none;">
+<div id="geduan_div" class="h10"></div>
+<div id="page_div" class="page min-hg-c mb-20" style="min-width:auto;box-shadow:none;">
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
-            
+        <div class="item-title">
+            {include file="public/callback_page_1" /}<!-- 返回箭头 -->
+            <a class="back_sz" href="javascript:void(0);"  data-href="{:url('Article/help')}" onclick="openHelpframe(this, '设置与帮助', '500px', '100%', 'r');" title="设置与帮助"><i class="iconfont e-shezhi-tongyong"></i></a>
+            <div class="subject">
+                <h3>编辑文档</h3>
+                <h5></h5>
+            </div>
             <ul class="tab-base nc-row">
-                <li><a href="javascript:void(0);" data-index='1' class="tab current"><span>常规选项</span></a></li>
-                <li><a href="javascript:void(0);" data-index='2' class="tab"><span>SEO选项</span></a></li>
-                <li><a href="javascript:void(0);" data-index='3' class="tab"><span>其他选项</span></a></li>
+                <li><a href="javascript:void(0);" data-index='1' class="tab current"><span>基础内容</span></a></li>
+                <li><a href="javascript:void(0);" data-index='2' class="tab"><span>SEO优化</span></a></li>
+                <li><a href="javascript:void(0);" data-index='3' class="tab"><span>更多设置</span></a></li>
+                <!-- #weapp_demontrate_li# -->
+                <!-- #weapp_li# -->
             </ul>
         </div>
     </div>
@@ -29,17 +36,19 @@
         <div class="ncap-form-default tab_div_1">
             <dl class="row">
                 <dt class="tit">
-                    <label for="title"><em>*</em>标题</label>
+                    <label for="title"><em>*</em>文档标题</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="title" value="{$field.title}" id="title" class="input-txt" maxlength="100" {eq name="$channelRow.is_repeat_title" value="0"} oninput="check_title_repeat(this,'{$field.aid}');" {/eq}>
+                    <input type="text" name="title" value="{$field.title}" id="title" class="input-txt" maxlength="200" {eq name="$channelRow.is_repeat_title" value="0"} oninput="check_title_repeat(this,'{$field.aid}');" {/eq}>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    副标题：<input type="text" name="subtitle" value="{$field.subtitle}" id="subtitle" class="w200">
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="title"><em>*</em>所属栏目</label>
+                    <label for="typeid"><em>*</em>栏目分类</label>
                 </dt>
                 <dd class="opt">
                     <input type="hidden" name="attr[typeid]" id="attr_typeid" value="{$field.typeid}">
@@ -50,6 +59,22 @@
                     <p class="notic">谨慎切换，自定义字段的内容会随着栏目切换而清空，在保存之前不受影响！</p>
                 </dd>
             </dl>
+            {notempty name='$global.web_stypeid_open'}
+            <dl class="row">
+                <dt class="tit">
+                    <label for="stypeid">副栏目分类</label>
+                </dt>
+                <dd class="opt"> 
+                    <input type="hidden" name="stypeid" id="stypeid" value="{$field.stypeid}" class="input-txt" onkeyup="this.value=this.value.replace(/[^\d\,]/g,'');" onpaste="this.value=this.value.replace(/[^\d\,]/g,'');" placeholder="">
+                    &nbsp;<a href="javascript:void(0);" data-channel="{$channeltype}" onclick="select_stypeid(this);" class="ncap-btn ncap-btn-green">选择副栏目</a>
+                    <span class="err"></span>
+                    <p class="notic">支持同频道模型的栏目</p>
+                    <div id="stypeid_txt" class="pt5">
+                        {volist name='$stypeid_arr' id='vo'}{gt name='$key' value='0'}&nbsp;&nbsp;|&nbsp;&nbsp;{/gt}<span>{$vo.typename}</span>{/volist}
+                    </div>
+                </dd>
+            </dl>
+            {/notempty}
             <dl class="row">
                 <dt class="tit">
                     <label>文档属性</label>
@@ -57,10 +82,10 @@
                 <dd class="opt">
                     {volist name="archives_flags" id="vo"}
                         <input type="hidden" name="attr[{$vo.flag_fieldname}]" {if $field[$vo.flag_fieldname] == 1}value="1"{else/}value="0"{/if}>
-                        <label><input type="checkbox" name="{$vo.flag_fieldname}" value="1" {if $field[$vo.flag_fieldname] == 1}checked{/if}>{$vo.flag_name}[{$vo.flag_attr}]</label>&nbsp;
+                        <label><input type="checkbox" name="{$vo.flag_fieldname}" value="1" {if $field[$vo.flag_fieldname] == 1}checked{/if}>{$vo.flag_name}<!-- [{$vo.flag_attr}] --></label>&nbsp;
                     {/volist}
                     <span class="err"></span>
-                    <p class="notic"></p>
+                    <p class="notic">如需管理，请点击右上角设置与帮助按钮</p>
                 </dd>
             </dl>
             <dl class="row {if condition="$field.is_jump != 1"}none{/if} dl_jump">
@@ -73,9 +98,42 @@
                     <p class="notic">请输入完整的URL网址（包含http或https），设置后访问该条信息将直接跳转到设置的网址</p>
                 </dd>
             </dl>
+            <dl class="row" style="z-index:2;">
+                <dt class="tit">
+                    <label>文档标签</label>
+                </dt>
+                <dd class="opt">          
+                    <input type="text" value="{$field.tags}" name="tags" id="tags" class="input-txt" placeholder="多个标签之间以逗号隔开" autocomplete="off" oninput="get_common_tagindex_input(this);" onfocus="$('#often_tags').hide();" onkeyup="this.value=this.value.replace(/[\，]/g,',');" onpaste="this.value=this.value.replace(/[\，]/g,',')">&nbsp;
+                    <a href="javascript:void(0);" onclick="get_common_tagindex(this);">显示常用标签</a>&nbsp;<img id="tag_loading" src="__STATIC__/common/images/loading.gif" style="display: none;" />
+                    <div class="often_tags" id="often_tags" data-opt="edit" style="display: none;"></div>
+                    <div class="often_tags" id="often_tags_input" style="display: none;"></div>
+                    <input type="hidden" id="tags_click_count">
+                </dd>
+            </dl>
+            <dl class="row {empty name="$global.web_citysite_open"} none {/empty} ">
+                <dt class="tit">
+                    <label for="title">所属区域</label>
+                </dt>
+                <dd class="opt"> 
+                    <select name="province_id" id="province_id" onchange="set_city_list(0);">
+                        <option value="0">全国</option>
+                        {volist name=':get_site_province_list()' id='vo'}
+                        <option value="{$vo.id}" {eq name="$field.province_id" value="$vo.id" } selected {/eq} >{$vo.name}</option>
+                        {/volist}
+                    </select>
+                    <select name="city_id" id="city_id" class="none ml5" onchange="set_area_list(0);">
+                        <option value="">--请选择--</option>
+                    </select>
+                    <select name="area_id" id="area_id" class="none ml5">
+                        <option value="">--请选择--</option>
+                    </select>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
             <dl class="row">
                 <dt class="tit">
-                  <label>缩略图</label>
+                  <label>封面图片</label>
                 </dt>
                 <dd class="opt">
                     <div class="input-file-show div_litpic_local" {neq name="$field.is_remote" value="0"}style="display: none;"{/neq}>
@@ -98,63 +156,82 @@
                     <p class="notic">当没有手动上传图片时候，会自动提取正文的第一张图片作为缩略图</p>
                 </dd>
             </dl>
-            <div {if condition="!isset($channelRow.data.is_article_pay) || $channelRow.data.is_article_pay eq 0"}class="none"{/if}>
+            <div class="{if condition='empty($channelRow.data.is_article_pay)'} none {/if}">
                 <dl class="row">
                     <dt class="tit">
-                        <label for="title">价格</label>
+                        <label>付费限制</label>
                     </dt>
                     <dd class="opt">
-                        <input type="text" name="users_price" value="{$field.users_price}" id="users_price" class="input-txt" maxlength="100">
-                        <span class="err"></span>
-                        <p class="notic">价格不为0为付费观看</p>
+                        <label class="curpoin"><input type="radio" name="restric_type" value="0" {empty name="$field.restric_type"} checked="checked" {/empty}>免费</label>&nbsp;&nbsp;
+                        <label class="curpoin"><input type="radio" name="restric_type" value="1" {eq name="$field.restric_type" value="1"} checked="checked" {/eq}>付费</label>&nbsp;&nbsp;
+                        <label class="curpoin"><input type="radio" name="restric_type" value="2" {eq name="$field.restric_type" value="2"} checked="checked" {/eq}>指定会员</label>&nbsp;&nbsp;
+                        <label class="curpoin"><input type="radio" name="restric_type" value="3" {eq name="$field.restric_type" value="3"} checked="checked" {/eq}>会员付费</label>&nbsp;&nbsp;
                     </dd>
                 </dl>
-                <dl class="row">
+                <dl class="row {if condition='!in_array($field.restric_type, [2,3])'} none {/if}" id="dl_arc_level_id">
                     <dt class="tit">
-                        <label for="title">付费预览</label>
+                        <label><em>*</em>会员等级</label>
                     </dt>
                     <dd class="opt">
-                        <label class="curpoin"><input type="radio" name="part_free" value="0" {if condition="$field.part_free == 0 || !isset($field.part_free)"} checked {/if} onclick="change_part_free(this);">不预览</label>&nbsp;
-                        <label class="curpoin"><input type="radio" name="part_free" value="2" {eq name="$field.part_free" value="2"} checked {/eq} onclick="change_part_free(this);">自动截取</label>&nbsp;
-                        <label class="curpoin"><input type="radio" name="part_free" value="1" {eq name="$field.part_free" value="1"} checked {/eq} onclick="change_part_free(this);">手工录入{eq name="$field.part_free" value="1"}<span id="part_free_span" style="color: red;">[编辑]</span>{/eq}</label>&nbsp;
+                        <select name="arc_level_id" id="arc_level_id">
+                            {volist name="users_level" id="vo"}
+                            <option value="{$vo.level_id}" level_value="{$vo.level_value}" {eq name='$vo.level_id' value='$field.arc_level_id'} selected {/eq}>{$vo.level_name}</option>
+                            {/volist}
+                        </select>
+                        &nbsp;
+                        <label id="no_vip_pay_label" class="{neq name="$field.restric_type" value="2"} none {/neq}" ><input type="checkbox" name="no_vip_pay" id="no_vip_pay" value="1" {eq name="$field.no_vip_pay" value="1"}checked="checked"{/eq} onClick="clickNoVipPay(this);">开启非会员付费</label>
+                		<p class="notic">包括等于或高于指定的会员等级</p>
+					</dd>
+                </dl>
+                <dl class="row {if condition='in_array($field.restric_type, [0]) || ($field.restric_type == 2 && $field.no_vip_pay == 0) '} none {/if}" id="dl_users_price">
+                    <dt class="tit">
+                        <label for="users_price"><em>*</em>购买价格</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="users_price" id="users_price" value="{$field.users_price}" class="input-txt" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" onpaste="this.value=this.value.replace(/[^\d\.]/g,'')" style="width: 100px !important;text-align: right;">&nbsp;元
                         <span class="err"></span>
                         <p class="notic"></p>
                     </dd>
                 </dl>
-                <dl class="row {neq name="$field.part_free" value="2"} none {/neq}" id="size_dl">
-                    <dt class="tit">
-                        <label for="size">大小</label>
-                    </dt>
-                    <dd class="opt">
-                        <input type="text" name="size" value="{$field.size|default=1}" id="size" class="input-txt" maxlength="100" autocomplete="off" style="width: 100px !important;text-align: right;"> K
-                        <span class="err"></span>
-                        <p class="notic"></p>
-                    </dd>
-                </dl>
+
+                <div class="{if condition='empty($field.restric_type)'} none {/if}" id="div_free_html">
+                    <dl class="row" id="dl_part_free">
+                        <dt class="tit">
+                            <label for="title"><em>*</em>免费内容</label>
+                        </dt>
+                        <dd class="opt">
+                            <label class="curpoin"><input type="radio" name="part_free" value="0" {if condition="empty($field.part_free)"} checked {/if} onclick="change_part_free(this);">不预览</label>&nbsp;
+                            <label class="curpoin"><input type="radio" name="part_free" value="2" {if condition="!empty($field.part_free) and $field.part_free eq '2'"} checked {/if} onclick="change_part_free(this);">自动截取</label>&nbsp;
+                            <label class="curpoin"><input type="radio" name="part_free" value="1" {if condition="!empty($field.part_free) and $field.part_free eq '1'"} checked {/if} onclick="change_part_free(this);">手工录入{if condition="!empty($field.part_free) and $field.part_free eq '1'"}<span id="part_free_span" style="color: red;">[编辑]</span>{/if}</label>&nbsp;
+                            <span class="err"></span>
+                            <p class="notic"></p>
+                        </dd>
+                    </dl>
+                    <dl class="row {if condition="empty($field.part_free) or $field.part_free neq '2'"} none {/if}" id="dl_size">
+                        <dt class="tit">
+                            <label for="size">大小</label>
+                        </dt>
+                        <dd class="opt">
+                            <input type="text" name="size" value="{$field.size|default=1024}" id="size" class="input-txt" maxlength="100" autocomplete="off" style="width: 100px !important;text-align: right;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" onpaste="this.value=this.value.replace(/[^\d\.]/g,'')">&nbsp;字节(1024字节=1KB)
+                            <span class="err"></span>
+                            <p class="notic"></p>
+                        </dd>
+                    </dl>
+                </div>
+
             </div>
             {include file="archives/get_field_addonextitem" /}
         </div>
         <!-- 常规信息 -->
         <!-- SEO参数 -->
         <div class="ncap-form-default tab_div_2" style="display:none;">
-            <dl class="row" style="z-index:2;">
-                <dt class="tit">
-                    <label>TAG标签</label>
-                </dt>
-                <dd class="opt">          
-                    <input type="text" value="{$field.tags}" name="tags" id="tags" class="input-txt" placeholder="多个标签之间以逗号隔开" autocomplete="off" oninput="get_common_tagindex_input(this);" onfocus="$('#often_tags').hide();" onkeyup="this.value=this.value.replace(/[\，]/g,',');" onpaste="this.value=this.value.replace(/[\，]/g,',')">&nbsp;
-                    <a href="javascript:void(0);" onclick="get_common_tagindex(this);">显示常用标签</a>&nbsp;<img id="tag_loading" src="__STATIC__/common/images/loading.gif" style="display: none;" />
-                    <div class="often_tags" id="often_tags" style="display: none;"></div>
-                    <div class="often_tags" id="often_tags_input" style="display: none;"></div>
-                    <input type="hidden" id="tags_click_count">
-                </dd>
-            </dl>
             <dl class="row">
                 <dt class="tit">
                     <label for="seo_title">SEO标题</label>
                 </dt>
                 <dd class="opt">
                     <input type="text" value="{$field.seo_title}" name="seo_title" id="seo_title" class="input-txt">
+					<span class="err"></span>
                     <p class="notic">一般不超过80个字符，为空时系统自动构成，可以到 <a href="{:url('Seo/index', array('inc_type'=>'seo'))}">SEO设置 - SEO基础</a> 中设置构成规则。</p>
                 </dd>
             </dl>
@@ -163,7 +240,7 @@
                     <label>SEO关键词</label>
                 </dt>
                 <dd class="opt">          
-                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:40px;">{$field.seo_keywords}</textarea>
+                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:20px;">{$field.seo_keywords}</textarea>
                     <span class="err"></span>
                     <p class="notic">一般不超过100个字符，多个关键词请用英文逗号（,）隔开，建议3到5个关键词。</p>
                 </dd>
@@ -173,9 +250,11 @@
                     <label>SEO描述</label>
                 </dt>
                 <dd class="opt">          
-                    <textarea rows="5" cols="60" id="seo_description" name="seo_description" style="height:60px;">{$field.seo_description}</textarea>
+                    <textarea rows="5" cols="60" id="seo_description" name="seo_description" style="height:54px;" class="keywordsTextarea" onkeyup="monitorInputStr();" onkeypress="monitorInputStr();">{$field.seo_description}</textarea>
                     <span class="err"></span>
-                    <p class="notic">一般不超过200个字符，不填写时系统自动提取正文的前200个字符</p>
+                    <p class="notic">一般不超过100个字符，不填写时系统自动提取正文的前100个字符</p>
+                    <p class="notic2 {empty name='$field.seo_description'}none{/empty}" id="beenWritten">你已输入<span id="beenWrittenStr">0</span>个字符</p>
+                    <p><label><input type="checkbox" name="basic_update_seo_description" value="1" {if condition="!empty($global['basic_update_seo_description'])"} checked="checked" {/if}>勾选后SEO描述将随正文内容更新</label></p>
                 </dd>
             </dl>
         </div>
@@ -189,13 +268,26 @@
                 <dd class="opt">
                     <input type="hidden" value="{$field.users_id}" name="users_id" class="input-txt">
                     <input type="text" value="{$field.author}" name="author" id="author" class="input-txt">
-                    &nbsp;<a href="javascript:void(0);" onclick="set_author();" class="ncap-btn ncap-btn-green">设置</a>
+					<span class="err"></span>	
                     <p class="notic">设置作者默认名称（将同步至管理员笔名）</p>
+                </dd>
+            </dl>
+            <dl class="row dl_origin">
+                <dt class="tit">
+                    <label>来源</label>
+                </dt>
+                <dd class="opt origin-hot">
+                    <input type="text" value="{$field.origin}" name="origin" id="origin" class="input-txt" onclick="searchOrigin(this);" autocomplete="off">
+                    <div class="origin-hot-list" style="display: none;" id="search_keywords_list_origin"></div>
+                    <textarea id="system_originlist_str" style="display: none;">{$system_originlist_str}</textarea>
+                    <span class="setting" onclick="set_originlist();">设置</span>
+                    <span class="err"></span>
+                    <p class="notic">为空时默认“网络”</p>
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label>浏览量</label>
+                    <label>点击数</label>
                 </dt>
                 <dd class="opt">    
                     <input type="text" value="{$field.click}" name="click" id="click" class="input-txt">
@@ -218,6 +310,7 @@
                     <p class="notic"></p>
                 </dd>
             </dl>
+            <!-- #weapp_UsersGroup_content_users_id={$field.users_id}#--><!-- #weapp_UsersGroup_content# -->
             <dl class="row">
                 <dt class="tit">
                     <label for="articleForm">发布时间</label>
@@ -244,33 +337,58 @@
                     <span class="err"></span>
                 </dd>
             </dl>
-            <dl class="row" {notin name='$seo_pseudo' value='2'}style="display: none;"{/notin}>
+            <dl class="row {notin name='$seo_pseudo' value='2,3'}no-grey{/notin}">
                 <dt class="tit">
                     <label>自定义文件名</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" value="{$field.htmlfilename}" name="htmlfilename" id="htmlfilename" onkeyup="this.value=this.value.replace(/[^\w\-]/g,'-');" onpaste="this.value=this.value.replace(/[^\w\-]/g,'-');" class="input-txt">.html
+                    <input type="text" {notin name='$seo_pseudo' value='2,3'}readonly="readonly" title="动态模式下不支持自定义文档url"{/notin} value="{$field.htmlfilename}" name="htmlfilename" id="htmlfilename" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\u4E00-\u9FA5\w\-]/g,'-');" onpaste="this.value=this.value.replace(/[^\u4E00-\u9FA5\w\-]/g,'-');" class="input-txt {notin name='$seo_pseudo' value='2,3'}no-drop{/notin}">.html
                     <span class="err"></span>
                     <p class="notic">自定义文件名可由字母、数字、下划线(_)、连接符(-)等符号组成，除此之外其他字符将自动转为连接符(-)</p>
                 </dd>
             </dl>
         </div>
         <!-- 其他参数 -->
+        <!-- #weapp_demontrate_div# -->
+        <!-- #weapp_div# -->
         <div class="ncap-form-default">
-            <div class="bot">
-                <textarea name="free_content" id="free_content" style="display: none;">{$field.free_content}</textarea>
+            <div class="bot2">
+                <textarea name="free_content" id="free_content" style="display: none;">{notempty name="$field.free_content"}{$field.free_content}{/notempty}</textarea>
                 <input type="hidden" name="gourl" value="{$gourl|default=''}">
                 <input type="hidden" name="aid" value="{$field.aid|default='0'}">
+                <input type="hidden" name="editor_addonFieldExt" id="editor_addonFieldExt" value="">
                 <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                {include file="public/callback_page_2" /}<!-- 返回按钮 -->
             </div>
         </div> 
     </form>
 </div>
 <script type="text/javascript">
+    layui.use('laydate', function() {
+        var laydate = layui.laydate;
+
+        laydate.render({
+            elem: '#add_time'
+            ,type: 'datetime'
+        });
+    })
 
     $(function () {
-        $('#add_time').layDate();   
-     
+        try {
+            var web_citysite_open = {$global['web_citysite_open']|default=0};
+            if (web_citysite_open > 0) {
+                var province_id = {$field.province_id|default=0};
+                var city_id = {$field.city_id|default=0};
+                var area_id = {$field.area_id|default=0};
+                if (province_id > 0) {
+                    set_city_list(city_id);
+                }
+                if (city_id > 0) {
+                    set_area_list(area_id);
+                }
+            }
+        }catch(e){}
+        
         //选项卡切换列表
         $('.tab-base').find('.tab').click(function(){
             $('.tab-base').find('.tab').each(function(){
@@ -278,8 +396,10 @@
             });
             $(this).addClass('current');
             var tab_index = $(this).data('index');          
-            $(".tab_div_1, .tab_div_2, .tab_div_3").hide();          
+            $(".tab_div_1, .tab_div_2, .tab_div_3").hide();
+            $(".tab_div_body").hide();
             $(".tab_div_"+tab_index).show();
+            layer.closeAll();
         });
 
         $('input[name=is_jump]').click(function(){
@@ -313,33 +433,88 @@
             $('#often_tags').show();
             event.stopPropagation();
         });
+
+        $('input[name=restric_type]').click(function(){
+            $('#dl_arc_level_id').hide();
+            $('#dl_users_price').hide();
+            $('#no_vip_pay_label').hide();
+            $('#div_free_html').hide();
+            var restric_type = $(this).val();
+            $('#arc_level_id').find('option:eq(0)').attr('selected',true);
+            if (0 < restric_type) {
+                $('#div_free_html').show();
+            }
+            if (-1 < $.inArray(restric_type, ['1','3'])) {
+                $('#dl_users_price').show();
+            }
+            if (-1 < $.inArray(restric_type, ['2','3'])) {
+                $('#dl_arc_level_id').show();
+                if (2 == restric_type) {
+                    $('#no_vip_pay_label').show();
+                    if ($('#no_vip_pay').is(':checked')){
+                        $('#dl_users_price').show();
+                    }
+                }
+            }
+        });
     });
 
     // 判断输入框是否为空
     function check_submit(){
         if($.trim($('input[name=title]').val()) == ''){
-            showErrorMsg('标题不能为空！');
             $($('.tab-base').find('.tab')[0]).trigger('click'); 
+            showErrorMsg('标题不能为空！');
             $('input[name=title]').focus();
             return false;
         }
         if ($('#typeid').val() == 0) {
-            showErrorMsg('请选择栏目…！');
             $($('.tab-base').find('.tab')[0]).trigger('click'); 
+            showErrorMsg('请选择栏目…！');
             $('#typeid').focus();
             return false;
         }
+        var restric_type = $('input[name=restric_type]:checked').val()
+        if ( restric_type == 1 ||  restric_type == 3 || (restric_type == 2 && $('#no_vip_pay').is(':checked'))){
+            var users_price = $('#users_price').val();
+            if (parseFloat(users_price).toString()  == "NaN") {
+                users_price = 0;
+            }
+            if (0 == users_price || users_price == '') {
+                showErrorMsg('购买价格不能为空或0');
+                $('#users_price').focus();
+                return false;
+            } else {
+                var exp = /^(([1-9]\d*)|\d)(\.\d{1,2})?$/;
+                if (!exp.test(users_price)) {
+                    showErrorMsg('购买价格格式不正确！');
+                    $('#users_price').focus();
+                    return false;
+                }
+            }
+        }
         
+        var htmlfilename = $.trim($('input[name=htmlfilename]').val());
+        if (htmlfilename != '') {
+            var exp = /^\d{1,}$/;
+            if (exp.test(htmlfilename)) {
+                showErrorAlert('自定义文件名不能纯数字，会与文档ID冲突！');
+                $('input[name=htmlfilename]').focus();
+                return false;
+            }
+        }
+
         layer_loading('正在处理');
         if(!ajax_check_htmlfilename())
         {
             layer.closeAll();
-            showErrorMsg('自定义文件名已存在！');
+            showErrorMsg('同栏目下，自定义文件名已存在！');
             $('input[name=htmlfilename]').focus();
             return false;
         }
-
-        $('#post_form').submit();
+        setTimeout(function (){
+            editor_auto_210607();
+            $('#post_form').submit();
+        }, 1);
     }
 
     function img_call_back(fileurl_tmp)
@@ -349,17 +524,18 @@
         $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
         $("input[name=is_litpic]").attr('checked', true); // 自动勾选属性[图片]
     }
+    
     function change_part_free(e) {
         if (1 == $(e).val()){
-            $('#size_dl').hide();
+            $('#dl_size').hide();
             $('#part_free_span').show();
             open_free_content();
         }else if (2 == $(e).val()){
             $('#part_free_span').hide();
-            $('#size_dl').show();
+            $('#dl_size').show();
         } else{
             $('#part_free_span').hide();
-            $('#size_dl').hide();
+            $('#dl_size').hide();
         }
     }
     function open_free_content() {
@@ -367,10 +543,27 @@
         layer.open({
             type: 2,
             title:'请输入预览内容',
+            shade: layer_shade,
             area: ['90%', '90%'], //宽高
             content: url
         });
     }
+    function clickNoVipPay(obj) {
+        if ($(obj).is(':checked')) {
+            $('#dl_users_price').show();
+        } else {
+            $('#dl_users_price').hide();
+        }
+    }
 </script>
-
+<script>
+    try{
+        var mt20_1649209614 = sessionStorage.getItem("mt20_1649209614");
+        if (mt20_1649209614 == 1){
+            $("#geduan_div").removeClass("h10");
+        }else{
+            $("#geduan_div").addClass("h10");
+        }
+    }catch(e){}
+</script>
 {include file="public/footer" /}

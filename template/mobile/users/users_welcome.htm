@@ -7,46 +7,52 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
         <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-
-        <!-- 新样式 2020-12-8 -->
         {eyou:static file="users/skin/css/element/index.css" /}
         {eyou:static file="users/skin/userfont/iconfont.css" /}
         {eyou:static file="users/skin/css/e-user.css" /}
         {eyou:include file="users/skin/css/diy_css.htm"/}
-
         {eyou:static file="/public/static/common/js/jquery.min.js"/}
-        {eyou:static file="users/skin/js/bootstrap.min.js"/}
         {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
-        {eyou:static file="users/skin/js/global.js"/}
-
+        {eyou:static file="/public/static/common/js/mobile_global.js"/}
     </head>
+
     <body>
         <div class="ey-container">
             <div class="ey-header">
                 <div class="ey-header-top">
+                    <a href="{eyou:url link='user/Users/info' /}" class="user-settings"><i class="el-icon-setting"></i></a>
                     <div class="user-info">
                         <div class="user-info-top">
-                            <div class="user-info-l face"><a href="{eyou:url link='user/Users/info' /}"><img id="head_pic_a" src="{$users.head_pic|get_head_pic=###}"/></a></div>
+                            <div class="user-info-l face">
+                                <a href="{eyou:url link='user/Users/info' /}"><img id="head_pic_a" src="{$users.head_pic|get_head_pic=###}"/></a>
+                            </div>
+                            {empty name="$users_id"}
                             <div class="user-info-m">
-                                <div class="name">{$users.username}{switch name="$users.level" }
-                        {case value="1"} <span class="yey-user-list-vip1"></span> {/case}
-                        {case value="2"} <span class="yey-user-list-vip2"></span> {/case}
-                        {case value="3"} <span class="yey-user-list-vip3"></span>  {/case}
-                    {/switch}</div>
+                                <div class="name"></div>
+                                <div class="level"><span><a href="{eyou:url link='user/Users/info' /}">点击登录</a></span></div>
+                            </div>
+                            {else/}
+                            <div class="user-info-m">
+                                <div class="name">
+                                    <a href="{eyou:url link='user/Users/info' /}">{$users.nickname|default=$users.username}</a>
+                                    <span class="yey-user-list-vip{eyou:egt name='$users.level' value='3'}3{else/}{$users.level}{/eyou:egt}"></span>
+                                </div>
                                 <div class="level">
-                                        <span>{$users.level_name}</span>&emsp;&emsp;{eyou:neq name='$users.level' value='1'} 剩余会员天数：<span class="red">{$users.maturity_date}</span> {/eyou:neq}
+                                    <span class="set">{$users.level_name}</span>&emsp;&emsp;
+                                    {eyou:neq name='$users.level' value='1'}剩余会员天数：<span class="red">{$users.maturity_date}</span>{/eyou:neq}
                                 </div>
                             </div>
+                            {/empty}
                             <div class="user-info-r"></div>
                         </div>
-                        <!-- 信息统计 start -->
+
                         <div class="user-info-bottom">
                             <a href="{eyou:url link='user/Users/score_index' /}" class="user-info-item">
-                                <span id="users_scores">{$users.scores}</span>
-                                <span>{$score_name}</span>
+                                <span id="usersScores">{$users.scores|default=0}</span>
+                                <span>{$score_name|default=''}</span>
                             </a>
                             <a href="{eyou:url link='user/Pay/pay_consumer_details' /}" class="user-info-item">
-                                <span>{$users.users_money}</span>
+                                <span>{$users.users_money|default=0}</span>
                                 <span>余额</span>
                             </a>
                             {egt name='$php_servicemeal' value='1'}
@@ -60,214 +66,177 @@
                                 <span>足迹</span>
                             </a>
                         </div>
-                        <!-- 信息统计 end -->
-                    </div>
-                </div>
-            </div>  
-                
-            <div class="nav-row mt15">
-                <div class="goods-nav-main">
-                    <div class="goods-nav">
-                        {if 1 < $php_servicemeal && isset($others.signin_conf) && isset($others.signin_conf.score_signin_status) && $others.signin_conf.score_signin_status == 1}
-                            {if !$others.signin_info}
-                            <span class="nav-item" id="user_signin_ahref" {if !$others.signin_info} data-url="{:url('api/Ajax/signin_save')}" onclick="userSignin(this);" {/if}>
-                                <span class="nav-item-icon">
-                                    <i class="iconfont icon-qiandao" style="color:#35dabb;"></i>
-                                </span>
-                                <span class="link" id="user_signin">
-                                    签到
-                                </span>
-                            </span>
-                            {else/}
-                            <span class="nav-item">
-                                <span class="nav-item-icon">
-                                        <i class="iconfont icon-qiandao" style="color:#35dabb;"></i>
-                                </span>
-                                <span class="link">
-                                    已签到
-                                </span>
-                            </span>
-                            {/if}
-                        {/if}
-                        {if isset($usersConfig['level_member_upgrade']) && $usersConfig['level_member_upgrade'] == 1}
-                        <a href="{eyou:url link='user/Level/level_centre'/}" class="nav-item">
-                            <span class="nav-item-icon">
-                                <i class="iconfont icon-huiyuanshengji" style="color:#ffc107;"></i>
-                            </span>
-                            {eyou:gt name='$users.level' value='1'}
-                                <span>升级会员</span>
-                            {eyou:else /}
-                                <span>开通会员</span>
-                            {/eyou:gt}
-                        </a>
-                        {/if}
-                        <a href="{eyou:url link='user/Users/collection_index' /}" class="nav-item">
-                            <span class="nav-item-icon">
-                                <i class="iconfont icon-shoucang" style="color:#ffc107;"></i>
-                            </span>
-                            <span>收藏</span>
-                        </a>
-                        <a href="{eyou:url link='user/Pay/pay_account_recharge'/}" class="nav-item">
-                            <span class="nav-item-icon">
-                                <i class="iconfont icon-yue" style="color:#fe755b;"></i>
-                            </span>
-                            <span>账户充值</span>
-                        </a>
                     </div>
                 </div>
             </div>
+
             <!-- 商城导航 start -->
             {if isset($usersConfig['shop_open']) && $usersConfig['shop_open'] == 1 && $php_servicemeal > 1}
             <div class="nav-row mt15">
                 <div class="goods-nav-main">
                     <div class="column-title">
                         <div class="column-title-l">我的订单</div>
-                         <div class="column-title-r"><a href="{eyou:url link='user/Shop/shop_centre'/}">更多</a></div>  
+                        <div class="column-title-r">
+                            <a href="{eyou:url link='user/Shop/shop_centre'/}">更多<i class="el-icon-arrow-right"></i></a>
+                        </div>  
                     </div>
-                    <div class="goods-nav mt10">
-                        <a href="{eyou:url link='user/Shop/shop_centre'/}" class="nav-item">
-                            <span class="nav-item-icon2">
-                                <i class="iconfont icon-dingdan"></i>
-                            </span>
-                            <span>全部订单</span>
-                        </a>
-                        <a href="{:url('user/Shop/shop_centre', ['select_status'=>'dzf'])}" class="nav-item">
-                            <span class="nav-item-icon2">
-                                <i class="iconfont icon-daifukuan"></i>
-                            </span>
+                    {eyou:spstatus id="order"}
+                    <div class="goods-nav">
+                        <a href="{:url('user/Shop/shop_centre', ['select_status'=>'dzf'])}" class="nav-item nav-item-a">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/nav1.png' /}"></span>
                             <span>待付款</span>
+                            <span class="fb">{$order.PendingPayment}</span>
                         </a>
-                        <a href="{:url('user/Shop/shop_centre', ['select_status'=>2])}" class="nav-item">
-                            <span class="nav-item-icon2">
-                                <i class="iconfont icon-daishouhuo"></i>
-                            </span>
+                        <a href="{:url('user/Shop/shop_centre', ['select_status'=>2])}" class="nav-item nav-item-a">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/nav2.png' /}"></span>
                             <span>待收货</span>
+                            <span class="fb">{$order.PendingReceipt}</span>
                         </a>
-                        <a href="{:url('user/Shop/shop_centre', ['select_status'=>3])}" class="nav-item">
-                            <span class="nav-item-icon2">
-                                <i class="iconfont icon-wancheng"></i>
-                            </span>
+                        <a href="{:url('user/Shop/shop_centre', ['select_status'=>3])}" class="nav-item nav-item-a">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/nav4.png' /}"></span>
                             <span>已完成</span>
+                            <span class="fb">{$order.Completed}</span>
                         </a>
                         {gt name='$php_servicemeal' value='1'}
-                        <a href="{:url('user/Shop/after_service')}" class="nav-item">
-                            <span class="nav-item-icon2">
-                                <i class="iconfont icon-shouhou"></i>
-                            </span>
+                        <a href="{:url('user/Shop/after_service')}" class="nav-item nav-item-a">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/nav5.png' /}"></span>
                             <span>售后</span>
+                            <span class="fb">{$order.AfterService}</span>
                         </a>
                         {/gt}
+                        {if isset($usersConfig['shop_open']) && $usersConfig['shop_open'] == 1 && $php_servicemeal >= 2}
+                        <a href="{eyou:url link='user/ShopComment/need_comment_list'/}" class="nav-item nav-item-a">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/nav6.png' /}"></span>
+                            <span>待评价</span>
+                            <span class="fb">{$order.waitComment}</span>
+                        </a>
+                        {/if}
                     </div>
+                    {/eyou:spstatus}
                 </div>
             </div>
             {/if}
             <!-- 商城导航 end -->
-            <!-- 导航列表 start -->
-            <div class="ey-row">
-                <div class="item-list">
-                    <a href="{eyou:url link='user/Users/info' /}" class="item">
-                        <div class="item-l">个人信息</div> 
-                        <div class="item-m tr"></div> 
-                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
-                    </a> 
-                    {if isset($usersConfig['shop_open']) && $usersConfig['shop_open'] == 1}
-                    <a href="{eyou:url link='user/Shop/shop_address_list'/}" class="item">
-                        <div class="item-l">收货地址</div> 
-                        <div class="item-m tr"></div> 
-                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
-                    </a>
-                    {/if}
-                    {if isset($usersConfig['users_open_release']) && $usersConfig['users_open_release'] == 1}
-                    <a href="{:url('user/UsersRelease/release_centre', ['list'=>1])}"  class="item">
-                        <div class="item-l">投稿中心</div> 
-                        <div class="item-m tr"></div> 
-                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
-                    </a>
-                    {/if}
-                    {if isset($part_channel['download']['status']) && $part_channel['download']['status'] == 1}
-                    <a href="{eyou:url link='user/Download/index'/}" class="item">
-                        <div class="item-l">我的下载</div>
-                        <div class="item-m tr"></div> 
-                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
-                    </a>
-                    {/if}
-                    {if isset($part_channel['article']['data']['is_article_pay']) && $part_channel['article']['data']['is_article_pay'] == 1}
-                    <a href="{eyou:url link='user/Users/article_index'/}" class="item">
-                        <div class="item-l">我的文章</div>
-                        <div class="item-m tr"></div>
-                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
-                    </a>
-                    {/if}
-                    {if isset($part_channel['media']['status']) && $part_channel['media']['status'] == 1 && $php_servicemeal > 1}
-                    <a href="{eyou:url link='user/Users/media_index' /}" class="item">
-                        <div class="item-l">我的视频</div>
-                        <div class="item-m tr"></div> 
-                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
-                    </a>
-                    {/if}
-                    {if isset($usersConfig['shop_open']) && $usersConfig['shop_open'] == 1 && $php_servicemeal >= 2}
-                    <a href="{eyou:url link='user/ShopComment/index'/}" class="item">
-                        <div class="item-l">我的评价</div>
-                        <div class="item-m tr"></div> 
-                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
-                    </a>
-                    {/if}
-                    {if isset($part_channel['ask']['status']) && $part_channel['ask']['status'] == 1 && $php_servicemeal >= 2}
-                    <a href="{eyou:url link='user/Ask/ask_index' /}" class="item">
-                        <div class="item-l">我的问答</div>
-                        <div class="item-m tr"></div>
-                        <div class="item-r"><i class="el-icon-arrow-right"></i></div>
-                    </a>
-                    {/if}
+                
+            <div class="nav-row mt15">
+                <div class="goods-nav-main">
+                    <div class="column-title"><div class="column-title-l">快捷功能</div></div>
+                    <div class="goods-nav">
+                        {if isset($others.signin_conf.score_signin_status) && $others.signin_conf.score_signin_status == 1 && $php_servicemeal > 1}
+                        <span class="nav-item" {if !$others.signin_info} onclick="userSignin(this);" {/if}>
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/tool9.png' /}"></span>
+                            <span class="link" id="user_signin">{if !$others.signin_info}签到{else/}已签到{/if}</span>
+                        </span>
+                        {/if}
+                        {if isset($usersConfig['level_member_upgrade']) && $usersConfig['level_member_upgrade'] == 1}
+                        <a href="{eyou:url link='user/Level/level_centre'/}" class="nav-item">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/tool5.png' /}"></span>
+                            {eyou:gt name='$users.level' value='1'}<span>升级会员</span>{eyou:else /}<span>开通会员</span>{/eyou:gt}
+                        </a>
+                        {/if}
+                        <a href="{eyou:url link='user/Users/collection_index' /}" class="nav-item">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/tool8.png' /}"></span>
+                            <span>我的收藏</span>
+                        </a>
+                        <a href="{eyou:url link='user/Pay/pay_account_recharge'/}" class="nav-item">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/tool3.png' /}"></span>
+                            <span>账户充值</span>
+                        </a>
+                        {if isset($usersConfig['shop_open']) && $usersConfig['shop_open'] == 1}
+                        <a href="{eyou:url link='user/Shop/shop_address_list'/}" class="nav-item">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/tool13.png' /}"></span>
+                            <span>收货地址</span>
+                        </a>
+                        {/if}
+                        {if isset($usersConfig['users_open_release']) && $usersConfig['users_open_release'] == 1}
+                        <a href="{:url('user/UsersRelease/release_centre', ['list'=>1])}" class="nav-item">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/tool14.png' /}"></span>
+                            <span>投稿中心</span>
+                        </a>
+                        {/if}
+                        {notempty name="$usersOrderUrl"}
+                        {if condition="isset($partChannel['article']['data']['is_article_pay']) && $partChannel['article']['data']['is_article_pay'] == 1"}
+                        <a href="{eyou:url link='user/Users/article_index'/}" class="nav-item">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/tool18.png' /}"></span>
+                            <span>会员订单</span>
+                        </a>
+                        {elseif condition="isset($partChannel['download']['data']['is_download_pay']) && $partChannel['download']['data']['is_download_pay'] == 1" /}
+                        <a href="{eyou:url link='user/Users/download_index'/}" class="nav-item">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/tool18.png' /}"></span>
+                            <span>会员订单</span>
+                        </a>
+                        {elseif condition="isset($partChannel['media']['data']['is_media_pay']) && $partChannel['media']['data']['is_media_pay'] == 1" /}
+                        <a href="{eyou:url link='user/Users/media_index'/}" class="nav-item">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/tool18.png' /}"></span>
+                            <span>会员订单</span>
+                        </a>
+                        {/if}
+                        {/notempty}
+                        {notempty name="$users_id"}
+                        <a href="{eyou:url link='user/Users/logout' /}" class="nav-item">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/tool19.png' /}"></span>
+                            <span>退出登录</span>
+                        </a>
+                        {/notempty}
+                    </div>
                 </div>
             </div>
-            
-            <!-- 导航列表 end -->
-            <div class="user-logout mb10">
-                <a class="el-button el-button--primary el-button--medium" href="{eyou:url link='user/Users/logout' /}">退出登录</a>
+
+            <div class="nav-row mt15 mb15 hide" id="eyExpandTpl">
+                <div class="goods-nav-main">
+                    <div class="column-title"><div class="column-title-l">拓展应用</div></div>
+                    <div class="goods-nav">
+                        {if condition="1 == $usersConfig.dealer_open && 1 == $users.allowApply"}
+                        <a {empty name="$users.dealer.dealer_id"} href="{eyou:url link='plugins/DealerPlugin/dealer_apply'/}" {else/} href="{eyou:url link='plugins/DealerPlugin/dealer_index'/}" {/empty} class="nav-item">
+                            <span class="nav-item-icon3"><img src="{$users.dealer.dealer_pic|default=''}"></span>
+                            <span>{empty name="$users.dealer.dealer_id"}申请分销商{else/}分销中心{/empty}</span>
+                        </a>
+                        {/if}
+
+                        {if condition="in_array('memgift', $useFunc) && $php_servicemeal > 1"}
+                        <a href="{eyou:url link='user/Memgift/users_gift_list' /}" class="nav-item">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/user-getgift-100x100.png' /}"></span>
+                            <span>积分兑换</span>
+                        </a>
+                        {/if}
+                        {egt name='$php_servicemeal' value='2'}
+                            {notempty name="$part_channel.ask.status"}
+                            <a href="{eyou:url link='user/Ask/ask_index' /}" class="nav-item">
+                                <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/user-ask-100x100.png' /}"></span>
+                                <span>我的问答</span>
+                            </a>
+                            {/notempty}
+                        {/egt}
+                        {notempty name="$others.weapp_menu_info"}
+                            {volist name="$others.weapp_menu_info" id="vo"}
+                            <a href="{:url($vo.mca)}" class="nav-item">
+                                <span class="nav-item-icon3"><img src="{$Think.const.ROOT_DIR}{$vo.litpic}"></span>
+                                <span>{$vo.title}</span>
+                            </a>
+                            {/volist}
+                        {/notempty}
+                    </div>
+                </div>
             </div>
+
+            <!-- 招聘插件 start -->
+            {if condition="file_exists(ROOT_PATH.'weapp/Recruits/template/eyoucms/users_v2x/users_leftmenu_m.htm')"}
+                {eyou:include file="/weapp/Recruits/template/eyoucms/users_v2x/users_leftmenu_m.htm" /}
+            {/if}
+            <!-- 招聘插件 end -->
                        
             <!-- 底部导航 start -->
             <div class="h50"></div>
             <div class="footer-nav">
-				{eyou:volist name="$bottom_menu_list" id="vo"}
-				<a href="{:url($vo.mca)}" class="nav-item">
-					<div class="nav-item-t"><i class="iconfont icon-{$vo.icon}"></i></div>
-					<div class="nav-item-b">{$vo.title}</div>
-				</a>
-				{/eyou:volist}
+                {eyou:volist name="$bottom_menu_list" id="vo"}
+                <a href="{eq name='$vo.icon' value='xingxing'}{$vo.mca}{else /}{:url($vo.mca)}{/eq}" class="nav-item">
+                    <div class="nav-item-t"><i class="iconfont icon-{$vo.icon}"></i></div>
+                    <div class="nav-item-b">{$vo.title}</div>
+                </a>
+                {/eyou:volist}
             </div>
             <!-- 底部导航 end -->
         </div>
-
-        <script type="text/javascript">
-            // 签到
-            function userSignin(obj) {
-                layer_loading('正在处理');
-                $.ajax({
-                    type: "POST",
-                    url: $(obj).attr('data-url'),
-                    data: {_ajax:1},
-                    dataType: 'json',
-                    success: function (res) {
-                        layer.closeAll();
-                        if(res.code == 1){
-                            layer.msg(res.msg, {icon: 6, time:1500});
-                            $("#user_signin").html("已签到");
-                            $("#user_signin_ahref").removeAttr("onclick");
-                            $("#user_signin_ahref").removeAttr("data-url");
-                            $("#users_scores").html(res.data.scores);
-                        }else{
-                            showErrorAlert(res.msg);
-                        }
-                    },
-                    error:function(e){
-                        layer.closeAll();
-                        showErrorAlert(e.responseText);
-                    }
-                });
-            }
-        </script>
-
+        {eyou:static file="users/skin/js/users_welcome.js"/}
     </body>
 </html>

@@ -56,8 +56,9 @@ class PayApi extends Model
         $data['appid']            = $wechat['appid'];
         $data['mch_id']           = $wechat['mchid'];
         $data['nonce_str']        = getTime();
-        $data['trade_type']       = "NATIVE";
+        $data['trade_type']       = "JSAPI";
         $data['notify_url']       = url('user/Pay/pay_deal_with');
+        $data['openid']           = getTime();
 
         // 签名加密
         $sign = $this->getParam($data);
@@ -71,6 +72,7 @@ class PayApi extends Model
            <nonce_str>".$data['nonce_str']."</nonce_str>
            <notify_url>".$data['notify_url']."</notify_url>
            <out_trade_no>".$data['out_trade_no']."</out_trade_no>
+           <openid>".$data['openid']."</openid>
            <spbill_create_ip>".$data['spbill_create_ip']."</spbill_create_ip>
            <total_fee>".$data['total_fee']."</total_fee>
            <trade_type>".$data['trade_type']."</trade_type>
@@ -84,16 +86,18 @@ class PayApi extends Model
         // 转换回数组格式
         $result = $this->xmlToArray($result);
 
-        // 返回结果
-        if($result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK') {
-            return $result['code_url'];
-        } else {
-            if ('签名错误' == $result['return_msg']) {
-                $result['return_msg'] = '微信KEY值错误！';
+        // 请求接口成功
+        if (!empty($result['return_code']) && $result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK') {
+            return true;
+        }
+        // 请求接口失败
+        else if (!empty($result['return_code']) && $result['return_code'] == 'FAIL') {
+            if (stristr($result['return_msg'], '签名错误')) {
+                $result['return_msg'] = '微信支付KEY密钥不正确';
             } else if (stristr($result['return_msg'], 'mch_id')) {
-                $result['return_msg'] = '微信商户号错误！';
+                $result['return_msg'] = '微信支付商户号配置不正确';
             } else if (stristr($result['return_msg'], 'appid')) {
-                $result['return_msg'] = '微信AppId错误！';
+                $result['return_msg'] = '微信支付AppID配置不正确';
             }
             return $result;
         }
@@ -206,7 +210,10 @@ class PayApi extends Model
                 return 'ok';
             } else if ('40001' == $result['code'] && 'Missing Required Arguments' == $result['msg']) {
                 return '商户私钥错误！';
-            } else if (!is_array($result)) {
+            } else if (is_array($result)) {
+                $msg = !empty($result['sub_msg']) ? $result['sub_msg'] : '请确保配置正确，且检查支付宝平台的权限';
+                return $msg;
+            } else {
                 return $result;
             }
         }

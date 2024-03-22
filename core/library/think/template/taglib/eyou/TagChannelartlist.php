@@ -15,29 +15,28 @@ namespace think\template\taglib\eyou;
 
 use think\Request;
 use think\Db;
+use app\common\model\Arctype;
 
 /**
  * 获取当前频道的下级栏目的内容列表标签
  */
 class TagChannelartlist extends Base
 {
-    public $tid = '';
-    
+    public $currentclass = '';
+    public $parent_arr = [];
+
     //初始化
     protected function _initialize()
     {
         parent::_initialize();
         /*应用于文档列表*/
         if ($this->aid > 0) {
-            $cacheKey = 'tagChannelartlist_'.strtolower('home_'.CONTROLLER_NAME.'_'.ACTION_NAME);
-            $cacheKey .= "_{$this->aid}";
-            $this->tid = cache($cacheKey);
-            if ($this->tid == false) {
-                $this->tid = Db::name('archives')->where('aid', $this->aid)->getField('typeid');
-                cache($cacheKey, $this->tid);
-            }
+            $this->tid = $this->get_aid_typeid($this->aid);
         }
         /*--end*/
+        $arctype_obj = new Arctype();
+        $arctype_arr = $arctype_obj->getAllPid($this->tid);
+        $this->parent_arr = get_arr_column($arctype_arr,'id');
     }
 
     /**
@@ -46,19 +45,29 @@ class TagChannelartlist extends Base
      * @param boolean $self 包括自己本身
      * @author wengxianhu by 2018-4-26
      */
-    public function getChannelartlist($typeid = '', $type = 'self')
+    public function getChannelartlist($typeid = '', $type = 'self', $currentclass = '')
     {
+        $this->currentclass = $currentclass;
         $typeid = !empty($typeid) ? $typeid : $this->tid;
 
         // 栏目ID为空则默认顶级栏目
-        if (empty($typeid)) $type = 'top';
-        
-        // 多语言
-        if (!empty($typeid)) {
+        if (empty($typeid)) {
+            $type = 'top';
+        } else {
+            // 多语言
             $typeid = model('LanguageAttr')->getBindValue($typeid, 'arctype');
             if (empty($typeid)) {
-                echo '标签channelartlist报错：找不到与第一套【'.$this->main_lang.'】语言关联绑定的属性 typeid 值 。';
+                echo '标签channelartlist报错：找不到与第一套【'.self::$main_lang.'】语言关联绑定的属性 typeid 值 。';
                 return false;
+            } else {
+                if (self::$language_split) {
+                    $this->lang = Db::name('arctype')->where(['id'=>$typeid])->cache(true, EYOUCMS_CACHE_TIME, 'arctype')->value('lang');
+                    if ($this->lang != self::$home_lang) {
+                        $lang_title = Db::name('language_mark')->where(['mark'=>self::$home_lang])->value('cn_title');
+                        echo "标签channel报错：【{$lang_title}】语言 typeid 值不存在。";
+                        return false;
+                    }
+                }
             }
         }
 
@@ -134,12 +143,22 @@ class TagChannelartlist extends Base
         $map['is_hidden'] = 0;
         $map['status'] = 1;
         $map['is_del'] = 0;
-        $result = Db::name('arctype')->field('*, id as typeid')
-            ->where($map)
-            ->where('lang', $this->home_lang)
-            ->order('sort_order asc')
-            ->select();
 
+        $group_user_where = $this->diy_get_users_group_arctype_query_builder();   //会员分组查询条件
+        if (empty($group_user_where)){
+            $result = Db::name('arctype')->field('*, id as typeid')
+                ->where($map)
+                ->order('sort_order asc')
+                ->select();
+        }else{
+            $result = Db::name('arctype')->alias("a")
+                ->join("weapp_users_group_arctype b",'a.id = b.type_id','left')
+                ->field('a.*, id as typeid')
+                ->where($map)
+                ->where($group_user_where)
+                ->order('sort_order asc')
+                ->select();
+        }
         if ($result) {
             $ctl_name_list = model('Channeltype')->getAll('id,ctl_name', array(), 'id');
             foreach ($result as $key => $val) {
@@ -151,10 +170,15 @@ class TagChannelartlist extends Base
                     $typeurl = typeurl('home/'.$ctl_name."/lists", $val);
                 }
                 $val['typeurl'] = $typeurl;
-
                 // 封面图
                 $val['litpic'] = handle_subdir_pic($val['litpic']);
-
+                /*标记栏目被选中效果*/
+                if (!empty($this->parent_arr) && in_array($val['id'],$this->parent_arr)) {
+                    $val['currentclass'] = $val['currentstyle'] = $this->currentclass;
+                } else {
+                    $val['currentclass'] = $val['currentstyle'] = '';
+                }
+                /*--end*/
                 $result[$key] = $val;
             }
         }
@@ -179,11 +203,21 @@ class TagChannelartlist extends Base
             'status'    => 1,
             'is_del'    => 0,
         );
-        $result = Db::name('arctype')->field('*, id as typeid')
-            ->where($map)
-            ->where('lang', $this->home_lang)
-            ->order('sort_order asc')
-            ->select();
+        $group_user_where = $this->diy_get_users_group_arctype_query_builder();   //会员分组查询条件
+        if (empty($group_user_where)){
+            $result = Db::name('arctype')->field('*, id as typeid')
+                ->where($map)
+                ->order('sort_order asc')
+                ->select();
+        }else{
+            $result = Db::name('arctype')->alias("a")
+                ->join("weapp_users_group_arctype b",'a.id = b.type_id','left')
+                ->field('a.*, id as typeid')
+                ->where($map)
+                ->where($group_user_where)
+                ->order('sort_order asc')
+                ->select();
+        }
 
         if ($result) {
             $ctl_name_list = model('Channeltype')->getAll('id,ctl_name', array(), 'id');
@@ -199,6 +233,13 @@ class TagChannelartlist extends Base
 
                 // 封面图
                 $val['litpic'] = handle_subdir_pic($val['litpic']);
+                /*标记栏目被选中效果*/
+                if (!empty($this->parent_arr) && in_array($val['id'],$this->parent_arr)) {
+                    $val['currentclass'] = $val['currentstyle'] = $this->currentclass;
+                } else {
+                    $val['currentclass'] = $val['currentstyle'] = '';
+                }
+                /*--end*/
                 
                 $result[$key] = $val;
             }
@@ -219,12 +260,23 @@ class TagChannelartlist extends Base
             'status'    => 1,
             'is_del'    => 0,
         );
-        $result = Db::name('arctype')->field('*, id as typeid')
-            ->where($map)
-            ->where('lang', $this->home_lang)
-            ->order('sort_order asc')
-            ->select();
-
+        $group_user_where = $this->diy_get_users_group_arctype_query_builder();   //会员分组查询条件
+        if (empty($group_user_where)){
+            $result = Db::name('arctype')->field('*, id as typeid')
+                ->where($map)
+                ->where('lang', $this->lang)
+                ->order('sort_order asc')
+                ->select();
+        }else{
+            $result = Db::name('arctype')->alias("a")
+                ->join("weapp_users_group_arctype b",'a.id = b.type_id','left')
+                ->field('a.*, id as typeid')
+                ->where($map)
+                ->where('lang', $this->lang)
+                ->where($group_user_where)
+                ->order('sort_order asc')
+                ->select();
+        }
         if ($result) {
             $ctl_name_list = model('Channeltype')->getAll('id,ctl_name', array(), 'id');
             foreach ($result as $key => $val) {
@@ -239,7 +291,13 @@ class TagChannelartlist extends Base
 
                 // 封面图
                 $val['litpic'] = handle_subdir_pic($val['litpic']);
-                
+                /*标记栏目被选中效果*/
+                if (!empty($this->parent_arr) && in_array($val['id'],$this->parent_arr)) {
+                    $val['currentclass'] = $val['currentstyle'] = $this->currentclass;
+                } else {
+                    $val['currentclass'] = $val['currentstyle'] = '';
+                }
+                /*--end*/
                 $result[$key] = $val;
             }
         }

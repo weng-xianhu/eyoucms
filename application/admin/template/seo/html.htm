@@ -59,10 +59,10 @@
             // $(".listbox").html('');
             var timestamp1 = Date.parse(new Date());
             $.ajax({
-                url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildIndex",
-                type:'POST',
+                url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildIndex&_ajax=1",
+                type:'GET',
                 dataType:'json',
-                data: {_ajax:1},
+                data: {},
                 beforeSend:function(){
                     layer_loading('正在处理');
                     // var index = layer.load(0, {shade: false}); 

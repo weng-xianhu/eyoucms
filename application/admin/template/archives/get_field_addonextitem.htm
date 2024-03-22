@@ -1,4 +1,4 @@
-<span id="FieldAddonextitem"></span>
+<span id="FieldAddonextitem" class="custom_fields"></span>
 <script type="text/javascript">
     $(function() {
         var aidNew = {$field.aid|default='0'};
@@ -6,17 +6,17 @@
         if (!typeidNew) typeidNew = {$field.typeid|default='0'};
         var channeltypeNew = {$channeltype|default='0'};
         var ControllerName = '{$Think.const.CONTROLLER_NAME}';
-        GetAddonextitem(0, typeidNew, channeltypeNew, aidNew, false, ControllerName);
+        var ActionName = '{$Think.const.ACTION_NAME}';
+        GetAddonextitem(0, typeidNew, channeltypeNew, aidNew, false, ControllerName, ActionName);
     });
-    
-    function GetAddonextitem(init, typeidNew, channeltypeNew, aidNew, is_destroy, ControllerName) {
-        var loadingTxt = 1 == init ? '正在切换' : '正在加载';
-        layer_loading(loadingTxt);
+
+    function GetAddonextitem(init, typeidNew, channeltypeNew, aidNew, is_destroy, ControllerName, ActionName) {
+        layer.load(3, {shade: [0.5,'#fff']});
         ControllerName = ControllerName ? ControllerName : '';
-        
+        ActionName = ActionName ? ActionName : '';
         $.ajax({
             url: "{:url('Archives/ajax_get_addonextitem')}",
-            data: {typeid: typeidNew, channeltype: channeltypeNew, aid: aidNew, controller_name: ControllerName, _ajax:1},
+            data: {typeid: typeidNew, channeltype: channeltypeNew, aid: aidNew, controller_name: ControllerName, action_name:ActionName, _ajax:1},
             type:'get',
             success:function(res) {
                 layer.closeAll();
@@ -53,6 +53,20 @@
                                 showEditor_1597892187('addonFieldExt_'+value);
                             });
                         }
+                    }
+                    // 自动远程图片本地化和自动清除本站链接
+                    var editor_addonFieldExt = '';
+                    $.each(res.data.htmltextField, function (index, value) {
+                        if ($('#editor_addonFieldExt')) {
+                            if (editor_addonFieldExt) {
+                                editor_addonFieldExt += ','+value;
+                            }else{
+                                editor_addonFieldExt = value;
+                            }
+                        }
+                    });
+                    if (editor_addonFieldExt) {
+                        $('#editor_addonFieldExt').val(editor_addonFieldExt);
                     }
                 }
             },

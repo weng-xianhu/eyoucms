@@ -29,9 +29,9 @@ $api_config = array(
 
     // 过滤不需要登录的操作
     'filter_login_action' => array(
-        'Admin@login', // 登录
-        'Admin@logout', // 退出
-        'Admin@vertify', // 验证码
+        // 'Admin@login', // 登录
+        // 'Admin@logout', // 退出
+        // 'Admin@vertify', // 验证码
     ),
     
     // 无需验证权限的操作

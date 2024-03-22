@@ -1,11 +1,12 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<body style="background: #F5F5F5; overflow: auto; cursor: default; -moz-user-select: inherit;min-width:auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width:auto;box-shadow:none;">
+<div style="height: 10px;"></div>
+<div class="page min-hg-c-66">
     <div class="flexigrid" style="margin-top: 0px;min-height: 600px;">
-        <div class="mDiv" style="padding: 0 0 10px;">
+        <div class="mDiv">
             <div class="ftitle">
                  {include file="archives/tags_btn" /}
             </div>
@@ -15,9 +16,10 @@
                 <div class="sDiv">
                     {include file="archives/flag_btn" /}
                     <div class="sDiv2">
-                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="标题搜索...">
+                        <input type="hidden" name="typeid" value="{$typeid}">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="标题搜索..." {if condition="!empty($arctype_info['typename'])"}title="仅搜索“{$arctype_info['typename']}”栏目下的文档"{/if}>
                         <input type="submit" class="btn" value="搜索">
-						<i class="fa fa-search"></i>
+						<i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -36,11 +38,14 @@
                         <th abbr="article_title" axis="col3" class="">
                             <div style="text-align: left;" class="text-l10">标题</div>
                         </th>
-                        <th abbr="article_time" axis="col6" class="w110">
+                        <!-- <th abbr="article_time" axis="col6" class="w120">
+                            <div class="tc">付费限制</div>
+                        </th> -->
+                        <th abbr="article_time" axis="col6" class="w120">
                             <div class="tc">栏目</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w60">
-                            <div class="tc sort_style"><a href="{:getArchivesSortUrl('arcrank')}">审核&nbsp;<i {eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}></i></a></div>
+                            <div class="tc sort_style"><a href="{:getArchivesSortUrl('arcrank')}">审核&nbsp;<i {eq name='$Request.param.orderby' value='arcrank'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w60">
                             <div class="tc">点击</div>
@@ -57,7 +62,7 @@
                             <div class="tc">操作</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w60">
-                            <div class="tc">排序</div>
+                            <div class="tc sort_style"><a href="{:getArchivesSortUrl('sort_order')}">排序&nbsp;<i {eq name='$Request.param.orderby' value='sort_order'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
                         </th>
                     </tr>
                     </thead>
@@ -71,14 +76,16 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
                         {foreach name="list" item="vo" key="k" }
                         <tr>
                             <td class="sign">
-                                <div class="tc w40"><input type="checkbox" name="ids[]" value="{$vo.aid}" autocomplete="off"></div>
+                                <div id="aid_{$vo.aid}" data-typeid="{$vo.typeid}" class="tc w40"><input type="checkbox" name="ids[]" value="{$vo.aid}" autocomplete="off"></div>
                             </td>
                            
                             <td class="sort">
@@ -89,13 +96,15 @@
                             <td class="" style="width: 100%;">
                                 <div class="tl pdl10" >
                                     {notempty name="$vo.is_litpic"}
-                                        <i class="fa fa-picture-o color_z" onmouseover="layer_tips=layer.tips('<img src={$vo.litpic} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});" onmouseout="layer.close(layer_tips);"></i>
+                                        <i class="fa fa-picture-o color_z" onmouseover="layer_tips=layer.tips('<img src={$vo.litpic} class=\'layer_tips_img\'>',this,{tips: [3, '#fff'],skin:'layer-yourskin-mt0'});" onmouseout="layer.close(layer_tips);"></i>
                                     {/notempty}
                                     {eq name="'Archives@edit'|is_check_access" value="1"}
                                         {if condition="empty($channelRow[$vo['channel']]['ifsystem'])"}
-                                            <a href="{:url('Custom/edit',array('id'=>$vo['aid'],'typeid'=>$Request.param.typeid, 'channel'=>$vo.channel))}" style="{eq name="vo.is_b" value="1"} font-weight: bold;{/eq}">{$vo.title}</a>
-                                        {else /}
-                                            <a href="{:url($channelRow[$vo['channel']]['ctl_name'].'/edit',array('id'=>$vo['aid'],'typeid'=>$Request.param.typeid))}" style="{eq name="vo.is_b" value="1"} font-weight: bold;{/eq}">{$vo.title}</a>
+                                            <a href="{:url('Custom/edit',array('id'=>$vo['aid'],'typeid'=>$Request.param.typeid, 'channel'=>$vo.channel, 'callback_url'=>$callback_url))}" style="{eq name="vo.is_b" value="1"} font-weight: bold;{/eq}">{$vo.title}</a>
+                                        {elseif condition="'Product' == $channelRow[$vo['channel']]['ctl_name']" /}
+                                            <a href="JavaScript:void(0);" data-url="{:url('Product/edit', ['id'=>$vo['aid'], 'typeid'=>$Request.param.typeid, 'callback_url'=>$callback_url])}" onclick="productEdit(this, {$shopOpen|default='0'}, {$vo.aid});" style="{eq name="vo.is_b" value="1"} font-weight: bold; {/eq}">{$vo.title}</a>
+                                        {else/}
+                                            <a href="{:url($channelRow[$vo['channel']]['ctl_name'].'/edit',array('id'=>$vo['aid'],'typeid'=>$Request.param.typeid, 'callback_url'=>$callback_url))}" style="{eq name="vo.is_b" value="1"} font-weight: bold; {/eq}">{$vo.title}</a>
                                         {/if}
                                     {else /}
                                     {$vo.title}
@@ -108,8 +117,14 @@
                                     {/volist}
                                 </div>
                             </td>
+                            <!-- <td class="">
+                                <div class="w120 tc">
+                                    <span style="display: block;">高级会员</span>
+                                    <span class="red">￥10.00</span>
+                                </div>
+                            </td> -->
                             <td class="">
-                                <div class="w110 tc"><a href="{:url('Archives/index_archives', array('typeid'=>$vo['typeid']))}">{$vo.typename|default='<i class="red">数据出错！</i>'}</a></div>
+                                <div class="w120 tc ellipsis"><a href="{:url('Archives/index_archives', array('typeid'=>$vo['typeid']))}" title="{$vo.typename}">{$vo.typename|default='<i class="red">数据出错！</i>'}</a></div>
                             </td>
                             <td>
                                 <div class="tc w60">
@@ -141,14 +156,16 @@
                                 <div class="w160 tc">
                                     {eq name="'Archives@edit'|is_check_access" value="1"}
                                         {if condition="empty($channelRow[$vo['channel']]['ifsystem'])"}
-                                            <a href="{:url('Custom/edit',array('id'=>$vo['aid'],'typeid'=>$Request.param.typeid, 'channel'=>$vo.channel))}" class="btn blue">编辑</a>
-                                        {else /}
-                                            <a href="{:url($channelRow[$vo['channel']]['ctl_name'].'/edit',array('id'=>$vo['aid'],'typeid'=>$Request.param.typeid))}" class="btn blue">编辑</a>
+                                        <a href="{:url('Custom/edit',array('id'=>$vo['aid'],'typeid'=>$Request.param.typeid, 'channel'=>$vo.channel, 'callback_url'=>$callback_url))}" class="btn blue">编辑</a>
+                                        {elseif condition="'Product' == $channelRow[$vo['channel']]['ctl_name']" /}
+                                        <a href="JavaScript:void(0);" data-url="{:url('Product/edit', ['id'=>$vo['aid'], 'typeid'=>$Request.param.typeid, 'callback_url'=>$callback_url])}" onclick="productEdit(this, {$shopOpen|default='0'}, {$vo.aid});" class="btn blue">编辑</a>
+                                        {else/}
+                                        <a href="{:url($channelRow[$vo['channel']]['ctl_name'].'/edit',array('id'=>$vo['aid'], 'typeid'=>$Request.param.typeid, 'callback_url'=>$callback_url))}" class="btn blue">编辑</a>
                                         {/if}
                                         <i></i>
                                     {/eq}
                                     {eq name="'Archives@del'|is_check_access" value="1"}
-                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Archives/del')}" data-id="{$vo.aid}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
+                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Archives/del')}" data-id="{$vo.aid}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
                                         <i></i>
                                     {/eq}
                                     <a href="{$vo.arcurl}" target="_blank" class="btn blue">浏览</a>
@@ -172,6 +189,7 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        {notempty name="list"}
         <div class="footer-oper">
             <span class="ml15">
                 <input type="checkbox" class="checkAll" autocomplete="off">
@@ -191,25 +209,33 @@
                     <a href="javascript:void(0);" onclick="func_move(this, 'ids');" data-url="{:url('Archives/move', array('typeid'=>$Request.param.typeid))}">移动文档</a>
                     {/eq}
                     {eq name="'Archives@del'|is_check_access" value="1"}
-                    <a href="javascript:void(0);" onclick="batch_del(this, 'ids');" data-url="{:url('Archives/del')}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}>删除文档</a>
+                    <a href="javascript:void(0);" onclick="batch_del(this, 'ids');" data-url="{:url('Archives/del')}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}>删除文档</a>
                     {/eq}
                     {eq name="'Archives@check'|is_check_access" value="1"}
                     <hr class="layui-bg-gray">
-                    <a href="javascript:void(0);" onclick="batch_check(this, 'ids');" data-url="{:url('Archives/check')}">审核文档</a>
-                    <a href="javascript:void(0);" onclick="batch_check(this, 'ids');" data-url="{:url('Archives/uncheck')}">取消审核</a>
+                    <a href="javascript:void(0);" onclick="batch_check(this, 'ids');" data-type="check" data-url="{:url('Archives/check')}">审核文档</a>
+                    <a href="javascript:void(0);" onclick="batch_check(this, 'ids');" data-type="uncheck" data-url="{:url('Archives/uncheck')}">取消审核</a>
                     {/eq}
                 </div>
             </div>
+            {eq name="'Archives@index_draft'|is_check_access" value="1"}
+			<a data-url="{:url('Archives/index_draft')}" onclick="recycleBin(this)" href="javascript:;" class="layui-btn layui-btn-primary" title="待审核文档">待审核文档</a>
+            {/eq}
             {eq name="'RecycleBin@archives_index'|is_check_access" value="1"}
-            {neq name='$recycle_switch' value='1'}
-                <a href="{:url('RecycleBin/archives_index')}" class="layui-btn layui-btn-primary" title="回收站">回收站</a>
-            {/neq}
+                {neq name="$global['web_recycle_switch']" value='1'}
+                    <a data-url="{:url('RecycleBin/archives_index')}" onclick="recycleBin(this)" href="javascript:;" class="layui-btn layui-btn-primary" title="回收站">回收站</a>
+                {/neq}
             {/eq}
             {include file="public/page" /}
         </div>
+        {/notempty}
     </div>
 </div>
 <script type="text/javascript">
+    function recycleBin(obj) {
+        var url = $(obj).data("url");
+        parent.location = url;
+    }
     $(function(){
         $('input[name*=ids]').click(function(){
             if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
@@ -268,7 +294,17 @@
             }
         })
         if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 2, title:false});
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
             return;
         }
 
@@ -279,9 +315,9 @@
             title: '移动文档',
             fixed: true, //不固定
             shadeClose: false,
-            shade: 0.3,
+            shade: layer_shade,
             maxmin: false, //开启最大化最小化按钮
-            area: ['350px', '260px'],
+            area: ['480px', '360px'],
             content: url
         });
     }
@@ -293,22 +329,41 @@
     {
         return aids;
     }
-
+    var typeid_arr = [];   //已经生成过静态的typeid
+    var build_finish = false;  //是否已经全部生成静态
+    //检查是否已经生成静态，刷新页面
+    function build_finish_polling(){
+        if(build_finish === true){
+            layer.closeAll();
+            layer.msg('操作成功', {icon: 1});
+            window.location.reload();
+        }
+    }
     /**
      * 批量审核
      */
     function batch_check(obj, name) {
 
         var url = $(obj).attr('data-url');
-
+        var data_type = $(obj).attr('data-type');//uncheck
         var a = [];
         $('input[name^='+name+']').each(function(i,o){
             if($(o).is(':checked')){
                 a.push($(o).val());
             }
-        })
+        });
         if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 2, title:false});
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
             return;
         }
 
@@ -326,23 +381,79 @@
                 data: {ids:a, _ajax:1},
                 dataType: 'json',
                 success: function (data) {
-                    layer.closeAll();
                     if(data.code == 1){
-                        layer.msg(data.msg, {icon: 1});
-                        window.location.reload();
+                        var last = false;
+                        if (data_type === 'check'){
+                            for(var i=0;i<a.length;i++){
+                                var id_value = a[i];
+                                var typeid =$("#aid_"+id_value).data('typeid');
+                                if ((i+1) == a.length){
+                                    last = true;
+                                }
+                                up_html(id_value,typeid,last);
+                            }
+                            window.setTimeout(build_finish_polling, 3000);
+                        }else{
+                            layer.closeAll();
+                            layer.msg(data.msg, {icon: 1});
+                            window.location.reload();
+                        }
                     }else{
+                        layer.closeAll();
                         layer.alert(data.msg, {icon: 2, title:false});
                     }
                 },
-                error:function(){
+                error:function(e){
                     layer.closeAll();
-                    layer.alert(ey_unknown_error, {icon: 2, title:false});
+                    layer.alert(e.responseText, {icon: 2, title:false});
                 }
             });
         // }, function (index) {
         //     layer.closeAll(index);
         // });
     }
+    //生成静态页面
+    function up_html(id_value,typeid,last){
+        $.ajax({
+            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__+"&id="+id_value+"&t_id="+typeid+"&type=view&ctl_name=Archives&_ajax=1",
+            type:'GET',
+            dataType:'json',
+            data:{},
+            success:function(res1){
+//                layer.closeAll();
+//                layer.msg('生成完成', {icon: 1, time: 1500});
+                if (typeid_arr.indexOf(typeid) === -1){
+                    typeid_arr.push(typeid);
+                    $.ajax({
+                        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__+"&id="+id_value+"&t_id="+typeid+"&type=lists&ctl_name=Archives&_ajax=1",
+                        type:'GET',
+                        dataType:'json',
+                        data:{},
+                        success:function(res2){
+                            if (last === true){
+                                build_finish = true;
+                            }
+//                        layer.closeAll();
+//                        layer.msg('生成完成', {icon: 1, time: 1500});
+                        },
+                        error: function(e){
+                        layer.closeAll();
+                        layer.alert('生成当前栏目HTML失败，请手工生成栏目静态！', {icon: 5, title: false});
+                        }
+                    });
+                }else{
+                    if (last === true){
+                        build_finish = true;
+                    }
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert('生成HTML失败，请手工生成静态HTML！', {icon: 5, title: false});
+            }
+        });
+    }
+
 </script>
 
 {include file="public/footer" /}

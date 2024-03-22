@@ -1,0 +1,96 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page min-hg-c-10">
+    <div class="flexigrid">
+        <form class="form-horizontal" id="packForm">
+            <input type="hidden" name="pack_id" value="{$pack.pack_id}">
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="pack_names"><em>*</em>套餐名称</label>
+                    </dt>
+                    <dd class="opt w0">
+                        <input type="text" id="pack_names" name="pack_names" value="{$pack.pack_names}" class="w100" placeholder="套餐名称">
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="pack_face_value"><em>*</em>面值</label>
+                    </dt>
+                    <dd class="opt w0">
+                        <input type="text" id="pack_face_value" name="pack_face_value" value="{$pack.pack_face_value}" class="w100" placeholder="实际入账余额">
+                        <span class="err"></span>
+                        <p class="notic">实际进入用户账户的余额</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="pack_pay_prices"><em>*</em>价格</label>
+                    </dt>
+                    <dd class="opt w0">
+                        <input type="text" id="pack_pay_prices" name="pack_pay_prices" value="{$pack.pack_pay_prices}" class="w100" placeholder="实际支付价格">
+                        <span class="err"></span>
+                        <p class="notic">用户实际需支付的金额</p>
+                    </dd>
+                </dl>
+            </div>
+            
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <div class="bot">
+                    <a href="JavaScript:void(0);" onclick="submitSavePack();" class="ncap-btn-big ncap-btn-green">确认提交</a>
+                    </div>
+                </dl>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    function submitSavePack() {
+        if (!$('#pack_names').val()) {
+            showErrorMsg('请输入套餐名称');
+            $('#pack_names').focus();
+            return false;
+        }
+        if (!$('#pack_face_value').val()) {
+            showErrorMsg('请输入实际入账余额');
+            $('#pack_face_value').focus();
+            return false;
+        }
+        if (!$('#pack_pay_prices').val()) {
+            showErrorMsg('请输入实际支付价格');
+            $('#pack_pay_prices').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $.ajax({
+            type: 'post',
+            data: $('#packForm').serialize(),
+            url : "{:url('Member/recharge_pack_edit', ['_ajax'=>1])}",
+            dataType: 'json',
+            success: function(res) {
+                layer.closeAll();
+                if (1 === parseInt(res.code)) {
+                    layer.msg(res.msg, {time: 1500}, function() {
+                        parent.window.location.reload();
+                    });
+                } else {
+                    layer.msg(res.msg, {time: 1500});
+                }
+            }
+        });
+    }
+
+    function changeStatus(id, val) {
+        if (1 == val) {
+            $("#"+id).show();
+        }else{
+            $("#"+id).hide();
+        }
+    }
+</script>
+{include file="public/footer" /}

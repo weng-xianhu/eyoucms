@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -54,17 +54,16 @@ class Archives extends Model
     public function getInfo($aid, $field = '', $isshowbody = true)
     {
         $result = array();
+        $field = !empty($field) ? $field : 'a.*';
+        $result = Db::name('archives')->field($field)
+            ->alias('a')
+            ->find($aid);
         if ($isshowbody) {
-            $field = !empty($field) ? $field : 'b.*, a.*, a.aid as aid';
-            $result = Db::name('archives')->field($field)
-                ->alias('a')
-                ->join('__ARTICLE_CONTENT__ b', 'b.aid = a.aid', 'LEFT')
-                ->find($aid);
-        } else {
-            $field = !empty($field) ? $field : 'a.*';
-            $result = Db::name('archives')->field($field)
-                ->alias('a')
-                ->find($aid);
+            $tableName = Db::name('channeltype')->where('id','eq',$result['channel'])->getField('table');
+            $addonFieldExt = Db::name($tableName.'_content')->where('aid',$aid)->find();
+            if (!empty($addonFieldExt)) {
+                $result = array_merge($addonFieldExt, $result);
+            }
         }
 
         // 文章TAG标签
@@ -128,7 +127,7 @@ class Archives extends Model
                     
                     case '2': // 产品模型
                         model('Product')->afterDel($aidArr);
-                       Db::name('product_attribute')->where(array('typeid'=>array('IN', $typeidArr)))->delete();
+                        Db::name('product_attribute')->where(array('typeid'=>array('IN', $typeidArr)))->delete();
                         break;
                     
                     case '3': // 图集模型
@@ -153,14 +152,14 @@ class Archives extends Model
         /*--end*/
 
         /*删除留言模型下的关联内容*/
-        $guestbookList =Db::name('guestbook')->where(array('typeid'=>array('IN', $typeidArr)))->select();
+        $guestbookList =Db::name('guestbook')->where(['typeid'=>array('IN', $typeidArr), 'form_type'=>0])->select();
         if (!empty($guestbookList)) {
             $aidArr = get_arr_column($guestbookList, 'aid');
             $typeidArr = get_arr_column($guestbookList, 'typeid');
             if ($aidArr && $typeidArr) {
-                $sta =Db::name('guestbook')->where(array('typeid'=>array('IN', $typeidArr)))->delete();
+                $sta =Db::name('guestbook')->where(['typeid'=>array('IN', $typeidArr), 'form_type'=>0])->delete();
                 if ($sta) {
-                   Db::name('guestbook_attribute')->where(array('typeid'=>array('IN', $typeidArr)))->delete();
+                   Db::name('guestbook_attribute')->where(['typeid'=>array('IN', $typeidArr), 'form_type'=>0])->delete();
                     model('Guestbook')->afterDel($aidArr);
                 }
             }
@@ -197,5 +196,29 @@ class Archives extends Model
         }
 
         return $result;
+    }
+
+    //自动远程图片本地化/自动清除非本站链接 type = 'type' 是栏目 ,否则是内容
+    public function editor_auto_210607(&$post = [])
+    {
+        if (!empty($post['editor_addonFieldExt'])) {
+            if (!empty($post['editor_remote_img_local']) || !empty($post['editor_img_clear_link'])) {
+                $editor_addonFieldExt_arr = explode(',', $post['editor_addonFieldExt']);
+                foreach ($editor_addonFieldExt_arr as $key => $val) {
+                    $html = htmlspecialchars_decode($post['addonFieldExt'][$val]);
+                    if (!empty($post['editor_remote_img_local'])) {
+                        $html = preg_replace('/(\s+)src=("|\')\/\//i', '${1}src=${2}http://', $html);
+                        $html = remote_to_local($html);
+                    }
+                    if (!empty($post['editor_img_clear_link'])) {
+                        $html = replace_links($html);
+                    }
+                    $post['addonFieldExt'][$val] = htmlspecialchars($html);
+                }
+                // unset($post['editor_remote_img_local']);
+                // unset($post['editor_img_clear_link']);
+                unset($post['editor_addonFieldExt']);
+            }
+        }
     }
 }

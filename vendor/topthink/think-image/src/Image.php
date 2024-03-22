@@ -82,8 +82,16 @@ class Image
                 ini_set("gd.jpeg_ignore_warning", 1); // by 小虎哥
             }
             $fun      = "imagecreatefrom{$this->info['type']}";
-            if (function_exists($fun)) {
-                $this->im = @$fun($file->getPathname());
+            if (function_exists($fun)) {   // && "imagecreatefromwebp" != $fun
+                try{
+                    if ("imagecreatefromwebp" == $fun){
+                        $this->im = imagecreatefromwebp($file->getPathname());
+                    }else{
+                        $this->im = @$fun($file->getPathname());
+                    }
+                }catch (\Exception $e){
+                    throw new ImageException('Failed to create image resources!');
+                }
             } else {
                 $this->im = '';
             }

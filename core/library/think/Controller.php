@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 namespace think;
 
@@ -72,6 +81,16 @@ class Controller
     public $is_mobile = 0;
 
     /**
+     * 前台当前站点
+     */
+    public $home_site = '';
+
+    /**
+     * 站点域名，带端口号
+     */
+    public $website_host = '';
+
+    /**
      * 构造方法
      * @access public
      * @param Request $request Request 对象
@@ -82,13 +101,60 @@ class Controller
             $request = Request::instance();
         }
         $this->request = $request;
-
         $this->root_dir = ROOT_DIR; // 子目录
+        $this->website_host = $this->request->host();
+        if (stristr($this->website_host, 'localhost')) {
+            $web_basehost = preg_replace('/^(([^\:\.]+):)?(\/\/)?([^\/\:]*)(.*)$/i', '${4}', config('tpcache.web_basehost'));
+            if (!empty($web_basehost)) {
+                $host_port = !stristr($this->website_host, ':') ? '' : $request->port();
+                $this->website_host = $web_basehost;
+                if (!empty($host_port) && !stristr($this->website_host, ':')) {
+                    $this->website_host .= ":{$host_port}";
+                }
+            }
+        }
+
+        // 运营状态下，检验阅读权限
+        $aid = input('param.aid/s', '');
+        if (Config::get('app_debug') != true && !empty($aid) && $this->request->module() == 'home' && ($this->request->controller() == 'View' || $this->request->action() == 'view') ) {
+            $map = [];
+            if (!is_numeric($aid) || strval(intval($aid)) !== strval($aid)) {
+                $map = array('a.htmlfilename' => $aid);
+            } else {
+                $map = array('a.aid' => intval($aid));
+            }
+            $map['a.is_del'] = 0; // 回收站功能
+            $field = 'a.aid,a.arcrank,a.users_id, a.typeid, a.channel, c.typearcrank,c.dirname,c.page_limit';
+            $archivesInfo = Db::name('archives')->field($field)
+                ->alias('a')
+                ->join('arctype c', 'a.typeid = c.id', 'LEFT')
+                ->where($map)
+                ->find();
+            $users_id = (int)session('users_id');
+            $archivesInfo['page_limit'] = empty($archivesInfo['page_limit']) ? [] : explode(',', $archivesInfo['page_limit']);
+            // 若需要会员权限则执行
+            if (($archivesInfo['arcrank'] > 0 || ( $archivesInfo['typearcrank'] > 0 && in_array(2,$archivesInfo['page_limit']) ) ) && empty($users_id)) {
+                $url = url('user/Users/login');
+                $arcurl = $this->request->domain().$this->root_dir."/index.php?m=home&c=Ajax&a=toView&aid={$aid}";
+                if (stristr($url, '?')) {
+                    $url = $url."&referurl=".urlencode($arcurl);
+                } else {
+                    $url = $url."?referurl=".urlencode($arcurl);
+                }
+                $this->redirect($url);
+                exit;
+            }
+        }
+
 
         /*多语言*/
         $this->home_lang = get_home_lang();
         $this->admin_lang = get_admin_lang();
         $this->main_lang = get_main_lang();
+        /*多城市*/
+        if (config('city_switch_on')) {
+            $this->home_site = get_home_site();
+        }
         null === $this->version && $this->version = getCmsVersion();
 
         $returnData = $this->pc_to_mobile($this->request);
@@ -142,6 +208,56 @@ class Controller
         !defined('SYSTEM_ADMIN_LANG') && define('SYSTEM_ADMIN_LANG', Config::get('global.admin_lang')); // 后台语言变量
         !defined('SYSTEM_HOME_LANG') && define('SYSTEM_HOME_LANG', Config::get('global.home_lang')); // 前台语言变量
 
+        if (stristr($this->request->url(), '?')) {
+            $module = $this->request->param('m');
+            if (!empty($module)) {
+                $module_dir = glob(APP_PATH.'*', GLOB_ONLYDIR);
+                foreach ($module_dir as $key => $val) {
+                    $val = str_replace('\\', '/', $val);
+                    $module_dir[$key] = preg_replace('/^(.*)\/([^\/]+)$/i', '${2}', $val);
+                }
+                if (!in_array($module, $module_dir)) {
+                    abort(404,'页面不存在');
+                }
+            }
+        }
+
+        $web_anti_brushing = config('tpcache.web_anti_brushing');
+        if (!empty($web_anti_brushing)) {
+            if ('home' == MODULE_NAME && 'Index' == CONTROLLER_NAME && 'index' == ACTION_NAME) {
+                $varsarr = ['clear','lang','site','templet','uiset','v','bd_vid','clickid'];
+                if (1 == config('ey_config.seo_pseudo') || isset($params['uiset'])) {
+                    $varsarr = array_merge($varsarr, ['m','c','a']);
+                }
+                $agentcode = config('tpcache.php_agentcode');
+                if (1 == $agentcode) {
+                    $varsarr[] = 'aid';
+                }
+                $params = $this->request->param();
+                if (empty($params['a']) || !in_array($params['a'], ['wechat_return','alipay_return','Express100','ey_agent'])) {
+                    foreach ($params as $key => $val) {
+                        if (!in_array($key, $varsarr)) {
+                            abort(404,'页面不存在');
+                        } else if ('clear' == $key) {
+                            if ($val != 1) {
+                                abort(404,'页面不存在');
+                            }
+                        } else if ('lang' == $key) {
+                            if ((isset($params['uiset']) || is_language()) && 2 == strlen($val)) {
+
+                            } else {
+                                abort(404,'页面不存在');
+                            }
+                        }
+                    }
+                }
+            } else {
+                if ((stristr($this->request->url(true), '/home/View/index/') || stristr($this->request->url(true), '/home/Lists/index/')) && 'Buildhtml' != CONTROLLER_NAME) {
+                    abort(404,'页面不存在');
+                }
+            }
+        }
+
         // 自动判断手机端和PC，以及PC/手机自适应模板 by 小虎哥 2018-05-10
         $v = I('param.v/s', 'pc');
         $v = trim($v, '/');
@@ -168,17 +284,17 @@ class Controller
 
         $this->view    = View::instance(Config::get('template'), Config::get('view_replace_str'));
 
-        /*多语言*/
         $this->assign('home_lang', $this->home_lang);
         $this->assign('admin_lang', $this->admin_lang);
         $this->assign('main_lang', $this->main_lang);
         $this->assign('version', $this->version);
         $this->assign('is_mobile', $this->is_mobile);
         $this->assign('tpl_theme', $this->tpl_theme);
-        /*--end*/
+        $this->assign('home_site', $this->home_site);
+        $this->assign('website_host', $this->website_host);
         
         $param = $this->request->param();
-        if (isset($param['clear']) || Config::get('app_debug') === true) {
+        if ( (CONTROLLER_NAME == 'Lists' && isset($param['sort'])) || isset($param['clear']) || Config::get('app_debug') === true) {
 
         } else {
             read_html_cache(); // 尝试从缓存中读取
@@ -225,6 +341,9 @@ class Controller
                 $searchformhidden .= '<input type="hidden" name="sm" value="'.$request->get('sm').'">';
                 $searchformhidden .= '<input type="hidden" name="sc" value="'.$request->get('sc').'">';
                 $searchformhidden .= '<input type="hidden" name="sa" value="'.$request->get('sa').'">';
+                if ('Mbackend' == $request->get('sm')) {
+                    $searchformhidden .= '<input type="hidden" name="isMobile" value="1">';
+                }
             }
             /*多语言*/
             $lang = $request->param('lang/s');
@@ -274,8 +393,15 @@ class Controller
 
         $mobileurl = '';
         $subDomain = $request->subDomain();
+        /*
+         *  域名为4段的时候，会照成手机端前缀和跳转后的前缀不一致而无限跳转造成死循环，
+         *  例如：域名www.eyou.com.cn  手机端为m
+         *  $request->subDomain() 的值为 "m.eyou" != 'm' , 导致下面判断不断得跳转 header('Location: '.$mobileurl)
+         *  死循环
+         */
+        $subDomain_arr = explode('.',$subDomain);
+        $subDomain = !empty($subDomain_arr[0]) ? $subDomain_arr[0] : '';
         $web_mobile_domain = config('tpcache.web_mobile_domain');
-
         if (!isMobile()) { // 浏览器PC模式访问
             $goto = input('param.goto/s');
             $goto = trim($goto, '/');
@@ -363,6 +489,7 @@ class Controller
                 }
                 else { // 分离式模板
                     $goto = input('param.goto/s');
+
                     if ($subDomain != $web_mobile_domain || (empty($subDomain) && empty($goto))) {
                         if (!empty($web_mobile_domain)) { // 手机域名不为空
                             $mobileurl = $mobileDomainURL.$request->url();
@@ -437,7 +564,6 @@ class Controller
     protected function coding()
     {
         \think\Coding::checksd();
-        // \think\Coding::resetcr();
     }
 
     /**
@@ -523,7 +649,7 @@ class Controller
         $html = $this->view->fetch($template, $vars, $replace, $config);
         /*尝试写入静态缓存*/
         $param = $this->request->param();
-        if (isset($param['clear']) || false === config('app_debug')) {
+        if (!isset($param['clear']) || false === config('app_debug')) {
             write_html_cache($html);
         }
         /*--end*/

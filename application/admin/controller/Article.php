@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -32,6 +32,11 @@ class Article extends Base
         empty($this->channeltype) && $this->channeltype = 1;
         $this->assign('nid', $this->nid);
         $this->assign('channeltype', $this->channeltype);
+
+        // 返回页面
+        $paramTypeid = input('param.typeid/d', 0);
+        $this->callback_url = url('Article/index', ['lang' => $this->admin_lang, 'typeid' => $paramTypeid]);
+        $this->assign('callback_url', $this->callback_url);
     }
 
     /**
@@ -46,14 +51,14 @@ class Article extends Base
         $typeid = input('typeid/d', 0);
 
         // 搜索、筛选查询条件处理
-        foreach (['keywords', 'typeid', 'flag', 'is_release'] as $key) {
+        foreach (['keywords', 'typeid', 'flag', 'is_release','province_id','city_id','area_id'] as $key) {
             if ($key == 'typeid' && empty($param['typeid'])) {
                 $typeids = Db::name('arctype')->where('current_channel', $this->channeltype)->column('id');
                 $condition['a.typeid'] = array('IN', $typeids);
             }
+            $param[$key] = isset($param[$key]) ? addslashes(trim($param[$key])) : '';
             if (isset($param[$key]) && $param[$key] !== '') {
                 if ($key == 'keywords') {
-                    $keywords = $param[$key];
                     $condition['a.title'] = array('LIKE', "%{$param[$key]}%");
                 } else if ($key == 'typeid') {
                     $typeid = $param[$key];
@@ -74,6 +79,14 @@ class Article extends Base
                     } else {
                         $FlagNew = $param[$key];
                         $condition['a.'.$param[$key]] = array('eq', 1);
+                    }
+                } else if (in_array($key, ['province_id','city_id','area_id'])) {
+                    if (!empty($param['area_id'])) {
+                        $condition['a.area_id'] = $param['area_id'];
+                    } else if (!empty($param['city_id'])) {
+                        $condition['a.city_id'] = $param['city_id'];
+                    } else if (!empty($param['province_id'])) {
+                        $condition['a.province_id'] = $param['province_id'];
                     }
                 } else {
                     $condition['a.'.$key] = array('eq', $param[$key]);
@@ -105,6 +118,7 @@ class Article extends Base
         $condition['a.channel'] = array('eq', $this->channeltype);
         $condition['a.lang'] = array('eq', $this->admin_lang);
         $condition['a.is_del'] = array('eq', 0);
+        $condition['a.arcrank'] = array('egt', -1);
         $conditionNew = "(a.users_id = 0 OR (a.users_id > 0 AND a.arcrank >= 0))";
 
         // 自定义排序
@@ -119,7 +133,8 @@ class Article extends Base
         // 数据查询，搜索出主键ID的值
         $SqlQuery = Db::name('archives')->alias('a')->where($condition)->where($conditionNew)->fetchSql()->count('aid');
         $count = Db::name('sql_cache_table')->where(['sql_md5'=>md5($SqlQuery)])->getField('sql_result');
-        if (!isset($count)) {
+        $count = ($count < 0) ? 0 : $count;
+        if (empty($count)) {
             $count = Db::name('archives')->alias('a')->where($condition)->where($conditionNew)->count('aid');
             /*添加查询执行语句到mysql缓存表*/
             $SqlCacheTable = [
@@ -173,18 +188,19 @@ class Article extends Base
         $assign_data['pager'] = $Page;
         $assign_data['typeid'] = $typeid;
         $assign_data['tab'] = input('param.tab/d', 3);// 选项卡
-        $assign_data['seo_pseudo'] = tpCache('seo.seo_pseudo');// 前台URL模式
+        $assign_data['seo_pseudo'] = tpCache('global.seo_pseudo');// 前台URL模式
         $assign_data['archives_flags'] = model('ArchivesFlag')->getList();// 文档属性
         $assign_data['arctype_info'] = $typeid > 0 ? Db::name('arctype')->field('typename')->find($typeid) : [];// 当前栏目信息
         $this->assign($assign_data);
-        $recycle_switch = tpSetting('recycle.recycle_switch');// 回收站开关
-        $this->assign('recycle_switch', $recycle_switch);
         return $this->fetch();
     }
 
     //添加
     public function add()
     {
+        // 手机端后台管理插件标识
+        $isMobile = input('param.isMobile/d', 0);
+
         $admin_info = session('admin_info');
         $auth_role_info = $admin_info['auth_role_info'];
         $this->assign('auth_role_info', $auth_role_info);
@@ -192,7 +208,7 @@ class Article extends Base
 
         if (IS_POST) {
             $post = input('post.');
-
+            model('Archives')->editor_auto_210607($post);
             //处理TAG标签
             if (!empty($post['tags_new'])) {
                 $post['tags'] = !empty($post['tags']) ? $post['tags'] . ',' . $post['tags_new'] : $post['tags_new'];
@@ -202,9 +218,19 @@ class Article extends Base
             $post['tags'] = array_unique($post['tags']);
             $post['tags'] = implode(',', $post['tags']);
 
-            $content = input('post.addonFieldExt.content', '', null);
-            if (!empty($post['users_price']) && 0 < $post['users_price']) {
+            $content = empty($post['addonFieldExt']['content']) ? '' : htmlspecialchars_decode($post['addonFieldExt']['content']);
+            if (!empty($post['restric_type']) && 0 < $post['restric_type']) {
                 $content = input('post.free_content', '', null);
+            }
+
+            // 如果安装后台手机端管理插件则执行
+            if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+                // 调用逻辑层
+                $mbackendLogic = new \weapp\Mbackend\logic\MbackendLogic;
+                $contentData = $mbackendLogic->fileCacheHandle('get');
+                $content = !empty($contentData['content']) ? $contentData['content'] : '';
+                $post['addonFieldExt']['content'] = $post['addonFieldExt']['content_ey_m'] = $content;
+                $content = !empty($content) ? htmlspecialchars_decode($content) : '';
             }
 
             // 根据标题自动提取相关的关键字
@@ -258,15 +284,27 @@ class Article extends Base
             //处理自定义文件名,仅由字母数字下划线和短横杆组成,大写强制转换为小写
             $htmlfilename = trim($post['htmlfilename']);
             if (!empty($htmlfilename)) {
-                $htmlfilename = preg_replace("/[^a-zA-Z0-9_-]+/", "-", $htmlfilename);
-                $htmlfilename = strtolower($htmlfilename);
+                $htmlfilename = preg_replace("/[^\x{4e00}-\x{9fa5}\w\-]+/u", "-", $htmlfilename);
+                // $htmlfilename = strtolower($htmlfilename);
                 //判断是否存在相同的自定义文件名
-                $filenameCount = Db::name('archives')->where([
-                        'htmlfilename'  => $htmlfilename,
-                        'lang'  => $this->admin_lang,
-                    ])->count();
+                $map = [
+                    'htmlfilename'  => $htmlfilename,
+                    'lang'  => $this->admin_lang,
+                ];
+                if (!empty($post['typeid'])) {
+                    $map['typeid'] = array('eq', $post['typeid']);
+                }
+                $filenameCount = Db::name('archives')->where($map)->count();
                 if (!empty($filenameCount)) {
-                    $this->error("自定义文件名已存在，请重新设置！");
+                    $this->error("同栏目下，自定义文件名已存在！");
+                } else if (preg_match('/^(\d+)$/i', $htmlfilename)) {
+                    $this->error("自定义文件名不能纯数字，会与文档ID冲突！");
+                }
+            } else {
+                // 处理外贸链接
+                if (is_dir('./weapp/Waimao/')) {
+                    $waimaoLogic = new \weapp\Waimao\logic\WaimaoLogic;
+                    $waimaoLogic->get_new_htmlfilename($htmlfilename, $post, 'add', $this->globalConfig);
                 }
             }
             $post['htmlfilename'] = $htmlfilename;
@@ -274,6 +312,21 @@ class Article extends Base
             //做自动通过审核判断
             if ($admin_info['role_id'] > 0 && $auth_role_info['check_oneself'] < 1) {
                 $post['arcrank'] = -1;
+            }
+
+            // 付费限制模式与之前三个字段 arc_level_id、 users_price、 users_free 组合逻辑兼容
+            $restricData = restric_type_logic($post, $this->channeltype);
+            if (isset($restricData['code']) && empty($restricData['code'])) {
+                $this->error($restricData['msg']);
+            }
+
+            // 副栏目
+            if (isset($post['stypeid'])) {
+                $post['stypeid'] = preg_replace('/([^\d\,\，]+)/i', ',', $post['stypeid']);
+                $post['stypeid'] = str_replace('，', ',', $post['stypeid']);
+                $post['stypeid'] = trim($post['stypeid'], ',');
+                $post['stypeid'] = str_replace(",{$post['typeid']},", ',', ",{$post['stypeid']},");
+                $post['stypeid'] = trim($post['stypeid'], ',');
             }
             
             // 存储数据
@@ -287,33 +340,37 @@ class Article extends Base
                 'is_roll'      => empty($post['is_roll']) ? 0 : $post['is_roll'],
                 'is_slide'      => empty($post['is_slide']) ? 0 : $post['is_slide'],
                 'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
+                'editor_remote_img_local'=> empty($post['editor_remote_img_local']) ? 0 : $post['editor_remote_img_local'],
+                'editor_img_clear_link'  => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
                 'is_jump'     => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
+                'origin'      => empty($post['origin']) ? '网络' : $post['origin'],
                 'seo_keywords'     => $seo_keywords,
                 'seo_description'     => $seo_description,
                 'admin_id'  => session('admin_info.admin_id'),
                 'lang'  => $this->admin_lang,
                 'sort_order'    => 100,
+                'crossed_price'     => empty($post['crossed_price']) ? 0 : floatval($post['crossed_price']),
                 'add_time'     => strtotime($post['add_time']),
                 'update_time'  => strtotime($post['add_time']),
             );
             $data = array_merge($post, $newData);
-
             $aid = Db::name('archives')->insertGetId($data);
             if (!empty($aid)) {
                 $_POST['aid'] = $aid;
-                if (!empty($post['users_price']) && 0 < $post['users_price']) {
+                if (!empty($post['restric_type']) && 0 < $post['restric_type']) {
                     if (empty($post['size'])) {$post['size'] = 1;}
-                    $free_content = $post['free_content'];
-                    if (2 == $post['part_free']){
+                    $free_content = !empty($post['free_content']) ? $post['free_content'] : '';
+                    if (!empty($post['part_free']) && 2 == $post['part_free']){
                         $free_content = htmlspecialchars_decode($post['addonFieldExt']['content']);
-                        $free_content = $this->SpLongBody($free_content,$post['size']*1024);
+                        $free_content = $this->SpLongBody($free_content, $post['size']);
+                        // $free_content = $this->SpLongBody($free_content,$post['size']*1024);
                         $free_content = htmlspecialchars($free_content);
                     }
                     Db::name('article_pay')->insert([
                         'aid'          => $aid,
-                        'part_free'    => $post['part_free'],
+                        'part_free'    => isset($post['part_free']) ? intval($post['part_free']) : 0,
                         'size'         => $post['size'],
                         'free_content' => $free_content,
                         'add_time'     => getTime(),
@@ -324,10 +381,18 @@ class Article extends Base
                 model('SqlCacheTable')->InsertSqlCacheTable();
                 adminLog('新增文章：'.$data['title']);
 
+                // 如果安装后台手机端管理插件则执行
+                if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+                    // 调用逻辑层
+                    $mbackendLogic = new \weapp\Mbackend\logic\MbackendLogic;
+                    $mbackendLogic->fileCacheHandle('del');
+                }
+
                 // 生成静态页面代码
                 $successData = [
                     'aid' => $aid,
                     'tid' => $post['typeid'],
+                    'method'   =>'add',
                 ];
                 $this->success("操作成功!", null, $successData);
             }
@@ -350,17 +415,20 @@ class Article extends Base
         // 模板列表
         $archivesLogic = new \app\admin\logic\ArchivesLogic;
         $templateList = $archivesLogic->getTemplateList($this->nid);
-        $this->assign('templateList', $templateList);
+        $assign_data['templateList'] = $templateList;
 
         // 默认模板文件
         $tempview = 'view_'.$this->nid.'.'.config('template.view_suffix');
         !empty($arctypeInfo['tempview']) && $tempview = $arctypeInfo['tempview'];
-        $this->assign('tempview', $tempview);
+        $assign_data['tempview'] = $tempview;
+        
+        // 会员等级信息
+        $assign_data['users_level'] = model('UsersLevel')->getList('level_id, level_name, level_value');
 
         // 文档默认浏览量
-        $other_config = tpCache('other');
-        if (isset($other_config['other_arcclick']) && 0 <= $other_config['other_arcclick']) {
-            $arcclick_arr = explode("|", $other_config['other_arcclick']);
+        $globalConfig = tpCache('global');
+        if (isset($globalConfig['other_arcclick']) && 0 <= $globalConfig['other_arcclick']) {
+            $arcclick_arr = explode("|", $globalConfig['other_arcclick']);
             if (count($arcclick_arr) > 1) {
                 $assign_data['rand_arcclick'] = mt_rand($arcclick_arr[0], $arcclick_arr[1]);
             } else {
@@ -383,14 +451,33 @@ class Article extends Base
         $channelRow['data'] = json_decode($channelRow['data'], true);
         $assign_data['channelRow'] = $channelRow;
 
+        // 来源列表
+        $system_originlist = tpSetting('system.system_originlist');
+        $system_originlist = json_decode($system_originlist, true);
+        $system_originlist = !empty($system_originlist) ? $system_originlist : [];
+        $assign_data['system_originlist_0'] = !empty($system_originlist) ? $system_originlist[0] : "";
+        $assign_data['system_originlist_str'] = implode(PHP_EOL, $system_originlist);
+
+        // 多站点，当用站点域名访问后台，发布文档自动选择当前所属区域
+        model('Citysite')->auto_location_select($assign_data);
+
         $this->assign($assign_data);
 
-        return $this->fetch();
+        // 如果安装手机端后台管理插件并且在手机端访问时执行
+        if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+            $this->assign('arctypeInfo', $arctypeInfo);
+            return $this->display('archives/add');
+        } else {
+            return $this->fetch();
+        }
     }
 
     //编辑
     public function edit()
     {
+        // 手机端后台管理插件标识
+        $isMobile = input('param.isMobile/d', 0);
+
         $admin_info = session('admin_info');
         $auth_role_info = $admin_info['auth_role_info'];
         $this->assign('auth_role_info', $auth_role_info);
@@ -398,7 +485,8 @@ class Article extends Base
 
         if (IS_POST) {
             $post = input('post.');
-
+            model('Archives')->editor_auto_210607($post);
+            $post['aid'] = intval($post['aid']);
             // 处理TAG标签
             if (!empty($post['tags_new'])) {
                 $post['tags'] = !empty($post['tags']) ? $post['tags'] . ',' . $post['tags_new'] : $post['tags_new'];
@@ -409,9 +497,19 @@ class Article extends Base
             $post['tags'] = implode(',', $post['tags']);
 
             $typeid = input('post.typeid/d', 0);
-            $content = input('post.addonFieldExt.content', '', null);
-            if (!empty($post['users_price']) && 0 < $post['users_price']) {
+            $content = empty($post['addonFieldExt']['content']) ? '' : htmlspecialchars_decode($post['addonFieldExt']['content']);
+            if (!empty($post['restric_type']) && 0 < $post['restric_type']) {
                 $content = input('post.free_content', '', null);
+            }
+
+            // 如果安装后台手机端管理插件则执行
+            if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+                // 调用逻辑层
+                $mbackendLogic = new \weapp\Mbackend\logic\MbackendLogic;
+                $contentData = $mbackendLogic->fileCacheHandle('get');
+                $content = !empty($contentData['content']) ? $contentData['content'] : '';
+                $post['addonFieldExt']['content'] = $post['addonFieldExt']['content_ey_m'] = $content;
+                $content = !empty($content) ? htmlspecialchars_decode($content) : '';
             }
 
             // 根据标题自动提取相关的关键字
@@ -441,9 +539,23 @@ class Article extends Base
                 $is_litpic = !empty($post['is_litpic']) ? $post['is_litpic'] : 0; // 有封面图
             }
 
+            // 勾选后SEO描述将随正文内容更新
+            $basic_update_seo_description = empty($post['basic_update_seo_description']) ? 0 : 1;
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('basic', ['basic_update_seo_description'=>$basic_update_seo_description], $val['mark']);
+                }
+            } else {
+                tpCache('basic', ['basic_update_seo_description'=>$basic_update_seo_description]);
+            }
+            /*--end*/
+
             // SEO描述
             $seo_description = '';
-            if (empty($post['seo_description']) && !empty($content)) {
+            if (!empty($basic_update_seo_description) || empty($post['seo_description'])) {
                 $seo_description = @msubstr(checkStrHtml($content), 0, config('global.arc_seo_description_length'), false);
             } else {
                 $seo_description = $post['seo_description'];
@@ -468,16 +580,28 @@ class Article extends Base
             //处理自定义文件名,仅由字母数字下划线和短横杆组成,大写强制转换为小写
             $htmlfilename = trim($post['htmlfilename']);
             if (!empty($htmlfilename)) {
-                $htmlfilename = preg_replace("/[^a-zA-Z0-9_-]+/", "-", $htmlfilename);
-                $htmlfilename = strtolower($htmlfilename);
+                $htmlfilename = preg_replace("/[^\x{4e00}-\x{9fa5}\w\-]+/u", "-", $htmlfilename);
+                // $htmlfilename = strtolower($htmlfilename);
                 //判断是否存在相同的自定义文件名
-                $filenameCount = Db::name('archives')->where([
-                        'aid'   => ['NEQ', $post['aid']],
-                        'htmlfilename'  => $htmlfilename,
-                        'lang'  => $this->admin_lang,
-                    ])->count();
+                $map = [
+                    'aid'   => ['NEQ', $post['aid']],
+                    'htmlfilename'  => $htmlfilename,
+                    'lang'  => $this->admin_lang,
+                ];
+                if (!empty($post['typeid'])) {
+                    $map['typeid'] = array('eq', $post['typeid']);
+                }
+                $filenameCount = Db::name('archives')->where($map)->count();
                 if (!empty($filenameCount)) {
-                    $this->error("自定义文件名已存在，请重新设置！");
+                    $this->error("同栏目下，自定义文件名已存在！");
+                } else if (preg_match('/^(\d+)$/i', $htmlfilename)) {
+                    $this->error("自定义文件名不能纯数字，会与文档ID冲突！");
+                }
+            } else {
+                // 处理外贸链接
+                if (is_dir('./weapp/Waimao/')) {
+                    $waimaoLogic = new \weapp\Waimao\logic\WaimaoLogic;
+                    $waimaoLogic->get_new_htmlfilename($htmlfilename, $post, 'edit', $this->globalConfig);
                 }
             }
             $post['htmlfilename'] = $htmlfilename;
@@ -488,6 +612,21 @@ class Article extends Base
                 if ($old_archives_arcrank < 0) {
                     unset($post['arcrank']);
                 }
+            }
+
+            // 付费限制模式与之前三个字段 arc_level_id、 users_price、 users_free 组合逻辑兼容
+            $restricData = restric_type_logic($post, $this->channeltype);
+            if (isset($restricData['code']) && empty($restricData['code'])) {
+                $this->error($restricData['msg']);
+            }
+
+            // 副栏目
+            if (isset($post['stypeid'])) {
+                $post['stypeid'] = preg_replace('/([^\d\,\，]+)/i', ',', $post['stypeid']);
+                $post['stypeid'] = str_replace('，', ',', $post['stypeid']);
+                $post['stypeid'] = trim($post['stypeid'], ',');
+                $post['stypeid'] = str_replace(",{$typeid},", ',', ",{$post['stypeid']},");
+                $post['stypeid'] = trim($post['stypeid'], ',');
             }
 
             // 存储数据
@@ -501,27 +640,35 @@ class Article extends Base
                 'is_roll'      => empty($post['is_roll']) ? 0 : $post['is_roll'],
                 'is_slide'      => empty($post['is_slide']) ? 0 : $post['is_slide'],
                 'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
+                'editor_remote_img_local'=> empty($post['editor_remote_img_local']) ? 0 : $post['editor_remote_img_local'],
+                'editor_img_clear_link'  => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
                 'is_jump'   => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
                 'seo_keywords'     => $seo_keywords,
                 'seo_description'     => $seo_description,
+                'crossed_price'     => empty($post['crossed_price']) ? 0 : floatval($post['crossed_price']),
                 'add_time'     => strtotime($post['add_time']),
                 'update_time'     => getTime(),
             );
             $data = array_merge($post, $newData);
             $r = Db::name('archives')->where(['aid' => $data['aid'], 'lang'  => $this->admin_lang])->update($data);
             if (!empty($r)) {
-                if (!empty($post['users_price']) && 0 < $post['users_price']) {
+                if (!empty($post['restric_type']) && 0 < $post['restric_type']) {
                     if (empty($post['size'])) {$post['size'] = 1;}
-                    $free_content = $post['free_content'];
-                    if (2 == $post['part_free']){
+                    $free_content = !empty($post['free_content']) ? $post['free_content'] : '';
+                    if (!empty($post['part_free']) && 2 == $post['part_free']){
                         $free_content = htmlspecialchars_decode($post['addonFieldExt']['content']);
-                        $free_content = $this->SpLongBody($free_content,$post['size']*1024);
+                        $free_content = $this->SpLongBody($free_content, $post['size']);
+                        // $free_content = $this->SpLongBody($free_content,$post['size']*1024);
                         $free_content = htmlspecialchars($free_content);
                     }
                     $is_in = Db::name('article_pay')->where('aid',$data['aid'])->find();
-                    $article_pay_data = ['part_free' => $post['part_free'],'size'=> $post['size'],'free_content' => $free_content];
+                    $article_pay_data = [
+                        'part_free' => isset($post['part_free']) ? intval($post['part_free']) : 0,
+                        'size'=> $post['size'],
+                        'free_content' => $free_content
+                    ];
                     if (empty($is_in)){
                         $article_pay_data['aid'] = $data['aid'];
                         $article_pay_data['add_time'] = getTime();
@@ -534,10 +681,18 @@ class Article extends Base
                 model('Article')->afterSave($data['aid'], $data, 'edit');
                 adminLog('编辑文章：'.$data['title']);
                 
+                // 如果安装后台手机端管理插件则执行
+                if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+                    // 调用逻辑层
+                    $mbackendLogic = new \weapp\Mbackend\logic\MbackendLogic;
+                    $mbackendLogic->fileCacheHandle('del');
+                }
+
                 // 生成静态页面代码
                 $successData = [
                     'aid'       => $data['aid'],
                     'tid'       => $typeid,
+                    'method'   =>'edit',
                 ];
                 $this->success("操作成功!", null, $successData);
             }
@@ -548,7 +703,7 @@ class Article extends Base
         $id = input('id/d');
         $info = model('Article')->getInfo($id, null, false);
         if (empty($info)) $this->error('数据不存在，请联系管理员！');
-        
+
         if (!empty($info['users_price'])) {
             $article_pay =  Db::name('article_pay')->field('part_free,free_content,size')->where('aid',$id)->find();
             if (!empty($article_pay)){
@@ -565,6 +720,14 @@ class Article extends Base
 
         $typeid = $info['typeid'];
         $assign_data['typeid'] = $typeid;
+        
+        // 副栏目
+        $stypeid_arr = [];
+        if (!empty($info['stypeid'])) {
+            $info['stypeid'] = trim($info['stypeid'], ',');
+            $stypeid_arr = Db::name('arctype')->field('id,typename')->where(['id'=>['IN', $info['stypeid']],'is_del'=>0])->select();
+        }
+        $assign_data['stypeid_arr'] = $stypeid_arr;
 
         // 栏目信息
         $arctypeInfo = Db::name('arctype')->find($typeid);
@@ -578,10 +741,9 @@ class Article extends Base
         }
     
         // SEO描述
-        if (!empty($info['seo_description'])) {
-            $info['seo_description'] = @msubstr(checkStrHtml($info['seo_description']), 0, config('global.arc_seo_description_length'), false);
-        }
-
+        // if (!empty($info['seo_description'])) {
+        //     $info['seo_description'] = @msubstr(checkStrHtml($info['seo_description']), 0, config('global.arc_seo_description_length'), false);
+        // }
         $assign_data['field'] = $info;
 
         // 允许发布文档列表的栏目，文档所在模型以栏目所在模型为主，兼容切换模型之后的数据编辑
@@ -595,12 +757,15 @@ class Article extends Base
         // 模板列表
         $archivesLogic = new \app\admin\logic\ArchivesLogic;
         $templateList = $archivesLogic->getTemplateList($this->nid);
-        $this->assign('templateList', $templateList);
+        $assign_data['templateList'] = $templateList;
 
         // 默认模板文件
         $tempview = $info['tempview'];
         empty($tempview) && $tempview = $arctypeInfo['tempview'];
-        $this->assign('tempview', $tempview);
+        $assign_data['tempview'] = $tempview;
+
+        // 会员等级信息
+        $assign_data['users_level'] = model('UsersLevel')->getList('level_id, level_name, level_value');
 
         // URL模式
         $tpcache = config('tpcache');
@@ -612,8 +777,21 @@ class Article extends Base
         $channelRow = Db::name('channeltype')->where('id', $this->channeltype)->find();
         $channelRow['data'] = json_decode($channelRow['data'], true);
         $assign_data['channelRow'] = $channelRow;
+
+        // 来源列表
+        $system_originlist = tpSetting('system.system_originlist');
+        $system_originlist = json_decode($system_originlist, true);
+        $system_originlist = !empty($system_originlist) ? $system_originlist : [];
+        $assign_data['system_originlist_str'] = implode(PHP_EOL, $system_originlist);
+
         $this->assign($assign_data);
-        return $this->fetch();
+
+        // 如果安装手机端后台管理插件并且在手机端访问时执行
+        if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+            return $this->display('archives/edit');
+        } else {
+            return $this->fetch();
+        }
     }
     
     //删除
@@ -628,6 +806,9 @@ class Article extends Base
     //自动截取方法
     function SpLongBody($mybody, $spsize)
     {
+        // 新的字符截取逻辑 --- chenfy
+        return $this->handleFreeContent($mybody, $spsize);
+        exit;
         if (strlen($mybody) < $spsize) {
             return $mybody;
         }
@@ -666,6 +847,64 @@ class Article extends Base
         return $ret;
     }
 
+    private function handleFreeContent($content = '', $freeSize = 0, $encoding = 'utf-8')
+    {
+        // 如果要截取的内容字数小于限制数字则原内容返回
+        if (mb_strlen($content, $encoding) < $freeSize) return $content;
+        $content = explode('<', stripslashes($content));
+        $isp = 0;
+        $istable = 0;
+        $result = '';
+        $freeContent = '';
+        foreach ($content as $key => $value) {
+            if (0 === intval($key) && !empty($value)) {
+                $freeContent .= $value;
+                continue;
+            }
+            $value = "<" . $value;
+            if (mb_strlen($value, $encoding) >= 4 && (false !== stripos($value, '<p>'))) {
+                if (false !== stripos($value, '<p>')) {
+                    $value = preg_replace('/<p>/i', '', $value);
+                    $strLength = mb_strlen($value, $encoding);
+                    $freeStrLength = '<' === $freeContent ? mb_strlen(preg_replace('/</i', '', $freeContent), $encoding) : mb_strlen($freeContent, $encoding);
+                    if (!empty($freeStrLength)) $freeSize = intval($freeSize) - intval($freeStrLength);
+                    if (intval($strLength) > intval($freeSize)) {
+                        $freeContent .= '<p>' . mb_substr($value, 0, $freeSize, 'utf-8') . '</p>';
+                    } else {
+                        $freeContent .= '<p>' . $value . '</p>';
+                    }
+                }
+                if (mb_strlen($freeContent, $encoding) > $freeSize) {
+                    $result = $freeContent;
+                    break;
+                }
+            } else {
+                if (strlen($value) > 6) {
+                    $tname = substr($value, 1, 5);
+                    if (strtolower($tname) == 'table') {
+                        $istable++;
+                    } else if (strtolower($tname) == '/tabl') {
+                        $istable--;
+                    }
+                    if ($istable > 0) {
+                        $freeContent .= $value;
+                        continue;
+                    } else {
+                        $freeContent .= $value;
+                    }
+                } else {
+                    $freeContent .= $value;
+                }
+                if (strlen($freeContent) > $freeSize) {
+                    $result = $freeContent;
+                    break;
+                }
+            }
+        }
+        $result = preg_replace('/<</i', '<', $result);
+        return $result;
+    }
+
     //获取免费阅读部分
     public function free_content($aid=0)
     {
@@ -674,6 +913,18 @@ class Article extends Base
             $free_content = Db::name('article_pay')->where('aid',$aid)->value('free_content');
         }
         $this->assign('free_content', $free_content);
+        return $this->fetch();
+    }
+
+    //帮助
+    public function help()
+    {
+        $system_originlist = tpSetting('system.system_originlist');
+        $system_originlist = json_decode($system_originlist, true);
+        $system_originlist = !empty($system_originlist) ? $system_originlist : [];
+        $assign_data['system_originlist_str'] = implode(PHP_EOL, $system_originlist);
+        $this->assign($assign_data);
+
         return $this->fetch();
     }
 }

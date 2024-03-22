@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -15,6 +15,7 @@ namespace app\api\model\v1;
 
 use think\Db;
 use think\Cache;
+use think\Config;
 
 /**
  * 微信小程序商城订单模型
@@ -25,15 +26,25 @@ class Shop extends UserBase
 {
     use \traits\controller\Jump;
 
-    private $diyminiproInfo = [];
+    private $miniproInfo = [];
 
     //初始化
     protected function initialize()
     {
         // 需要调用`Model`的`initialize`方法
         parent::initialize();
-        $Config = Db::name('pay_api_config')->where('pay_id', 1)->find();
-        $this->diyminiproInfo = !empty($Config['pay_info']) ? unserialize($Config['pay_info']) : [];
+        $this->times = getTime();
+        $dataConf = tpSetting("OpenMinicode.conf_".self::$provider, [], self::$lang);
+        $this->miniproInfo = json_decode($dataConf, true);
+    }
+
+    public function getCartTotalNum()
+    {
+        $cart_total_num = 0;
+        if (!empty($this->users_id)){
+            $cart_total_num = Db::name('shop_cart')->where(['users_id' => $this->users_id])->sum('product_num');
+        }
+        return $cart_total_num;
     }
 
     /*购物车操作--Start*/
@@ -68,11 +79,15 @@ class Shop extends UserBase
                     'spec_stock' => ['>', 0],
                 ];
                 //获取第一个有库存的规格
-                $post['spec_value_id'] = Db::name('product_spec_value')->where($combiWhere)->order('value_id asc')->getField('spec_value_id');
-                if (empty($post['spec_value_id'])) {
-                    $this->error('商品已售罄');
+                $Field = 'spec_value_id, spec_stock';
+                $SpecValue = Db::name('product_spec_value')->field($Field)->where($combiWhere)->order('value_id asc')->find();
+                if (!empty($SpecValue)) {
+                    if ($SpecValue['spec_stock'] > 0) {
+                        $post['spec_value_id'] = $CartWhere['spec_value_id'] = $SpecValue['spec_value_id'];
+                    } else {
+                        $this->error('商品已售罄');
+                    }
                 }
-                $CartWhere['spec_value_id'] = $post['spec_value_id'];
             }
             /* END */
 
@@ -95,7 +110,8 @@ class Shop extends UserBase
                 $ResultID = Db::name('shop_cart')->add($data);
             }
             if (!empty($ResultID)) {
-                $this->success('加入成功');
+                $cart_total_num = Db::name('shop_cart')->where(['users_id' => $post['users_id']])->sum('product_num');
+                $this->success('加入成功','',['cart_total_num'=>$cart_total_num]);
             } else {
                 $this->error('加入失败');
             }
@@ -127,6 +143,11 @@ class Shop extends UserBase
                 'product_id' => $post['product_id'],
                 'lang'       => get_home_lang()
             ];
+            if (!empty($post['discount_active_id'])){
+                $CartWhere['discount_active_id'] = $post['discount_active_id'];
+            }else{
+                $CartWhere['discount_active_id'] = 0;
+            }
 
             /*若开启多规格则执行*/
             $usersConfig = getUsersConfigData('shop');
@@ -149,12 +170,14 @@ class Shop extends UserBase
                     'selected'      => 1,
                     'lang'          => get_home_lang(),
                     'add_time'      => getTime(),
-                    'update_time'   => getTime()
+                    'update_time'   => getTime(),
+                    'discount_active_id'   => !empty($CartWhere['discount_active_id']) ? $CartWhere['discount_active_id'] : 0
                 ];
                 $ResultID = Db::name('shop_cart')->add($data);
             }
             if (!empty($ResultID)) {
-                $this->success('加入成功');
+                $totalCart = Db::name('shop_cart')->where(['users_id' => $post['users_id']])->sum('product_num');
+                $this->success('加入成功','',['cart_total_num'=>$totalCart]);
             } else {
                 $this->error('加入失败');
             }
@@ -175,14 +198,15 @@ class Shop extends UserBase
         ];
         $ResultID = Db::name('shop_cart')->where($where)->delete();
         if (!empty($ResultID)) {
-            $this->success('操作成功');
+            $totalCart = Db::name('shop_cart')->where(['users_id' => $param['users_id']])->sum('product_num');
+            $this->success('操作成功','',['cart_total_num'=>$totalCart]);
         } else {
             $this->error('操作失败');
         }
     }
 
     // 购物车数据列表
-    public function ShopCartList($users_id = null, $level_discount = 100)
+    public function ShopCartList($users_id = null, $level_discount = 100, $level_id = 0)
     {
         $result              = [];
         $result['cart_list'] = [];
@@ -194,8 +218,16 @@ class Shop extends UserBase
                 'a.lang'     => get_home_lang(),
                 'b.arcrank'  => array('egt', 0)
             ];
+            $field = 'a.*, b.aid, b.title, b.litpic, b.users_price, b.users_discount_type, b.stock_count, b.attrlist_id, c.spec_price, c.spec_stock';
+            if ('v1.5.1' < getVersion()) {
+                $field .= ',c.seckill_price, c.seckill_stock';
+            }
+            if ('v1.5.7' < getVersion()) {
+                $field .= ',c.discount_price, c.discount_stock';
+            }
+
             $ShopCart  = Db::name("shop_cart")
-                ->field('a.*, b.aid, b.title, b.litpic, b.users_price, b.stock_count, b.attrlist_id, c.spec_price, c.spec_stock')
+                ->field($field)
                 ->alias('a')
                 ->join('__ARCHIVES__ b', 'a.product_id = b.aid', 'LEFT')
                 ->join('__PRODUCT_SPEC_VALUE__ c', 'a.spec_value_id = c.spec_value_id and a.product_id = c.aid', 'LEFT')
@@ -211,12 +243,12 @@ class Shop extends UserBase
                 $users_discount = strval($level_discount) / strval(100);
 
                 // 处理购物车数据
-                $ShopCart = $this->OrderProductProcess($ShopCart, $ConfigData, $users_discount);
+                $ShopCart = $this->OrderProductProcess($ShopCart, $ConfigData, $users_discount, $level_id);
             }
             $result['cart_list'] = $ShopCart;
         }
 
-//        $result['product'] = model('v1.Api')->getRecomProduct(6);
+        $result['product'] = model('v1.Api')->getRecomProduct();
 
         return $result;
     }
@@ -235,7 +267,8 @@ class Shop extends UserBase
         }
         $ResultID = Db::name('shop_cart')->where($where)->setInc('product_num');
         if (!empty($ResultID)) {
-            $this->success('操作成功');
+            $cart_total_num = Db::name('shop_cart')->where('users_id',$param['users_id'])->sum('product_num');
+            $this->success('操作成功','',['cart_total_num'=>$cart_total_num]);
         } else {
             $this->error('操作失败');
         }
@@ -258,7 +291,8 @@ class Shop extends UserBase
             if ($product_num_tmp > 1) {
                 $ResultID = Db::name('shop_cart')->where($where)->setDec('product_num');
                 if (!empty($ResultID)) {
-                    $this->success('操作成功');
+                    $cart_total_num = Db::name('shop_cart')->where('users_id',$param['users_id'])->sum('product_num');
+                    $this->success('操作成功','',['cart_total_num'=>$cart_total_num]);
                 }
             } else {
                 $this->error('数量至少一件！');
@@ -330,6 +364,7 @@ class Shop extends UserBase
                 'product_id'  => $post['product_id'],
                 'product_num' => $post['product_num'],
                 'active_time_id' => isset($post['active_time_id']) ? $post['active_time_id'] : 0,
+                'discount_active_id' => isset($post['discount_active_id']) ? $post['discount_active_id'] : 0,
             ];
 
             /*存在规格则执行*/
@@ -345,15 +380,19 @@ class Shop extends UserBase
             Cache::set($querystr, $querydata, 86400);
 
             // 跳转链接
-            $url = '/pages/product_buy/index?querystr=' . $querystr;
-            $this->success('数据正确', $url);
+            if (1 == input('param.fenbao/d')) {
+                $url = '?querystr=' . $querystr;
+            } else {
+                $url = '/pages/product_buy/index?querystr=' . $querystr;
+            }
+            $this->success('数据正确', $url, ['url'=>$url]);
         } else {
             $this->error('该商品不存在或已下架！');
         }
     }
 
     // 获取商品信息进行展示
-    public function GetProductData($querystr = null, $users_id = null, $level_discount = 100)
+    public function GetProductData($querystr = null, $users_id = null, $level_discount = 100, $users = [], $post = [])
     {
         if (empty($users_id)) $this->error('请先登录');
 
@@ -361,8 +400,16 @@ class Shop extends UserBase
         $CacheData = Cache::get($querystr);
 
         // 是否存在购买商品
-        $list = $this->GetBuyOrderList($CacheData, $users_id);
+        $list = $this->GetBuyOrderList($CacheData, $users_id, $post);
         if (empty($list)) $this->error('链接失效，请重新下单');
+
+        //购物车下单
+        if (empty($CacheData)) {
+            $logistics_type_arr = get_arr_column($list, 'logistics_type');
+            if (empty($post['deliveryShow']) && empty($post['verifyShow']) && in_array(1, $logistics_type_arr)) {
+                $post['deliveryShow'] = 1;
+            }
+        }
 
         // 获取商城配置信息
         $ConfigData = getUsersConfigData('shop');
@@ -375,8 +422,7 @@ class Shop extends UserBase
         }
 
         /* 商品规格/折扣数据处理 */
-        $list = $this->OrderProductProcess($list, $ConfigData, $users_discount);
-
+        $list = $this->OrderProductProcess($list, $ConfigData, $users_discount, $users['level_id']);
         if (empty($list)) $this->error('商品库存不足或已过期！');
         /* END */
 
@@ -386,38 +432,26 @@ class Shop extends UserBase
 
         /* 商品数据整合处理 */
         foreach ($list as $key => $value) {
-            /* 合计金额、合计数量计算 */
+            // 合计金额、合计数量计算 
             if ($value['users_price'] >= 0 && !empty($value['product_num'])) {
                 // 计算单品小计
-                $list[$key]['subtotal'] = sprintf("%.2f", $value['users_price'] * $value['product_num']);
+                $list[$key]['subtotal'] = unifyPriceHandle($value['users_price'] * $value['product_num']);
                 // 计算合计金额
                 $GlobalInfo['TotalAmount'] += $list[$key]['subtotal'];
-                $GlobalInfo['TotalAmount'] = sprintf("%.2f", $GlobalInfo['TotalAmount']);
+                $GlobalInfo['TotalAmount'] = unifyPriceHandle($GlobalInfo['TotalAmount']);
                 // 计算合计数量
                 $GlobalInfo['TotalNumber'] += $value['product_num'];
                 // 判断订单类型，目前逻辑：一个订单中，只要存在一个普通商品(实物商品，需要发货物流)，则为普通订单
                 // 0表示为普通订单，1表示为虚拟订单，虚拟订单无需发货物流，无需选择收货地址，无需计算运费
                 if (empty($value['prom_type'])) $GlobalInfo['PromType'] = 0;
             }
-            /* END */
 
-            /* 规格处理 */
-            $list[$key]['product_spec'] = '';
-            if (!empty($value['spec_value_id'])) {
-                $spec_value_id = explode('_', $value['spec_value_id']);
-                if (!empty($spec_value_id)) {
-                    $SpecWhere       = [
-                        'aid'           => $value['product_id'],
-                        'lang'          => get_home_lang(),
-                        'spec_value_id' => ['IN', $spec_value_id]
-                    ];
-                    $ProductSpecData = Db::name("product_spec_data")->where($SpecWhere)->field('spec_name, spec_value')->select();
-                    foreach ($ProductSpecData as $spec_value) {
-                        $list[$key]['product_spec'] .= $spec_value['spec_name'] . '：' . $spec_value['spec_value'] . '；';
-                    }
-                }
-            }
-            /* END */
+            // 仅到店核销
+            if ('2' === $value['logistics_type']) $GlobalInfo['onlyVerify'] = true;
+            // 仅物流配送
+            if ('1' === $value['logistics_type']) $GlobalInfo['onlyDelivery'] = true;
+            // 物流配送 和 到店核销 都支持
+            if ('1,2' === $value['logistics_type']) $GlobalInfo['allLogisticsType'] = true;
         }
         /* END */
 
@@ -430,8 +464,7 @@ class Shop extends UserBase
             $address['region']['detail']   = $address['address'];
             $address['address_all']        = $address['region']['province'] . $address['region']['city'] . $address['region']['district'] . $address['region']['detail'];
 
-            $shop_open_shipping = getUsersConfigData('shop.shop_open_shipping');
-            if (!empty($shop_open_shipping)) {
+            if (!empty($GlobalInfo['shop_open_shipping'])) {
                 /* 查询运费 */
                 $where['province_id'] = $address['province'];
                 $template_money       = Db::name('shop_shipping_template')->where($where)->getField('template_money');
@@ -450,125 +483,205 @@ class Shop extends UserBase
         /* END */
 
         // 最终支付总金额
-        $GlobalInfo['PayTotalAmount'] = sprintf("%.2f", $GlobalInfo['TotalAmount'] + $address['template_money']);
-
+        if (!empty($post['deliveryShow']) && 1 === intval($post['deliveryShow'])) {
+            // 订单总金额 + 运费金额
+            $GlobalInfo['PayTotalAmount'] = unifyPriceHandle($GlobalInfo['TotalAmount'] + $address['template_money']);
+        } else {
+            $GlobalInfo['PayTotalAmount'] = unifyPriceHandle($GlobalInfo['TotalAmount']);
+        }
+        
         // 数据返回
         $ResultData = [
-            'address'      => $address,
-            'global_info'  => $GlobalInfo,
+            'users' => $users,
+            'address' => $address,
+            'global_info' => $GlobalInfo,
             'product_data' => $list
         ];
-        $ResultData[ 'coupon_data'] = $this->getOrderCoupon($list,$users_id);
+        $ResultData['coupon_data'] = $this->getOrderCoupon($list,$users_id,$users_discount);
+        $coupon_ids = get_arr_column($ResultData['coupon_data'],'coupon_id');
+        $ResultData['unuse_coupon_data'] = $this->getUnuseOrderCoupon($coupon_ids,$users_id);
         $this->success('数据正确', null, $ResultData);
     }
 
     /**
      * 获取该订单可用优惠券
      */
-    public function getOrderCoupon($product_data,$user_id)
+    public function getOrderCoupon($product_data,$user_id,$users_discount)
     {
-        $aids = [];
-        $typeids = [];
-        $type_price = 0;
-        $aid_price = 0;
-        $totol_price = 0;
-        foreach ($product_data as $k => $v){
-            if (!in_array($v['aid'],$aids)){
-                $aids[] = $v['aid'];
-                $aid_price += $v['subtotal'];
-            }
-            if (!in_array($v['typeid'],$typeids)){
-                $typeids[] = $v['typeid'];
-                $type_price += $v['subtotal'];
-            }
-            $totol_price += $v['subtotal'];
+        $use_data = [];
+        $coupon_table = 'shop_coupon';
+        $coupon_use_table = 'shop_coupon_use';
+        $weappInfo = model('ShopPublicHandle')->getWeappInfo("Coupons");
+        if (!empty($weappInfo['status']) && 1 == $weappInfo['status']) {
+            $coupon_table = 'weapp_coupons';
+            $coupon_use_table = 'weapp_coupons_use';
         }
-        //查出顶级分类
-        if (!empty($typeids)){
-            $type_data = Db::name('arctype')->where('id','in',$typeids)->field('id,topid')->select();
-            if (!empty($type_data)){
-                $typeids = [];
-                foreach ($type_data as $k => $v){
-                    if (0 == $v['topid'] && !in_array($v['id'],$typeids)){
-                        $typeids[] = $v['id'];
-                    }else if( !empty($v['topid'])  && !in_array($v['topid'],$typeids) ){
-                        $typeids[] = $v['topid'];
-                    }
-                }
+
+        $all_total_price = 0;//所有商品总价
+        $no_discount_total_price = 0;//没用会员价 的商品总价
+        foreach ($product_data as $k => $v){
+            if (!empty($v['stop_buy']) && 1 == $v['stop_buy']){
+                unset($product_data[$k]); //去除本单不可使用商品
+                continue;
             }
+            if (empty($v['use_discount_price'])) $no_discount_total_price += $v['subtotal'];
+            $all_total_price += $v['subtotal'];
         }
         $where['a.users_id'] = $user_id;
         $where['a.start_time'] = ['<=',getTime()];
         $where['a.end_time'] = ['>=',getTime()];
         $where['a.use_status'] =  0;
-        $where['b.coupon_id'] =  ['>',1];
-        $use_data = [];
-        //查出全部的优惠券
-        $data = Db::name('shop_coupon_use')
+        $where['b.coupon_id'] =  ['>',0];
+        //查出全部的没过期优惠券
+        $data = Db::name($coupon_use_table)
             ->alias('a')
-            ->join('shop_coupon b','a.coupon_id = b.coupon_id','left')
+            ->join("{$coupon_table} b",'a.coupon_id = b.coupon_id','left')
             ->where($where)
             ->getAllWithIndex('use_id');
         if (!empty($data)){
             foreach ($data as $k => $v){
+                if (1 != $users_discount && !empty($v['use_limit'])) continue;
+
+                $v['conditions_use'] = floatval($v['conditions_use']);
                 if (1 == $v['coupon_form']){
                     $v['coupon_form_name'] = '满减券';
+                }elseif (2 == $v['coupon_form']){
+                    $v['coupon_form_name'] = '满折券';
+                    $v['coupon_discount'] = floatval( $v['coupon_discount']);
                 }
                 $v['start_time'] = date('Y/m/d', $v['start_time']);
                 $v['end_time'] = date('Y/m/d', $v['end_time']);
                 switch ($v['coupon_type'])
                 {
                     case 2:
+                        $v['coupon_type_name'] = '指定商品';
                         //指定商品
                         if (!empty($v['product_id'])){
                             $product_arr = explode(",",$v['product_id']);
-                            $in = 0;
-                            foreach ($aids as $m){
-                                if (in_array($m,$product_arr) && $aid_price >= $v['conditions_use']){
-                                    //此优惠券可用
-                                    $in = 1;
-                                    break;
+                            $product_total_price = 0; //本张优惠券可用的商品总价
+                            foreach ($product_data as $m => $n){
+                                if (!empty($v['use_limit']) && !empty($n['use_discount_price'])){
+                                    continue;
+                                }
+                                if (in_array($n['aid'],$product_arr)){
+                                    $product_total_price += $n['subtotal'];
                                 }
                             }
-                            if (!empty($in)){
-                                $use_data[] = $v;
+                            if ($product_total_price >= $v['conditions_use']) {
+                                if (2 == $v['coupon_form']){ //满折
+                                    $coupon_discount = 1 - ($v['coupon_discount'] / 10); //优惠的折扣
+                                    $v['coupon_price'] = unifyPriceHandle($product_total_price * $coupon_discount);
+                                }
+
+                                $use_data[] = $v;//此优惠券可用
                             }
                         }
                         break;
                     case 3:
+                        $v['coupon_type_name'] = '指定分类';
                         //指定分类
                         if (!empty($v['arctype_id'])){
                             $arctype_arr = explode(",",$v['arctype_id']);
-                            $in = 0;
-                            foreach ($typeids as $m){
-                                if (in_array($m,$arctype_arr) && $type_price >= $v['conditions_use']){
-                                    //此优惠券可用
-                                    $in = 1;
-                                    break;
+                            $arctype_total_price = 0;//本张优惠券可用的商品总价
+                            foreach ($product_data as $m => $n){
+                                if (!empty($v['use_limit']) && !empty($n['use_discount_price'])){
+                                    continue;
+                                }
+                                if (in_array($n['typeid'],$arctype_arr)){
+                                    $arctype_total_price += $n['subtotal'];
                                 }
                             }
-                            if (!empty($in)){
-                                $use_data[] = $v;
+                            if ($arctype_total_price >= $v['conditions_use']) {
+                                if (2 == $v['coupon_form']){ //满折
+                                    $coupon_discount = 1 - ($v['coupon_discount'] / 10); //优惠的折扣
+                                    $v['coupon_price'] = unifyPriceHandle($arctype_total_price * $coupon_discount);
+                                }
+                                $use_data[] = $v;//此优惠券可用
                             }
                         }
                         break;
                     default:
-                        if ($totol_price >= $v['conditions_use']) {
+                        $v['coupon_type_name'] = '全部商品';
+                        //不可与会员折扣同时使用 包括会员价和会员等级折扣
+                        if (!empty($v['use_limit'])){
+                            $total_price = $no_discount_total_price;
+                        }else{
+                            $total_price = $all_total_price;
+                        }
+
+                        if ($total_price >= $v['conditions_use']) {
+                            if (2 == $v['coupon_form']){ //满折
+                                $coupon_discount = 1 - ($v['coupon_discount'] / 10); //优惠的折扣
+                                $v['coupon_price'] = unifyPriceHandle($total_price * $coupon_discount);
+                            }
                             $use_data[] = $v;
                         }
+
+
                         break;
                 }
             }
         }
         return $use_data;
     }
+    /**
+     * 获取该订单不可用优惠券
+     */
+    public function getUnuseOrderCoupon($coupon_ids = [],$users_id)
+    {
+        $coupon_table = 'shop_coupon';
+        $coupon_use_table = 'shop_coupon_use';
+        $weappInfo = model('ShopPublicHandle')->getWeappInfo("Coupons");
+        if (!empty($weappInfo['status']) && 1 == $weappInfo['status']) {
+            $coupon_table = 'weapp_coupons';
+            $coupon_use_table = 'weapp_coupons_use';
+        }
+
+        $where['a.users_id'] = $users_id;
+        $where['a.use_status'] =  0;
+        $where['a.end_time'] = ['>=',getTime()];
+        $where['b.coupon_id'] =  ['not in',$coupon_ids];
+        $unuse_data = [];
+        //查出全部的优惠券
+        $data = Db::name($coupon_use_table)
+            ->alias('a')
+            ->join("{$coupon_table} b",'a.coupon_id = b.coupon_id','left')
+            ->where($where)
+            ->getAllWithIndex('use_id');
+        if (!empty($data)){
+            foreach ($data as $k => $v){
+                $v['conditions_use'] = floatval($v['conditions_use']);
+                if (1 == $v['coupon_form']){
+                    $v['coupon_form_name'] = '满减券';
+                }elseif (2 == $v['coupon_form']){
+                    $v['coupon_form_name'] = '满折券';
+                    $v['coupon_discount'] = floatval( $v['coupon_discount']);
+                }
+                $v['start_time'] = date('Y/m/d', $v['start_time']);
+                $v['end_time'] = date('Y/m/d', $v['end_time']);
+                switch ($v['coupon_type']) {
+                    case '1':
+                        $v['coupon_type_name'] = '全部商品';
+                        break;
+                    case '2';
+                        $v['coupon_type_name'] = '指定商品';
+                        break;
+                    case '3';
+                        $v['coupon_type_name'] = '指定分类';
+                        break;
+                }
+                $unuse_data[] = $v;
+            }
+        }
+        return $unuse_data;
+    }
 
     // 订单结算
-    public function ShopOrderPay($post = [], $level_discount = 100)
+    public function ShopOrderPay($post = [], $level_discount = 100, $level_id = 0, $usersData = [])
     {
         // 基础判断
         if (empty($post['users_id'])) $this->error('请先登录');
-        if (1 != $post['prom_type']){
+        if (!empty($post['deliveryShow']) && 1 === intval($post['deliveryShow'])) {
             if (empty($post['addr_id']) || $post['addr_id'] == 'undefined') $this->error('请添加收货地址');
         }
         if (empty($post['pay_type'])) $this->error('请选择支付方式');
@@ -578,18 +691,16 @@ class Shop extends UserBase
 
         // 会员折扣
         $users_discount = strval($level_discount) / strval(100);
-        if ( isset($post['order_source']) && 20 == $post['order_source']){
-            $users_discount = 0;
-        }
+        if (isset($post['order_source']) && 20 == $post['order_source']) $users_discount = 0;
 
         // 获取下单的商品数据
         $CacheData = Cache::get($post['querystr']);
-        $list      = $this->GetBuyOrderList($CacheData, $post['users_id']);
+        $list = $this->GetBuyOrderList($CacheData, $post['users_id'], $post);
         if (empty($list)) $this->error('链接失效，请重新下单');
 
         // 订单商品数据处理
-        $list = $this->OrderProductProcess($list, $ConfigData, $users_discount);
-        if (empty($list)) $this->error('商品库存不足或已过期！');
+        $list = $this->OrderProductProcess($list, $ConfigData, $users_discount, $level_id);
+        if (empty($list)) $this->error('商品库存不足或已过期');
 
         // 组装订单流程所需全局信息
         $GlobalInfo = $this->GetGlobalInfo($ConfigData, $CacheData);
@@ -599,8 +710,8 @@ class Shop extends UserBase
             /* 合计金额、合计数量计算 */
             if ($value['users_price'] >= 0 && !empty($value['product_num'])) {
                 // 计算合计金额
-                $GlobalInfo['TotalAmount'] += sprintf("%.2f", $value['users_price'] * $value['product_num']);
-                $GlobalInfo['TotalAmount'] = sprintf("%.2f", $GlobalInfo['TotalAmount']);
+                $GlobalInfo['TotalAmount'] += unifyPriceHandle($value['users_price'] * $value['product_num']);
+                $GlobalInfo['TotalAmount'] = unifyPriceHandle($GlobalInfo['TotalAmount']);
                 // 计算合计数量
                 $GlobalInfo['TotalNumber'] += $value['product_num'];
                 // 判断订单类型，目前逻辑：一个订单中，只要存在一个普通商品(实物商品，需要发货物流)，则为普通订单
@@ -611,36 +722,29 @@ class Shop extends UserBase
         }
         /* END */
 
-        // 获取用户下单时提交的收货地址及运费
-        $AddrData = $this->GetUsersAddrData($post, $GlobalInfo['PromType']);
-
-        // 订单总金额 + 运费金额
-        $GlobalInfo['PayTotalAmount'] = sprintf("%.2f", $GlobalInfo['TotalAmount'] + $AddrData['shipping_fee']);
-        //应付总金额
-        $PayAmount = $GlobalInfo['PayTotalAmount'];
-        //使用优惠券
+        // 使用优惠券
         if (!empty($post['coupon_id'])){
             $coupon_where = [
-                'a.coupon_id'=>$post['coupon_id'],
-                'a.use_status'=>0,
-                'a.users_id'  => $post['users_id'],
+                'a.coupon_id' => $post['coupon_id'],
+                'a.use_status' => 0,
+                'a.users_id' => $post['users_id'],
             ];
-            $coupon_where['a.start_time'] = ['<=',getTime()];
-            $coupon_where['a.end_time'] = ['>=',getTime()];
-            $coupon_info = Db::name('shop_coupon_use')
-                ->alias('a')
-                ->join('shop_coupon b','a.coupon_id = b.coupon_id','left')
-                ->where($coupon_where)
-                ->find();
-            if (!empty($coupon_info)){
-                $PayAmount = $PayAmount-$coupon_info['coupon_price'] < 0 ? 0 : $PayAmount-$coupon_info['coupon_price'];
-            }
+            $coupon_info = model('ShopPublicHandle')->order_coupon_handle($coupon_where, $list,$users_discount);
+            if (!empty($coupon_info)) $GlobalInfo['TotalAmount'] = $GlobalInfo['TotalAmount'] - $coupon_info['coupon_price'] < 0 ? 0 : $GlobalInfo['TotalAmount'] - $coupon_info['coupon_price'];
         }
 
-        if (2 == $post['pay_type']) {
-            $UsersMoney = Db::name('users')->where('users_id', $post['users_id'])->getField('users_money');
-            if ($GlobalInfo['PayTotalAmount'] > $UsersMoney) $this->error('您的余额不足，支付失败');
+        $AddrData = [];
+        if (!empty($post['deliveryShow']) && 1 === intval($post['deliveryShow'])) {
+            // 获取用户下单时提交的收货地址及运费
+            $AddrData = $this->GetUsersAddrData($post, $GlobalInfo['PromType']);
+            // 订单总金额 + 运费金额
+            $GlobalInfo['PayTotalAmount'] = unifyPriceHandle($GlobalInfo['TotalAmount'] + $AddrData['shipping_fee']);
+        } else {
+            $GlobalInfo['PayTotalAmount'] = unifyPriceHandle($GlobalInfo['TotalAmount']);
         }
+
+        // 应付总金额
+        $PayAmount = $GlobalInfo['PayTotalAmount'];
 
         // 添加到订单主表
         $time      = getTime();
@@ -652,7 +756,8 @@ class Shop extends UserBase
             'payment_method'     => 0,
             'pay_time'           => 0,
             'pay_name'           => 'wechat',
-            'wechat_pay_type'    => 'WeChatH5',
+            'wechat_pay_type'    => 'WeChatAppletsPay',
+            'order_terminal'     => 3,
             'pay_details'        => '',
             'order_total_amount' => $GlobalInfo['PayTotalAmount'],
             'order_amount'       => $PayAmount,
@@ -665,7 +770,7 @@ class Shop extends UserBase
             'user_note'          => $post['remark'],
             'lang'               => get_home_lang()
         ];
-        if (!empty($coupon_info)){
+        if (!empty($coupon_info)) {
             $OrderData['coupon_id'] = $coupon_info['coupon_id'];
             $OrderData['use_id'] = $coupon_info['use_id'];
             $OrderData['coupon_price'] = $coupon_info['coupon_price'];
@@ -673,8 +778,33 @@ class Shop extends UserBase
         // 存在收货地址则追加合并到主表数组
         if (!empty($AddrData)) $OrderData = array_merge($OrderData, $AddrData);
 
+        // 余额支付
+        if (2 === intval($post['pay_type'])) {
+            $usersMoney = Db::name('users')->where('users_id', $post['users_id'])->getField('users_money');
+            if ($GlobalInfo['PayTotalAmount'] > $usersMoney) $this->error('您的余额不足，支付失败');
+        }
+        // 抖音支付时更新订单支付类型
+        else if (9 === intval($post['pay_type'])) {
+            $OrderData['pay_name'] = 'tikTokPay';
+            $OrderData['wechat_pay_type'] = '';
+        }
+        // 百度支付时更新订单支付类型
+        else if (10 === intval($post['pay_type'])) {
+            $OrderData['pay_name'] = 'baiduPay';
+            $OrderData['wechat_pay_type'] = '';
+        }
+
+        // 订单提交处理 -- 其他逻辑公共调用方法，部分逻辑改动不适合直接修改原文件时请在此方法做处理和兼容
+        $OrderData = model('ShopPublicHandle')->orderSubmitPublicHandle($OrderData, $this->usersConfig, $this->users_id, $post, $list);
+
+        // 添加订单及后续处理
         $OrderId = Db::name('shop_order')->add($OrderData);
         if (!empty($OrderId)) {
+            $OrderData['order_id'] = $OrderId;
+
+            // 订单创建后续处理 -- 其他逻辑公共调用方法，部分逻辑改动不适合直接修改原文件时请在此方法做处理和兼容
+            $OrderData = model('ShopPublicHandle')->orderCreatePublicHandle($OrderData, $this->usersConfig, $this->users_id, $post, $list);
+
             //锁定优惠券
             if (!empty($coupon_info)){
                 $coupon_update = [
@@ -682,10 +812,17 @@ class Shop extends UserBase
                     'use_status'=> 0,
                     'users_id'  => $post['users_id'],
                 ];
-                Db::name('shop_coupon_use')->where($coupon_update)->update(['use_status'=> 1,'use_time'=>getTime(),'update_time'=>getTime()]);
+                $coupon_use_table = 'shop_coupon_use';
+                $weappInfo = model('ShopPublicHandle')->getWeappInfo("Coupons");
+                if (!empty($weappInfo['status']) && 1 == $weappInfo['status']) {
+                    $coupon_use_table = 'weapp_coupons_use';
+                }
+
+                Db::name($coupon_use_table)->where($coupon_update)->update(['use_status'=> 1,'use_time'=>getTime(),'update_time'=>getTime()]);
             }
 
             $cart_ids   = $UpSpecValue = [];
+            $contains_virtual = 1;//是否包含虚拟产品
             foreach ($list as $key => $value) {
                 $attr_value = $attr_value_new = $spec_value = '';
 
@@ -740,6 +877,13 @@ class Shop extends UserBase
                     'order_source'       => isset($post['order_source']) ? $post['order_source'] : 10,
                     'order_source_id'    => isset($post['order_source_id']) ? $post['order_source_id'] : 0,
                 ];
+
+                if (in_array($value['prom_type'],[1,2,3])){
+                    $contains_virtual = 2;
+                }
+            }
+            if (2 == $contains_virtual) {
+                Db::name('shop_order')->where('order_id',$OrderId)->update(['contains_virtual'=>$contains_virtual]);
             }
 
             $DetailsId = Db::name('shop_order_details')->insertAll($OrderDetailsData);
@@ -753,28 +897,31 @@ class Shop extends UserBase
                 // 添加订单操作记录
                 AddOrderAction($OrderId, $post['users_id']);
 
-                if (1 == $post['pay_type']) {
-                    // 微信支付
-                    $Data       = $this->GetWechatAppletsPay($post['openid'], $OrderData['order_code'], $OrderData['order_amount']);
-                    $ResultData = [
-                        'WeChatPay' => $Data,
+                // 微信支付
+                if (1 === intval($post['pay_type'])) {
+                    // 调用微信支付接口
+                    $weChatPay = model('ShopPublicHandle')->getWechatAppletsPay($post['users_id'], $OrderData['order_code'], $OrderData['order_amount']);
+                    $result = [
+                        'WeChatPay' => $weChatPay,
                         'OrderData' => [
                             'order_id'   => $OrderId,
                             'order_code' => $OrderData['order_code']
                         ]
                     ];
-                    $this->success('正在支付', null, $ResultData);
-
-                } else if (2 == $post['pay_type']) {
-                    // 余额支付
-
+                    $result['tmplData'] = [];
+                    // 返回提示
+                    $this->success('正在支付', null, $result);
+                }
+                // 余额支付
+                else if (2 === intval($post['pay_type'])) {
+                    // 更新订单为已余额支付完成
                     $pay_details = [
                         'unified_id'     => $OrderId,
                         'unified_number' => $OrderData['order_code'],
                         'payment_amount' => $OrderData['order_amount'],
                         'payment_type'   => '余额支付'
                     ];
-                    $UpOrderData = [
+                    $update = [
                         'order_status'    => 1,
                         'pay_name'        => 'balance',
                         'wechat_pay_type' => '',
@@ -782,14 +929,18 @@ class Shop extends UserBase
                         'pay_time'        => getTime(),
                         'update_time'     => getTime()
                     ];
-                    $ReturnID    = Db::name('shop_order')->where('order_id', $OrderId)->update($UpOrderData);
-                    if (!empty($ReturnID)) {
-                        $UsersData = [
-                            'users_money' => $UsersMoney - $OrderData['order_amount'],
-                            'update_time' => getTime()
-                        ];
-                        $users_id  = Db::name('users')->where('users_id', $post['users_id'])->update($UsersData);
-                        if (!empty($users_id)) {
+                    $resultID = Db::name('shop_order')->where('order_id', $OrderId)->update($update);
+                    if (!empty($resultID)) {
+                        // 扣除会员余额
+                        $resultID = Db::name('users')->where('users_id', $post['users_id'])->setDec('users_money', $OrderData['order_amount']);
+                        if (!empty($resultID)) {
+                            // 添加会员余额记录
+                            $getParam = [
+                                'users_money' => $usersMoney,
+                                'users_id' => $post['users_id']
+                            ];
+                            UsersMoneyAction($OrderData['order_code'], $getParam, $OrderData['order_amount'], '订单支付');
+
                             // 添加订单操作记录
                             AddOrderAction($OrderId, $post['users_id'], 0, 1, 0, 1, '支付成功！', '会员使用余额完成支付！');
 
@@ -801,15 +952,55 @@ class Shop extends UserBase
                                 'order_id' => $OrderId
                             ];
                             $ShopModel->afterVirtualProductPay($Where);
+                            
+                            // 统计销售额
+                            eyou_statistics_data(2);
+                            eyou_statistics_data(3, $OrderData['order_amount']);
+                            $result['tmplData'] = [];
 
                             // 邮箱发送
-                            // $SmtpConfig = tpCache('smtp');
-                            // $ResultData['email'] = GetEamilSendData($SmtpConfig, $this->users, $OrderWhere, 1, 'balance');
+                            $result['email'] = GetEamilSendData(tpCache('smtp'), $usersData, $OrderData, 1, 'balance');
 
-                            $url = '/pages/order/index';
-                            $this->success('支付完成', $url, ['OrderData' => $OrderData]);
+                            // 短信发送
+                            $result['mobile'] = GetMobileSendData(tpCache('sms'), $usersData, $OrderData, 1, 'balance');
+
+                            // 发送站内信给后台
+                            $OrderData['pay_method'] = '余额支付';
+                            SendNotifyMessage($OrderData, 5, 1, 0);
+
+                            // 返回数据
+                            $result['OrderData'] = $OrderData;
+                            $this->success('支付完成', '/pages/order/index', $result);
                         }
                     }
+                }
+                // 抖音支付
+                else if (9 === intval($post['pay_type'])) {
+                    $tikTokPay = model('TikTok')->getTikTokAppletsPay($OrderId, $OrderData['order_code'], $OrderData['order_amount'], $this->usersConfig['order_unpay_close_time']);
+                    $result = [
+                        'tikTokPay' => $tikTokPay,
+                        'OrderData' => [
+                            'order_id'   => $OrderId,
+                            'order_code' => $OrderData['order_code']
+                        ]
+                    ];
+                    $result['tmplData'] = [];
+                    // 返回提示
+                    $this->success('正在支付', null, $result);
+                }
+                // 百度支付
+                else if (10 === intval($post['pay_type'])) {
+                    $baiduPay = model('BaiduPay')->getBaiDuAppletsPay($OrderId, $OrderData['order_code'], $OrderData['order_amount']);
+                    $result = [
+                        'baiduPay' => $baiduPay,
+                        'OrderData' => [
+                            'order_id'   => $OrderId,
+                            'order_code' => $OrderData['order_code']
+                        ]
+                    ];
+                    $result['tmplData'] = [];
+                    // 返回提示
+                    $this->success('正在支付', null, $result);
                 }
             } else if (!empty($OrderId) && empty($DetailsId)) {
                 // 订单详情添加失败则删除已添加的订单主表数据
@@ -820,111 +1011,53 @@ class Shop extends UserBase
         $this->error('订单生成失败，商品数据有误！');
     }
 
+    //生成核销码
+    public function create_verify_code($length = 12)
+    {
+        $chars = "0123456789";
+        $char_len = strlen($chars);
+        $verify_code = '';
+        for ($i = 0; $i < $length; $i++) {
+            $loop = mt_rand(0, ($char_len - 1));
+            $verify_code .= $chars[$loop];
+        }
+        $is_have = Db::name('shop_order_verify')->where('verify_code',$verify_code)->count();
+        if (!empty($is_have)){
+            $verify_code = $this->create_verify_code(12);
+        }
+        return $verify_code;
+    }
+
     // 微信小程序支付后续处理
     public function WechatAppletsPayDealWith($PostData = [], $notify = false)
     {
-        $OpenID    = !empty($PostData['openid']) ? $PostData['openid'] : '';
-        $UsersID   = !empty($PostData['users_id']) ? $PostData['users_id'] : '';
-        $OrderID   = $PostData['order_id'];
-        $OrderCode = $PostData['order_code'];
-        if (!empty($OrderID) && !empty($OrderCode)) {
-            /* 查询本站订单状态 */
+        if (!empty($PostData['order_id']) && !empty($PostData['order_code'])) {
+            // 查询本站订单状态 
             $where = [
-                'users_id'   => $UsersID,
-                'order_id'   => $OrderID,
-                'order_code' => $OrderCode,
+                'users_id'   => $this->users_id,
+                'order_id'   => $PostData['order_id'],
+                'order_code' => $PostData['order_code'],
             ];
             $order = Db::name('shop_order')->where($where)->find();
-
-            if (empty($order)) {
-                $this->error('无效订单！');
-            } else if (0 < $order['order_status']) {
-                // 订单已支付
-                if ($notify === true) { // 异步
-                    return [
-                        'code' => 1,
-                        'msg'  => 'ok',
-                    ];
-                } else { // 同步
-                    $this->success('支付完成', '/pages/order/index');
-                }
+            if (empty($order)) $this->error('无效订单');
+            if ((0 < intval($order['prom_type']) || (0 === intval($order['prom_type']) && 2 === intval($order['logistics_type']))) && in_array($order['order_status'], [2, 3]) && 'wechat' === trim($order['pay_name'])) {
+                // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $order['order_code'], 2);
+                $this->success('订单已完成');
             }
-
-            // 小程序配置
-            $diyminiproMallSettingModel = new \weapp\DiyminiproMall\model\DiyminiproMallSettingModel;
-            $Setting                    = $diyminiproMallSettingModel->getSettingValue('setting');
-
-            // 当前时间戳
-            $time = getTime();
-
-            // 当前时间戳 + OpenID 经 MD5加密
-            $nonceStr = md5($time . $OpenID);
-
-            // 调用支付接口参数
-            $params = [
-                'appid'        => $Setting['appId'],
-                'mch_id'       => $this->diyminiproInfo['mchid'],
-                'nonce_str'    => $nonceStr,
-                'out_trade_no' => $OrderCode
-            ];
-
-            // 生成参数签名
-            $params['sign'] = $this->ParamsSign($params, $this->diyminiproInfo['key']);
-
-            // 生成参数XML格式
-            $ParamsXml = $this->ParamsXml($params);
-
-            // 调用接口返回数据
-            $url    = 'https://api.mch.weixin.qq.com/pay/orderquery';
-            $result = $this->HttpsPost($url, $ParamsXml);
-
-            // 解析XML格式
-            $ResultData = $this->ResultXml($result);
-
-            // 订单是否存在
-            if (!empty($ResultData) && 'SUCCESS' == $ResultData['return_code'] && 'OK' == $ResultData['return_msg']) {
-                // if ('NOTPAY' == $ResultData['trade_state'] && !empty($ResultData['trade_state_desc'])) {
-                //     // 订单未支付
-                //     $this->error($ResultData['trade_state_desc']);
-                // }
-                if ('SUCCESS' == $ResultData['trade_state']) {
-                    // 订单已支付，处理订单流程
-                    $OrderWhere = [
-                        'order_id' => $OrderID,
-                        'users_id' => $order['users_id']
-                    ];
-                    $OrderData  = [
-                        'order_status' => 1,
-                        'pay_details'  => serialize($ResultData),
-                        'pay_time'     => getTime(),
-                        'update_time'  => getTime()
-                    ];
-                    $ResultID   = Db::name('shop_order')->where($OrderWhere)->update($OrderData);
-                    if (!empty($ResultID)) {
-                        // 添加订单操作记录
-                        AddOrderAction($OrderID, $order['users_id'], 0, 1, 0, 1, '支付成功！', '会员使用微信小程序完成支付！');
-
-                        // 虚拟自动发货
-                        $ShopModel = new \app\user\model\Pay();
-                        $Where     = [
-                            'lang'     => get_home_lang(),
-                            'users_id' => $UsersID,
-                            'order_id' => $OrderID
-                        ];
-                        $ShopModel->afterVirtualProductPay($Where);
-
-                        // 订单支付完成
-                        if ($notify === true) { // 异步
-                            return [
-                                'code' => 1,
-                                'msg'  => 'ok',
-                            ];
-                        } else { // 同步
-                            $url = '/pages/order/index';
-                            $this->success('支付完成', $url);
-                        }
-                    }
-                }
+            if (0 !== intval($order['order_status'])) $this->success('订单支付成功');
+            $order['unified_id'] = $order['order_id'];
+            $order['unified_number'] = $order['order_code'];
+            $order['transaction_type'] = 2;
+            if (9 === intval($PostData['pay_type'])) {
+                model('TikTok')->tikTokAppletsPayDealWith($order);
+            }
+            // 百度支付
+            else if (10 === intval($PostData['pay_type'])) {
+                model('BaiduPay')->baiDuAppletsPayDealWith($order);
+            }
+            // 微信支付
+            else {
+                model('ShopPublicHandle')->getWeChatPayResult($this->users_id, $order);
             }
         }
     }
@@ -941,16 +1074,42 @@ class Shop extends UserBase
         $Result = Db::name('shop_order')->where($where)->field($field)->find();
         if (!empty($Result)) {
             if (0 == $Result['order_status']) {
-                $Data       = $this->GetWechatAppletsPay($post['openid'], $post['order_code'], $Result['order_amount']);
-                $ResultData = [
-                    'WeChatPay' => $Data,
-                    'OrderData' => [
-                        'order_id'   => $post['order_id'],
-                        'order_code' => $post['order_code']
-                    ]
-                ];
-                $url        = '/pages/order/index';
-                $this->success('正在支付', $url, $ResultData);
+                // 抖音支付
+                if (9 === intval($post['pay_type'])) {
+                    $tikTokPay = model('TikTok')->getTikTokAppletsPay($post['order_id'], $post['order_code'], $Result['order_amount'], $this->usersConfig['order_unpay_close_time']);
+                    $resultData = [
+                        'tikTokPay' => $tikTokPay,
+                        'OrderData' => [
+                            'order_id'   => $post['order_id'],
+                            'order_code' => $post['order_code']
+                        ]
+                    ];
+                }
+                // 百度支付
+                else if (10 === intval($post['pay_type'])) {
+                    $baiduPay = model('BaiduPay')->getBaiDuAppletsPay($post['order_id'], $post['order_code'], $Result['order_amount']);
+                    $resultData = [
+                        'baiduPay' => $baiduPay,
+                        'OrderData' => [
+                            'order_id'   => $post['order_id'],
+                            'order_code' => $post['order_code']
+                        ]
+                    ];
+                }
+                // 微信支付
+                else {
+                    // 调用微信支付接口
+                    $weChatPay = model('ShopPublicHandle')->getWechatAppletsPay($post['users_id'], $post['order_code'], $Result['order_amount'], 2);
+                    $resultData = [
+                        'WeChatPay' => $weChatPay,
+                        'OrderData' => [
+                            'order_id'   => $post['order_id'],
+                            'order_code' => $post['order_code']
+                        ]
+                    ];
+                }
+                $url = 1 == input('param.fenbao/d') ? '' : '/pages/user/index';
+                $this->success('正在支付', $url, $resultData);
             } else if (in_array($Result['order_status'], [1, 2, 3])) {
                 $this->success('订单已支付');
             } else if ($Result['order_status'] == 4) {
@@ -963,65 +1122,10 @@ class Shop extends UserBase
     }
 
     // 微信小程序支付
-    private function GetWechatAppletsPay($OpenID = null, $out_trade_no = null, $total_fee = null)
+    public function GetWechatAppletsPay($OpenID = null, $out_trade_no = null, $total_fee = null, $notify_url = '')
     {
-        // 小程序配置
-        $diyminiproMallSettingModel = new \weapp\DiyminiproMall\model\DiyminiproMallSettingModel;
-        $Setting                    = $diyminiproMallSettingModel->getSettingValue('setting');
-
-        // 当前时间戳
-        $time = time();
-
-        // 当前时间戳 + OpenID 经 MD5加密
-        $nonceStr = md5($time . $OpenID);
-
-        // 调用支付接口参数
-        $params = [
-            'appid'            => $Setting['appId'],
-            'attach'           => "微信小程序支付",
-            'body'             => "商品支付",
-            'mch_id'           => $this->diyminiproInfo['mchid'],
-            'nonce_str'        => $nonceStr,
-            'notify_url'       => url('plugins/DiyminiproMall/wxpay_notify', [], true, true, 1, 2),
-            'openid'           => $OpenID,
-            'out_trade_no'     => $out_trade_no,
-            'spbill_create_ip' => $this->GetClientIP(),
-            'total_fee'        => strval($total_fee * 100),
-            'trade_type'       => 'JSAPI'
-        ];
-
-        // 生成参数签名
-        $params['sign'] = $this->ParamsSign($params, $this->diyminiproInfo['key']);
-
-        // 生成参数XML格式
-        $ParamsXml = $this->ParamsXml($params);
-
-        // 调用接口返回数据
-        $url    = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
-        $result = $this->HttpsPost($url, $ParamsXml);
-
-        // 解析XML格式
-        $ResultData = $this->ResultXml($result);
-
-        // 数据返回
-        if ($ResultData['return_code'] == 'SUCCESS' && $ResultData['return_msg'] == 'OK') {
-            // 返回支付所需参数
-            $ReturnData = [
-                'prepay_id' => $ResultData['prepay_id'],
-                'nonceStr'  => $nonceStr,
-                'timeStamp' => strval($time)
-            ];
-            // 生成支付所需的签名
-            $ReturnData['paySign'] = $this->PaySign($Setting['appId'], $params['nonce_str'], $ResultData['prepay_id'], $time);
-            return $ReturnData;
-        } else if ($ResultData['return_code'] == 'FAIL') {
-            if ($ResultData['return_msg'] == '签名错误') {
-                $ResultData['return_msg'] = '小程序支付配置不正确！';
-            }
-            return $ResultData;
-        } else {
-            return $ResultData;
-        }
+        // 调用微信支付接口
+        return model('ShopPublicHandle')->getWechatAppletsPay($this->users_id, $out_trade_no, $total_fee, 2);
     }
 
     private function ParamsSign($values, $apikey)
@@ -1072,7 +1176,7 @@ class Shop extends UserBase
     private function ResultXml($xml)
     {
         // 禁止引用外部xml实体
-        libxml_disable_entity_loader(true);
+        @libxml_disable_entity_loader(true);
         return json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
     }
 
@@ -1125,7 +1229,7 @@ class Shop extends UserBase
         ksort($data);
         $string = $this->ParamsUrl($data);
         // 签名步骤二：在string后加入KEY
-        $string = $string . '&key=' . $this->diyminiproInfo['key'];
+        $string = $string . '&key=' . $this->miniproInfo['apikey'];
         // 签名步骤三：MD5加密
         $string = md5($string);
         // 签名步骤四：所有字符转为大写
@@ -1158,7 +1262,8 @@ class Shop extends UserBase
                         $ArcUpData[] = [
                             'aid'         => $value['aid'],
                             'stock_count' => Db::raw('stock_count-' . ($value['quantity'])),
-                            'sales_num'   => Db::raw('sales_num+' . ($value['quantity']))
+                            'sales_num'   => Db::raw('sales_num+' . ($value['quantity'])),
+                            'sales_all'   => Db::raw('sales_all+' . ($value['quantity'])),
                         ];
                     }
                 } else {
@@ -1167,7 +1272,8 @@ class Shop extends UserBase
                         $ArcUpData[] = [
                             'aid'         => $value['aid'],
                             'stock_count' => Db::raw('stock_count-' . ($value['quantity'])),
-                            'sales_num'   => Db::raw('sales_num+' . ($value['quantity']))
+                            'sales_num'   => Db::raw('sales_num+' . ($value['quantity'])),
+                            'sales_all'   => Db::raw('sales_all+' . ($value['quantity'])),
                         ];
                     }
                 }
@@ -1200,20 +1306,23 @@ class Shop extends UserBase
     }
 
     // 获取下单的商品数据
-    private function GetBuyOrderList($CacheData = [], $users_id = null)
+    private function GetBuyOrderList($CacheData = [], $users_id = null, $post = [])
     {
         $list = [];
         if (!empty($CacheData)) {
             // 立即购买下单
-            $ArchivesWhere['a.aid'] = $CacheData['product_id'];
-            if (!empty($CacheData['spec_value_id'])) $ArchivesWhere['b.spec_value_id'] = $CacheData['spec_value_id'];
-            $field                  = 'a.aid, a.typeid, a.title, a.litpic, a.users_price, a.stock_count, a.prom_type, a.attrlist_id, b.value_id, b.aid as product_id, b.spec_value_id, b.spec_price, b.spec_stock';
+            $where['a.aid'] = $CacheData['product_id'];
+            if (!empty($CacheData['spec_value_id'])) $where['b.spec_value_id'] = $CacheData['spec_value_id'];
+            $field = 'a.aid, a.typeid, a.title, a.litpic, a.users_price, a.users_discount_type, a.stock_count, a.prom_type, a.attrlist_id, a.logistics_type, b.value_id, b.aid as product_id, b.spec_value_id, b.spec_price, b.spec_stock';
             if ('v1.5.1' < getVersion()) {
                 $field .= ',b.seckill_price, b.seckill_stock';
             }
-            $list                   = Db::name('archives')->alias('a')->field($field)
+            if ('v1.5.7' < getVersion()) {
+                $field .= ',b.discount_price, b.discount_stock';
+            }
+            $list = Db::name('archives')->alias('a')->field($field)
                 ->join('__PRODUCT_SPEC_VALUE__ b', 'a.aid = b.aid', 'LEFT')
-                ->where($ArchivesWhere)
+                ->where($where)
                 ->limit('0, 1')
                 ->select();
             $list[0]['product_num'] = $CacheData['product_num'];
@@ -1247,29 +1356,66 @@ class Shop extends UserBase
                         $list[0]['stock_count'] = $list[0]['seckill_stock'] = $active_goods['seckill_stock'];
                     }
                 }
+            }elseif (isset($CacheData['discount_active_id']) && !empty($CacheData['discount_active_id'])){
+                $list[0]['discount_active_id'] = $CacheData['discount_active_id'];
+                $end_date = Db::name('discount_active')->where('active_id',$CacheData['discount_active_id'])->value('end_date');
+                if ($end_date < getTime()){
+                    if (empty($list)) $this->error('活动已结束!');
+                }
+                //判断该秒杀商品是多规格还是单规格
+                $discount_goods = Db::name('discount_active_goods')
+                    ->alias('a')
+                    ->field('b.is_sku,b.discount_price,b.discount_stock')
+                    ->join('discount_goods b','a.aid = b.aid')
+                    ->where('a.aid',$CacheData['product_id'])
+                    ->where('a.active_id',$CacheData['discount_active_id'])
+                    ->find();
+                $list[0]['is_sku'] = $discount_goods['is_sku'];
+                if (empty($discount_goods['is_sku'])){
+                    //单规格
+                    $list[0]['users_price'] = $list[0]['discount_price'] = $discount_goods['discount_price'];
+                    $list[0]['stock_count'] = $list[0]['discount_stock'] = $discount_goods['discount_stock'];
+                }
             }
         } else {
             // 购物车下单
-            $cart_where = [
+            $where = [
                 'a.users_id' => $users_id,
                 'a.lang'     => get_home_lang(),
                 'a.selected' => 1,
             ];
-            $list       = Db::name('shop_cart')->field('a.*,b.typeid, b.aid, b.title, b.litpic, b.users_price, b.stock_count, b.prom_type, b.attrlist_id, c.spec_price, c.spec_stock, c.value_id')
+            $list = Db::name('shop_cart')->field('a.*,b.typeid, b.aid, b.title, b.litpic, b.users_price, b.users_discount_type, b.stock_count, b.prom_type, b.attrlist_id, b.logistics_type, c.spec_price, c.spec_stock, c.value_id')
                 ->alias('a')
                 ->join('__ARCHIVES__ b', 'a.product_id = b.aid', 'LEFT')
                 ->join('__PRODUCT_SPEC_VALUE__ c', 'a.spec_value_id = c.spec_value_id and a.product_id = c.aid', 'LEFT')
-                ->where($cart_where)
+                ->where($where)
                 ->select();
+            $logistics_type_arr = get_arr_column($list,'logistics_type');
+            if (empty($post['deliveryShow']) && empty($post['verifyShow']) && in_array(1,$logistics_type_arr)){
+                $post['deliveryShow'] = 1;
+            }
+            foreach ($list as $key => $value) {
+                // 仅购买支持到店核销商品
+                if (!empty($post['verifyShow']) && 1 === intval($post['verifyShow'])) {
+                    if ('1' === $value['logistics_type']) unset($list[$key]);
+                }
+                // 仅购买支持快递配送商品
+                else if (!empty($post['deliveryShow']) && 1 === intval($post['deliveryShow'])) {
+                    if ('2' === $value['logistics_type']) unset($list[$key]);
+                }
+            }
         }
 
         return $list;
     }
 
     // 商品规格/折扣数据处理
-    private function OrderProductProcess($list = [], $ConfigData = [], $users_discount = 1)
+    private function OrderProductProcess($list = [], $ConfigData = [], $users_discount = 1, $level_id = 0)
     {
         foreach ($list as $key => $value) {
+            // 规格处理
+            $list[$key]['product_spec_list'] = !empty($value['spec_value_id']) ? model('ShopPublicHandle')->getGoodsSpecList($value) : [];
+
             /* 未开启多规格则执行 */
             if (!isset($ConfigData['shop_open_spec']) || empty($ConfigData['shop_open_spec'])) {
                 $value['spec_value_id']      = $value['spec_price'] = $value['spec_stock'] = 0;
@@ -1285,22 +1431,25 @@ class Shop extends UserBase
             /* END */
 
             /* 商品原价 */
-            $list[$key]['old_price'] = sprintf("%.2f", $list[$key]['users_price']);
+            $list[$key]['old_price'] = unifyPriceHandle($list[$key]['users_price']);
             /* END */
 
             /* 计算折扣后的价格 */
-            if (!empty($users_discount)) {
+            if (!empty($users_discount) && 0 === intval($value['users_discount_type'])) {
                 // 会员折扣价
-                $list[$key]['users_price'] = sprintf("%.2f", $value['users_price'] * $users_discount);
+                $list[$key]['users_price'] = unifyPriceHandle($value['users_price'] * $users_discount);
             }
             /* END */
-
-            /* 秒杀商品多规格商品，则覆盖商品原来的价格 */
-            if (!empty($value['is_sku']) && !empty($value['spec_value_id']) && 'undefined' != $value['spec_value_id'] && $value['seckill_price'] >= 0) {
-                //秒杀商品秒杀库存覆盖原有规格库存
-                $value['spec_stock'] = $value['seckill_stock'];
-                // 规格秒杀价格覆盖商品原价
-                $list[$key]['old_price'] =  $list[$key]['users_price'] = $value['users_price'] = $value['seckill_price'];
+            $list[$key]['discount_end_date'] = 0;
+            $list[$key]['use_discount_price'] = 0;
+            /* 限时折扣商品多规格商品，则覆盖商品原来的价格 */
+            if (!empty($value['discount_active_id'])) {
+                if (empty($value['discount_price'])){
+                    $value['discount_price'] = Db::name('discount_goods')->where('aid',$value['aid'])->value('discount_price');
+                }
+                $list[$key]['users_price'] = $value['spec_price'] = $value['discount_price'];
+                $list[$key]['use_discount_price'] = 1;
+                $list[$key]['discount_end_date'] = Db::name('discount_active')->where('active_id',$value['discount_active_id'])->value('end_date');
             }
             /* END */
 
@@ -1317,6 +1466,11 @@ class Shop extends UserBase
 
             // 图片处理
             $list[$key]['litpic'] = $this->get_default_pic($value['litpic'], true);
+
+            // 商品是 单规格 且 设置会员折扣价 则处理
+            if (empty($list[$key]['product_spec']) && 1 === intval($value['users_discount_type']) && !empty($level_id)) {
+                $list[$key]['users_price'] = model('ShopPublicHandle')->handleUsersDiscountPrice($value['aid'], $level_id);
+            }
 
             /* 若库存为空则清除这条数据 */
             if (empty($value['stock_count'])) {
@@ -1352,6 +1506,12 @@ class Shop extends UserBase
             // 虚拟订单文案
             'virtual_text1'      => '1、该产品为虚拟产品，仅支持在线支付且无需选择收货地址及运费计算。',
             'virtual_text2'      => '2、若产品是充值类产品，请将您的手机号或需充值的卡号填入留言中。',
+            // 仅到店核销
+            'onlyVerify'         => false,
+            // 仅物流配送
+            'onlyDelivery'       => false,
+            // 物流支持
+            'allLogisticsType'   => false,
 
         ];
 
@@ -1481,6 +1641,9 @@ class Shop extends UserBase
                 if (!empty($post['active_time_id'])){
                     $find_field = 'seckill_stock';
                 }
+                if (!empty($post['discount_active_id'])){
+                    $find_field = 'discount_stock';
+                }
                 $spec_stock = Db::name('product_spec_value')->where($SpecWhere)->getField($find_field);
                 if (empty($spec_stock)) {
                     $this->error('商品已售罄！');
@@ -1488,6 +1651,7 @@ class Shop extends UserBase
                 if ($spec_stock < $post['product_num']) {
                     $this->error('商品最大库存：' . $spec_stock);
                 }
+
             } else {
                 $ArchivesWhere = [
                     'aid'     => $post['product_id'],
@@ -1496,6 +1660,8 @@ class Shop extends UserBase
                 ];
                 if (!empty($post['active_time_id'])){
                     $stock_count = Db::name('sharp_goods')->where('aid',$post['product_id'])->getField('seckill_stock');
+                }elseif (!empty($post['discount_active_id'])){
+                    $stock_count = Db::name('discount_goods')->where('aid',$post['product_id'])->getField('discount_stock');
                 }else{
                     $stock_count   = Db::name('archives')->where($ArchivesWhere)->getField('stock_count');
                 }
@@ -1812,51 +1978,61 @@ class Shop extends UserBase
      * @return \think\Paginator
      * @throws \think\exception\DbException
      */
-    public function getOrderList($users_id, $type = 'all')
+    public function getOrderList($users_id = 0, $type = 'all')
     {
         // 筛选条件
-        $filter = [];
+        $where = [
+            'lang' => get_home_lang(),
+            'users_id' => intval($users_id),
+        ];
         // 订单数据类型
         switch ($type) {
             case 'all': // 全部
                 break;
             case 'payment'; // 待付款
-                $filter['order_status'] = 0;
+                $where['order_status'] = 0;
                 break;
             case 'delivery'; // 待发货
-                $filter['order_status'] = 1;
+                $where['order_status'] = 1;
                 break;
             case 'received'; // 待收货
-                $filter['order_status'] = 2;
+                $where['order_status'] = 2;
                 break;
             case 'complete'; // 待评价
-                $filter['order_status'] = 3;
-                $filter['is_comment'] = 0;
+                $where['order_status'] = 3;
+                // $where['is_comment'] = 0;
                 break;
+            case 'close'; // 订单关闭
+                $where['order_status'] = -1;
+                break; 
         }
-
-        $filter['users_id'] = $users_id;
-        $filter['lang']     = get_home_lang();
-        $result             = Db::name('shop_order')
-            ->where($filter)
-            ->order('order_id desc')
-            ->paginate(15, false, [
-                'query' => request()->param()
-            ]);
-
+        $result = Db::name('shop_order')->where($where)->order('order_id desc')->paginate(15, false, ['query' => request()->param()]);
         !empty($result) && $result = $result->toArray();
         $order_ids = get_arr_column($result['data'], 'order_id');
 
         // 订单商品详情
         $orderGoods = [];
-        $goodsList  = Db::name('shop_order_details')->where([
+        $where = [
+            'users_id' => intval($users_id),
             'order_id' => ['IN', $order_ids],
-            'users_id' => $users_id,
-        ])
-            ->order('order_id desc')
-            ->select();
+        ];
+        $goodsList = Db::name('shop_order_details')->where($where)->order('order_id desc')->select();
+
+        // 安装积分商城插件则执行
+        if (!empty($goodsList)) {
+            $weappInfo = model('ShopPublicHandle')->getWeappPointsShop();
+            if (!empty($weappInfo)) {
+                // 积分商城插件积分订单商品详情处理
+                $pointsOrderModel = new \app\plugins\model\PointsOrder();
+                $pointsGoodsBuyField = $pointsOrderModel->pointsGoodsOrderDetails($goodsList);
+            }
+        }
+
         foreach ($goodsList as $key => $_goods) {
-            $_goods['litpic']                  = $this->get_default_pic($_goods['litpic'], true);
+            $_goods['product_price'] = unifyPriceHandle($_goods['product_price']);
+            // 获取订单商品规格列表(购买时的商品规格)
+            $_goods['product_spec_list'] = model('ShopPublicHandle')->getOrderGoodsSpecList($_goods);
+            $_goods['litpic'] = $this->get_default_pic($_goods['litpic'], true);
             $orderGoods[$_goods['order_id']][] = $_goods;
         }
 
@@ -1865,12 +2041,18 @@ class Shop extends UserBase
         $channeltypeInfo = !empty($channeltype_row[2]) ? $channeltype_row[2] : [];
         $channel_ntitle  = !empty($channeltypeInfo['ntitle']) ? $channeltypeInfo['ntitle'] : '商品';
 
+        $pay_method_arr = config('global.pay_method_arr');
         $order_status_arr = config('global.order_status_arr');
         foreach ($result['data'] as $key => &$_order) {
+            $_order['shipping_fee'] = unifyPriceHandle($_order['shipping_fee']);
+            $_order['order_amount'] = unifyPriceHandle($_order['order_amount']);
+            $_order['order_total_amount'] = unifyPriceHandle($_order['order_total_amount']);
+            $_order['pay_name_text']     = !empty($pay_method_arr[$_order['pay_name']]) ? $pay_method_arr[$_order['pay_name']] : '未支付';
             $_order['order_status_text'] = $order_status_arr[$_order['order_status']];
             $_order['add_time']          = MyDate('Y-m-d H:i:s', $_order['add_time']);
             $_order['goods']             = !empty($orderGoods[$_order['order_id']]) ? $orderGoods[$_order['order_id']] : [];
             $_order['channel_ntitle']    = '商品'; // $channel_ntitle;
+            $_order['pointsGoodsBuyField'] = !empty($pointsGoodsBuyField[$_order['order_id']]) ? $pointsGoodsBuyField[$_order['order_id']] : [];
         }
         return $result;
     }
@@ -1894,7 +2076,13 @@ class Shop extends UserBase
             //还原优惠券
             $use_id = Db::name('shop_order')->where($Where)->value('use_id');
             if (!empty($use_id)){
-                $coupon_use = Db::name('shop_coupon_use')->where(['use_id'=>$use_id])->find();
+                $coupon_use_table = 'shop_coupon_use';
+                $weappInfo = model('ShopPublicHandle')->getWeappInfo("Coupons");
+                if (!empty($weappInfo['status']) && 1 == $weappInfo['status']) {
+                    $coupon_use_table = 'weapp_coupons_use';
+                }
+
+                $coupon_use = Db::name($coupon_use_table)->where(['use_id'=>$use_id])->find();
                 if (!empty($coupon_use)){
                     if ($coupon_use['start_time'] <= getTime() && $coupon_use['end_time'] >= getTime()){
                         $use_update = ['use_status'=>0];
@@ -1903,7 +2091,7 @@ class Shop extends UserBase
                     }
                     $use_update['use_time'] = 0;
                     $use_update['update_time'] = getTime();
-                    Db::name('shop_coupon_use')->where(['use_id'=>$use_id,'users_id' => $users_id])->update($use_update);
+                    Db::name($coupon_use_table)->where(['use_id'=>$use_id,'users_id' => $users_id])->update($use_update);
                 }
             }
 
@@ -1916,40 +2104,89 @@ class Shop extends UserBase
                 // 订单取消，还原单内产品数量
                 $productSpecValue->SaveProducSpecValueStock($order_id, $users_id);
             }
+
+            // 如果安装了秒杀插件则执行
+            if (is_dir('./weapp/Seckill/')) {
+                $SeckillRow = model('Weapp')->getWeappList('Seckill');
+                //is_seckill_order 只有安装了秒杀插件 shop_order表才会有这个字段
+                if (!empty($SeckillRow) && 1 == intval($SeckillRow['status']) && !empty($order['is_seckill_order'])) {
+                    // 调用秒杀逻辑层方法
+                    $weappSeckillLogic = new \weapp\Seckill\logic\SeckillLogic;
+                    $weappSeckillLogic->cancelOrderHandle($order_id, $users_id);
+                }
+            }
             // 添加订单操作记录
             AddOrderAction($order_id, $users_id, 0, 0, 0, 0, '订单取消！', '会员关闭订单！');
             $this->success('订单取消成功！');
         }
     }
 
+    // 订单提醒发货
+    public function orderRemind($order_id = 0, $users_id = 0)
+    {
+         $post = input('post.');
+        // 添加订单操作记录
+        AddOrderAction($order_id, $users_id, 0, 1, 0, 1, '提醒成功！', '会员提醒管理员及时发货！');
+        $this->success('提醒成功');
+    }
+
     // 确认收货
     public function orderReceipt($order_id, $users_id)
     {
         // 更新条件
-        $Where = [
+        $where = [
             'order_id' => $order_id,
             'users_id' => $users_id,
         ];
-        // 更新数据
-        $Data = [
-            'order_status' => 3,
-            'confirm_time' => getTime(),
-            'update_time'  => getTime(),
-        ];
-        // 更新订单主表
-        $return = Db::name('shop_order')->where($Where)->update($Data);
-        if (!empty($return)) {
+        $order = Db::name('shop_order')->where($where)->find();
+        $orderStatus = empty($order['order_status']) ? 0 : intval($order['order_status']);
+        if (2 === intval($orderStatus)) {
             // 更新数据
-            $Data = [
-                'update_time' => getTime(),
+            $update = [
+                'order_status' => 3,
+                'confirm_time' => getTime(),
+                'update_time'  => getTime(),
             ];
-            // 更新订单明细表
-            Db::name('shop_order_details')->where($Where)->update($Data);
-            // 添加订单操作记录
-            AddOrderAction($order_id, $users_id, 0, 3, 1, 1, '确认收货！', '会员已确认收到货物，订单完成！');
-            $this->success('会员确认收货');
+            // 更新订单主表
+            $return = Db::name('shop_order')->where($where)->update($update);
+            if (!empty($return)) {
+                // 更新数据
+                $update = [
+                    'update_time' => getTime(),
+                ];
+                // 更新订单明细表
+                Db::name('shop_order_details')->where($where)->update($update);
+
+                // 添加订单操作记录
+                AddOrderAction($order_id, $users_id, 0, 3, 1, 1, '确认收货！', '会员已确认收到货物，订单完成！');
+
+                // 如果安装了分销插件则执行
+                if (is_dir('./weapp/DealerPlugin/')) {
+                    // 开启分销插件则执行
+                    $data = model('Weapp')->getWeappList('DealerPlugin');
+                    if (!empty($data['status']) && 1 == $data['status']) {
+                        // 调用分销逻辑层方法
+                        $dealerCommonLogic = new \weapp\DealerPlugin\logic\DealerCommonLogic;
+                        $dealerCommonLogic->dealerOrderSettlementExecute($order_id, $users_id);
+                    }
+                }
+
+                // 如果安装了秒杀插件则执行
+                if (is_dir('./weapp/Seckill/')) {
+                    $SeckillRow = model('Weapp')->getWeappList('Seckill');
+                    //is_seckill_order 只有安装了秒杀插件 shop_order表才会有这个字段
+                    if (!empty($SeckillRow) && 1 == intval($SeckillRow['status']) && !empty($order['is_seckill_order'])) {
+                        // 调用秒杀逻辑层方法
+                        $weappSeckillLogic = new \weapp\Seckill\logic\SeckillLogic;
+                        $weappSeckillLogic->confirmOrderHandle($order_id, $users_id);
+                    }
+                }
+                $this->success('确认收货成功');
+            } else {
+                $this->error('101:订单异常，请刷新重试');
+            }
         } else {
-            $this->error('订单号错误');
+            $this->error('102:订单异常，请刷新重试');
         }
     }
 
@@ -1974,6 +2211,11 @@ class Shop extends UserBase
             $this->error('订单不存在！');
         }
 
+        // 优化显示金额
+        $result['coupon_price'] = unifyPriceHandle($result['coupon_price']);
+        $result['shipping_fee'] = unifyPriceHandle($result['shipping_fee']);
+        $result['order_amount'] = unifyPriceHandle($result['order_amount']);
+        $result['order_total_amount'] = unifyPriceHandle($result['order_total_amount']);
         // 模型名称
         $channeltype_row          = \think\Cache::get('extra_global_channeltype');
         $channeltypeInfo          = !empty($channeltype_row[2]) ? $channeltype_row[2] : [];
@@ -1981,6 +2223,9 @@ class Shop extends UserBase
         // 获取订单状态
         $order_status_arr            = config('global.order_status_arr');
         $result['order_status_text'] = $order_status_arr[$result['order_status']];
+        // 获取订单支付方式
+        $pay_method_arr          = config('global.pay_method_arr');
+        $result['pay_name_text'] = !empty($pay_method_arr[$result['pay_name']]) ? $pay_method_arr[$result['pay_name']] : '未支付';
         // 收货地址
         $result['province_text'] = $this->GetRegionName($result['province'], 1);
         $result['city_text']     = $this->GetRegionName($result['city'], 2);
@@ -1991,88 +2236,120 @@ class Shop extends UserBase
         $result['TotalAmount'] = 0.00;
         // 订单明细表
         $result['goods'] = Db::name("shop_order_details")->order('product_price desc, product_name desc')->where($Where)->select();
+        // 订单操作记录
+        $result['orderLog'] = Db::name('shop_order_log')->where('order_id', $order_id)->order('action_id desc')->select();
+        foreach ($result['orderLog'] as $key => $value) {
+            $result['orderLog'][$key]['add_time'] = MyDate('Y-m-d H:i:s', $value['add_time']);
+        }
+
+        // 安装积分商城插件则执行
+        $result['pointsGoodsBuyField'] = [];
+        if (!empty($result['goods'])) {
+            $weappInfo = model('ShopPublicHandle')->getWeappPointsShop();
+            if (!empty($weappInfo)) {
+                // 积分商城插件积分订单商品详情处理
+                $pointsOrderModel = new \app\plugins\model\PointsOrder();
+                $pointsGoodsBuyField = $pointsOrderModel->pointsGoodsOrderDetails($result['goods']);
+                $result['pointsGoodsBuyField'] = !empty($pointsGoodsBuyField[$result['order_id']]) ? $pointsGoodsBuyField[$result['order_id']] : [];
+            }
+        }
+
+        // 安装订单核销插件则执行
+        $result['verify'] = [];
+        if (!empty($result['verify_id'])) {
+            $weappInfo = model('ShopPublicHandle')->getWeappVerifyInfo();
+            if (!empty($weappInfo)) {
+                // 订单核销插件核销订单商品详情处理
+                $verifyModel = new \app\plugins\model\Verify();
+                $result['verify'] = $verifyModel->verifyOrderDetails($result);
+            }
+        }
+
         //虚拟商品拼接回复
         $virtual_delivery = '';
         // 虚拟发货
         $virtual_delivery_status = false;
         // 商品处理
         foreach ($result['goods'] as $key => $value) {
+            $result['prom_type']  = $value['prom_type'];
+            $result['goods'][$key]['product_price'] = unifyPriceHandle($value['product_price']);
+            $result['goods'][$key]['product_spec_list'] = model('ShopPublicHandle')->getOrderGoodsSpecList($value);
+
             //虚拟需要自动发货的商品卖家回复拼接
             if ($value['prom_type'] == 2 && 2 <= intval($result['order_status'])) {
                 $virtual_delivery_status = true;
                 //查询商品名称
-                $product_title = Db::name('archives')->where('aid', $value['product_id'])->getField('title');
+                // $product_title = Db::name('archives')->where('aid', $value['product_id'])->getField('title');
                 //查网盘信息
                 $netdisk = Db::name("product_netdisk")->where('aid', $value['product_id'])->find();
                 if ($netdisk) {
-                    $virtual_delivery .= "商品标题：" . $product_title . "</br>";
-                    $virtual_delivery .= "网盘地址：" . $netdisk['netdisk_url'] . "</br>";
+                    // $virtual_delivery .= "商品标题：" . $product_title . "";
+                    $virtual_delivery .= "网盘地址：" . $netdisk['netdisk_url'] . "";
                     if (!empty($netdisk['netdisk_pwd'])) {
-                        $virtual_delivery .= "提取码：" . $netdisk['netdisk_pwd'] . "</br>";
+                        $virtual_delivery .= "提取码：" . $netdisk['netdisk_pwd'] . "";
                     }
                     if (!empty($netdisk['unzip_pwd'])) {
-                        $virtual_delivery .= "解压密码：" . $netdisk['unzip_pwd'] . "</br>";
+                        $virtual_delivery .= "解压密码：" . $netdisk['unzip_pwd'] . "";
                     }
                     $virtual_delivery .= "--------------------";
                 }
-            } elseif ($value['prom_type'] == 3 && 2 <= intval($result['order_status'])) {
+                $result['netdisk'] =  $netdisk;
+            } else if ($value['prom_type'] == 3 && 2 <= intval($result['order_status'])) {
                 $virtual_delivery_status = true;
                 //查询商品名称
-                $product_title = Db::name('archives')->where('aid', $value['product_id'])->getField('title');
+                // $product_title = Db::name('archives')->where('aid', $value['product_id'])->getField('title');
                 //查网盘信息
                 $netdisk = Db::name("product_netdisk")->where('aid', $value['product_id'])->find();
                 if ($netdisk) {
-                    $virtual_delivery .= "商品标题：" . $product_title . "</br>";
-                    $virtual_delivery .= "文本内容：" . $netdisk['text_content'] . "</br>";
+                    // $virtual_delivery .= "商品标题：" . $product_title . "";
+                    $virtual_delivery .= "文本内容：" . $netdisk['text_content'] . "";
                     $virtual_delivery .= "--------------------";
                 }
-            } elseif ($value['prom_type'] == 1) {
+                $result['netdisk'] =  $netdisk;
+            } else if ($value['prom_type'] == 1) {
                 $virtual_delivery_status = true;
                 //查询商品名称
                 if (!empty($result['virtual_delivery'])) {
-                    $product_title    = Db::name('archives')->where('aid', $value['product_id'])->getField('title');
-                    $virtual_delivery .= "商品标题：" . $product_title . "</br>";
-                    $virtual_delivery .= filter_line_return($result['virtual_delivery'], '</br>') . "</br>";
+                    // $product_title    = Db::name('archives')->where('aid', $value['product_id'])->getField('title');
+                    // $virtual_delivery .= "商品标题：" . $product_title . "";
+                    $virtual_delivery .= filter_line_return($result['virtual_delivery'], '') . "";
                     $virtual_delivery .= "--------------------";
                 }
             }
-
-            if (!empty($virtual_delivery)) {
-                $result['virtual_delivery'] = $virtual_delivery;
-            }
+            $result['virtual_delivery_status'] = $virtual_delivery_status;
+            if ($virtual_delivery_status && !empty($virtual_delivery)) $result['virtual_delivery'] = $virtual_delivery;
 
             // 商品属性处理
             $ValueData  = unserialize($value['data']);
             $spec_value = !empty($ValueData['spec_value']) ? htmlspecialchars_decode($ValueData['spec_value']) : '';
-            $spec_value = htmlspecialchars_decode($spec_value);
-
+            $spec_value = !empty($spec_value) ? htmlspecialchars_decode($spec_value) : '';
             // 旧参数+规格值
-            $attr_value                    = !empty($ValueData['attr_value']) ? htmlspecialchars_decode($ValueData['attr_value']) : '';
-            $attr_value                    = htmlspecialchars_decode($attr_value);
-            $spec_data                     = $spec_value . $attr_value;
-            $spec_data                     = str_replace('<br/>', '；', $spec_data);
-            $result['goods'][$key]['data'] = trim($spec_data, '；');
-
+            // $attr_value                    = !empty($ValueData['attr_value']) ? htmlspecialchars_decode($ValueData['attr_value']) : '';
+            // $attr_value                    = htmlspecialchars_decode($attr_value);
+            // $spec_data                     = $spec_value . $attr_value;
+            // $spec_data                     = str_replace('<br/>', '；', $spec_data);
+            // $result['goods'][$key]['data'] = trim($spec_data, '；');
+            $result['goods'][$key]['data'] = trim(str_replace('<br/>', '；', $spec_value), '；');
             // 新参数+规格值
-            $attr_value_new                    = !empty($ValueData['attr_value_new']) ? htmlspecialchars_decode($ValueData['attr_value_new']) : '';
-            $attr_value_new                    = htmlspecialchars_decode($attr_value_new);
-            $new_spec_data                     = $spec_value . $attr_value_new;
-            $new_spec_data                     = str_replace('<br/>', '；', $new_spec_data);
-            $result['goods'][$key]['new_data'] = trim($new_spec_data, '；');
-            if (!empty($result['goods'][$key]['new_data'])) {
-                $result['goods'][$key]['new_data'] = $result['goods'][$key]['data'];
-            }
+            // $attr_value_new                    = !empty($ValueData['attr_value_new']) ? htmlspecialchars_decode($ValueData['attr_value_new']) : '';
+            // $attr_value_new                    = htmlspecialchars_decode($attr_value_new);
+            // $new_spec_data                     = $spec_value . $attr_value_new;
+            // $new_spec_data                     = str_replace('<br/>', '；', $new_spec_data);
+            // $result['goods'][$key]['new_data'] = trim($new_spec_data, '；');
+            $result['goods'][$key]['new_data'] = trim(str_replace('<br/>', '；', $spec_value), '；');
 
             // 图片处理
             $result['goods'][$key]['litpic'] = $this->get_default_pic($value['litpic'], true);
-
             // 小计
             $result['goods'][$key]['subtotal'] = $value['product_price'] * $value['num'];
-            $result['goods'][$key]['subtotal'] = sprintf("%.2f", $result['goods'][$key]['subtotal']);
+            $result['goods'][$key]['subtotal'] = unifyPriceHandle($result['goods'][$key]['subtotal']);
             // 合计金额
             $result['TotalAmount'] += $result['goods'][$key]['subtotal'];
-            $result['TotalAmount'] = sprintf("%.2f", $result['TotalAmount']);
+            $result['TotalAmount'] = unifyPriceHandle($result['TotalAmount']);
         }
+        // 自动关闭未付款订单时间
+        $orderUnpayCloseTime = getUsersConfigData('order.order_unpay_close_time');
+        $result['orderUnpayCloseTime'] = !empty($orderUnpayCloseTime) ? intval($orderUnpayCloseTime) / 60 : 0;
 
         return $result;
     }
@@ -2105,29 +2382,28 @@ class Shop extends UserBase
 
         if (!empty($post['formData'])) {
             $post['formData'] = json_decode(htmlspecialchars_decode($post['formData']), true);
-            $insert           = [];
+            $insert = [];
             $detail_ids = [];
             $order_code = Db::name('shop_order')->where(['order_id'=>$order_id])->value('order_code');
-
             foreach ($post['formData'] as $k => $v) {
                 $detail_ids[] = $v['order_details_id'];
-                if (!empty($v['uploaded'])){
-                    $v['uploaded'] = implode(',',$v['uploaded']);
-                    $v['uploaded'] = serialize($v['uploaded']);
-                }else{
-                    $v['uploaded'] = '';
+                $uploadImg = '';
+                if (!empty($v['uploaded'])) {
+                    $uploadImg = implode(',', $v['uploaded']);
+                } else if (!empty($v['image_list'])) {
+                    $uploadImg = implode(',', $v['image_list']);
                 }
                 $insert[] = [
-                    'upload_img'       => $v['uploaded'],
-                    'total_score'      => $v['score'],
-                    'content'          => serialize($v['content']),
-                    'users_id'         => $users_id,
-                    'order_id'         => $order_id,
-                    'order_code'       => $order_code,
-                    'product_id'       => $v['goods_id'],
-                    'details_id'       => $v['order_details_id'],
-                    'add_time'         => getTime(),
-                    'update_time'      => getTime(),
+                    'upload_img'  => serialize($uploadImg),
+                    'total_score' => $v['score'],
+                    'content'     => serialize($v['content']),
+                    'users_id'    => $users_id,
+                    'order_id'    => $order_id,
+                    'order_code'  => $order_code,
+                    'product_id'  => $v['goods_id'],
+                    'details_id'  => $v['order_details_id'],
+                    'add_time'    => getTime(),
+                    'update_time' => getTime(),
                 ];
             }
             $insert_data = Db::name('shop_order_comment')->insertAll($insert);
@@ -2169,9 +2445,8 @@ class Shop extends UserBase
         $score > 0 && $condition['total_score'] = $score;
 
         $pagesize = empty($pagesize) ? config('paginate.list_rows') : $pagesize;
-        $args = [$goods_id,$page,$pagesize,$score];
-        $cacheKey = "plugins-model-DiyminiproMallShop-getGoodsCommentList-".md5(json_encode($args));
-//        $result = cache($cacheKey);
+        $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.json_encode(func_get_args()));
+        $result = cache($cacheKey);
         if (true || empty($result)) {
             $paginate = array(
                 'page'  => $page,
@@ -2301,13 +2576,12 @@ class Shop extends UserBase
     /**
      * 获取秒杀列表
      */
-    public function GetSharpIndex( $tid=0 , $page = 1 )
+    public function GetSharpIndex( $tid = 0 , $page = 1 )
     {
         $pagesize = 10;
         $pagesize = empty($pagesize) ? config('paginate.list_rows') : $pagesize;
-        $args = [$tid,$page,$pagesize];
-        $cacheKey = "plugins-model-DiyminiproMallShop-GetSharpIndex-".md5(json_encode($args));
-//        $result = cache($cacheKey);
+        $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.json_encode(func_get_args()));
+        $result = cache($cacheKey);
         if (true || empty($result)) {
             $paginate = array(
                 'page'  => $page,
@@ -2395,8 +2669,8 @@ class Shop extends UserBase
     private function orderExpressQuery($express_code, $express_order)
     {
         // 缓存索引
-        $cacheIndex = 'plugins_model_DiyminiproMallShop_express_' . $express_code . '_' . $express_order;
-        if ($data = Cache::get($cacheIndex)) {
+        $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.json_encode(func_get_args()));
+        if ($data = Cache::get($cacheKey)) {
             return $data;
         }
 
@@ -2430,7 +2704,7 @@ class Shop extends UserBase
 
 
         // 记录缓存, 时效5分钟
-        Cache::set($cacheIndex, $express['data'], 300);
+        Cache::set($cacheKey, $express['data'], 300);
         return $express['data'];
     }
 
@@ -2443,8 +2717,8 @@ class Shop extends UserBase
     private function orderExpressQuery2($express_code, $express_order)
     {
         // 缓存索引
-        $cacheIndex = 'plugins_model_DiyminiproMallShop_express_' . $express_code . '_' . $express_order;
-        if ($data = Cache::get($cacheIndex)) {
+        $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.json_encode(func_get_args()));
+        if ($data = Cache::get($cacheKey)) {
             return $data;
         }
 
@@ -2471,7 +2745,7 @@ class Shop extends UserBase
             return false;
         }
         // 记录缓存, 时效5分钟
-        Cache::set($cacheIndex, $express['data'], 300);
+        Cache::set($cacheKey, $express['data'], 300);
         return $express['data'];
     }
 
@@ -2503,7 +2777,7 @@ class Shop extends UserBase
     protected function onPaymentByWechat($users, $order)
     {
         // 统一下单API
-        if (empty($this->diyminiproInfo['mchid']) || empty($this->diyminiproInfo['key'])) {
+        if (empty($this->miniproInfo['mchid']) || empty($this->miniproInfo['apikey'])) {
             return [
                 'code' => 0,
                 'msg'  => '很抱歉，请在网站小程序后台，完善微信支付配置！',
@@ -2529,17 +2803,15 @@ class Shop extends UserBase
         $time = getTime();
         // 生成随机字符串
         $nonceStr = md5($time . $openid);
-        // 小程序配置
-        $diyminiproMallSettingModel = new \weapp\DiyminiproMall\model\DiyminiproMallSettingModel;
-        $inc                        = $diyminiproMallSettingModel->getSettingValue('setting');
+
         // API参数
         $params = [
-            'appid'            => $inc['appId'],
+            'appid'            => $this->miniproInfo['appid'],
             'attach'           => '微信小程序支付',
             'body'             => $order_code,
-            'mch_id'           => $this->diyminiproInfo['mchid'],
+            'mch_id'           => $this->miniproInfo['mchid'],
             'nonce_str'        => $nonceStr,
-            'notify_url'       => url('plugins/DiyminiproMall/wxpay_notify', [], true, true, 1, 1),  // 异步通知地址
+            'notify_url'       => url('api/v1/Api/wxpay_notify', [], true, true, 1, 1),  // 异步通知地址
             'openid'           => $openid,
             'out_trade_no'     => $order_code,
             'spbill_create_ip' => clientIP(),
@@ -2547,11 +2819,11 @@ class Shop extends UserBase
             'trade_type'       => 'JSAPI',
         ];
         // 生成签名
-        $params['sign'] = model('DiyminiproMallUser')->makeSign($params, $this->diyminiproInfo['key']);
+        $params['sign'] = model('v1.User')->makeSign($params, $this->miniproInfo['apikey']);
         // 请求API
         $url    = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
-        $result = httpRequest($url, 'POST', model('DiyminiproMallUser')->toXml($params));
-        $prepay = model('DiyminiproMallUser')->fromXml($result);
+        $result = httpRequest($url, 'POST', model('v1.User')->toXml($params));
+        $prepay = model('v1.User')->fromXml($result);
         // 请求失败
         if ($prepay['return_code'] === 'FAIL') {
             return [
@@ -2566,7 +2838,7 @@ class Shop extends UserBase
             ];
         }
         // 生成 nonce_str 供前端使用
-        $paySign = $this->makePaySign($inc['appId'], $params['nonce_str'], $prepay['prepay_id'], $time);
+        $paySign = $this->makePaySign($this->miniproInfo['appid'], $params['nonce_str'], $prepay['prepay_id'], $time);
         return [
             'prepay_id' => $prepay['prepay_id'],
             'nonceStr'  => $nonceStr,
@@ -2593,9 +2865,9 @@ class Shop extends UserBase
         ];
         // 签名步骤一：按字典序排序参数
         ksort($data);
-        $string = model('DiyminiproMallUser')->toUrlParams($data);
+        $string = model('v1.User')->toUrlParams($data);
         // 签名步骤二：在string后加入KEY
-        $string = $string . '&key=' . $this->diyminiproInfo['key'];
+        $string = $string . '&key=' . $this->miniproInfo['apikey'];
         // 签名步骤三：MD5加密
         $string = md5($string);
         // 签名步骤四：所有字符转为大写
@@ -2608,6 +2880,14 @@ class Shop extends UserBase
      */
     public function GetMyCouponList($users_id, $type = 0)
     {
+        $coupon_table = 'shop_coupon';
+        $coupon_use_table = 'shop_coupon_use';
+        $weappInfo = model('ShopPublicHandle')->getWeappInfo("Coupons");
+        if (!empty($weappInfo['status']) && 1 == $weappInfo['status']) {
+            $coupon_table = 'weapp_coupons';
+            $coupon_use_table = 'weapp_coupons_use';
+        }
+
         // 筛选条件
         $filter = [];
         //0-未使用 1-已使用 2-已过期
@@ -2620,15 +2900,16 @@ class Shop extends UserBase
             case '1'; // 已使用
                 break;
             case '2'; // 已过期
+                unset($filter['a.use_status']);
                 $filter['a.end_time'] = ['<',getTime()];
                 break;
         }
         $filter['a.users_id'] = $users_id;
         $filter['b.coupon_id'] = ['>',0];
 
-        $result = Db::name('shop_coupon_use')
+        $result = Db::name($coupon_use_table)
             ->alias('a')
-            ->join('shop_coupon b','a.coupon_id = b.coupon_id','left')
+            ->join("{$coupon_table} b",'a.coupon_id = b.coupon_id','left')
             ->where($filter)
             ->order('a.add_time desc')
             ->paginate(10, false, [
@@ -2637,7 +2918,13 @@ class Shop extends UserBase
         !empty($result) && $result = $result->toArray();
 
         foreach ($result['data'] as $k => $v ) {
-            $v['coupon_form_name'] = '满减券';
+            $v['conditions_use'] = floatval($v['conditions_use']);
+            if (1 == $v['coupon_form']){
+                $v['coupon_form_name'] = '满减券';
+            }elseif (2 == $v['coupon_form']){
+                $v['coupon_form_name'] = '满折券';
+                $v['coupon_discount'] = floatval( $v['coupon_discount']);
+            }
             $v['start_time'] = date('Y/m/d',$v['start_time']);
             $v['end_time'] = date('Y/m/d',$v['end_time']);
             switch ($v['coupon_type']) {
@@ -2661,14 +2948,24 @@ class Shop extends UserBase
      */
     public function GetCouponCenter($users_id)
     {
+        $coupon_table = 'shop_coupon';
+        $coupon_use_table = 'shop_coupon_use';
+        $weappInfo = model('ShopPublicHandle')->getWeappInfo("Coupons");
+        if (!empty($weappInfo['status']) && 1 == $weappInfo['status']) {
+            $coupon_table = 'weapp_coupons';
+            $coupon_use_table = 'weapp_coupons_use';
+        }
+
         // 筛选条件
         $filter = [
-            'status' => 1,
+            'status' => 1
         ];
         $filter['start_date'] = ['<=',getTime()];
         $filter['end_date'] = ['>=',getTime()];
+        $coupon_type = input('param.coupon_type/d');
+        if (!empty($coupon_type)) $filter['coupon_type'] = $coupon_type;
 
-        $result = Db::name('shop_coupon')
+        $result = Db::name($coupon_table)
             ->where($filter)
             ->order('sort_order asc,coupon_id desc')
             ->paginate(6, false, [
@@ -2678,13 +2975,21 @@ class Shop extends UserBase
             $coupon_ids = [];
             $result = $result->toArray();
             foreach ($result['data'] as $k => $v ) {
+                $v['conditions_use'] = floatval($v['conditions_use']);
                 $coupon_ids[] = $v['coupon_id'];
-                $v['coupon_form_name'] = '满减券';
+                if (1 == $v['coupon_form']){
+                    $v['coupon_form_name'] = '满减券';
+                }elseif (2 == $v['coupon_form']){
+                    $v['coupon_form_name'] = '满折券';
+                    $v['coupon_discount'] = floatval( $v['coupon_discount']);
+                }
+                $v['start_date'] = date('Y/m/d',$v['start_date']);
+                $v['end_date'] = date('Y/m/d',$v['end_date']);
                 switch ($v['use_type']) {
                     case '1': // 固定期限有效
-                        $v['start_date'] = date('Y/m/d',$v['start_date']);
-                        $v['end_date'] = date('Y/m/d',$v['end_date']);
-                        $v['use_type_name'] = $v['start_date'].'-'.$v['end_date'];
+                        $v['use_start_time'] = date('Y/m/d',$v['use_start_time']);
+                        $v['use_end_time'] = date('Y/m/d',$v['use_end_time']);
+                        $v['use_type_name'] = $v['use_start_time'].'-'.$v['use_end_time'];
                         break;
                     case '2'; // 领取当天开始有效
                         $v['use_type_name'] = '领取'.$v['valid_days'].'天内有效';
@@ -2698,7 +3003,7 @@ class Shop extends UserBase
             $have_where['users_id'] = $users_id;
             $have_where['coupon_id'] = ['in',$coupon_ids];
             $have_where['use_status'] = 0;
-            $have = Db::name('shop_coupon_use')->where($have_where)->column('coupon_id');
+            $have = Db::name($coupon_use_table)->where($have_where)->column('coupon_id');
             if (!empty($have)){
                 foreach ($result['data'] as $k => $v ) {
                     if (in_array($v['coupon_id'],$have)){
@@ -2710,4 +3015,1152 @@ class Shop extends UserBase
 
         return $result;
     }
+
+    // 会员余额记录
+    public function getUsersMoneyDetails($users = [], $param = [])
+    {
+        $where = [
+            'status' => ['IN', [2, 3]],
+            'users_id' => $param['users_id'],
+        ];
+        $UsersMoney = Db::name('users_money')->where($where)->order('moneyid desc')->select();
+        // 获取金额明细类型
+        $pay_cause_type_arr = Config::get('global.pay_cause_type_arr');
+        // 获取金额明细状态
+        $pay_status_arr = Config::get('global.pay_status_arr');
+        foreach ($UsersMoney as $key => $value) {
+            $value['status_name'] = $pay_status_arr[$value['status']];
+            $value['add_time'] = MyDate('Y-m-d H:i:s', $value['add_time']);
+            $value['cause_type_name'] = $pay_cause_type_arr[$value['cause_type']];
+            $UsersMoney[$key] = $value;
+        }
+        $users['MoneyList'] = $UsersMoney;
+
+        // 会员余额首页
+        $this->success('查询成功', null, $users);
+    }
+
+    // 会员余额充值
+    public function getUsersMoneyRecharge($param = [])
+    {
+        if (empty($param['usersMoney'])) $this->error('请输入充值金额');
+
+        // 记录类型，充值
+        $cause_type = 1;
+        // 清理当前会员的未支付的充值记录
+        $where = [
+            'status' => 1,
+            'cause_type' => $cause_type,
+            'users_id' => $param['users_id'],
+        ];
+        Db::name('users_money')->where($where)->delete();
+
+        // 查询当前会员的余额
+        $where = [
+            'users_id' => $param['users_id']
+        ];
+        $UsersMoney = Db::name('users')->where($where)->getField('users_money');
+
+        // 充值记录数据处理
+        $time = getTime();
+        // 订单号规则
+        $OrderNumber = date('Ymd') . $time . rand(10, 100);
+        // 支付类型中文名称
+        $pay_cause_type_arr = Config::get('global.pay_cause_type_arr');
+        // 记录数据
+        $insert = [
+            'users_id'      => $param['users_id'],
+            'cause_type'    => $cause_type,
+            'cause'         => $pay_cause_type_arr[$cause_type],
+            'money'         => $param['usersMoney'],
+            'users_money'   => $UsersMoney + $param['usersMoney'],
+            'pay_method'    => 'wechat',
+            'pay_details'   => '',
+            'order_number'  => $OrderNumber,
+            'status'        => 1,
+            'add_time'      => $time
+        ];
+
+        $insertID = Db::name('users_money')->insertGetId($insert);
+        if (!empty($insertID)) {
+            $openid = Db::name('wx_users')->where('users_id', $param['users_id'])->getField('openid');
+            $Data = $this->GetWechatAppletsPay($openid, $OrderNumber, $param['usersMoney']);
+            $ResultData = [
+                'WeChatPay' => $Data,
+                'OrderData' => [
+                    'moneyid' => $insertID,
+                    'order_number' => $OrderNumber
+                ]
+            ];
+            $this->success('正在支付', null, $ResultData);
+        } else {
+            $this->error('充值失败');
+        }
+    }
+
+    // 会员余额充值后续处理
+    public function getUsersMoneyRechargePay($param = [])
+    {
+        // 查询订单信息
+        $where = [
+            'cause_type' => 1,
+            'users_id' => $param['users_id'],
+            'moneyid' => $param['moneyid'],
+            'order_number' => $param['order_number'],
+        ];
+        $usersMoney = Db::name('users_money')->where($where)->find();
+        if (empty($usersMoney)) $this->error('订单错误，刷新重试');
+        if (1 !== intval($usersMoney['status'])) $this->error('订单已被处理，刷新重试');
+
+        // 查询会员openid
+        $openid = Db::name('wx_users')->where('users_id', $param['users_id'])->getField('openid');
+
+        // 下单确认页数据处理
+        $WeChatPay = $this->GetWeChatPayDetails($openid, $param['order_number']);
+
+        // 判断处理订单是否真实支付并处理订单
+        if (!empty($WeChatPay) && 'SUCCESS' == $WeChatPay['return_code'] && 'OK' == $WeChatPay['return_msg'] && 'SUCCESS' == $WeChatPay['trade_state']) {
+            // 充值订单已支付，将订单更新为已支付
+            $update = [
+                'status' => 2,
+                'pay_details' => serialize($WeChatPay),
+                'update_time' => getTime(),
+            ];
+            $ResultID = Db::name('users_money')->where($where)->update($update);
+            if (!empty($ResultID)) {
+                // 增加会员余额
+                $update = [
+                    'users_money' => Db::raw('users_money+'.($usersMoney['money'])),
+                ];
+                $ResultID = Db::name('users')->where('users_id', $param['users_id'])->update($update);
+                if (!empty($ResultID)) {
+                    // 将充值订单更新为已完成
+                    $update = [
+                        'status' => 3,
+                        'update_time' => getTime(),
+                    ];
+                    Db::name('users_money')->where($where)->update($update);
+
+                    //统计余额充值
+                    eyou_statistics_data(5, floatval($usersMoney['money']));
+
+                    // 返回结束
+                    $this->success('支付完成');
+                }
+            }
+            $this->success('订单处理失败，请联系管理员');
+        }
+    }
+
+    // 查询会员支付信息详情
+    public function GetWeChatPayDetails($openid = 0, $orderCode = 0)
+    {
+        // 当前时间戳
+        $time = getTime();
+
+        // 当前时间戳 + openid 经 MD5加密
+        $nonceStr = md5($time . $openid);
+
+        // 调用支付接口参数
+        $params = [
+            'appid' => $this->miniproInfo['appid'],
+            'mch_id' => $this->miniproInfo['mchid'],
+            'nonce_str' => $nonceStr,
+            'out_trade_no' => $orderCode
+        ];
+
+        // 生成参数签名
+        $params['sign'] = $this->ParamsSign($params, $this->miniproInfo['apikey']);
+
+        // 生成参数XML格式
+        $ParamsXml = $this->ParamsXml($params);
+
+        // 调用接口返回数据
+        $url = 'https://api.mch.weixin.qq.com/pay/orderquery';
+        $result = httpRequest($url, 'POST', $ParamsXml);
+
+        // 解析XML格式
+        $ResultData = $this->ResultXml($result);
+
+        return $ResultData;
+    }
+
+    // 查询订单内的指定的某个商品，判断是否已申请售后或已评价商品
+    public function getOrderGoodsDetect($param = [])
+    {
+        // 查询商品
+        $where = [
+            'users_id' => $param['users_id'],
+            'order_id' => $param['order_id'],
+            'details_id' => $param['details_id'],
+            'product_id' => $param['product_id']
+        ];
+        $field = 'details_id, order_id, users_id, product_id, apply_service, is_comment';
+        $orderGoods = Db::name("shop_order_details")->where($where)->field($field)->find();
+        if (empty($orderGoods)) $this->error('订单商品不存在');
+        $orderGoods['service_id'] = 0;
+
+        // 检测商品是否可以进行下一步操作
+        if ('service' == $param['use']) {
+            if (!empty($orderGoods['apply_service'])) {
+                $where['status'] = ['NEQ', 8];
+                $orderGoods['service_id'] = Db::name('shop_order_service')->where($where)->getField('service_id');
+            }
+        } else if ('comment' == $param['use']) {
+            if (!empty($orderGoods['is_comment'])) {
+                $url = strval('/pages/article/view?aid=' . $param['product_id']);
+                $this->success('订单商品已完成评价', $url, false);
+            }
+        }
+
+        // 返回信息
+        $this->success('检测完成', null, $orderGoods);
+    }
+
+    // 查询售后服务单列表
+    public function getOrderGoodsServiceList($param = [])
+    {
+        $where = [
+            'users_id' => $param['users_id'],
+        ];
+        if (!empty($param['serviceStatus']) && 1 == $param['serviceStatus']) {
+            $where['status'] = ['IN', [1, 2, 4, 5]];
+        } else if (!empty($param['serviceStatus']) && 2 == $param['serviceStatus']) {
+            $where['status'] = ['IN', [6, 7]];
+        }
+        $field = 'service_id, service_type, users_id, product_name, product_img, status, add_time';
+
+        // 分页参数
+        $Query = request()->param();
+        // 查询订单数据
+        $result = Db::name('shop_order_service')->field($field)->where($where)->paginate(15, false, ['query' => $Query]);
+        !empty($result) && $serviceData = $result->toArray();
+
+        if (!empty($serviceData['data'])) {
+            $orderServiceType = Config::get('global.order_service_type');
+            $orderServiceStatus = Config::get('global.order_service_status');
+            foreach ($serviceData['data'] as $key => $value) {
+                // 处理数据
+                $value['add_time'] = MyDate('Y-m-d H:i:s', $value['add_time']);
+                $value['product_img'] = $this->get_default_pic($value['product_img'], true);
+                $value['status_name'] = $orderServiceStatus[$value['status']];
+                $value['service_type_name'] = $orderServiceType[$value['service_type']];
+                // 重载数据
+                $serviceData['data'][$key] = $value;
+            }
+        }
+
+        $this->success('查询成功', null, $serviceData);
+    }
+
+    // 查询申请售后的订单商品
+    public function getOrderGoodsService($param = [])
+    {
+        $serviceData = $serviceDataLog = $expressData = [];
+        if (!empty($param['service_id'])) {
+            // 如果存在则查询售后服务订单
+            $where = [
+                'users_id' => $param['users_id'],
+                'service_id' => $param['service_id'],
+            ];
+            $serviceData = Db::name('shop_order_service')->where($where)->find();
+            if (empty($serviceData)) $this->error('售后订单不存在');
+            $uploadImg = explode(',', $serviceData['upload_img']);
+            foreach ($uploadImg as $key => $value) {
+                if (!empty($value)) {
+                    $uploadImg[$key] = $this->get_default_pic($value, true);
+                } else {
+                    unset($serviceImg[$key]);
+                }
+            }
+            $serviceData['upload_img'] = $uploadImg;
+            $serviceData['add_time'] = MyDate('Y-m-d H:i:s', $serviceData['add_time']);
+            $serviceData['product_img'] = $this->get_default_pic($serviceData['product_img'], true);
+            $serviceData['status_name'] = Config::get('global.order_service_status')[$serviceData['status']];
+            $serviceData['service_type_name'] = Config::get('global.order_service_type')[$serviceData['service_type']];
+            $serviceData['admin_delivery'] = !empty($serviceData['admin_delivery']) ? unserialize($serviceData['admin_delivery']) : '';
+            $serviceData['users_delivery'] = !empty($serviceData['users_delivery']) ? unserialize($serviceData['users_delivery']) : '';
+
+            // 查询售后订单流程记录
+            $where = [
+                'service_id' => $param['service_id'],
+            ];
+            $serviceDataLog = Db::name('shop_order_service_log')->order('log_id desc')->where($where)->select();
+            foreach ($serviceDataLog as $key => $value) {
+                if (!empty($value['users_id'])) {
+                    $serviceDataLog[$key]['name'] = '会员';
+                } else if (!empty($value['admin_id'])) {
+                    $serviceDataLog[$key]['name'] = '商家';
+                }
+                $serviceDataLog[$key]['add_time'] = MyDate('Y-m-d H:i:s', $value['add_time']);
+            }
+
+            // 物流数据表
+            $expressData = Db::name('shop_express')->select();
+
+            // 追加参数用于查询
+            $param['order_id'] = $serviceData['order_id'];
+            $param['product_id'] = $serviceData['product_id'];
+            $param['details_id'] = $serviceData['details_id'];
+        }
+
+        // 查询商品
+        $where = [
+            'a.users_id' => $param['users_id'],
+            'a.order_id' => $param['order_id'],
+            'a.details_id' => $param['details_id'],
+            'a.product_id' => $param['product_id']
+        ];
+        $field = 'a.users_id, a.order_id, b.order_code, a.details_id, a.product_id, a.product_name, a.product_price, a.num as product_num, a.litpic, a.apply_service, b.pay_time, b.consignee, b.mobile, b.province, b.city, b.district, b.address';
+        $orderGoods = Db::name("shop_order_details")->alias('a')->join('__SHOP_ORDER__ b', 'a.order_id = b.order_id', 'LEFT')->where($where)->field($field)->find();
+        if (empty($orderGoods)) $this->error('订单商品不存在');
+
+        // 处理商品信息
+        $orderGoods['litpic'] = $this->get_default_pic($orderGoods['litpic'], true);
+        $orderGoods['pay_time'] = MyDate('Y-m-d H:i:s', $orderGoods['pay_time']);
+        $Province = $this->GetRegionName($orderGoods['province']);
+        $City     = $this->GetRegionName($orderGoods['city']);
+        $District = $this->GetRegionName($orderGoods['district']);
+        $orderGoods['address'] = $Province . ' ' . $City . ' ' . $District . ' ' . $orderGoods['address'];
+
+        // 后台设置的商家收货地址
+        $orderGoods['admin_addr'] = getUsersConfigData('addr');
+
+        // 物流数据
+        $orderGoods['express'] = $expressData;
+
+        // 售后服务订单
+        $orderGoods['service'] = $serviceData;
+        $orderGoods['service_log'] = $serviceDataLog;
+
+        $this->success('查询成功', null, $orderGoods);
+    }
+
+    // 添加申请售后的订单商品入库
+    public function addOrderGoodsService($param = [])
+    {
+        // 解析参数
+        $formData = htmlspecialchars_decode($param['formData']);
+        $formData = json_decode(htmlspecialchars_decode($formData), true);
+
+        // 查询是否已申请售后
+        $where = [
+            'status' => ['NEQ', 8],
+            'users_id' => $param['users_id'],
+            'order_id' => $formData['order_id'],
+            'product_id' => $formData['product_id'],
+            'details_id' => $formData['details_id']
+        ];
+        $IsCount = Db::name('shop_order_service')->where($where)->count();
+        if (!empty($IsCount)) $this->error('订单商品已申请售后');
+
+        $time = getTime();
+        $addService = [
+            'service_type' => !empty($formData['service_type']) ? intval($formData['service_type']) : 0,
+            'users_id' => intval($param['users_id']),
+            'order_id' => !empty($formData['order_id']) ? intval($formData['order_id']) : 0,
+            'order_code' => !empty($formData['order_code']) ? strval($formData['order_code']) : 0,
+            'details_id' => !empty($formData['details_id']) ? intval($formData['details_id']) : 0,
+            'product_id' => !empty($formData['product_id']) ? intval($formData['product_id']) : 0,
+            'product_name' => !empty($formData['product_name']) ? strval($formData['product_name']) : '',
+            'product_num' => !empty($formData['product_num']) ? intval($formData['product_num']) : 0,
+            'product_img' => !empty($formData['litpic']) ? strval($formData['litpic']) : '',
+            'content' => !empty($formData['content']) ? htmlspecialchars($formData['content']) : '',
+            'upload_img' => !empty($formData['uploaded'][0]) ? implode(',', $formData['uploaded']) : '',
+            'address' => strval($formData['address']),
+            'consignee' => !empty($formData['consignee']) ? $formData['consignee'] : '',
+            'mobile' => !empty($formData['mobile']) ? $formData['mobile'] : 0,
+            'refund_price' => !empty($formData['product_price']) ? $formData['product_price'] : 0,
+            'refund_code' => 'HH' . $time . rand(10,100),
+            'add_time'    => $time,
+            'update_time' => $time,
+        ];
+        if (2 == $addService['service_type'] && !empty($addService['refund_price'])) $addService['refund_code'] = 'TK' . $time . rand(10,100);
+        $ResultID = Db::name('shop_order_service')->insertGetId($addService);
+
+        // 申请售后后续操作
+        if (!empty($ResultID)) {
+            // 更新订单明细表中对应商品为申请服务
+            $update = [
+                'details_id' => $addService['details_id'],
+                'apply_service' => 1,
+                'update_time' => getTime()
+            ];
+            Db::name('shop_order_details')->update($update);
+
+            // 添加订单服务记录
+            $LogNote = 1 == $addService['service_type'] ? '会员提交换货申请，待管理员审核！' : '会员提交退货申请，待管理员审核！';
+            OrderServiceLog($ResultID, $addService['order_id'], $addService['users_id'], 0, $LogNote);
+
+            // 申请成功返回
+            $this->success('已申请，待审核');
+        } else {
+            $this->error('申请售后失败');
+        }
+    }
+
+    // 取消售后订单会员邮寄物流信息
+    public function cancelOrderGoodsService($param = [])
+    {
+        // 取消服务单
+        $where = [
+            'users_id' => $param['users_id'],
+            'service_id' => $param['service_id']
+        ];
+        $update = [
+            'status' => 8,
+            'update_time' => getTime(),
+        ];
+        $ResultID = Db::name('shop_order_service')->where($where)->update($update);
+        if (!empty($ResultID)) {
+            // 更新订单明细表中对应商品为未申请服务
+            $where = [
+                'users_id' => $param['users_id'],
+                'details_id' => $param['details_id']
+            ];
+            $update = [
+                'apply_service' => 0,
+                'update_time' => getTime()
+            ];
+            Db::name('shop_order_details')->where($where)->update($update);
+
+            // 添加记录单
+            $param['status'] = 8;
+            $this->addOrderServiceLog($param);
+            $this->success('取消成功');
+        } else {
+            $this->error('取消失败');
+        }
+    }
+
+    // 添加售后订单会员邮寄物流信息
+    public function addServiceUsersDelivery($param = [])
+    {
+        // 解析物流参数
+        $usersDelivery = htmlspecialchars_decode($param['usersDelivery']);
+        $usersDelivery = json_decode(htmlspecialchars_decode($usersDelivery), true);
+
+        // 更新处理
+        $where = [
+            'users_id' => $param['users_id'],
+            'service_id' => $param['service_id'],
+        ];
+        $update = [
+            'status' => 4,
+            'users_delivery' => !empty($usersDelivery) ? serialize($usersDelivery) : '',
+            'update_time' => getTime(),
+        ];
+        $ResultID = Db::name('shop_order_service')->where($where)->update($update);
+        if (!empty($ResultID)) {
+            // 添加记录单
+            $param['status'] = 4;
+            $this->addOrderServiceLog($param);
+            $this->success('提交物流成功');
+        } else {
+            $this->error('提交物流失败');
+        }
+    }
+
+    // 记录商品退换货服务单信息
+    private function addOrderServiceLog($param = [])
+    {
+        if (empty($param)) return false;
+
+        if (2 == $param['status']) {
+            $LogNote = '商家通过申请，等待会员将货物寄回商家！';
+        } else if (3 == $param['status']) {
+            $LogNote = '商家拒绝申请，请联系商家处理！';
+        } else if (4 == $param['status']) {
+            $LogNote = '会员已将货物发出，等待商家收货！';
+        } else if (5 == $param['status']) {
+            $LogNote = '商家已收到货物，待管理员进行退换货处理！';
+        } else if (6 == $param['status']) {
+            $LogNote = '商家已将新货物重新发出，换货完成，服务结束！';
+        } else if (7 == $param['status']) {
+            $LogNote = '商家已将金额、余额、积分退回，退款完成，服务结束！';
+        } else if (8 == $param['status']) {
+            $LogNote = '服务单被取消，服务结束！';
+        }
+        OrderServiceLog($param['service_id'], $param['order_id'], $param['users_id'], 0, $LogNote);
+    }
+
+    /**************************     限时折扣 开始    ****************************/
+    //获取单次显示折扣
+    public function getOneDiscount($param = [])
+    {
+        $avtive_id = !empty($param['activeid']) ? intval($param['activeid']) : 0;
+
+        $where['status'] = 1;
+        $where['is_del'] = 0;
+
+        //如果没传活动id就取当前正在进行的
+        if (!empty($avtive_id)){
+            $where['active_id'] = $avtive_id;
+            $active = Db::name('discount_active')->where($where)->find();
+        }else{
+            $where['start_date'] = ['<=',getTime()];
+            $where['end_date'] = ['>=',getTime()];
+            //获取已开始未结束的限时折扣
+            $active = Db::name('discount_active')->where($where)->find();
+            //如果没有就取即将开始的
+            if (empty($active)){
+                $active = Db::name('discount_active')
+                    ->where('status',1)
+                    ->where('is_del',0)
+                    ->where('start_date','>',getTime())
+                    ->order('start_date asc')
+                    ->find();
+            }
+        }
+        $return = [];
+        if (!empty($active)){
+            $return['active'] = $active;
+
+            if ($active['start_date'] <= getTime()){
+                $return['active']['active_status'] = 10;//进行中
+            }else{
+                $return['active']['active_status'] = 20;//即将开始
+            }
+            $param['active_id'] = $return['active']['active_id'];
+            $return['goodsList'] = $this->getDiscountGoodsList($param);
+        }
+        return $return;
+    }
+
+    /**
+     * 限时折扣：获取限时折扣商品列表
+     */
+    public function getDiscountGoodsList($param = [])
+    {
+        $limit = !empty($param['limit']) ? intval($param['limit']) : 6;
+        $active_id = $param['active_id'];
+        $data = Db::name('discount_active_goods')
+            ->alias('a')
+            ->field('c.*,b.litpic,b.title,a.*,b.users_price')
+            ->join('archives b','a.aid = b.aid')
+            ->join('discount_goods c','a.discount_goods_id = c.discount_gid')
+            ->where('a.active_id',$active_id)
+            ->limit($limit)
+            ->getAllWithIndex('aid');
+        if (!empty($data)){
+            $aids = [];
+            foreach ($data as $k => $v){
+                $data[$k]['litpic'] = get_default_pic($v['litpic'],true);
+                if (1 == $v['is_sku']){
+                    $aids[] = $v['aid'];
+                }
+            }
+            //多规格
+            if (!empty($aids)){
+                $sku = Db::name('product_spec_value')
+                    ->field('*,min(discount_price) as discount_price')
+                    ->where('aid','in',$aids)
+                    ->group('aid')
+                    ->getAllWithIndex('aid');
+            }
+
+            foreach ($data as $k => $v){
+                if (1 == $v['is_sku'] && !empty($sku[$v['aid']])){
+                    $v['discount_price'] = $sku[$v['aid']]['discount_price'];
+                }
+                $v['progress'] = 0;
+                if (0 < $v['sales_actual']){
+                    $count_stock = $v['sales_actual']+$v['discount_stock']+$v['virtual_sales'];
+                    $v['progress'] = intval(($v['sales_actual']+$v['virtual_sales'])/$count_stock*100);
+                }else{
+                    if (0 < $v['virtual_sales']){
+                        $v['progress'] = intval($v['virtual_sales']/($v['virtual_sales']+$v['discount_stock'])*100);;
+                    }
+                }
+                if (0 < $v['virtual_sales']){
+                    $v['sales_actual'] = $v['sales_actual'] +$v['virtual_sales'];
+
+                }
+                $data[$k] = $v;
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * 获取限时折扣列表
+     */
+    public function GetDiscountIndex($param = [])
+    {
+        $active_id = $param['active_id'];
+        $page = !empty($param['page']) ? $param['page'] : 1;
+        $pagesize = !empty($param['limit']) ? $param['limit'] : 20;
+        $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.json_encode(func_get_args()));
+        $result = cache($cacheKey);
+        if (true || empty($result)) {
+            $paginate = array(
+                'page'  => $page,
+            );
+            $pages = Db::name('discount_active_goods')
+                ->alias('a')
+                ->field('c.*,b.litpic,b.title,a.*,b.users_price')
+                ->join('archives b','a.aid = b.aid')
+                ->join('discount_goods c','a.discount_goods_id = c.discount_gid')
+                ->where('a.active_id',$active_id)
+                ->paginate($pagesize, false, $paginate);
+
+            $result = $pages->toArray();
+
+            $aids = [];
+            foreach ($result['data'] as $k => $v){
+                $result['data'][$k]['litpic'] = get_default_pic($v['litpic'],true);
+                if (1 == $v['is_sku']){
+                    $aids[] = $v['aid'];
+                }
+            }
+
+            //多规格
+            if (!empty($aids)) {
+                $sku = Db::name('product_spec_value')
+                    ->field('*,min(discount_price) as discount_price')
+                    ->where('aid', 'in', $aids)
+                    ->group('aid')
+                    ->getAllWithIndex('aid');
+            }
+            //sales_actual //
+            foreach ($result['data'] as $k => $v){
+                if (1 == $v['is_sku'] && !empty($sku[$v['aid']])){
+                    $v['discount_price'] = $sku[$v['aid']]['discount_price'];
+                }
+                $v['progress'] = 0;
+                if (0 < $v['sales_actual']){
+                    $count_stock = $v['sales_actual']+$v['discount_stock']+$v['virtual_sales'];
+                    $v['progress'] = intval(($v['sales_actual']+$v['virtual_sales'])/$count_stock*100);
+                }else{
+                    if (0 < $v['virtual_sales']){
+                        $v['progress'] = intval($v['virtual_sales']/($v['virtual_sales']+$v['discount_stock'])*100);;
+                    }
+                }
+                if (0 < $v['virtual_sales']){
+                    $v['sales_actual'] = $v['sales_actual'] + $v['virtual_sales'];
+
+                }
+                $result['data'][$k] = $v;
+            }
+            if(1 == $page){
+                $result['active'] = $this->GetDiscount($active_id);
+            }
+            cache($cacheKey, $result, null, 'GetDiscountIndex');
+        }
+
+        return $result;
+    }
+    //获取限时折扣活动信息(不包括折扣商品信息)
+    public function GetDiscount($active_id = 0){
+        $data = Db::name('discount_active')->where('active_id',$active_id)->find();
+        if ($data['start_date'] <= getTime()){
+            $data['active_status'] = 10;//进行中
+        }else{
+            $data['active_status'] = 20;//即将开始
+        }
+        return $data;
+    }
+    /**************************     限时折扣 结束    ****************************/
+
+    /**************************     会员升级 开始    ****************************/
+    // 会员升级
+    public function upgradeUserLevel($param = [], $users = [])
+    {
+        if (empty($param['type_id'])) $this->error('缺少升级类型');
+        // 记录类型，消费
+        $causeType = 0;
+        // 清理当前会员的未支付完成的升级订单记录
+        $where = [
+            'status' => 1,
+            'users_id' => $this->users_id,
+            'cause_type' => intval($causeType),
+        ];
+        Db::name('users_money')->where($where)->delete(true);
+        // 会员信息
+        $users = empty($users) ? GetUsersLatestData($this->users_id) : $users;
+        // 订单号规则
+        $orderNumber = date('Ymd') . $this->times . rand(10, 100);
+        // 查询会员升级级别信息
+        $usersTypeManage = Db::name('users_type_manage')->where('type_id', $param['type_id'])->find();
+        // 支付方式
+        $payName = '余额';
+        $payName = 'wechat' == $param['pay_type'] ? '微信' : $payName;
+        $payName = 'baiduPay' == $param['pay_type'] ? '百度' : $payName;
+        $payName = 'tikTokPay' == $param['pay_type'] ? '抖音' : $payName;
+        // 支付详情
+        $payDetails = "会员当前级别为【{$users['level_name']}】，使用{$payName}支付【{$usersTypeManage['type_name']}】，支付金额为{$usersTypeManage['price']}";
+        // 记录数据
+        $insert = [
+            'users_id'      => intval($this->users_id),
+            'cause_type'    => intval($causeType),
+            'cause'         => serialize($usersTypeManage),
+            'money'         => $usersTypeManage['price'],
+            'users_money'   => floatval($users['users_money']),
+            'pay_method'    => $param['pay_type'],
+            'pay_details'   => serialize($payDetails),
+            'order_number'  => $orderNumber,
+            'level_id'      => $usersTypeManage['level_id'],
+            'status'        => 1,
+            'add_time'      => $this->times,
+            'update_time'   => $this->times
+        ];
+        if ('balance' == $param['pay_type']) {
+            // 会员余额是否足够支付
+            if (floatval($users['users_money']) < floatval($usersTypeManage['price'])) $this->error('余额不足');
+            // 余额支付则记录支付后会员剩余余额
+            $insert['users_money'] = floatval($users['users_money']) - floatval($usersTypeManage['price']);
+        }
+        $insertID = Db::name('users_money')->insertGetId($insert);
+        if (!empty($insertID)) {
+            // 微信支付
+            if ('wechat' == $param['pay_type']) {
+                // 调用微信支付接口
+                $weChatPay = model('ShopPublicHandle')->getWechatAppletsPay($this->users_id, $orderNumber, $usersTypeManage['price'], 3);
+                $resultData = [
+                    'WeChatPay' => $weChatPay,
+                    'OrderData' => [
+                        'moneyid' => $insertID,
+                        'order_number' => $orderNumber
+                    ]
+                ];
+                $this->success('正在支付', null, $resultData);
+            }
+            // 抖音支付
+            else if ('tikTokPay' == $param['pay_type']) {
+                $tikTokPay = model('TikTok')->getTikTokAppletsPay($insertID, $orderNumber, $usersTypeManage['price'], 30, 'users_money', 3);
+                $resultData = [
+                    'tikTokPay' => $tikTokPay,
+                    'OrderData' => [
+                        'moneyid' => $insertID,
+                        'order_number' => $orderNumber
+                    ]
+                ];
+                // 返回提示
+                $this->success('正在支付', null, $resultData);
+            }
+            // 百度支付
+            else if ('baiduPay' == $param['pay_type']) {
+                $baiduPay = model('BaiduPay')->getBaiDuAppletsPay($insertID, $orderNumber, $usersTypeManage['price'], 'users_money', 3);
+                $result = [
+                    'baiduPay' => $baiduPay,
+                    'OrderData' => [
+                        'moneyid' => $insertID,
+                        'order_number' => $orderNumber
+                    ]
+                ];
+                // 返回提示
+                $this->success('正在支付', null, $result);
+            }
+            // 余额支付
+            else if ('balance' == $param['pay_type']) {
+                // 扣除会员余额
+                $resultID = Db::name('users')->where(['users_id' => $this->users_id])->setDec('users_money', $usersTypeManage['price']);
+                // 后续处理
+                if (!empty($resultID)) {
+                    $insert['unified_id'] = $insertID;
+                    $insert['unified_number'] = $insert['order_number'];
+                    $insert['transaction_type'] = 3;
+                    $payApiLogic = new \app\user\logic\PayApiLogic($this->users_id, true);
+                    $payApiLogic->OrderProcessing($insert, $insert);
+                }
+            }
+        }
+        $this->error('会员升级失败');
+    }
+
+    // 会员升级
+    public function handleUpgradeUserLevel($param = [], $users = [])
+    {
+        // 查询订单信息
+        $where = [
+            'cause_type' => 0,
+            'users_id' => $this->users_id,
+            'order_number' => trim($param['order_number']),
+        ];
+        $usersMoney = Db::name('users_money')->where($where)->find();
+        if (empty($usersMoney)) $this->error('订单错误，刷新重试');
+        if (1 !== intval($usersMoney['status'])) {
+            if (in_array($usersMoney['status'], [2, 3]) && 'wechat' === trim($usersMoney['pay_method'])) {
+                // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $usersMoney['order_number'], 3, '会员升级');
+            }
+            $this->success('订单已处理');
+        }
+
+        // 下单确认页数据处理
+        $usersMoney['unified_id'] = $usersMoney['moneyid'];
+        $usersMoney['unified_number'] = $usersMoney['order_number'];
+        $usersMoney['transaction_type'] = 3;
+        // 微信支付后续处理
+        if ('wechat' == $usersMoney['pay_method']) {
+            model('ShopPublicHandle')->getWeChatPayResult($this->users_id, $usersMoney, 3);
+        }
+        // 抖音支付后续处理
+        else if ('tikTokPay' == $usersMoney['pay_method']) {
+            model('TikTok')->tikTokAppletsPayDealWith($usersMoney, false, 'users_money');
+        }
+        // 百度支付后续处理
+        else if ('baiduPay' == $usersMoney['pay_method']) {
+            model('BaiduPay')->baiDuAppletsPayDealWith($usersMoney, false, 'users_money');
+        }
+    }
+
+    // 微信小程序支付后续处理
+    public function WechatAppletsPayDealWithUsersMoney($PostData = [], $notify = false)
+    {
+        $OpenID    = !empty($PostData['openid']) ? $PostData['openid'] : '';
+        $UsersID   = !empty($PostData['users_id']) ? $PostData['users_id'] : '';
+        $order_number = $PostData['order_number'];
+
+        if (!empty($moneyid) && !empty($order_number)) {
+            $where = [
+                'users_id'   => $UsersID,
+                'order_number' => $order_number,
+            ];
+            //查询订单状态
+            $order = Db::name('users_money')->where($where)->find();
+
+            if (empty($order)) {
+                $this->error('无效订单！');
+            } else if (1 < $order['status']) {
+                // 订单已支付
+                if ($notify === true) { // 异步
+                    return [
+                        'code' => 1,
+                        'msg'  => 'ok',
+                    ];
+                } else { // 同步
+                    $this->success('支付完成', '/pages/user/index');
+                }
+            }
+
+            // 当前时间戳
+            $time = getTime();
+
+            // 当前时间戳 + OpenID 经 MD5加密
+            $nonceStr = md5($time . $OpenID);
+
+            // 调用支付接口参数
+            $params = [
+                'appid'        => $this->miniproInfo['appid'],
+                'mch_id'       => $this->miniproInfo['mchid'],
+                'nonce_str'    => $nonceStr,
+                'out_trade_no' => $order_number
+            ];
+
+            // 生成参数签名
+            $params['sign'] = $this->ParamsSign($params, $this->miniproInfo['apikey']);
+
+            // 生成参数XML格式
+            $ParamsXml = $this->ParamsXml($params);
+
+            // 调用接口返回数据
+            $url    = 'https://api.mch.weixin.qq.com/pay/orderquery';
+            $result = $this->HttpsPost($url, $ParamsXml);
+
+            // 解析XML格式
+            $ResultData = $this->ResultXml($result);
+
+            // 订单是否存在
+            if (!empty($ResultData) && 'SUCCESS' == $ResultData['return_code'] && 'OK' == $ResultData['return_msg']) {
+                // if ('NOTPAY' == $ResultData['trade_state'] && !empty($ResultData['trade_state_desc'])) {
+                //     // 订单未支付
+                //     $this->error($ResultData['trade_state_desc']);
+                // }
+                if ('SUCCESS' == $ResultData['trade_state']) {
+                    // 订单已支付，处理订单流程
+                    $OrderWhere = [
+                        'order_number' => $order_number,
+                        'users_id' => $UsersID
+                    ];
+                    $OrderData  = [
+                        'status' => 2,
+                        'update_time'  => getTime()
+                    ];
+                    $ResultID   = Db::name('users_money')->where($OrderWhere)->update($OrderData);
+                    if (!empty($ResultID)) {
+                        $order['cause'] = unserialize($order['cause']);
+                        $level_maturity_days = Db::name('users')->where('users_id', $UsersID)->value('level_maturity_days');
+                        $limit_arr = Config::get('global.admin_member_limit_arr');
+
+                        $day = $limit_arr[$order['cause']['limit_id']]['maturity_days'];
+                        $users_update['level_maturity_days'] = Db::Raw('level_maturity_days +'.$day);
+                        if (empty($level_maturity_days)){
+                            $users_update['open_level_time'] = getTime();
+                        }
+                        $users_update['level'] = $order['cause']['level_id'];
+                        $users_update['update_time'] = getTime();
+                        Db::name('users')->where('users_id', $UsersID)->update($users_update);
+
+                        // 订单支付完成
+                        if ($notify === true) { // 异步
+                            return [
+                                'code' => 1,
+                                'msg'  => 'ok',
+                            ];
+                        } else { // 同步
+                            $url = '/pages/user/index';
+                            $this->success('支付完成', $url);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**************************     会员升级 结束    ****************************/
+
+    /**************************     视频购买 开始    ****************************/
+    // 视频购买
+    public function buyMedia($param = [])
+    {
+        if (empty($param['aid'])) $this->error('缺少必要参数');
+        // 清理当前会员的未支付的充值记录
+        $where = [
+            'order_status' => 0,
+            'users_id' => $this->users_id,
+        ];
+        Db::name('media_order')->where($where)->delete();
+
+        $users = Db::name('users')
+            ->field('a.*,b.discount')
+            ->alias('a')
+            ->join('users_level b','a.level = b.level_id','left')
+            ->where('a.users_id',$this->users_id)
+            ->find();
+        $list = Db::name('archives')->where('aid',$param['aid'])->find();
+        $price = unifyPriceHandle($list['users_price'] * ($users['discount'] / 100));
+
+        // 生成订单并保存到数据库
+        $time = getTime();
+        $OrderData = [
+            'order_code'      => date('Y') . $time . rand(10,100),
+            'users_id'        => $this->users_id,
+            'mobile'          => !empty($users['mobile']) ?$users['mobile'] : '',
+            'order_status'    => 0,
+            'order_amount'    => $price,
+            'pay_time'        => '',
+            'pay_name'        => '',
+            'wechat_pay_type' => '',
+            'pay_details'     => '',
+            'product_id'      => $list['aid'],
+            'product_name'    => $list['title'],
+            'product_litpic'  => get_default_pic($list['litpic']),
+            'lang'            => get_home_lang(),
+            'add_time'        => $time,
+            'update_time'     => $time
+        ];
+        $insertID = Db::name('media_order')->insertGetId($OrderData);
+        if (!empty($insertID)) {
+            if ('wechat' == $param['pay_type']) {
+                // 调用微信支付接口
+                $weChatPay = model('ShopPublicHandle')->getWechatAppletsPay($this->users_id, $OrderData['order_code'], $price, 8);
+                $resultData = [
+                    'WeChatPay' => $weChatPay,
+                    'OrderData' => [
+                        'order_id' => $insertID,
+                        'order_code' => $OrderData['order_code']
+                    ]
+                ];
+                $this->success('正在支付', null, $resultData);
+
+                // 微信支付
+                // $openid = Db::name('wx_users')->where('users_id', $param['users_id'])->getField('openid');
+                // $notify_url =  url('api/v1/Api/wxpay_notify_media', [], true, true, 1, 2);
+                // $Data = $this->GetWechatAppletsPay($openid, $OrderData['order_code'],  $price,$notify_url);
+                // $ResultData = [
+                //     'WeChatPay' => $Data,
+                //     'OrderData' => [
+                //         'order_id' => $insertID,
+                //         'order_code' => $OrderData['order_code']
+                //     ]
+                // ];
+                // $this->success('正在支付', null, $ResultData);
+            } else if ('balance' == $param['pay_type']) {
+                //先判断余额够不够
+                if ($users['users_money'] < $price){
+                    $this->error('余额不足!');
+                }
+
+                // 订单更新数据，更新为已付款
+                $pay_details['unified_id'] = $insertID;
+                $pay_details['unified_number'] = $OrderData['order_code'];
+                $pay_details['payment_type'] = '余额支付';
+                $pay_details['payment_amount'] = $price;
+                $pay_details['transaction_type'] = 8;
+                // 余额支付
+                $UpOrderData = [
+                    'order_status'    => 1,
+                    'pay_time'    => getTime(),
+                    'pay_name'    => 'balance',
+                    'pay_details' => serialize($pay_details),
+                    'update_time' => getTime()
+                ];
+                $ReturnID    = Db::name('media_order')->where('order_code',  $OrderData['order_code'])->update($UpOrderData);
+                if (!empty($ReturnID)) {
+                    $Where = [
+                        'users_id' => $this->users_id
+                    ];
+                    $UsersData = [
+                        'users_money' => Db::raw('users_money-'.$OrderData['order_amount']),
+                        'update_time' => getTime()
+                    ];
+                    Db::name('users')->where($Where)->update($UsersData);
+                    UsersMoneyRecording($OrderData['order_code'], $users, $OrderData['order_amount'], '视频购买', 3);
+                    $url = '/pages/user/index';
+                    $this->success('支付完成', $url);
+                }
+            }
+        } else {
+            $this->error('会员升级失败');
+        }
+    }
+
+    // 会员升级
+    public function handleBuyMedia($param = [])
+    {
+        // 查询订单信息
+        $where = [
+            'users_id' => $this->users_id,
+            'order_code' => $param['order_code'],
+        ];
+        $order = Db::name('media_order')->where($where)->find();
+        if (empty($order)) $this->error('订单错误，刷新重试');
+        if (0 !== intval($order['status'])) $this->error('订单已被处理，刷新重试');
+
+        // 查询会员openid
+        $openid = Db::name('wx_users')->where('users_id', $param['users_id'])->getField('openid');
+
+        // 下单确认页数据处理
+        $WeChatPay = $this->GetWeChatPayDetails($openid, $param['order_code']);
+
+        // 判断处理订单是否真实支付并处理订单
+        if (!empty($WeChatPay) && 'SUCCESS' == $WeChatPay['return_code'] && 'OK' == $WeChatPay['return_msg'] && 'SUCCESS' == $WeChatPay['trade_state']) {
+            // 视频订单已支付，将订单更新为已支付
+            // 订单更新数据，更新为已付款
+            $pay_details['unified_id'] = $order['order_id'];
+            $pay_details['unified_number'] = $order['order_code'];
+            $pay_details['payment_type'] = '微信支付';
+            $pay_details['payment_amount'] = $order['order_amount'];
+            $pay_details['transaction_type'] = 8;
+            // 余额支付
+            $UpOrderData = [
+                'order_status'    => 1,
+                'pay_time'    => getTime(),
+                'pay_name'    => 'wechat',
+                'wechat_pay_type'    => 'WeChatScanCode',
+                'pay_details' => serialize($pay_details),
+                'update_time' => getTime()
+            ];
+            $return  = Db::name('media_order')->where('order_code',  $param['order_code'])->update($UpOrderData);
+            if (!empty($return)) {
+                // 返回结束
+                $this->success('支付完成');
+            }
+            $this->success('订单处理失败，请联系管理员');
+        }
+    }
+
+    // 微信小程序支付后续处理
+    public function WechatAppletsPayDealWithMedia($PostData = [], $notify = false)
+    {
+        $OpenID    = !empty($PostData['openid']) ? $PostData['openid'] : '';
+        $UsersID   = !empty($PostData['users_id']) ? $PostData['users_id'] : '';
+        $order_code = $PostData['order_code'];
+
+        if (!empty($order_code)) {
+            $where = [
+                'users_id'   => $UsersID,
+                'order_code' => $order_code,
+            ];
+            //查询订单状态
+            $order = Db::name('media_order')->where($where)->find();
+
+            if (empty($order)) {
+                $this->error('无效订单！');
+            } else if (0 < $order['status']) {
+                // 订单已支付
+                if ($notify === true) { // 异步
+                    return [
+                        'code' => 1,
+                        'msg'  => 'ok',
+                    ];
+                } else { // 同步
+                    $this->success('支付完成', '/pages/user/index');
+                }
+            }
+
+            // 当前时间戳
+            $time = getTime();
+
+            // 当前时间戳 + OpenID 经 MD5加密
+            $nonceStr = md5($time . $OpenID);
+
+            // 调用支付接口参数
+            $params = [
+                'appid'        => $this->miniproInfo['appid'],
+                'mch_id'       => $this->miniproInfo['mchid'],
+                'nonce_str'    => $nonceStr,
+                'out_trade_no' => $order_code
+            ];
+
+            // 生成参数签名
+            $params['sign'] = $this->ParamsSign($params, $this->miniproInfo['apikey']);
+
+            // 生成参数XML格式
+            $ParamsXml = $this->ParamsXml($params);
+
+            // 调用接口返回数据
+            $url    = 'https://api.mch.weixin.qq.com/pay/orderquery';
+            $result = $this->HttpsPost($url, $ParamsXml);
+
+            // 解析XML格式
+            $ResultData = $this->ResultXml($result);
+
+            // 订单是否存在
+            if (!empty($ResultData) && 'SUCCESS' == $ResultData['return_code'] && 'OK' == $ResultData['return_msg']) {
+                // if ('NOTPAY' == $ResultData['trade_state'] && !empty($ResultData['trade_state_desc'])) {
+                //     // 订单未支付
+                //     $this->error($ResultData['trade_state_desc']);
+                // }
+                if ('SUCCESS' == $ResultData['trade_state']) {
+                    // 订单已支付，处理订单流程
+                    $OrderWhere = [
+                        'order_code' => $order_code,
+                        'users_id' => $UsersID
+                    ];
+                    // 订单更新数据，更新为已付款
+                    $pay_details['unified_id'] = $order['order_id'];
+                    $pay_details['unified_number'] = $order['order_code'];
+                    $pay_details['payment_type'] = '微信支付';
+                    $pay_details['payment_amount'] = $order['order_amount'];
+                    $pay_details['transaction_type'] = 8;
+                    // 余额支付
+                    $UpOrderData = [
+                        'order_status'    => 1,
+                        'pay_time'    => getTime(),
+                        'pay_name'    => 'wechat',
+                        'wechat_pay_type'    => 'WeChatScanCode',
+                        'pay_details' => serialize($pay_details),
+                        'update_time' => getTime()
+                    ];
+                    $ResultID   = Db::name('media_order')->where($OrderWhere)->update($UpOrderData);
+                    if (!empty($ResultID)) {
+
+                        // 订单支付完成
+                        if ($notify === true) { // 异步
+                            return [
+                                'code' => 1,
+                                'msg'  => 'ok',
+                            ];
+                        } else { // 同步
+                            $url = '/pages/user/index';
+                            $this->success('支付完成', $url);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**************************     视频购买 结束    ****************************/
 }

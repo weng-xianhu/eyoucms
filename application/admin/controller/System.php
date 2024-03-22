@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -38,15 +38,28 @@ class System extends Base
     public function web()
     {
         $inc_type =  'web';
+        $config = tpCache($inc_type);
 
         if (IS_POST) {
             $param = input('post.');
+            $param['web_basehost'] = preg_replace('/<script([^\>]*)>([\s\S]+)<\/script>/i', '', $param['web_basehost']);
+            $param['web_title'] = preg_replace('/<script([^\>]*)>([\s\S]+)<\/script>/i', '', $param['web_title']);
             $param['web_keywords'] = str_replace('，', ',', $param['web_keywords']);
+            $param['web_keywords'] = preg_replace('/<script([^\>]*)>([\s\S]+)<\/script>/i', '', $param['web_keywords']);
             $param['web_description'] = filter_line_return($param['web_description']);
-            
+            $param['web_description'] = preg_replace('/<script([^\>]*)>([\s\S]+)<\/script>/i', '', $param['web_description']);
+            $param['web_status_url'] = trim($param['web_status_url']);
+            $web_status_tpl = trim($param['web_status_tpl']);
+            $web_status_tpl = trim($web_status_tpl, '/');
+            if (!empty($this->root_dir)) {
+                $web_status_tpl = preg_replace('#^'.$this->root_dir.'/#i', '', '/'.$web_status_tpl);
+                $web_status_tpl = trim($web_status_tpl, '/');
+            }
+            $param['web_status_tpl'] = $web_status_tpl;
+
             if (1 == $param['web_status']) {
                 /*多语言 - 不知为何v1.4.0新增该逻辑【在静态模式下，关闭网站会自动切换为动态URL模式】*/
-                // $seo_pseudo = tpCache('seo.seo_pseudo');
+                // $seo_pseudo = tpCache('global.seo_pseudo');
                 // if (2 == $seo_pseudo) {
                 //     if (is_language()) {
                 //         $langRow = \think\Db::name('language')->order('id asc')
@@ -63,6 +76,9 @@ class System extends Base
                 @unlink('./index.html');
             }
 
+            // 站点状态关闭时，所关闭的终端口(pc、mobile)
+            // $param['web_close_port'] = !empty($param['web_close_port']) ? serialize($param['web_close_port']) : '';
+
             // 网站根网址
             $web_basehost = rtrim($param['web_basehost'], '/');
             if (!is_http_url($web_basehost) && !empty($web_basehost)) {
@@ -71,16 +87,16 @@ class System extends Base
             $param['web_basehost'] = $web_basehost;
 
             // 网站logo
-            $web_logo_is_remote = !empty($param['web_logo_is_remote']) ? $param['web_logo_is_remote'] : 0;
-            $web_logo = '';
-            if ($web_logo_is_remote == 1) {
-                $web_logo = $param['web_logo_remote'];
-            } else {
-                $web_logo = $param['web_logo_local'];
-            }
-            $param['web_logo'] = $web_logo;
-            unset($param['web_logo_is_remote']);
-            unset($param['web_logo_remote']);
+            // $web_logo = '';
+            // $web_logo_is_remote = !empty($param['web_logo_is_remote']) ? $param['web_logo_is_remote'] : 0;
+            // if ($web_logo_is_remote == 1) {
+            //     $web_logo = $param['web_logo_remote'];
+            // } else {
+            //     $web_logo = $param['web_logo_local'];
+            // }
+            $param['web_logo'] = $param['web_logo_local'];
+            // unset($param['web_logo_is_remote']);
+            // unset($param['web_logo_remote']);
             unset($param['web_logo_local']);
 
             // 浏览器地址图标
@@ -103,24 +119,31 @@ class System extends Base
                     }
                 }
             }
+            $param['web_recordnum'] = preg_replace('/<script([^\>]*)>([\s\S]+)<\/script>/i', '', $param['web_recordnum']);
+            $param['web_garecordnum'] = preg_replace('/<script([^\>]*)>([\s\S]+)<\/script>/i', '', $param['web_garecordnum']);
 
             tpCache($inc_type, $param);
             write_global_params($this->admin_lang); // 写入全局内置参数
+
+            if ($config['web_basehost'] != $param['web_basehost']) {
+                verify_authortoken();
+            }
+
             $this->success('操作成功', url('System/web'));
             exit;
         }
 
-        $config = tpCache($inc_type);
         // 网站logo
-        if (is_http_url($config['web_logo'])) {
-            $config['web_logo_is_remote'] = 1;
-            $config['web_logo_remote'] = handle_subdir_pic($config['web_logo']);
-        } else {
-            $config['web_logo_is_remote'] = 0;
-            $config['web_logo_local'] = handle_subdir_pic($config['web_logo']);
-        }
+        // if (is_http_url($config['web_logo'])) {
+        //     $config['web_logo_is_remote'] = 1;
+        //     $config['web_logo_remote'] = handle_subdir_pic($config['web_logo']);
+        // } else {
+        //     $config['web_logo_is_remote'] = 0;
+        //     $config['web_logo_local'] = handle_subdir_pic($config['web_logo']);
+        // }
+        $config['web_logo_local'] = handle_subdir_pic($config['web_logo']);
 
-        $config['web_ico'] = preg_replace('#^(/[/\w]+)?(/)#i', $this->root_dir.'$2', $config['web_ico']); // 支持子目录
+        $config['web_ico'] = preg_replace('#^(/[/\w\-]+)?(/)#i', $this->root_dir.'$2', $config['web_ico']); // 支持子目录
         
         /*系统模式*/
         $web_cmsmode = isset($config['web_cmsmode']) ? $config['web_cmsmode'] : 2;
@@ -146,16 +169,58 @@ class System extends Base
         $this->assign('eyou_row',$eyou_row);
         /*--end*/
 
-        /*网站关键词*/
-        // if ($config['web_keywords']) {
-        //     if (unserialize($config['web_keywords'])) {
-        //         $config['web_keywords'] = implode(",", unserialize($config['web_keywords']));
-        //         tpCache('web',['web_keywords'=>$config['web_keywords']]);
-        //     }
-        // }
+        // 站点状态关闭时，所关闭的终端口(pc、mobile)
+        // $config['web_close_port'] = !empty($config['web_close_port']) ? unserialize($config['web_close_port']) : ['pc', 'mobile'];
 
         $this->assign('config',$config);//当前配置项
-        $this->assign('seo_pseudo', tpCache('seo.seo_pseudo')); // URL模式
+        $this->assign('seo_pseudo', tpCache('global.seo_pseudo')); // URL模式
+        return $this->fetch();
+    }
+
+    /**
+     * 自定义变量
+     */
+    public function customvar()
+    {
+        $inc_type =  'web';
+
+        if (IS_POST) {
+            $param = input('post.');
+
+            tpCache($inc_type, $param);
+            write_global_params($this->admin_lang); // 写入全局内置参数
+            $this->success('操作成功', url('System/customvar'));
+            exit;
+        }
+
+        $config = tpCache($inc_type);
+
+        /*系统模式*/
+        $web_cmsmode = isset($config['web_cmsmode']) ? $config['web_cmsmode'] : 2;
+        $this->assign('web_cmsmode', $web_cmsmode);
+        /*--end*/
+
+        /*自定义变量*/
+        $eyou_row = Db::name('config_attribute')->field('a.attr_id, a.attr_name, a.attr_var_name, a.attr_input_type, b.value, b.id, b.name')
+            ->alias('a')
+            ->join('__CONFIG__ b', 'b.name = a.attr_var_name AND b.lang = a.lang', 'LEFT')
+            ->where([
+                'b.lang'    => $this->admin_lang,
+                'a.inc_type'    => $inc_type,
+                'b.is_del'  => 0,
+            ])
+            ->order('a.attr_id asc')
+            ->select();
+        foreach ($eyou_row as $key => $val) {
+            $val['value'] = handle_subdir_pic($val['value'], 'html'); // 支持子目录
+            $val['value'] = handle_subdir_pic($val['value']); // 支持子目录
+            $eyou_row[$key] = $val;
+        }
+        $this->assign('eyou_row',$eyou_row);
+        /*--end*/
+
+        $this->assign('config',$config);//当前配置项
+        $this->assign('seo_pseudo', tpCache('global.seo_pseudo')); // URL模式
         return $this->fetch();
     }
 
@@ -167,10 +232,14 @@ class System extends Base
         $this->language_access(); // 多语言功能操作权限
 
         $inc_type = 'web';
+        $config = tpCache($inc_type);
 
         if (IS_POST) {
             $param = input('post.');
-
+            $param['web_show_popup_upgrade'] = intval($param['web_show_popup_upgrade']);
+            if (empty($param['web_show_popup_upgrade']) && $this->php_servicemeal <= 0) {
+                $param['web_show_popup_upgrade'] = -1;
+            }
             if (1 == $param['web_mobile_domain_open']) {
                 $web_mobile_domain = trim($param['web_mobile_domain']);
                 if (!empty($web_mobile_domain) && ($web_mobile_domain == 'www' || $web_mobile_domain == $this->request->subDomain())) {
@@ -184,35 +253,25 @@ class System extends Base
             $web_cmspath = trim($param['web_cmspath'], '/');
             $web_cmspath = !empty($web_cmspath) ? '/'.$web_cmspath : '';
             $param['web_cmspath'] = $web_cmspath;
-            /*自定义后台路径名*/
-            $adminbasefile = trim($param['adminbasefile']).'.php'; // 新的文件名
-            $param['web_adminbasefile'] = $this->root_dir.'/'.$adminbasefile; // 支持子目录
-            $adminbasefile_old = trim($param['adminbasefile_old']).'.php'; // 旧的文件名
-            unset($param['adminbasefile']);
-            unset($param['adminbasefile_old']);
-            if ('index.php' == $adminbasefile) {
-                $this->error("后台路径禁止使用index", null, '', 1);
-            }
-            /*--end*/
-            $param['web_sqldatapath'] = '/'.trim($param['web_sqldatapath'], '/'); // 数据库备份目录
-            $param['web_htmlcache_expires_in'] = intval($param['web_htmlcache_expires_in']); // 页面缓存有效期
-            /*后台登录超时*/
-            $web_login_expiretime = $param['web_login_expiretime'];
-            $web_login_expiretime = preg_replace('/^(\d{0,})(.*)$/i', '${1}', $web_login_expiretime);
-            empty($web_login_expiretime) && $web_login_expiretime = config('login_expire');
-            if ($web_login_expiretime > 2592000) {
-                $web_login_expiretime = 2592000; // 最多一个月
-            }
-            $param['web_login_expiretime'] = $web_login_expiretime;
-            /*--end*/
-            
+
             /*前台模板风格*/
             $web_tpl_theme = $param['web_tpl_theme'];
-            $web_tpl_theme_old = tpCache('web.web_tpl_theme');
+            $web_tpl_theme_old = tpCache('global.web_tpl_theme');
             /*--end*/
 
-            tpSetting('recycle', ['recycle_switch' => $param['recycle_switch']]);//回收站开关
+            $recycle_is_clear = $param['recycle_is_clear']; // 是否要清空回收站
+            unset($param['recycle_is_clear']);
 
+
+            // $web_language_switch = tpCache('global.web_language_switch');
+            // if (!empty($web_language_switch)) {
+            //     $param['web_citysite_open'] = 0;
+            // }
+
+            $other_pcwapjs = $param['other_pcwapjs'];
+            unset($param['other_pcwapjs']);
+
+            $seo_pseudo = tpCache('global.seo_pseudo');
             /*多语言*/
             if (is_language()) {
                 $langRow = \think\Db::name('language')->order('id asc')
@@ -221,69 +280,54 @@ class System extends Base
                 foreach ($langRow as $key => $val) {
                     tpCache($inc_type,$param,$val['mark']);
                     write_global_params($val['mark']); // 写入全局内置参数
+                    // if (!empty($param['web_citysite_open']) && 2 == $seo_pseudo) {
+                    //     tpCache('seo', ['seo_pseudo'=>1, 'seo_dynamic_format'=>1], $val['mark']);
+                    // }
+                    // pc/wap跳转js
+                    tpCache('other', ['other_pcwapjs'=>$other_pcwapjs], $val['mark']);
                 }
             } else {
                 tpCache($inc_type,$param);
                 write_global_params($this->admin_lang); // 写入全局内置参数
+                // if (!empty($param['web_citysite_open']) && 2 == $seo_pseudo) {
+                //     tpCache('seo', ['seo_pseudo'=>1, 'seo_dynamic_format'=>1]);
+                // }
+                // pc/wap跳转js
+                tpCache('other', ['other_pcwapjs'=>$other_pcwapjs]);
             }
             /*--end*/
 
-            /*更改session会员设置 - session有效期（后台登录超时）*/
-            $session_conf = [];
-            $session_file = APP_PATH.'admin/conf/session_conf.php';
-            if (file_exists($session_file)) {
-                require_once($session_file);
-                $session_conf_tmp = EY_SESSION_CONF;
-                if (!empty($session_conf_tmp)) {
-                    $session_conf_tmp = json_decode($session_conf_tmp, true);
-                    if (!empty($session_conf_tmp) && is_array($session_conf_tmp)) {
-                        $session_conf = $session_conf_tmp;
-                    }
-                }
+            // 开发模式，清掉缓存
+            if (2 == $param['web_cmsmode']) {
+                Cache::clear();
+                delFile(RUNTIME_PATH);
             }
-            $session_conf['expire'] = $param['web_login_expiretime'];
-            $str_session_conf = '<?php'.PHP_EOL.'$session_1600593464 = json_encode('.var_export($session_conf,true).');'.PHP_EOL.'define(\'EY_SESSION_CONF\', $session_1600593464);';
-            @file_put_contents(APP_PATH . 'admin/conf/session_conf.php', $str_session_conf);
-            /*--end*/
 
-            $refresh = false;
-            $gourl = request()->domain().$this->root_dir.'/'.$adminbasefile; // 支持子目录
-            /*更改自定义后台路径名*/
-            if ($adminbasefile_old != $adminbasefile && eyPreventShell($adminbasefile_old)) {
-                if (file_exists($adminbasefile_old)) {
-                    if(rename($adminbasefile_old, $adminbasefile)) {
-                        $refresh = true;
-                    }
-                } else {
-                    $this->error("根目录{$adminbasefile_old}文件不存在！", null, '', 2);
-                }
+            // 清空回收站
+            if (!empty($param['web_recycle_switch']) && !empty($recycle_is_clear)) {
+                model('RecycleBin')->clear('all');
             }
-            /*--end*/
+
+            // 多城市开关
+            // model('Citysite')->setCitysiteOpen();
 
             if ($web_tpl_theme != $web_tpl_theme_old) {
-                delFile(rtrim(RUNTIME_PATH, '/'), true);
+                foreach ([HTML_ROOT,TEMP_PATH] as $k2 => $v2) {
+                    delFile($v2);
+                }
             }
-            
-            /*刷新整个后台*/
-            if ($refresh) {
-                $this->success('操作成功', $gourl, '', 1, [], '_parent');
+            if ((isset($config['absolute_path_open']) && $param['absolute_path_open'] != $config['absolute_path_open']) || (!isset($config['absolute_path_open']) && $param['absolute_path_open'] == 1)){
+                foreach ([HTML_ROOT,TEMP_PATH,CACHE_PATH] as $k3 => $v3) {
+                    delFile($v3);
+                }
             }
-            /*--end*/
 
             $this->success('操作成功', url('System/web2'));
         }
 
-        $config = tpCache($inc_type);
         // 当前主域名
         $this->assign('subDomain', $this->request->subDomain());
-        //自定义后台路径名
-        $baseFile = explode('/', $this->request->baseFile());
-        $web_adminbasefile = end($baseFile);
-        $adminbasefile = preg_replace('/^(.*)\.([^\.]+)$/i', '$1', $web_adminbasefile);
-        $this->assign('adminbasefile', $adminbasefile);
-        // 数据库备份目录
-        $sqlbackuppath = config('DATA_BACKUP_PATH');
-        $this->assign('sqlbackuppath', $sqlbackuppath);
+
         // 当前域名是否IP或者localhost本地
         $is_localhost = 0;
         if (preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/i', $this->request->host(true)) || 'localhost' == $this->request->host(true)) {
@@ -321,8 +365,10 @@ class System extends Base
         /*代理贴牌功能限制-e*/
         
         $this->assign('config',$config);//当前配置项
-        $recycle_switch = tpSetting('recycle.recycle_switch');
-        $this->assign('recycle_switch', $recycle_switch);//回收站
+
+        // pc/wap跳转js
+        $other_pcwapjs = tpCache('global.other_pcwapjs');
+        $this->assign('other_pcwapjs', $other_pcwapjs);
 
         return $this->fetch();
     }
@@ -389,8 +435,8 @@ class System extends Base
             }
             unset($param['other_arcdownload']);
 
-            $old_basic_img_style_wh = $param['old_basic_img_style_wh'];
-            unset($param['old_basic_img_style_wh']);
+            $old_basic_img_setlist = $param['old_basic_img_setlist'];
+            unset($param['old_basic_img_setlist']);
 
             $param['file_size'] = intval($param['file_size']);
             if (0 < $max_filesize && $max_filesize < $param['file_size']) {
@@ -412,7 +458,7 @@ class System extends Base
             $file_type = explode('|', $param['file_type']);
             foreach ($file_type as $key => $val) {
                 $val = trim($val);
-                if (preg_match('/^(php|asp|jsp|perl|cgi|asa|pht|phtml)/i', $val) || empty($val)) {
+                if (preg_match('/^(php|asp|jsp|perl|cgi|asa|pht|phtml|htm)/i', $val) || empty($val)) {
                     unset($file_type[$key]);
                 }
             }
@@ -424,11 +470,34 @@ class System extends Base
             $media_type = explode('|', $param['media_type']);
             foreach ($media_type as $key => $val) {
                 $val = trim($val);
-                if (!in_array($val, $media_ext_arr) || empty($val)) {
+                if (empty($val)) {
                     unset($media_type[$key]);
+                } else if (!in_array($val, $media_ext_arr)) {
+                    $this->error("不支持{$val}格式");
                 }
             }
             $param['media_type'] = implode('|', $media_type);
+            /*end*/
+
+            // 内容图片附加功能
+            $param['basic_img_auto_wh'] = !empty($param['basic_img_auto_wh']) ? $param['basic_img_auto_wh'] : 0;
+            $param['basic_img_alt'] = !empty($param['basic_img_alt']) ? $param['basic_img_alt'] : 0;
+            $param['basic_img_title'] = !empty($param['basic_img_title']) ? $param['basic_img_title'] : 0;
+            $param['basic_img_alt_force'] = !empty($param['basic_img_alt_force']) ? $param['basic_img_alt_force'] : 0;
+            $param['basic_body_allowurls'] = !empty($param['basic_body_allowurls']) ? $param['basic_body_allowurls'] : '';
+            /*过滤重复值和域名处理*/
+            $allowurls_arr = explode(PHP_EOL, $param['basic_body_allowurls']);
+            foreach ($allowurls_arr as $key => $val) {
+                $tmp_val = trim($val);
+                $tmp_val = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${4}', $tmp_val);
+                if (empty($tmp_val)) {
+                    unset($allowurls_arr[$key]);
+                    continue;
+                }
+                $allowurls_arr[$key] = $tmp_val;
+            }
+            $allowurls_arr = array_unique($allowurls_arr);
+            $param['basic_body_allowurls'] = implode(PHP_EOL, $allowurls_arr);
             /*end*/
 
             /*多语言*/
@@ -455,16 +524,35 @@ class System extends Base
             }
             /*--end*/
 
-            if ($old_basic_img_style_wh != $param['basic_img_style_wh']) {
+            $new_basic_img_setlist = $param['basic_img_auto_wh'].$param['basic_img_alt'].$param['basic_img_title'];
+            if ($old_basic_img_setlist != $new_basic_img_setlist) {
                 // 清空详情页缓存
                 foreach (['http','https'] as $key => $val) {
-                    delFile(RUNTIME_PATH.'html/'.$val.'/view');
+                    delFile(HTML_ROOT.$val.'/view');
                 }
             }
 
             // 编辑器选项配置
             if (!empty($param['editor_select'])) {
-                tpSetting('editor', ['editor_select' => $param['editor_select']]);
+                $editor_arr = [
+                    'editor_select' => $param['editor_select'],
+                    'editor_bdmap_ak' => $param['editor_bdmap_ak'],
+                    'editor_remote_img_local' => $param['editor_remote_img_local'],
+                    'editor_img_clear_link' => $param['editor_img_clear_link'],
+                ];
+                /*多语言*/
+                if (is_language()) {
+                    $langRow = \think\Db::name('language')->order('id asc')
+                        ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                        ->select();
+                    foreach ($langRow as $key => $val) {
+                        tpSetting('editor', $editor_arr, $val['mark']);
+                    }
+                } else {
+                    tpSetting('editor',$editor_arr);
+                }
+                $bdmap_ak_js =  ROOT_PATH.'public/plugins/Ueditor/dialogs/map/bdmap_ak.js';
+                file_put_contents($bdmap_ak_js,"var bdmap_ak = '{$editor_arr['editor_bdmap_ak']}';");
             }
 
             $this->success('操作成功', url('System/basic'));
@@ -482,7 +570,124 @@ class System extends Base
         $this->assign('editor', $editor);
         return $this->fetch();
     }
+    /*
+     *
+     */
+    public function basic_open(){
+        $inc_type =  'basic';
+        $other_inc_type = 'other';
 
+        $config = tpCache($inc_type);
+        $other_config = tpCache($other_inc_type);
+        $editor = tpSetting('editor');
+
+        if (IS_POST) {
+            $param = input('post.');
+            // 文档默认浏览量
+            if (isset($param['other_arcclick']) && 0 <= $param['other_arcclick']) {
+                $arcclick_arr = explode("|", $param['other_arcclick']);
+                if (count($arcclick_arr) > 1) {
+                    foreach ($arcclick_arr as $k => $v) {
+                        $arcclick_arr[$k] = intval($v);
+                        if ($k > 1) {
+                            unset($arcclick_arr[$k]);
+                        }
+                    }
+                    asort($arcclick_arr);
+                    $other_param['other_arcclick'] = implode('|', $arcclick_arr);
+                } else {
+                    $other_param['other_arcclick'] = intval($arcclick_arr[0]);
+                }
+            }else{
+                $other_param['other_arcclick'] = '500|1000';
+            }
+            unset($param['other_arcclick']);
+
+            // 软件默认下载量
+            if (isset($param['other_arcdownload']) && 0 <= $param['other_arcdownload']) {
+                $arcdownload_arr = explode("|", $param['other_arcdownload']);
+                if (count($arcdownload_arr) > 1) {
+                    foreach ($arcdownload_arr as $k => $v) {
+                        $arcdownload_arr[$k] = intval($v);
+                        if ($k > 1) {
+                            unset($arcdownload_arr[$k]);
+                        }
+                    }
+                    asort($arcdownload_arr);
+                    $other_param['other_arcdownload'] = implode('|', $arcdownload_arr);
+                } else {
+                    $other_param['other_arcdownload'] = intval($arcdownload_arr[0]);
+                }
+            }else{
+                $other_param['other_arcdownload'] = '500|1000';
+            }
+            unset($param['other_arcdownload']);
+
+            $old_basic_img_setlist = $param['old_basic_img_setlist'];
+            unset($param['old_basic_img_setlist']);
+
+            // 内容图片附加功能
+            $param['basic_img_auto_wh'] = !empty($param['basic_img_auto_wh']) ? $param['basic_img_auto_wh'] : 0;
+            $param['basic_img_alt'] = !empty($param['basic_img_alt']) ? $param['basic_img_alt'] : 0;
+            $param['basic_img_title'] = !empty($param['basic_img_title']) ? $param['basic_img_title'] : 0;
+
+            /*多语言*/
+            if (is_language()) {
+                $newParam['basic_indexname'] = $param['basic_indexname'];
+                $newParam = array_merge($config,$newParam);
+                tpCache($inc_type,$newParam);
+
+                $synLangParam = $param; // 同步更新多语言的数据
+                unset($synLangParam['basic_indexname']);
+                $langRow = \think\Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                $synLangParam = array_merge($config,$synLangParam);
+                foreach ($langRow as $key => $val) {
+                    tpCache($inc_type, $synLangParam, $val['mark']);
+                    if (!empty($other_param)) {
+                        $other_param = array_merge($other_config,$other_param);
+                        tpCache($other_inc_type, $other_param, $val['mark']);
+                    }
+                }
+            } else {
+                $param = array_merge($config,$param);
+                tpCache($inc_type,$param);
+                if (!empty($other_param)) {
+                    $other_param = array_merge($other_config,$other_param);
+                    tpCache($other_inc_type, $other_param);
+                }
+            }
+            /*--end*/
+
+            $new_basic_img_setlist = $param['basic_img_auto_wh'].$param['basic_img_alt'].$param['basic_img_title'];
+            if ($old_basic_img_setlist != $new_basic_img_setlist) {
+                // 清空详情页缓存
+                foreach (['http','https'] as $key => $val) {
+                    delFile(HTML_ROOT.$val.'/view');
+                }
+            }
+
+            // 编辑器选项配置
+            if (!empty($param['editor_select'])) {
+                $editor_arr = [
+                    'editor_select' => $param['editor_select'],
+                    'editor_remote_img_local' => $param['editor_remote_img_local'],
+                    'editor_img_clear_link' => $param['editor_img_clear_link'],
+                ];
+                tpSetting('editor', $editor_arr);
+            }
+
+            $this->success('操作成功', url('System/basic_open'));
+        }
+
+
+        $this->assign('config', $config);
+        $this->assign('other_config', $other_config);
+        $this->assign('editor', $editor);
+
+        return $this->fetch();
+    }
     /**
      * 图片水印
      */
@@ -496,27 +701,29 @@ class System extends Base
             $param = input('post.');
             $tabase = input('post.tabase/d');
             unset($param['tabase']);
-
-            $mark_img_is_remote = !empty($param['mark_img_is_remote']) ? $param['mark_img_is_remote'] : 0;
-            $mark_img = '';
-            if ($mark_img_is_remote == 1) {
-                $mark_img = $param['mark_img_remote'];
-            } else {
-                $mark_img = $param['mark_img_local'];
+            if (is_http_url($param['mark_img'])){
+                $this->error('仅支持本地图片');
+//                if (preg_match('/^\/\//i',$param['mark_img'])){
+//                    $param['mark_img'] = request()->scheme().':'.$param['mark_img'];
+//                }
+//                $r =  saveRemote($param['mark_img'], 'temp/',0);
+//                $r = json_decode($r, true);
+//                if ('SUCCESS' != $r['state']) {
+//                    $this->error('远程水印图片本地化失败,请检查图片链接域名协议与网站域名协议是否一致');
+//                }
+//                $param['mark_img'] = handle_subdir_pic($r['url']);
             }
-            $waterPath = preg_replace('#^(/[/\w]+)?(/public/upload/|/uploads/)#i', '$2', $mark_img); 
+
+            $waterPath = preg_replace('#^(/[/\w\-]+)?(/public/upload/|/uploads/)#i', '$2', $param['mark_img']);
             $waterImgInfo = @getimagesize('.'.$waterPath);
             $waterImgW = !empty($waterImgInfo[0]) ? $waterImgInfo[0] : 0;
             $waterImgH = !empty($waterImgInfo[1]) ? $waterImgInfo[1] : 0;
             if ($waterImgW > 2000 || $waterImgH > 2000) {
                 $this->error('水印图片像素不能过大，否则无法对小图片进行水印！');
             }
-            $param['mark_img'] = $mark_img;
-            unset($param['mark_img_is_remote']);
-            unset($param['mark_img_remote']);
-            unset($param['mark_img_local']);
 
             /*多语言*/
+            empty($param['mark_img_is_remote']) && $param['mark_img_is_remote'] = 0;
             if (is_language()) {
                 $langRow = \think\Db::name('language')->order('id asc')
                     ->cache(true, EYOUCMS_CACHE_TIME, 'language')
@@ -532,13 +739,6 @@ class System extends Base
         }
 
         $config = tpCache($inc_type);
-        if (is_http_url($config['mark_img'])) {
-            $config['mark_img_is_remote'] = 1;
-            $config['mark_img_remote'] = handle_subdir_pic($config['mark_img']);
-        } else {
-            $config['mark_img_is_remote'] = 0;
-            $config['mark_img_local'] = handle_subdir_pic($config['mark_img']);
-        }
 
         $this->assign('config',$config);//当前配置项
         return $this->fetch();
@@ -578,7 +778,7 @@ class System extends Base
             /*校验配置是否改动，若改动将会清空缩略图目录*/
             unset($param['__token__']);
             if (md5(serialize($param)) != md5(serialize($thumbConfig))) {
-                delFile(RUNTIME_PATH.'html'); // 清空缓存页面
+                delFile(HTML_ROOT); // 清空缓存页面
                 delFile(UPLOAD_PATH.'thumb'); // 清空缩略图
             }
             /*--end*/
@@ -618,61 +818,16 @@ class System extends Base
     // 所有API接口的配置
     public function api_conf()
     {
-        /*会员中心总配置信息*/
-        $userConfig = getUsersConfigData('all');
-        $this->assign('userConfig', $userConfig);
-        /* END */
-
         /*是否开启支付功能*/
-        $this->assign('pay_open', $userConfig['pay_open']);
-        /* END */
-
-        /*微信支付配置*/
-        $wechat = !empty($userConfig['pay_wechat_config']) ? unserialize($userConfig['pay_wechat_config']) : [];
-        $this->assign('wechat', $wechat);
-        /* END */
-
-        /*支付宝支付配置*/
-        $alipay = !empty($userConfig['pay_alipay_config']) ? unserialize($userConfig['pay_alipay_config']) : [];
-        $this->assign('alipay', $alipay);
-        if (version_compare(PHP_VERSION,'5.5.0','<')) {
-            $php_version = 1; // PHP5.4.0或更低版本，可使用旧版支付方式
-        } else {
-            $php_version = 0;// PHP5.5.0或更高版本，可使用新版支付方式，兼容旧版支付方式
-        }
-        $this->assign('php_version',$php_version);
-        /* END */
-
-        /*微站点配置*/
-        $login = !empty($userConfig['wechat_login_config']) ? unserialize($userConfig['wechat_login_config']) : [];
-        $this->assign('login', $login);
-        /* END */
-
-        /*邮箱配置*/
-        // $smtp = tpCache('smtp');
-        // $this->assign('smtp', $smtp);
-        /* END */
-
-        /*手机短信配置*/
-        // $sms = tpCache('sms');
-        // if (!isset($sms['sms_type'])) {
-        //     $sms['sms_type'] = 1;
-        //     tpCache('sms',array('sms_type'=>1));
-        // }
-        // $this->assign('sms', $sms);
-        /* END */
-
-        /*阿里云OSS配置*/
-        $oss = tpCache('oss');
-        $this->assign('oss', $oss);
+        $this->assign('pay_open', $this->usersConfig['pay_open']);
         /* END */
 
         /*余额支付开关*/
         $pay_balance_open = 1;
-        if (!isset($userConfig['pay_balance_open'])) {
+        if (!isset($this->usersConfig['pay_balance_open'])) {
             getUsersConfigData('pay', ['pay_balance_open' => 1]);
         } else {
-            $pay_balance_open = intval($userConfig['pay_balance_open']);
+            $pay_balance_open = intval($this->usersConfig['pay_balance_open']);
         }
         $this->assign('pay_balance_open', $pay_balance_open);
         /* END */
@@ -690,8 +845,10 @@ class System extends Base
         $this->assign('pay_api_list', $pay_api_list);
         /* END */
 
-        /*通知管理*/
-        // action('admin/Notify/index');
+        /*开放API开关*/
+        $confApi = tpSetting("OpenMinicode.conf", [], $this->main_lang);
+        $confApi = json_decode($confApi, true);
+        $this->assign('confApi', $confApi);
         /* END */
 
         return $this->fetch();
@@ -706,9 +863,14 @@ class System extends Base
         if (IS_POST) {
             $goback = input('param.goback/s');
             $param = input('post.');
-            // $param['smtp_shop_order_pay'] = !empty($param['smtp_shop_order_pay']) ? 1 : 0;
-            // $param['smtp_shop_order_send'] = !empty($param['smtp_shop_order_send']) ? 1 : 0;
-
+            if (!empty($param['tpl_id'])){
+                Db::name('smtp_tpl')->where('tpl_id','in',$param['tpl_id'])->update(['is_open'=>1,'update_time'=>getTime()]);
+                Db::name('smtp_tpl')->where('tpl_id','not in',$param['tpl_id'])->update(['is_open'=>0,'update_time'=>getTime()]);
+            }else{
+                Db::name('smtp_tpl')->where('tpl_id','>',0)->update(['is_open'=>0,'update_time'=>getTime()]);
+            }
+            if (isset($param['tpl_id'])) unset($param['tpl_id']);
+            
             /*多语言*/
             if (is_language()) {
                 $langRow = \think\Db::name('language')->order('id asc')
@@ -730,6 +892,9 @@ class System extends Base
 
         $goback = input('param.goback/s');
         $this->assign('goback', $goback);
+
+        $tpl_list = Db::name('smtp_tpl')->where('lang', $this->admin_lang)->order('tpl_id asc')->select();
+        $this->assign('tpl_list', $tpl_list);
 
         return $this->fetch();
     }
@@ -783,6 +948,8 @@ class System extends Base
         $inc_type =  'sms';
         if (IS_POST) {
             $param = input('post.');
+            empty($param['sms_shop_order_pay']) && $param['sms_shop_order_pay'] = 0;
+            empty($param['sms_guestbook_send']) && $param['sms_guestbook_send'] = 0;
 
             if (!isset($param['sms_type'])) $param['sms_type'] = 1;
             if ($param['sms_type'] == 1) {
@@ -792,9 +959,15 @@ class System extends Base
                 unset($param['sms_appkey']);
                 unset($param['sms_secretkey']);
             }
-
-            // $param['sms_shop_order_pay'] = !empty($param['sms_shop_order_pay']) ? 1 : 0;
-            // $param['sms_shop_order_send'] = !empty($param['sms_shop_order_send']) ? 1 : 0;
+            if (!empty($param['sms_type'])){
+                if (!empty($param['tpl_id'][$param['sms_type']])){
+                    Db::name('sms_template')->where('sms_type',$param['sms_type'])->where('tpl_id','in',$param['tpl_id'][$param['sms_type']])->update(['is_open'=>1,'update_time'=>getTime()]);
+                    Db::name('sms_template')->where('sms_type',$param['sms_type'])->where('tpl_id','not in',$param['tpl_id'][$param['sms_type']])->update(['is_open'=>0,'update_time'=>getTime()]);
+                }else{
+                    Db::name('sms_template')->where('sms_type',$param['sms_type'])->where('tpl_id','>',0)->update(['is_open'=>0,'update_time'=>getTime()]);
+                }
+            }
+            if (isset($param['tpl_id'])) unset($param['tpl_id']);
 
             /*多语言*/
             if (is_language()) {
@@ -812,12 +985,30 @@ class System extends Base
             $this->success('操作成功', url('System/sms'));
         }
 
+        $assign_data = [];
         $sms = tpCache('sms');
         if (!isset($sms['sms_type'])) {
             $sms['sms_type'] = 1;
             tpCache('sms', array('sms_type'=>1));
         }
-        $this->assign('sms', $sms);
+        $assign_data['sms'] = $sms;
+
+        $map = [
+            'lang' => $this->admin_lang,
+        ];
+        $map['sms_type'] = 1;
+        $assign_data['sms_list1'] = Db::name('sms_template')->where($map)->order('send_scene asc')->select();
+        $map['sms_type'] = 2;
+        $assign_data['sms_list2'] = Db::name('sms_template')->where($map)->order('send_scene asc')->select();
+
+        // ToSms短信通知插件内置代码 start
+        if (file_exists('./weapp/ToSms/model/ToSmsModel.php')) {
+            $toSmsModel = new \weapp\ToSms\model\ToSmsModel;
+            $toSmsModel->admin_System_sms($assign_data);
+        }
+        // ToSms短信通知插件内置代码 end
+
+        $this->assign($assign_data);
         return $this->fetch();
     }
 
@@ -862,11 +1053,11 @@ class System extends Base
         }
         foreach (['sms_appkey','sms_secretkey','sms_appkey_tx','sms_appid_tx'] as $key => $val) {
             if (2 == $sms_type) {
-                if (preg_match('/^sms_(.*)_tx$/i', $val) && empty($sms_arr[$val])) {
+                if (preg_match('/^sms_(.*)_tx$/i', $val) && isset($sms_arr[$val]) && empty($sms_arr[$val])) {
                     $is_conf = 0;
                 }
             } else {
-                if (preg_match('/^sms_/i', $val) && empty($sms_arr[$val])) {
+                if (preg_match('/^sms_/i', $val) && isset($sms_arr[$val]) && empty($sms_arr[$val])) {
                     $is_conf = 0;
                 }
             }
@@ -875,6 +1066,15 @@ class System extends Base
 
         $shop_open = getUsersConfigData('shop.shop_open');
         $this->assign('shop_open', $shop_open);
+
+        // ToSms短信通知插件内置代码 start
+        $show_sms_tpl_code = true;
+        if (file_exists('./weapp/ToSms/model/ToSmsModel.php')) {
+            $toSmsModel = new \weapp\ToSms\model\ToSmsModel;
+            $show_sms_tpl_code = $toSmsModel->admin_system_sms_tpl($sms_type, 'show_sms_tpl_code');
+        }
+        $this->assign('show_sms_tpl_code', $show_sms_tpl_code);
+        // ToSms短信通知插件内置代码 end
 
         return $this->fetch();
     }
@@ -900,22 +1100,24 @@ class System extends Base
                     }
                 }
 
-                $url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=".$post['login']['appid']."&secret=".$post['login']['appsecret'];
-                $response = httpRequest($url);
-                $params = json_decode($response, true);
-                if (!isset($params['access_token'])) {
-                    $wechat_code = config('error_code.wechat');
-                    $msg = !empty($wechat_code[$params['errcode']]) ? $wechat_code[$params['errcode']] : $params['errmsg'];
-                    $this->error($msg);
-                }
+                $conf_wechat = tpSetting("OpenMinicode.conf_wechat", [], $this->main_lang);
+                $conf_wechat = json_decode($conf_wechat, true);
+                empty($conf_wechat) && $conf_wechat = [];
+                $appid = !empty($conf_wechat['appid']) ? $conf_wechat['appid'] : '';
+                $appsecret = !empty($conf_wechat['appsecret']) ? $conf_wechat['appsecret'] : '';
+
+                // 同步到微信公众号配置
+                $conf_wechat['wechat_name'] = $post['login']['wechat_name'];
+                $conf_wechat['wechat_pic'] = $post['login']['wechat_pic'];
+                tpSetting('OpenMinicode', ['conf_wechat' => json_encode($conf_wechat)], $this->main_lang);
 
                 if (1 == $post['shop']['shop_micro']) {
-                    if (empty($post['login']['appid']) || empty($post['login']['appsecret'])) {
+                    if (empty($appid) || empty($appsecret)) {
                         $post['shop']['shop_micro'] = 0;
                     }
                 }
                 if (1 == $post['shop']['shop_force_use_wechat']) {
-                    if (empty($post['login']['appid']) || empty($post['login']['appsecret'])) {
+                    if (empty($appid) || empty($appsecret)) {
                         $post['shop']['shop_force_use_wechat'] = 0;
                     } else {
                         $post['shop']['shop_micro'] = 1;
@@ -923,15 +1125,28 @@ class System extends Base
                 }
 
                 // 微信登录配置处理
-                $post['wechat']['wechat_login_config'] = serialize($post['login']);
+                $login_config = [
+                    'appid' => $appid,
+                    'appsecret' => $appsecret,
+                ];
+                $login_config = array_merge($login_config, $post['login']);
+                $post['wechat']['wechat_login_config'] = serialize($login_config);
                 unset($post['login']);
 
                 foreach ($post as $key => $val) {
                     is_array($val) && getUsersConfigData($key, $val);
                 }
-                $this->success('设置成功！', url('Shop/conf'));
+
+                $this->success('操作成功', url('System/microsite'));
             }
         }
+
+        /*微站点配置*/
+        $login = !empty($this->usersConfig['wechat_login_config']) ? unserialize($this->usersConfig['wechat_login_config']) : [];
+        $this->assign('login', $login);
+        /* END */
+
+        return $this->fetch();
     }
     
     
@@ -1019,37 +1234,34 @@ class System extends Base
             }
 
             $post = input('post.');
-
-            if (!empty($post['clearall'])) { // 清除全部缓存
-                $this->clearSystemCache();
+            if (!empty($post['clearAll'])) {
+                $this->clearSystemCache(1);
             } else {
-                if (!empty($post['clearHtml'])) { // 清除页面缓存
-                    $this->clearHtmlCache($post['clearHtml']);
+                if (!empty($post['clearTable'])) {
+                    if (in_array('table', $post['clearTable'])) {
+                        $this->clearSystemCache(3);
+                    }
                 }
-
-                if (!empty($post['clearCache'])) { // 清除数据缓存
-                    $this->clearSystemCache($post['clearCache']);
+                if (!empty($post['clearHtml'])) {
+                    foreach ($post['clearHtml'] as $key => $val) {
+                        delFile(HTML_ROOT.$val);
+                    }
+                }
+                if (!empty($post['clearCache'])) {
+                    foreach ($post['clearCache'] as $key => $val) {
+                        if ($val == 'cache') {
+                            $this->clearSystemCache(0);
+                        } else {
+                            delFile(RUNTIME_PATH.$val);
+                        }
+                    }
                 }
             }
 
-            // 清除其他临时文件
-            $this->clearOtherCache();
-
-            /*重新生成全部数据表字段缓存文件*/
-            try {
-                schemaAllTable();
-            } catch (\Exception $e) {}
-            /*--end*/
-
-            /*清除旧升级备份包，保留最后一个备份文件*/
-            $backupArr = glob(DATA_PATH.'backup/v*_www');
-            for ($i=0; $i < count($backupArr) - 1; $i++) { 
-                delFile($backupArr[$i], true);
-            }
-
+            /*清除旧升级备份包*/
             $backupArr = glob(DATA_PATH.'backup/*');
             foreach ($backupArr as $key => $filepath) {
-                if (file_exists($filepath) && !stristr($filepath, '.htaccess') && !stristr($filepath, '_www')) {
+                if (file_exists($filepath) && !stristr($filepath, '.htaccess')) {
                     if (is_dir($filepath)) {
                         delFile($filepath, true);
                     } else if (is_file($filepath)) {
@@ -1065,47 +1277,204 @@ class System extends Base
             if (!empty($lang) && $lang != get_main_lang()) {
                 $gourl .= "?lang={$lang}";
             }
+            
             $this->success('操作成功', $gourl, '', 1, [], '_parent');
         }
         
+        // 页面目录
+        $pageDirList = [
+            [
+                'dir_title' => '首页',
+                'dir_value' => 'index',
+                'dir_type' => 'system',
+                'sort_order' => $this->get_page_sort_order('index'),
+            ],
+            [
+                'dir_title' => '列表',
+                'dir_value' => 'lists',
+                'dir_type' => 'system',
+                'sort_order' => $this->get_page_sort_order('lists'),
+            ],
+            [
+                'dir_title' => '内容',
+                'dir_value' => 'view',
+                'dir_type' => 'system',
+                'sort_order' => $this->get_page_sort_order('view'),
+            ],
+            [
+                'dir_title' => '标签',
+                'dir_value' => 'tags',
+                'dir_type' => 'system',
+                'sort_order' => $this->get_page_sort_order('tags'),
+            ],
+        ];
+        $directory = HTML_ROOT;
+        if (is_dir($directory)) {
+            $mydir = dir($directory);
+            while ($file = $mydir->read()) {
+                if ((is_dir("$directory/$file")) && !in_array($file, ['plugins','.','..','index','lists','view','tags'])) {
+                    switch ($file) {
+                        default:
+                            $dir_title = '其他';
+                            break;
+                    }
+                    $pageDirList[] = [
+                        'dir_title' => $dir_title,
+                        'dir_value' => $file,
+                        'dir_type' => 'system',
+                        'sort_order'=> $this->get_page_sort_order($file),
+                    ];
+                }
+            }
+            $mydir->close();
+        }
+
+        // 插件页面目录
+        $directory = HTML_ROOT.'plugins';
+        if (is_dir($directory)) {
+            $mydir = dir($directory);
+            while ($file = $mydir->read()) {
+                if ((is_dir("$directory/$file")) && !in_array($file, ['.','..'])) {
+                    switch ($file) {
+                        case 'ask':
+                            $dir_title = '问答';
+                            break;
+                        default:
+                            $dir_title = '其他';
+                            break;
+                    }
+                    $pageDirList[] = [
+                        'dir_title' => $dir_title,
+                        'dir_value' => $file,
+                        'dir_type' => 'plugins',
+                        'sort_order'=> $this->get_page_sort_order($file),
+                    ];
+                }
+            }
+            $mydir->close();
+        }
+        $sort_orders = get_arr_column($pageDirList, 'sort_order');
+        array_multisort($sort_orders, SORT_ASC, $pageDirList);
+        $this->assign('pageDirList', $pageDirList);
+        
+        // 数据目录
+        $cacheDirList = [];
+        $cache_dir = false;
+        $directory = RUNTIME_PATH;
+        $mydir = dir($directory);
+        while ($file = $mydir->read()) {
+            if ((is_dir("$directory/$file")) AND ($file != ".") AND ($file != "..") AND ($file != 'html')) {
+                if ($file == 'cache') {
+                    $cache_dir = true;
+                    $dir_title = '数据缓存';
+                } else if ($file == 'temp') {
+                    $dir_title = 'php编译';
+                } else if ($file == 'data') {
+                    $dir_title = '项目数据';
+                } else if ($file == 'log') {
+                    $dir_title = '系统日志';
+                } else if (stristr($file, 'lotus')) {
+                    $dir_title = '支付日志';
+                } else {
+                    $dir_title = '其他';
+                }
+                $cacheDirList[] = [
+                    'dir_title' => $dir_title,
+                    'dir_value' => $file,
+                    'dir_type' => 'system',
+                    'sort_order'=> $this->get_file_sort_order($file),
+                ];
+            }
+        }
+        $mydir->close();
+        if (!$cache_dir) {
+            $cacheDirList[] = [
+                'dir_title' => '数据缓存',
+                'dir_value' => 'cache',
+                'dir_type' => 'system',
+                'sort_order'=> $this->get_file_sort_order('cache'),
+            ];
+        }
+        $sort_orders = get_arr_column($cacheDirList, 'sort_order');
+        array_multisort($sort_orders, SORT_ASC, $cacheDirList);
+        $this->assign('cacheDirList', $cacheDirList);
+
         return $this->fetch();
     }
 
-    /**
-     * 清空数据缓存
-     */
-    public function fastClearCache($arr = array())
+    private function get_page_sort_order($name)
     {
-        $this->clearSystemCache();
-        $script = "<script>parent.layer.msg('操作成功', {time:3000,icon: 1});window.location='".url('Index/welcome')."';</script>";
-        echo $script;
+        if ($name == 'index') {
+            $sort_order = 1;
+        } else if ($name == 'lists') {
+            $sort_order = 2;
+        } else if ($name == 'view') {
+            $sort_order = 3;
+        } else if ($name == 'tags') {
+            $sort_order = 4;
+        } else if ($name == 'ask') {
+            $sort_order = 5;
+        } else {
+            $sort_order = 100;
+        }
+
+        return $sort_order;
+    }
+
+    private function get_file_sort_order($name)
+    {
+        if ($name == 'cache') {
+            $sort_order = 1;
+        } else if ($name == 'temp') {
+            $sort_order = 2;
+        } else if (stristr($name, 'lotus')) {
+            $sort_order = 3;
+        } else {
+            $sort_order = 100;
+        }
+
+        return $sort_order;
     }
 
     /**
      * 清空数据缓存
      */
-    public function clearSystemCache($arr = array())
+    private function clearSystemCache($clearall = 0)
     {
-        if (empty($arr)) {
-            delFile(rtrim(RUNTIME_PATH, '/'), true);
-        } else {
-            foreach ($arr as $key => $val) {
-                delFile(RUNTIME_PATH.$val, true);
-            }
+        $clearall = input('param.clearall/d', $clearall);
+        if ($clearall == 3) { // 数据表文件
+            schemaAllTable();
+        } else if (1 == $clearall) { // 全部缓存
+            Cache::clear();
+            delFile(RUNTIME_PATH);
+            schemaAllTable();
+        } else if (2 == $clearall) { // 页面缓存
+            delFile(HTML_ROOT);
+        } else { // 数据缓存
+            Cache::clear();
         }
 
-        /*多语言*/
-        if (is_language()) {
-            $langRow = Db::name('language')->order('id asc')
-                ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                ->select();
-            foreach ($langRow as $key => $val) {
-                tpCache('global', '', $val['mark']);
+        try {
+            /*清除大数据缓存表 -- 陈风任*/
+            Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
+            model('SqlCacheTable')->InsertSqlCacheTable(true);
+            /* END */
+        } catch (\Exception $e) {}
+
+        if (empty($clearall) || 1 == $clearall) {
+            /*多语言*/
+            if (is_language()) {
+                $langRow = Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('global', '', $val['mark']);
+                }
+            } else { // 单语言
+                tpCache('global');
             }
-        } else { // 单语言
-            tpCache('global');
+            /*--end*/ 
         }
-        /*--end*/
 
         return true;
     }
@@ -1116,7 +1485,7 @@ class System extends Base
     public function clearHtmlCache($arr = array())
     {
         if (empty($arr)) {
-            delFile(rtrim(HTML_ROOT, '/'), true);
+            delFile(HTML_ROOT);
         } else {
             $seo_pseudo = tpCache('seo.seo_pseudo');
             foreach ($arr as $key => $val) {
@@ -1141,21 +1510,6 @@ class System extends Base
             }
         }
     }
-
-    /**
-     * 清除其他临时文件
-     */
-    private function clearOtherCache()
-    {
-        $arr = [
-            'template',
-        ];
-        foreach ($arr as $key => $val) {
-            delFile(RUNTIME_PATH.$val, true);
-        }
-
-        return true;
-    }
       
     /**
      * 发送测试邮件
@@ -1167,6 +1521,7 @@ class System extends Base
         $content = '演示一串随机数字：' . mt_rand(1000,9999);
         $res = send_email($param['smtp_from_eamil'], $title, $content, 0, $smtp_config);
         if (intval($res['code']) == 1) {
+            unset($smtp_config['tpl_id']);
             /*多语言*/
             if (is_language()) {
                 $langRow = \think\Db::name('language')->order('id asc')
@@ -1206,6 +1561,7 @@ class System extends Base
         $send_scene = intval($send_scene);
         $res = sendSms($send_scene, $param['sms_test_mobile'], array('content'=>mt_rand(1000,9999)),0,$sms_config);
         if (intval($res['status']) == 1) {
+            unset($sms_config['tpl_id']);
             /*多语言*/
             if (is_language()) {
                 $langRow = \think\Db::name('language')->order('id asc')
@@ -1224,19 +1580,130 @@ class System extends Base
             $this->error($res['msg']);
         }
     }
+    //自定义分组列表
+    public function config_type(){
+        $list = array();
+        $condition = array();
+//        $keywords = input('keywords/s');
+//        if (!empty($keywords)) {
+//            $condition['type_name'] = array('LIKE', "%{$keywords}%");
+//        }
+        $condition['lang'] = array('eq', $this->admin_lang);
 
+        $count = Db::name('config_type')->where($condition)->count('id');// 查询满足要求的总记录数
+        $Page = $pager = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
+        $list = Db::name('config_type')->where($condition)->order('sort_order asc, id asc')->limit($Page->firstRow.','.$Page->listRows)->select();
+
+        $show = $Page->show();// 分页显示输出
+        $this->assign('page',$show);// 赋值分页输出
+        $this->assign('list',$list);// 赋值数据集
+        $this->assign('pager',$pager);// 赋值分页对象
+        return $this->fetch();
+    }
+    //修改(新增)分组
+    public function config_type_save(){
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+
+            if (empty($post['type_name'])) {
+                $this->error('至少新增一个链接分组！');
+            } else {
+                $is_empty = true;
+                foreach ($post['type_name'] as $key => $val) {
+                    $val = trim($val);
+                    if (!empty($val)) {
+                        $is_empty = false;
+                        break;
+                    }
+                }
+                if (true === $is_empty) {
+                    $this->error('分组名称不能为空！');
+                }
+            }
+
+            // 数据拼装
+            $now_time = getTime();
+            $addData = $editData = [];
+            foreach ($post['type_name'] as $key => $val) {
+                $group_name  = trim($val);
+                if (!empty($group_name)) {
+                    if (empty($post['id'][$key])) {
+                        if ($this->admin_lang == $this->main_lang) {
+                            $addData[] = [
+                                'type_name' => $group_name,
+                                'sort_order' => $post['sort_order'][$key] ? :100,
+                                'lang' => $this->admin_lang,
+                                'add_time' => $now_time,
+                                'update_time' => $now_time,
+                            ];
+                        }
+                    } else {
+                        $id = intval($post['id'][$key]);
+                        $editData[] = [
+                            'id' => $id,
+                            'type_name' => $group_name,
+                            'sort_order' => $post['sort_order'][$key] ? :100,
+                            'lang' => $this->admin_lang,
+                            'update_time' => $now_time,
+                        ];
+                    }
+                }
+            }
+            if (!empty($addData)) {
+                $rdata = model('ConfigType')->saveAll($addData);
+            }
+            $r = true;
+            if (!empty($editData)) {
+                $r = model('ConfigType')->saveAll($editData);
+            }
+
+            if ($r !== false) {
+                adminLog('保存自定义变量分组：'.implode(',', $post['type_name']));
+                $this->success('操作成功');
+            }
+        }
+        $this->error('操作失败');
+    }
+    //删除分组
+    public function config_type_del(){
+        $id_arr = input('del_id/a');
+        $id_arr = eyIntval($id_arr);
+        if(IS_POST && !empty($id_arr)){
+            $group_name_list = Db::name('config_type')->where([
+                'id'    => ['IN', $id_arr],
+            ])->column('type_name');
+
+            $r = Db::name('config_type')->where([
+                'id'    => ['IN', $id_arr],
+            ])->delete();
+            if($r !== false){
+                $attr_var_name = Db::name('config_attribute')->where([
+                    'type_id'    => ['IN', $id_arr],
+                ])->getField('attr_var_name',true);
+                if (!empty($attr_var_name)){
+                     Db::name('config')->where(['name'=>['in',$attr_var_name]])->delete();
+                    Db::name('config_attribute')->where(['attr_var_name'=>['in',$attr_var_name]])->delete();
+                }
+                adminLog('删除自定义分组：'.implode(',', $group_name_list));
+                $this->success('删除成功');
+            }
+        }
+        $this->error('删除失败');
+    }
     //自定义变量列表
     public function customvar_index()
     {
         $list = array();
         $keywords = input('keywords/s');
-
+        $type_id = input('type_id/d',0);
         $condition = array();
         if (!empty($keywords)) {
             $condition['a.attr_name'] = array('LIKE', "%{$keywords}%");
         }
+        if (!empty($type_id)){
+            $condition['a.type_id'] = $type_id;
+        }
         $condition['a.lang'] = array('eq', $this->admin_lang);
-
         $attr_var_names = Db::name('config')->field('name')
             ->where([
                 'name'  => ['LIKE', "web_attr_%"],
@@ -1244,11 +1711,10 @@ class System extends Base
                 'is_del'    => 0,
             ])->getAllWithIndex('name');
         $condition['a.attr_var_name'] = array('IN', array_keys($attr_var_names));
-
         $count = Db::name('config_attribute')->alias('a')->where($condition)->count();
-        $pageObj = new Page($count, 100);
+        $pageObj = new Page($count, config('paginate.list_rows'));
         $list = Db::name('config_attribute')->alias('a')
-            ->field('a.*, b.id')
+            ->field('a.*, b.id, b.value')
             ->join('__CONFIG__ b', 'b.name = a.attr_var_name AND b.lang = a.lang', 'LEFT')
             ->where($condition)
             ->where([
@@ -1257,16 +1723,59 @@ class System extends Base
             ->order('a.attr_id asc')
             ->limit($pageObj->firstRow.','.$pageObj->listRows)
             ->select();
-
+        $config_type = Db::name('config_type')->field('id, type_name')->order('sort_order asc')->getAllWithIndex('id');
+        $this->assign('config_type',$config_type);  //分组列表
+        foreach ($list as $key => $val) {
+            if (3 == $val['attr_input_type']) {
+                $val['value'] = handle_subdir_pic($val['value']);
+            }
+            $val['type_name'] = !empty($config_type[$val['type_id']]['type_name']) ? $config_type[$val['type_id']]['type_name'] : '';
+            $val['attr_var_title'] = str_replace('web_attr_', 'web_attrname_', $val['attr_var_name']);
+            $list[$key] = $val;
+        }
+        $attr_input_type = [
+            '0' => '单行文本',
+            '2' => '多行文本',
+            '3' => '上传图片',
+            '4' => '开关类型',
+        ];
+        $this->assign('attr_input_type',$attr_input_type);  //类型列表
         $pageStr = $pageObj->show();
-        $this->assign('pageStr',$pageStr);
+        $this->assign('page',$pageStr);
         $this->assign('list',$list);
-        $this->assign('pageObj',$pageObj);
-        $recycle_switch = tpSetting('recycle.recycle_switch');//回收站开关
-        $this->assign('recycle_switch', $recycle_switch);
+        $this->assign('pager',$pageObj);
+
         return $this->fetch();
     }
-
+    /*
+     * 保存单个自定义变量
+     */
+    public function customvar_save_one(){
+        if (IS_AJAX_POST){
+            $post = input('post.');
+            if(isset($post['attr_id']) && isset($post['attr_name']) && isset($post['attr_input_type']) && isset($post['attr_var_name']) && isset($post['attr_value']) && isset($post['type_id'])){
+                $a = Db::name("config_attribute")->where([
+                        'attr_id'=>$post['attr_id']
+                    ])->update([
+                        'type_id'=>$post['type_id'],
+                        'attr_name'=>$post['attr_name'],
+                        'attr_input_type'=>$post['attr_input_type'],
+                        'update_time'=>getTime(),
+                    ]);
+                $c = tpCache('web', [$post['attr_var_name']=>$post['attr_value']]);
+                if($a !== false && $c !== false){
+                    if($post['attr_input_type'] == 4){
+                        $post['attr_value'] = $post['attr_value'] == 1 ? '开启' : '关闭';
+                    }else if($post['attr_input_type'] == 3){
+                        $img_url = get_default_pic($post['attr_value']);
+                        $post['attr_value'] = '<img src="'.$img_url.'" height="50">';
+                    }
+                    $this->success("修改成功",null,['attr_value'=> $post['attr_value'] ]);
+                }
+            }
+        }
+        $this->error('操作错误！');
+    }
     /**
      * 保存自定义变量
      */
@@ -1274,7 +1783,6 @@ class System extends Base
     {
         if (IS_AJAX_POST) {
             $post = input('post.');
-
             if (empty($post['attr_name'])) {
                 $this->error('至少新增一个自定义变量！');
             }
@@ -1285,12 +1793,17 @@ class System extends Base
                 $attr_name  = trim($val);
                 if (!empty($attr_name)) {
                     $attr_input_type = intval($post['attr_input_type'][$key]);
+                    $attr_value = isset($post['attr_value'][$key]) ? $post['attr_value'][$key] : '';
+                    $attr_var_name = isset($post['attr_var_name'][$key]) ? $post['attr_var_name'][$key] : '';
+                    $type_id = isset($post['attr_type_id'][$key]) ? $post['attr_type_id'][$key] : '';
                     if (empty($post['attr_id'][$key])) {
                         if ($this->admin_lang == $this->main_lang) {
                             $addData[] = [
                                 'inc_type' => 'web',
                                 'attr_name' => $attr_name,
                                 'attr_input_type' => $attr_input_type,
+                                'attr_value' => $attr_value,
+                                'type_id' => $type_id,
                                 'lang' => $this->admin_lang,
                                 'add_time' => getTime(),
                                 'update_time' => getTime(),
@@ -1302,16 +1815,29 @@ class System extends Base
                             'attr_id' => $attr_id,
                             'inc_type' => 'web',
                             'attr_name' => $attr_name,
+                            'attr_var_name' => $attr_var_name,
                             'attr_input_type' => $attr_input_type,
+                            'attr_value' => $attr_value,
+                            'type_id' => $type_id,
                             'lang' => $this->admin_lang,
                             'update_time' => getTime(),
                         ];
                     }
                 }
             }
+
+            /*多语言*/
+            $langRow = [];
+            if (is_language()) {
+                $langRow = Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+            }
+            /*end*/
+            
             if (!empty($addData)) {
                 $rdata = model('ConfigAttribute')->saveAll($addData);
-                if ($rdata) {
+                if ($rdata !== false) {
                     foreach ($rdata as $k1 => $v1) {
                         $attr_id = $v1->getData('attr_id');
                         $addData[$k1]['attr_id'] = $attr_id;
@@ -1323,12 +1849,8 @@ class System extends Base
                 }
 
                 /*多语言*/
-                $langRow = [];
                 if (is_language()) {
                     $langAddData = [];
-                    $langRow = Db::name('language')->order('id asc')
-                        ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                        ->select();
                     foreach ($langRow as $key => $val) {
                         if ($this->admin_lang == $val['mark']) {
                             continue;
@@ -1346,14 +1868,15 @@ class System extends Base
                 }
                 /*end*/
             }
+
             if (!empty($editData)) {
                 $r = model('ConfigAttribute')->saveAll($editData);
-                if ($r) {
+                if ($r !== false) {
                     // 新增到config表，更新缓存
-                    if (!empty($addData)) {
+                    if (!empty($addData) && $this->admin_lang == $this->main_lang) {
                         $configData = [];
                         foreach ($addData as $key => $val) {
-                            $configData[$val['attr_var_name']] = '';
+                            $configData['web_attr_'.$val['attr_id']] = isset($val['attr_value']) ? $val['attr_value'] : '';
                         }
                         // 多语言
                         if (is_language()) {
@@ -1364,10 +1887,17 @@ class System extends Base
                             tpCache('web', $configData);
                         }
                     }
+
+                    // 更新到config表，更新缓存
+                    $configData = [];
+                    foreach ($editData as $key => $val) {
+                        $configData[$val['attr_var_name']] = isset($val['attr_value']) ? $val['attr_value'] : '';
+                    }
+                    tpCache('web', $configData);
                     // end
 
                     adminLog('保存自定义变量：'.implode(',', $post['attr_name']));
-                    $this->success('操作成功', url('System/web'));
+                    $this->success('操作成功', url('System/customvar_index'));
                 } else {
                     $this->error('操作失败');
                 }
@@ -1478,21 +2008,21 @@ EOF;
                 case 'thumb_open':
                     {
 $msg = <<<EOF
-<span style="color:red">（温馨提示：高级调用不会受缩略图功能的开关影响！）</span><br/>
+<span style="color:red">温馨提示：高级调用不会受缩略图功能的开关影响！</span><br/>
 【标签方法的格式】<br/>
 {$space}thumb_img=###,宽度,高度,生成方式<br/>
 <br/>
 【指定宽高度的调用】<br/>
-{$space}列表页/内容页：{\$eyou.field.litpic<span style="color:red">|thumb_img=###,500,500</span>}<br/>
-{$space}标签arclist/list里：{\$field.litpic<span style="color:red">|thumb_img=###,500,500</span>}<br/>
+{$space}列表页/内容页：{\$eyou.field.litpic|thumb_img=###,500,500<br/>
+{$space}标签arclist/list里：{\$field.litpic|thumb_img=###,500,500<br/>
 <br/>
 【指定生成方式的调用】<br/>
 {$space}生成方式：1 = 拉伸；2 = 留白；3 = 截减；<br/>
 {$space}以标签arclist为例：<br/>
-{$space}{$space}缩略图拉伸：{\$field.litpic<span style="color:red">|thumb_img=###,500,500,1</span>}<br/>
-{$space}{$space}缩略图留白：{\$field.litpic<span style="color:red">|thumb_img=###,500,500,2</span>}<br/>
-{$space}{$space}缩略图截减：{\$field.litpic<span style="color:red">|thumb_img=###,500,500,3</span>}<br/>
-{$space}{$space}默&nbsp;认&nbsp;生&nbsp;成：{\$field.litpic<span style="color:red">|thumb_img=###,500,500</span>}{$space}(以默认全局配置的生成方式)<br/>
+{$space}缩略图拉伸：{\$field.litpic|thumb_img=###,500,500,1}<br/>
+{$space}缩略图留白：{\$field.litpic|thumb_img=###,500,500,2}<br/>
+{$space}缩略图截减：{\$field.litpic|thumb_img=###,500,500,3}<br/>
+{$space}默&nbsp;认&nbsp;生&nbsp;成：{\$field.litpic|thumb_img=###,500,500}{$space}(以默认全局配置的生成方式)<br/>
 EOF;
                     }
                     break;
@@ -1579,5 +2109,25 @@ EOF;
     public function web_m()
     {
         return $this->fetch();
+    }
+
+    public function ajax_check_language_open()
+    {
+        if (IS_AJAX) {
+            $web_language_switch = tpCache('web.web_language_switch');
+            if (!empty($web_language_switch)) {
+                $this->error('已开启多语言');
+            } else {
+                $this->success('未开启多语言');
+            }
+        }
+    }
+
+    public function neverAgainPrompt()
+    {
+        if (IS_AJAX_POST) {
+            $neverAgainPrompt = input('param.neverAgainPrompt/d', 0);
+            tpSetting('system', ['system_never_again_prompt' => $neverAgainPrompt]);
+        }
     }
 }

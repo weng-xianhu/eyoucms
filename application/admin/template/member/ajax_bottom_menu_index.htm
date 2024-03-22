@@ -14,10 +14,10 @@
                             <div class="tc">ID</div>
                         </th>
                         <th abbr="article_time" axis="col4" class="w250">
-                            <div class="tl">菜单名称</div>
+                            <div class="tl text-l10">菜单名称</div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="">菜单选择</div>
+                            <div class="tl text-l10">菜单选择</div>
                         </th>
                         <th abbr="article_time" axis="col4" class="w100">
                             <div class="tc">显示</div>
@@ -37,9 +37,9 @@
                         <tbody id="tbody">
                         {empty name="list"}
                             <tr>
-                                <td class="no-data" align="center" axis="col0" colspan="50">
-                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的数据
-                                </td>
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </tr>
                         {else/}
                             {foreach name="list" item="vo" key="k" }
@@ -124,6 +124,12 @@
         }
 
         return false;
+    }
+
+    function changeMca(id,obj) {
+        var new_mca = $(obj).val();
+        changeTableVal_1609402253('users_bottom_menu', 'id', id, 'mca', new_mca);
+
     }
 
     function changeTableVal_1609402253(table,id_name,id_value,field,field_val)

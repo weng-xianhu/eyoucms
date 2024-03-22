@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>评价服务-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/eyoucms.css"/}
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/tag_global.js"/}
+        <script type="text/javascript" src="__STATIC__/admin/js/jquery-ui/jquery-ui.min.js"></script>
+    </head>
+
+    <body class="centre shop">
+        {eyou:include file="users/users_header.htm" /}
+        <div class="breadcrumbs"></div>
+
+        <div class="ey-body-bg">
+            <div class="ey-body pd0">
+                <div class="ey-container w1226">
+                    {eyou:include file="users/users_left.htm" /}
+                    <div class="ey-con mi-comment xin_mian fr">
+                        <div class="el-row shop-oper">
+                            <h1 class="title">评价服务</h1>
+                        </div>
+                        <div class="appraise-list mt20">
+                            <form id="post_form">
+                                <input type="hidden" name="newCommnet" value="1">
+                                <input type="hidden" name="order_id" value="{$eyou.field.order.order_id}" />
+                                <input type="hidden" name="order_code" value="{$eyou.field.order.order_code}" />
+                                {eyou:volist name="$eyou.field.goods" id="vo"}
+                                <input type="hidden" class="text" name="details_id[{$vo.details_id}]" value="{$vo.details_id}">
+                                <input type="hidden" class="text" name="product_id[{$vo.details_id}]" value="{$vo.product_id}">
+                                <div class="item">
+                                    <div class="item-l">
+                                        <div class="img"><a href="{$vo.arcurl}"><img src="{$vo.litpic}"></a></div>
+                                        <a class="title">
+                                            {$vo.product_name}&nbsp;
+                                            {eyou:volist name='$vo.product_spec_list' id='spec'}{$spec.value}&nbsp;{/eyou:volist}
+                                        </a>
+                                    </div>
+                                    <div class="item-r">
+                                        <div class="item-r-t">
+                                            <div class="item-from-row" style="display: flex;flex-direction: row;align-items: center;line-height: unset;min-height: unset;">
+                                                <div style="margin-right: 10px;font-weight: 700;">描述相符</div>
+                                                <div class="ey-start-ment curpoin" style="flex: 1;">
+                                                    <input type="hidden" name="total_score[{$vo.details_id}]" id="total_score_{$vo.details_id}" value="5">
+                                                    <i class="iconfont-users2 icon-users2-xingxing total-score-{$vo.details_id} active" onclick="totalScore(0, {$vo.details_id});"></i>
+                                                    <i class="iconfont-users2 icon-users2-xingxing total-score-{$vo.details_id} active" onclick="totalScore(1, {$vo.details_id});"></i>
+                                                    <i class="iconfont-users2 icon-users2-xingxing total-score-{$vo.details_id} active" onclick="totalScore(2, {$vo.details_id});"></i>
+                                                    <i class="iconfont-users2 icon-users2-xingxing total-score-{$vo.details_id} active" onclick="totalScore(3, {$vo.details_id});"></i>
+                                                    <i class="iconfont-users2 icon-users2-xingxing total-score-{$vo.details_id} active" onclick="totalScore(4, {$vo.details_id});"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="item-r-m mt10">
+                                            <textarea class="el-input__inner" name="content[{$vo.details_id}]" style="min-height:110px;" rows="3" placeholder="请在此处输入您的评价"></textarea>
+                                        </div>
+
+                                        <div class="item-r-b">
+                                            <div class="images_upload_main" data-numlimit="6" id="uploadCommentImg_{$vo.details_id}">
+                                                <a href="javascript:void(0);" onclick="uploadCommentImg({$vo.details_id});" data-num="6" class="el-button el-button--primary is-plain el-button--small"><i class="el-icon-picture"></i>上传图片</a>
+                                                <span style="color: #b7aeae;">限6张</span>
+                                                <div class="sort-list mt20 ui-sortable">
+                                                    <div class="fieldext_upload_{$vo.details_id}" style="display: none;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {/eyou:volist}
+                                <div class="order-progress-con" style="margin-left: 190px; margin-top: 20px;">
+                                    <input type="button" onclick="submitComment(this);" data-url="{$eyou.SubmitUrl}" class="el-button el-button--primary" value="确认提交"/>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 上传图片显示的样板 start -->
+        <div id="uploadCommentImgTpl" style="display: none;">
+            <div class="fieldext_upload fieldext_upload_1695802162">
+                <div class="images_upload_item">
+                    <input type="hidden">
+                    <a href="javascript:void(0);" class="pic"><img src=""></a>
+                    <a class="delete" href="javascript:void(0)">&nbsp;&nbsp;</a>
+                </div>
+            </div>
+        </div>
+        <!-- 上传图片显示的样板 end -->
+        {eyou:static file="users/skin/js/shop_comment_goods_list.js"/}
+        {eyou:include file="users/users_footer.htm" /}

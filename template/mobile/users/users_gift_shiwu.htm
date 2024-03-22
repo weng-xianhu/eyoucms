@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>会员中心 - 输入收货人信息 -{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+    <!-- 新样式 2020-11-25 -->
+    {eyou:static file="users/skin/css/element/index.css" /}
+    {eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm" /}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="users/skin/js/global.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="/public/static/common/js/mobile_global.js"/}
+    <style type="text/css">
+        .input-boxs{
+            display: flex;margin-top: 10px; justify-content: space-between;
+        }
+        .input-boxs-con{
+            width: 100%;display:flex;height: 40px;line-height: 40px;
+        }
+    </style>
+</head>
+
+<body style="margin:0 ">
+<!--手机绑定弹出框2-->
+<div style="padding:0 20px;">
+    <div class="login-popup">
+        <form id="form1" name='form1' method='POST' action='' >
+            <input type="hidden" name="gift_id" value="{$post.gift_id}">
+            <div class="input-boxs">
+                <div class="input-boxs-con">
+                    <span style="width: 40px;color: #929292;">姓名</span>
+                    <input class="el-input__inner" required type="text" id="name" name="name" value="{$field.name}">
+                </div>
+            </div>
+            <div class="input-boxs">
+                <div class="input-boxs-con">
+                    <span style="width: 40px;color: #929292;">电话</span>
+                    <input class="el-input__inner" required type="text" id="mobile" name="mobile" value="{$field.mobile}">
+                </div>
+            </div>
+            <div class="input-boxs">
+                <div class="input-boxs-con">
+                    <span style="width: 40px;color: #929292;">地址</span>
+                    <input class="el-input__inner" required type="text" id="address" name="address" value="{$field.address}">
+                </div>
+            </div>
+            <div style="text-align: center;margin-top: 25px;">
+                <button type="button" id="btnSignCheck" class="el-button el-button--primary" style="width: 100px;"><span>确&nbsp;定</span></button>
+            </div>
+        </form>
+    </div>
+</div>
+<!--手机绑定弹出框2 end-->
+
+<script type="text/javascript">
+    $(function(){
+        $('#btnSignCheck').click(function(){
+            if ($.trim($('#name').val()) == '') {
+                $('#name').focus();
+                layer.msg('请输入收货人姓名！', {icon: 2, time: 2000});
+                return false;
+            }
+            if ($.trim($('#mobile').val()) == '') {
+                $('#mobile').focus();
+                layer.msg('请输入收货人手机号！', {icon: 2, time: 2000});
+                return false;
+            }
+            if ($.trim($('#address').val()) == '') {
+                $('#address').focus();
+                layer.msg('请输入收货人详细地址！', {icon: 2, time: 2000});
+                return false;
+            }
+            $.ajax({
+                url: "{:url('user/Memgift/users_gift_shiwu')}",
+                type: 'POST',
+                dataType: 'JSON',
+                data: $('#form1').serialize(),
+                success: function(res){
+                    if (1 == res.code) {
+                        var _parent = parent;
+                        _parent.layer.closeAll();
+                        _parent.layer.msg(res.msg, {icon: 1, time: 1500}, function(){
+                            _parent.window.location.reload();
+                        });
+                    } else {
+                        layer.msg(res.msg, {icon: 2, time: 2000});
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    layer.alert('网络失败，请刷新页面后重试', {icon: 5, title:false});
+                }
+            })
+        });
+    })
+</script>
+
+</body>
+</html>
+

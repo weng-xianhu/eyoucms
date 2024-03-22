@@ -1,14 +1,33 @@
-    <div class="fixed-bar">
-        <div class="item-title">
-            <a class="back" href="{:url('Index/switch_map')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
-            <ul class="tab-base nc-row">
-                {eq name="'RecycleBin@archives_index'|is_check_access" value="1"}
-                    <li>
-                        <a href="{:url('RecycleBin/archives_index')}" {if condition="in_array($Think.const.CONTROLLER_NAME, ['RecycleBin'])"}class="current"{/if}>
-                            <span>回收站</span>
-                        </a>
-                    </li>
-                {/eq}
-            </ul>
+
+<div class="fixed-bar">
+    <div class="item-title">
+        <a class="back_xin" href="{notempty name='$menu'}{:url('Index/switch_map')}{else /}{:url('Archives/index')}{/notempty}" title="返回"><i class="iconfont e-fanhui"></i></a>
+        <div class="subject">
+            <h3>回收站</h3>
+            <h5></h5>
         </div>
+        <ul class="tab-base nc-row">
+            {if condition="$main_lang == $admin_lang"}
+            <li><a href="{:url('RecycleBin/archives_index')}" {eq name='$Request.action' value='archives_index'}class="current"{/eq}><span>文档管理</span></a></li>
+            {/if}
+
+            {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+            <li><a href="{:url('RecycleBin/arctype_index')}" {eq name='$Request.action' value='arctype_index'}class="current"{/eq}><span>栏目管理</span></a></li>
+            {/if}
+
+            {if condition="$main_lang == $admin_lang"}
+            <li><a href="{:url('RecycleBin/customvar_index')}" {eq name='$Request.action' value='customvar_index'}class="current"{/eq}><span>自定义变量</span></a></li>
+            {/if}
+
+            {if condition="$main_lang == $admin_lang"}
+                {notempty name="$is_old_product_attr"}
+                <li><a href="{:url('RecycleBin/proattr_index')}" {eq name='$Request.action' value='proattr_index'}class="current"{/eq}><span>产品参数</span></a></li>
+                {/notempty}
+            {/if}
+            
+            {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+            <li><a href="{:url('RecycleBin/gbookattr_index')}" {eq name='$Request.action' value='gbookattr_index'}class="current"{/eq}><span>留言属性</span></a></li>
+            {/if}
+        </ul>
     </div>
+</div>

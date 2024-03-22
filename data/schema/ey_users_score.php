@@ -12,7 +12,7 @@ return array (
   'type' => 
   array (
     'name' => 'type',
-    'type' => 'tinyint(1)',
+    'type' => 'tinyint(2)',
     'notnull' => false,
     'default' => '1',
     'primary' => false,
@@ -48,9 +48,9 @@ return array (
   'score' => 
   array (
     'name' => 'score',
-    'type' => 'int(10)',
+    'type' => 'varchar(20)',
     'notnull' => false,
-    'default' => '0',
+    'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),
@@ -105,6 +105,42 @@ return array (
     'type' => 'int(10)',
     'notnull' => false,
     'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'current_score' => 
+  array (
+    'name' => 'current_score',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'current_devote' => 
+  array (
+    'name' => 'current_devote',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'admin_id' => 
+  array (
+    'name' => 'admin_id',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'remark' => 
+  array (
+    'name' => 'remark',
+    'type' => 'varchar(255)',
+    'notnull' => false,
+    'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),

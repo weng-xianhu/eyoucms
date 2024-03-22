@@ -18,6 +18,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'type_id' => 
+  array (
+    'name' => 'type_id',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'attr_name' => 
   array (
     'name' => 'attr_name',

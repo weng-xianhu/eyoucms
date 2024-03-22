@@ -1,35 +1,111 @@
-// 自动加载默认的运费
-$(function(){
-    var addr_id = $('#addr_id').val();
-    if (addr_id) SelectEd('addr_id', addr_id);
+var json612627 = b1decefec6b39feb3be1064e27be2a9;
+
+$(function() {
+    // 自动加载默认的运费
+    // var addr_id = $('#addr_id').val();
+    // if (addr_id && !json612627.onlyVerify) SelectEd('addr_id', addr_id);
+
+    // 自动加载默认物流方式
+    if (true === json612627.onlyVerify) {
+        $('#selectVerify').click();
+    } else {
+        $('#selectDelivery').click();
+    }
 });
 
-// 颜色控制
-function ColorS(css){
-    if ('zxzf' == css) {
-        $('#zxzf').addClass("btn-primary");
-        $('#hdfk').removeClass("btn-primary");
-        $('#payment_method').val(0);
-    }else{
-        $('#hdfk').addClass("btn-primary");
-        $('#zxzf').removeClass("btn-primary");
-        $('#payment_method').val(1);
+// 在微信端时，跳转至选择添加收货地址方式页面
+function GetWeChatAddr() {
+    window.location.href = json612627.shop_add_address;
+}
+
+// 选择配送方式
+function selectLogisticsType(logisticsType) {
+    if (!logisticsType) {
+        layer.alert('非法操作', {icon:0, title: false, closeBtn: 0});
+        return false;
+    }
+    $('#logistics_type').val(logisticsType);
+    // 快递配送
+    if (1 === parseInt(logisticsType)) {
+        $("#shop_prompt").show();
+        $("#selectDelivery").addClass('on active');
+        $("#selectDeliveryID").css('display', '');
+        $("#selectDeliveryAddress").css('display', '');
+        $("#selectVerify").removeClass('on active');
+        $("#selectVerifyID").css('display', 'none');
+        $("#selectVerifyInfo").css('display', 'none');
+        // 运费计算逻辑
+        SelectEd('addr_id', $('#addr_id').val());
+    }
+    // 到店自提
+    else if (2 === parseInt(logisticsType)) {
+        $("#shop_prompt").hide();
+        var store_id = $('#store_id').val();
+        if (0 < parseInt(store_id)) {
+            $("#selectVerifyInfo").css('display', '');
+            if (0 === parseInt(json612627.is_wap)) $("#selectVerifyID").css('display', '');
+        } else {
+            $("#selectVerifyID").css('display', '');
+        }
+        $("#selectVerify").addClass('on active');
+        $("#selectDelivery").removeClass('on active');
+        $("#selectDeliveryID").css('display', 'none');
+        $("#selectDeliveryAddress").css('display', 'none');
+        // 运费、订单总价、支付剩余余额计算
+        orderFreightCountLogic(0);
+    }
+
+    // 在线支付 OR 线下支付处理
+    $('.pay-type-item').each(function() {
+        if ($(this).attr('data-type') == 'hdfk_payOnDelivery' && 1 === parseInt(logisticsType)) {
+            $(this).show();
+        } else if ($(this).attr('data-type') == 'hdfk_payOnDelivery' && 2 === parseInt(logisticsType)) {
+            $(this).hide();
+            if (1 == $('#payment_method').val() && 'hdfk_payOnDelivery' == $('#payment_type').val()) {
+                $($('.pay-type-item')[0]).trigger("click");
+            }
+        }
+    });
+}
+
+// 选择到店自提门店
+function selectVerifyStore(confirm, obj) {
+    if (confirm) {
+        $('#store_id').val($(obj).data('store_id'));
+        if (0 < parseInt($(obj).data('store_id'))) {
+            $("#selectVerifyID").css('display', '');
+            $("#selectVerifyInfo").css('display', '');
+            $("#verify_store_name").html($(obj).data('store_name'));
+            $("#verify_store_address").html($(obj).data('store_address'));
+            $("#verify_prov_city_area").html($(obj).data('prov_city_area'));
+            if (1 === parseInt(json612627.is_wap)) $("#selectVerifyID").css('display', 'none');
+        } else {
+            $("#verify_store_name").html('');
+            $("#verify_store_address").html('');
+            $("#verify_prov_city_area").html('');
+            $("#selectVerifyID").css('display', '');
+            $("#selectVerifyInfo").css('display', 'none');
+        }
+        layer.closeAll();
+    } else {
+        var area = ['1240px', '60%'];
+        if (1 === parseInt(json612627.is_wap)) area = ['100%', '100%'];
+        layer.open({
+            type: 2,
+            title: '选择门店',
+            shadeClose: false,
+            maxmin: false, //开启最大化最小化按钮
+            area: area,
+            content: json612627.verifyStore
+        });
     }
 }
 
-// 在微信端时，跳转至选择添加收货地址方式页面
-function GetWeChatAddr(){
-    var JsonData = b1decefec6b39feb3be1064e27be2a9;
-    window.location.href = JsonData.shop_add_address;
-}
-
 // 添加收货地址
-function ShopAddAddress(){
-    var JsonData = b1decefec6b39feb3be1064e27be2a9;
-    var url = JsonData.shop_add_address;
-    var width  = JsonData.addr_width;
-    var height = JsonData.addr_height;
-    var url = url;
+function ShopAddAddress() {
+    var width  = json612627.addr_width;
+    var height = json612627.addr_height;
+    var url = json612627.shop_add_address;
     if (url.indexOf('?') > -1) {
         url += '&';
     } else {
@@ -48,12 +124,10 @@ function ShopAddAddress(){
 }
 
 // 更新收货地址
-function ShopEditAddress(addr_id){
-    var JsonData = b1decefec6b39feb3be1064e27be2a9;
-    var url = JsonData.shop_edit_address;
-    var width  = JsonData.addr_width;
-    var height = JsonData.addr_height;
-    var url = url;
+function ShopEditAddress(addr_id) {
+    var width  = json612627.addr_width;
+    var height = json612627.addr_height;
+    var url = json612627.shop_edit_address;
     if (url.indexOf('?') > -1) {
         url += '&';
     } else {
@@ -63,7 +137,7 @@ function ShopEditAddress(addr_id){
     //iframe窗
     layer.open({
         type: 2,
-        title: '添加收货地址',
+        title: '修改收货地址',
         shadeClose: false,
         maxmin: false, //开启最大化最小化按钮
         area: [width, height],
@@ -72,33 +146,27 @@ function ShopEditAddress(addr_id){
 }
 
 // 删除收货地址
-function ShopDelAddress(addr_id){
-    layer.confirm('是否删除收货地址？', {
-        title:false,
-        btn: ['是', '否'] //按钮
-    }, function () {
-        // 是
-        var JsonData = b1decefec6b39feb3be1064e27be2a9;
-        var url = JsonData.shop_del_address;
-
+function ShopDelAddress(addr_id) {
+    unifiedConfirmBox('确认删除收货地址？', '', '', function() {
         $.ajax({
-            url: url,
-            data: {addr_id:addr_id,_ajax:1},
-            type:'post',
-            dataType:'json',
-            success:function(res){
+            url : json612627.shop_del_address,
+            data: {addr_id: addr_id},
+            type: 'post',
+            dataType: 'json',
+            success: function(res) {
                 layer.closeAll();
-                if ('1' == res.code) {
-                    layer.msg(res.msg, {time: 1500});
+                if (1 === parseInt(res.code)) {
+                    showSuccessMsg(res.msg);
                     $("#"+addr_id+'_ul_li').remove();
-                }else{
-                    layer.msg(res.msg, {time: 2000});
+                } else {
+                    showErrorMsg(res.msg);
                 }
+            },
+            error: function (e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
             }
         });
-    }, function (index) {
-        // 否
-        layer.closeAll(index);
     });
 }
 
@@ -106,86 +174,89 @@ function ShopDelAddress(addr_id){
 function SelectEd(idname, addr_id, addrData) {
     if (addr_id) {
         $('#'+idname).val(addr_id);
-
         if (addrData && $('#addr_consignee')) {
             $('#addr_consignee').html(addrData.consignee);
             $('#addr_mobile').html(addrData.mobile);
             $('#addr_Info').html(addrData.Info);
             $('#addr_address').html(addrData.address);
         } else {
-            var lis = $('#UlHtml li');
-            var id  = addr_id+'_ul_li';
+            var id = addr_id+'_ul_li';
             $('#'+id).addClass("selected");
-            lis.each(function(){
-                if (id != this.id) $('#'+this.id).removeClass("selected");
-            });
+            if ('v2.x' == json612627.usersTpl2xVersion) {
+                $('#UlHtml .address-item').each(function(){
+                    if (id != this.id) $('#'+this.id).removeClass("selected");
+                });
+            } else {
+                $('#UlHtml li').each(function(){
+                    if (id != this.id) $('#'+this.id).removeClass("selected");
+                });
+            }
         }
 
         // 查询运费
-        var JsonData = b1decefec6b39feb3be1064e27be2a9;
-        var url = JsonData.shop_inquiry_shipping;
+        var url = json612627.shop_inquiry_shipping;
         $.ajax({
             url : url,
-            data: {addr_id: addr_id, _ajax: 1},
-            type:'post',
-            dataType:'json',
-            success:function(res){
-                // 运费
-                $('#template_money').html('￥'+res.data);
-                
-                // 计算总价+运费
-                var TotalAmount_old = $('#TotalAmount_old').val();
-                var AmountNew = (Number(TotalAmount_old) + Number(res.data)).toFixed(2);
-                $('#TotalAmount, #PayTotalAmountID').html(AmountNew);
-
-                // 计算支付后剩余余额
-                var UsersMoney = (Number(JsonData.UsersMoney) - Number(AmountNew)).toFixed(2);
-                $('#UsersSurplusMoneyID').html(UsersMoney);
+            data: {addr_id: addr_id},
+            type: 'post',
+            dataType: 'json',
+            success: function(res) {
+                // 运费、订单总价、支付剩余余额计算
+                orderFreightCountLogic(res.data);
             }
         });
     }
 }
 
-// 提交订单
-function ShopPaymentPage(){
-    layer_loading('正在处理');
-    var JsonData = b1decefec6b39feb3be1064e27be2a9;
-    var url = JsonData.shop_payment_page;
-    if (url.indexOf('?') > -1) {
-        url += '&';
-    } else {
-        url += '?';
-    }
-    url += '_ajax=1';
+// 运费、订单总价、支付剩余余额计算
+function orderFreightCountLogic(freight) {
+    // 运费
+    $('#shipping_money').html(0 === parseFloat(freight) ? 0 : freight);
+    $('#template_money').html(0 === parseFloat(freight) ? '包邮' : '￥' + freight);
     
-    $.ajax({
-        url : url,
-        data: $('#theForm').serialize(),
-        type:'post',
-        dataType:'json',
-        success:function(res) {
-            if (1 == res.code) {
-                if (res.data.code && 'order_status_0' == res.data.code) { // 兼容第二套会员中心
-                    SelectPayMethod_2(res.data.pay_id, res.data.pay_mark, res.data.unified_id, res.data.unified_number, res.data.transaction_type);
+    // 计算总价+运费
+    var amountNew = (Number(json612627.totalAmountOld) + Number(freight)).toFixed(2);
+    $('#TotalAmount, #PayTotalAmountID').html(parseFloat(amountNew));
+
+    // 计算支付后剩余余额
+    var usersMoney = (Number(json612627.UsersMoney) - Number(amountNew)).toFixed(2);
+    $('#UsersSurplusMoneyID').html(parseFloat(usersMoney));
+}
+
+// 提交订单
+function ShopPaymentPage() {
+    layer_loading('<font id="loading_tips_230111">正在处理</font>');
+    var timer = setTimeout(function() {
+        $.ajax({
+            url : json612627.shop_payment_page,
+            data: $('#theForm').serialize(),
+            type: 'post',
+            dataType: 'json',
+            success: function(res) {
+                clearTimeout(timer); // 清理定时任务
+                if (1 == res.code) {
+                    if (res.data.code && 'order_status_0' == res.data.code) { // 兼容第二套会员中心
+                        SelectPayMethod_2(res.data.pay_id, res.data.pay_mark, res.data.unified_id, res.data.unified_number, res.data.transaction_type);
+                    } else {
+                        if (res.data.email) SendEmail_1608628263(res.data.email);
+                        if (res.data.mobile) SendMobile_1608628263(res.data.mobile);
+                        window.location.href = res.url;
+                    }
                 } else {
-                    if (res.data.email) SendEmail_1608628263(res.data.email);
-                    if (res.data.mobile) SendMobile_1608628263(res.data.mobile);
-                    window.location.href = res.url;
-                }
-            } else {
-                layer.closeAll();
-                if (1 == res.data.add_addr) {
-                    ShopAddAddress();
-                } else if (res.data.url) { // 兼容第二套会员中心
-                    layer.msg(res.msg, {icon: 5,time: 1500}, function(){
-                        window.location.href = res.data.url;
-                    });
-                } else {
-                    layer.alert(res.msg, {icon:0, title: false, closeBtn: 0});
+                    layer.closeAll();
+                    if (1 == res.data.add_addr) {
+                        ShopAddAddress();
+                    } else if (res.data.url) { // 兼容第二套会员中心
+                        layer.msg(res.msg, {icon: 5,time: 1500}, function(){
+                            window.location.href = res.data.url;
+                        });
+                    } else {
+                        layer.alert(res.msg, {icon:0, title: false, closeBtn: 0});
+                    }
                 }
             }
-        }
-    });
+        });
+    }, 100);
 }
 
 // 邮箱发送

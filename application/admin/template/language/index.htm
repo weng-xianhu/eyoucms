@@ -2,21 +2,30 @@
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-10">
     {include file="language/bar" /}
     <div class="flexigrid">
-        <div class="mDiv">
+        <div class="mDiv pt0">
             <div class="ftitle">
-                <h3>语言列表</h3>
-                <h5>(共{$pageObj->totalRows}条数据)</h5>
+                {eq name='$main_lang' value='$admin_lang'}
+                    {eq name="'Language@add'|is_check_access" value="1"}
+                    <div class="fbutton">
+                        <a href="javascript:void(0);" data-href="{:url('Language/add')}" onclick="openFullframe(this, '新增语言', '600px', '570px');">
+                            <div class="add">
+                                <span><i class="layui-icon layui-icon-addition"></i>新增语言</span>
+                            </div>
+                        </a>
+                    </div>
+                    {/eq}
+                {/eq}
             </div>
-            <form class="navbar-form form-inline" action="{:U('Language/index')}" method="get" onsubmit="layer_loading('正在处理');">
+            <form class="navbar-form form-inline" action="{:url('Language/index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
                     <div class="sDiv2">
-                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索相关数据...">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="中文名称搜索...">
                         <input type="submit" class="btn" value="搜索">
-                        <i class="fa fa-search"></i>
+                        <i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -28,7 +37,7 @@
                     <tr>
                         {eq name='$main_lang' value='$admin_lang'}
                         <th class="sign w40" axis="col0">
-                            <div class="tc">选择</div>
+                            <div class="tc"><input type="checkbox" class="checkAll"></div>
                         </th>
                         {/eq}
                         <th abbr="article_show" axis="col5" class="w40">
@@ -37,10 +46,13 @@
                         <th abbr="ac_id" axis="col4">
                             <div class="text-l10">语言名称</div>
                         </th>
+                        <th abbr="article_time" axis="col6" class="w80">
+                            <div class="tc">语言标识</div>
+                        </th>
                         <th abbr="article_title" axis="col3" class="w180">
                             <div class="text-l10">中文名称</div>
                         </th>
-                        <th abbr="article_time" axis="col6" class="w40">
+                        <th abbr="article_time" axis="col6" class="w60">
                             <div class="tc">国旗</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w100">
@@ -52,7 +64,7 @@
                         <!-- <th abbr="article_time" axis="col6" class="w200">
                             <div class="tc">单独域名</div>
                         </th> -->
-                        <th axis="col1" class="w120">
+                        <th axis="col1" class="w150">
                             <div class="tc">操作</div>
                         </th>
                         <th abbr="article_show" axis="col5" class="w60">
@@ -70,7 +82,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -81,6 +95,8 @@
                                 <div class="w40 tc">
                                     {if condition="1 != $vo.is_home_default AND 0 < $k"}
                                     <input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.id}">
+                                    {else/}
+                                    <input disabled  type="checkbox" name="ids[]" value="{$vo.id}">
                                     {/if}
                                 </div>
                             </td>
@@ -92,8 +108,13 @@
                             </td>
                             <td style="width: 100%">
                                 <div class="text-l10" style="">
-                                    <a href="{:url('Language/edit',array('id'=>$vo['id']))}">
+                                    <a href="javascript:void(0);" data-href="{:url('Language/edit',array('id'=>$vo['id']))}" onclick="openFullframe(this, '编辑语言', '600px', '530px');">
                                     {$vo.title}</a>
+                                </div>
+                            </td>
+                            <td class="tc">
+                                <div class="w80 tc">
+                                    {$vo.mark}
                                 </div>
                             </td>
                             <td class="">
@@ -102,7 +123,7 @@
                                 </div>
                             </td>
                             <td class="tc">
-                                <div class="w40 tc">
+                                <div class="w60 tc">
                                     <img src="__STATIC__/common/images/language/{$vo.mark}.gif" alt="{$vo.cn_title}" style="float: unset;"/>
                                 </div>
                             </td>
@@ -130,18 +151,22 @@
                                 </div>
                             </td> -->
                             <td class="operation">
-                                <div class="w120 tc">
+                                <div class="w150 tc">
                                     {eq name="'Language@edit'|is_check_access" value="1"}
-                                    <a href="{:U('Language/edit',array('id'=>$vo['id']))}" class="btn blue">编辑</a>
+                                    <a href="javascript:void(0);" data-href="{:url('Language/edit',array('id'=>$vo['id']))}" onclick="openFullframe(this, '编辑语言', '600px', '570px');" class="btn blue">编辑</a>
                                     {/eq}
 
-                                    {if condition="$vo['is_home_default'] == 1 OR $vo['mark'] == $main_lang"}
+                                    {if condition="$vo['is_home_default'] == 1 || $vo['mark'] == $main_lang"}
                                         <i></i>
-                                        <a class="btn grey"  href="javascript:void(0);" data-id="{$vo.admin_id}">删除</a>
+                                        <a class="btn grey" href="javascript:void(0);">同步</a>
+                                        <i></i>
+                                        <a class="btn grey" href="javascript:void(0);" data-id="{$vo.admin_id}">删除</a>
                                     {else /}
+                                        <i></i>
+                                        <a class="btn blue" href="javascript:void(0);" data-id="{$vo.id}" onClick="sync_arc(this);">同步</a>
                                         {eq name="'Language@del'|is_check_access" value="1"}
                                         <i></i>
-                                        <a class="btn red"  href="javascript:void(0)" data-url="{:U('Language/del')}" data-id="{$vo.id}" onClick="delfun(this);">删除</a>
+                                        <a class="btn red" href="javascript:void(0)" data-url="{:url('Language/del')}" data-id="{$vo.id}" onClick="delfun(this);">删除</a>
                                         {/eq}
                                     {/if}
                                 </div>
@@ -167,34 +192,25 @@
         <div class="tDiv">
             <div class="tDiv2">
                 {eq name='$main_lang' value='$admin_lang'}
-                <div class="fbutton checkboxall">
-                    <input type="checkbox" autocomplete="off" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
-                </div>
-                {eq name="'Language@del'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a onclick="batch_del(this, 'ids');" data-url="{:U('Language/del')}">
-                        <div class="add" title="批量删除">
-                            <span>批量删除</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
-                {eq name="'Language@add'|is_check_access" value="1"}
-                <div class="fbutton">
-                    <a href="{:U('Language/add')}">
-                        <div class="add" title="新增语言">
-                            <span class="red">新增语言</span>
-                        </div>
-                    </a>
-                </div>
-                {/eq}
-                <div class="fbutton">
-                    <a  href="javascript:void(0);" onclick="tag_call('web_language_switch');">
-                        <div class="add" title="标签调用">
-                            <span class="red">标签调用</span>
-                        </div>
-                    </a>
-                </div>
+                    <div class="fbutton checkboxall">
+                        <input type="checkbox" class="checkAll">
+                    </div>
+                    {eq name="'Language@del'|is_check_access" value="1"}
+                    <div class="fbutton">
+                        <a onclick="batch_del(this, 'ids');" data-url="{:url('Language/del')}">
+                            <div class="add">
+                                <span>批量删除</span>
+                            </div>
+                        </a>
+                    </div>
+                    {/eq}
+                    <div class="fbutton">
+                        <a  href="javascript:void(0);" onclick="tag_call('web_language_switch');">
+                            <div class="add">
+                                <span>标签调用</span>
+                            </div>
+                        </a>
+                    </div>
                 {/eq}
             </div>
             <div style="clear:both"></div>
@@ -204,6 +220,18 @@
     </div>
 </div>
 <script>
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]:not(:disabled)').prop('checked',this.checked);
+        });
+    });
     $(document).ready(function(){
         // 表格行点击选中切换
         $('#flexigrid > table>tbody >tr').click(function(){
@@ -236,7 +264,7 @@
             title: '模板语言变量',
             fixed: true, //不固定
             shadeClose: false,
-            shade: 0.3,
+            shade: layer_shade,
             maxmin: false, //开启最大化最小化按钮
             area: ['90%', '90%'],
             content: url,
@@ -249,8 +277,16 @@
     function delfun(obj){
       var title = $(obj).attr('data-typename');
       layer.confirm('<font color="#ff0000">将同步清空该语言的全部数据</font>，确认删除？', {
-          title: false,
-          btn: ['确定','取消'] //按钮
+          shade: layer_shade,
+          area: ['480px', '190px'],
+          move: false,
+          title: '提示',
+          btnAlign:'r',
+          closeBtn: 3,
+          btn: ['确定', '取消'] ,//按钮
+          success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
         }, function(){
           layer_loading('正在处理');
         // 确定
@@ -287,10 +323,16 @@
                 if(res.code == 1){
                     //询问框
                     var confirm = layer.confirm(res.data.msg, {
-                            title: false,
-                            area: ['70%','80%'],
-                            btn: ['关闭'] //按钮
-
+                            area: ['780px','350px'],
+                            move: false,
+                            title: '提示',
+                            shade: layer_shade,
+                            btnAlign:'r',
+                            closeBtn: 3,
+                            btn: ['关闭'] ,//按钮
+                            success: function () {
+                                $(".layui-layer-content").css('text-align', 'left');
+                            }
                         }, function(){
                             layer.close(confirm);
                         }
@@ -299,10 +341,58 @@
                     layer.alert(res.msg, {icon: 2, title:false});
                 }
             },
-            error:function(){
-                layer.alert(ey_unknown_error, {icon: 2, title:false});
+            error:function(e){
+                layer.alert(e.responseText, {icon: 2, title:false});
             }
         });
+    }
+    
+    function sync_arc(obj) {
+        var sync_arc_tip = layer.confirm('一键同步和中文主站有关联的栏目文档，将清空该语言下的所有原文档', {
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                shade: layer_shade,
+                btnAlign: 'r',
+                closeBtn: 3,
+                btn: ['确定', '取消'],//按钮
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                }
+            }, function () {
+                layer.close(sync_arc_tip);
+                layer_loading('正在处理');
+                var is_jump = 0;
+                var id = $(obj).data('id');
+                // var is_jump_val = $("#is_jump:checked").val();
+                // if ('on' == is_jump_val){
+                //     is_jump = 1;
+                // }
+                $.ajax({
+                    type: "POST",
+                    url: "{:url('Language/sync', ['_ajax'=>1])}",
+                    data: {id: id,is_jump:is_jump},
+                    dataType: 'json',
+                    success: function (res) {
+                        layer.closeAll();
+                        if (res.code == 1) {
+                            layer.msg(res.msg, {icon: 1});
+                        } else {
+                            layer.alert(res.msg, {icon: 2, title: false});
+                        }
+                    },
+                    error: function (e) {
+                        layer.closeAll();
+                        layer.alert(e.responseText, {icon: 2, title: false});
+                    }
+                });
+            }
+            , function () {
+                layer.close(sync_arc_tip);
+            }
+        )
+        // $(".layui-layer-content").append('<p><input type="checkbox" id="is_jump" checked>跳过已存在文档</p>');
+
     }
 </script>
 

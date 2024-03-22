@@ -1,115 +1,103 @@
 <!DOCTYPE HTML>
 <html>
-	<head>
-		<meta charset="utf-8" />
-		<title>{$eyou.field.title}-{eyou:global name='web_name' /}</title>
-		<meta name="renderer" content="webkit">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
-		<link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-		{eyou:static file="users/skin/css/basic.css" /}
-		{eyou:static file="users/skin/css/eyoucms.css" /}
-		<!-- 新样式 2020-11-25 -->
-		{eyou:static file="users/skin/css/element/index.css" /}
-		{eyou:static file="users/skin/css/e-user.css" /}
-		{eyou:include file="users/skin/css/diy_css.htm" /}
+    <head>
+        <meta charset="utf-8" />
+        <title>账户余额-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/eyoucms.css" /}
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm" /}
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="users/skin/js/global.js"/}
+    </head>
 
-		{eyou:static file="/public/static/common/js/jquery.min.js"/}
-		{eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
-		{eyou:static file="users/skin/js/global.js"/}
-	</head>
+    <body>
+        {eyou:include file="users/users_header.htm" /}
+        <div class="breadcrumbs"> </div>
+        <div class="ey-body-bg">
+            <div class="ey-body pd0">
+                <div class="ey-container w1226">
+                    {eyou:include file="users/users_left.htm" /}
+                    <div class="ey-con fr">
+                        <div class="xin_mian user-pay-con main-bg">
+                            <div class="user-pay-box">
+                                <div class="el-row shop-oper">
+                                    <h1 class="title"> 财务明细</h1>
+                                </div>
+                                <div class="el-row shop-oper mt20">
+                                    <div class="shop-oper-bottom">
+                                        <div class="shop-oper-l">
+                                            <div class="el-button-group">
+                                                <a class="el-button-xin el-button--default first active" href="{:url('user/Pay/pay_consumer_details')}">余额明细</a>
+                                                {egt name='$php_servicemeal' value='2'}
+                                                <a class="el-button-xin el-button--default" href="{:url('user/Users/score_index')}">{$score_name}明细</a>
+                                                {/egt}
+                                            </div>
+                                        </div>
+                                        <div class="shop-oper-r">
+                                            <div class="users-money">账户余额&nbsp;:&nbsp;￥<span class="red fb">{$users.users_money}</span> <a href="{:url('user/Pay/pay_account_recharge')}" class="el-button el-button--primary is-plain el-button--small ml10">充值</a></div>
+                                        </div>
+                                    </div>
+                                </div>
 
-	<body>
-		<!-- 头部 -->
-		{eyou:include file="users/users_header.htm" /}
-		<!-- 头部结束 -->
-
-		<div class="ey-body-bg">
-			<div class="ey-body">
-				<div class="ey-container w1200">
-					<!-- 侧边 -->
-					{eyou:include file="users/users_left.htm" /}
-					<!-- 侧边结束 -->
-					<!-- 中部 -->
-					<div class="ey-con fr">
-						<div class="el-main main-bg">
-							<div class="column-title mb20">
-								<div class="column-name">账户明细</div>
-								<div class="column-right">
-
-								</div>
-							</div>
-							
-							<div class="ey-con-inside">
-								<div class="el-row oper-row">
-									<div class="el-col-12 oper-row-l">
-										<!-- 导航栏 -->
-										{eyou:include file="users/finance_bar.htm" /}
-										<!-- END -->
-										
-									</div>
-									<div class="el-col-12 oper-row-r">账户余额 : ￥<span class="red fb">{$users.users_money}</span>元</div>
-								</div>
-								
-								<div>
-									<div id="finance-list_wrapper" class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition" style="width: 100%;">
-										<table class=""
-										 cellspacing="0" id="finance-list" data-table-ajaxurl="" data-table-pagelength="20" data-plugin="selectable"
-										 role="grid" aria-describedby="finance-list_info">
-											<thead>
-												<tr role="row">
-													<th style="width: 440px"><div class="cell">订单号</div></th>
-													<th style="width: 100px;"><div class="cell">金额</div></th>
-													<th style="width: 100px;"><div class="cell">类型</div></th>
-													<th style="width: 100px;"><div class="cell">状态</div></th>
-													<th style="width: 200px;"><div class="cell">时间</div></th>
-												</tr>
-											</thead>
-
-											<tbody>
-												{eyou:empty name="list"}
-												<tr>
-													<td  align="center" axis="col0" colspan="50">
-														<div class="cell pt50 pb50 tc">
-														   <span class="mb10"><img id='litpic_img'  src="__PUBLIC__/static/common/images/null-data.png"/></span>
-														 </div>
-													</td>
-												</tr>
-												{eyou:else/}
-												{eyou:volist name="list" id="vo"}
-												<tr >
-													<td ><div class="cell">{$vo.order_number}</div></td>
-													<td>
-														<div class="cell red">
-														{eyou:if condition="in_array($vo.cause_type, [0, 3])"}
-														-{$vo.money}
-														{eyou:else /}
-														+{$vo.money}
-														{/eyou:if}
-														</div>
-													</td>
-													<td><div class="cell">{$pay_cause_type_arr[$vo['cause_type']]|default=''}</div></td>
-													<td><div class="cell">{$pay_status_arr[$vo['status']]|default=''}</div></td>
-													<td><div class="cell">{$vo.add_time|date='Y-m-d H:i:s',###}</div></td>
-												</tr>
-												{/eyou:volist}
-												{/eyou:empty}
-											</tbody>
-										</table>
-									</div>
-									{$page}
-									{eyou:if condition="!empty($pager->totalRows)"}
-									<div class="fytotal">共{$pager->totalRows}条记录</div>
-									{/eyou:if}
-								</div>
-
-							</div>
-
-						</div>
-					</div>
-					<!-- 中部结束 -->
-				</div>
-			</div>
-		</div>
-
-		{eyou:include file="users/users_footer.htm" /}
+                                <div class="ey-con-inside mt20">
+                                    <div id="finance-list_wrapper" class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition" style="width: 100%;padding-bottom: 10px;">
+                                        <table class="pay_details" cellspacing="0" cellpadding="0" style="width: 100%">
+                                            <thead>
+                                                <tr role="row">
+                                                    <th style=""><div class="cell">订单号</div></th>
+                                                    <th class="w150"><div class="cell tc">金额(￥)</div></th>
+                                                    <th class="w150"><div class="cell tc">变动后(￥)</div></th>
+                                                    <th class="w150"><div class="cell tc">类型</div></th>
+                                                    <th class="w200"><div class="cell tc">时间</div></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {eyou:empty name="list"}
+                                                <tr>
+                                                    <td class="border-none" align="center" axis="col0" colspan="50">
+                                                        <div class="cell pt100 tc">
+                                                           <span class="mb10"><img id='litpic_img'  src="{eyou:static file='users/skin/images/null-data.png' /}"/></span>
+                                                           <p>当前暂无余额明细哦~</p>
+                                                         </div>
+                                                    </td>
+                                                </tr>
+                                                {eyou:else/}
+                                                {eyou:volist name="list" id="vo"}
+                                                <tr >
+                                                    <td><div class="cell">{$vo.order_number}</div></td>
+                                                    <td>
+                                                        <div class="cell tc">
+                                                            {eyou:if condition="in_array($vo.cause_type, [0, 3, 5, 6])"}
+                                                            <span class="red">-{$vo.money}</span>
+                                                            {eyou:else /}
+                                                            <span class="green">+{$vo.money}</span>
+                                                            {/eyou:if}
+                                                        </div>
+                                                    </td>
+                                                    <td><div class="cell tc">{$vo.users_money}</div></td>
+                                                    <td><div class="cell tc">{$pay_cause_type_arr[$vo['cause_type']]|default=''}</div></td>
+                                                    <td><div class="cell tc">{$vo.add_time|date='Y-m-d H:i:s',###}</div></td>
+                                                </tr>
+                                                {/eyou:volist}
+                                                {/eyou:empty}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {$page}
+                                    {eyou:if condition="!empty($pager->totalRows)"}
+                                    <div class="fytotal">共{$pager->totalRows}条记录</div>
+                                    {/eyou:if}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {eyou:include file="users/users_footer.htm" /}

@@ -17,31 +17,44 @@
 // 1、中括号的序号可选，在同一个操作名内用于区分开。
 // 2、键名不区分大写小写，要注意大小写，系统自己转为小写处理在md5()加密处理。
 
+$cache_prefix = \think\Config::get('cache.prefix');
+
 return array(
     /* -------------------------全局使用------------------------- */
-    'common_getEveryTopDirnameList_model'     => array(
-        'tag'=>'arctype', 'options'=>array('expire'=>0, 'prefix'=>'')
+    'global_get_region_list'     => array(
+        'tag'=>'region', 'options'=>array('expire'=>0, 'prefix'=>$cache_prefix)
     ),
-    'common_weapp_getWeappList'     => array(
-        'tag'=>'weapp', 'options'=>array('expire'=>0, 'prefix'=>'')
+    'global_get_province_list'     => array(
+        'tag'=>'region', 'options'=>array('expire'=>0, 'prefix'=>$cache_prefix)
+    ),
+    'global_get_city_list'     => array(
+        'tag'=>'region', 'options'=>array('expire'=>0, 'prefix'=>$cache_prefix)
+    ),
+    'global_get_area_list'     => array(
+        'tag'=>'region', 'options'=>array('expire'=>0, 'prefix'=>$cache_prefix)
+    ),
+
+    /* -------------------------数据表数据缓存------------------------- */
+    'table_arctype'     => array(
+        'tag'=>'arctype', 'options'=>array('expire'=>0, 'prefix'=>$cache_prefix)
     ),
 
     /* -------------------------前台使用------------------------- */
     // 'home_base_global_assign'     => array(
-    //     'tag'=>'home_base', 'options'=>array('expire'=>43200, 'prefix'=>'')
+    //     'tag'=>'home_base', 'options'=>array('expire'=>43200, 'prefix'=>$cache_prefix)
     // ),
 
     /* -------------------------后台使用------------------------- */
     'admin_all_menu'     => array(
-        'tag'=>'admin_common', 'options'=>array('expire'=>43200, 'prefix'=>'')
+        'tag'=>'admin_common', 'options'=>array('expire'=>43200, 'prefix'=>$cache_prefix)
     ),
     'admin_auth_role_list_logic'     => array(
-        'tag'=>'admin_logic', 'options'=>array('expire'=>-1, 'prefix'=>'')
+        'tag'=>'admin_logic', 'options'=>array('expire'=>-1, 'prefix'=>$cache_prefix)
     ),
     'admin_auth_modular_list_logic'     => array(
-        'tag'=>'admin_logic', 'options'=>array('expire'=>-1, 'prefix'=>'')
+        'tag'=>'admin_logic', 'options'=>array('expire'=>-1, 'prefix'=>$cache_prefix)
     ),
     'admin_channeltype_list_logic'     => array(
-        'tag'=>'admin_logic', 'options'=>array('expire'=>86400, 'prefix'=>'')
+        'tag'=>'admin_logic', 'options'=>array('expire'=>86400, 'prefix'=>$cache_prefix)
     ),
 );

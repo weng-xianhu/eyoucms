@@ -1,0 +1,155 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="member/left" /}
+<div class="page min-hg-c-10" style="min-width:auto;margin-left:100px;">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <!-- <a class="back_xin" href="{:url("UsersScore/conf")}" title="返回"><i class="iconfont e-fanhui"></i></a> -->
+            <ul class="tab-base nc-row">
+                <li>
+                    <a {if condition="in_array($Request.action, ['recharge_pack_list'])"}class="current"{/if} href='{:url("Member/recharge_pack_list")}'>
+                        <span>充值套餐</span>
+                    </a>
+                </li>
+    
+                <li>
+                    <a {if condition="in_array($Request.action, ['recharge_pack_log'])"}class="current"{/if} href='{:url("Member/recharge_pack_log")}'>
+                        <span>领取记录</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="flexigrid">
+        <div id="explanation" class="explanation">
+            <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+                <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+            </div>
+            <ul>
+                <li style="color: red;">注意：该功能仅限于【uni版（抖音，微信）开源小程序】插件</li>
+            </ul>
+        </div>
+        <div class="mDiv">
+            <div class="ftitle">
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-href='{:url("Member/recharge_pack_add")}' onclick="openFullframe(this, '添加套餐', '40%', '50%');">
+                        <div class="add" title="添加套餐">
+                            <span><i class="layui-icon layui-icon-addition"></i>添加套餐</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <form class="navbar-form form-inline" id="searchForm" action="{:url('Member/recharge_pack_list')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="pack_names" value="{$packNames|default=''}" class="qsbox" placeholder="搜索套餐名称...">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="iconfont e-sousuo"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                        <tr>
+                            <th class="w40"> <div class="tc">序号</div> </th>
+                            <th> <div class="text-l10">套餐名称</div> </th>
+                            <th class="w120"> <div class="text-l10">面值</div> </th>
+                            <th class="w120"> <div class="text-l10">价格</div> </th>
+                            <th class="w100"> <div class="tc">购买数量</div> </th>
+                            <th class="w150"> <div class="tc">创建时间</div> </th>
+                            <th class="w50"> <div class="tc">状态</div> </th>
+                            <th class="w120"> <div class="tc">操作</div> </th>
+                            <th class="w60"> <div class="tc">排序</div> </th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                        {empty name="$list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {else/}
+                        {volist name="$list" id="vo"}
+                        <tr>
+                            <td class="sort"> <div class="w40 tc">{$vo.virtual_id}</div> </td>
+                            <td style="width: 100%"> <div class="text-l10">{$vo.pack_names}</div> </td>
+                            <td> <div class="w120 text-l10">{$vo.pack_face_value}</div> </td>
+                            <td> <div class="w120 text-l10">{$vo.pack_pay_prices}</div> </td>
+                            <td> <div class="w100 tc">{$vo.pack_sales_num}</div> </td>
+                            <td> <div class="w150 tc">{$vo.add_time|date='Y-m-d H:i:s',###}</div> </td>
+                            <td>
+                                <div class="tc w50">
+                                    {if condition="$vo['status'] eq 1"}
+                                    <span class="yes" {eq name="'Member@recharge_pack_edit'|is_check_access" value="1"} onClick="changeTableVal('users_recharge_pack', 'pack_id', '{$vo.pack_id}', 'status', this);" {/eq} data-value="2"><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                    <span class="no" {eq name="'Member@recharge_pack_edit'|is_check_access" value="1"} onClick="changeTableVal('users_recharge_pack', 'pack_id', '{$vo.pack_id}', 'status', this);" {/eq} data-value="1"><i class="fa fa-ban"></i>否</span>
+                                    {/if}
+                                </div>
+                            </td>
+                            <td class="operation">
+                                <div class="w120 tc">
+                                    {eq name="'Member@recharge_pack_edit'|is_check_access" value="1"}
+                                    <a href="javascript:void(0);" data-href='{:url("Member/recharge_pack_edit", ["pack_id"=>$vo.pack_id])}' onclick="openFullframe(this, '编辑套餐', '60%', '50%');" class="btn blue">编辑</a>
+                                    {/eq}
+                                    <i></i>
+                                    {eq name="'Member@recharge_pack_del'|is_check_access" value="1"}
+                                    <a href="javascript:void(0)" data-url="{:url('Member/recharge_pack_del')}" data-id="{$vo.pack_id}" onClick="delfun(this);" class="btn red">删除</a>
+                                    {/eq}
+                                </div>
+                            </td>
+                            <i></i>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {eq name="'Member@recharge_pack_edit'|is_check_access" value="1"}
+                                    <input style="text-align: left;" type="text" onchange="changeTableVal('users_recharge_pack', 'pack_id', '{$vo.pack_id}', 'sort_order', this);" size="4" value="{$vo.sort_order}"/>
+                                    {else /}
+                                    {$vo.sort_order}
+                                    {/eq}
+                                </div>
+                            </td>
+                        </tr>
+                        {/volist}
+                        {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        {notempty name="list"}
+        <div class="tDiv">
+            <div class="tDiv2">
+                <!-- <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                {eq name="'Member@recharge_pack_del'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Member@recharge_pack_del')}" class="layui-btn layui-btn-primary">
+                        <span>批量删除</span>
+                    </a>
+                </div>
+                {/eq} -->
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        {/notempty}
+    </div>
+</div>
+
+{include file="public/footer" /}

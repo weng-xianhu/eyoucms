@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -30,6 +30,11 @@ class Images extends Base
         empty($this->channeltype) && $this->channeltype = 3;
         $this->assign('nid', $this->nid);
         $this->assign('channeltype', $this->channeltype);
+
+        // 返回页面
+        $paramTypeid = input('param.typeid/d', 0);
+        $this->callback_url = url('Images/index', ['lang' => $this->admin_lang, 'typeid' => $paramTypeid]);
+        $this->assign('callback_url', $this->callback_url);
     }
 
     //列表
@@ -42,7 +47,7 @@ class Images extends Base
         $typeid = input('typeid/d', 0);
 
         // 搜索、筛选查询条件处理
-        foreach (['keywords', 'typeid', 'flag', 'is_release'] as $key) {
+        foreach (['keywords', 'typeid', 'flag', 'is_release','province_id','city_id','area_id'] as $key) {
             if ($key == 'typeid' && empty($param['typeid'])) {
                 $typeids = Db::name('arctype')->where('current_channel', $this->channeltype)->column('id');
                 $condition['a.typeid'] = array('IN', $typeids);
@@ -70,6 +75,14 @@ class Images extends Base
                     } else {
                         $FlagNew = $param[$key];
                         $condition['a.'.$param[$key]] = array('eq', 1);
+                    }
+                } else if (in_array($key, ['province_id','city_id','area_id'])) {
+                    if (!empty($param['area_id'])) {
+                        $condition['a.area_id'] = $param['area_id'];
+                    } else if (!empty($param['city_id'])) {
+                        $condition['a.city_id'] = $param['city_id'];
+                    } else if (!empty($param['province_id'])) {
+                        $condition['a.province_id'] = $param['province_id'];
                     }
                 } else {
                     $condition['a.'.$key] = array('eq', $param[$key]);
@@ -115,7 +128,8 @@ class Images extends Base
         // 数据查询，搜索出主键ID的值
         $SqlQuery = Db::name('archives')->alias('a')->where($condition)->where($conditionNew)->fetchSql()->count('aid');
         $count = Db::name('sql_cache_table')->where(['sql_md5'=>md5($SqlQuery)])->getField('sql_result');
-        if (!isset($count)) {
+        $count = ($count < 0) ? 0 : $count;
+        if (empty($count)) {
             $count = Db::name('archives')->alias('a')->where($condition)->where($conditionNew)->count('aid');
             /*添加查询执行语句到mysql缓存表*/
             $SqlCacheTable = [
@@ -171,8 +185,6 @@ class Images extends Base
         $assign_data['archives_flags'] = model('ArchivesFlag')->getList();// 文档属性
         $assign_data['arctype_info'] = $typeid > 0 ? Db::name('arctype')->field('typename')->find($typeid) : [];// 当前栏目信息
         $this->assign($assign_data);
-        $recycle_switch = tpSetting('recycle.recycle_switch');//回收站开关
-        $this->assign('recycle_switch', $recycle_switch);
         return $this->fetch();
     }
 
@@ -188,7 +200,7 @@ class Images extends Base
 
         if (IS_POST) {
             $post = input('post.');
-
+            model('Archives')->editor_auto_210607($post);
             /* 处理TAG标签 */
             if (!empty($post['tags_new'])) {
                 $post['tags'] = !empty($post['tags']) ? $post['tags'] . ',' . $post['tags_new'] : $post['tags_new'];
@@ -199,7 +211,7 @@ class Images extends Base
             $post['tags'] = implode(',', $post['tags']);
             /* END */
 
-            $content = input('post.addonFieldExt.content', '', null);
+            $content = empty($post['addonFieldExt']['content']) ? '' : htmlspecialchars_decode($post['addonFieldExt']['content']);
 
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
@@ -253,15 +265,27 @@ class Images extends Base
             //处理自定义文件名,仅由字母数字下划线和短横杆组成,大写强制转换为小写
             $htmlfilename = trim($post['htmlfilename']);
             if (!empty($htmlfilename)) {
-                $htmlfilename = preg_replace("/[^a-zA-Z0-9_-]+/", "-", $htmlfilename);
-                $htmlfilename = strtolower($htmlfilename);
+                $htmlfilename = preg_replace("/[^\x{4e00}-\x{9fa5}\w\-]+/u", "-", $htmlfilename);
+                // $htmlfilename = strtolower($htmlfilename);
                 //判断是否存在相同的自定义文件名
-                $filenameCount = Db::name('archives')->where([
-                        'htmlfilename'  => $htmlfilename,
-                        'lang'  => $this->admin_lang,
-                    ])->count();
+                $map = [
+                    'htmlfilename'  => $htmlfilename,
+                    'lang'  => $this->admin_lang,
+                ];
+                if (!empty($post['typeid'])) {
+                    $map['typeid'] = array('eq', $post['typeid']);
+                }
+                $filenameCount = Db::name('archives')->where($map)->count();
                 if (!empty($filenameCount)) {
-                    $this->error("自定义文件名已存在，请重新设置！");
+                    $this->error("同栏目下，自定义文件名已存在！");
+                } else if (preg_match('/^(\d+)$/i', $htmlfilename)) {
+                    $this->error("自定义文件名不能纯数字，会与文档ID冲突！");
+                }
+            } else {
+                // 处理外贸链接
+                if (is_dir('./weapp/Waimao/')) {
+                    $waimaoLogic = new \weapp\Waimao\logic\WaimaoLogic;
+                    $waimaoLogic->get_new_htmlfilename($htmlfilename, $post, 'add', $this->globalConfig);
                 }
             }
             $post['htmlfilename'] = $htmlfilename;
@@ -269,6 +293,15 @@ class Images extends Base
             //做自动通过审核判断
             if ($admin_info['role_id'] > 0 && $auth_role_info['check_oneself'] < 1) {
                 $post['arcrank'] = -1;
+            }
+
+            // 副栏目
+            if (isset($post['stypeid'])) {
+                $post['stypeid'] = preg_replace('/([^\d\,\，]+)/i', ',', $post['stypeid']);
+                $post['stypeid'] = str_replace('，', ',', $post['stypeid']);
+                $post['stypeid'] = trim($post['stypeid'], ',');
+                $post['stypeid'] = str_replace(",{$post['typeid']},", ',', ",{$post['stypeid']},");
+                $post['stypeid'] = trim($post['stypeid'], ',');
             }
 
             // --存储数据
@@ -282,14 +315,18 @@ class Images extends Base
                 'is_roll'      => empty($post['is_roll']) ? 0 : $post['is_roll'],
                 'is_slide'      => empty($post['is_slide']) ? 0 : $post['is_slide'],
                 'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
+                'editor_remote_img_local'=> empty($post['editor_remote_img_local']) ? 0 : $post['editor_remote_img_local'],
+                'editor_img_clear_link'  => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
                 'is_jump'     => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
+                'origin'      => empty($post['origin']) ? '网络' : $post['origin'],
                 'seo_keywords'     => $seo_keywords,
                 'seo_description'     => $seo_description,
                 'admin_id'  => session('admin_info.admin_id'),
                 'lang'  => $this->admin_lang,
                 'sort_order'    => 100,
+                'crossed_price'     => empty($post['crossed_price']) ? 0 : floatval($post['crossed_price']),
                 'add_time'     => strtotime($post['add_time']),
                 'update_time'  => strtotime($post['add_time']),
             );
@@ -329,22 +366,6 @@ class Images extends Base
         $assign_data['arctype_html'] = $arctype_html;
         /*--end*/
 
-        /*自定义字段*/
-        // $addonFieldExtList = model('Field')->getChannelFieldList($this->channeltype);
-        // $channelfieldBindRow = Db::name('channelfield_bind')->where([
-        //         'typeid'    => ['IN', [0,$typeid]],
-        //     ])->column('field_id');
-        // if (!empty($channelfieldBindRow)) {
-        //     foreach ($addonFieldExtList as $key => $val) {
-        //         if (!in_array($val['id'], $channelfieldBindRow)) {
-        //             unset($addonFieldExtList[$key]);
-        //         }
-        //     }
-        // }
-        // $assign_data['addonFieldExtList'] = $addonFieldExtList;
-        // $assign_data['aid'] = 0;
-        /*--end*/
-
         // 阅读权限
         $arcrank_list = get_arcrank_list();
         $assign_data['arcrank_list'] = $arcrank_list;
@@ -362,9 +383,9 @@ class Images extends Base
         /*--end*/
 
         // 文档默认浏览量
-        $other_config = tpCache('other');
-        if (isset($other_config['other_arcclick']) && 0 <= $other_config['other_arcclick']) {
-            $arcclick_arr = explode("|", $other_config['other_arcclick']);
+        $globalConfig = tpCache('global');
+        if (isset($globalConfig['other_arcclick']) && 0 <= $globalConfig['other_arcclick']) {
+            $arcclick_arr = explode("|", $globalConfig['other_arcclick']);
             if (count($arcclick_arr) > 1) {
                 $assign_data['rand_arcclick'] = mt_rand($arcclick_arr[0], $arcclick_arr[1]);
             } else {
@@ -386,6 +407,15 @@ class Images extends Base
         $channelRow = Db::name('channeltype')->where('id', $this->channeltype)->find();
         $assign_data['channelRow'] = $channelRow;
 
+        // 来源列表
+        $system_originlist = tpSetting('system.system_originlist');
+        $system_originlist = json_decode($system_originlist, true);
+        $system_originlist = !empty($system_originlist) ? $system_originlist : [];
+        $assign_data['system_originlist_str'] = implode(PHP_EOL, $system_originlist);
+        $assign_data['system_originlist_0'] = !empty($system_originlist) ? $system_originlist[0] : "";
+        // 多站点，当用站点域名访问后台，发布文档自动选择当前所属区域
+        model('Citysite')->auto_location_select($assign_data);
+
         $this->assign($assign_data);
 
         return $this->fetch();
@@ -403,6 +433,8 @@ class Images extends Base
 
         if (IS_POST) {
             $post = input('post.');
+            model('Archives')->editor_auto_210607($post);
+            $post['aid'] = intval($post['aid']);
 
             /* 处理TAG标签 */
             if (!empty($post['tags_new'])) {
@@ -415,7 +447,7 @@ class Images extends Base
             /* END */
 
             $typeid = input('post.typeid/d', 0);
-            $content = input('post.addonFieldExt.content', '', null);
+            $content = empty($post['addonFieldExt']['content']) ? '' : htmlspecialchars_decode($post['addonFieldExt']['content']);
 
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
@@ -445,9 +477,23 @@ class Images extends Base
                 $is_litpic = !empty($post['is_litpic']) ? $post['is_litpic'] : 0; // 有封面图
             }
 
+            // 勾选后SEO描述将随正文内容更新
+            $basic_update_seo_description = empty($post['basic_update_seo_description']) ? 0 : 1;
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('basic', ['basic_update_seo_description'=>$basic_update_seo_description], $val['mark']);
+                }
+            } else {
+                tpCache('basic', ['basic_update_seo_description'=>$basic_update_seo_description]);
+            }
+            /*--end*/
+
             // SEO描述
             $seo_description = '';
-            if (empty($post['seo_description']) && !empty($content)) {
+            if (!empty($basic_update_seo_description) || empty($post['seo_description'])) {
                 $seo_description = @msubstr(checkStrHtml($content), 0, config('global.arc_seo_description_length'), false);
             } else {
                 $seo_description = $post['seo_description'];
@@ -469,16 +515,28 @@ class Images extends Base
             //处理自定义文件名,仅由字母数字下划线和短横杆组成,大写强制转换为小写
             $htmlfilename = trim($post['htmlfilename']);
             if (!empty($htmlfilename)) {
-                $htmlfilename = preg_replace("/[^a-zA-Z0-9_-]+/", "-", $htmlfilename);
-                $htmlfilename = strtolower($htmlfilename);
+                $htmlfilename = preg_replace("/[^\x{4e00}-\x{9fa5}\w\-]+/u", "-", $htmlfilename);
+                // $htmlfilename = strtolower($htmlfilename);
                 //判断是否存在相同的自定义文件名
-                $filenameCount = Db::name('archives')->where([
-                        'aid'   => ['NEQ', $post['aid']],
-                        'htmlfilename'  => $htmlfilename,
-                        'lang'  => $this->admin_lang,
-                    ])->count();
+                $map = [
+                    'aid'   => ['NEQ', $post['aid']],
+                    'htmlfilename'  => $htmlfilename,
+                    'lang'  => $this->admin_lang,
+                ];
+                if (!empty($post['typeid'])) {
+                    $map['typeid'] = array('eq', $post['typeid']);
+                }
+                $filenameCount = Db::name('archives')->where($map)->count();
                 if (!empty($filenameCount)) {
-                    $this->error("自定义文件名已存在，请重新设置！");
+                    $this->error("同栏目下，自定义文件名已存在！");
+                } else if (preg_match('/^(\d+)$/i', $htmlfilename)) {
+                    $this->error("自定义文件名不能纯数字，会与文档ID冲突！");
+                }
+            } else {
+                // 处理外贸链接
+                if (is_dir('./weapp/Waimao/')) {
+                    $waimaoLogic = new \weapp\Waimao\logic\WaimaoLogic;
+                    $waimaoLogic->get_new_htmlfilename($htmlfilename, $post, 'edit', $this->globalConfig);
                 }
             }
             $post['htmlfilename'] = $htmlfilename;
@@ -494,6 +552,15 @@ class Images extends Base
                 }
             }
 
+            // 副栏目
+            if (isset($post['stypeid'])) {
+                $post['stypeid'] = preg_replace('/([^\d\,\，]+)/i', ',', $post['stypeid']);
+                $post['stypeid'] = str_replace('，', ',', $post['stypeid']);
+                $post['stypeid'] = trim($post['stypeid'], ',');
+                $post['stypeid'] = str_replace(",{$typeid},", ',', ",{$post['stypeid']},");
+                $post['stypeid'] = trim($post['stypeid'], ',');
+            }
+
             // --存储数据
             $newData = array(
                 'typeid'=> $typeid,
@@ -505,11 +572,14 @@ class Images extends Base
                 'is_roll'      => empty($post['is_roll']) ? 0 : $post['is_roll'],
                 'is_slide'      => empty($post['is_slide']) ? 0 : $post['is_slide'],
                 'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
+                'editor_remote_img_local'=> empty($post['editor_remote_img_local']) ? 0 : $post['editor_remote_img_local'],
+                'editor_img_clear_link'  => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
                 'is_jump'   => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
                 'seo_keywords'     => $seo_keywords,
                 'seo_description'     => $seo_description,
+                'crossed_price'     => empty($post['crossed_price']) ? 0 : floatval($post['crossed_price']),
                 'add_time'     => strtotime($post['add_time']),
                 'update_time'     => getTime(),
             );
@@ -557,6 +627,14 @@ class Images extends Base
         /*--end*/
         $typeid = $info['typeid'];
         $assign_data['typeid'] = $typeid;
+        
+        // 副栏目
+        $stypeid_arr = [];
+        if (!empty($info['stypeid'])) {
+            $info['stypeid'] = trim($info['stypeid'], ',');
+            $stypeid_arr = Db::name('arctype')->field('id,typename')->where(['id'=>['IN', $info['stypeid']],'is_del'=>0])->select();
+        }
+        $assign_data['stypeid_arr'] = $stypeid_arr;
 
         // 栏目信息
         $arctypeInfo = Db::name('arctype')->find($typeid);
@@ -571,9 +649,9 @@ class Images extends Base
         }
     
         // SEO描述
-        if (!empty($info['seo_description'])) {
-            $info['seo_description'] = @msubstr(checkStrHtml($info['seo_description']), 0, config('global.arc_seo_description_length'), false);
-        }
+        // if (!empty($info['seo_description'])) {
+        //     $info['seo_description'] = @msubstr(checkStrHtml($info['seo_description']), 0, config('global.arc_seo_description_length'), false);
+        // }
 
         $assign_data['field'] = $info;
 
@@ -587,22 +665,6 @@ class Images extends Base
         /*允许发布文档列表的栏目，文档所在模型以栏目所在模型为主，兼容切换模型之后的数据编辑*/
         $arctype_html = allow_release_arctype($typeid, array($info['channel']));
         $assign_data['arctype_html'] = $arctype_html;
-        /*--end*/
-        
-        /*自定义字段*/
-        // $addonFieldExtList = model('Field')->getChannelFieldList($info['channel'], 0, $id, $info);
-        // $channelfieldBindRow = Db::name('channelfield_bind')->where([
-        //         'typeid'    => ['IN', [0,$typeid]],
-        //     ])->column('field_id');
-        // if (!empty($channelfieldBindRow)) {
-        //     foreach ($addonFieldExtList as $key => $val) {
-        //         if (!in_array($val['id'], $channelfieldBindRow)) {
-        //             unset($addonFieldExtList[$key]);
-        //         }
-        //     }
-        // }
-        // $assign_data['addonFieldExtList'] = $addonFieldExtList;
-        // $assign_data['aid'] = $id;
         /*--end*/
 
         // 阅读权限
@@ -630,6 +692,12 @@ class Images extends Base
 
         $channelRow = Db::name('channeltype')->where('id', $this->channeltype)->find();
         $assign_data['channelRow'] = $channelRow;
+
+        // 来源列表
+        $system_originlist = tpSetting('system.system_originlist');
+        $system_originlist = json_decode($system_originlist, true);
+        $system_originlist = !empty($system_originlist) ? $system_originlist : [];
+        $assign_data['system_originlist_str'] = implode(PHP_EOL, $system_originlist);
 
         $this->assign($assign_data);
         return $this->fetch();
@@ -659,5 +727,16 @@ class Images extends Base
 
             }
         }
+    }
+    //帮助
+    public function help()
+    {
+        $system_originlist = tpSetting('system.system_originlist');
+        $system_originlist = json_decode($system_originlist, true);
+        $system_originlist = !empty($system_originlist) ? $system_originlist : [];
+        $assign_data['system_originlist_str'] = implode(PHP_EOL, $system_originlist);
+        $this->assign($assign_data);
+    
+        return $this->fetch();
     }
 }

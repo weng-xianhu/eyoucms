@@ -1,0 +1,110 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="min-width: 100px;cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th abbr="" axis="col3" class="">
+                            <div class="" style="padding-left:15px ">点击名称选择文件</div>
+                        </th>
+                        <th abbr="" axis="col3" class="w200">
+                            <div class="tc">文件大小</div>
+                        </th>
+                        <th abbr="" axis="col6" class="w100">
+                            <div class="tc">最后修改时间</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                    <tr>
+                        <td class="no-data" align="center" axis="col0" colspan="50">
+                            <div class="no_row">
+                                <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {else/}
+                    {foreach name="list" item="vo" key="k" }
+                    <tr>
+                        <td style="width: 100%">
+                            <div style="text-align: left; padding-left: 15px;">
+                                {if condition="in_array($vo['filetype'], array('dir','dir2'))"}
+                                <a href="{:url('Seo/filemanager', array('activepath'=>replace_path($vo.filepath)))}">
+                                    <img src="__SKIN__/images/{$vo.icon}" border="0" width="16" height="16" align="absmiddle" class="flt_u">&nbsp;
+                                    {$vo.filename}
+                                </a>
+                                {else /}
+                                {notempty name="$vo.icon"}
+                                <img class="flt_u" src="__SKIN__/images/{$vo.icon}" border="0" width="16" height="16" align="absmiddle" {if condition="!empty($vo.filepath) AND 'image' == $vo.filemine"}onmouseover="layer_tips=layer.tips('<img src=__ROOT_DIR__{$vo.filepath}?v={php}echo time();{/php} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/if} onmouseout="layer.close(layer_tips);">
+                                {/notempty}
+                                &nbsp;
+                                {eq name="$vo['filemine']" value='image'}
+                                <a href="__ROOT_DIR__{$vo['filepath']}?v={php}echo time();{/php}" target="_blank">{$vo.filename}</a>
+                                {else /}
+                                <a href="javascript:;" onclick="ReturnValue('{$vo.filename}')">{$vo.filename}</a>
+                                {/eq}
+                                {/if}
+
+                            </div>
+                        </td>
+                        <td class="">
+                            <div class="w200 tc">
+                                {$vo.filesize|default=''}
+                            </div>
+                        </td>
+                        <td class="">
+                            <div class="w100 tc">
+                                {notempty name="$vo.filetime"}
+                                {$vo.filetime|date='Y-m-d',###}
+                                {/notempty}
+                            </div>
+                        </td>
+                    </tr>
+                    {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <!--分页位置-->
+    </div>
+</div>
+<form class="none" id="post_del" method="POST" action="">
+    <input type="hidden" name="filename" value="">
+    <input type="hidden" name="activepath" value="">
+</form>
+<script type="text/javascript">
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+    function ReturnValue(reimg)
+    {
+        parent.layer.closeAll();
+        $('#seo_html_templet', window.parent.document).val(reimg);
+        $('#preview_home', window.parent.document).attr('href', '__ROOT_DIR__/index.php?clear=1&templet='+reimg);
+    }
+
+</script>
+
+{include file="public/footer" /}

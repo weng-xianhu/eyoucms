@@ -13,10 +13,17 @@
 
 namespace weapp\Sample\logic;
 
+use think\Db;
+
 /**
  * 业务逻辑
  */
 class SampleLogic
 {
+    /**
+     * 析构函数
+     */
+    function  __construct() {
 
+    }
 }

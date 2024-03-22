@@ -49,7 +49,7 @@ class Base extends Common {
     {
         // 设置全局模板变量
         if (!defined('MODULE_NAME')) {
-            $request = think\Request::instance();
+            $request = \think\Request::instance();
             define('MODULE_NAME', $request->module());
         }
         $global_variable = array();

@@ -35,7 +35,7 @@ class Guestbook extends Base
     }
 
     /**
-     * 留言列表
+     * 留言列表 - 仅是栏目关联的留言
      */
     public function index()
     {
@@ -53,7 +53,7 @@ class Guestbook extends Base
         foreach (['keywords', 'typeid'] as $key) {
             if (isset($get[$key]) && $get[$key] !== '') {
                 if ($key == 'keywords') {
-                    $attr_row           = Db::name('guestbook_attr')->field('aid')->where(array('attr_value' => array('LIKE', "%{$get[$key]}%")))->group('aid')->getAllWithIndex('aid');
+                    $attr_row           = Db::name('guestbook_attr')->field('aid')->where(array('attr_value' => array('LIKE', "%{$get[$key]}%"),'form_type'=>0))->group('aid')->getAllWithIndex('aid');
                     $aids               = array_keys($attr_row);
                     $condition['a.aid'] = array('IN', $aids);
                 } else if ($key == 'typeid') {
@@ -98,6 +98,7 @@ class Guestbook extends Base
             /*--end*/
         }
 
+        $condition['a.form_type'] = 0;
         // 多语言
         $condition['a.lang'] = array('eq', $this->admin_lang);
 
@@ -111,7 +112,7 @@ class Guestbook extends Base
             ->alias('a')
             ->join('__ARCTYPE__ b', 'a.typeid = b.id', 'LEFT')
             ->where($condition)
-            ->order('a.add_time desc')
+            ->order('a.is_read asc, a.add_time desc')
             ->limit($Page->firstRow . ',' . $Page->listRows)
             ->getAllWithIndex('aid');
 
@@ -119,6 +120,7 @@ class Guestbook extends Base
          * 完善数据集信息
          * 在数据量大的情况下，经过优化的搜索逻辑，先搜索出主键ID，再通过ID将其他信息补充完整；
          */
+        $typeids = [];
         if ($list) {
             $where = [
                 'b.aid'     => ['IN', array_keys($list)],
@@ -127,7 +129,7 @@ class Guestbook extends Base
                 'a.is_del'  => 0,
             ];
             $row       = Db::name('guestbook_attribute')
-                ->field('a.attr_name, b.attr_value, b.aid, b.attr_id,a.attr_input_type')
+                ->field('a.attr_name, a.typeid, b.attr_value, b.aid, b.attr_id,a.attr_input_type')
                 ->alias('a')
                 ->join('__GUESTBOOK_ATTR__ b', 'b.attr_id = a.attr_id', 'LEFT')
                 ->where($where)
@@ -135,15 +137,43 @@ class Guestbook extends Base
                 ->getAllWithIndex();
             $attr_list = array();
             foreach ($row as $key => $val) {
+                $typeids[] = $val['typeid'];
                 if (9 == $val['attr_input_type']){
                     //如果是区域类型,转换名称
                     $val['attr_value'] = Db::name('region')->where('id','in',$val['attr_value'])->column('name');
                     $val['attr_value'] = implode('',$val['attr_value']);
+                }else if(10 == $val['attr_input_type']){
+                    $val['attr_value'] = date('Y-m-d H:i:s',$val['attr_value']);
+                } else if(11 == $val['attr_input_type']) {
+                    $attrValueArr = !empty($val['attr_value']) ? explode(',', $val['attr_value']) : [];
+                    $val['attr_value'] = '';
+                    foreach ($attrValueArr as $_k => $_v) {
+                        if ($_k >= 2) {
+                            break;
+                        }
+                        if (preg_match('/(\.('.tpCache('global.image_type').'))$/i', $_v)) {
+                            if (!stristr($_v, '|')) {
+                                $_v = handle_subdir_pic($_v);
+                                $val['attr_value'] .= "<img src='{$_v}' width='60' height='60' style='float: unset; cursor: pointer;margin: 0px 3px;' onclick=\"Images('{$_v}', 650, 350);\" />";
+                            }
+                        } elseif (preg_match('/(\.('.tpCache('global.file_type').'))$/i', $_v)) {
+                            if (!stristr($_v, '|')) {
+                                $_v = handle_subdir_pic($_v);
+                                $val['attr_value'] .= "<a href='{$_v}' download='".time()."'><img src=\"".ROOT_DIR."/public/static/common/images/file.png\" alt=\"\" style=\"width: 16px; height: 16px;\">文件下载</a>";
+                            }
+                        }
+                    }
                 }
-                if (preg_match('/(\.(jpg|gif|png|bmp|jpeg|ico|webp))$/i', $val['attr_value'])) {
+                if (preg_match('/(\.('.tpCache('global.image_type').'))$/i', $val['attr_value'])) {
                     if (!stristr($val['attr_value'], '|')) {
                         $val['attr_value'] = handle_subdir_pic($val['attr_value']);
                         $val['attr_value'] = "<img src='{$val['attr_value']}' width='60' height='60' style='float: unset;cursor: pointer;' onclick=\"Images('{$val['attr_value']}', 650, 350);\" />";
+                    }
+                }elseif (preg_match('/(\.('.tpCache('global.file_type').'))$/i', $val['attr_value'])){
+                    if (!stristr($val['attr_value'], '|')) {
+                        $val['attr_value'] = handle_subdir_pic($val['attr_value']);
+                        $download_name = preg_replace('/^(.*)\/([^\/]+)\.(\w+)$/i', '${2}', $val['attr_value']);
+                        $val['attr_value'] = "<a href='{$val['attr_value']}' download='".$download_name."'><img src=\"".ROOT_DIR."/public/static/common/images/file.png\" alt=\"\" style=\"width:16px;height:16px;float:unset;\">&nbsp;点击下载</a>";
                     }
                 } else {
                     $val['attr_value'] = str_replace(PHP_EOL, ' | ', $val['attr_value']);
@@ -154,12 +184,18 @@ class Guestbook extends Base
                 $list[$key]['attr_list'] = isset($attr_list[$val['aid']]) ? $attr_list[$val['aid']] : array();
             }
         }
-        $assign_data['tab_list'] = Db::name('guestbook_attribute')->where([
-                'typeid' => $typeid,
+        $tab_list = Db::name('guestbook_attribute')->where([
+                'typeid' => ['IN', $typeids],
+                'form_type'       => 0,
                 'is_showlist' => 1,
                 'lang'   => $this->admin_lang,
                 'is_del'    => 0,
-            ])->order('sort_order asc, attr_id asc')->select();
+            ])->order('typeid asc, sort_order asc, attr_id asc')->select();
+        $tab_list = group_same_key($tab_list, 'typeid');
+        if (!empty($typeid)) {
+            $tab_list = empty($tab_list[$typeid]) ? [] : $tab_list[$typeid];
+        }
+        $assign_data['tab_list']    = $tab_list;
         $show                    = $Page->show(); // 分页显示输出
         $assign_data['page']     = $show; // 赋值分页输出
         $assign_data['list']     = $list; // 赋值数据集
@@ -191,23 +227,22 @@ class Guestbook extends Base
     {
         $id_arr = input('del_id/a');
         $id_arr = eyIntval($id_arr);
+        $form_type = input('param.form_type/d', 0);
         if (!empty($id_arr)) {
             $r = Db::name('guestbook')->where([
                 'aid'  => ['IN', $id_arr],
+                'form_type' => $form_type,
                 'lang' => $this->admin_lang,
             ])->delete();
-            if ($r) {
+            if ($r !== false) {
                 // ---------后置操作
                 model('Guestbook')->afterDel($id_arr);
                 // ---------end
                 adminLog('删除留言-id：' . implode(',', $id_arr));
                 $this->success('删除成功');
-            } else {
-                $this->error('删除失败');
             }
-        } else {
-            $this->error('参数有误');
         }
+        $this->error('删除失败');
     }
 
     //留言表单表单列表
@@ -230,6 +265,7 @@ class Guestbook extends Base
             }
         }
 
+        $condition['a.form_type'] = 0;
         $condition['b.id'] = ['gt', 0];
         $condition['a.is_del'] = 0;
         $condition['a.lang'] = $this->admin_lang;
@@ -250,16 +286,14 @@ class Guestbook extends Base
 
         if ($list) {
             $attr_ida = array_keys($list);
-            $fields = "b.*, a.*";
+            $fields = "b.*, a.*,a.attr_id as orgin_attr_id";
             $row = Db::name('guestbook_attribute')
                 ->field($fields)
                 ->alias('a')
                 ->join('__ARCTYPE__ b', 'a.typeid = b.id', 'LEFT')
                 ->where('a.attr_id', 'in', $attr_ida)
                 ->getAllWithIndex('attr_id');
-
             $row = model('LanguageAttr')->getBindValue($row, 'guestbook_attribute', $this->main_lang); // 获取多语言关联绑定的值
-
             foreach ($row as $key => $val) {
                 $val['fieldname'] = 'attr_'.$val['attr_id'];
                 $row[$key] = $val;
@@ -289,8 +323,6 @@ class Guestbook extends Base
         $assign_data['tab'] = $tab;
         $assign_data['attrInputTypeArr'] = $this->attrInputTypeArr; // 表单类型
         $this->assign($assign_data);
-        $recycle_switch = tpSetting('recycle.recycle_switch');//回收站开关
-        $this->assign('recycle_switch', $recycle_switch);
         return $this->fetch();
     }
 
@@ -302,7 +334,9 @@ class Guestbook extends Base
         //防止php超时
         function_exists('set_time_limit') && set_time_limit(0);
         
-        $this->language_access(); // 多语言功能操作权限
+        if (is_language() && empty($this->globalConfig['language_split'])) {
+            $this->language_access(); // 多语言功能操作权限
+        }
 
         if(IS_AJAX && IS_POST)//ajax提交验证
         {
@@ -347,10 +381,12 @@ class Guestbook extends Base
             $savedata = array(
                 'attr_name'       => $post_data['attr_name'],
                 'typeid'          => $post_data['typeid'],
+                'form_type'       => 0,
                 'attr_input_type' => $attr_input_type,
                 'attr_values'     => isset($post_data['attr_values']) ? $post_data['attr_values'] : '',
                 'is_showlist'     => $post_data['is_showlist'],
                 'required'        => $post_data['required'],
+                'real_validate'   => $post_data['real_validate'],
                 'validate_type'   => $validate_type,
                 'sort_order'      => 100,
                 'lang'            => $this->admin_lang,
@@ -358,7 +394,20 @@ class Guestbook extends Base
                 'update_time'     => getTime(),
             );
 
-            // 数据验证            
+            // 如果是添加手机号码类型则执行
+            if (!empty($savedata['typeid']) && 6 === intval($savedata['attr_input_type']) && 1 === intval($savedata['real_validate'])) {
+                // 查询是否已添加需要真实验证的手机号码类型
+                $where = [
+                    'typeid' => $savedata['typeid'],
+                    'form_type'       => 0,
+                    'real_validate' => $savedata['real_validate'],
+                    'attr_input_type' => $savedata['attr_input_type']
+                ];
+                $realValidate = $model->get($where);
+                if (!empty($realValidate)) $this->error('只能设置一个需要真实验证的手机号码类型');
+            }
+
+            // 数据验证
             $validate = \think\Loader::validate('GuestbookAttribute');
             if(!$validate->batch()->check($savedata))
             {
@@ -444,6 +493,7 @@ class Guestbook extends Base
             /*end*/
             
             $post_data = input('post.');
+            $post_data['attr_id'] = intval($post_data['attr_id']);
             $post_data['attr_values'] = $attr_values;
             $attr_input_type = isset($post_data['attr_input_type']) ? $post_data['attr_input_type'] : 0;
 
@@ -465,14 +515,31 @@ class Guestbook extends Base
                 'attr_id'         => $post_data['attr_id'],
                 'attr_name'       => $post_data['attr_name'],
                 'typeid'          => $post_data['typeid'],
+                'form_type'       => 0,
                 'attr_input_type' => $attr_input_type,
                 'attr_values'     => isset($post_data['attr_values']) ? $post_data['attr_values'] : '',
                 'is_showlist'     => $post_data['is_showlist'],
                 'required'        => $post_data['required'],
+                'real_validate'   => $post_data['real_validate'],
                 'validate_type'   => $validate_type,
                 'sort_order'      => 100,
                 'update_time'     => getTime(),
             );
+
+            // 如果是添加手机号码类型则执行
+            if (!empty($savedata['typeid']) && 6 === intval($savedata['attr_input_type']) && 1 === intval($savedata['real_validate'])) {
+                // 查询是否已添加需要真实验证的手机号码类型
+                $where = [
+                    'typeid' => $savedata['typeid'],
+                    'form_type'       => 0,
+                    'attr_id' => ['NEQ', $savedata['attr_id']],
+                    'real_validate' => $savedata['real_validate'],
+                    'attr_input_type' => $savedata['attr_input_type']
+                ];
+                $realValidate = $model->get($where);
+                if (!empty($realValidate)) $this->error('只能设置一个需要真实验证的手机号码类型');
+            }
+            
             // 数据验证            
             $validate = \think\Loader::validate('GuestbookAttribute');
             if(!$validate->batch()->check($savedata))
@@ -489,12 +556,11 @@ class Guestbook extends Base
                 $model->data($savedata, true); // 收集数据
                 $model->isUpdate(true, [
                     'attr_id' => $post_data['attr_id'],
-                    'lang'    => $this->admin_lang,
                 ])->save(); // 写入数据到数据库
                 $return_arr = array(
                     'status' => 1,
                     'msg'    => '操作成功',
-                    'data'   => array('url' => url('Guestbook/attribute_index', array('typeid' => $post_data['typeid']))),
+                    'data'   => array('url' => url('Guestbook/attribute_index', array('typeid' => intval($post_data['typeid'])))),
                 );
                 adminLog('编辑留言表单：' . $savedata['attr_name']);
                 respose($return_arr);
@@ -510,7 +576,7 @@ class Guestbook extends Base
         /*--end*/
         $info = Db::name('GuestbookAttribute')->where([
             'attr_id' => $id,
-            'lang'    => $this->admin_lang,
+            'form_type' => 0,
         ])->find();
         if (empty($info)) {
             $this->error('数据不存在，请联系管理员！');
@@ -582,44 +648,69 @@ class Guestbook extends Base
      */
     public function attribute_del()
     {
-        $this->language_access(); // 多语言功能操作权限
+        if (is_language() && empty($this->globalConfig['language_split'])) {
+            $this->language_access(); // 多语言功能操作权限
+        }
+
         $thorough = input('thorough/d');
         $id_arr = input('del_id/a');
         $id_arr = eyIntval($id_arr);
         if (!empty($id_arr)) {
             //多语言
-            if (is_language()) {
-                $attr_name_arr = [];
-                foreach ($id_arr as $key => $val) {
-                    $attr_name_arr[] = 'attr_' . $val;
-                }
+            $attr_name_arr = [];
+            foreach ($id_arr as $key => $val) {
+                $attr_name_arr[] = 'attr_' . $val;
+            }
+            if (is_language() && empty($this->globalConfig['language_split'])) {
                 $new_id_arr = Db::name('language_attr')->where([
-                    'attr_name'  => ['IN', $attr_name_arr],
-                    'attr_group' => 'guestbook_attribute',
-                ])->column('attr_value');
+                        'attr_name'  => ['IN', $attr_name_arr],
+                        'attr_group' => 'guestbook_attribute',
+                    ])->column('attr_value');
                 !empty($new_id_arr) && $id_arr = $new_id_arr;
             }
             if (1 == $thorough){//彻底删除
                 $r = Db::name('GuestbookAttribute')->where([
                     'attr_id' => ['IN', $id_arr],
+                    'form_type' => 0,
                 ])->delete();
             }else{
                 $r = Db::name('GuestbookAttribute')->where([
                     'attr_id' => ['IN', $id_arr],
+                    'form_type' => 0,
                 ])->update([
                     'is_del'      => 1,
                     'update_time'   => getTime(),
                 ]);
             }
-            if($r){
+            if($r !== false){
+                // 删除多语言留言属性关联绑定
+                if (1 == $thorough){//彻底删除
+                    if (!empty($attr_name_arr)) {
+                        if (get_admin_lang() == get_main_lang()) {
+                            Db::name('language_attribute')->where([
+                                    'attr_name' => ['IN', $attr_name_arr],
+                                    'attr_group'    => 'guestbook_attribute',
+                                ])->delete();
+                        }
+                        if (empty($this->globalConfig['language_split'])) {
+                            Db::name('language_attr')->where([
+                                    'attr_name' => ['IN', $attr_name_arr],
+                                    'attr_group'    => 'guestbook_attribute',
+                                ])->delete();
+                        } else {
+                            Db::name('language_attr')->where([
+                                    'attr_value' => ['IN', $id_arr],
+                                    'attr_group'    => 'guestbook_attribute',
+                                ])->delete();
+                        }
+                    }
+                }
+                /*--end*/
                 adminLog('删除留言表单-id：'.implode(',', $id_arr));
                 $this->success('删除成功');
-            }else{
-                $this->error('删除失败');
             }
-        }else{
-            $this->error('参数有误');
         }
+        $this->error('删除失败');
     }
 
     /**
@@ -628,40 +719,77 @@ class Guestbook extends Base
     public function details()
     {
         $aid = input('param.aid/d');
+        $form_type = input('param.form_type/d', 0);
 
         // 标记为已读和IP地区
-        $row = Db::name('guestbook')->find($aid);
+        if (1 == $form_type) {
+            $row = Db::name('guestbook')->field('a.*, b.form_name')
+                ->alias('a')
+                ->join('form b','a.typeid = b.form_id','left')
+                ->where(['a.aid'=>$aid, 'a.form_type'=>$form_type])
+                ->find();
+        } else {
+            $row = Db::name('guestbook')->field('a.*, b.typename as form_name')
+                ->alias('a')
+                ->join('arctype b','a.typeid = b.id','left')
+                ->where(['a.aid'=>$aid, 'a.form_type'=>$form_type])
+                ->find();
+        }
         $city = "";
         $city_arr = getCityLocation($row['ip']);
         if (!empty($city_arr)) {
             !empty($city_arr['location']) && $city .= $city_arr['location'];
         }
         $row['city'] = $city;
+        // 标记为已读
+        if (empty($row['is_read'])) {
+            $row['is_read'] = 1;
+            $row['update_time'] = getTime();
+            Db::name('guestbook')->where(['aid'=>$aid])->update([
+                    'is_read'   => $row['is_read'],
+                    'update_time'   => $row['update_time'],
+                ]);
+        }
         $this->assign('row', $row);
 
         // 留言属性
-        $condition['a.aid'] = $aid;
-        $condition['a.lang'] =  $this->admin_lang;
-        $attr_list = Db::name('guestbook_attr')
-            ->field("b.*, a.*")
-            ->alias('a')
-            ->join('__GUESTBOOK_ATTRIBUTE__ b', 'a.attr_id = b.attr_id', 'LEFT')
-            ->where($condition)
-            ->order('a.attr_id asc')
-            ->select();
+        $attr_list = Db::name('guestbook_attribute')->where(['typeid'=>$row['typeid'],'form_type'=>$form_type])->order('attr_id asc')->select();
+        $attr_values = Db::name('guestbook_attr')->field('attr_id,attr_value')->where(['aid'=>$aid,'form_type'=>$form_type])->getAllWithIndex('attr_id');
+        foreach ($attr_list as $key => $val) {
+            $val['attr_value'] = empty($attr_values[$val['attr_id']]) ? '' : $attr_values[$val['attr_id']]['attr_value'];
+            $attr_list[$key] = $val;
+        }
         foreach ($attr_list as $key => &$val) {
             if ($val['attr_input_type'] == 9) {
                 $val['attr_value'] = Db::name('region')->where('id','in',$val['attr_value'])->column('name');
                 $val['attr_value'] = implode('',$val['attr_value']);
             } else if ($val['attr_input_type'] == 4) {
                 $val['attr_value'] = filter_line_return($val['attr_value'], '、');
+            } else if(10 == $val['attr_input_type'] && !empty($val['attr_value'])){
+                $val['attr_value'] = date('Y-m-d H:i:s',$val['attr_value']);
+            } else if(11 == $val['attr_input_type']) {
+                $attrValueArr = !empty($val['attr_value']) ? explode(',', $val['attr_value']) : [];
+                $val['attr_value'] = '';
+                foreach ($attrValueArr as $value) {
+                    if (preg_match('/(\.('.tpCache('global.image_type').'))$/i', $value)) {
+                        if (!stristr($value, '|')) {
+                            $value = handle_subdir_pic($value);
+                            $val['attr_value'] .= "<a class='guest-pic' href='{$value}' target='_blank'><img src='{$value}' width='60' height='60' style='float: unset; cursor: pointer;'/></a>";
+                        }
+                    } elseif (preg_match('/(\.('.tpCache('global.file_type').'))$/i', $value)) {
+                        if (!stristr($value, '|')) {
+                            $value = handle_subdir_pic($value);
+                            $val['attr_value'] .= "<a href='{$value}' download='".time()."'><img src=\"".ROOT_DIR."/public/static/common/images/file.png\" alt=\"\" style=\"width: 16px; height: 16px;\">文件下载</a>";
+                        }
+                    }
+                }
             } else {
                 if (preg_match('/(\.(jpg|gif|png|bmp|jpeg|ico|webp))$/i', $val['attr_value'])) {
                     if (!stristr($val['attr_value'], '|')) {
                         $val['attr_value'] = handle_subdir_pic($val['attr_value']);
                         $val['attr_value'] = "<a href='{$val['attr_value']}' target='_blank'><img src='{$val['attr_value']}' width='60' height='60' style='float: unset;cursor: pointer;' /></a>";
                     }
-                }elseif (preg_match('/(\.('.tpCache('basic.file_type').'))$/i', $val['attr_value'])){
+                }elseif (preg_match('/(\.('.tpCache('global.file_type').'))$/i', $val['attr_value'])){
                     if (!stristr($val['attr_value'], '|')) {
                         $val['attr_value'] = handle_subdir_pic($val['attr_value']);
                         $val['attr_value'] = "<a href='{$val['attr_value']}' download='".time()."'><img src=\"".ROOT_DIR."/public/static/common/images/file.png\" alt=\"\" style=\"width: 16px;height:  16px;\">点击下载</a>";
@@ -669,21 +797,22 @@ class Guestbook extends Base
                 }
             }
         }
+
         $this->assign('attr_list', $attr_list);
 
-        // 标记为已读
-        Db::name('guestbook')->where(['aid'=>$aid, 'lang'=>$this->admin_lang])->update([
-                'is_read'   => 1,
-                'update_time'   => getTime(),
-            ]);
-
-        return $this->fetch();
+        // 如果安装手机端后台管理插件并且在手机端访问时执行
+        $isMobile = input('param.isMobile/d', 0);
+        if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+            return $this->display('form/details');
+        } else {
+            return $this->fetch();
+        }
     }
 
     /**    
      * excel导出
      */
-    public function excel_export()
+    public function ajax_excel_export()
     {
         $id_arr          = input('aid/s');
         if (!empty($id_arr)) {
@@ -693,10 +822,12 @@ class Guestbook extends Base
         $typeid          = input('typeid/d');
         $start_time      = input('start_time/s');
         $end_time        = input('end_time/s');
+        $form_type = input('param.form_type/s', 0);
 
         $strTable        = '<table width="500" border="1">';
         $where           = [];
-        $where['typeid'] = $typeid;
+        if (!empty($typeid)) $where['typeid'] = $typeid;
+        if ('all' != $form_type) $where['form_type'] = intval($form_type);
         $where['lang']   = $this->admin_lang;
         $order           = 'add_time asc';
         //没有指定ID就导出全部
@@ -717,11 +848,12 @@ class Guestbook extends Base
         }
         $row = Db::name('guestbook')->where($where)->order($order)->select();
 
-        $title = Db::name('guestbook_attribute')->where([
-                'typeid' => $typeid,
-                'lang'   => $this->admin_lang,
-                'is_del'    => 0,
-            ])->order('sort_order asc, attr_id asc')->select();
+        $map = [];
+        if (!empty($typeid)) $map['typeid'] = $typeid;
+        if ('all' != $form_type) $map['form_type'] = intval($form_type);
+        $map['lang']   = $this->admin_lang;
+        $map['is_del'] = 0;
+        $title = Db::name('guestbook_attribute')->where($map)->order('sort_order asc, attr_id asc')->select();
 
         if ($row && $title) {
             $strTable .= '<tr>';
@@ -744,6 +876,18 @@ class Guestbook extends Base
                     if ($v['attr_input_type'] == 9){
                         $v['attr_value'] = Db::name('region')->where('id','in',$v['attr_value'])->column('name');
                         $attr_value[$k]['attr_value'] = implode('',$v['attr_value']);
+                    }else if(10 == $v['attr_input_type']){
+                        $attr_value[$k]['attr_value'] =  date('Y-m-d H:i:s',$v['attr_value']);
+                    }else if(in_array($v['attr_input_type'],[5,8])){     //单张图、附件
+                        if (!stristr($val['attr_value'], '|')){
+                            $attr_value[$k]['attr_value'] = handle_subdir_pic($v['attr_value'],'img',true);
+                        }
+                    }else if(11 == $v['attr_input_type']){  //多张图
+                        $attr_value_arr = explode(",",$v['attr_value']);
+                        foreach ($attr_value_arr as $attr_value_k => $attr_value_v){
+                            $attr_value_arr[$attr_value_k] = handle_subdir_pic($attr_value_v,'img',true);
+                        }
+                        $attr_value[$k]['attr_value'] = implode(PHP_EOL,$attr_value_arr);
                     }
                 }
 
@@ -758,7 +902,36 @@ class Guestbook extends Base
             }
         }
         $strTable .= '</table>';
-        downloadExcel($strTable, 'guestbook');
+        if ('all' === $form_type) {
+            downloadExcel($strTable, 'allwords');
+        } else if (1 == $form_type) {
+            downloadExcel($strTable, 'form');
+        } else {
+            downloadExcel($strTable, 'guestbook');
+        }
         exit();
+    }
+
+    /**
+     * 设置/取消星标
+     * @return [type] [description]
+     */
+    public function ajax_set_star()
+    {
+        $aid = input('param.aid/d');
+        $is_star = input('param.is_star/d');
+        if (IS_AJAX && !empty($aid)) {
+            $r = Db::name('guestbook')->where(['aid'=>$aid])->update([
+                    'is_star' => $is_star,
+                ]);
+            if ($r !== false) {
+                if ($is_star == 1) {
+                    $this->success('星标成功');
+                } else {
+                    $this->success('取消成功');
+                }
+            }
+        }
+        $this->error('操作失败');
     }
 }

@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 namespace think\db;
 
@@ -1422,6 +1431,10 @@ class Query
         if (is_null($listRows) && strpos($page, ',')) {
             list($page, $listRows) = explode(',', $page);
         }
+        $page = preg_replace('/[^0-9]/i', '', $page);
+        if ($page > 9999999999999999) {
+            $page = 9999999999999999;
+        }
         $this->options['page'] = [intval($page), intval($listRows)];
         return $this;
     }
@@ -1463,6 +1476,7 @@ class Query
         ], $config['var_page']);
 
         $page = $page < 1 ? 1 : $page;
+        if (!empty($config['page_tmp']) && 'Buildhtml' == CONTROLLER_NAME) $page = $config['page_tmp']; // 生成静态优化 by 小虎哥
 
         $config['path'] = isset($config['path']) ? $config['path'] : call_user_func([$class, 'getCurrentPath']);
 
@@ -1917,6 +1931,9 @@ class Query
             // 读取缓存
             if (!App::$debug && is_file(DATA_PATH . 'schema/' . $schema . '.php')) {
                 $info = include DATA_PATH . 'schema/' . $schema . '.php'; // 修改表字段文件路径  by 小虎哥
+                if (empty($info) || !is_array($info)) {
+                    $info = $this->connection->getFields($guid);
+                }
             } else {
                 $info = $this->connection->getFields($guid);
             }
@@ -1952,7 +1969,7 @@ class Query
         if (!empty($this->pk)) {
             $pk = $this->pk;
         } else {
-            $pk = $this->getTableInfo(is_array($options) ? $options['table'] : $options, 'pk');
+            $pk = $this->getTableInfo(is_array($options) && isset($options['table']) ? $options['table'] : $options, 'pk');
         }
         return $pk;
     }
@@ -2584,11 +2601,13 @@ class Query
      */
     protected function cacheData($key, $data, $config = [])
     {
-        if (isset($config['tag'])) {
-            Cache::tag($config['tag'])->set($key, $data, $config['expire']);
-        } else {
-            Cache::set($key, $data, $config['expire']);
-        }
+        // if (false === Config::get('app_debug')) { // 运营模式才可以用数据缓存
+            if (isset($config['tag'])) {
+                Cache::tag($config['tag'])->set($key, $data, $config['expire']);
+            } else {
+                Cache::set($key, $data, $config['expire']);
+            }
+        // }
     }
 
     /**

@@ -6,7 +6,7 @@
 <div id="ajaxwaitid"></div>
 <div class="page" style="min-width: auto;">
     <!-- 操作说明 -->
-    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 97%; height: 100%;margin: 0 auto;">
         <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
             <h4 title="提示相关设置操作时应注意的要点">提示</h4>
             <span title="收起提示" id="explanationZoom" style="display: block;"></span>
@@ -32,7 +32,7 @@
                     <label for="tag_seo_keywords">SEO关键词</label>
                 </dt>
                 <dd class="opt" style="width: auto;">
-                    <textarea rows="5" cols="60" name="tag_seo_keywords" id="tag_seo_keywords" style="height: 40px;">{$data.tag_seo_keywords}</textarea>
+                    <textarea rows="5" cols="60" name="tag_seo_keywords" id="tag_seo_keywords" style="height: 20px;">{$data.tag_seo_keywords}</textarea>
                     <p class="notic">标签调用方法：{literal}{$eyou.field.seo_keywords}{/literal}</p>
                 </dd>
             </dl>
@@ -66,7 +66,7 @@
                 if (1 == res.code) {
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000});
+                    _parent.layer.msg(res.msg, {icon: 1, shade: 0.1, time: 1000});
                 } else {
                     showErrorMsg(res.msg);
                 }

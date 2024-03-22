@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -91,12 +91,16 @@ class DownloadFile extends Model
                           if (0 == res.code) {
                             // 没有登录
                             if (undefined != res.data.is_login && 0 == res.data.is_login) {
-                                if (document.getElementById('ey_login_id_1609665117')) {
-                                    $('#ey_login_id_1609665117').trigger('click');
+                                if (document.getElementById('ey_login_id_v665117')) {
+                                    $('#ey_login_id_v665117').trigger('click');
                                 } else {
                                     window.location.href = res.data.url;
                                 }
                             } else {
+                                if (res.data.need_buy == 1){
+                                    DownloadBuyNow(res.data.url,res.data.aid);
+                                    return false;
+                                } 
                                 if (!window.layer) {
                                     alert(res.msg);
                                     if (undefined != res.data.url && res.data.url) {
@@ -126,6 +130,58 @@ class DownloadFile extends Model
                         } 
                     };
                   };
+                  
+                  // 立即购买
+                function DownloadBuyNow(url,aid){
+                    // 步骤一:创建异步对象
+                    var ajax = new XMLHttpRequest();
+                    //步骤二:设置请求的url参数,参数一是请求的类型,参数二是请求的url,可以带参数,动态的传递参数starName到服务端
+                    ajax.open("post", url, true);
+                    // 给头部添加ajax信息
+                    ajax.setRequestHeader("X-Requested-With","XMLHttpRequest");
+                    // 如果需要像 HTML 表单那样 POST 数据，请使用 setRequestHeader() 来添加 HTTP 头。然后在 send() 方法中规定您希望发送的数据：
+                    ajax.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+                    //步骤三:发送请求+数据
+                    ajax.send('_ajax=1&aid=' + aid+'&return_url='+encodeURIComponent(window.location.href));
+                    //步骤四:注册事件 onreadystatechange 状态改变就会调用
+                    ajax.onreadystatechange = function () {
+                        //步骤五 请求成功，处理逻辑
+                        if (ajax.readyState==4 && ajax.status==200) {
+                            var json = ajax.responseText;
+                            var res  = JSON.parse(json);
+                            if (1 == res.code) {
+                                layer.open({
+                                    type: 2,
+                                    title: '选择支付方式',
+                                    shadeClose: false,
+                                    maxmin: false, //开启最大化最小化按钮
+                                    skin: 'WeChatScanCode_20191120',
+                                    area: ['500px', '202px'],
+                                    content: res.url
+                                });
+                            } else {
+                                if (res.data.url){
+                                    //登录
+                                    if (document.getElementById('ey_login_id_v665117')) {
+                                        $('#ey_login_id_v665117').trigger('click');
+                                    } else {
+                                        if (-1 == res.data.url.indexOf('?')) {
+                                            window.location.href = res.data.url+'?referurl='+encodeURIComponent(window.location.href);
+                                        }else{
+                                            window.location.href = res.data.url+'&referurl='+encodeURIComponent(window.location.href);
+                                        }
+                                    }
+                                }else{
+                                    if (!window.layer) {
+                                        alert(res.msg);
+                                    } else {
+                                        layer.alert(res.msg, {icon: 5, title: false, closeBtn: false});
+                                    }
+                                }
+                            }
+                        }
+                    };
+                }
                 </script>
 EOF;
         }

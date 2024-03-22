@@ -1,260 +1,468 @@
 {include file="public/layout" /}
-
-<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;min-width:auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-{include file="shop/left" /}
-<div class="page" style="min-width:auto;margin-left:98px;">
-    {include file="shop/shop_bar" /}
-    <div class="flexigrid">
-        <div class="mDiv">
-            <div class="ftitle"> <h3>售后列表</h3> <h5>(共{$pager->totalRows}条数据)</h5> </div>
-            <form class="navbar-form form-inline" id="postForm" action="{:url('ShopService/after_service')}" method="get" onsubmit="layer_loading('正在处理');">
-                {$searchform.hidden|default=''}
-                <div class="sDiv">
-                    <div class="sDiv2">
-                        <input type="text" size="50" name="order_code" value="{$Request.param.order_code}" class="qsbox" style="width: 200px;" placeholder="搜索订单号..."> <input type="submit" class="btn" value="搜索"> <i class="fa fa-search"></i>
+{include file="order/left" /}
+
+<div class="page" style="min-width:auto;margin-left:100px;padding-bottom: 0;">
+    <div class="flexigrid flexigrid-xin">
+        <div class="header-bar">
+            <div class="more">
+                <div class="search">
+                    <div class="content">
+                        <form id="postForm" action="{:url('ShopService/after_service')}" method="get" onsubmit="layer_loading('正在处理');" style="display: unset;">
+                            {$searchform.hidden|default=''}
+                            <input type="hidden" name="order_status" value="{$Request.param.order_status}">
+                            <div class="ey-form-item"><label class="users-form-item-label">关键词：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <!-- 订单号查询 -->
+                                            <div class="sDiv2">
+                                                <input type="text" size="50" name="order_code" id="order_code" value="{$Request.param.order_code}" class="qsbox" style="width: 170px;" placeholder="订单号或商品名称...">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="ey-form-item"><label class="users-form-item-label">支付方式：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="">
+                                                <select name="pay_name" id="pay_name">
+                                                    <option value="" {if condition="!$Request.param.pay_name"}selected{/if}>全部</option>
+                                                    <option value="admin_pay" {eq name="$Request.param.pay_name" value="admin_pay"}selected{/eq}>后台支付</option>
+                                                    <option value="balance" {eq name="$Request.param.pay_name" value="balance"}selected{/eq}>余额支付</option>
+                                                    {eq name="$shopOpenOffline" value="0"}
+                                                    <option value="delivery_pay" {eq name="$Request.param.pay_name" value="delivery_pay"}selected{/eq}>货到付款</option>
+                                                    {/eq}
+                                                    {eq name="$openWeChat" value="0"}
+                                                    <option value="wechat" {eq name="$Request.param.pay_name" value="wechat"}selected{/eq}>微信支付</option>
+                                                    {/eq}
+                                                    {eq name="$openAliPay" value="0"}
+                                                    <option value="alipay" {eq name="$Request.param.pay_name" value="alipay"}selected{/eq}>支付宝支付</option>
+                                                    {/eq}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ey-form-item"><label class="users-form-item-label">订单来源：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="">
+                                                <select name="order_terminal" id="order_terminal">
+                                                    <option value="0" {if condition="!$Request.param.order_terminal"}selected{/if}>全部</option>
+                                                    <option value="1" {eq name="$Request.param.order_terminal" value="1"}selected{/eq}>电脑端</option>
+                                                    <option value="2" {eq name="$Request.param.order_terminal" value="2"}selected{/eq}>手机端</option>
+                                                    {eq name="$openMall" value="1"}
+                                                    <option value="3" {eq name="$Request.param.order_terminal" value="3"}selected{/eq}>微信小程序</option>
+                                                    {/eq}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ey-form-item"><label class="users-form-item-label">申请时间：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="sDiv2">
+                                                <input type="text" name="add_time_begin" id="add_time_begin" autocomplete="off" value="{$Request.param.add_time_begin}" class="qsbox" placeholder="起始日期">
+                                            </div>
+                                            &nbsp;至&nbsp;
+                                            <div class="sDiv2">
+                                                <input type="text" name="add_time_end" id="add_time_end" autocomplete="off" value="{$Request.param.add_time_end}" class="qsbox" placeholder="结束日期">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="ey-form-item">
+                            <div class="users-form-item-content">
+                                <span class="bt-xin" onclick="orderQuery();">查询</span>
+                                <span class="bt-xin-no" onclick="orderQuery('reset');">重置</span>
+                                <div class="fbutton">
+                                    <a href="javascript:void(0);" onclick="orderExcelExport(this);" data-url="{:url('Order/ajax_order_excel_export')}" class="bt-xin-xia"><i class="iconfont e-xiazai"></i>导出</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
                 </div>
-            </form>
-        </div>
-
-        <div class="hDiv">
-            <div class="hDivBox">
-                <table cellspacing="0" cellpadding="0" style="width: 100%">
-                    <thead>
-                    <tr>
-                        <th class="sign w40" axis="col0">
-                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
-                        </th>
-                        <th align="center" abbr="article_title" axis="col3" class="w60">
-                            <div class="tc">缩略图</div>
-                        </th>
-                        <th abbr="article_title" axis="col3" class="">
-                            <div style="text-align: left; padding-left: 10px;" class="">订单号</div>
-                        </th>
-                        <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">用户名</div>
-                        </th>
-                        <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">商品金额</div>
-                        </th>
-                        <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">退还金额</div>
-                        </th>
-                        <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">售后类型</div>
-                        </th>
-                        <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">处理状态</div>
-                        </th>
-                        <th abbr="article_time" axis="col6" class="w160">
-                            <div class="tc">申请时间</div>
-                        </th>
-                        <th axis="col1" class="w200">
-                            <div class="tc">操作</div>
-                        </th>
-                    </tr>
-                    </thead>
-                </table>
             </div>
-        </div>
-        <div class="bDiv" style="height: auto;">
-            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
-                <table style="width: 100%">
-                    <tbody>
-                    {empty name="Service"}
-                        <tr>
-                            <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
-                            </td>
-                        </tr>
-                    {else/}
-                        {volist name="Service" id="vo"}
-                        <tr>
-                            <td class="sign">
-                                <div class="w40 tc"> <input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.service_id}"> </div>
-                            </td>
-
-                            <td class="w60">
-                                <div class="tc">
-                                    <a href="{$vo.arcurl}" target="_blank"><img width="60" height="60" src="{$vo.product_img}"></a>
-                                </div>
-                            </td>
-
-                            <td class="" style="width: 100%;">
-                                <div class="tl" style="padding-left: 10px;">
-                                    <a href="javascript:void(0);" data-href="{:url('Shop/order_details', array('order_id' => $vo['order_id']))}" onclick="openFullframe(this, '订单详情', '100%', '100%');"> {$vo.order_code} </a>
-                                </div>
-                            </td>
-
-                            <td class="">
-                                <div class="w100 tc">
-                                    <a href="javascript:void(0);" data-href="{:url('Member/users_edit', array('id' => $vo['users_id']))}" onclick="openFullframe(this, '用户资料', '100%', '100%');"> {$vo.username} </a>
-                                </div>
-                            </td>
-
-                            <td class="">
-                                {eq name="$vo.service_type" value="1"}￥{$vo.product_total_price}{/eq}
-                                {eq name="$vo.service_type" value="2"}￥{$vo.product_total_price}{/eq}
-                            </td>
-
-                            <td class="">
-                                {eq name="$vo.service_type" value="1"}￥{$vo.refund_price}{/eq}
-                                {eq name="$vo.service_type" value="2"}￥{$vo.refund_price}{/eq}
-                            </td>
-
-                            <td class="">
-                                {eq name="$vo.service_type" value="1"}<div class="w100 tc blue">换货</div>{/eq}
-                                {eq name="$vo.service_type" value="2"}<div class="w100 tc red">退货</div>{/eq}
-                                {eq name="$vo.service_type" value="3"}<div class="w100 tc">维修</div>{/eq}
-                            </td>
-
-                            <td class=""> <div class="w100 tc"> {$ServiceStatus[$vo.status]|default=''} </div> </td>
-
-                            <td class=""> <div class="w160 tc"> {$vo.add_time|MyDate='Y-m-d H:i:s',###} </div> </td>
-
-                            <td>
-                                <div class="w200 tc">
-                                    <a href="javascript:void(0);" data-href="{:url('ShopService/after_service_details', array('service_id' => $vo['service_id']))}" onclick="openFullframe(this, '售后详情', '100%', '100%');" class="btn blue"><i class="fa fa-pencil-square-o"></i> 详情 </a>
-                                    {eq name="$vo.status" value="1"}
-                                    <a href="JavaScript:void(0);" onclick="AuditOpinion('{$vo.service_id}', '{$vo.users_id}', '{$vo.order_id}', '{$vo.service_type}');" class="btn blue"> 审核 </a>
-                                    {/eq}
-                                    {if $vo.service_type == 1 && in_array($vo.status, [2, 4, 5])}
-                                    <a href="JavaScript:void(0);" onclick="CarryOut('{$vo.service_id}', '{$vo.users_id}', '{$vo.order_id}', '{$vo.service_type}');" class="btn blue"> 完成 </a>
-                                    {/if}
-                                    {if $vo.service_type == 2 && in_array($vo.status, [2, 4, 5])}
-                                    <a href="JavaScript:void(0);" onclick="Refund('{$vo.service_id}', '{$vo.users_id}', '{$vo.order_id}', '{$vo.refund_price}');" class="btn blue"> 退款 </a>
-                                    {/if}
-                                    <a href="javascript:void(0);" data-url="{:url('ShopService/after_service_del')}" data-id="{$vo.service_id}" onclick="delfun(this);" class="btn blue"> 删除 </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {/volist}
-                    {/empty}
-                    </tbody>
-                </table>
-            </div>
-            <div class="iDiv" style="display: none;"></div>
-        </div>
-
-        <div class="tDiv">
-            <div class="tDiv2">
-                <div class="fbutton checkboxall">
-                    <input type="checkbox" autocomplete="off" class="checkAll">
-                </div>
-                <div class="fbutton">
-                    <a onclick="batch_del(this, 'ids');" data-url="{:url('ShopService/after_service_del')}" class="layui-btn layui-btn-primary"><span>批量删除</span></a>
-                </div>
-                {include file="public/page" /}
-            </div>
-            <div style="clear:both"></div>
         </div>
     </div>
 </div>
 
+
+<div class="page" style="min-width:auto;margin-left:100px;">
+    <div class="flexigrid flexigrid-xin" style=" padding-right: 1px; ">
+        <div class="tableDiv  bubbleInfo">
+            <table cellspacing="0" cellpadding="0" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th align="center" abbr="article_title" axis="col3"> <div class="">商品信息</div> </th>
+                        <th abbr="article_time" axis="col6" class="w200"> <div class="">单价/数量</div> </th>
+                        <th abbr="article_time" axis="col6" class="w240"> <div class="">退还金额</div> </th>
+                        <th abbr="article_time" axis="col6" class="w240"> <div class="">收货人</div> </th>
+                        <th abbr="article_time" axis="col6" class="w160"> <div class="">售后类型</div> </th>
+                        <th abbr="article_time" axis="col6" class="w160"> <div class="">处理状态</div> </th>
+                        <th axis="col1" class="w180"> <div class="">操作</div> </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {empty name="Service"}
+                    <tr>
+                        <td class="no-data" align="center" axis="col0" colspan="50">
+                            <div class="no_row">
+                                <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                            </div>
+                        </td>
+                    </tr>
+                {else/}
+                    {volist name="Service" id="vo"}
+                    <tr class="order-empty"> <td colspan="8"></td> </tr>
+                    <tr>
+                        <td class="biaotou" colspan="8">
+                             <span class="mr15" style=" display: flex; flex-direction: row; align-items: center; ">
+                                {notempty name="$vo.points_shop_order"}<i class="iconfont e-wodejifen f-18 orange mr5"></i>{/notempty}
+                                <i class="iconfont e-shijian"></i><span class="mr15">{$vo.add_time}</span>
+                                <span class="mr15">订单号：{$vo.order_code} <a class="copy order_code" onclick="orderCopy('order_code');" data-clipboard-text="{$vo.order_code}">复制</a></span>
+                                <span class="mr15">服务单号：{$vo.refund_code} <a class="copy refund_code" onclick="orderCopy('refund_code');" data-clipboard-text="{$vo.refund_code}">复制</a></span>
+                             </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="goods-detail">
+                                <div class="goods-image">
+                                    <a href="{$vo.arcurl}" target="_blank"><img src="{$vo.product_img}"></a>
+                                </div>
+                                <div class="goods-info">
+                                    <p class="goods-title"><!-- <span class="shi">实</span> -->{$vo.product_name}</p>
+                                    <p class="goods-spec">{$vo.product_spec}</p>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class=""><p style="font-weight: 600;">{empty name="$vo.points_shop_order"}￥{/empty}{$vo.product_price} X {$vo.num}</p></td>
+
+                        <td class="" rowspan="1"><p>{empty name="$vo.points_shop_order"}￥{/empty}{$vo.refund_price}</p></td>
+                    
+                        <td class="" rowspan="1"><p>{$vo.consignee}</p><p class="am-link-muted">{$vo.mobile}</p></td>
+                    
+                        <td class="" rowspan="1">
+                            <span class="am-badge am-badge-secondary">
+                                {eq name="$vo.service_type" value="1"}<div class="w100 blue">换货</div>{/eq}
+                                {eq name="$vo.service_type" value="2"}<div class="w100 red">退货</div>{/eq}
+                                {eq name="$vo.service_type" value="3"}<div class="w100">维修</div>{/eq}
+                            </span>
+                        </td>
+                    
+                        <td class="" rowspan="1">
+                            <p>
+                                {if condition="1 == $vo.status"}
+                                <span class="zt" style="color: #ff9900;">{$ServiceStatus[$vo.status]|default=''}</span>
+                                {elseif condition="in_array($vo.status, [2, 4, 5, 6, 7])"}
+                                <span class="zt" style="color: #19be6b;">{$ServiceStatus[$vo.status]|default=''}</span>
+                                {else}
+                                <span class="zt" style="color: #939799;">{$ServiceStatus[$vo.status]|default=''}</span>
+                                {/if}
+                            </p>
+                        </td>
+                        
+                        <td class="" rowspan="1">
+                            <div class="operation">
+                                <a class="bt" href="{:url('ShopService/after_service_details', ['service_id' => $vo.service_id])}">售后详情</a>
+                                {eq name="$vo.status" value="1"}
+                                    <a href="javascript:void(0);" onclick="manualRefund({$vo.service_id});" class="bt">手动退款</a>
+                                    <a href="JavaScript:void(0);" onclick="afterService({$vo.service_id}, 2);" class="bt">通过审核</a>
+                                    <a href="JavaScript:void(0);" onclick="afterService({$vo.service_id}, 3);" class="bt">驳回申请</a>
+                                {/eq}
+
+                                {if $vo.service_type == 1 && in_array($vo.status, [2, 4, 5])}
+                                    {eq name="$vo.status" value="4"}
+                                    <a href="javascript:void(0);" onclick="afterService({$vo.service_id}, 5);" class="bt">确认收货</a>
+                                    {/eq}
+                                    {eq name="$vo.status" value="5"}
+                                    <a href="javascript:void(0);" onclick="openFullframe(this, '维权重新发货', '800px', '62%')" data-href="{:url('ShopService/after_service_resend', ['service_id' => $vo.service_id])}" class="bt">确认发货</a>
+                                    {/eq}
+                                    <a href="javascript:void(0);" onclick="manualRefund({$vo.service_id});" class="bt">手动退款</a>
+                                    <a href="JavaScript:void(0);" onclick="confirmComplete({$vo.service_id}, {$vo.status});" class="bt">完成换货</a>
+                                {/if}
+
+                                {if $vo.service_type == 2 && in_array($vo.status, [2, 4, 5])}
+                                    {eq name="$vo.status" value="4"}
+                                    <a href="javascript:void(0);" onclick="afterService({$vo.service_id}, 5);" class="bt">确认收货</a>
+                                    {/eq}
+                                    <a href="javascript:void(0);" onclick="manualRefund({$vo.service_id});" class="bt">手动退款</a>
+                                    <a href="JavaScript:void(0);" onclick="refundToBalance({$vo.service_id});" class="bt">退款到余额</a>
+                                {/if}
+
+                                {eq name="$vo.manual_refund" value="1"}
+                                    <a href="JavaScript:void(0);" onclick="BrowseRefundNote('{$vo.refund_note}');" class="bt">手动退款原因</a>
+                                {/eq}
+                            </div>
+                        </td>
+                    </tr>
+                    {/volist}
+                {/empty}
+                </tbody>
+            </table>
+        </div>
+        {notempty name="list"}
+        <div class="tDiv"> <div class="tDiv2"> {include file="public/page" /} </div> <div style="clear:both"></div> </div>
+        {/notempty}
+    </div>
+</div>
+
 <script type="text/javascript">
-    $(function(){
-        $('input[name*=ids]').click(function(){
-            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
-                $('.checkAll').prop('checked','checked');
-            } else {
-                $('.checkAll').prop('checked', false);
+    layui.use('laydate', function() {
+        var laydate = layui.laydate;
+        //执行一个laydate实例
+        laydate.render({elem: '#add_time_end'});
+        laydate.render({elem: '#add_time_begin'});
+    });
+
+    // 订单查询
+    function orderQuery(isReset) {
+        if (isReset && 'reset' == isReset) {
+            window.location.href = "{:url('ShopService/after_service')}";
+        } else {
+            $('#postForm').submit();
+        }
+    }
+
+    // 订单号复制
+    function orderCopy(copyClass) {
+        var clipboard1 = new Clipboard("." + copyClass);
+        clipboard1.on("success", function(e) {
+            showSuccessMsg("复制成功");
+        });
+        clipboard1.on("error", function(e) {
+            showErrorMsg("复制失败！请手动复制");
+        }); 
+    }
+
+    // AJAX调用下载
+    function orderExcelExport(obj) {
+        layer_loading('订单导出中');
+        $.ajax({
+            type: 'post',
+            url : $(obj).attr('data-url'),
+            data: {
+                _ajax: 1,
+                // 导出类型，售后订单固定值6
+                export_type: 6,
+                // 搜索条件信息，可为空
+                pay_name: "{$Request.param.pay_name}",
+                order_code: "{$Request.param.order_code}",
+                end_time: "{$Request.param.add_time_end}",
+                start_time: "{$Request.param.add_time_begin}",
+                order_terminal: "{$Request.param.order_terminal}",
+            },
+            dataType: 'json',
+            success: function(res) {
+                layer.closeAll();
+                if (1 == res.code) {
+                    window.location.href = res.url;
+                } else {
+                    showErrorAlert(res.msg);
+                }
+            },
+            error: function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
             }
         });
-        $('input[type=checkbox].checkAll').click(function(){
-            $('input[type=checkbox]').prop('checked',this.checked);
-        });
-    });
+    }
 
-    $(document).ready(function(){
-        // 表格行点击选中切换
-        $('#flexigrid > table>tbody >tr').click(function(){
-            $(this).toggleClass('trSelected');
-        });
-
-        // 点击刷新数据
-        $('.fa-refresh').click(function(){
-            location.href = location.href;
-        });
-    });
+    var serviceArr;
+    var serviceJsonArr = {$serviceJsonArr};
+    // 获取当前操作的售后订单信息
+    function getServiceArr(serviceID) {
+        serviceArr = serviceJsonArr[serviceID] ? serviceJsonArr[serviceID] : false;
+        if (false === serviceArr) {
+            showErrorAlert('数据错误，刷新重试', 2, function() {window.location.reload();});
+            return false;
+        }
+        return true;
+    }
 
     // 确认审核意见
-    function AuditOpinion(service_id, users_id, order_id, service_type) {
-        var type = 1 == service_type ? "<span style='color: blue;'> 换货 </span>" : "<span style='color: red;'> 退货 </span>";
-        layer.confirm('是否同意'+type+'申请？', {
-            title: false,
-            btn: ['同意', '拒绝'],
-        }, function() {
-            // 同意申请
-            PerformOperation(service_id, users_id, order_id, 2, 0, 0);
-        }, function() {
-            // 拒绝申请
-            PerformOperation(service_id, users_id, order_id, 3, 0, 0);
-        });
+    function afterService(serviceID, status) {
+        // 获取当前操作的售后订单信息
+        if (getServiceArr(serviceID)) {
+            var typeHtml = "<span style='color: blue;'>换货</span>";
+            if (2 === parseInt(serviceArr.service_type)) {
+                typeHtml = "<span style='color: red;'>退货退款</span>";
+            } else if (3 === parseInt(serviceArr.service_type)) {
+                typeHtml = "<span style='color: red;'>仅退款</span>";
+            }
+            if (2 === parseInt(status)) {
+                var confirmMsg = '确认通过 ' + typeHtml + ' 审核？';
+                var confirmBtn = ['通过审核', '取消'];
+            } else if (3 === parseInt(status)) {
+                var confirmMsg = '确认驳回 ' + typeHtml + ' 申请？';
+                var confirmBtn = ['驳回申请', '取消'];
+            } else if (5 === parseInt(status)) {
+                var confirmMsg = '确认收到买家退回的商品？';
+                var confirmBtn = ['确认收货', '取消'];
+            } else if (8 === parseInt(status)) {
+                var confirmMsg = '确认关闭 ' + typeHtml + ' 维权？';
+                var confirmBtn = ['关闭维权', '取消'];
+            } else if (9 === parseInt(status)) {
+                var confirmMsg = '确认拒绝收货？';
+                var confirmBtn = ['拒绝收货', '取消'];
+            } else {
+                showErrorAlert('类型错误，刷新重试', 2, function() {window.location.reload();});
+                return false;
+            }
+            showConfirm(confirmMsg, {btn: confirmBtn}, function() {
+                // 确认执行
+                performOperation(status);
+            });
+        }
+    }
+
+    // 售后服务手动完成服务单并自行退款
+    function manualRefund(serviceID) {
+        // 获取当前操作的售后订单信息
+        if (getServiceArr(serviceID)) {
+            layer.prompt({
+                formType: 2,
+                shade: layer_shade,
+                value: '',
+                title: '提示',
+                closeBtn: 3,
+                btnAlign: 'r',
+                id: 'manualRefund',
+                btn: ['完成并退款', '取消'],
+                area: ['300px', '100px'],
+                success: function(layero, index) {
+                    $("#manualRefund").find('textarea').attr('placeholder', '请填写手动完成服务单原因(非必填)');
+                    var msg = '<span style="color: red; font-size: 16px;">是否确认手动完成服务单并自行退款</span><br/><br/>';
+                    $("#manualRefund").prepend(msg);
+                    $(".layui-layer-content").css('text-align', 'left');
+                },
+                yes: function(index, layero) {
+                    var status = 1 == serviceArr.service_type ? 6 : 7;
+                    var refund_note = $("#manualRefund").find("textarea").val();
+                    performOperation(status, '', 1, refund_note);
+                    layer.close(index);
+                }
+            });
+        }
+    }
+
+    // 确认退款到余额
+    function refundToBalance(serviceID) {
+        // 获取当前操作的售后订单信息
+        if (getServiceArr(serviceID)) {
+            // 提示信息
+            var confirmMsg = '';
+            if (2 == serviceArr.status) {
+                confirmMsg = "当前处于等待会员退货阶段，";
+            } else if (4 == serviceArr.status) {
+                confirmMsg = "当前处于等待商家收货阶段，";
+            } else if (5 == serviceArr.status) {
+                confirmMsg = "商家已收货，";
+            }
+            confirmMsg = confirmMsg + "确认完成退货服务并退款到余额？";
+            showConfirm(confirmMsg, {}, function() {
+                // 确认执行
+                performOperation(7, '', 0, '');
+            });
+        }
     }
 
     // 确认完成服务
-    function CarryOut(service_id, users_id, order_id, service_type) {
-        var type = 1 == service_type ? "<span style='color: blue;'> 换货 </span>" : "<span style='color: red;'> 退货 </span>";
-        layer.confirm('确认完成'+type+'服务？', {
-            title: false,
-            btn: ['确认', '取消'],
-        }, function() {
-            // 确认
-            if (1 == service_type) {
-                // 换货结束
-                PerformOperation(service_id, users_id, order_id, 6, 0, 0);
-            } else if (2 == service_type) {
-                // 退货结束
-                PerformOperation(service_id, users_id, order_id, 7, 0, 0);
+    function confirmComplete(serviceID, status) {
+        if (getServiceArr(serviceID)) {
+            var confirmMsg = '';
+            if (2 == status) {
+                confirmMsg = "当前处于等待会员发货阶段，";
+            } else if (4 == status) {
+                confirmMsg = "当前处于等待商家收货阶段，";
+            } else if (5 == status) {
+                confirmMsg = "当前处于等待商家发货阶段，";
             }
-        }, function() {
-
-        });
-    }
-
-    // 确认退款操作
-    function Refund(service_id, users_id, order_id, refund_price) {
-        layer.confirm("请选择<span style='color: red;'> 退货 </span>操作", {
-            title: false,
-            btn: ['退款到余额', '直接完成'],
-        }, function() {
-            // 确认
-            PerformOperation(service_id, users_id, order_id, 7, 1, refund_price);
-        }, function() {
-            PerformOperation(service_id, users_id, order_id, 7, 0, refund_price);
-        });
+            layer.confirm(confirmMsg + "确认完成换货服务？", {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['完成换货', '取消'],
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                },
+            }, function() {
+                // 确认换货结束
+                performOperation(6);
+            });
+        }
     }
 
     // 执行审核操作
-    function PerformOperation(service_id, users_id, order_id, status, is_refund, refund_price) {
+    function performOperation(status, delivery, manual_refund, refund_note) {
+        console.log(serviceArr);
+        var postData = {
+            _ajax: 1,
+            status: status,
+            users_id: serviceArr.users_id,
+            order_id: serviceArr.order_id,
+            details_id: serviceArr.details_id,
+            service_id: serviceArr.service_id,
+            product_id: serviceArr.product_id,
+            delivery: delivery ? delivery : {},
+            service_type: serviceArr.service_type,
+            refund_note: refund_note ? refund_note : '',
+            manual_refund: manual_refund ? manual_refund : 0,
+        };
+        // 退款到余额
+        if (7 === parseInt(postData.status) && 0 === parseInt(postData.manual_refund)) {
+            postData.refund_way = 1;
+            postData.actual_price = serviceArr.actual_price;
+            postData.actual_points = serviceArr.actual_points;
+        }
         layer_loading('正在处理');
         $.ajax({
-            url: "{:url('ShopService/after_service_deal_with')}",
-            data: {
-                service_id: service_id,
-                users_id: users_id,
-                order_id: order_id,
-                status: status,
-                is_refund: is_refund,
-                refund_price: refund_price,
-                _ajax: 1
-            },
-            type:'post',
-            dataType:'json',
-            success:function(res) {
+            url: "{:url('ShopService/after_service_handle')}",
+            data: postData,
+            type: 'post',
+            dataType: 'json',
+            success: function(res) {
                 layer.closeAll();
-                if (1 == res.code) {
-                    layer.msg(res.msg, {time: 1500}, function() {
+                if (1 === parseInt(res.code)) {
+                    showSuccessMsg(res.msg, 1500, function() {
                         window.location.reload();
                     });
                 } else {
-                    layer.msg(res.msg, {time: 1500});
+                    showErrorAlert(res.msg);
                 }
+            },
+            error: function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
             }
         });
+    }
+
+    // 查看手动退款原因
+    function BrowseRefundNote(layer_str) {
+        layer.confirm(layer_str, {title: false, closeBtn: 0, btn: ['关闭'], area: ['25%', '25%']});
     }
 </script>
 

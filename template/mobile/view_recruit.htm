@@ -5,20 +5,22 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{$eyou.field.seo_title}</title>
-        <meta name="description" content="{$eyou.field.seo_description}" />
         <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+        <meta name="description" content="{$eyou.field.seo_description}" />
         <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
         {eyou:static file="skin/style/pintuer.css" /}
         {eyou:static file="skin/style/header.css" /}
         {eyou:static file="skin/style/style.css" /}
-        {eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+        {eyou:static file="skin/style/iconfont.css" /}
         <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
     </head>
     <body>
         <div id="mobile-mask">
-            <!--网站公用头部——开始-->
+            <!-- 公用头部 begin -->
             {eyou:include file="header.htm" /}
+            <!-- 公用头部 end -->
             <div class="layout bg-gray">
+                <!-- 当前位置 begin -->
                 <div class="container-layout">
                     <div class="line">
                         <div class="nav-bread">
@@ -26,17 +28,20 @@
                         </div>
                     </div>
                 </div>
+                <!-- 当前位置 end -->
                 <div class="container-layout">
                     <div class="line">
                         <div class="xl12 xs12 xm12 xb12">
-                            <!--内容 begin-->
+                            <!-- 内容 begin-->
                             <div class="article bg-white">
                                 <div class="padding-big">
                                     <div class="post margin-big-bottom">
+                                        <!-- 标题 begin -->
                                         <h1>{$eyou.field.title}</h1>
+                                        <!-- 标题 end -->
                                         <div class="blank"></div>
                                         <div class="text-gray padding-big-bottom text-default">
-                                            <span class="margin-right">发布时间：{$eyou.field.add_time|MyDate='Y-m-d',###}</span>
+                                            <span class="margin-right">更新时间：{$eyou.field.update_time|MyDate='Y-m-d',###}</span>
                                             <span class="margin-right">点击数：{eyou:arcclick /}</span>
                                         </div>
                                         <div class="blank"></div>
@@ -68,20 +73,16 @@
                                                 <div class="blank-small"></div>
                                                 {eyou:guestbookform type='default' typeid='6'}
                                                 <form method="POST" {$field.formhidden} action="{$field.action}" onsubmit="return checkForm();">
-                                                    <!-- 申请职位 -->
                                                     <div class="form-group">
                                                         <div class="field">
                                                             <input type='text' id='attr_4' name='{$field.attr_4}' class="input text-main" placeholder="{$field.itemname_4}" value="{$eyou.field.title}" />
                                                         </div>
                                                     </div>
-                                                    <!-- 姓名 -->
                                                     <div class="form-group">
                                                         <div class="field">
                                                             <input type='text' id='attr_5' name='{$field.attr_5}' class="input text-main" placeholder="{$field.itemname_5}" value="" />
                                                         </div>
                                                     </div>
-
-                                                    <!--行业 -->
                                                     <div class="form-group">
                                                         <div class="field">
                                                             <select name="{$field.attr_6}" id="attr_6">
@@ -92,9 +93,6 @@
                                                             </select>
                                                         </div>
                                                     </div>
-                                                    <!-- 行业 -->
-
-                                                    <!-- 手机 -->
                                                     <div class="form-group">
                                                         <div class="field">
                                                             <input type='text' id='attr_16' name='{$field.attr_16}' class="input" placeholder="{$field.itemname_16}" value="" />
@@ -105,7 +103,6 @@
                                                         <div class="field"><textarea class="textarea" id='attr_20' name='{$field.attr_20}' placeholder="{$field.itemname_20}" value="" rows="3" /></textarea>
                                                         </div>
                                                     </div>
-                                                    <!-- 提交 -->
                                                     <div class="blank"></div>
                                                     <div class="form-button">
                                                         <input class="button bg-yellow button-large button-block border-none radius-none text-white" type="submit" value="提交" />
@@ -118,60 +115,59 @@
                                     </div>
                                     <!-- 留言弹窗 end -->
                                 </div>
-                                <!--tag-->
+                                <!-- tag begin -->
                                 {eyou:notempty name='$eyou.field.tags'}
                                 <span>Tag：</span>
-                                {eyou:tag getall='0'}
+                                {eyou:tags getall='0'}
                                 <a href="{$field.link}" class="tag tags bg-yellow radius text-white margin-small-bottom" {$field.target}>{$field.tag}</a>
-                                {/eyou:tag}
+                                {/eyou:tags}
                                 {/eyou:notempty}
-                                <!--tag end-->
+                                <!-- tag end -->
                                 <div class="blank"></div>
                             </div>
                         </div>
                     </div>
-                    <!--line end-->
                 </div>
                 <div class="blank"></div>
                 <div class="container-layout">
                     <div class="line">
                         <div class="xl12 xs12 xm12 xb12">
-                            <!-- 上下篇 begin -->
                             <div class="prenext-pro">
                                 <div class="line">
+                                    <!-- 上一篇 begin -->
                                     <div class="xl5 xs5 xm5 xb5">
-                                        {eyou:prenext get='next' titlelen='30'}
+                                        {eyou:prenext get='pre' titlelen='30'}
                                         <a href="{$field.arcurl}" class="button button-block bg-white border radius-none text-main text-middle text-center" title="上一篇:{$field.title}"><i class="margin-right fa fa-long-arrow-left"></i>上一篇</a>
                                         {eyou:else /}
                                         <a class="button button-block bg-white border radius-none text-gray text-middle text-center"><i class="margin-right fa fa-long-arrow-left"></i>没有了</a>
                                         {/eyou:prenext}
                                     </div>
-
+                                    <!-- 上一篇 end -->
                                     <div class="xl2 xs2 xm2 xb2 text-center">
                                         {eyou:type typeid="$eyou.field.parent_id"}
                                         <a href="{$field.typeurl}" class="button radius-none border button-block bg-white text-main text-middle text-center"><i class="fa fa-align-justify margin-right"></i><span class="hidden-l">返回</span></a>
                                         {/eyou:type}
                                     </div>
-
+                                    <!-- 下一篇 begin -->
                                     <div class="xl5 xs5 xm5 xb5">
-                                        {eyou:prenext get='pre' titlelen='30'}
+                                        {eyou:prenext get='next' titlelen='30'}
                                         <a href="{$field.arcurl}" class="button border button-block bg-white radius-none text-main text-middle text-center float-right" title="下一篇:{$field.title}">下一篇<i class="margin-left fa fa-long-arrow-right"></i></a>
                                         {eyou:else /}
                                         <a class="button button-block bg-white border radius-none text-gray text-middle text-center">没有了<i class="margin-left fa fa-long-arrow-right"></i></a>
                                         {/eyou:prenext}
                                     </div>
+                                    <!-- 下一篇 end -->
                                 </div>
                             </div>
-                            <!-- 上下篇 end -->
                         </div>
                     </div>
-                    <!--line end-->
                 </div>
                 <div class="blank-small"></div>
             </div>
-            <!-- 页脚开始 -->
+            <!-- 公用底部 begin -->
             {eyou:include file="footer.htm" /}
-        </div><!-- id="mobile-mask" -->
+            <!-- 公用底部 end -->
+        </div>
         {eyou:static file="skin/js/jquery.min.js" /}
         {eyou:static file="skin/js/pintuer.js" /}
         {eyou:static file="skin/js/common.js" /}

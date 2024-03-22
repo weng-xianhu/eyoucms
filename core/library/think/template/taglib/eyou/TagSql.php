@@ -13,7 +13,6 @@
 
 namespace think\template\taglib\eyou;
 
-
 /**
  * SQL万能标签
  */
@@ -34,6 +33,9 @@ class TagSql extends Base
         if (empty($sql)) {
             echo '标签sql报错：缺少属性 sql 值。';
             return false;
+        } else if (stristr($sql, 'delete') || stristr($sql, 'truncate')) {
+            echo '标签sql报错：不支持禁用词 delete 或 truncate';
+            return false;
         }
  
         if ($cachetime === '') {
@@ -47,6 +49,7 @@ class TagSql extends Base
         $sql = str_replace(' lt ', ' < ', $sql);// 小于
         $sql = str_replace(' elt ', ' <= ', $sql);// 小于等于
         $sql = str_replace('__PREFIX__', config('database.prefix'), $sql); // 替换前缀
+        $sql = str_replace('#@__', config('database.prefix'), $sql); // 兼容语法
 
         $cacheKey = "tagSql_".md5($sql);
         $result = cache($cacheKey);

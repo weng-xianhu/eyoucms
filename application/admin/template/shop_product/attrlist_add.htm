@@ -1,9 +1,10 @@
 {include file="public/layout" /}
-<body style="background-color: #FFF; overflow: auto;">
+<body style="background-color: #FFF; overflow: auto;overflow-x: hidden;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="box-shadow:none;">
+<div id="geduan_div" class="h10"></div>
+<div id="page_div" class="page min-hg-c mb-20" style="min-width:auto;box-shadow:none;">
     <form class="form-horizontal" id="PostForm">
         <div class="ncap-form-default">
             <dl class="row">
@@ -32,7 +33,7 @@
                 </dt>
                 <dd class="opt">
                     <a href="JavaScript:void(0);" class="ncap-btn ncap-btn-green" onclick="Add();">新增</a>
-                    <div class="" style="margin-top: 15px;width: 850px;">
+                    <div class="" style="margin-top: 15px;width: 650px;">
                         <div class="flexigrid">
                             <div class="hDiv">
                                 <div class="hDivBox">
@@ -40,18 +41,18 @@
                                         <thead>
                                             <tr>
                                                 <th abbr="article_title" axis="col3" class="">
-                                                    <div style="text-align: left; padding-left: 10px;" class="">参数名称</div>
+                                                    <div style="text-align: left; padding-left: 10px;" class="">参数值</div>
                                                 </th>
                                                 
-                                                <th abbr="article_time" axis="col4" class="w150">
-                                                    <div class="tc">参数类型</div>
+                                                <th abbr="article_time" axis="col4" class="w120">
+                                                    <div class="tc">类型</div>
                                                 </th>
 
-                                                <th abbr="article_time" axis="col4" class="w250">
-                                                    <div class="tc" id="PromptText">参数可选值</div>
+                                                <th abbr="article_time" axis="col4" class="w180">
+                                                    <div class="tc" id="PromptText">默认值</div>
                                                 </th>
 
-                                                <th abbr="article_time" axis="col4" class="w100">
+                                                <th abbr="article_time" axis="col4" class="w80">
                                                     <div class="tc" >排序</div>
                                                 </th>
 
@@ -74,24 +75,24 @@
                                                     </td>
 
                                                     <td>
-                                                        <div class="w150 tc">
+                                                        <div class="w120 tc">
                                                             <select name="attr_input_type[]" class="w100" data-id="OptContent_0" onchange="ChangeDisplay(this);">
-                                                                <option value="0">手工录入</option>
-                                                                <option value="1">下拉选择</option>
+                                                                <option value="0">输入框</option>
+                                                                <option value="1">下拉框</option>
                                                             </select>
                                                         </div>
                                                     </td>
 
                                                     <td>
-                                                        <div class="w250 tc" id="OptContent_0">
+                                                        <div class="w180 tc" id="OptContent_0">
                                                             ——————
                                                             <input type="hidden" name="attr_values[]" autocomplete="off" class="w160">
                                                         </div>
                                                     </td>
 
                                                     <td>
-                                                        <div class="w100 tc">
-                                                            <input type="text" name="attr_sort_order[]" style="width: 60px;text-align: center;" value="100" >
+                                                        <div class="w80 tc">
+                                                            <input type="text" name="attr_sort_order[]" style="width: 50px;text-align: center;" value="100" >
                                                         </div>
                                                     </td>
 
@@ -133,23 +134,23 @@
                 '</td>'+
 
                 '<td>'+
-                    '<div class="w150 tc">'+
+                    '<div class="w120 tc">'+
                         '<select name="attr_input_type[]" class="w100" data-id="OptContent_'+tr_id+'" onchange="ChangeDisplay(this);">'+
-                            '<option value="0">手工录入</option>'+
-                            '<option value="1">下拉选择</option>' +
+                            '<option value="0">输入框</option>'+
+                            '<option value="1">下拉框</option>' +
                         '</select>'+
                     '</div>'+
                 '</td>'+
 
                 '<td>'+
-                    '<div class="w250 tc"  id="OptContent_'+tr_id+'">'+
+                    '<div class="w180 tc"  id="OptContent_'+tr_id+'">'+
                         '——————<input type="hidden" name="attr_values[]" autocomplete="off" class="w160">'+
                     '</div>'+
                 '</td>'+
 
                 '<td>'+
-                    '<div class="w100 tc">'+
-                        '<input type="text" name="attr_sort_order[]" style="width: 60px;text-align: center;" value="100" >'+
+                    '<div class="w80 tc">'+
+                        '<input type="text" name="attr_sort_order[]" style="width: 50px;text-align: center;" value="100" >'+
                     '</div>'+
                 '</td>'+
 
@@ -173,7 +174,7 @@
         var value = $(obj).val();
         if (1 == value){
             //多行文本
-            var html = '<textarea rows="5" cols="30" name="attr_values[]" style="height: 60px;" placeholder="一行代表一个可选值"></textarea>';
+            var html = '<textarea rows="5" cols="30" name="attr_values[]" style="width: 166px;height: 60px;" placeholder="一行代表一个可选值"></textarea>';
         } else{
             var html = '——————<input type="hidden" name="attr_values[]" autocomplete="off" class="w160">';
         }
@@ -201,7 +202,7 @@
                 if (res.code == 1) {
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {icon: 1, shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {icon: 1, shade: layer_shade, time: 1000}, function(){
                         _parent.window.location.reload();
                     });
                 } else {
@@ -216,3 +217,13 @@
     }
 </script>
 {include file="public/footer" /}
+<script>
+    try{
+        var mt20_1649209614 = sessionStorage.getItem("mt20_1649209614");
+        if (mt20_1649209614 == 1){
+            $("#geduan_div").removeClass("h10");
+        }else{
+            $("#geduan_div").addClass("h10");
+        }
+    }catch(e){}
+</script>

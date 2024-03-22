@@ -1,0 +1,466 @@
+{include file="public/layout" /}
+<body class="bodystyle">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page style2021">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back_xin" href="javascript:history.back();"  title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>html生成</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    <div class="flexigrid">
+        <form class="form-horizontal" name="handlepost" id="handlepost" method="post">
+            <!-- 一键生成 -->
+            <div class="hDiv htitx">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">一键生成</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default tab_div_1">
+                <dl class="row">
+                    <dt class="tit">
+                        <label>更新模式</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="radio-label">
+                            <span> &nbsp; </span>
+                            <input type="radio" class="radio" name="seo_uphtmltype" value="0" checked='checked'>全部页面生成
+                            <span class="check-mark"></span>
+                        </label>&nbsp;
+                        <label class="radio-label">
+                            <span> &nbsp; </span>
+                            <input type="radio" class="radio" name="seo_uphtmltype" value="1">指定时间更新
+                            <span class="check-mark"></span>
+                        </label>&nbsp;
+                        <label class="radio-label">
+                            <span> &nbsp; </span>
+                            <input type="radio" class="radio" name="seo_uphtmltype" value="2">指定ID更新
+                            <span class="check-mark"></span>
+                        </label>&nbsp;
+                    </dd>
+                </dl>
+                <dl class="row none" id="dl_seo_start_time_1">
+                    <dt class="tit">
+                        <label for="">起始时间 <p class="notic">即是文档的发布时间</p></label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" id="seo_start_time" name="seo_start_time" value="{php}echo date('Y-m-d'){/php}" class="input-txt w300" autocomplete="off">
+                        <span class="add-on input-group-addon">
+                            <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                        </span> 
+                        <span class="err"></span>
+                    </dd>
+                </dl>
+                <dl class="row none" id="dl_seo_start_time_2">
+                    <dt class="tit">
+                        <label for="">起始ID <p class="notic">即是起始的文档ID</p></label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" id="seo_startid2" name="seo_startid2" value="0" placeholder="起始的文档ID" title="空或0表示从头开始" class="input-txt w300" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')">
+                        <span class="err"></span>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label></label>
+                    </dt>
+                    <dd class="opt">
+                        <a class="ncap-btn-big ncap-btn-green mr10" href="javascript:void(0);" id="up_site" >开始生成HTML</a>
+                    </dd>
+                </dl>
+
+            </div>
+            <!-- 一键生成 -->
+            <!-- 首页生成 -->
+            <div class="hDiv htitx">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">首页生成</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default tab_div_1">
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="">首页模板</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" id="seo_html_templet" name="seo_html_templet" value="{$config.seo_html_templet|default='index.htm'}" placeholder="index.htm" class="input-txt w300" maxlength="200" autocomplete="off" readonly="readonly" onkeyup="this.value=this.value.replace(/\\/g,'/');" onpaste="this.value=this.value.replace(/\\/g,'/')"> &nbsp;&nbsp;
+                        <a href="javascript:void(0);" onClick="SelectTemplets('handlepost.seo_html_templet');" class="a-link"><i class="iconfont e-wenjianjia mr3"></i>模板选择</a>
+                        <span class="err"></span>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="">首页位置</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" id="seo_html_position" name="seo_html_position" value="{$config.seo_html_position|default='../index.html'}" placeholder="留空默认根目录" class="input-txt w300" maxlength="200" autocomplete="off" onkeyup="this.value=this.value.replace(/\\/g,'/');" onpaste="this.value=this.value.replace(/\\/g,'/')">
+                        <span class="err"></span>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label>首页模式</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="radio-label">
+                            <span> &nbsp; </span>
+                            <input type="radio" class="radio" name="seo_showmod" value="0" {if condition="empty($config.seo_showmod)"}checked='checked'{/if}>动态浏览
+                            <span class="check-mark"></span>
+                        </label>&nbsp;
+                        <label class="radio-label">
+                            <span> &nbsp; </span>
+                            <input type="radio" class="radio" name="seo_showmod" value="1" {if condition="!empty($config.seo_showmod)"}checked='checked'{/if}>生成静态
+                            <span class="check-mark"></span>
+                        </label>&nbsp;
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label></label>
+                    </dt>
+                    <dd class="opt">
+                        <a class="ncap-btn-big ncap-btn-green mr10" href="javascript:void(0);" id="up_index" >更新首页HTML</a>
+                        <a class="a-txt" id="preview_home" target="_blank" href="__ROOT_DIR__/index.php?clear=1&templet=index.htm"><i class="fa fa-home"></i>预览首页</a>
+                    </dd>
+                </dl>
+
+            </div>
+            <!-- 首页生成 -->
+            <!-- 栏目生成 -->
+            <div class="hDiv htitx">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">栏目生成</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default tab_div_2" >
+                <dl class="row">
+                    <dt class="tit">
+                        <label >选择栏目</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="select w200">
+                            <select name="html_typeid" id="html_typeid" class="w300">
+                                <option value="0">所有栏目…</option>
+                                {$select_html}
+                            </select>
+                        </div>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>每页生成</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" id="seo_maxpagesize" name="seo_maxpagesize" value="50" class="input-txt w100" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')"> &nbsp;&nbsp; 个文件
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>更新子栏目</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="radio-label">
+                            <span> &nbsp; </span>
+                            <input type="radio" class="radio" checked="checked" name="seo_upnext" value="1" checked='checked'>是
+                            <span class="check-mark"></span>
+                        </label>&nbsp;
+                        <label class="radio-label">
+                            <span> &nbsp; </span>
+                            <input type="radio" class="radio" name="seo_upnext" value="0">否
+                            <span class="check-mark"></span>
+                        </label>&nbsp;
+
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label></label>
+                    </dt>
+                    <dd class="opt">
+                        <a class="ncap-btn-big ncap-btn-green mr10" href="javascript:void(0);" id="up_channel">开始生成HTML</a>
+                    </dd>
+                </dl>
+            </div>
+            <!-- 栏目生成 -->
+            <!-- 文档生成 -->
+            <div class="hDiv htitx">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">文档生成</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default tab_div_3" >
+                <dl class="row">
+                    <dt class="tit">
+                        <label >选择栏目</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="select w200">
+                            <select name="html_arc_typeid" id="html_arc_typeid" class="w300">
+                                <option value="0">所有文档…</option>
+                                {$select_html}
+                            </select>
+                        </div>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label>生成ID段 <p class="notic">空或0表示从头开始或结束</p></label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" id="seo_startid" value="" name="seo_startid" class="input-txt w100" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')" placeholder="起始ID" title="空或0表示从头开始"> &nbsp;&nbsp;<span style="color: #999;font-weight: bold;font-size:26px;">-</span> &nbsp;&nbsp;
+                        <input type="text" id="seo_endid" value="" name="seo_endid" class="input-txt w100" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')" placeholder="结束ID" title="空或0表示直到结束ID">
+                        <span class="err"></span>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>每页生成</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="seo_pagesize" id="seo_pagesize" value="20" class="input-txt w100" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')"> &nbsp;&nbsp; 个文件
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label></label>
+                    </dt>
+                    <dd class="opt">
+                        <a class="ncap-btn-big ncap-btn-green mr10" href="javascript:void(0);" id="up_article">开始生成HTML</a>
+                    </dd>
+                </dl>
+            </div>
+
+        </form>
+    </div>
+</div>
+<div class="floatNav">
+    <div class="floatNav-tit">
+        快捷导航
+    </div>
+    <div class="floatNav-con">
+        <ul>
+            <li>
+                <div class="dot"></div>
+                <div class="event"><a href="{:url('Seo/seo')}">URL配置</a></div>
+            </li>
+            <li>
+                <div class="dot"></div>
+                <div class="event"><a href="{:url('Sitemap/index')}">Sitemap</a></div>
+            </li>
+            <li>
+                <div class="dot"></div>
+                <div class="event"><a href="{:url('Links/index')}">友情链接</a></div>
+            </li>
+        </ul>
+    </div>
+</div>
+<script>
+    layui.use('laydate', function() {
+        var laydate = layui.laydate;
+
+        laydate.render({
+            elem: '#seo_start_time'
+            ,type: 'date'
+        });
+    })
+
+    $(function(){
+        $('input[name=seo_uphtmltype]').click(function(){
+            var seo_uphtmltype = $(this).val();
+            $('#dl_seo_start_time_1').hide();
+            $('#dl_seo_start_time_2').hide();
+            if (1 == seo_uphtmltype) {
+                $('#dl_seo_start_time_1').show();
+                $('#dl_seo_start_time_2').hide();
+            } else if (2 == seo_uphtmltype) {
+                $('#dl_seo_start_time_1').hide();
+                $('#dl_seo_start_time_2').show();
+            }
+        });
+
+        /**
+         * 初始化数据缓存
+         * @return {[type]} [description]
+         */
+        function init_data_cache() {
+            $.ajax({
+                url : "{:url('Seo/init_data_cache')}",
+                type: 'post',
+                data: {'_ajax': 1},
+                dataType: 'JSON',
+                success: function(res) {
+
+                }
+            });
+        }
+        init_data_cache();
+    });
+
+    //选择首页静态文件
+    function SelectTemplets(fname)
+    {
+        var url = "{:url('Seo/filemanager')}";
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: '选择主页模板',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            maxmin: false, //开启最大化最小化按钮
+            area: ['80%', '80%'],
+            content: url
+        });
+    }
+
+    function check_index_file()
+    {
+        var is_index_file = {$is_index_file|default=0};
+        if (0 == is_index_file) {
+            showErrorAlert('网站根目录缺少 index.php 文件，请拷贝该文件上传到空间里！');
+            return false;
+        }
+        return true;
+    }
+
+    //生成整站
+    $("#up_site").click(function(){
+        if (!check_index_file()) {return false;}
+        var seo_uphtmltype = $('input[name=seo_uphtmltype]:checked').val();
+        var seo_maxpagesize = $('input[name=seo_maxpagesize]').val(); // 栏目每页生成文件
+        var seo_pagesize = $('input[name=seo_pagesize]').val(); // 文档每页生成文件
+        var seo_start_time = $('input[name=seo_start_time]').val();  //起始时间
+        var seo_startid2 = $('input[name=seo_startid2]').val();  //起始id
+        var url = eyou_basefile+"?m=admin&c=Seo&a=site&is_buildhtml=1&uphtmltype="+seo_uphtmltype+"&seo_maxpagesize="+seo_maxpagesize+"&seo_pagesize="+seo_pagesize+"&seo_start_time="+seo_start_time+"&seo_startid2="+seo_startid2+"&lang="+__lang__;
+        var index = layer.open({type: 2,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
+    })
+
+    //生成首页
+    $("#up_index").click(function(){
+        if (!check_index_file()) {return false;}
+        if($('input[name=seo_html_templet]').val() == ''){
+            showErrorMsg('主页模板不能为空！');
+            $('input[name=seo_html_templet]').focus();
+            return false;
+        }
+        var seo_showmod = $('input[name=seo_showmod]:checked').val();
+        var timestamp1 = Date.parse(new Date());
+        $.ajax({
+            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildIndex&lang="+__lang__+"&seo_showmod="+seo_showmod+"&_ajax=1",
+            type:'GET',
+            dataType:'json',
+            data: {},
+            beforeSend:function(){
+                layer.load(3, {shade: [0.1,'#000']});
+            },
+            success:function(res){
+                layer.closeAll();
+                if(res.msg !== ""){
+                    if (-1 != res.msg.indexOf('浏览')) {
+                        showErrorAlert(res.msg, 6);
+                    } else {
+                        showErrorAlert(res.msg);
+                    }
+                }else{
+                    var timestamp2 = Date.parse(new Date());
+                    var timestamp3 = (timestamp2 - timestamp1) / 1000;
+                    if (timestamp3 < 1) timestamp3 = 1;
+                    layer.msg("生成完毕，共耗时：<font color='red'>"+timestamp3+"</font> 秒",{icon:1,time:2000});
+                }
+            },
+            complete:function(){
+
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    });
+
+    //生成栏目页
+    $("#up_channel").click(function(){
+        if (!check_index_file()) {return false;}
+        var typeid = $("#html_typeid").val();     //栏目id
+        var seo_maxpagesize = $('input[name=seo_maxpagesize]').val(); // 每页生成文件
+        var seo_upnext = $('input[name=seo_upnext]:checked').val(); // 是否更新子栏目
+        var url = eyou_basefile+"?m=admin&c=Seo&a=channel&typeid="+typeid+"&is_buildhtml=1&seo_maxpagesize="+seo_maxpagesize+"&seo_upnext="+seo_upnext+"&lang="+__lang__;
+        var index = layer.open({type: 2,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
+    });
+
+    //生成文章页
+    $("#up_article").click(function(){
+        if (!check_index_file()) {return false;}
+        var typeid = $("#html_arc_typeid").val();     //栏目id
+        var seo_startid = $('input[name=seo_startid]').val(); // 文档ID开始
+        var seo_endid = $('input[name=seo_endid]').val(); // 文档ID结束
+        var seo_pagesize = $('input[name=seo_pagesize]').val(); // 每页生成文件
+        var url = eyou_basefile+"?m=admin&c=Seo&a=article&uphtmltype=1&typeid="+typeid+"&is_buildhtml=1&seo_startid="+seo_startid+"&seo_endid="+seo_endid+"seo_pagesize="+seo_pagesize+"&lang="+__lang__;
+        var index = layer.open({type: 2,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
+    });
+</script>
+{include file="public/footer" /}

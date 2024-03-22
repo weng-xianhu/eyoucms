@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/userfont/iconfont.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/mobile_global.js"/}
+    </head>
+
+    <body>
+        <div class="ey-header-status">
+            <div class="header-status-l">
+                <a href="javascript:history.go(-1);"><i class="el-icon-arrow-left"></i></a>
+            </div> 
+            <div class="header-status-m">申请售后服务</div>
+            <div class="header-status-r"></div>
+        </div>
+        <div class="h50"></div>
+
+        <div class="ey-container order-con">
+            <div class="order-list">
+                {eyou:volist name="$eyou.field" id="vo"}
+                <div class="order-item">
+                    <div class="order-item-m">
+                        <div class="order-item-ml"><div class="img"><img src="{$vo.litpic}"></div></div>
+                        <div class="order-item-mc">
+                            <div class="title">{$vo.product_name}</div>
+                            <div class="f12 fc9">{eyou:volist name='$vo.product_spec_list' id='spec'}<span>{$spec.value}&nbsp;</span>{/eyou:volist}</div>
+                        </div>
+                        <div class="order-item-mr"><a class="order-btn" href="{$vo.url}">{empty name="$vo.apply_service"}申请{else/}查看{/empty}售后</a></div>
+                    </div>
+                </div>
+                {/eyou:volist}
+            </div>
+        </div>
+    </body>
+</html>

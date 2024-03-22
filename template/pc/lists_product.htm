@@ -4,27 +4,32 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>{$eyou.field.seo_title}</title>
-<meta name="description" content="{$eyou.field.seo_description}" />
 <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<meta name="description" content="{$eyou.field.seo_description}" />
 <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
 {eyou:static file="skin/style/pintuer.css" /}
 {eyou:static file="skin/style/header.css" /}
 {eyou:static file="skin/style/style.css" /}
-{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+{eyou:static file="skin/style/iconfont.css" /}
 <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
 </head>
 <body>
 <div id="mobile-mask">
-	<!--网站公用头部——开始-->
+	<!--公用头部 begin -->
 	{eyou:include file="header.htm" /}
-    {eyou:include file="banner.htm" /}
-	
+	<!-- 公用头部 end -->    
+	<!--公用栏目图片 begin -->
+	{eyou:include file="banner.htm" /}
+	<!-- 公用栏目图片 end -->    
+	<!-- 横向栏目样式 begin -->
 	<div class="layout text-center bg-white">
 		<div class="container">
 			<div class="line">
 				<ul class="nav-tree text-center">
-						
-					{eyou:channel type="first" currentstyle="active"}
+						<li>
+							<a href="{$eyou.field.toptypeurl}" {eyou:eq name="$eyou.field.topid" value="0"}class="active"{/eyou:eq}>全部</a>
+						</li>
+					{eyou:models type="first" currentstyle="active"}
 						{eyou:eq name='$eyou.field.grade' value='2'}
 							{eyou:type typeid='$eyou.field.typeid' id='field1'}
 								{eyou:eq name='$field1.parent_id' value='$field.id'}
@@ -33,25 +38,26 @@
 							{/eyou:type}
 						{/eyou:eq}
 						<li><a href={eyou:notempty name="$field.children"}"javacript:void(0);"{eyou:else /}"{$field.typeurl}"{/eyou:notempty} title="{$field.typename}" class="{$field.currentstyle}">{$field.typename}
-						{eyou:notempty name="$field.children"}<i class="fa fa-angle-down margin-left"></i>{/eyou:notempty}</a>
+						{eyou:notempty name="$field.children"}<i class="iconfont icon-down margin-left"></i>{/eyou:notempty}</a>
 						{eyou:notempty name="$field.children"}
 						<ul>
-						{eyou:channel name="$field.children" id="field2"}
+						{eyou:models name="$field.children" id="field2"}
 							<li class="children">
 								<a href="{$field2.typeurl}" class="{$field2.currentstyle}" title="{$field2.typename}">{$field2.typename}</a>
 							</li>
-						{/eyou:channel}
+						{/eyou:models}
 						</ul>
 						{/eyou:notempty}
 						</li>
-					{/eyou:channel}
+					{/eyou:models}
 				</ul>
 			</div>
 		</div>
 	</div>	
-	
+	<!-- 横向栏目样式 end -->    
 	<div class="layout bg-gray">
 		<div class="blank-small"></div>
+        <!-- 筛选功能 begin -->
 		<div class="container">
 			<div class="line">
 				<div class="filter-box bg-white">
@@ -77,6 +83,7 @@
 				</div>
 			</div>		
 		</div>
+        <!-- 筛选功能 end -->
 		<div class="blank-small"></div>
 		
 		<div class="container">
@@ -89,14 +96,13 @@
 								<a href="{$field.arcurl}" title="{$field.title}"><img src="{$field.litpic}" class="img-responsive"></a>
 								<div class="media-body text-left">
 									<h2><a href="{$field.arcurl}" class="text-middle">{$field.title}</a></h2>
-									<!-- <p>{$field.seo_description}</p> -->
 									<div class="price-info height margin-big-top">
 										<ul>
 											<li class="v2-1 text-yellow float-left">
 												<span class="Conv_DINCondensedC text-big">￥{$field.users_price}</span>
 											</li>
 											<li class="v2-2 text-gray text-right float-right">
-												<i class="fa fa-eye margin-small-right margin-left"></i>{$field.click}
+												<i class="iconfont icon-eye margin-small-right"></i>{$field.click}
 											</li>
 											<div class="clearfix"></div>
 										</ul>
@@ -109,22 +115,24 @@
                     
 					{/eyou:list}
 				</div>
-				<!-- 分页 -->
 				<div class="blank-middle"></div>
+                <!-- 分页 begin -->
 				<div class="text-center">
 					<ul class="pagination">
 					   {eyou:pagelist listitem='pre,pageno,next' listsize='9' /}
 					</ul>
 				</div>
+				<!-- 分页 end -->
                 <div class="blank-large"></div>
-				<!-- 分页 -->
 			</div>
 		</div>
 
 	</div>
-<!--网站公用底部——开始-->
+
+<!--网站公用底部 begin -->
 {eyou:include file="footer.htm" /}
-</div><!-- id="mobile-mask" -->
+<!--网站公用底部 end -->
+</div>
 {eyou:static file="skin/js/pintuer.js" /}
 {eyou:static file="skin/js/common.js" /}
 <!-- 菜单 -->

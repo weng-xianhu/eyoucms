@@ -2,36 +2,20 @@
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-1">
 
     
     <div class="row-bar clearfix mb10">
-        <div class="row-bar-l fl">
-            <ul class="tab-base nc-row">
-                {eq name="$Think.const.CONTROLLER_NAME.'@index'|is_check_access" value="1"}
-                <li><a href="{:url('Weapp/index')}" class="tab {eq name="$Request.action" value="index"}current{/eq}"><span>我的插件</span></a></li>
-                {/eq}
-                
-                {eq name="$Think.const.CONTROLLER_NAME.'@plugin'|is_check_access" value="1"}
-                    {eq name="$weapp_plugin_open" value="1"}
-                    <li><a href="{:url('Weapp/plugin')}" class="tab {eq name="$Request.action" value="plugin"}current{/eq}"><span>云插件库</span></a></li>
-                    {/eq}
-                {/eq}
-                
-                {eq name="$Think.const.CONTROLLER_NAME.'@mybuy'|is_check_access" value="1"}
-                <li><a href="{:url('Weapp/mybuy', ['install'=>0])}" class="tab {eq name="$Request.action" value="mybuy"}current{/eq}"><span>已购买插件</span></a></li>
-                {/eq}
-            </ul>
-        </div>
+        {include file="weapp/bar" /}
         <div class="flexigrid fr">
             <form class="navbar-form form-inline" action="{:url('Weapp/mybuy')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="ftitle">
-                    <div class="sDiv2 fl" style="margin-right: 6px;">
+                    <div class="sDiv2 fl" style="">
                         <input type="hidden" name="install" value="{$Request.param.install|default=0}">
-                        <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
+                        <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据..." autocomplete="off">
                         <input type="submit" class="btn" value="搜索">
-            			<i class="fa fa-search"></i>
+            			<i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -47,7 +31,9 @@
                         <tbody>
                             <tr>
                                 <td class="no-data" align="center" axis="col0" colspan="50">
-                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                    <div class="no_row">
+                                        <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -80,16 +66,16 @@
                                 {eq name="'Weapp@install'|is_check_access" value="1"}
                                 <a href="javascript:void(0);" onclick="install(this);" data-id="{$vo['id']}" class="btn blue">安装</a>
                                 {/eq}
-                                {eq name="'Weapp@del'|is_check_access" value="1"}
+                                <!-- {eq name="'Weapp@del'|is_check_access" value="1"}
                                 <a href="javascript:void(0);" data-url="{:url('Weapp/del')}" data-id="{$vo.id}" data-name="{$vo.name}" onClick="delfun(this);">删除</a>
-                                {/eq}
+                                {/eq} -->
                             {else /}
                                 {eq name="'Weapp@install'|is_check_access" value="1"}
                                 <a href="javascript:void(0);" onclick="remoteInstall('{$vo['code']}', '{$vo['min_version']|default=$vo['config']['min_version']}');">安装</a>
                                 {/eq}
-                                {eq name="'Weapp@del_remote'|is_check_access" value="1"}
+                                <!-- {eq name="'Weapp@del_remote'|is_check_access" value="1"}
                                 <a href="javascript:void(0);" data-url="{:url('Weapp/del_remote')}" data-id="{$vo.id}" data-name="{$vo.name}" onClick="del_remote(this);">删除</a>
-                                {/eq}
+                                {/eq} -->
                             {/empty}
                         {else /}
                             {eq name="'Weapp@execute'|is_check_access" value="1"}
@@ -175,9 +161,17 @@
     function uninstall(obj)
     {
         //询问框
-        var confirm = layer.confirm('<font color="red">此操作数据不可恢复</font>，是否卸载移除？', {
-                title: false,
-                btn: ['确定', '取消'] //按钮
+        var confirm = layer.confirm('数据将不可恢复，是否卸载？', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['确定', '取消'] ,//按钮
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
 
             }, function(){
                 layer.close(confirm);
@@ -227,9 +221,17 @@
 
     function delfun(obj){
         var name = $(obj).attr('data-name');
-        layer.confirm('将移除<font color="#ff0000">【'+name+'】</font>，确认移除？', {
-            title: false,//name,
-            btn: ['确定','取消'] //按钮
+        layer.confirm('确认移除<font color="#ff0000">【'+name+'】</font>？', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function(){
             layer_loading('正在处理');
             // 确定
@@ -256,9 +258,17 @@
 
     function del_remote(obj){
         var name = $(obj).attr('data-name');
-        layer.confirm('将移除<font color="#ff0000">【'+name+'】</font>，确认移除？', {
-            title: false,//name,
-            btn: ['确定','取消'] //按钮
+        layer.confirm('确认移除<font color="#ff0000">【'+name+'】</font>？', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function(){
             layer_loading('正在处理');
             // 确定

@@ -1,0 +1,19 @@
+
+{eyou:if condition="!empty($weapp_wxlogin) || !empty($weapp_qqlogin) || !empty($weapp_wblogin)"}
+  <div class="login-more">
+      <div class="title"><span>其他方式登录</span></div>
+      <div class="login-list">
+        {eyou:notempty name="$weapp_qqlogin"}
+          <a title="QQ登录" href="{eyou:url link='plugins/QqLogin/login' seo_pseudo='1' seo_inlet='0' /}" class="login-item qq"><i class="iconfont e-qq"></i></a>
+        {/eyou:notempty}
+
+        {eyou:notempty name="$weapp_wxlogin"}
+          <a title="微信登录" href="{eyou:url link='plugins/WxLogin/login' seo_pseudo='1' seo_inlet='0' /}" class="login-item weixin"><i class="iconfont e-weixin"></i></a>
+        {/eyou:notempty}
+
+        {eyou:notempty name="$weapp_wblogin"}
+          <a title="微博登录" href="{eyou:url link='plugins/Wblogin/login' seo_pseudo='1' seo_inlet='0' /}" class="login-item weibo"><i class="iconfont e-weibo"></i></a>
+        {/eyou:notempty}
+      </div>
+  </div>
+{/eyou:if}

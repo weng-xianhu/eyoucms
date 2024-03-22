@@ -10,11 +10,28 @@
                     </dt>
                     <dd class="opt">
                         <input type="hidden" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">
-                        <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <!-- 隐藏域 start -->
+            {/case}
+
+            {case value="region"}
+                <!-- 区域选项 start -->
+                <dl class="row">
+                    <dt class="tit">
+                        <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </dt>
+                    <dd class="opt">
+                        {volist name="$vo.dfvalue" id="v2"}
+                            <label>
+                                <input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2['id']}" {if condition="isset($vo['trueValue']) AND in_array($v2['id'], $vo['trueValue'])"}checked="checked"{/if}>{$v2['name']}
+                            </label>&nbsp;
+                        {/volist}
+                        <span class="err"></span>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                    </dd>
+                </dl>
+                <!-- 区域选项 end -->
             {/case}
 
             {case value="text"}
@@ -26,7 +43,7 @@
                     <dd class="opt">
                         <input type="text" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">&nbsp;{$vo.dfvalue_unit|default=''}
                         <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                     </dd>
                 </dl>
                 <!-- 单行文本框 end -->
@@ -41,7 +58,7 @@
                     <dd class="opt">          
                         <textarea rows="5" cols="60" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" style="height:60px;">{$vo.dfvalue|default=''}</textarea>
                         <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                     </dd>
                 </dl>
                 <!-- 多行文本框 end -->
@@ -59,7 +76,7 @@
                         {/volist}
                         <input type="hidden" name="{$vo.fieldArr}[{$vo.name}_eyempty]" value="{if condition="!empty($vo['trueValue'])"}1{else /}0{/if}">
                         <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                     </dd>
                 </dl>
                 <script type="text/javascript">
@@ -83,7 +100,7 @@
                         <label><input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>{$v2}</label>&nbsp;
                         {/volist}
                         <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                     </dd>
                 </dl>
                 <!-- 单选项 end -->
@@ -103,7 +120,7 @@
                             <input id="{$vo.fieldArr}_{$vo.name|default=''}0" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="0" type="radio" {if condition="0 == $vo['dfvalue']"}checked="checked"{/if}>
                         </div>
                         <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                     </dd>
                 </dl>
                 <script type="text/javascript">
@@ -139,7 +156,7 @@
                             {/volist}
                         </select>
                         <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                     </dd>
                 </dl>
                 <!-- 下拉框 end -->
@@ -169,7 +186,7 @@
                         &nbsp;
                         <label><input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_is_remote]" id="{$vo.fieldArr}_{$vo.name|default=''}_eyou_is_remote" value="1" {eq name="$vo[$vo['name'].'_eyou_is_remote']" value="1"}checked="checked"{/eq} onClick="clickRemote(this, '{$vo.fieldArr}_{$vo.name|default=''}_eyou');">远程图片</label>
                         <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                     </dd>
                 </dl>
                 <script type="text/javascript">
@@ -201,7 +218,7 @@
                     &nbsp;
                     <label><input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_is_remote]" id="{$vo.fieldArr}_{$vo.name|default=''}_eyou_is_remote" value="1" {eq name="$vo[$vo['name'].'_eyou_is_remote']" value="1"}checked="checked"{/eq} onClick="clickRemote(this, '{$vo.fieldArr}_{$vo.name|default=''}_eyou');">远程文件</label>
                     <span class="err"></span>
-                    <p class="notic">{$vo.remark|default=''}</p>
+                    <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                 </dd>
             </dl>
             <script type="text/javascript">
@@ -246,19 +263,18 @@
                                     <td >
                                         <div class="sort-list-{$vo.fieldArr}_{$vo.name|default=''}">
                                             {volist name="$vo[$vo['name'].'_eyou_imgupload_list']" id="v2" key="k2"}
-                                            <div class="images_upload" style="display:inline-block;">
-                                                <div style="position: relative; height: 130px;">
+                                            <div class="images_upload images_upload_html" style="display:inline-block;">
+                                                <div class="images_upload_box">
                                                     <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2['image_url']}">
                                                     <a href="{$v2['image_url']}" onclick="" class="upimg" target="_blank" title="拖动修改排序">
-                                                        <img src="{$v2['image_url']}" width="136" height="136">
+                                                        <img data-original="{$v2['image_url']}">
                                                     </a>
                                                     <a href="javascript:void(0)" onclick="{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'{$v2['image_url']}')" class="delect" title="删除"></a>
                                                 </div>
-                                                <textarea rows="5" cols="60" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_intro][]" style="height:28px; width: 136px;" placeholder="图片注释">{$v2.intro}</textarea>
+                                                <textarea rows="5" cols="60" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_intro][]" placeholder="图片注释">{$v2.intro}</textarea>
                                             </div>
                                             {/volist}
-                                            <div class="images_upload">
-                                            </div>
+                                            <div class="images_upload"></div>
                                         </div>
                                         <a href="javascript:void(0);" onClick="GetUploadify(100,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back');"  class="img-upload mb15" title="点击上传">
                                              <div class="y-line"></div>
@@ -271,15 +287,15 @@
                         </div>
                         <!-- 上传图片显示的样板 start -->
                         <div class="{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl none">
-                            <div class="images_upload" style="display:inline-block;">
-                                <div style="position: relative; height: 130px;">
+                            <div class="images_upload images_upload_html" style="display:inline-block;">
+                                <div class="images_upload_box">
                                     <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="" />
                                     <a href="javascript:void(0);" onClick="" class="upimg" title="拖动修改排序">
-                                        <img src="__STATIC__/admin/images/add-button.jpg" width="136" height="136" />
+                                        <img src="__STATIC__/admin/images/add-button.jpg" />
                                     </a>
                                     <a href="javascript:void(0)" class="delect" title="删除">&nbsp;&nbsp;</a>
                                 </div>
-                                <textarea rows="5" cols="60" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_intro][]" style="height:28px; width: 136px;" placeholder="图片注释"></textarea>
+                                <textarea rows="5" cols="60" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_intro][]" placeholder="图片注释"></textarea>
                             </div>
                         </div>
                         <!-- 上传图片显示的样板 end -->
@@ -292,11 +308,15 @@
                         var  last_div = $(".{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl").html();
                         for (var i=0;i<paths.length ;i++ )
                         {
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".images_upload:eq(0)").before(last_div);  // 插入一个 新图片
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".images_upload:eq(0)").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".images_upload:eq(0)").find('img').attr('src',paths[i]);// 修改他的图片路径
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".images_upload:eq(0)").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('');
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".images_upload:eq(0)").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+                            if ($(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html").length > 0) {
+                                $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").after(last_div);  // 插入一个 新图片
+                            } else {
+                                $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload:last").before(last_div);  // 插入一个 新图片
+                            }
+                            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+                            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").find('img').attr('src',paths[i]);// 修改他的图片路径
+                            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('');
+                            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").find('input').val(paths[i]); // 设置隐藏域 要提交的值
                         }             
                     }
                     /*
@@ -310,12 +330,12 @@
                         $.ajax({
                             type:'GET',
                             url:"{:url('Field/del_arctypeimgs', ['_ajax'=>1])}",
-                            data:{filename:path,fieldname:"{$vo.name}",typeid:"{$aid|default='0'}"},
+                            data:{filename:path,fieldid:"{$vo.id}",typeid:"{$aid|default='0'}"},
                             success:function(){
                                 $(obj).parent().parent().remove(); // 删除完服务器的, 再删除 html上的图片
                                 $.ajax({
                                     type:'GET',
-                                    url:"{:url('Uploadify/delupload', ['_ajax'=>1])}",
+                                    url:"{:url('Uploadimgnew/delupload', ['_ajax'=>1])}",
                                     data:{action:"del", filename:path},
                                     success:function(){}
                                 });
@@ -334,7 +354,7 @@
                         }
                     });
                     //因为他们要拖动，所以尽量设置他们的文字不能选择。 
-                    $( ".sort-list-{$vo.fieldArr}_{$vo.name|default=''}" ).disableSelection();
+                    // $( ".sort-list-{$vo.fieldArr}_{$vo.name|default=''}" ).disableSelection();
                 </script>
                 <!-- 多张图 end -->
             {/case}
@@ -348,7 +368,7 @@
                     <dd class="opt"> 
                         <input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="只允许纯数字" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9]/g,''));">&nbsp;{$vo.dfvalue_unit|default=''}
                         <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                     </dd>
                 </dl>
                 <!-- 整数类型 end -->
@@ -363,7 +383,7 @@
                     <dd class="opt"> 
                         <input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="允许带有小数点的数值" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9\.]/g,''));">&nbsp;{$vo.dfvalue_unit|default=''}
                         <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                     </dd>
                 </dl>
                 <!-- 小数类型 end -->
@@ -378,7 +398,7 @@
                     <dd class="opt"> 
                         <input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="允许带有小数点的金额" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9\.]/g,''));">&nbsp;{$vo.dfvalue_unit|default=''}
                         <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                     </dd>
                 </dl>
                 <!-- 金额类型 end -->
@@ -396,41 +416,75 @@
                             <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
                         </span> 
                         <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                     </dd>
                 </dl>
                 <script type="text/javascript">
-                    $(function () {
-                        $('#{$vo.fieldArr}_{$vo.name|default=''}').layDate();   
-                    });
+                    layui.use('laydate', function() {
+                        var laydate = layui.laydate;
+
+                        //常规用法
+                        laydate.render({
+                            elem: "#{$vo.fieldArr}_{$vo.name|default=''}"
+                            ,type: 'datetime'
+                        });
+                    })
                 </script>
                 <!-- 日期和时间 end -->
             {/case}
 
             {case value="htmltext"}
                 <!-- HTML文本 start -->
+                {eq name="$editor.editor_select" value="1"}
                 <dl class="row">
                     <dt class="tit">
                         <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
                     </dt>
-                    <dd class="opt">          
+                    <dd class="opt">
+                        {if condition="isset($vo['first']) AND 1 == $vo['first']"}
+                        <label class="curpoin"><input type="checkbox" name="editor_remote_img_local" id="editor_remote_img_local" data-val="{$vo.editor.editor_remote_img_local}" value="1" {eq name="$vo.editor.editor_remote_img_local" value="1"} checked {/eq}>远程图片本地化</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(1);">[手动]</a>&nbsp; -->
+                        <label class="curpoin"><input type="checkbox" name="editor_img_clear_link" id="editor_img_clear_link" data-val="{$vo.editor.editor_img_clear_link}" value="1" {eq name="$vo.editor.editor_img_clear_link" value="1"} checked {/eq}>清除非本站链接</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(2);">[手动]</a>&nbsp; -->
+                        {/if}
                         <textarea class="span12 ckeditor" id="{$vo.fieldArr}_{$vo.name|default=''}" data-func="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" title="">{$vo.dfvalue|default=''}</textarea>
-						<div class="opt-moreOper">
-							<p>
-							    <a href="javascript:void(0);" onclick="remote_to_local_{$vo.fieldArr}_{$vo.name|default=''}();" class="ncap-btn2">远程图片本地化</a>&nbsp;
-							    <a href="javascript:void(0);" onclick="replace_links_{$vo.fieldArr}_{$vo.name|default=''}();" class="ncap-btn2">清除非本站链接</a>&nbsp;
-							</p>
-						</div>
                         <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
                     </dd>
                 </dl>
+
+                {if condition="isset($vo['first']) AND 1 == $vo['first']"}
                 <script type="text/javascript">
-                    UE.getEditor('{$vo.fieldArr}_{$vo.name|default=''}',{
-                        serverUrl :"{:url('Ueditor/index',array('savepath'=>'ueditor'))}",
+                    // 打开多图选择及上传界面
+                    function OpenImagesList(e, obj) {
+                        var func = '';
+                        if (e.path && e.path[10] && e.path[10].id && undefined != e.path[10].id) {
+                            func = e.path[10].id;
+                        } else {
+                            func = $(obj).parent().parent().parent().parent().parent().parent().parent().parent().parent().attr('id');
+                        }
+                        if (func.indexOf('addonField_') == -1) {
+                            func = 'addonField_content';
+                        }
+                        var OpenUrl = "{:url('Uploadimgnew/upload', ['num'=>30, 'path'=>'allimg', 'is_water'=>1])}";
+                        OpenUrl += "&func=images_call_" + func;
+                        top.layer.open({
+                            type: 2,
+                            title: '图片上传',
+                            shade: layer_shade,
+                            maxmin: false,
+                            shadeClose: false,
+                            area: ['1000px', '625px'],
+                            content: OpenUrl
+                        });
+                    }
+                </script>
+                {/if}
+
+                <script type="text/javascript">
+                    var ue_{$vo.fieldArr}_{$vo.name|default=''} = UE.getEditor('{$vo.fieldArr}_{$vo.name|default=''}',{
+                        serverUrl :"{:url('Ueditor/index',array('savepath'=>'allimg'))}",
                         zIndex: 999,
                         initialFrameWidth: "100%", //初化宽度
-                        initialFrameHeight: 450, //初化高度            
+                        initialFrameHeight: 450, //初化高度
                         focus: false, //初始化时，是否让编辑器获得焦点true或false
                         maximumWords: 99999,
                         removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
@@ -447,58 +501,114 @@
                         }
                     }
 
-                    // 远程图片本地化
-                    function remote_to_local_{$vo.fieldArr}_{$vo.name|default=''}() {
-                        var body = UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").getContent();
-                        layer_loading('下载中');
-                        $.ajax({
-                            type: 'POST',
-                            url: "{:url('Archives/ajax_remote_to_local')}",
-                            data: {body:body,_ajax:1},
-                            dataType: "JSON",
-                            success: function(res){
-                                layer.closeAll();
-                                if (res.code == 1) {
-                                    UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").setContent(res.data.body);
-                                    layer.msg(res.msg, {icon: 1, time:1000});
-                                } else {
-                                    showErrorMsg(res.msg);
-                                }
-                            },
-                            error: function(e){
-                                layer.closeAll();
-                                showErrorMsg(res.msg);
-                            }
+                    // 加载图片到编辑器指定位置
+                    function images_call_{$vo.fieldArr}_{$vo.name|default=''}(fileurl_tmp) {
+                        var addBody = '';
+                        $.each(fileurl_tmp, function(index, items) {
+                            addBody += '<p><img src="'+items+'"></p>';
                         });
+                        UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").execCommand('inserthtml', addBody);
                     }
 
-                    // 清除非本站链接
-                    function replace_links_{$vo.fieldArr}_{$vo.name|default=''}() {
+                    // 自动远程图片本地化/自动清除非本站链接
+                    function ajax_auto_editor_{$vo.fieldArr}_{$vo.name|default=''}(local,link) {
                         var body = UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").getContent();
-                        layer_loading('正在处理');
                         $.ajax({
                             type: 'POST',
-                            url: "{:url('Archives/ajax_replace_links')}",
-                            data: {body:body,_ajax:1},
+                            url: "{:url('Archives/ajax_auto_editor')}",
+                            data: {local:local,link:link,body:body,_ajax:1},
                             dataType: "JSON",
+                            async:false,
                             success: function(res){
-                                layer.closeAll();
                                 if (res.code == 1) {
                                     UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").setContent(res.data.body);
-                                    layer.msg(res.msg, {icon: 1, time:1000});
-                                } else {
-                                    showErrorMsg(res.msg);
                                 }
-                            },
-                            error: function(e){
-                                layer.closeAll();
-                                showErrorMsg(res.msg);
                             }
                         });
                     }
                 </script>
+                {else/}
+                <dl class="row">
+                    <dt class="tit">
+                        <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </dt>
+                    <dd class="opt">
+                        {if condition="isset($vo['first']) AND 1 == $vo['first']"}
+                        <label class="curpoin"><input type="checkbox" name="editor_remote_img_local" id="editor_remote_img_local" data-val="{$vo.editor.editor_remote_img_local}" value="1" {eq name="$vo.editor.editor_remote_img_local" value="1"} checked {/eq} >远程图片本地化</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(1);">[手动]</a>&nbsp; -->
+                        <label class="curpoin"><input type="checkbox" name="editor_img_clear_link" id="editor_img_clear_link" data-val="{$vo.editor.editor_img_clear_link}" value="1" {eq name="$vo.editor.editor_img_clear_link" value="1"} checked {/eq} >清除非本站链接</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(2);">[手动]</a>&nbsp; -->
+                        {/if}
+                        <textarea id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]">{$vo.dfvalue|default=''}</textarea>
+                        <span class="err"></span>
+                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                    </dd>
+                </dl>
+                <script type="text/javascript">
+                    // 加载编辑器，若存在编辑器则先进行销毁
+                    try {
+                        var elemtid = "{$vo.fieldArr}_{$vo.name|default=''}";
+                        var editor = CKEDITOR.instances[elemtid];
+                        if (editor) editor.destroy(true);
+                    } catch(e) {}
+
+                    CKEDITOR.replace(elemtid, {
+                        filebrowserBrowseUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                        filebrowserImageBrowseUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                        filebrowserUploadUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                        filebrowserImageUploadUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                    });
+
+                    // 自动远程图片本地化/自动清除非本站链接
+                    function ajax_auto_editor_{$vo.fieldArr}_{$vo.name|default=''}(local,link) {
+                        var body = CKEDITOR.instances.{$vo.fieldArr}_{$vo.name|default=''}.getData();
+                        $.ajax({
+                            type: 'POST',
+                            url: "{:url('Archives/ajax_auto_editor')}",
+                            data: {local:local,link:link,body:body,_ajax:1},
+                            dataType: "JSON",
+                            async:false,
+                            success: function(res){
+                                if (res.code == 1) {
+                                    CKEDITOR.instances.{$vo.fieldArr}_{$vo.name|default=''}.setData(res.data.body);
+                                }
+                            }
+                        });
+                    }
+
+                </script>
+                {/eq}
                 <!-- HTML文本 end -->
             {/case}
         {/switch}
     {/if}
 {/volist}
+
+<script type="text/javascript">
+    $(function(){
+        try {
+            $("img").lazyload({
+                effect: "fadeIn",
+                placeholder : "__PUBLIC__/static/common/images/loading.gif",
+                threshold: 200
+            });
+        }catch(e){}
+        
+        auto_notic_tips();
+        /**
+        * 自动小提示
+        */
+        function auto_notic_tips()
+        {
+            var html = '<a class="ui_tips" href="javascript:void(0);" onmouseover="layer_tips = layer.tips($(this).parent().find(\'p.notic\').html(), this, {time:100000});" onmouseout="layer.close(layer_tips);">提示</a>';
+            $.each($('dd.opt > p.notic'), function(index, item){
+                var a_length = $(item).prev("a.ui_tips").length;
+                if ($(item).html() != '' && 0 == a_length) {
+                    $(item).before(html);
+                }
+            });
+        }
+
+        // 第一个自定义字段显示感汉号提示
+        var ganhaohtml = '<a class="ui_tips-ganhan" href="javascript:void(0);" onmouseover="layer_tips = layer.tips($(this).parent().find(\'p.notic-ganhan-ico\').html(), this, {time:100000});" onmouseout="layer.close(layer_tips);"></a><p class="notic-ganhan-ico none">属于自定义字段。在“更多功能>栏目字段”里管理</p>';
+        $($('#FieldAddonextitem').find('dl > dd').find('p.notic').get(0)).parent().append(ganhaohtml);
+    });
+</script>

@@ -11,10 +11,12 @@
 #pc-header .nav li ul li a {background:#FFF;line-height:42px;color:#3e3e3e;font-size:14px;font-weight:normal;display:block;width:100%;text-align:left;}
 #pc-header .nav li ul li a:hover{background:#ff9600;color:#fff;}
 
-#pc-header .searchBar{position:absolute;top:21px;right:150px}
+#pc-header .searchBar{position:absolute;top:21px;right:136px}
+#pc-header .searchBar a{padding: 10px;}
 #pc-header a.search-ico i{font-size:18px;color:#6E6E6E;}
 /* 购物车图标 */
-#pc-header .shopBar{position:absolute;top:21px;right:110px}
+#pc-header .shopBar{position:absolute;top:21px;right:96px}
+#pc-header .shopBar a{padding: 10px;}
 #pc-header a.shop-ico i{font-size:18px;color:#6E6E6E;}
 
 /* 登入后状态 */
@@ -28,6 +30,7 @@
 .log-in .button-group .button {padding:0;line-height:18px;font-size:20px}
 .log-in .button-group .drop-menu { left: -30px;border-top:0px solid #ff0000;-webkit-box-shadow: 0px 0px 0px rgba(0,0,0,.075);box-shadow: 0px 8px 10px rgba(0,0,0,.05);border-radius:4px;}
 .log-in a.user-ico{width:32px;height:32px;line-height:32px;background:#ECEFF5;display:block;}
+.log-in a.user-ico i{font-size: 18px;}
 .log-in a.user-head{width:32px;height:32px;overflow:hidden;display:block;}
 .log-in a.user-head img{width:32px;height:32px;}
 /* 登入后状态 end*/
@@ -82,9 +85,9 @@
 /* 弹出搜索 begin */
 .searchBar-m {display:none;width:100%;height:100%;position:fixed;top:60px;z-index:9;text-align:center}
 .searchBar-m .mask {position:absolute;left:0;right:0;width:100%;height:100%;background:#000;opacity:0.8;}
-.searchBar-m a{display:none;position:absolute;right:5%;top:5%;width:50px;height:50px;line-height:46px;font-size:36px;z-index:9999;color:#fff;}
+.searchBar-m a{display:block;position:absolute;right:0%;top:0%;width:50px;height:50px;line-height:46px;font-size:36px;z-index:9999;color:#fff;}
 .searchBar-m a:hover{color:#ff9600}
-.searchBar-m .form-group {width:100%;position:absolute;left:50%;top:120px;transform:translate(-50%,-200%);}
+.searchBar-m .form-group {width:100%;position:absolute;left:51%;top:180px;transform:translate(-50%,-200%);}
 .searchBar-m .input{width:88%;background:transparent;border:0;border-bottom:2px solid #fff;color:#9c9c9c;height:50px;line-height:50px;float:left;padding:0 0 0 20px}
 .searchBar-m .button {width:8%;height:50px;line-height:60px;border-bottom:2px solid #fff;display:block;float:left;background:url(../images/ico-search-button.png) no-repeat center 50%;text-indent:-2000px}
 .searchBar-m .button:hover{background:url(../images/ico-search-button.png) no-repeat center 50%;}

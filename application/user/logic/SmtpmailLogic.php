@@ -41,8 +41,27 @@ class SmtpmailLogic extends Model
     public function send_email($email = '', $title = '', $type = 'reg', $scene = 2, $data = [])
     {
         // 是否传入邮箱地址
+        $email = trim($email);
         if (empty($email)) {
             return ['code'=>0, 'msg'=>"邮箱地址参数不能为空！"];
+        } else {
+            $email_arr = explode(',', $email);
+            if (1 == count($email_arr)) {
+                if (!check_email($email)) {
+                    return ['code'=>0, 'msg'=>"邮箱格式不正确！"];
+                }
+            } else {
+                foreach ($email_arr as $key => $val) {
+                    $val = trim($val);
+                    if (!check_email($val) || empty($val)) {
+                        unset($email_arr[$key]);
+                    }
+                }
+                if (empty($email_arr)) {
+                    return ['code'=>0, 'msg'=>"邮箱格式不正确！"];
+                }
+                $email = implode(',', $email_arr);
+            }
         }
 
         // 查询扩展是否开启
@@ -58,6 +77,7 @@ class SmtpmailLogic extends Model
         }
 
         // 邮件使用场景
+        $scene = intval($scene);
         $send_email_scene = config('send_email_scene');
         $send_scene = $send_email_scene[$scene]['scene'];
 
@@ -72,15 +92,14 @@ class SmtpmailLogic extends Model
         // 会员ID
         $users_id = session('users_id');
 
-        // 发送邮件操作分发
+        // 找回密码
         if ('retrieve_password' == $type) {
-            // 找回密码，判断邮箱是否存在
+            // 判断邮箱是否存在
             $where = array(
                 'info'     => array('eq',$email),
                 'lang'     => array('eq',$this->home_lang),
             );
-            $users_list = M('users_list')->where($where)->field('info')->find();
-
+            $users_list = M('users_list')->where($where)->field('users_id,info')->find();
             // 判断会员是否已绑定邮箱
             $userswhere = array(
                 'email'    => array('eq',$email),
@@ -94,29 +113,12 @@ class SmtpmailLogic extends Model
                     return ['code'=>0, 'msg'=>'邮箱地址未绑定，不能找回密码！'];
                 }
             }
-
             if (!empty($users_list)) {
-                // // 判断是否已发送过验证链接，链接一小时内有效
-                // $where_ = array(
-                //     'email'     => array('eq',$email),
-                //     'status'    => array('eq',0),
-                //     'lang'      => $this->home_lang,
-                // );
-                // $isrecord = M('smtp_record')
-                //         ->where($where_)
-                //         ->field('record_id,add_time')
-                //         ->order('add_time desc')
-                //         ->find();
                 $time = getTime();
-
-                // // 邮箱验证码有效期
-                // if (!empty($isrecord) && ($time - $isrecord['add_time']) < Config::get('global.email_default_time_out')) {
-                //     return ['code'=>1, 'msg'=>'验证码已发送至邮箱：'.$email.'，请登录邮箱查看验证码！'];
-                // }
-
                 // 数据添加
                 $datas['source']   = 4; // 来源，与场景ID对应：4=找回密码
                 $datas['email']    = $email;
+                $datas['users_id']    = $users_list['users_id'];
                 $datas['code']     = rand(1000,9999);
                 $datas['lang']     = $this->home_lang;
                 $datas['add_time'] = $time;
@@ -124,16 +126,16 @@ class SmtpmailLogic extends Model
             } else {
                 return ['code'=>0, 'msg'=>'邮箱地址不存在！'];
             }
-
-        } else if ('bind_email' == $type) {
-            // 邮箱绑定，判断邮箱是否已存在
+        }
+        // 邮箱绑定
+        else if ('bind_email' == $type) {
+            // 判断邮箱是否已存在
             $listwhere = array(
                 'info'     => array('eq',$email),
                 'users_id' => array('neq',$users_id),
                 'lang'     => array('eq',$this->home_lang),
             );
             $users_list = M('users_list')->where($listwhere)->field('info')->find();
-
             // 判断会员是否已绑定相同邮箱
             $userswhere = array(
                 'users_id' => array('eq',$users_id),
@@ -145,28 +147,9 @@ class SmtpmailLogic extends Model
             if (!empty($usersdata['is_email'])) {
                 return ['code'=>0, 'msg'=>'邮箱已绑定，无需重新绑定！'];
             }
-
             // 邮箱数据处理
             if (empty($users_list)) {
-                // // 判断是否已发送过验证链接，链接一小时内有效
-                // $where_ = array(
-                //     'email'     => array('eq',$email),
-                //     'users_id'  => array('eq',$users_id),
-                //     'status'    => array('eq',0),
-                //     'lang'      => $this->home_lang,
-                // );
-                // $isrecord = M('smtp_record')
-                //         ->where($where_)
-                //         ->field('record_id,add_time')
-                //         ->order('add_time desc')
-                //         ->find();
                 $time = getTime();
-
-                // // 邮箱验证码有效期
-                // if (!empty($isrecord) && ($time - $isrecord['add_time']) < Config::get('global.email_default_time_out')) {
-                //     return ['code'=>1, 'msg'=>'验证码已发送至邮箱：'.$email.'，请登录邮箱查看验证码！'];
-                // }
-
                 // 数据添加
                 $datas['source']   = 3; // 来源，与场景ID对应：3=绑定邮箱
                 $datas['email']    = $email;
@@ -178,34 +161,17 @@ class SmtpmailLogic extends Model
             } else {
                 return ['code'=>0, 'msg'=>"邮箱已经存在，不可以绑定！"];
             }
-
-        } else if ('reg' == $type) {
-            // 注册，判断邮箱是否已存在
+        }
+        // 会员注册
+        else if ('reg' == $type) {
+            // 判断邮箱是否已存在
             $where = array(
                 'info' => array('eq',$email),
                 'lang' => array('eq',$this->home_lang),
             );
             $users_list = M('users_list')->where($where)->field('info')->find();
-
             if (empty($users_list)) {
-                // // 判断是否已发送过验证链接，链接一小时内有效
-                // $where_ = array(
-                //     'email'     => array('eq',$email),
-                //     'status'    => array('eq',0),
-                //     'lang'      => $this->home_lang,
-                // );
-                // $isrecord = M('smtp_record')
-                //         ->where($where_)
-                //         ->field('record_id,add_time')
-                //         ->order('add_time desc')
-                //         ->find();
                 $time = getTime();
-
-                // // 邮箱验证码有效期
-                // if (!empty($isrecord) && ($time - $isrecord['add_time']) < Config::get('global.email_default_time_out')) {
-                //     return ['code'=>1, 'msg'=>'验证码已发送至邮箱：'.$email.'，请登录邮箱查看验证码！'];
-                // }
-
                 // 数据添加
                 $datas['source']   = 2; // 来源，与场景ID对应：2=注册
                 $datas['email']    = $email;
@@ -216,8 +182,9 @@ class SmtpmailLogic extends Model
             } else {
                 return ['code'=>0, 'msg'=>'邮箱已存在！'];
             }
-            
-        } else if ('order_msg' == $type) {
+        }
+        // 订单(支付、发货)提醒
+        else if ('order_msg' == $type) {
             $content = '订单有新的消息，请登录查看。';
             if (!empty($data)) {
                 $PayMethod = '';
@@ -240,10 +207,17 @@ class SmtpmailLogic extends Model
                             break;
                     }
                 }
-
                 switch ($data['type']) {
                     case '1':
-                        $content = '您好，管理员。 会员(' . $data['nickname'] . ')使用'. $PayMethod .'对订单(' . $data['order_code'] . ')支付完成，请登录后台审查并及时发货。';
+                        $content = '您好，管理员。 会员(' . $data['nickname'] . ')使用'. $PayMethod .'对订单(' . $data['order_code'] . ')支付完成，请登录后台审查并及时发货。<br/>';
+                        $order_data = Db::name('shop_order')->where('order_code',$data['order_code'])->field('order_id,order_total_amount')->find();
+                        $order_detail = Db::name('shop_order_details')
+                            ->where('order_id',$order_data['order_id'])
+                            ->select();
+                        foreach ($order_detail as $k => $v) {
+                            $content .= "{$v['product_name']} ￥".floatval($v['product_price'])." x {$v['num']} = ￥".floatval($v['product_price']*$v['num']) .'<br/>';
+                        }
+                        $content .= "订单总额：￥" . floatval($order_data['order_total_amount']);
                         break;
                     case '2':
                         $url = request()->domain() . url('user/Shop/shop_order_details', ['order_id'=>$data['order_id']]);
@@ -253,8 +227,16 @@ class SmtpmailLogic extends Model
                 }
             }
         }
+        // 会员投稿提醒
+        else if ('usersRelease' == $type) {
+            $content = !empty($emailtemp['tpl_title']) ? $emailtemp['tpl_title'] : '您有新的投稿文档，请及时查看！';
+            if (!empty($data)) {
+                $content .= '<br/>文档标题：' . $data['title'] . '<br/>文档内容：' . $data['content'] . '<br/>投稿时间：' . $data['add_time'] . '<br/>文档审核：' . $data['arcrank'];
+            }
+        }
 
         // 判断标题拼接
+        $title = addslashes($title);
         $web_name = $emailtemp['tpl_name'].'：'.$title.'-'.tpCache('web.web_name');
         $content = !empty($content) ? $content : '感谢您的注册,您的邮箱验证码为: '.$datas['code'];
         $html = "<p style='text-align: left;'>{$web_name}</p><p style='text-align: left;'>{$content}</p>";
@@ -266,7 +248,7 @@ class SmtpmailLogic extends Model
         }
 
         // 实例化类库，调用发送邮件
-        $res = send_email($email,$emailtemp['tpl_title'],$html, $send_scene);
+        $res = send_email($email, $emailtemp['tpl_title'], $html, $send_scene);
         if (intval($res['code']) == 1) {
             return ['code'=>1, 'msg'=>$res['msg']];
         } else {

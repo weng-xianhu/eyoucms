@@ -12,7 +12,7 @@ return array (
   'order_code' => 
   array (
     'name' => 'order_code',
-    'type' => 'varchar(30)',
+    'type' => 'varchar(50)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -21,6 +21,15 @@ return array (
   'users_id' => 
   array (
     'name' => 'users_id',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'merchant_id' => 
+  array (
+    'name' => 'merchant_id',
     'type' => 'int(11) unsigned',
     'notnull' => false,
     'default' => '0',
@@ -67,6 +76,42 @@ return array (
   array (
     'name' => 'wechat_pay_type',
     'type' => 'varchar(20)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'order_terminal' => 
+  array (
+    'name' => 'order_terminal',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'contains_virtual' => 
+  array (
+    'name' => 'contains_virtual',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'manual_refund' => 
+  array (
+    'name' => 'manual_refund',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'refund_note' => 
+  array (
+    'name' => 'refund_note',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -130,6 +175,33 @@ return array (
   array (
     'name' => 'confirm_time',
     'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'allow_service' => 
+  array (
+    'name' => 'allow_service',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'obtain_scores' => 
+  array (
+    'name' => 'obtain_scores',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'is_obtain_scores' => 
+  array (
+    'name' => 'is_obtain_scores',
+    'type' => 'tinyint(1) unsigned',
     'notnull' => false,
     'default' => '0',
     'primary' => false,
@@ -357,6 +429,24 @@ return array (
     'type' => 'decimal(10,2)',
     'notnull' => false,
     'default' => '0.00',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'verify_id' => 
+  array (
+    'name' => 'verify_id',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'logistics_type' => 
+  array (
+    'name' => 'logistics_type',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '1',
     'primary' => false,
     'autoinc' => false,
   ),

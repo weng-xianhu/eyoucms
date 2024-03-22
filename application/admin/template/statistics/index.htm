@@ -1,11 +1,11 @@
 {include file="public/layout" /}
 <script type="text/javascript" src="__PUBLIC__/plugins/Echarts/echarts.min.js"></script>
 <link href="__SKIN__/css/main_new.css?v={$version}" rel="stylesheet" type="text/css">
-<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4; padding: 20px; ">
+<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4; padding: 10px; ">
 	<div id="append_parent"></div>
 	<div id="ajaxwaitid"></div>
 	{include file="shop/left" /}
-	<div class="page" style="min-width:auto;margin-left:98px;">
+	<div class="page" >
 		<div class="flexigrid">
 			<div class="mDiv">
 				<div class="ftitle">
@@ -162,7 +162,7 @@
 		</div>
 	</div>
 
-	<div class="page mt20" style="min-width:auto;margin-left:98px;">
+	<div class="page mt10">
 		<div class="flexigrid">
 			<div class="mDiv">
 				<div class="ftitle">
@@ -178,7 +178,7 @@
 		</div>
 	</div>
 
-	<div class="stats-content" style="min-width:auto;margin-left:98px;width:calc(100% - 98px); ">
+	<div class="stats-content">
 		<div class="stats-content-l fl">
 			<div class="flexigrid">
 				<div class="mDiv">
@@ -282,8 +282,24 @@
 			</div>
 		</div>
 	</div>
-
 	<script type="text/javascript">
+        try{
+            if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
+                $(".page").css("margin-left","");
+                $(".page").css("min-width","");
+                $(".stats-content").css("min-width","");
+                $(".stats-content").css("margin-left","");
+                $(".stats-content").css("width","");
+            }else{
+                $(".page").css("margin-left","100px");
+                $(".page").css("min-width","auto");
+                $(".stats-content").css("display","flow-root");
+                $(".stats-content").css("margin-bottom","auto");
+                $(".stats-content").css("min-width","20px");
+                $(".stats-content").css("margin-left","100px");
+                $(".stats-content").css("width","calc(100% - 100px)");
+            }
+        }catch(e){}
 		function getBeforeDate(n) {
 	        var n = n;
 	        var d = new Date();

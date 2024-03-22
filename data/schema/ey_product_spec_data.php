@@ -63,6 +63,24 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'open_image' => 
+  array (
+    'name' => 'open_image',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'spec_image' => 
+  array (
+    'name' => 'spec_image',
+    'type' => 'varchar(255)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'lang' => 
   array (
     'name' => 'lang',

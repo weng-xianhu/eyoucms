@@ -6,10 +6,16 @@
 .pagination > li {
     display: inline;
 }
+.pagination > li.disabled a {
+    color: #cfcfcf;
+}
+.pagination > li.disabled a:hover, .pagination > li.disabled a:focus{
+    color: #cfcfcf;
+}
 .pagination > li > a, .pagination > li > span {
     background-color: #fff;
     border: 1px solid #ddd;
-    font-size: 14px;
+	font-size: 14px;
     color:#666;
     float: left;
     line-height: 1.42857;
@@ -36,7 +42,7 @@
     background-color: #eee;
     border-color: #ddd;
     color: #23527c;
-    
+	
 }
 .pagination > .active > a, .pagination > .active > a:focus, .pagination > .active > a:hover, .pagination > .active > span, .pagination > .active > span:focus, .pagination > .active > span:hover {
     background-color:#ffffff;

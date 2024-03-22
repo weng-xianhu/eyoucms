@@ -15,7 +15,7 @@
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
                         <input type="submit" class="btn" value="搜索">
-                        <i class="fa fa-search"></i>
+                        <i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -73,7 +73,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -237,13 +239,31 @@
             }
         })
         if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 5, title: false});
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
             return;
         }
         // 删除按钮
-        layer.confirm('此操作不可恢复，确认批量删除？', {
-            btn: ['确定', '取消'],
-            title: false
+        layer.confirm('确认批量删除？', {
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            shade: layer_shade,
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定','取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function () {
             layer_loading('正在处理');
             $.ajax({
@@ -260,9 +280,9 @@
                         layer.alert(data.msg, {icon: 5});
                     }
                 },
-                error:function(){
+                error:function(e){
                     layer.closeAll();
-                    layer.alert(ey_unknown_error, {icon: 5});
+                    layer.alert(e.responseText, {icon: 5});
                 }
             });
         }, function (index) {
@@ -281,13 +301,31 @@
             }
         })
         if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 5, title: false});
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
             return;
         }
         // 删除按钮
         layer.confirm('确认批量审核？', {
-            btn: ['确定', '取消'],
-            title: false
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            shade: layer_shade,
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定','取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function () {
             layer_loading('正在处理');
             $.ajax({
@@ -304,9 +342,9 @@
                         layer.alert(data.msg, {icon: 5});
                     }
                 },
-                error:function(){
+                error:function(e){
                     layer.closeAll();
-                    layer.alert(ey_unknown_error, {icon: 5});
+                    layer.alert(e.responseText, {icon: 5});
                 }
             });
         }, function (index) {
@@ -325,13 +363,31 @@
             }
         })
         if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 5, title: false});
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
             return;
         }
         // 删除按钮
         layer.confirm('确认批量推荐？', {
-            btn: ['确定', '取消'],
-            title: false
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            shade: layer_shade,
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定','取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function () {
             layer_loading('正在处理');
             $.ajax({
@@ -348,9 +404,9 @@
                         layer.alert(data.msg, {icon: 5});
                     }
                 },
-                error:function(){
+                error:function(e){
                     layer.closeAll();
-                    layer.alert(ey_unknown_error, {icon: 5});
+                    layer.alert(e.responseText, {icon: 5});
                 }
             });
         }, function (index) {
@@ -361,9 +417,17 @@
      * 单个删除
      */
     function FindDelData(obj, del_id) {
-        layer.confirm('此操作不可恢复，确认删除？', {
-            btn  : ['确定', '取消'],
-            title: false
+        layer.confirm('确认删除？', {
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            shade: layer_shade,
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定','取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function () {
             layer_loading('正在处理');
             $.ajax({
@@ -381,9 +445,9 @@
                         layer.msg(res.msg, {time: 1500, icon: 5});
                     }
                 },
-                error : function() {
+                error : function(e) {
                     layer.closeAll();
-                    layer.alert(ey_unknown_error, {icon: 5});
+                    layer.alert(e.responseText, {icon: 5});
                 }
             });
         }, function (index) {

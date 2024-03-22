@@ -30,7 +30,7 @@ class TagType extends Base
         $this->fieldLogic = new FieldLogic();
         /*应用于文档列表*/
         if ($this->aid > 0) {
-            $this->tid = Db::name('archives')->where('aid', $this->aid)->getField('typeid');
+            $this->tid = $this->get_aid_typeid($this->aid);
         }
         /*--end*/
     }
@@ -51,8 +51,17 @@ class TagType extends Base
         if (!empty($typeid)) {
             $typeid = model('LanguageAttr')->getBindValue($typeid, 'arctype'); // 多语言
             if (empty($typeid)) {
-                echo '标签type报错：找不到与第一套【'.$this->main_lang.'】语言关联绑定的属性 typeid 值 。';
+                echo '标签type报错：找不到与第一套【'.self::$main_lang.'】语言关联绑定的属性 typeid 值 。';
                 return false;
+            } else {
+                if (self::$language_split) {
+                    $this->lang = Db::name('arctype')->where(['id'=>$typeid])->cache(true, EYOUCMS_CACHE_TIME, 'arctype')->value('lang');
+                    if ($this->lang != self::$home_lang) {
+                        $lang_title = Db::name('language_mark')->where(['mark'=>self::$home_lang])->value('cn_title');
+                        echo "标签type报错：【{$lang_title}】语言 typeid 值不存在。";
+                        return false;
+                    }
+                }
             }
         }
 

@@ -12,6 +12,7 @@
  */
 
 return array(
+    // 模板设置
     'template' => array(
         // 模板路径
         'view_path' => './application/admin/template/',

@@ -28,7 +28,7 @@ function CancelOrder(order_id) {
     });
 }
 
-function LogisticsInquiry(url){
+function LogisticsInquiry(url) {
     //iframe窗
     layer.open({
         type: 2,

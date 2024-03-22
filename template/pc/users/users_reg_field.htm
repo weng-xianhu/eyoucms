@@ -15,29 +15,94 @@
 
             {eyou:case value="mobile"}
                 <!-- 手机文本框 start -->
-                {eyou:include file="/public/static/template/users_v2/users_reg_field_mobile.htm" /}
+                <div class="form-group group_z">
+                    <div class="input-group">
+                        {eyou:eq name="$vo.is_required" value="1"}<em class="tis">(必填)</em>{/eyou:eq}
+                        <input type="text" class="form-control" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" maxlength="11" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}">
+                    </div>
+                </div>
+                {eyou:if condition="isset($usersConfig['users_verification']) && 3 == $usersConfig['users_verification']"}
+                <div class="form-group group_z">
+                    <div class="input-group btn-direction">
+                        <input type="hidden" name="__mobile_1_token__" value="{$Request.token.__mobile_1_token__}" />
+                        <input type="text" class="form-control" id="{$vo.fieldArr}_{$vo.name|default=''}_code" name="{$vo.fieldArr}[{$vo.name|default=''}_code]" placeholder="手机验证码" autocomplete="off">
+                        <input type="button" id="{$vo.fieldArr}_{$vo.name|default=''}_button" onclick="get_{$vo.fieldArr}{$vo.name|default=''}_code();" class="btn btn-primary sento" value="获取验证码"/>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    function get_{$vo.fieldArr}{$vo.name|default=''}_code() {
+                        var mobile = $("#{$vo.fieldArr}_{$vo.name|default=''}").val();
+                        // 手机号是否为空
+                        if (!mobile) {
+                            $("#{$vo.fieldArr}_{$vo.name|default=''}").focus();
+                            layer.msg('请输入{$vo.title}！', {time: 1500});
+                            return false;
+                        }
+                        
+                        // 手机格式不正确
+                        var reg = /^1[0-9]{10}$/i;
+                        if (!reg.test(mobile)) {
+                            $("#{$vo.fieldArr}_{$vo.name|default=''}").focus();
+                            layer.msg('请输入正确的{$vo.title}！', {time: 1500});
+                            return false;
+                        }
+                
+                        // 设置为不可点击
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('获取中…').attr('disabled', 'disabled');
+                
+                        var __mobile_1_token__ = $('input[name=__mobile_1_token__]').val();
+                        $.ajax({
+                            url: "{eyou:url link='api/Ajax/SendMobileCode' /}",
+                            data: {type:'reg', mobile:mobile, is_mobile:true, title:'账号注册', source:0, __mobile_1_token__:__mobile_1_token__},
+                            type:'post',
+                            dataType:'json',
+                            success:function(res){
+                                if (res.code == 1) {
+                                    {$vo.fieldArr}{$vo.name|default=''}_countdown();
+                                    layer.msg(res.msg, {time: 1500});
+                                } else {
+                                    $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('获取验证码').removeAttr("disabled");
+                                    layer.alert(res.msg, {icon: 2, title: false, closeBtn: 0});
+                                }
+                            },
+                            error : function() {
+                                $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('获取验证码').removeAttr("disabled");
+                                layer.alert('发送失败，请尝试重新发送！', {icon: 5, title: false, closeBtn: 0});
+                            }
+                        });
+                    }
+                
+                    function {$vo.fieldArr}{$vo.name|default=''}_countdown(){
+                        // 倒计时
+                        var setTime;
+                        var time = 120;
+                        setTime = setInterval(function() {
+                            if(0 >= time) {
+                                clearInterval(setTime);
+                                return false;
+                            }
+                
+                            time--;
+                            $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val(time + '秒').attr('disabled', 'disabled');
+                            if(time == 0) $("#{$vo.fieldArr}_{$vo.name|default=''}_button").val('获取验证码').removeAttr("disabled");
+                        }, 1000);
+                    }
+                </script>
+                {/eyou:if}
+                <!-- 手机文本框 end --> 
                 <!-- 手机文本框 end -->
             {/eyou:case}
 
             {eyou:case value="email"}
                 <!-- 邮箱文本框 start -->
                 <div class="form-group group_z">
-                    <div class="input-group">
-                        <span class="input-group-addon">
-                            <i class="fa fa-envelope-o"></i>
-                        </span>
-                        {eyou:eq name="$vo.is_required" value="1"}<em class="tis">(必填)</em>{/eyou:eq}
-                        <input type="text" class="form-control" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}" >
-                    </div>
+                    <!-- {eyou:eq name="$vo.is_required" value="1"}<em class="tis">(必填)</em>{/eyou:eq} -->
+                    <input type="text" class="form-control h60" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}" >
                 </div>
 
                 {eyou:if condition="isset($usersConfig['users_verification']) && 2 == $usersConfig['users_verification']"}
                 <div class="form-group group_z">
                     <div class="input-group btn-direction">
-                        <span class="input-group-addon">
-                            <i class="fa fa-shield"></i>
-                            <!-- <span style="color:red;">*</span> -->
-                        </span>
                         <input type="text" class="form-control" id="{$vo.fieldArr}_{$vo.name|default=''}_code" name="{$vo.fieldArr}[{$vo.name|default=''}_code]" value="" placeholder="邮箱验证码">
                         <input type="button" id="{$vo.fieldArr}_{$vo.name|default=''}_button" onclick="get_{$vo.fieldArr}{$vo.name|default=''}_code();" class="btn btn-primary sento" value="点击发送" />
                     </div>
@@ -106,9 +171,6 @@
                 <!-- 单行文本框 start -->
                 <div class="form-group group_z">
                     <div class="input-group">
-                        <span class="input-group-addon">
-                            <i class="fa fa-paper-plane-o"></i>
-                        </span>
                         {eyou:eq name="$vo.is_required" value="1"}<em class="tis">(必填)</em>{/eyou:eq}
                         <input type="text" class="form-control" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}">
                     </div>
@@ -132,9 +194,11 @@
                     <fieldset>
                         <legend>{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</legend>
                         {eyou:volist name="$vo.dfvalue" id="v2"}
-                            <div class="checkbox-custom checkbox-primary">
-                                <input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/eyou:if}><label>{$v2}</label>
-                            </div>
+                            <label class="checkbox-label">
+                            	<span>{$v2}</span>
+                            	<input type="checkbox" class="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/eyou:if}>
+                                <span class="check-mark"></span>
+                            </label>
                         {/eyou:volist}
                     </fieldset>
                 </div>
@@ -147,10 +211,11 @@
                     <fieldset>
                         <legend>{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</legend>
                             {eyou:volist name="$vo.dfvalue" id="v2"}
-                            <div class="radio-custom radio-primary">
-                                <input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/eyou:if}>
-                                <label>{$v2}</label>
-                            </div>
+                            <label class="radio-label">
+                            	<span>{$v2}</span>
+                            	<input type="radio" class="radio" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/eyou:if}>
+                                <span class="check-mark"></span>
+                            </label>
                          {/eyou:volist}
                     </fieldset>
                 </div>
@@ -160,8 +225,9 @@
             {eyou:case value="select"}
                 <!-- 下拉框 start -->
                 <div class="form-group group_z">
+                    <fieldset>
+                    <legend>{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</legend>
                     <div class="select">
-                    <div class="dt">{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</div>
                         <div class="dd">
                             <select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" class="form-control">
                                 <option value="">请选择</option>
@@ -171,11 +237,147 @@
                             </select>
                         </div>
                     </div>
+                    </fieldset>
                 </div>
                 <!-- 下拉框 end -->
             {/eyou:case}
             <!-- 扩展 start -->
-            {eyou:include file="/public/static/template/users_v2/users_reg_field_extend.htm" /}
+            <!-- 扩展 -->
+            {eyou:case value="img"}
+                <!-- 单张图 start -->
+                <div class="form-group group_z">
+                    <div class="input-group input-group-icon">
+                        <input type="text" class="  form-control" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="" style="display: none;"><!--{$vo.info|default=''}-->
+                        <input class=" form-control {$vo.fieldArr}_{$vo.name|default=''}_input" placeholder="{$vo.title}" onClick="GetUploadify(1,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back','{:url('user/Uploadify/upload',['resource'=>'reg'])}')">
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    function {$vo.fieldArr}_{$vo.name|default=''}_call_back(fileurl_tmp)
+                    {
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}").val(fileurl_tmp);
+                        $(".{$vo.fieldArr}_{$vo.name|default=''}_input").val(fileurl_tmp);
+                    }
+                </script>
+                <!-- 单张图 end -->
+            {/eyou:case}
+            
+            {eyou:case value="imgs"}
+            <!-- 多张图 start -->
+            <div class="form-group group_z images_upload_main">
+                <div class="input-group">
+                    <button type="button" style="text-align: left;" class="form-control" onClick="GetUploadify(100,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back', '', '{$vo.title}');">
+                        {$vo.title}<span style="float: right;font-size: 16px;">点击上传</span>
+                    </button>
+                </div>
+                <div style="margin: 5px 0;padding: 3px;border: 1px dashed #ebeced;display: none;" id="upload_imgs_{$vo.fieldArr}_{$vo.name|default=''}">
+                    <!--上传填充-->
+                </div>
+                
+                <!-- 上传图片显示的样板 start -->
+                <div class="{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl" style="display: none;">
+                    <div class="fieldext_upload fieldext_upload_html">
+                        <div class="images_upload_item">
+                            <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="">
+                            <a href="" target="_blank">
+                                <img src="__STATIC__/admin/images/add-button.jpg" width="42" height="42">
+                            </a>
+                            <a class="delete" href="javascript:void(0)" title="删除"></a>
+                        </div>
+                    </div>
+                </div>
+                <!-- 上传图片显示的样板 end -->
+            </div>
+            <script type="text/javascript">
+                var GetUploadify_url = "{:url('user/Uploadify/upload',['resource'=>'reg'])}";
+            
+                // 上传多图回调函数
+                function {$vo.fieldArr}_{$vo.name|default=''}_call_back(paths){
+                    var  last_div = $(".{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl").html();
+                    for (var i=0;i<paths.length ;i++ )
+                    {
+                        if ($("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html").length == 0) {
+                            $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+                        }
+                        $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''}").append(last_div);  // 插入一个 新图片
+            
+            
+                        $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+                        $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('img').attr('src',paths[i]);// 修改他的图片路径
+                        $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('');
+                        $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+                    }
+                }
+                /*
+             * 上传之后删除组图input
+             * @access   public
+             * @val      string  删除的图片input
+             */
+                function {$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(obj,path)
+                {
+                    $(obj).parent().parent().remove();
+                    if ($("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html").length == 0) {
+                        $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''}").css('display','none');
+                    }
+                }
+            </script>
+            <!-- 多张图 end -->
+            {/eyou:case}
+            
+            {case value="file"}
+            {eyou:static file="/public/plugins/layui/css/layui.css" /}
+            {eyou:static file="/public/plugins/layui/layui.js" /}
+            <!-- 单个文件 start -->
+            <div class="form-group group_z">
+                <div class="input-group">
+                    <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" style="display: none;">
+                    <button type="button" style="text-align: left;" class="form-control" id="upload_{$vo.fieldArr}_{$vo.name|default=''}" >{$vo.title}<span style="float: right;font-size: 16px;" id="btntxt_file_{$vo.fieldArr}_{$vo.name|default=''}">点击上传</span></button>
+                    <!-- <a id="download_file_{$vo.fieldArr}_{$vo.name|default=''}" style="margin-left: 10px;text-decoration: underline;{eyou:notempty name='$vo.dfvalue' /}display: 'block';{eyou:else /}display: none;{/eyou:notempty}" {eyou:notempty name='$vo.dfvalue' /} href="{$vo.dfvalue|default=''}"  download="{$vo.dfvalue|get_filename=###}" {/eyou:notempty}>
+                        <img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件
+                    </a> -->
+                </div>
+            </div>
+            
+            <script>
+                $(function(){
+                    layui.use('upload', function(){
+                        var upload = layui.upload;
+            
+                        //执行实例
+                        upload.render({
+                            elem: "#upload_{$vo.fieldArr}_{$vo.name|default=''}" //绑定元素
+                            ,url: "{:url('user/Uploadify/DownloadUploadFileAjax')}"
+                            ,exts: '{$vo.ext}'
+                            ,size: {$vo.filesize} //限制文件大小，单位 KB
+                            ,accept: 'file' //普通文件
+                            ,done: function(res){
+                                //上传完毕回调
+                                if (res.state=="SUCCESS"){
+                                    layer.msg('上传成功!')
+                                    $("#btntxt_file_{$vo.fieldArr}_{$vo.name|default=''}").text('已上传');
+                                    // $("#{$vo.fieldArr}_{$vo.name|default=''}").val(res.url);
+                                    // $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+                                    // $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").attr('href',res.url);
+                                    // var arr = res.url.split("/");
+                                    // var download = arr[arr.length-1];
+                                    // $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").attr('download',download);
+                                    // $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('color','#000');
+                                    // $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").html('<img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件');
+                                }else {
+                                    $("#btntxt_file_{$vo.fieldArr}_{$vo.name|default=''}").text('点击上传');
+                                    // $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+                                    // $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('color','red');
+                                    // $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").text(res.state);
+                                }
+                            }
+                            ,error: function(){
+                                //请求异常回调
+                            }
+                        });
+                    });
+                })
+            </script>
+            <!-- 单个文件 end -->
+            {/case}
             <!-- 扩展 end -->
         {/eyou:switch}
 {/eyou:volist}

@@ -41,7 +41,7 @@ class TagTagarclist extends Base
      * @param     int  $row  调用行数
      * @param     string  $orderby  排列顺序
      * @param     string  $addfields  附加表字段，以逗号隔开
-     * @param     string  $orderway  排序方式
+     * @param     string  $ordermode  排序方式
      * @param     string  $tagid  标签id
      * @param     string  $tag  标签属性集合
      * @param     string  $pagesize  分页显示条数
@@ -49,11 +49,11 @@ class TagTagarclist extends Base
      * @param     string  $arcrank  是否显示会员权限
      * @return    array
      */
-    public function getTagarclist($param = array(),  $limit = 20, $orderby = '', $addfields = '', $orderway = '', $tagid = '', $tag = '', $pagesize = 0, $thumb = '', $arcrank = '')
+    public function getTagarclist($param = array(),  $limit = 20, $orderby = '', $addfields = '', $ordermode = '', $tagid = '', $tag = '', $pagesize = 0, $thumb = '', $arcrank = '')
     {
         $result = false;
 
-        empty($orderway) && $orderway = 'desc';
+        empty($ordermode) && $ordermode = 'desc';
         $limit_arr = explode(',', $limit);
         $pagesize = empty($pagesize) ? end($limit_arr) : intval($pagesize);
         $allow_release_channel = config('global.allow_release_channel');
@@ -155,12 +155,10 @@ class TagTagarclist extends Base
         }
 
         // 给排序字段加上表别名
-        $orderby = getOrderBy($orderby,$orderway,true);
+        $orderby = getOrderBy($orderby,$ordermode,true);
 
         /*用于arclist标签的分页*/
         if(0 < $pagesize) {
-            $tag['typeid'] = $typeid;
-            isset($tag['channelid']) && $tag['channelid'] = $channeltype;
             $tagidmd5 = $this->attDef($tag); // 进行tagid的默认处理
         }
         /*--end*/
@@ -168,7 +166,7 @@ class TagTagarclist extends Base
         // 是否显示会员权限
         $users_level_list = $users_level_list2 = [];
         if ('on' == $arcrank || stristr(','.$addfields.',', ',arc_level_name,')) {
-            $users_level_list = Db::name('users_level')->field('level_id,level_name,level_value')->where('lang',$this->home_lang)->order('is_system desc, level_value asc')->getAllWithIndex('level_value');
+            $users_level_list = Db::name('users_level')->field('level_id,level_name,level_value')->where('lang',self::$home_lang)->order('is_system desc, level_value asc, level_id asc')->getAllWithIndex('level_value');
             if (stristr(','.$addfields.',', ',arc_level_name,')) {
                 $users_level_list2 = convert_arr_key($users_level_list, 'level_id');
             }
@@ -184,7 +182,7 @@ class TagTagarclist extends Base
             ->alias('a')
             ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
             ->where($where_str)
-            ->where('a.lang', $this->home_lang)
+            ->where('a.lang', self::$home_lang)
             ->orderRaw($orderby)
             ->limit($limit)
             ->select();
@@ -286,15 +284,17 @@ class TagTagarclist extends Base
                 $addfields = '';
             }
             /*end*/
-            !empty($addfields) && $addfields = ','.$addfields;
-            $resultExt = M($addtableName)->field("aid {$addfields}")->where('aid','in',$aidArr)->getAllWithIndex('aid');
-            /*自定义字段的数据格式处理*/
-            $resultExt = $this->fieldLogic->getChannelFieldList($resultExt, $channeltype, true);
-            /*--end*/
-            foreach ($result as $key => $val) {
-                $valExt = !empty($resultExt[$val['aid']]) ? $resultExt[$val['aid']] : array();
-                $val = array_merge($valExt, $val);
-                $result[$key] = $val;
+            if (!empty($addfields)) {
+                $addfields = ','.$addfields;
+                $resultExt = M($addtableName)->field("aid {$addfields}")->where('aid','in',$aidArr)->getAllWithIndex('aid');
+                /*自定义字段的数据格式处理*/
+                $resultExt = $this->fieldLogic->getChannelFieldList($resultExt, $channeltype, true);
+                /*--end*/
+                foreach ($result as $key => $val) {
+                    $valExt = !empty($resultExt[$val['aid']]) ? $resultExt[$val['aid']] : array();
+                    $val = array_merge($valExt, $val);
+                    $result[$key] = $val;
+                }
             }
         }
         /*--end*/

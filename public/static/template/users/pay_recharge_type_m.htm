@@ -1,3 +1,16 @@
+{eyou:sppayapilist id='vo'}
+{eyou:notempty name="$vo.pay_id"}
+<li>
+    <a class="block cover pay-online" href="JavaScript:void(0);" onclick="SelectPayMethod('{$vo.pay_id}', '{$vo.pay_mark}');">
+        <img src="{$vo.pay_img}" class="img-fluid inline-block" style="width: 163px; height: 52px;">
+    </a>
+</li>
+{/eyou:notempty}
+{$vo.hidden}
+{/eyou:sppayapilist}
+<input type="hidden" id="PayID">
+<input type="hidden" id="PayMark">
+
 {eyou:if condition="1 != $data.transaction_type && 1 == $data.pay_balance_open"}
     <li class="text-xs-center pay-order-zhifubao" data-toggle="modal" data-target="#pay-order-modal">
         <a class="block cover pay-online" href="JavaScript:void(0);" id="PayBalancePayment" onclick="PayBalancePayment();">
@@ -48,7 +61,6 @@
         function PayIsRecharge(msg ,url) {
             layer.confirm(msg, {
                 title: false,
-                closeBtn: 0,
                 btn: ['去充值','其他方式支付'],
                 cancel: function(index, layero){ 
                     $('#PayBalancePayment').prop("disabled", false).css("pointer-events", "");
@@ -57,9 +69,8 @@
                 // 去充值
                 window.open(url); 
                 
-                layer.confirm('充值成功？ 是否立即支付？', {
+                layer.confirm('是否充值成功，立即支付？', {
                     title: false,
-                    closeBtn: 0,
                     btn: ['立即支付','其他方式支付'],
                     cancel: function(index, layero){ 
                         $('#PayBalancePayment').prop("disabled", false).css("pointer-events", "");
@@ -81,21 +92,3 @@
         }
     </script>
 {/eyou:if}
-
-<!-- 支付API列表，套板请务必将整块代码一起复制，包含隐藏域 -->
-<script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
-{eyou:sppayapilist id='vo'}
-    {eyou:notempty name="$vo.pay_id"}
-        {neq name="$vo.pay_mark" value="Hupijiaopay"}
-        <li>
-            <a class="block cover pay-online" href="JavaScript:void(0);" onclick="SelectPayMethod('{$vo.pay_id}', '{$vo.pay_mark}');">
-                <img src="{eyou:empty name='$vo.pay_img'}{eyou:global name='web_templets_m'/}/users/skin/images/{$vo.pay_mark}.png{eyou:else/}{$vo.pay_img}{/eyou:empty}" class="img-fluid inline-block" style="width: 163px; height: 52px;">
-            </a>
-        </li>
-        {/neq}
-    {/eyou:notempty}
-    {$vo.hidden}
-{/eyou:sppayapilist}
-<input type="hidden" id="PayID">
-<input type="hidden" id="PayMark">
-<!-- END -->

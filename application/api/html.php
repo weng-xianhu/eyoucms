@@ -11,7 +11,21 @@
  * Date: 2018-4-3
  */
 
+// 全局变量数组
+$global = config('tpcache');
+empty($global) && $global = tpCache('global');
+// 系统模式
+$web_cmsmode = isset($global['web_cmsmode']) ? $global['web_cmsmode'] : 2;
+/*页面缓存有效期*/
+$app_debug = true;
+if (1 == $web_cmsmode) { // 运营模式
+    $app_debug = false;
+}
+/*--end*/
+
 return array(
+    // 应用调试模式
+    'app_debug' => $app_debug,
     // 模板设置
     'template' => array(
         // 模板路径

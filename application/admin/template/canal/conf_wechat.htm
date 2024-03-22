@@ -1,0 +1,376 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll;min-width:auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page min-hg-c-i" style="min-width: auto;box-shadow:none;">
+    {include file="canal/bar" /}
+    <!-- 操作说明 -->
+    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); margin-bottom: 15px;">
+        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+        </div>
+        <ul>
+            <li>1，微信公众号：登录 <a href="https://mp.weixin.qq.com" target="_blank">微信公众号平台</a>，在“设置与开发->基本配置”里获取AppID、AppSecret的值，设置IP白名单等。配置可通用于微站点、或云插件库里的微信公众号插件。<span style="color: red;">(注：订阅号不支持登录与支付)</span></li>
+            <li>2，微站点：微信号、二维码是在微站点开启 <span style="color: red;">强制微信模式</span> 时在PC和移动端展示</li>
+        </ul>
+    </div>
+    <div class="flexigrid htitx">
+        <form class="form-horizontal" id="post_form" action="{:url('Canal/conf_wechat')}" method="post">
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th class="sign w10" axis="col0">
+                                    <div class="tc"></div>
+                                </th>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tc">微信公众号</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="appid"><em id="em_appid" {empty name='$data.appid'}style="display: none;"{/empty}>*</em>AppID</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="appid" id="appid" value="{$data.appid|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">开发者ID</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="appsecret"><em id="em_appsecret" {empty name='$data.appsecret'}style="display: none;"{/empty}>*</em>AppSecret</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="appsecret" id="appsecret" value="{$data.appsecret|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">开发者密码</p>
+                    </dd>
+                </dl>
+                {notempty name='$ipTips'}
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="url">注意事项</label>
+                    </dt>
+                    <dd class="opt">
+                        {$ipTips}
+                        <span class="err"></span>
+                        <p class=""></p>
+                    </dd>
+                </dl>
+                {/notempty}
+                <!-- <dl class="row">
+                    <dt class="tit">
+                        <label for="wechat_name">微信号</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="wechat_name" id="wechat_name" value="{$data.wechat_name|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="wechat_pic">二维码</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="input-file-show">
+                            <span class="show">
+                                <a id="img_a_wechat_pic" class="nyroModal" rel="gal" href="{$data.wechat_pic|default='javascript:void(0);'}?t={php}echo time();{/php}" target="_blank">
+                                    <i id="img_i_wechat_pic" class="fa fa-picture-o" {notempty name="$data.wechat_pic"}onmouseover="layer_tips=layer.tips('<img src={$data.wechat_pic|default=''}?t={php}echo time();{/php} width=300 height=300>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                                </a>
+                            </span>
+                            <span class="type-file-box">
+                                <input type="text" id="wechat_pic" name="wechat_pic" value="{$data.wechat_pic|default=''}" class="type-file-text" autocomplete="off">
+                                <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                                <input class="type-file-file" onclick="GetUploadify(1, '', 'allimg', 'wechat_pic_call_back')" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                            </span>
+                        </div>
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl> -->
+                <dl class="row">
+                    <div class="bot" style="padding-bottom:0px;">
+                        <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                        &nbsp;<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=10166&origin_eycms=1','微信公众号配置')" style="font-size: 12px;padding-left: 10px;position:absolute;top: 30px">不会配置？</a>
+                    </div>
+                </dl>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+    
+        $(function(){
+            $('#appid, #appsecret').keyup(function(){
+                var appid = $.trim($('#appid').val());
+                var appsecret = $.trim($('#appsecret').val());
+                if (appid != '' || appsecret != '') {
+                    $('#em_appid').show();
+                    $('#em_appsecret').show();
+                } else {
+                    $('#em_appid').hide();
+                    $('#em_appsecret').hide();
+                }
+            });
+        });
+    
+        // 判断输入框是否为空
+        function checkForm(){
+            var appid = $.trim($('#appid').val());
+            var appsecret = $.trim($('#appsecret').val());
+            if (appid != '' || appsecret != '') {
+                if(appid == ''){
+                    showErrorMsg('AppID不能为空！');
+                    $('input[name=appid]').focus();
+                    return false;
+                }
+                if(appsecret == ''){
+                    showErrorMsg('AppSecret不能为空！');
+                    $('input[name=appsecret]').focus();
+                    return false;
+                }
+            }
+            layer_loading('正在处理');
+            $.ajax({
+                url: "{:url('Canal/conf_wechat', ['_ajax'=>1])}",
+                type: 'POST',
+                dataType: 'JSON',
+                data: $('#post_form').serialize(),
+                success: function (res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        showErrorAlert(res.msg);
+                        return false;
+                    }
+                },
+                error: function (e) {
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                    return false;
+                }
+            });
+        }
+    
+        // 加载图片显示
+        function wechat_pic_call_back(fileurl_tmp) {
+            $("#wechat_pic").val(fileurl_tmp);
+            $("#img_a_wechat_pic").attr('href', fileurl_tmp);
+            $("#img_i_wechat_pic").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" width=300 height=300>',this,{tips: [1, '#fff']});");
+        }
+    
+    </script>
+
+    <div class="flexigrid htitx">
+        <form class="form-horizontal" id="postMicrosite" method="post">
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th class="sign w10" axis="col0">
+                                    <div class="tc"></div>
+                                </th>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tc">微站点</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="ncap-form-default" style="position: sticky;">
+                <dl class="row">
+                    <dt class="tit">
+                        <label>微站点模式</label>
+                        <input type="hidden" id="shop_micro" value="{$usersConfig.shop_micro|default=0}">
+                    </dt>
+                    <dd class="opt" style="line-height: 30px;">
+                        <label>
+                            <input type="radio" name="shop[shop_micro]" id="shop_micro1" value="1" {if condition="isset($usersConfig.shop_micro) && $usersConfig.shop_micro == 1"} checked="checked" {/if} onclick="DetectConfig(1);"/>开启
+                        </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label>
+                            <input type="radio" name="shop[shop_micro]" id="shop_micro0" value="0" {if condition="empty($usersConfig.shop_micro)"} checked="checked" {/if}/>关闭
+                        </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <p class="notic">开启后，在微信里访问不需要注册或登录，需要先配置下方微信参数</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>强制微信模式</label>
+                        <input type="hidden" id="shop_force_use_wechat" value="{$usersConfig.shop_force_use_wechat|default=0}">
+                    </dt>
+                    <dd class="opt" style="line-height: 30px;">
+                        <label>
+                            <input type="radio" name="shop[shop_force_use_wechat]" id="shop_force_use_wechat1" value="1" {if condition="isset($usersConfig.shop_force_use_wechat) && $usersConfig.shop_force_use_wechat == 1"} checked="checked" {/if} onclick="DetectConfig(2);"/>开启
+                        </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label>
+                            <input type="radio" name="shop[shop_force_use_wechat]" id="shop_force_use_wechat0" value="0" {if condition="empty($usersConfig.shop_force_use_wechat)"} checked="checked" {/if} onclick="DetectConfig(3);"/>关闭
+                        </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <p class="notic">开启后，只能在微信内访问，需要先开启微站点模式</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="wechat_name">微信号</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="login[wechat_name]" id="wechat_name" value="{$login.wechat_name|default=''}" class="input-txt">
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="wechat_pic">二维码</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="input-file-show">
+                            <span class="show">
+                                <a id="img_a_wechat_pic" class="nyroModal" rel="gal" href="{$login.wechat_pic|default='javascript:void(0);'}?t={php}echo time();{/php}" target="_blank">
+                                    <i id="img_i_wechat_pic" class="fa fa-picture-o" {notempty name="$login.wechat_pic"}onmouseover="layer_tips=layer.tips('<img src={$login.wechat_pic|default=''}?t={php}echo time();{/php} width=300 height=300>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                                </a>
+                            </span>
+                            <span class="type-file-box">
+                                <input type="text" id="wechat_pic" name="login[wechat_pic]" value="{$login.wechat_pic|default=''}" class="type-file-text" autocomplete="off">
+                                <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                                <input class="type-file-file" onclick="GetUploadify(1, '', 'allimg', 'wechat_pic_call_back')" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                            </span>
+                        </div>
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <div class="bot" style="padding-bottom:0px;">
+                        <input type="hidden" id="WX_appid" value="{$login.appid|default=''}">
+                        <a href="JavaScript:void(0);" onclick="submit_microsite();" class="ncap-btn-big ncap-btn-green">确认提交</a>
+                    </div>
+                </dl>
+            </div>
+            <div class="" style="position: absolute;top: 38px;left: 750px;">
+                <dl class="" style="background: #fff;">
+                
+                    <div class="">
+                        <img src="__STATIC__/admin/images/wzd-shili.jpg" width="278" height="195" />
+                    </div>
+                    <div style="text-align: center;line-height: 32px;font-size: 16px;">PC效果演示</div>
+                </dl>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+        $(function(){
+            //操作提示缩放动画
+            $("#microsite_checkZoom").toggle(
+                function() {
+                    $("#microsite_explanation").animate({
+                        color: "#FFF",
+                        backgroundColor: "#4FD6BE",
+                        width: "80",
+                        height: "20",
+                    },300);
+                    $("#microsite_explanationZoom").hide();
+                },
+                function() {
+                    $("#microsite_explanation").animate({
+                        color: "#2CBCA3",
+                        backgroundColor: "#EDFBF8",
+                        width: "99%",
+                        height: "20",
+                    },300,function() {
+                        $(this).css('height', '100%');
+                    });
+                    $("#microsite_explanationZoom").show();
+                }
+            );
+        })
+        // 提交
+        function submit_microsite(){
+            layer_loading("正在处理");
+            $.ajax({
+                url: "{:url('System/microsite', ['_ajax'=>1])}",
+                type: 'POST',
+                dataType: 'JSON',
+                data: $('#postMicrosite').serialize(),
+                success: function(res){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {shade: 0.1, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        var icon = 2;
+                        try{
+                            if (res.data.icon) {
+                                icon = res.data.icon;
+                            }
+                        }catch(e){}
+                        showErrorAlert(res.msg, icon);
+                        return false;
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    showErrorMsg(e.responseText);
+                    return false;
+                }
+            });
+        }
+    
+        // 检测是否配置微信参数
+        function DetectConfig(type) {
+            if (3 == type) {
+                $('#shop_micro0').removeAttr("disabled");
+                return false;
+            }
+    
+            var WX_appid = $('#WX_appid');
+            if (!WX_appid.val() || '' == WX_appid.val()) {
+                if (1 == type) {
+                    $("#shop_micro0").click();
+                } else if (2 == type) {
+                    $("#shop_force_use_wechat0").click();
+                }
+                showErrorAlert('请先完善微信公众号配置');
+                return false;
+            }
+    
+            if (2 == type) {
+                // 设置微信端开启
+                $("#shop_force_use_wechat1, #shop_micro1").attr('checked', true);
+                $('#shop_micro0').attr("disabled", "disabled");
+            }
+        }
+    
+        // 加载图片显示
+        function wechat_pic_call_back(fileurl_tmp) {
+            $("#wechat_pic").val(fileurl_tmp);
+            $("#img_a_wechat_pic").attr('href', fileurl_tmp);
+            $("#img_i_wechat_pic").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" width=300 height=300>',this,{tips: [1, '#fff']});");
+        }
+    </script>
+</div>
+
+{include file="public/footer" /}

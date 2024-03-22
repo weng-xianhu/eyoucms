@@ -1,0 +1,209 @@
+{include file="public/layout" /}
+
+<link rel="stylesheet" type="text/css" href="__SKIN__/js/codemirror/codemirror.css?v={$version}">
+<script type="text/javascript" src="__SKIN__/js/codemirror/codemirror.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/xml/xml.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/javascript/javascript.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/css/css.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/php/php.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/clike/clike.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/codemirror/mode/htmlmixed/htmlmixed.js?v={$version}"></script>
+
+<body style="background-color: #FFF; overflow: auto;min-width:auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;box-shadow:none;">
+    <form class="form-horizontal" id="post_form" action="{:url('Index/ajax_theme_tplfile_edit')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">模板目录</dt>
+                <dd class="opt">
+                    {$tpldirpath}
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row {if condition="$type != 'welcome'"}none{/if}">
+                <dt class="tit">
+                    <label for="theme_title"><em>*</em>模板名称</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <input type="text" name="theme_title" placeholder="" id="theme_title" value="{$info.theme_title}" class="input-txt" autocomplete="off">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="url"><em>*</em>文件名称</label>
+                </dt>
+                <dd class="opt">
+                    {$type}_<input type="text" name="filename" value="{$info.filename}" id="filename" placeholder="自定义" tabindex="2" onkeyup="this.value=this.value.replace(/[^\w\-]/g,'');" onpaste="this.value=this.value.replace(/[^\w\-]/g,'')" autocomplete="off">.htm
+                    <span class="err"></span>
+                    <p class="notic">只允许字母、数字、下划线、连接符的任意组合</p>
+                    <p class="red" id="txt_filename"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="content">HTML代码</label>
+                </dt>
+                <dd class="opt">
+                    <textarea name='content' id="content" style='width:99%;height:500px;background:#ffffff;' tabindex="3">{$content}</textarea>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <input type="hidden" id="type" name="type" value="{$type}" />
+                <input type="hidden" id="theme_id" name="theme_id" value="{$info['theme_id']}" />
+                <input type="hidden" id="welcome_tplname" name="welcome_tplname" value="{$info['welcome_tplname']}" />
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn" tabindex="4">确认提交</a>
+                <a href="JavaScript:void(0);" onclick="welcome_tplname_del(this);" class="ncap-btn-big ncap-btn-green" style="border: 1px solid #C9C9C9; background-color: #fff;color: #555;" >删除</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    var editor = '';
+
+    $(function(){
+      
+        editor = CodeMirror.fromTextArea(document.getElementById('content'), {
+            lineNumbers: true, // 显示行号
+            lineWrapping: true, // 在行槽中添加行号显示器、折叠器、语法检测器`
+            autofocus:true,  //自动聚焦
+            mode: 'text/html'
+        });
+        editor.setSize('auto','500px');
+
+        $('#filename').keyup(function(){
+            $.ajax({
+                type: "POST",
+                url: "{:url('Index/ajax_theme_tplfile_edit', ['nosubmit'=>1,'_ajax'=>1])}",
+                data: $('#post_form').serialize(),
+                dataType: 'json',
+                success: function (res) {
+                    if(res.code == 1){
+                        $('#txt_filename').html('');
+                    } else {
+                        $('#txt_filename').html(res.msg);
+                    }
+                }
+            });
+        });
+    });
+
+    function welcome_tplname_del(obj)
+    {
+        layer.confirm('确定删除？', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['确定', '取消'], //按钮
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                }
+            }, function(){
+                layer_loading('正在处理');
+                var type = $('#type').val();
+                var theme_id = $('#theme_id').val();
+                $.ajax({
+                    type : 'POST',
+                    url : "{:url('Index/ajax_theme_tplfile_del', ['_ajax'=>1])}",
+                    data : {theme_id:theme_id, type:type, _ajax:1},
+                    dataType : 'json',
+                    success : function(res){
+                        if(res.code == 1){
+                            parent.layer.closeAll();
+                            var id = res.data.select_input_id;
+                            if ('login' == type) {
+                                // $('#'+id+'_'+res.data.theme_id, window.parent.document).text(res.data.filename);
+                            } else if ('welcome' == type) {
+                                if ($('#per_'+id+'_'+theme_id, window.parent.document).find('input[name=welcome_tplname]:checked').length == 1) {
+                                    $($('#welcome_tplname', window.parent.document).find('input[name=welcome_tplname]').get(0)).attr('checked', true);
+                                }
+                                $('#per_'+id+'_'+theme_id, window.parent.document).remove();
+                            }
+                            parent.layer.msg(res.msg, {icon: 1, time: 1000});
+                            return false;
+                        }else{
+                            layer.closeAll();
+                            showErrorAlert(res.msg);
+                        }
+                    },
+                    error:function(e){
+                        layer.closeAll();
+                        showErrorAlert(e.responseText);
+                    }
+                })
+            }, function(index){
+                layer.close(index);
+                return false;// 取消
+            }
+        );
+    }
+
+    // 判断输入框是否为空
+    function checkForm(){
+        var type = $('#type').val();
+        if ('welcome' == type) {
+            if($('input[name=theme_title]').val() == ''){
+                showErrorMsg('模板名称不能为空！');
+                $('input[name=theme_title]').focus();
+                return false;
+            }
+        }
+        if($('input[name=filename]').val() == ''){
+            showErrorMsg('文件名称不能为空！');
+            $('input[name=filename]').focus();
+            return false;
+        }
+        var content = editor.getValue();
+        if(content == ''){
+            showErrorMsg('HTML代码不能为空！');
+            $('#content').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        var theme_title = $('#theme_title').val();
+        var theme_id = $('#theme_id').val();
+        var welcome_tplname = $('#welcome_tplname').val();
+        $.ajax({
+            type: "POST",
+            url: "{:url('Index/ajax_theme_tplfile_edit', ['_ajax'=>1])}",
+            data: {filename:$('#filename').val(), content:content, type:type, theme_title:theme_title, theme_id:theme_id, welcome_tplname:welcome_tplname},
+            dataType: 'json',
+            success: function (res) {
+                if(res.code == 1){
+                    parent.layer.closeAll();
+                    var html = '';
+                    var id = res.data.select_input_id;
+                    if ('login' == type) {
+                        // $('#'+id+'_'+res.data.theme_id, window.parent.document).text(res.data.filename);
+                    } else if ('welcome' == type) {
+                        $('#'+id+'_'+res.data.theme_id, window.parent.document).text(res.data.theme_title);
+                    }
+                    parent.layer.msg(res.msg, {icon: 1, time: 1000});
+                    return false;
+                }else{
+                    layer.closeAll();
+                    if (res.data.focus) {
+                        $('#'+res.data.focus).focus();
+                    }
+                    layer.msg(res.msg, {icon: 2});
+                    return false;
+                }
+            },
+            error:function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 2, title:false});
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

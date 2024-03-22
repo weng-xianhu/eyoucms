@@ -34,7 +34,7 @@ class Single extends Model
      */
     public function getInfoByTypeid($typeid)
     {
-        $cacheKey = "home_model_Single_getInfoByTypeid_{$typeid}";
+        $cacheKey = md5("home_model_Single_getInfoByTypeid_{$typeid}");
         $result = cache($cacheKey);
         if (empty($result)) {
             $field = 'c.*, b.*, a.*, b.aid, a.id as typeid';

@@ -120,6 +120,19 @@ function layer_loading(msg){
     return loading;
 }
 
+// 加载层
+function layer_loading_mini(icon){
+    //loading层
+    if (!icon) {
+        icon = 2;
+    }
+    var loading = layer.load(icon, {
+        shade: [0.2,'#000'] //0.1透明度的白色背景
+    });
+
+    return loading;
+}
+
 // 上传头像
 function upload_head_pic(e){
     var file = $(e)[0].files[0];

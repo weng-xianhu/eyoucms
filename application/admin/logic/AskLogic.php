@@ -45,8 +45,8 @@ class AskLogic extends Model
         if (false !== filter_var($web_basehost, FILTER_VALIDATE_IP)) {
             $web_basehost = tpCache('web.web_basehost');
         }
-        $web_basehost = preg_replace('/^(([^\:]+):)?(\/\/)?([^\/\:]*)(.*)$/i', '${4}', $web_basehost);
-        $this->upgrade_url = $this->service_url . '&domain='.$web_basehost.'&type=theme_ask&ip='.serverIP();
+        $web_basehost = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${4}', $web_basehost);
+        $this->upgrade_url = $this->service_url . '&domain='.$web_basehost.'&type=theme_ask&cms_version='.getVersion().'&ip='.serverIP();
         $this->planPath_pc = 'template/'.TPL_THEME.'pc/';
         $this->planPath_m = 'template/'.TPL_THEME.'mobile/';
     }
@@ -461,9 +461,9 @@ class AskLogic extends Model
         }
         $mysqlinfo = \think\Db::query("SELECT VERSION() as version");
         $mysql_version  = $mysqlinfo[0]['version'];
-        $vaules = array(
+        $values = array(
             'type'  => 'theme_ask',
-            'domain'=>$_SERVER['HTTP_HOST'], //用户域名                
+            'domain'=>request()->host(), //用户域名                
             'key_num'=>'v1.0.0', // 用户版本号
             'to_key_num'=>$to_key_num, // 用户要升级的版本号                
             'add_time'=>time(), // 升级时间
@@ -475,7 +475,7 @@ class AskLogic extends Model
         );
         // api_Service_upgradeLog
         $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVVwZ3JhZGUmYT11cGdyYWRlTG9nJg==';
-        $url = base64_decode($this->service_ey).base64_decode($tmp_str).http_build_query($vaules);
+        $url = base64_decode($this->service_ey).base64_decode($tmp_str).http_build_query($values);
         @httpRequest($url);
     }
 

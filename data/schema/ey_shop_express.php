@@ -36,10 +36,19 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'is_choose' => 
+  array (
+    'name' => 'is_choose',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'sort_order' => 
   array (
     'name' => 'sort_order',
-    'type' => 'int(10)',
+    'type' => 'int(10) unsigned',
     'notnull' => false,
     'default' => '0',
     'primary' => false,
@@ -48,7 +57,7 @@ return array (
   'add_time' => 
   array (
     'name' => 'add_time',
-    'type' => 'int(11)',
+    'type' => 'int(11) unsigned',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

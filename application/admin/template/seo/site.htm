@@ -7,7 +7,7 @@
         var __root_dir__ = "__ROOT_DIR__";
         var __lang__ = "{$admin_lang}";
     </script>
-    <script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
+    <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
     <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
 </head>
 <style>
@@ -74,7 +74,6 @@
 </style>
 <body class="gray-bg">
 <div class="ibox float-e-margins">
-
     <div class="ibox-content">
         <div class="progress progress-striped active">
             <div class="progress-bar progress-bar-success" role="progressbar"
@@ -83,7 +82,11 @@
         </div>
         <div style="text-align:center" class="success">
             <div class="finash" style="">
-                <span><font id="title">正在生成</font><span class="filepath"></span>，</span>
+                <span>
+                    <font id="title">正在生成</font>
+                    <span class="filepath"></span>，
+                </span>
+                <span class="filefindex"></span>
                 已完成<span class="percent" style="color:#ff0000 ;font-size:14px;">0</span>%
             </div>
         </div>
@@ -95,65 +98,78 @@
 <script type="text/javascript">
     $('#a_close_pop').hide();
     //请求获取全部数据和页数
-    var channelfid = articlefid = 0;   //本次执行的下标
+    var channelfid = articlefid = channel_index = 0;   //本次执行的下标
     var allpagetotal = channelpagetotal = articlepagetotal = 0;
     var achieve = channelachieve = articleachieve = 0;
+    var type_index = 0;
     var msg = "";
     var timestamp1 = Date.parse(new Date());
     function sendIndex(){
-     $.ajax({
-         url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildIndexAll&lang="+__lang__,
-         type:'POST',
-         dataType:'json',
-         data:{_ajax:1},
-         success:function(res){
-             findex = res.data.typeid;
-             achieve = res.data.achievepage;
-             allpagetotal = res.data.allpagetotal;
-             channelpagetotal = res.data.channelpagetotal;
-             articlepagetotal = res.data.articlepagetotal;
-             msg += res.msg;
-             progress = ((achieve/allpagetotal)*100).toFixed(1);
-             $("#title").html('成功创建首页');
-             $(".filepath").html('');
-             $(".progress-bar").css('width',progress+'%');
-             $(".percent").text(progress);
-             if (achieve === 1){
-                 if (msg !== ""){
-                     $("#error_msg").show();
-                     $("#error_msg").prepend(msg);
+        $.ajax({
+             url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildIndexAll&lang="+__lang__+"&_ajax=1",
+             type:'GET',
+             dataType:'json',
+             data:{},
+             timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
+             success:function(res){
+                 findex = res.data.typeid;
+                 achieve = res.data.achievepage;
+                 allpagetotal = res.data.allpagetotal;
+                 channelpagetotal = res.data.channelpagetotal;
+                 articlepagetotal = res.data.articlepagetotal;
+                 if ( -1 == res.msg.indexOf('浏览')){
+                     msg += res.msg;
                  }
-                 sendChannel();
+                 progress = ((achieve/allpagetotal)*100).toFixed(1);
+                 $("#title").html('成功创建首页');
+                 $(".filepath").html('');
+                 $(".progress-bar").css('width',progress+'%');
+                 $(".percent").text(progress);
+                 if (achieve === 1){
+                     if (msg !== ""){
+                         $("#error_msg").show();
+                         $("#error_msg").prepend(msg);
+                         msg = "";
+                     }
+                     sendChannel();
+                 }
+             },
+             error:function(e){
+                parent.layer.alert(e.responseText, {icon: 5, title:false});
              }
-         },
-         error:function(e){
-            parent.layer.alert(e.responseText, {icon: 5, title:false});
-         }
-     });
+        });
     }
 
      function sendChannel(){
          $.ajax({
-             url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildChannel&lang="+__lang__,
-             type:'POST',
+             url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildChannel&lang="+__lang__+"&id=0&index="+channel_index+"&findex="+articlefid+"&achieve="+channelachieve+"&_ajax=1",
+             type:'GET',
              dataType:'json',
-             data:{'id':0,'findex':articlefid,'achieve':channelachieve,_ajax:1},
+             data:{},
+             timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
              beforeSend:function(){
              },
              success:function(res){
+                 channel_index = res.data.index;
                  articlefid = res.data.findex;
                  channelachieve = res.data.achievepage;
                  msg += res.msg;
                  progress = (((achieve+channelachieve)/allpagetotal)*100).toFixed(1);
                  $("#title").html('成功创建栏目：');
-                 $(".filepath").html(res.data.findex);
+                 $(".filepath").html(res.data.findex+1);
+                 if (res.data.index > 1) {
+                     $(".filefindex").html('第'+res.data.index+'页，');
+                 } else {
+                     $(".filefindex").html('');
+                 }
                  $(".progress-bar").css('width',progress+'%');
                  $(".percent").text(progress);
-                 if (channelachieve === channelpagetotal){
+                 if (channelachieve >= channelpagetotal){
                      achieve = achieve + channelachieve;
                      if (msg !== ""){
                          $("#error_msg").show();
                          $("#error_msg").prepend(msg);
+                         msg = "";
                      }
                      sendArticle();
                      return false;
@@ -168,10 +184,11 @@
      
      function sendArticle() {
          $.ajax({
-             url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildArticle&lang="+__lang__,
-             type:'POST',
+             url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildArticle&lang="+__lang__+"&id=0&findex="+channelfid+"&achieve="+articleachieve+"&_ajax=1",
+             type:'GET',
              dataType:'json',
-             data:{'id':0,'findex':channelfid,'achieve':articleachieve,_ajax:1},
+             data:{},
+             timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
              success:function(res){
                  channelfid = res.data.findex;
                  articleachieve = res.data.achievepage;
@@ -181,7 +198,7 @@
                  $(".filepath").html(channelfid);
                  $(".progress-bar").css('width',progress+'%');
                  $(".percent").text(progress);
-                 if (articleachieve === articlepagetotal){
+                 if (articleachieve >= articlepagetotal){
                      var timestamp2 = Date.parse(new Date());
                      var timestamp3 = (timestamp2 - timestamp1) / 1000;
                      if (timestamp3 < 1) timestamp3 = 1;
@@ -193,6 +210,7 @@
                      if (msg !== ""){
                          $("#error_msg").show();
                          $("#error_msg").prepend(msg);
+                         msg = "";
                      }
                      return false;
                  }
@@ -202,8 +220,162 @@
                 parent.layer.alert(e.responseText, {icon: 5, title:false});
              }
          });
-     }
-     sendIndex();
+    }
+
+    var uphtmltype = {$uphtmltype|default=0}; // 更新选项
+    var startid = 0; // 指定的文档起始ID
+    var typeids = ''; // 指定文档之后，所关联的栏目ID
+    var counts = ''; // 指定文档之后，所关联的栏目生成个数（与栏目id对应）
+    /**
+     * 指定文档生成全部(涉及栏目、首页)
+     * @return {[type]} [description]
+     */
+    function sendAppointAll(){
+        $.ajax({
+             url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildIndexAll&lang="+__lang__+"&uphtmltype="+uphtmltype+"&_ajax=1",
+             type:'GET',
+             dataType:'json',
+             data:{},
+             timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
+             success:function(res){
+                 findex = res.data.typeid;
+                 achieve = res.data.achievepage;
+                 allpagetotal = res.data.allpagetotal;
+                 channelpagetotal = res.data.channelpagetotal;
+                 articlepagetotal = res.data.articlepagetotal;
+                 startid = res.data.startid;
+                 typeids = res.data.typeids;
+                 counts = res.data.counts;
+                 if (0 == articlepagetotal) {
+                     var timestamp2 = Date.parse(new Date());
+                     var timestamp3 = (timestamp2 - timestamp1) / 1000;
+                     if (timestamp3 < 1) timestamp3 = 1;
+                     $(".finash").remove();
+                     $(".progress-bar").css('width','100%');
+                     $(".progress").removeClass('progress-striped ').removeClass('active');
+                     $(".success").html("生成完成，共耗时：<font color='red'>"+timestamp3+"</font> 秒");
+                     $('#a_close_pop').show();
+                     if (msg !== "") {
+                         $("#error_msg").show();
+                         $("#error_msg").prepend(msg);
+                         msg = "";
+                     }
+                     return false;
+                 } else {
+                     if ( -1 == res.msg.indexOf('浏览')){
+                         msg += res.msg;
+                     }
+                     progress = ((achieve/allpagetotal)*100).toFixed(1);
+                     $("#title").html('数据优化中');
+                     $(".filepath").html('');
+                     $(".progress-bar").css('width',progress+'%');
+                     $(".percent").text(progress);
+                     if (achieve === 1){
+                         if (msg !== ""){
+                             $("#error_msg").show();
+                             $("#error_msg").prepend(msg);
+                             msg = "";
+                         }
+                         sendAppointArticle();
+                     }
+                 }
+             },
+             error:function(e){
+                parent.layer.alert(e.responseText, {icon: 5, title:false});
+             }
+        });
+    }
+
+    function sendAppointArticle(){
+         $.ajax({
+             url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildArticle&lang="+__lang__+"&id=0&findex="+channelfid+"&achieve="+articleachieve+"&uphtmltype="+uphtmltype+"&startid="+startid+"&_ajax=1",
+             type:'GET',
+             dataType:'json',
+             data:{},
+             timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
+             beforeSend:function(){
+             },
+             success:function(res){
+                 channelfid = res.data.findex;
+                 articleachieve = res.data.achievepage;
+                 msg += res.msg;
+                 progress = (((achieve+articleachieve)/allpagetotal)*100).toFixed(1);
+                 $("#title").html('成功创建文档数：');
+                 $(".filepath").html(channelfid);
+                 $(".progress-bar").css('width',progress+'%');
+                 $(".percent").text(progress);
+                 if (articleachieve === articlepagetotal){
+                     achieve = achieve + articleachieve;
+                     if (msg !== ""){
+                         $("#error_msg").show();
+                         $("#error_msg").prepend(msg);
+                         msg = "";
+                     }
+                     sendAppointChannel();
+                     return false;
+                 }
+                 sendAppointArticle();
+             },
+             error:function(e){
+                parent.layer.alert(e.responseText, {icon: 5, title:false});
+             }
+         });
+    }
+
+    function sendAppointChannel(){
+         $.ajax({
+             url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildChannel&lang="+__lang__+"&id=0&index="+channel_index+"&findex="+articlefid+"&type_index="+type_index+"&achieve=0&uphtmltype="+uphtmltype+"&typeids="+typeids+"&counts="+counts+"&_ajax=1",
+             type:'GET',
+             dataType:'json',
+             data:{},
+             timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
+             beforeSend:function(){
+             },
+             success:function(res){
+                 channel_index = res.data.index;
+                 articlefid = res.data.findex;
+                 channelachieve += res.data.achievepage;  //生成栏目完成数据
+                 type_index = res.data.type_index;
+                 msg += res.msg;
+                 progress = (((achieve+channelachieve)/allpagetotal)*100).toFixed(1);
+                 $("#title").html('成功创建栏目：');
+                 $(".filepath").html(res.data.findex);
+                 if (res.data.index > 1) {
+                     $(".filefindex").html('第'+res.data.index+'页，');
+                 } else {
+                     $(".filefindex").html('');
+                 }
+                 $(".progress-bar").css('width',progress+'%');
+                 $(".percent").text(progress);
+                 if (channelachieve === channelpagetotal){
+                     var timestamp2 = Date.parse(new Date());
+                     var timestamp3 = (timestamp2 - timestamp1) / 1000;
+                     if (timestamp3 < 1) timestamp3 = 1;
+                     $(".finash").remove();
+                     $(".progress-bar").css('width','100%');
+                     $(".progress").removeClass('progress-striped ').removeClass('active');
+                     $(".success").html("生成完成，共耗时：<font color='red'>"+timestamp3+"</font> 秒");
+                     $('#a_close_pop').show();
+                     if (msg !== ""){
+                         $("#error_msg").show();
+                         $("#error_msg").prepend(msg);
+                         msg = "";
+                     }
+                     return false;
+                 }
+                 sendAppointChannel();
+             },
+             error:function(e){
+                parent.layer.alert(e.responseText, {icon: 5, title:false});
+             }
+         });
+    }
+
+    if (0 == uphtmltype) { // 更新全部
+        sendIndex();
+    } else if (1 == uphtmltype || 2 == uphtmltype) {
+        sendAppointAll();
+    }
 </script>
 </body>
 </html>

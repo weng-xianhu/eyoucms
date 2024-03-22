@@ -3,7 +3,7 @@
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width:auto; ">
+<div class="page min-hg-c-10">
     {include file="system/bar" /}
     <div class="flexigrid htitx">
         {eq name="$pay_open" value="1"}
@@ -16,8 +16,8 @@
         {include file="system/notify" /}
         <!-- END -->
 
-        <!-- 微站点配置 -->
-        {include file="system/microsite" /}
+        <!-- 渠道配置 -->
+        {include file="system/canal_list" /}
         <!-- END -->
     </div>
 </div>
@@ -29,17 +29,19 @@
     </div>
     <div class="floatNav-con">
         <ul>
+            {eq name="$pay_open" value="1"}
             <li>
                 <div class="dot"></div>
                 <div class="event" data-to="alipay_set"><a href="javascript:void(0);">支付接口</a></div>
             </li>
+            {/eq}
             <li>
                 <div class="dot"></div>
                 <div class="event" data-to="notify_list"><a href="javascript:void(0);">消息通知</a></div>
             </li>
             <li>
                 <div class="dot"></div>
-                <div class="event" data-to="microsite"><a href="javascript:void(0);">微站点设置</a></div>
+                <div class="event" data-to="canal_list"><a href="javascript:void(0);">渠道配置</a></div>
             </li>
         </ul>
     </div>

@@ -14,7 +14,7 @@ class Page{
     public $url     = ''; //当前链接URL
     public $nowPage = 1;
 
-	// 分页显示定制
+    // 分页显示定制
     private $config  = array(
         'header' => '<span class="rows">共 %TOTAL_ROW% 条记录</span>',
         /*
@@ -45,13 +45,23 @@ class Page{
         $this->listRows   = empty($pagesize) ? $listRows : $pagesize;  //设置每页显示行数
         $this->parameter  = empty($parameter) ? input() : $parameter;
         $this->nowPage    = empty($p) ? 1 : $p;
-//        $this->parameter  = empty($parameter) ? $_REQUEST : $parameter;
-//        $this->nowPage    = empty($_REQUEST[$this->p]) ? 1 : intval($_REQUEST[$this->p]);        
+        // $this->parameter  = empty($parameter) ? $_REQUEST : $parameter;
+        // $this->nowPage    = empty($_REQUEST[$this->p]) ? 1 : intval($_REQUEST[$this->p]);        
         $this->nowPage    = $this->nowPage>0 ? $this->nowPage : 1;
         $this->firstRow   = $this->listRows * ($this->nowPage - 1);
         /* 计算分页信息 */
         $this->totalPages = ceil($this->totalRows / $this->listRows)>0 ? ceil($this->totalRows / $this->listRows) : 1; //总页数
         
+        if (isMobile()) {
+            $this->config = [
+                'header' => '<span class="rows">共 %TOTAL_ROW% 条记录</span>',
+                'prev'   => '上一页',
+                'next'   => '下一页',
+                'first'  => '首页',
+                'last'   => '尾页',
+                'theme'  => '%FIRST% %UP_PAGE% %LINK_PAGE% %DOWN_PAGE% %END%',
+            ];
+        }
     }
 
     /**
@@ -77,7 +87,7 @@ class Page{
         static $seo_pseudo = null;
         null === $seo_pseudo && $seo_pseudo = config('ey_config.seo_pseudo');
         if ($seo_pseudo == 3 || $seo_pseudo == 2) {
-            if (!strstr($this->url, '.htm')){
+            if (!strstr($this->url, '.htm') && !preg_match('/m=([^&]+)&c=([^&]+)&a=([^&]+)/i', $this->url)){
                 $this->url = rtrim($this->url, '/').'/';
             }
         }
@@ -96,22 +106,28 @@ class Page{
         $mca = MODULE_NAME.'/'.CONTROLLER_NAME.'/'.ACTION_NAME;
         $this->url = U($mca, $this->parameter);
 
-        if(!empty($this->totalPages) && $this->nowPage > $this->totalPages) {
+        if (!empty($this->totalPages) && $this->nowPage > $this->totalPages) {
             $this->nowPage = $this->totalPages;
         }
 
         /* 计算分页临时变量 */
         $now_cool_page      = $this->rollPage/2;
-		$now_cool_page_ceil = ceil($now_cool_page);
-		$this->lastSuffix && $this->config['last'] = $this->totalPages;
+        $now_cool_page_ceil = ceil($now_cool_page);
+        $this->lastSuffix && $this->config['last'] = $this->totalPages;
         $this->config['last'] = '尾页';
         //上一页
         $up_row  = $this->nowPage - 1;
         $up_page = $up_row > 0 ? '<li id="example1_previous" class="paginate_button previous"><a class="prev" href="' . $this->url($up_row) . '">' . $this->config['prev'] . '</a></li>' : '';
+        if ($this->totalPages > 1 && $up_row <= 0) {
+            $up_page = '<li id="example1_previous" class="paginate_button previous disabled"><a class="prev" href="javascript:void(0);">' . $this->config['prev'] . '</a></li>'.$up_page;
+        }
 
         //下一页
         $down_row  = $this->nowPage + 1;
         $down_page = ($down_row <= $this->totalPages) ? '<li id="example1_next" class="paginate_button next"><a class="next" href="' . $this->url($down_row) . '">' . $this->config['next'] . '</a></li>' : '';
+        if ($this->totalPages > 1 && $down_row > $this->totalPages) {
+            $down_page = $down_page.'<li id="example1_next" class="paginate_button next disabled"><a class="next" href="javascript:void(0);">' . $this->config['next'] . '</a></li>';
+        }
 
         //第一页
         $the_first = '';
@@ -131,26 +147,28 @@ class Page{
 
         //数字连接
         $link_page = "";
-        for($i = 1; $i <= $this->rollPage; $i++){
-			if(($this->nowPage - $now_cool_page) <= 0 ){
-				$page = $i;
-			}elseif(($this->nowPage + $now_cool_page - 1) >= $this->totalPages){
-				$page = $this->totalPages - $this->rollPage + $i;
-			}else{
-				$page = $this->nowPage - $now_cool_page_ceil + $i;
-			}
-            if($page > 0 && $page != $this->nowPage){
-
-                if($page <= $this->totalPages){
-                    $link_page .= '<li class="paginate_button"><a class="num" href="' . $this->url($page) . '">' . $page . '</a></li>';
+        if (!isMobile()) {
+            for ($i = 1; $i <= $this->rollPage; $i++) {
+                if(($this->nowPage - $now_cool_page) <= 0 ){
+                    $page = $i;
+                }elseif(($this->nowPage + $now_cool_page - 1) >= $this->totalPages){
+                    $page = $this->totalPages - $this->rollPage + $i;
                 }else{
-                    break;
+                    $page = $this->nowPage - $now_cool_page_ceil + $i;
                 }
-            }else{
-                if($page > 0 && $this->totalPages != 1){
-//                    $link_page .= '<span class="current">' . $page . '</span>';
-                    $link_page .= '<li class="paginate_button active"><a tabindex="0" data-dt-idx="1" aria-controls="example1" href="javascript:void(0);">' . $page . '</a></li>';
+                if($page > 0 && $page != $this->nowPage){
 
+                    if($page <= $this->totalPages){
+                        $link_page .= '<li class="paginate_button"><a class="num" href="' . $this->url($page) . '">' . $page . '</a></li>';
+                    }else{
+                        break;
+                    }
+                }else{
+                    if($page > 0 && $this->totalPages != 1){
+                        // $link_page .= '<span class="current">' . $page . '</span>';
+                        $link_page .= '<li class="paginate_button active"><a tabindex="0" data-dt-idx="1" aria-controls="example1" href="javascript:void(0);">' . $page . '</a></li>';
+
+                    }
                 }
             }
         }

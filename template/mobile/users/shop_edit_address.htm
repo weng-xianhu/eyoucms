@@ -1,107 +1,70 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8" />
-    <title>修改收货地址-{eyou:global name='web_name' /}</title>
-    <meta name="renderer" content="webkit">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
-    {eyou:static file="users/skin/css/bootstrap.min.css" /}
-    {eyou:static file="users/skin/css/eyoucms.css" /}
-    {eyou:static file="users/skin/css/basic.css" /}
-    {eyou:static file="users/skin/css/shop.css" /}
-    <!-- 新样式 2020-11-25 -->
-    {eyou:static file="users/skin/css/element/index.css" /}
-    {eyou:static file="users/skin/css/e-user.css" /}
-    {eyou:include file="users/skin/css/diy_css.htm"/}
+    <head>
+        <meta charset="utf-8" />
+        <title>修改收货地址-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/mobile_global.js"/}
+        {eyou:static file="/public/static/common/js/shop_address.js"/}
+    </head>
 
-    {eyou:static file="/public/static/common/js/jquery.min.js"/}
-    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
-    {eyou:static file="/public/static/common/js/tag_global.js"/}
-
-    {eyou:static file="/public/static/common/js/shop_edit_addr_v2.js"/}
-
-</head>
-<body>
-<div class="el-row">
-    <form name='theForm' id="theForm" method="post">
-        <div class="ey-popups ey-container">
-            <input type="hidden" name="addr_id" value="{$eyou.field.addr_id}">
-            
-            <div class="el-form-item">
-                <div class="el-input">
-                    <input type="text" value="{$eyou.field.consignee}" name="consignee" required class="el-input__inner" placeholder="收货人姓名">
+    <body>
+        <div class="ey-container">
+            <form name='theForm' id="theForm" method="post">
+                <input type="hidden" name="v2x" value="1">
+                <input type="hidden" name="addr_id" value="{$eyou.field.addr_id}">
+                <div class="ey-con ey-row bgfff">
+                    <div class="item-from-flex">
+                        <div class="item-tit">联系人</div>
+                        <div class="item-con">
+                            <input type="text" name="consignee" id="consignee" value="{$eyou.field.consignee}" autocomplete="off" class="input-text" placeholder="请输入真实姓名">
+                        </div>
+                    </div>
+                    <div class="item-from-flex">
+                        <div class="item-tit">联系电话</div>
+                        <div class="item-con">
+                            <input type="text" name="mobile" id="mobile" value="{$eyou.field.mobile}" autocomplete="off" class="input-text" placeholder="请输入收货手机号码" maxlength="11" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'');">
+                        </div>
+                    </div>
+                    <div class="item-from-flex">
+                        <div class="item-tit">省市区</div>
+                        <div class="item-con">
+                            <div class="ey-select">
+                                <select class="el-input_select_inner address-select" name="province" id='province' onChange="GetRegionData(this, 'province', 1);">
+                                    {eyou:volist name="$eyou.field.Province" id="P_v"}
+                                    <option {if condition="$P_v.id == $eyou.field.province"} selected {/if} value="{$P_v.id}">{$P_v.name}</option>
+                                    {/eyou:volist}
+                                </select>
+                                <select class="el-input_select_inner address-select" name="city" id='city' onChange="GetRegionData(this, 'city', 1);">
+                                    {eyou:volist name="$eyou.field.City" id="C_v"}
+                                    <option {if condition="$C_v.id == $eyou.field.city"} selected {/if} value="{$C_v.id}">{$C_v.name}</option>
+                                    {/eyou:volist}
+                                </select>
+                                <select class="el-input_select_inner address-select" name="district" id='district'>
+                                    {eyou:volist name="$eyou.field.District" id="D_v"}
+                                    <option {if condition="$D_v.id == $eyou.field.district"} selected {/if} value="{$D_v.id}">{$D_v.name}</option>
+                                    {/eyou:volist}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-from-flex">
+                        <div class="item-tit">详细地址</div>
+                        <div class="item-con">
+                            <input type="text" name="address" id="address" value="{$eyou.field.address}" autocomplete="off" class="input-text" placeholder="请输入详细地址">
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="el-form-item">
-                <div class="el-input">
-                    <input type="text" value="{$eyou.field.mobile}" name="mobile" required class="el-input__inner" placeholder="收货人手机">
-                </div>    
-            </div>
-            
-            <div class="el-form-item" style="display: none;">
-                <select class="el-input__inner" name="country">
-                    <option value="{$eyou.field.country}">{$eyou.field.country}</option>
-                </select>
-            </div>
-            
-            <div class="item-flex">
-                <div class="el-form-item">
-                    <select class="el-input__inner" name="province" id='province' onChange="GetRegionData(this,'province')">
-                        {eyou:volist name="$eyou.field.Province" id="P_v"}
-                            <option {if condition="$P_v.id == $eyou.field.province"} selected {/if} value="{$P_v.id}">{$P_v.name}</option>
-                        {/eyou:volist}
-                    </select>
-                </div>
-                
-                <div class="el-form-item">
-                    <select class="el-input__inner" name="city" id='city' onChange="GetRegionData(this,'city')">
-                        {eyou:volist name="$eyou.field.City" id="C_v"}
-                            <option {if condition="$C_v.id == $eyou.field.city"} selected {/if} value="{$C_v.id}">{$C_v.name}</option>
-                        {/eyou:volist}
-                    </select>
-                </div>
-                
-                <div class="el-form-item">
-                    <select class="el-input__inner" name="district" id='district'>
-                        {eyou:volist name="$eyou.field.District" id="D_v"}
-                            <option {if condition="$D_v.id == $eyou.field.district"} selected {/if} value="{$D_v.id}">{$D_v.name}</option>
-                        {/eyou:volist}
-                    </select>
-                </div>
-                
-            </div>
-            
-             <div class="el-form-item">
-                 <textarea class="el-input__inner" style="min-height:50px;" rows="3" name="address" placeholder="收货详情地址">{$eyou.field.address}</textarea>
-             </div>
-
-            {if condition="!isMobile() || !isWeixin()"}
-            <div class="el-form-item">
-                <label class="switchCheck">
-                     <input class="checkbox" type="checkbox" name="is_default" value="1" {if condition="1 == $eyou.field.is_default"} checked="checked" {/if}>
-                    <i></i>
-                </label>
-               <span>默认地址</span>
-            </div>
-            {/if}
-            
-            <input type="hidden" id="GetRegionDataS" value="{eyou:url link='user/Shop/get_region_data'/}">
-            <input type="hidden" id="ShopEditAddress" value="{eyou:url link='user/Shop/shop_edit_address'/}">
-            <input type="hidden" id="DelAddress" value="{eyou:url link='user/Shop/shop_del_address'/}">
-            
-            <div class="el-form-item flex tc">
-                <div class="form-item-l">
-                    <button type="button" class="el-button el-button--primary" style="width: 100%;" onclick="EditAddress();">确定</button>
-                </div>
-                <div class="form-item-r">
-                    <a class="el-button el-button--default" style="width: 100%;" href="javascript:void(0);" {$eyou.field.onDelAddress}>删除</a>
-                </div>
-            </div>
+                <div class="public-btn"><a href="JavaScript:void(0);" onclick="editMoveAddress();">保存地址</a></div>
+            </form>
         </div>
-        
-    </form>
-</div>
-</body>
+        {eyou:static file="/public/static/common/js/shop_edit_addr_v2.js"/}
+    </body>
 </html>

@@ -1,25 +1,34 @@
 {include file="public/layout" /}
-
-<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
     <div class="fixed-bar">
         <div class="item-title">
-            <a class="back" href="{:url('Channeltype/index')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            <a class="back_xin" href="{:url('Channeltype/index')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>留言模型</h3>
+                <h5></h5>
+            </div>
             <ul class="tab-base nc-row">
-                <li><a href="javascript:void(0);" class="tab current"><span>留言属性</span></a></li>
+                {eq name="'Channeltype@edit'|is_check_access" value="1"}
+                <li><a href="{:url('Channeltype/edit', ['id'=>8])}" {eq name='$Request.action' value='edit'}class="current"{/eq}><span>模型编辑</span></a></li>
+                {/eq}
+                {eq name="'Channeltype@edit'|is_check_access" value="1"}
+                    <li><a href="{:url('Field/attribute_index')}" {eq name='$Request.action' value='attribute_index'}class="current"{/eq}><span>字段管理</span></a></li>
+                {/eq}
             </ul>
         </div>
     </div>
     <div class="flexigrid">
-        <div class="mDiv">
+        <div class="mDiv pt0">
             <div class="ftitle">
                 {eq name="$Think.const.CONTROLLER_NAME.'@attribute_add'|is_check_access" value="1"}
                 <div class="fbutton">
                     <a href="javascript:void(0);" onclick="attribute_add(this);" data-href="{:url('Field/attribute_add', array('typeid'=>$Request.param.typeid))}">
-                        <div class="add" title="新增属性">
-                            <span><i class="layui-icon layui-icon-addition"></i>新增属性</span>
+                        <div class="add">
+                            <span><i class="layui-icon layui-icon-addition"></i>新增字段</span>
                         </div>
                     </a>
                 </div>
@@ -31,7 +40,7 @@
                         if (0 == count) {
                             layer.alert('请先建立留言栏目，并关联留言模型后再操作！', {icon: 5, title:false});
                         } else {
-                            openFullframe(obj, '新增属性', '100%', '100%');
+                            openFullframe(obj, '新增字段', '100%', '100%');
                         }
                     }
                 </script>
@@ -49,9 +58,9 @@
                         {/gt}
                     </div>
                     <div class="sDiv2">
-                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="属性搜索...">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="字段搜索...">
                         <input type="submit" class="btn" value="搜索">
-                        <i class="fa fa-search"></i>
+                        <i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -70,10 +79,10 @@
                             <div class="tc">ID</div>
                         </th>
                         <th abbr="article_title" axis="col3" class="">
-                            <div style="text-align: left; padding-left: 10px;" class="">属性名称</div>
+                            <div style="text-align: left; padding-left: 10px;" class="">字段名称</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">属性类型</div>
+                            <div class="tc">字段类型</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w100">
                             <div class="tc">所属栏目</div>
@@ -96,7 +105,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -118,7 +129,7 @@
                             <td style="width: 100%">
                                 <div style="text-align: left; padding-left: 10px;">
                                     {eq name="$Think.const.CONTROLLER_NAME.'@attribute_edit'|is_check_access" value="1"}
-                                    <a href="javascript:void(0);" data-href="{:url('Field/attribute_edit',array('id'=>$vo['attr_id']))}" onclick="openFullframe(this, '编辑属性', '100%', '100%');">{$vo.attr_name}</a>
+                                    <a href="javascript:void(0);" data-href="{:url('Field/attribute_edit',array('id'=>$vo['attr_id']))}" onclick="openFullframe(this, '编辑字段', '100%', '100%');">{$vo.attr_name}</a>
                                     {else /}
                                     {$vo.attr_name}
                                     {/eq}
@@ -144,12 +155,12 @@
                             <td>
                                 <div class="w180 tc">
                                     {eq name="$Think.const.CONTROLLER_NAME.'@attribute_edit'|is_check_access" value="1"}
-                                    <a href="javascript:void(0);" data-href="{:url('Field/attribute_edit',array('id'=>$vo['attr_id']))}" onclick="openFullframe(this, '编辑属性', '100%', '100%');" class="btn blue">编辑</a>
+                                    <a href="javascript:void(0);" data-href="{:url('Field/attribute_edit',array('id'=>$vo['attr_id']))}" onclick="openFullframe(this, '编辑字段', '100%', '100%');" class="btn blue">编辑</a>
                                     <i></i>
                                     {/eq}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@attribute_del'|is_check_access" value="1"}
                                         {eq name='$main_lang' value='$admin_lang'}
-                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Field/attribute_del')}" data-id="{$vo.attr_id}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
+                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Field/attribute_del')}" data-id="{$vo.attr_id}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
                                         <i></i>
                                         {/eq}
                                     {/eq}
@@ -172,7 +183,7 @@
                     </div>
                     {eq name="$Think.const.CONTROLLER_NAME.'@attribute_del'|is_check_access" value="1"}
                     <div class="fbutton">
-                        <a onclick="batch_del(this, 'ids');" data-url="{:url('Field/attribute_del')}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} class="layui-btn layui-btn-primary">批量删除</a>
+                        <a onclick="batch_del(this, 'ids');" data-url="{:url('Field/attribute_del')}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} class="layui-btn layui-btn-primary">批量删除</a>
                     </div>
                     {/eq}
                 {/eq}
@@ -203,7 +214,7 @@
     function copyToClipBoard(fieldname, attr_id, attr_input_type) {
         if (0 == attr_input_type) { // 单行文本
             var liststr = "<input type='text' id='"+fieldname+"' name='{$"+"field."+fieldname+"}'>";
-            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>属性名称：</dd>';
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
             contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
             contentdiv += '<dd>表单调用代码：</dd>';
             contentdiv += '<dd><input type="text" style="width:400px;" value="' + liststr + '" /></dd>';
@@ -211,7 +222,7 @@
         } 
         else if (1 == attr_input_type) { // 下拉框
             var liststr = "<select name='{$"+"field."+fieldname+"}' id='"+fieldname+"'>\r\n    <option value='无'>无</option>\r\n    {eyou:volist name='$"+"field.options_"+attr_id+"' id='vo'}\r\n        <option value='{$"+"vo.value}'>{$"+"vo.value}</option>\r\n    {/eyou:volist"+"}\r\n</select>";
-            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>属性名称：</dd>';
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
             contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
             contentdiv += '<dd>表单调用代码：</dd>';
             contentdiv += '<dd><textarea rows="4" cols="60" style="width:400px;height:110px;">' + liststr + '</textarea></dd>';
@@ -219,7 +230,7 @@
         } 
         else if (2 == attr_input_type) { // 多行文本
             var liststr = "<textarea id='"+fieldname+"' name='{$"+"field."+fieldname+"}'></textarea>";
-            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>属性名称：</dd>';
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
             contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
             contentdiv += '<dd>表单调用代码：</dd>';
             contentdiv += '<dd><input type="text" style="width:400px;" value="' + liststr + '" /></dd>';
@@ -227,7 +238,7 @@
         } 
         else if (3 == attr_input_type) { // 单选框
             var liststr = "{eyou:volist name='$"+"field.options_"+attr_id+"' id='vo'}\r\n    <label><input type='radio' id='"+fieldname+"' name='{$"+"field."+fieldname+"}' value='{$"+"vo.value}'>{$"+"vo.value}</label>\r\n{/eyou:volist"+"}";
-            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>属性名称：</dd>';
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
             contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
             contentdiv += '<dd>表单调用代码：</dd>';
             contentdiv += '<dd><textarea rows="4" cols="60" style="width:400px;height:80px;">' + liststr + '</textarea></dd>';
@@ -235,7 +246,7 @@
         } 
         else if (4 == attr_input_type) { // 多选框
             var liststr = "{eyou:volist name='$"+"field.options_"+attr_id+"' id='vo'}\r\n    <label><input type='checkbox' name='{$"+"field."+fieldname+"}' value='{$"+"vo.value}'>{$"+"vo.value}</label>\r\n{/eyou:volist"+"}";
-            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>属性名称：</dd>';
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
             contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
             contentdiv += '<dd>表单调用代码：</dd>';
             contentdiv += '<dd><textarea rows="4" cols="60" style="width:400px;height:80px;">' + liststr + '</textarea></dd>';
@@ -243,15 +254,15 @@
         } 
         else if (5 == attr_input_type) { // 上传图片
             var liststr = "<input type='file' name='{$"+"field."+fieldname+"}' value=''>";
-            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>属性名称：</dd>';
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
             contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
             contentdiv += '<dd>表单调用代码：</dd>';
             contentdiv += '<dd><input type="text" style="width:400px;" value="' + liststr + '" /></dd>';
-            contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color:red; ">特别注意：请在前台模板的留言标签里追加 {$'+'field.formhidden} 到 &lt;form  &gt;表单里，<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('+"'https://www.eyoucms.com/plus/view.php?aid=8378','单张图类型教程说明'"+')">详细说明</a>。</dd>'
+            contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color:red; ">特别注意：请在前台模板的留言标签里追加 {$'+'field.formhidden} 到 &lt;form  &gt;表单里，<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('+"'https://www.eyoucms.com/plus/view.php?aid=8378&origin_eycms=1','单张图类型教程说明'"+')">详细说明</a>。</dd>'
             height = '300px';
         } else if (8 == attr_input_type) { // 上传附件
             var liststr = "<input type='file' name='{$"+"field."+fieldname+"}' value=''>";
-            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>属性名称：</dd>';
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
             contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
             contentdiv += '<dd>表单调用代码：</dd>';
             contentdiv += '<dd><input type="text" style="width:400px;" value="' + liststr + '" /></dd>';
@@ -262,22 +273,38 @@
                 "<!--二级-->\n<select {$"+"field.second_id_"+attr_id+"}></select>\n" +
                 "<!--三级-->\n<select {$"+"field.third_id_"+attr_id+"}></select>\n" +
                 "{$"+"field.hidden_"+attr_id+"}";
-            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>属性名称：</dd>';
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
             contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
             contentdiv += '<dd>表单调用代码：</dd>';
-            contentdiv += '<dd><textarea rows="4" cols="60" style="width:400px;height:110px;">' + liststr + '</textarea></dd>';
-            contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color:red; ">特别注意：请在前台模板的留言标签里追加 {$'+'field.hidden_'+attr_id+'} 到 &lt;form  &gt;表单里。</dd>'
-            height = '300px';
+            contentdiv += '<dd><textarea rows="4" cols="60" style="width:400px;height:180px;">' + liststr + '</textarea></dd>';
+            contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color:red; ">特别注意：请在前台模板的留言标签里追加 {$'+'field.hidden_'+attr_id+'} 到 &lt;form  &gt;表单里。</dd>';
+            height = '460px';
+        }else if (10 == attr_input_type) { // 时间
+            var liststr = "<input type=\"text\" name='{$"+"field."+fieldname+"}' id='{$"+"field."+fieldname+"}' placeholder='{$"+"field.itemname_"+attr_id+"}' autocomplete=\"off\">\n\n" +
+                "{"+"eyou:static file='/public/plugins/laydate-v5.3.1/laydate.js' /}\n" +
+                "<script type='text/javascript'>\n" +
+                "    laydate.render({\n" +
+                "       elem: '#{$"+"field."+fieldname+"}'\n" +
+                "       ,type: 'datetime'\n" +
+                "    });\n" +
+                "<"+"/script>";
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
+            contentdiv += '<dd>表单调用代码：</dd>';
+            contentdiv += '<dd><textarea rows="4" cols="60" style="width:400px;height:180px;">' + liststr + '</textarea></dd>';
+            contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color:red; ">特别注意：在弹窗表单里，可能遇到日期插件无法使用，请自行更换其他日期插件处理，谢谢。</dd>';
+            height = '470px';
         }
         else {
-            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>属性名称：</dd>'
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>'
             contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>'
-            contentdiv += '<dd>属性名称：</dd>'
+            contentdiv += '<dd>字段名称：</dd>'
             contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.'+fieldname+'}"></dd>'
             height = '250px';
         }
         contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color: #F60;">请将相应标签复制并粘贴到对应模板文件中！</dd></dl></div>'
         layer.open({
+            shade: layer_shade,
             title: '标签调用',
             type: 1,
             skin: 'layui-layer-demo',

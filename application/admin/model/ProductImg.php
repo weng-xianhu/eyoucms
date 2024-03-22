@@ -79,7 +79,7 @@ class ProductImg extends Model
                 $img_info = array();
                 $filesize = 0;
                 if (is_http_url($val)) {
-                    $imgurl = $val;
+                    $imgurl = handle_subdir_pic($val);
                 } else {
                     $imgurl = ROOT_PATH.ltrim($val, '/');
                     $filesize = @filesize('.'.$val);

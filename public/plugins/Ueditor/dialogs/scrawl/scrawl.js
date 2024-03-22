@@ -5,6 +5,9 @@
  * Time: 上午11:38
  * To change this template use File | Settings | File Templates.
  */
+
+return true; // 涂鸦功能可能存在安全隐患，已注释掉代码
+
 var scrawl = function (options) {
     options && this.initOptions(options);
 };

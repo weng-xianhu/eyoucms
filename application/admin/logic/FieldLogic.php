@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -105,7 +105,7 @@ class FieldLogic extends Model
             if(empty($dfvalue)) {
                 $dfvalue = '';
             }
-            $maxlen = 250;
+            $maxlen = 500;
             $fields[0] = " `$fieldname` varchar($maxlen) NOT NULL DEFAULT '$dfvalue' COMMENT '$fieldtitle';";
             $fields[1] = "varchar($maxlen)";
             $fields[2] = $maxlen;
@@ -122,7 +122,7 @@ class FieldLogic extends Model
         }
         else if("media" == $dtype)
         {
-            $maxlen = 200;
+            $maxlen = 500;
             $fields[0] = " `$fieldname` varchar($maxlen) NOT NULL DEFAULT '$dfvalue' COMMENT '$fieldtitle';";
             $fields[1] = "varchar($maxlen)";
             $fields[2] = $maxlen;
@@ -147,7 +147,7 @@ class FieldLogic extends Model
         else if("htmltext" == $dtype)
         {
             $maxlen = 0;
-            $fields[0] = " `$fieldname` longtext COMMENT '$fieldtitle';";
+            $fields[0] = " `$fieldname` longtext CHARACTER SET utf8 COMMENT '$fieldtitle';";
             $fields[1] = "longtext";
             $fields[2] = $maxlen;
         }
@@ -155,6 +155,10 @@ class FieldLogic extends Model
         {
             $maxlen = 0;
             $dfvalueArr = explode(',', $dfvalue);
+            if (64 < count($dfvalueArr)){
+                $dfvalueArr = array_slice($dfvalueArr, 0, 64);
+                $dfvalue = implode(',', $dfvalueArr);
+            }
             $default_value = '';
             // $default_value = !empty($dfvalueArr[0]) ? $dfvalueArr[0] : '';
             $dfvalue = str_replace(',', "','", $dfvalue);
@@ -180,7 +184,7 @@ class FieldLogic extends Model
             {
                 $dfvalue = '';
             }
-            $maxlen = 200;
+            $maxlen = 500;
             $fields[0] = " `$fieldname` varchar($maxlen) NOT NULL DEFAULT '$dfvalue' COMMENT '$fieldtitle';";
             $fields[1] = "varchar($maxlen)";
             $fields[2] = $maxlen;
@@ -339,15 +343,7 @@ class FieldLogic extends Model
     public function synChannelTableColumns($channel_id)
     {
         $this->synArchivesTableColumns($channel_id);
-
-        // $cacheKey = "admin-FieldLogic-synChannelTableColumns-{$channel_id}";
-        // $cacheValue = cache($cacheKey);
-        // if (!empty($cacheValue)) {
-        //     return true;
-        // }
-
         $channelfieldArr = Db::name('channelfield')->field('name,dtype')->where('channel_id',$channel_id)->getAllWithIndex('name');
-
         $new_arr = array(); // 表字段数组
         $addData = array(); // 数据存储变量
 
@@ -500,7 +496,7 @@ class FieldLogic extends Model
      */
     public function synArctypeTableColumns($channel_id = '')
     {
-        $cacheKey = "admin-FieldLogic-synArctypeTableColumns-{$channel_id}";
+        $cacheKey = md5("admin-FieldLogic-synArctypeTableColumns-{$channel_id}");
         $cacheValue = cache($cacheKey);
         if (!empty($cacheValue)) {
             return true;
@@ -730,7 +726,18 @@ class FieldLogic extends Model
                     
                     default:
                     {
-                        $val = trim($val);
+                        if (is_array($val)) {
+                            $new_val = [];
+                            foreach ($val as $_k => $_v) {
+                                $_v = trim($_v);
+                                if (!empty($_v)) {
+                                    $new_val[] = $_v;
+                                }
+                            }
+                            $val = $new_val;
+                        } else {
+                            $val = trim($val);
+                        }
                         break;
                     }
                 }

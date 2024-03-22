@@ -38,7 +38,9 @@
                         {empty name="list"}
                             <tr>
                                 <td class="no-data" align="center" axis="col0" colspan="50">
-                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                    <div class="no_row">
+                                        <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                    </div>
                                 </td>
                             </tr>
                         {else/}
@@ -88,7 +90,7 @@
         </div>
         <div class="footer-oper">
             <div class="fbutton">
-                <a href="javascript:void(0);" data-url="{:url('Encodes/ajax_ask_type_save')}" onclick="saveAskData(this);"  class="layui-btn layui-btn-primary">
+                <a href="javascript:void(0);" data-url="{:url('Ask/ajax_ask_type_save')}" onclick="saveAskData(this);"  class="layui-btn layui-btn-primary">
                     <span class="">保存</span>
                 </a>
             </div>
@@ -113,7 +115,7 @@
             title: title,
             fixed: true,
             shadeClose: false,
-            shade: 0.3,
+            shade: layer_shade,
             area: ['700px', '430px'],
             content: url
         });
@@ -232,8 +234,16 @@
      */
     function FindDelData(obj, del_id) {
         layer.confirm('此操作不可恢复，确认删除？', {
-            btn  : ['确定', '取消'],
-            title: false
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            shade: layer_shade,
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定','取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function () {
             layer_loading('正在处理');
             $.ajax({

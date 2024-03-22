@@ -27,6 +27,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'form_type' => 
+  array (
+    'name' => 'form_type',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'attr_input_type' => 
   array (
     'name' => 'attr_input_type',
@@ -67,6 +76,15 @@ return array (
   array (
     'name' => 'validate_type',
     'type' => 'smallint(5)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'real_validate' => 
+  array (
+    'name' => 'real_validate',
+    'type' => 'tinyint(1) unsigned',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

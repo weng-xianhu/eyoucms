@@ -3,6 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>跳转提示</title>
+	<link href="__SKIN__/font/css/iconfont.css?v={$version}" rel="stylesheet" />
     <style type="text/css">
         *{ padding: 0; margin: 0; }
         body{ background: #fff; font-family: '微软雅黑'; color: #CCC; font-size: 16px; }
@@ -13,8 +14,8 @@
         .system-message .detail{ font-size: 12px; line-height: 20px; margin-top: 12px; display:none}
         
         .system-message .tit{position: relative;height: 50px;line-height: 50px;width: 100%;border-bottom: 1px solid #eee;}
-        .system-message .tit i{position: absolute;top: 12px;font-size: 30px;margin-right: 10px;color: #53bb4c;}
-        .system-message .tit b{margin: 0 15px 0 30px;font-weight: normal;font-size: 16px;color: #53bb4c;}
+        .system-message .tit i{position: absolute;font-size: 26px;color: #53bb4c;}
+        .system-message .tit b{margin: 0 15px 0 25px;font-weight: normal;font-size: 18px;color: #53bb4c;}
         .system-message .tit span{font-size: 14px;margin: 0 10px;color: #999;}
         .system-message ul{margin: 10px auto; overflow: hidden;}
         .system-message ul li{float: left;list-style: none;margin:5px 18px 5px 0;}
@@ -24,7 +25,7 @@
         var __root_dir__ = "__ROOT_DIR__";
         var __lang__ = "{$admin_lang}";
     </script> 
-    <script type="text/javascript" src="__STATIC__/common/js/jquery.tools.min.js"></script>
+    <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version|default='v1.6.4'}"></script>
     <script type="text/javascript">
         $(function(){
             var height2=$('.system-message').height();
@@ -38,6 +39,7 @@
     <link href="__PUBLIC__/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+	<div style="display: block;height: 10px;background: #f4f4f4;clear: both;"></div>
 {switch name="$code"}
     {case value="1"}
         {php}
@@ -47,7 +49,7 @@
                 $post = array_merge($post, $data);
             }
             $data = $post;
-            $row = \think\DB::name('archives')
+            $row = \think\Db::name('archives')
                 ->field("b.*, a.*, a.aid as aid, c.ifsystem")
                 ->alias('a')
                 ->join('__ARCTYPE__ b', 'a.typeid = b.id', 'LEFT')
@@ -61,8 +63,11 @@
             $seo_pseudo = tpCache('seo.seo_pseudo');
             $lang = input('param.lang/s', 'cn');
             $gourl = cookie('ENV_GOBACK_URL');
+            $gourl = preg_replace('/<script([^\>]*)>([\s\S]+)<\/script>/i', '', urldecode($gourl));
             $addurl = request()->baseFile()."?m=admin&c=Archives&a=add&typeid=".$data['tid']."&lang=".$lang;
-            $listurl = cookie('ENV_LIST_URL')."&typeid=".$data['tid'];
+            $env_list_url = cookie('ENV_LIST_URL');
+            $env_list_url = preg_replace('/<script([^\>]*)>([\s\S]+)<\/script>/i', '', urldecode($env_list_url));
+            $listurl = $env_list_url."&typeid=".$data['tid'];
             if (empty($row['ifsystem'])) {
                 $listurl .= "&channel=".$data['channel'];
                 $addurl .= "&channel=".$data['channel'];
@@ -79,29 +84,37 @@
             }
             if (0 > $row['click'] && -1 < $arcrank) {
                 $push_zzbaidu_type = 'add';
-                \think\DB::name('archives')
+                \think\Db::name('archives')
                     ->where('aid', 'eq', $data['aid'])
                     ->update(['click'=>mt_rand(500, 1000), 'update_time'=>getTime()]);
+            }
+            $zzbaidutoken = config('tpcache.sitemap_zzbaidutoken');//不为空则实时推送Url的token
+            $bdminipro = \think\Db::name('weapp')->where(['code'=>'BdDiyminipro','status'=>1])->count();//是否安装百度小程序
+
+            $seo_uphtml_after = cookie('ENV_UPHTML_AFTER');
+            if (!empty($seo_uphtml_after)) {
+                $seo_uphtml_after = json_decode($seo_uphtml_after, true);
+                $alltypeid = getalltype($data['tid'],'id');
             }
         {/php}
         <div class="system-message">
             <div class="tit">
-                <i class="glyphicon glyphicon-ok-circle"></i><span><b>成功{$msg}文档</b>请选择你的后续操作：</span>
+                <i class="iconfont e-complete"></i><span><b>成功{$msg}文档</b>请选择你的后续操作：</span>
             </div>
             <ul>
                 <li><span>{$msg1}文档</span><a href="{$addurl|default=''}" style="display: none;">{$msg1}文档</a></li>
-                <li><span>查看文档</span><a href="{$arcurl|default=''}" target="_blank" style="display: none;">查看文档</a></li>
+                <li><span>预览文档</span><a href="{$arcurl|default=''}" target="_blank" style="display: none;">预览文档</a></li>
                 <li><span>更改文档</span><a href="{$Request.baseFile}?m=admin&c=Archives&a=edit&id={$data['aid']}&typeid={$data['tid']}&lang={$Request.param.lang|default='cn'}" style="display: none;">更改文档</a></li>
-                <li><span>已发布文档管理</span><a href="{$listurl|default=''}" style="display: none;">已发布文档管理</a></li>
+                <li><span>文档栏目列表</span><a href="{$listurl|default=''}" style="display: none;">文档栏目列表</a></li>
                 {notempty name='$gourl'}
-                <li><span>[记忆的列表页]</span><a href="{$gourl|default=''}" style="display: none;">[记忆的列表页]</a></li>
+                <li><span>[返回原列表]</span><a href="{$gourl|default=''}" style="display: none;">[返回原列表]</a></li>
                 {/notempty}
             </ul>
             {if condition="2 == $seo_pseudo && 1 != $env_is_uphtml"}
-            <div class="buttom" id="tips">正在生成当前文档……请勿刷新！</div>
-            <input type="hidden" id="is_uphtml" value="1">
+                <div class="buttom" id="tips">正在生成当前文档……请勿刷新！</div>
+                <input type="hidden" id="is_uphtml" value="1">
             {else /}
-            <input type="hidden" id="is_uphtml" value="0">
+                <input type="hidden" id="is_uphtml" value="0">
             {/if}
         </div>
         <script type="text/javascript">
@@ -120,69 +133,76 @@
                 cookie('ENV_IS_UPHTML', 1);
         {/php}
         <script type="text/javascript">
-        /* 生成静态页面代码 */
-        var aid = {$data['aid']|default=0};
-        var arcrank = {$arcrank|default=0};
-        var typeid = {$data['tid']|default=0};
-        var ctl_name = "{$ctl_name}";
-        if(aid > 0){
-            $.ajax({
-                url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
-                type:'POST',
-                dataType:'json',
-                data:{aid:aid,typeid:typeid,type:'view',ctl_name:ctl_name,_ajax:1},
-                success:function(res){
-                    layer.closeAll();
-                    $('#tips').html('生成文档HTML成功，正在生成栏目……');
-                    $.ajax({
-                        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
-                        type:'POST',
-                        dataType:'json',
-                        data:{aid:aid,typeid:typeid,type:'lists',ctl_name:ctl_name,_ajax:1},
-                        success:function(res){
-                            layer.closeAll();
-                            $('#tips').html('');
-                            if (arcrank >= 0) {
-                                // 百度自动推送
+            /* 生成静态页面代码 */
+            var aid = {$data['aid']|default=0};
+            var arcrank = {$arcrank|default=0};
+            var typeid = {$data['tid']|default=0};
+            var method = "{$data['method']|default=''}";
+            var ctl_name = "{$ctl_name}";
+            var seo_uphtml_after_home = {$seo_uphtml_after['seo_uphtml_after_home']|default=0};
+            var seo_uphtml_after_channel = {$seo_uphtml_after['seo_uphtml_after_channel']|default=0};
+            var seo_uphtml_after_pernext = {$seo_uphtml_after['seo_uphtml_after_pernext']|default=0};
+            if(aid > 0 && arcrank >= 0){
+                $.ajax({
+                url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__+"&id="+aid+"&t_id="+typeid+"&type=view&ctl_name="+ctl_name+"&_ajax=1",
+                    type:'POST',
+                    dataType:'json',
+                    data:{seo_uphtml_after_pernext:seo_uphtml_after_pernext},
+                    success:function(res){
+                        layer.closeAll();
+                        if (arcrank >= 0) {
+                            // 百度自动推送
+                            var zzbaidutoken = "{$zzbaidutoken|default=''}";
+                            if (zzbaidutoken != '') {
                                 push_zzbaidu('{$arcurl_home}', '{$push_zzbaidu_type}');
-                                // 更新sitemap.xml地图
-                                update_sitemap('{$ctl_name}', '{$push_zzbaidu_type}');
                             }
-                        },
-                        error: function(e){
-                            layer.closeAll();
-                            layer.alert('生成当前栏目HTML失败，请手工生成栏目静态！', {icon: 5, title: false});
+                            // 更新sitemap.xml地图
+                            update_sitemap('{$ctl_name}', '{$push_zzbaidu_type}');
+                            //百度小程序 API 提交 (自动推送)
+                            var bdminipro = {$bdminipro|default=0};
+                            if (bdminipro != 0) {
+                                push_bdminipro(aid, 1);
+                            }
                         }
-                    });
-                },
-                error: function(e){
-                    layer.closeAll();
-                    layer.alert('生成HTML失败，请手工生成静态HTML！', {icon: 5, title: false});
-                },
-                complete:function(){
-                    $('.system-message ul li').each(function(i,o){
-                        $(o).find('span').hide();
-                        $(o).find('a').show();
-                    })
-                }
-            });
-        }
-        /* end */
+                        uphtml_channel();
+                    },
+                    error: function(e){
+                        layer.closeAll();
+                        layer.alert('生成文档失败，请手工生成静态！', {icon: 5, title: false});
+                    },
+                    complete:function(){
+
+                    }
+                });
+            }else{
+                $('#tips').html('');
+                $('.system-message ul li').each(function(i,o){
+                    $(o).find('span').hide();
+                    $(o).find('a').show();
+                });
+            }
+            /* end */
         </script>
         {php}
             } else if (in_array($seo_pseudo, [1,3])) {
         {/php}
         <script type="text/javascript">
-        /* 生成静态页面代码 */
-        var aid = {$data['aid']|default=0};
-        var arcrank = {$arcrank|default=0};
-        if(aid > 0 && arcrank >= 0){
-            // 百度自动推送
-            push_zzbaidu('{$arcurl_home}', '{$push_zzbaidu_type}');
-            // 更新sitemap.xml地图
-            update_sitemap('{$ctl_name}', '{$push_zzbaidu_type}');
-        }
-        /* end */
+            var aid = {$data['aid']|default=0};
+            var arcrank = {$arcrank|default=0};
+            if(aid > 0 && arcrank >= 0){
+                // 百度自动推送
+                var zzbaidutoken = "{$zzbaidutoken|default=''}";
+                if (zzbaidutoken != '') {
+                    push_zzbaidu('{$arcurl_home}', '{$push_zzbaidu_type}');
+                }
+                // 更新sitemap.xml地图
+                update_sitemap('{$ctl_name}', '{$push_zzbaidu_type}');
+                //百度小程序 API 提交 (自动推送)
+                var bdminipro = {$bdminipro|default=0};
+                if (bdminipro != 0) {
+                    push_bdminipro(aid, 1);
+                }
+            }
         </script>
         {php}
             }
@@ -191,7 +211,13 @@
     {case value="0"}
         <div class="system-message">
             <h1 class="glyphicon glyphicon-exclamation-sign" style="color:#F33"></h1>
-            <p class="error">{$msg|strip_tags=###}</p>
+            <p class="error">
+                {if condition="stristr($msg, '__html__')"}
+                    {$msg|str_replace='__html__','',###}
+                {else /}
+                    {$msg|strip_tags=###}
+                {/if}
+            </p>
             <p class="detail"></p>
             <p class="jump">页面自动 <a id="href" href="{$url}" target="{empty name='$target'}_self{else /}{$target}{/empty}">跳转</a> 等待时间：<b id="wait">{$wait}</b>
                 <script type="text/javascript">
@@ -216,5 +242,94 @@
         </div>
     {/case}
 {/switch}
+
+<script type="text/javascript">
+    // 发布/编辑文档后，生成相关栏目
+    function uphtml_channel()
+    {
+        /*if(method === 'edit'){
+            $('#tips').html('');
+            $('.system-message ul li').each(function(i,o){
+                $(o).find('span').hide();
+                $(o).find('a').show();
+            })
+            return false;
+        }*/
+
+        if (0 == seo_uphtml_after_channel) {
+            uphtml_index();
+            return false;
+        }
+
+        $('#tips').html('生成文档成功，正在生成栏目……');
+
+        setTimeout(function (){
+            var alltypeid = {$alltypeid|json_encode};
+            for (var i = 0; i < alltypeid.length; i++) {
+                $.ajax({
+                    url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__+"&id="+aid+"&t_id="+alltypeid[i]+"&type=lists&ctl_name="+ctl_name+"&_ajax=1",
+                    type:'GET',
+                    dataType:'json',
+                    async: false,
+                    data:{},
+                    beforeSend:function(){
+                        
+                    },
+                    success:function(res){
+
+                    },
+                    error: function(e){
+                        layer.alert('生成当前栏目失败，请手工生成静态！', {icon: 5, title: false});
+                    }
+                });
+            }
+            uphtml_index();
+        }, 10);
+    }
+
+    // 发布/编辑文档后，生成首页
+    function uphtml_index()
+    {
+        if (0 == seo_uphtml_after_home) {
+            $('#tips').html('');
+            $('.system-message ul li').each(function(i,o){
+                $(o).find('span').hide();
+                $(o).find('a').show();
+            })
+            return false;
+        }
+
+        var tips = '';
+        if (1 == seo_uphtml_after_channel) {
+            tips = '生成相关栏目成功，正在生成首页……';
+        } else {
+            tips = '生成文档成功，正在生成首页……';
+        }
+        $('#tips').html(tips);
+
+        setTimeout(function (){
+            $.ajax({
+                url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__+"&type=index&_ajax=1",
+                type:'GET',
+                dataType:'json',
+                data:{},
+                beforeSend:function(){
+                    
+                },
+                success:function(res){
+                    $('#tips').html('');
+                    $('.system-message ul li').each(function(i,o){
+                        $(o).find('span').hide();
+                        $(o).find('a').show();
+                    })
+                },
+                error: function(e){
+                    layer.alert('生成网站首页失败，请手工生成网站首页！', {icon: 5, title: false});
+                }
+            });
+        }, 10);
+    }
+</script>
+
 </body>
 </html>

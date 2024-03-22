@@ -1,0 +1,89 @@
+{include file="public/layout" /}
+
+<body class="eyou_body_xin">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div id="geduan_div" class="h10"></div>
+<div class="page" style="min-width: auto; padding-bottom: 15px;">
+    <div class="flexigrid">
+        {include file="notice/notice_details_bar" /}
+        <form class="form-horizontal pl10 pr10" id="post_form" action="" method="post">
+            <div class="ncap-form-default tab_div_1">
+                <!-- 邮件通知 -->
+                <dl class="row">
+                    <dt class="tit">是否开启</dt>
+                    <dd class="opt">
+                        <ul class="nc-row ncap-waybill-list">
+                            <li style="width: 100%;">
+                                <label class="label" >
+                                    <input class="check" type="radio" name="is_open" value="1" {notempty name="$info.is_open"}checked="checked"{/notempty}><span>开启</span>
+                                </label>
+                                &nbsp; &nbsp;
+                                <label class="label" >
+                                    <input class="check" type="radio" name="is_open" value="0" {empty name="$info.is_open"}checked="checked"{/empty}><span>关闭</span>
+                                </label>
+                            </li>
+                        </ul>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit"><em>*</em>邮件标题</dt>
+                    <dd class="opt">
+                        <textarea rows="5" cols="80" name="tpl_title" style="height:80px;" class="w250" placeholder="验证码已发送至您的邮箱，请登录邮箱查看验证码！">{$info.tpl_title}</textarea>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">模板演示</dt>
+                    <dd class="opt"> 
+                        <div class="default-template-content"><img src="__STATIC__/admin/images/notice_template_email_bg.png" alt="" class="bg-img">
+                            <div class="sms-notice">
+                                <div class="message-content">{$info.tpl_title}</div>
+                            </div>
+                        </div>
+                     </dd>
+                </dl>
+                <div style="height: 30px;display: block;"></div>
+                <!-- 短信通知 -->
+            </div>
+            <div class="ncap-form-default">
+                <div class="bot2" style="padding-left: 160px;">
+                    <input type="hidden" name="tpl_id" value="{$info.tpl_id}">
+                    <input type="hidden" name="send_scene" value="{$info.send_scene}">
+                    <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">保存</a>
+                    <a class="ncap-btn-big ncap-btn-no" href="javascript:history.back();" title="返回">返回</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    function checkForm(){
+        if ($('textarea[name=tpl_title]').val() == '') {
+            showErrorMsg('邮件标题不能为空！');
+            $('textarea[name=tpl_title]').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Notice/notice_details_smtp', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if (res.code == 1) {
+                    layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                        window.location.reload();
+                    });
+                } else {
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

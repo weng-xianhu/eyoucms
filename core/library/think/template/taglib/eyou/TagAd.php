@@ -38,22 +38,26 @@ class TagAd extends Base
         /*多语言*/
         $aid = model('LanguageAttr')->getBindValue($aid, 'ad');
         if (empty($aid)) {
-            echo '标签ad报错：找不到与第一套【'.$this->main_lang.'】语言关联绑定的属性 aid 值。';
+            echo '标签ad报错：找不到与第一套【'.self::$main_lang.'】语言关联绑定的属性 aid 值。';
             return false;
+        } else {
+            if (self::$language_split) {
+                $this->lang = Db::name('ad')->where(['id'=>$aid])->cache(true, EYOUCMS_CACHE_TIME, 'ad')->value('lang');
+                if ($this->lang != self::$home_lang) {
+                    $lang_title = Db::name('language_mark')->where(['mark'=>self::$home_lang])->value('cn_title');
+                    echo "标签ad报错：【{$lang_title}】语言 aid 值不存在。";
+                    return false;
+                }
+            }
         }
         /*--end*/
 
-        $result = M("ad")->where([
-                'id'    => $aid,
-                'lang'  => $this->home_lang,
-            ])
-            ->cache(true,EYOUCMS_CACHE_TIME,"ad")
-            ->find();
+        $result = M("ad")->where(['id' => $aid])->cache(true,EYOUCMS_CACHE_TIME,"ad")->find();
         if (empty($result)) {
             echo '标签ad报错：该广告ID('.$aid.')不存在。';
             return false;
         }
-        
+
         $result['litpic'] = handle_subdir_pic(get_default_pic($result['litpic'])); // 默认无图封面
         $result['intro'] = htmlspecialchars_decode($result['intro']); // 解码内容
         $result['target'] = ($result['target'] == 1) ? 'target="_blank"' : 'target="_self"';

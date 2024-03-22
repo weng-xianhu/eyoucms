@@ -24,9 +24,11 @@ function CartUnifiedAlgorithm(is_sold_out = null ,aid = null, symbol = null, sel
     }
     if (Number(is_sold_out) < Number(CartNum)) {
         layer.msg('商品库存仅！'+is_sold_out+'件', {time: 1500});
-        NumV.val(is_sold_out);
+        var pre_value = NumV.attr('data-pre_value');
+        NumV.val(pre_value);
         return false;
     }
+    NumV.attr('data-pre_value', CartNum);
 
     var PriceV       = $('#'+cart_id+'_price');     //单价
     var SubTotalV    = $('#'+cart_id+'_subtotal');  //小计
@@ -42,21 +44,21 @@ function CartUnifiedAlgorithm(is_sold_out = null ,aid = null, symbol = null, sel
         }
         // 计算单品小计
         var SubTotalNums = Number(PriceV.html()) * Number(NumV.val());
-        SubTotalV.html(SubTotalNums.toFixed(2));
+        SubTotalV.html(parseFloat(SubTotalNums.toFixed(2)));
         
     } else if ('+' == symbol) {
         // 计算单品数量
         NumV.val(Number(NumV.val()) + 1);
         // 计算单品小计
         var SubTotalNums = Number(PriceV.html()) * Number(NumV.val());
-        SubTotalV.html(SubTotalNums.toFixed(2));
+        SubTotalV.html(parseFloat(SubTotalNums.toFixed(2)));
 
     } else if ('-' == symbol && NumV.val() > '1') {
         // 计算单品数量
         NumV.val(Number(NumV.val()) - 1);
         // 计算单品小计
         var SubTotalNums = Number(PriceV.html()) * Number(NumV.val());
-        SubTotalV.html(SubTotalNums.toFixed(2));
+        SubTotalV.html(parseFloat(SubTotalNums.toFixed(2)));
 
     } else {
         // 数量减少，为1时不可减。
@@ -82,7 +84,7 @@ function CartUnifiedAlgorithm(is_sold_out = null ,aid = null, symbol = null, sel
                 });
             } else {
                 TotalNumberV.html(res.data.NumberVal);
-                TotalAmountV.html(res.data.AmountVal);
+                TotalAmountV.html(parseFloat(res.data.AmountVal));
             }
         }
     });
@@ -105,7 +107,7 @@ function Checked(cart_id,selected){
         if ('0' == selected) {
             div_inputs.each(function(){
                 // 赋值单选框
-                $('#'+this.id).prop('checked','true');
+                $('#'+this.id).prop('checked', true);
                 $('#'+this.id).val('1');
 
                 // 赋值隐藏域
@@ -124,7 +126,7 @@ function Checked(cart_id,selected){
         }else{
             div_inputs.each(function(){
                 // 赋值单选框
-                $('#'+this.id).removeProp("checked");
+                $('#'+this.id).prop("checked", false);
                 $('#'+this.id).val('0');
 
                 // 赋值隐藏域
@@ -139,7 +141,7 @@ function Checked(cart_id,selected){
 
         // 赋值总额总数
         TotalNumberV.html(NumberVal);
-        TotalAmountV.html(AmountVal.toFixed(2));
+        TotalAmountV.html(parseFloat(AmountVal.toFixed(2)));
 
     }else{
         selected       = $('#'+cart_id+'_Selected').val();  // 获取是否全选
@@ -160,23 +162,23 @@ function Checked(cart_id,selected){
             $('#'+cart_id+'_Selected').val('1');
             if (div_inputs.length == CheckedNum) {
                 // 全部选中
-                $('#AllChecked').prop('checked','true');
+                $('#AllChecked').prop('checked', true);
                 $('#AllSelected').val('1');
             }else{
                 // 非全部选中
-                $('#AllChecked').removeProp("checked");
+                $('#AllChecked').prop("checked", false);
                 $('#AllSelected').val('0');
             }
         }else{
             // 撤销选中
             $('#'+cart_id+'_Selected').val('0');
-            $('#AllChecked').removeProp("checked");
+            $('#AllChecked').prop("checked", false);
             $('#AllSelected').val('0');
         }
 
         // 赋值数据
         TotalNumberV.html(NumberVal);
-        TotalAmountV.html(AmountVal.toFixed(2));
+        TotalAmountV.html(parseFloat(AmountVal.toFixed(2)));
     }
     
     // 修改购物车选中数据
@@ -197,7 +199,8 @@ function Checked(cart_id,selected){
 function CartDel(cart_id,title){
     var JsonData = b82ac06cf24687eba9bc5a7ba92be4c8;
     var url = JsonData.cart_del_url;
-    layer.confirm('确定要删除 <span style="color:red;">'+title+'</span> ？', {
+    layer.confirm('确定删除吗？', {
+        title: false,
         btn: ['确认', '取消'] //按钮
     }, function () {
         $.ajax({
@@ -211,7 +214,7 @@ function CartDel(cart_id,title){
                     $('#' + cart_id + '_product').remove();
                     $('#' + cart_id + '_product_spec').remove();
                     $('#TotalNumber').html(res.data.NumberVal);
-                    $('#TotalAmount').html(res.data.AmountVal);
+                    $('#TotalAmount').html(parseFloat(res.data.AmountVal));
                     if (0 == res.data.CartCount) {
                         window.location.reload();
                     }
@@ -241,7 +244,7 @@ function MoveToCollection(cart_id,title){
                     $('#' + cart_id + '_product').remove();
                     $('#' + cart_id + '_product_spec').remove();
                     $('#TotalNumber').html(res.data.NumberVal);
-                    $('#TotalAmount').html(res.data.AmountVal);
+                    $('#TotalAmount').html(parseFloat(res.data.AmountVal));
                 } else {
                     layer.msg(res.msg, {time: 2000});
                 }

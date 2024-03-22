@@ -1,0 +1,177 @@
+<!-- 扩展 -->
+{eyou:case value="img"}
+    <!-- 单张图 start -->
+    <div class="form-group">
+        <div class="input-group input-group-icon">
+            <span class="input-group-addon"><i class="fa fa-shield"></i></span>
+            <input type="text" class="  form-control" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="" style="display: none;"><!--{$vo.info|default=''}-->
+            <input class=" form-control {$vo.fieldArr}_{$vo.name|default=''}_input" placeholder="{$vo.title}" style="height: 43px;" onClick="Get_mobile_{$vo.fieldArr}_{$vo.name|default=''}(1,'','{$vo.title}')">
+        </div>
+    </div>
+    <script type="text/javascript">
+        // 手机端上传单张图
+        function Get_mobile_{$vo.fieldArr}_{$vo.name|default=''}(num, url='', title)
+        {
+            var scriptUrl = '__ROOT_DIR__/public/plugins/layer_mobile/layer.js?v={$version}';
+            // end
+            $.getScript(scriptUrl, function(){
+
+                if (num > 0) {
+                    if (!url) {
+                        url = "{:url('user/Uploadify/upload',['resource'=>'reg'])}";
+                    }
+
+                    if (url.indexOf('?') > -1) {
+                        url += '&';
+                    } else {
+                        url += '?';
+                    }
+
+                    var content = $('#update_mobile_file').html();
+                    content = content.replace(/up_f/g, 'upfile');
+                    content = content.replace(/form1/g,'theForm{$vo.fieldArr}_{$vo.name|default=\'\'}');
+                    content = content.replace(/MobileHeadPic/g,"changeImgMobileUpload_{$vo.fieldArr}_{$vo.name|default=''}");
+
+                    layer_GetUploadify = layer.open({
+                        type:1,
+                        title:title,
+                        anim:'up',
+                        style:'position:fixed; bottom:0; left:0; width: 100%; padding:10px 0; border:none;max-width: 100%;',
+                        content:content,
+                    });
+                } else {
+                    layer.open({
+                        content: '允许上传0张图片',
+                        skin: 'footer',
+                    });
+                    return false;
+                }
+            });
+        }
+
+        function changeImgMobileUpload_{$vo.fieldArr}_{$vo.name|default=''}(){
+
+            $.getScript('__ROOT_DIR__/public/plugins/layer_mobile/layer.js?v={$version}', function(){
+                // 提示信息，2秒自动关闭
+                function MsgOpen(msgs){
+                    layer.open({
+                        content: msgs,
+                        skin: 'msg',
+                        time: 2,
+                    });
+                }
+
+                // 提示信息，估计在底部提示，点击空白处关闭
+                function FooterOpen(msgs){
+                    layer.open({
+                        content: msgs,
+                        skin: 'footer',
+                    });
+                }
+
+                // 提示动画
+                function LoaDing(){
+                    var loading = layer.open({
+                        type:2,
+                        content: '正在处理',
+                    });
+                    return loading;
+                }
+
+                UpdateImgMobileHeadPic_{$vo.fieldArr}_{$vo.name|default=''}();
+
+                // 移动端更换头像
+                function UpdateImgMobileHeadPic_{$vo.fieldArr}_{$vo.name|default=''}()
+                {
+                    // 正在处理提示动画
+                    var loading = LoaDing();
+                    // 获取表单对象
+
+                    var data = new FormData($('#theForm{$vo.fieldArr}_{$vo.name|default=\'\'}')[0]);
+
+                    $.ajax({
+                        url: "{eyou:url link='user/Uploadify/imageUp' vars='savepath=allimg&pictitle=head_pic&dir=images&resource=reg'/}",
+                        type: 'post',
+                        data: data,
+                        dataType: 'json',
+                        cache: false,
+                        processData: false,
+                        contentType: false,
+                        success:function(res){
+                            if (res.state == 'SUCCESS') {
+                                layer.closeAll();
+                                $.getScript('__ROOT_DIR__/public/plugins/layer-v3.1.0/layer.js?v={$version}', function(){});
+                                {$vo.fieldArr}_{$vo.name|default=''}_call_back(res.url);
+
+                            }else{
+                                layer.close(loading);
+                                MsgOpen(res.state);
+                            }
+                        },
+                        error : function(e) {
+                            layer.close(loading);
+                            FooterOpen(e.responseText);
+                        }
+                    });
+                };
+            })
+        }
+    </script>
+    <!-- 单张图 end -->
+{/eyou:case}
+
+{case value="file"}
+{eyou:static file="/public/plugins/layui/css/layui.css" /}
+{eyou:static file="/public/plugins/layui/layui.js" /}
+<!-- 单个文件 start -->
+<div class="form-group">
+    <div class="input-group input-group-icon">
+        <span class="input-group-addon"><i class="fa fa-shield"></i></span>
+        <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" style="display: none;">
+        <button type="button" style="height: 42px;padding: 0 10px; border-width: 1px;" class="el-button el-button--primary is-plain el-button--small" id="upload_{$vo.fieldArr}_{$vo.name|default=''}" ><i class="el-icon-paperclip"></i>{$vo.title}</button>
+        <a id="download_file_{$vo.fieldArr}_{$vo.name|default=''}" style="margin-left: 15px;text-decoration: underline;{eyou:notempty name='$vo.dfvalue' /}display: '';{eyou:else /}display: none;{/eyou:notempty}"
+           {eyou:notempty name='$vo.dfvalue' /} href="{$vo.dfvalue|default=''}" download="{$vo.dfvalue|get_filename=###}" {/eyou:notempty}>
+        <img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件</a>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function(){
+        layui.use('upload', function(){
+            var upload = layui.upload,
+                layer = layui.layer;
+
+            //执行实例
+            var uploadInst = upload.render({
+                elem: "#upload_{$vo.fieldArr}_{$vo.name|default=''}" //绑定元素
+                ,url: "{:url('user/Uploadify/DownloadUploadFileAjax')}"
+                ,exts: '{$vo.ext}'
+                ,size: {$vo.filesize} //限制文件大小，单位 KB
+                ,accept: 'file' //普通文件
+                ,done: function(res){
+                //上传完毕回调
+                if (res.state=="SUCCESS"){
+                    layer.msg('上传成功!')
+                    $("#{$vo.fieldArr}_{$vo.name|default=''}").val(res.url);
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").attr('href',res.url);
+                    var arr = res.url.split("/");
+                    var download = arr[arr.length-1];
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").attr('download',download);
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('color','#000');
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").html(' <img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件');
+                }else {
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('color','red');
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").text(res.state);
+                }
+            }
+        ,error: function(){
+                //请求异常回调
+            }
+        });
+        });
+    })
+</script>
+<!-- 单个文件 end -->
+{/case}

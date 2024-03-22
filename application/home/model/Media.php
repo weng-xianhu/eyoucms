@@ -49,18 +49,27 @@ class Media extends Model
             $field = implode(',', $data);
         }
 
+        $map = [];
+        if (!is_numeric($aid) || strval(intval($aid)) !== strval($aid)) {
+            $map['a.htmlfilename'] = $aid;
+        } else {
+            $map['a.aid'] = intval($aid);
+        }
+
         $result = array();
         if ($isshowbody) {
             $field = !empty($field) ? $field : 'b.*, a.*';
-            $result = db('archives')->field($field)
+            $result = Db::name('archives')->field($field)
                 ->alias('a')
                 ->join('__MEDIA_CONTENT__ b', 'b.aid = a.aid', 'LEFT')
-                ->find($aid);
+                ->where($map)
+                ->find();
         } else {
             $field = !empty($field) ? $field : 'a.*';
-            $result = db('archives')->field($field)
+            $result = Db::name('archives')->field($field)
                 ->alias('a')
-                ->find($aid);
+                ->where($map)
+                ->find();
         }
 
         // 文章TAG标签

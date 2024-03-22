@@ -1,0 +1,73 @@
+<!-- 扩展 -->
+{eyou:case value="img"}
+    <!-- 单张图 start -->
+    <div class="form-group group_z">
+        <div class="input-group input-group-icon">
+            <span class="input-group-addon"><i class="fa fa-shield"></i></span>
+            <input type="text" class="  form-control" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="" style="display: none;"><!--{$vo.info|default=''}-->
+            <input class=" form-control {$vo.fieldArr}_{$vo.name|default=''}_input" placeholder="{$vo.title}" style="height: 43px;" onClick="GetUploadify(1,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back','{:url('user/Uploadify/upload',['resource'=>'reg'])}')">
+        </div>
+    </div>
+    <script type="text/javascript">
+        function {$vo.fieldArr}_{$vo.name|default=''}_call_back(fileurl_tmp)
+        {
+            $("#{$vo.fieldArr}_{$vo.name|default=''}").val(fileurl_tmp);
+            $(".{$vo.fieldArr}_{$vo.name|default=''}_input").val(fileurl_tmp);
+        }
+    </script>
+    <!-- 单张图 end -->
+{/eyou:case}
+{case value="file"}
+{eyou:static file="/public/plugins/layui/css/layui.css" /}
+{eyou:static file="/public/plugins/layui/layui.js" /}
+<!-- 单个文件 start -->
+<div class="form-group group_z">
+    <div class="input-group input-group-icon">
+        <span class="input-group-addon"><i class="fa fa-shield"></i></span>
+        <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" style="display: none;">
+        <button type="button" style="height: 42px;padding: 0 10px; border-width: 1px;" class="el-button el-button--primary is-plain el-button--small" id="upload_{$vo.fieldArr}_{$vo.name|default=''}" ><i class="el-icon-paperclip"></i>{$vo.title}</button>
+        <a id="download_file_{$vo.fieldArr}_{$vo.name|default=''}" style="margin-left: 10px;text-decoration: underline;{eyou:notempty name='$vo.dfvalue' /}display: '';{eyou:else /}display: none;{/eyou:notempty}"
+           {eyou:notempty name='$vo.dfvalue' /} href="{$vo.dfvalue|default=''}"  download="{$vo.dfvalue|get_filename=###}" {/eyou:notempty}>
+        <img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件</a>
+    </div>
+</div>
+
+<script>
+    $(function(){
+        layui.use('upload', function(){
+            var upload = layui.upload;
+
+            //执行实例
+            upload.render({
+                elem: "#upload_{$vo.fieldArr}_{$vo.name|default=''}" //绑定元素
+                ,url: "{:url('user/Uploadify/DownloadUploadFileAjax')}"
+                ,exts: '{$vo.ext}'
+                ,size: {$vo.filesize} //限制文件大小，单位 KB
+                ,accept: 'file' //普通文件
+                ,done: function(res){
+                    //上传完毕回调
+                    if (res.state=="SUCCESS"){
+                        layer.msg('上传成功!')
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}").val(res.url);
+                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").attr('href',res.url);
+                        var arr = res.url.split("/");
+                        var download = arr[arr.length-1];
+                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").attr('download',download);
+                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('color','#000');
+                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").html('<img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件');
+                    }else {
+                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").css('color','red');
+                        $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}").text(res.state);
+                    }
+                }
+                ,error: function(){
+                    //请求异常回调
+                }
+            });
+        });
+    })
+</script>
+<!-- 单个文件 end -->
+{/case}

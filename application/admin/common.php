@@ -11,6 +11,115 @@
  * Date: 2018-4-3
  */
 
+if (!function_exists('security_verify_func')) 
+{
+    /**
+     * 当前功能是否需要密保问题验证
+     * @param
+     * @return bool
+     */
+    function security_verify_func($ctl_act = '')
+    {
+        if (empty($ctl_act)) {
+            $ctl = request()->controller();
+            $act = request()->action();
+            $ctl_all = $ctl.'@*';
+            $ctl_act = $ctl.'@'.$act;
+        } else {
+            $ctl_all = preg_replace('/\@([\w\-]+)$/i', '@*', $ctl_act);
+        }
+
+        $security = tpSetting('security');
+        $security_verifyfunc = !empty($security['security_verifyfunc']) ? json_decode($security['security_verifyfunc'], true) : ['Filemanager@*','Arctype@ajax_newtpl','Archives@ajax_newtpl'];
+        if (in_array($ctl_act, ['Filemanager@*','Arctype@ajax_newtpl','Archives@ajax_newtpl'])) {
+            return true;
+        } else {
+            if (!empty($security['security_ask_open'])) {
+                if (in_array($ctl_all, $security_verifyfunc) || in_array($ctl_act, $security_verifyfunc)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+}
+
+if (!function_exists('security_answer_verify')) 
+{
+    /**
+     * 是否验证了密保答案
+     */
+    function security_answer_verify()
+    {
+        $security = tpSetting('security');
+        if (!empty($security['security_ask_open'])) {
+            $admin_id = session('?admin_id') ? (int)session('admin_id') : 0;
+            $admin_info = \think\Db::name('admin')->field('admin_id,last_ip')->where(['admin_id'=>$admin_id])->find();
+            // 当前管理员二次安全验证过的IP地址
+            $security_answerverify_ip = !empty($security['security_answerverify_ip']) ? $security['security_answerverify_ip'] : '-1';
+            // 同IP不验证
+            if (empty($admin_info) || $admin_info['last_ip'] != $security_answerverify_ip) {
+                return false;
+            }  
+        }
+
+        return true;
+    }
+}
+
+if (!function_exists('del_html_dirpath')){
+    /*
+     * 删除静态页面
+     */
+    function del_html_dirpath(){
+        $error = false;
+        $dirArr = [];
+        $seo_html_listname = tpCache('global.seo_html_listname');
+        $row = \think\Db::name('arctype')->field('dirpath,diy_dirpath')->select();
+        foreach ($row as $key => $val) {
+            $dirpathArr = explode('/', $val['dirpath']);
+            if (3 == $seo_html_listname) {
+                $dir = end($dirpathArr);
+            } else if (4 == $seo_html_listname) {
+                $dirpathArr = explode('/', $val['diy_dirpath']);
+                $dir = end($dirpathArr);
+            } else {
+                $dir = !empty($dirpathArr[1]) ? $dirpathArr[1] : '';
+            }
+            $filepath = "./{$dir}";
+            if (!empty($dir) && !in_array($dir, $dirArr) && file_exists($filepath)) {
+                @unlink($filepath."/index.html");
+                $bool = delFile($filepath, true);
+                if (false !== $bool) {
+                    array_push($dirArr, $dir);
+                } else {
+                    $error = true;
+                }
+            }
+        }
+
+        $data = [];
+        $data['msg'] = '';
+        if ($error) {
+            $num = 0;
+            $wwwroot = glob('*', GLOB_ONLYDIR);
+            foreach ($wwwroot as $key => $val) {
+                if (in_array($val, $dirArr)) {
+                    if (0 == $num) {
+                        $data['msg'] .= "<font color='red'>部分目录删除失败，请手工删除：</font><br/>";
+                    }
+                    $data['msg'] .= ($num+1)."、{$val}<br/>";
+                    $num++;
+                }
+            }
+            $data['height'] = $num * 24;
+        }
+
+        return $data;
+    }
+}
+
 if (!function_exists('is_adminlogin')) 
 {
     /**
@@ -24,33 +133,6 @@ if (!function_exists('is_adminlogin'))
             return $admin_id;
         }else{
             return false;
-        }
-    }
-}
-
-if (!function_exists('adminLog')) 
-{
-    /**
-     * 管理员操作记录
-     * @param $log_url 操作URL
-     * @param $log_info 记录信息
-     */
-    function adminLog($log_info = ''){
-        $admin_id = session('admin_id');
-        $admin_id = !empty($admin_id) ? $admin_id : -1;
-        $add['log_time'] = getTime();
-        $add['admin_id'] = $admin_id;
-        $add['log_info'] = $log_info;
-        $add['log_ip'] = clientIP();
-        $add['log_url'] = request()->baseUrl() ;
-        M('admin_log')->add($add);
-        
-        // 只保留最近一个月的操作日志
-        try {
-            $ajaxLogic = new \app\admin\logic\AjaxLogic;
-            $ajaxLogic->del_adminlog();
-        } catch (\Exception $e) {
-            
         }
     }
 }
@@ -74,19 +156,22 @@ if (!function_exists('getAdminInfo'))
             if (!empty($admin_info)) {
                 // 头像
                 empty($admin_info['head_pic']) && $admin_info['head_pic'] = get_head_pic($admin_info['head_pic'], true);
-                
                 // 权限组
                 $admin_info['role_id'] = !empty($admin_info['role_id']) ? $admin_info['role_id'] : -1;
+                // 是否创始人
+                $is_founder = 0;
                 if (-1 == $admin_info['role_id']) {
                     if (!empty($admin_info['parent_id'])) {
                         $role_name = '超级管理员';
                     } else {
+                        $is_founder = 1;
                         $role_name = '创始人';
                     }
                 } else {
                     $role_name = $admin_info['role_name'];
                 }
                 $admin_info['role_name'] = $role_name;
+                $admin_info['is_founder'] = $is_founder;
             }
         }
         
@@ -168,12 +253,99 @@ if (!function_exists('is_check_access'))
             $admin_auths = array_unique($admin_auths);
             $diff_auths = array_diff($all_auths, $admin_auths);
 
+            if (in_array('archives@index_draft', $diff_auths) && !in_array('archives@*', $diff_auths)) {
+                $index_key = array_search('archives@index_draft', $diff_auths);
+                if (isset($diff_auths[$index_key])) {
+                    unset($diff_auths[$index_key]);
+                }
+            }
+
             if (in_array($ctl_act, $diff_auths) || in_array($ctl_all, $diff_auths)) {
+                $bool_flag = false;
+            }else if($ctl_act == 'order@index' && (in_array('member@money_index', $diff_auths) || in_array('member@*', $diff_auths)) && (in_array('shop@index', $diff_auths) || in_array('shop@*', $diff_auths))){ //Member@money_index 会员订单入口； Shop@index 商城中心订单都没有权限的清空下，关闭订单管理
                 $bool_flag = false;
             }
         }
 
         return $bool_flag;
+    }
+}
+if (!function_exists('getAdminMenuList')){
+    /**
+     * 根据角色权限过滤菜单
+     * $menu_list   所有菜单
+     */
+    function getAdminMenuList($menuArr){
+        $role_id = session('admin_info.role_id');
+        if (0 < intval($role_id)) {
+            $auth_role_info = session('admin_info.auth_role_info');
+            $permission = $auth_role_info['permission'];
+            $permission_rules = !empty($permission['rules']) ? $permission['rules'] : [];
+            $permission_plugins = !empty($permission['plugins']) ? $permission['plugins'] : [];
+            if (!empty($permission_plugins)){
+                $permission_plugins = get_arr_column($permission_plugins,"code");
+            }
+            $web_weapp_switch = tpCache('global.web_weapp_switch');
+            $auth_rule = get_auth_rule();
+            $all_auths = []; // 系统全部权限对应的菜单ID
+            $admin_auths = []; // 用户当前拥有权限对应的菜单ID
+            $diff_auths = []; // 用户没有被授权的权限对应的菜单ID
+
+            foreach($auth_rule as $key => $val){
+                $all_auths = array_merge($all_auths, explode(',', strtolower($val['auths'])));
+                if (in_array($val['id'], $permission_rules)) {
+                    $admin_auths = array_merge($admin_auths, explode(',', strtolower($val['auths'])));
+                }
+            }
+            $all_auths = array_unique($all_auths);
+            $admin_auths = array_unique($admin_auths);
+            $diff_auths = array_diff($all_auths, $admin_auths);
+
+            if (in_array('archives@index_draft', $diff_auths) && !in_array('archives@*', $diff_auths)) {
+                $index_key = array_search('archives@index_draft', $diff_auths);
+                if (isset($diff_auths[$index_key])) {
+                    unset($diff_auths[$index_key]);
+                }
+            }
+
+            //过滤该用户不包含的权限
+            foreach($menuArr as $k=>$val){
+                $ctl = strtolower($val['controller_name']);
+                $act = strtolower($val['action_name']);
+                $ctl_act = $ctl.'@'.$act;
+                $ctl_all = $ctl.'@*';
+                if (in_array($ctl_act, $diff_auths) || in_array($ctl_all, $diff_auths)) {
+                    unset($menuArr[$k]);//过滤菜单
+                }else if($val['menu_id'] == '2004021' && !is_check_access("Member@money_index") && !is_check_access("Member@money_index")){ //Member*money_index 会员订单入口； Shop*index 商城中心订单
+                    unset($menuArr[$k]);//Member*money_index 会员订单入口； Shop*index 商城中心订单都没有权限的清空下，关闭订单管理
+                } else if ($val['menu_id'] == '2004') {
+                    if ($auth_role_info['switch_map'] <= 0) {
+                        unset($menuArr[$k]); // 功能地图入口
+                    }
+                }
+                //过滤没有权限的插件
+                if ($ctl == 'weapp' && $act == 'execute'){
+                    if (1 != $web_weapp_switch || empty($permission_plugins)){
+                        unset($menuArr[$k]);//过滤菜单
+                    }else{
+                        $param_str = get_str_between($val['param'], "sm|", "|sc");
+                        if (!in_array($param_str,$permission_plugins)){
+                            unset($menuArr[$k]);//过滤菜单
+                        }
+                    }
+                }
+            }
+        }
+
+        return $menuArr;
+    }
+}
+if (!function_exists('get_str_between')){
+    function get_str_between($input, $start, $end) {
+        $substr = substr($input, strlen($start)+strpos($input, $start),(strlen($input) - strpos($input, $end))*(-1));
+
+        return $substr;
+
     }
 }
 
@@ -288,25 +460,25 @@ if (!function_exists('tpversion'))
         $mysql_version  = $mysqlinfo[0]['version'];
         $global_config = tpCache('global');
         $users_config = getUsersConfigData('all');
-        $vaules = array(            
-            'domain'=>$_SERVER['HTTP_HOST'], 
+        $values = array(            
+            'domain'=>request()->host(), 
             'key_num'=>$curent_version, 
             'install_time'=>$install_time, 
             'serial_number'=>$serial_number,
-            'ip'    => GetHostByName($_SERVER['SERVER_NAME']),
+            'ip'    => serverIP(),
             'agentcode' => !empty($global_config['php_agentcode']) ? $global_config['php_agentcode'] : 0,
             'global_config' => base64_encode(json_encode($global_config)),
             'users_config' => base64_encode(json_encode($users_config)),
             'phpv'  => urlencode(phpversion()),
             'mysql_version' => urlencode($mysql_version),
             'web_server'    => urlencode($_SERVER['SERVER_SOFTWARE']),
-            'web_title' => tpCache('web.web_title'),
+            'web_title' => tpCache('global.web_title'),
         );
         // api_Service_user_push
-        $service_ey = config('service_ey');
-        $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVNlcnZpY2UmYT11c2VyX3B1c2gm';
-        $url = base64_decode($service_ey).base64_decode($tmp_str);
-        @httpRequest($url, 'POST', $vaules, [], $timeout);
+        $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+        $upgradeLogic->GetKeyData($values);
+        $url = $upgradeLogic->getServiceUrl().'/index.php?m=api&c=Service&a=user_push';
+        @httpRequest($url, 'POST', $values, [], $timeout);
     }
 }
 
@@ -320,7 +492,7 @@ if (!function_exists('push_zzbaidu'))
         // 获取token的值：http://ziyuan.baidu.com/linksubmit/index?site=http://www.eyoucms.com/
         $aid = intval($aid);
         $typeid = intval($typeid);
-        $sitemap_zzbaidutoken = tpCache('sitemap.sitemap_zzbaidutoken');
+        $sitemap_zzbaidutoken = tpCache('global.sitemap_zzbaidutoken');
         if (empty($sitemap_zzbaidutoken) || (empty($aid) && empty($typeid)) || !function_exists('curl_init')) {
             return '';
         }
@@ -361,561 +533,6 @@ if (!function_exists('push_zzbaidu'))
     }
 }
 
-if (!function_exists('sitemap_auto')) 
-{
-    /**
-     * 自动生成引擎sitemap
-     */
-    function sitemap_auto()
-    {
-        $sitemap_config = tpCache('sitemap');
-        if (isset($sitemap_config['sitemap_auto']) && $sitemap_config['sitemap_auto'] > 0) {
-            sitemap_all();
-        }
-    }
-}
-
-if (!function_exists('sitemap_all')) 
-{
-    /**
-     * 生成全部引擎sitemap
-     */
-    function sitemap_all()
-    {
-        sitemap_xml();
-    }
-}
-
-if (!function_exists('sitemap_xml')) 
-{
-    /**
-     * 生成xml形式的sitemap
-     */
-    function sitemap_xml()
-    {
-        $globalConfig = tpCache('global');
-        if (!isset($globalConfig['sitemap_xml']) || empty($globalConfig['sitemap_xml'])) {
-            return '';
-        }
-
-        $modelu_name = 'home';
-        $lang = get_current_lang();
-        $default_lang = get_default_lang();
-        $langRow = \think\Db::name('language')->field('is_home_default')->where(['mark'=>$lang])->find();
-        if (!empty($langRow['is_home_default'])) {
-            $filename = ROOT_PATH . "sitemap.xml";
-        } else {
-            $filename = ROOT_PATH . "sitemap_{$lang}.xml";
-        }
-
-        /* 分类列表(用于生成列表链接的sitemap) */
-        $map = array(
-            'status'    => 1,
-            'is_del'    => 0,
-            'lang'      => $lang,
-        );
-        if (is_array($globalConfig)) {
-            // 过滤隐藏栏目
-            if (isset($globalConfig['sitemap_not1']) && $globalConfig['sitemap_not1'] > 0) {
-                $map['is_hidden'] = 0;
-            }
-            // 过滤外部模块
-            if (isset($globalConfig['sitemap_not2']) && $globalConfig['sitemap_not2'] > 0) {
-                $map['is_part'] = 0;
-            }
-        }
-        $result_arctype = M('arctype')->field("*, id AS loc, add_time AS lastmod, 'hourly' AS changefreq, '0.8' AS priority")
-            ->where($map)
-            ->order('sort_order asc, id asc')
-            ->getAllWithIndex('id');
-
-        /* 文章列表(用于生成文章详情链接的sitemap) */
-        if (!isset($globalConfig['sitemap_archives_num']) || $globalConfig['sitemap_archives_num'] === '') {
-            $sitemap_archives_num = 100;
-        } else {
-            $sitemap_archives_num = intval($globalConfig['sitemap_archives_num']);
-        }
-        $result_archives = [];
-        if (0 < $sitemap_archives_num) {
-            $map = array(
-                'channel'   => ['IN', config('global.allow_release_channel')],
-                'arcrank'   => array('gt', -1),
-                'status'    => 1,
-                'is_del'    => 0,
-                'lang'      => $lang,
-            );
-            if (is_array($globalConfig)) {
-                // 过滤外部模块
-                if (isset($globalConfig['sitemap_not2']) && $globalConfig['sitemap_not2'] > 0) {
-                    $map['is_jump'] = 0;
-                }
-            }
-            /*定时文档显示插件*/
-            if (is_dir('./weapp/TimingTask/')) {
-                $TimingTaskRow = model('Weapp')->getWeappList('TimingTask');
-                if (!empty($TimingTaskRow['status']) && 1 == $TimingTaskRow['status']) {
-                    $map['add_time'] = ['elt', getTime()]; // 只显当天或之前的文档
-                }
-            }
-            /*end*/
-            $field = "aid, channel, is_jump, jumplinks, add_time, update_time, typeid, aid AS loc, add_time AS lastmod, 'daily' AS changefreq, '0.5' AS priority";
-            $result_archives = M('archives')->field($field)
-                ->where($map)
-                ->order('aid desc')
-                ->limit($sitemap_archives_num)
-                ->select();
-        }
-
-        /* Tag列表(用于生成Tag标签链接的sitemap) */
-        if (!isset($globalConfig['sitemap_tags_num']) || $globalConfig['sitemap_tags_num'] === '') {
-            $sitemap_tags_num = 100;
-        } else {
-            $sitemap_tags_num = intval($globalConfig['sitemap_tags_num']);
-        }
-        $result_tags = [];
-        if (0 < $sitemap_tags_num) {
-            $map = array(
-                'lang'      => $lang,
-            );
-            $field = "id, add_time, id AS loc, add_time AS lastmod, 'daily' AS changefreq, '0.5' AS priority";
-            $result_tags = M('tagindex')->field($field)
-                ->where($map)
-                ->order('add_time desc')
-                ->limit($sitemap_tags_num)
-                ->select();
-        }
-
-        // header('Content-Type: text/xml');//这行很重要，php默认输出text/html格式的文件，所以这里明确告诉浏览器输出的格式为xml,不然浏览器显示不出xml的格式
-        $xml_wrapper = <<<XML
-<?xml version='1.0' encoding='utf-8'?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-</urlset>
-XML;
-
-        if (function_exists('simplexml_load_string')) {
-            $xml = @simplexml_load_string($xml_wrapper);
-        } else if (class_exists('SimpleXMLElement')) {
-            $xml = new SimpleXMLElement($xml_wrapper);
-        }
-        if (!$xml) {
-            return true;
-        }
-
-        // 更新频率
-        $sitemap_changefreq_index = !empty($globalConfig['sitemap_changefreq_index']) ? $globalConfig['sitemap_changefreq_index'] : 'always';
-        $sitemap_changefreq_list = !empty($globalConfig['sitemap_changefreq_list']) ? $globalConfig['sitemap_changefreq_list'] : 'hourly';
-        $sitemap_changefreq_view = !empty($globalConfig['sitemap_changefreq_view']) ? $globalConfig['sitemap_changefreq_view'] : 'daily';
-
-        // 优先级别
-        $sitemap_priority_index = !empty($globalConfig['sitemap_priority_index']) ? $globalConfig['sitemap_priority_index'] : '1.0';
-        $sitemap_priority_list = !empty($globalConfig['sitemap_priority_list']) ? $globalConfig['sitemap_priority_list'] : '0.8';
-        $sitemap_priority_view = !empty($globalConfig['sitemap_priority_view']) ? $globalConfig['sitemap_priority_view'] : '0.5';
-
-        $langRow = \think\Db::name('language')
-            ->where(['status'=>1])
-            ->order('id asc')
-            ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-            ->select();
-
-        // 去掉入口文件
-        $inletStr = '/index.php';
-        $seo_inlet = config('ey_config.seo_inlet');
-        1 == intval($seo_inlet) && $inletStr = '';
-
-        // 首页
-        if ($lang == $default_lang) {
-            foreach ($langRow as $key => $val) {
-                $mark = $val['mark'];
-                if (empty($globalConfig['web_language_switch']) && $lang != $mark) { // 关闭多语言
-                    continue;
-                }
-                /*单独域名*/
-                $url = $val['url'];
-                if (empty($url)) {
-                    if (1 == $val['is_home_default']) {
-                        $url = request()->domain().ROOT_DIR.'/';
-                    } else {
-                        if ($mark != $default_lang) {
-                            $url = request()->domain().ROOT_DIR."/sitemap_{$mark}.xml";
-                        } else {
-                            $seoConfig = tpCache('seo', [], $mark);
-                            $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
-                            if (1 == $seo_pseudo) {
-                                $url = request()->domain().ROOT_DIR.$inletStr;
-                                if (!empty($inletStr)) {
-                                    $url .= '?';
-                                } else {
-                                    $url .= '/?';
-                                }
-                                $url .= http_build_query(['lang'=>$mark]);
-                            } else {
-                                $url = request()->domain().ROOT_DIR.$inletStr.'/'.$mark;
-                            }
-                        }
-                    }
-                } else {
-                    if (0 == $val['is_home_default']) {
-                        $url = $url.ROOT_DIR."/sitemap_{$mark}.xml";
-                    }
-                }
-                /*--end*/
-
-                $item = $xml->addChild('url'); //使用addChild添加节点
-                foreach (['loc','lastmod','changefreq','priority'] as $key1) {
-                    if ('loc' == $key1) {
-                        $row = $url;
-                    } else if ('lastmod' == $key1) {
-                        $row = date('Y-m-d');
-                    } else if ('changefreq' == $key1) {
-                        $row = $sitemap_changefreq_index;
-                    } else if ('priority' == $key1) {
-                        $row = $sitemap_priority_index;
-                    }
-                    try {
-                        $node = $item->addChild($key1, $row);
-                    } catch (\Exception $e) {}
-                    if (isset($attribute_array[$key1]) && is_array($attribute_array[$key1])) {
-                        foreach ($attribute_array[$key1] as $akey => $aval) {//设置属性值，我这里为空
-                            $node->addAttribute($akey, $aval);
-                        }
-                    }
-                }
-            }
-        }
-        else {
-            foreach ($langRow as $key => $val) {
-                $mark = $val['mark'];
-                if (empty($globalConfig['web_language_switch']) || $lang != $mark) { // 关闭多语言
-                    continue;
-                }
-                /*单独域名*/
-                $url = $val['url'];
-                if (empty($url)) {
-                    $seoConfig = tpCache('seo', [], $mark);
-                    $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
-                    if (1 == $seo_pseudo) {
-                        $url = request()->domain().ROOT_DIR.$inletStr;
-                        if (!empty($inletStr)) {
-                            $url .= '?';
-                        } else {
-                            $url .= '/?';
-                        }
-                        $url .= http_build_query(['lang'=>$mark]);
-                    } else {
-                        $url = request()->domain().ROOT_DIR.$inletStr.'/'.$mark;
-                    }
-                }
-                /*--end*/
-
-                $item = $xml->addChild('url'); //使用addChild添加节点
-                foreach (['loc','lastmod','changefreq','priority'] as $key1) {
-                    if ('loc' == $key1) {
-                        $row = $url;
-                    } else if ('lastmod' == $key1) {
-                        $row = date('Y-m-d');
-                    } else if ('changefreq' == $key1) {
-                        $row = $sitemap_changefreq_index;
-                    } else if ('priority' == $key1) {
-                        $row = $sitemap_priority_index;
-                    }
-                    try {
-                        $node = $item->addChild($key1, $row);
-                    } catch (\Exception $e) {}
-                    if (isset($attribute_array[$key1]) && is_array($attribute_array[$key1])) {
-                        foreach ($attribute_array[$key1] as $akey => $aval) {//设置属性值，我这里为空
-                            $node->addAttribute($akey, $aval);
-                        }
-                    }
-                }
-            }
-        }
-        /*--end*/
-         
-        /*所有栏目*/
-        foreach ($result_arctype as $sub) {
-            if (is_array($sub)) {
-                $item = $xml->addChild('url'); //使用addChild添加节点
-                foreach ($sub as $key => $row) {
-                    if (in_array($key, array('loc','lastmod','changefreq','priority'))) {
-                        if ($key == 'loc') {
-                            if ($sub['is_part'] == 1) {
-                                $row = $sub['typelink'];
-                            } else {
-                                $row = get_typeurl($sub, false);
-                            }
-                            $row = str_replace('&amp;', '&', $row);
-                            $row = str_replace('&', '&amp;', $row);
-                        } else if ($key == 'lastmod') {
-                            $row = date('Y-m-d');
-                        } else if ($key == 'changefreq') {
-                            $row = $sitemap_changefreq_list;
-                        } else if ($key == 'priority') {
-                            $row = $sitemap_priority_list;
-                        }
-                        try {
-                            $node = $item->addChild($key, $row);
-                        } catch (\Exception $e) {}
-                        if (isset($attribute_array[$key]) && is_array($attribute_array[$key])) {
-                            foreach ($attribute_array[$key] as $akey => $aval) {//设置属性值，我这里为空
-                                $node->addAttribute($akey, $aval);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        /*--end*/
-
-        /*所有文档*/
-        foreach ($result_archives as $val) {
-            if (is_array($val) && isset($result_arctype[$val['typeid']])) {
-                $item = $xml->addChild('url'); //使用addChild添加节点
-                $val = array_merge($result_arctype[$val['typeid']], $val);
-                foreach ($val as $key => $row) {
-                    if (in_array($key, array('loc','lastmod','changefreq','priority'))) {
-                        if ($key == 'loc') {
-                            if ($val['is_jump'] == 1) {
-                                $row = $val['jumplinks'];
-                            } else {
-                                $row = get_arcurl($val, false);
-                            }
-                            $row = str_replace('&amp;', '&', $row);
-                            $row = str_replace('&', '&amp;', $row);
-                        } else if ($key == 'lastmod') {
-                            $lastmod_time = empty($val['update_time']) ? $val['add_time'] : $val['update_time'];
-                            $row = date('Y-m-d', $lastmod_time);
-                        } else if ($key == 'changefreq') {
-                            $row = $sitemap_changefreq_view;
-                        } else if ($key == 'priority') {
-                            $row = $sitemap_priority_view;
-                        }
-                        try {
-                            $node = $item->addChild($key, $row);
-                        } catch (\Exception $e) {}
-                        if (isset($attribute_array[$key]) && is_array($attribute_array[$key])) {
-                            foreach ($attribute_array[$key] as $akey => $aval) {//设置属性值，我这里为空
-                                $node->addAttribute($akey, $aval);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        /*--end*/
-
-        /*所有Tag*/
-        foreach ($result_tags as $val) {
-            if (is_array($val)) {
-                $item = $xml->addChild('url'); //使用addChild添加节点
-                foreach ($val as $key => $row) {
-                    if (in_array($key, array('loc','lastmod','changefreq','priority'))) {
-                        if ($key == 'loc') {
-                            $row = get_tagurl($val['id']);
-                            $row = str_replace('&amp;', '&', $row);
-                            $row = str_replace('&', '&amp;', $row);
-                        } else if ($key == 'lastmod') {
-                            $row = date('Y-m-d', $val['add_time']);
-                        } else if ($key == 'changefreq') {
-                            $row = $sitemap_changefreq_view;
-                        } else if ($key == 'priority') {
-                            $row = $sitemap_priority_view;
-                        }
-                        try {
-                            $node = $item->addChild($key, $row);
-                        } catch (\Exception $e) {}
-                        if (isset($attribute_array[$key]) && is_array($attribute_array[$key])) {
-                            foreach ($attribute_array[$key] as $akey => $aval) {//设置属性值，我这里为空
-                                $node->addAttribute($akey, $aval);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        /*--end*/
-
-        $content = $xml->asXML(); //用asXML方法输出xml，默认只构造不输出。
-        @file_put_contents($filename, $content);
-    }
-}
-
-if (!function_exists('get_typeurl')) 
-{
-    /**
-     * 获取栏目链接
-     *
-     * @param array $arctype_info 栏目信息
-     * @param boolean $admin 后台访问链接，还是前台链接
-     */
-    function get_typeurl($arctype_info = array(), $admin = true)
-    {
-        /*问答模型*/
-        if ($arctype_info['current_channel'] == 51) { 
-            $typeurl = get_askurl("home/Ask/index");
-            // 自动隐藏index.php入口文件
-            $typeurl = auto_hide_index($typeurl);
-
-            return $typeurl;
-        }
-        /*end*/
-
-        static $domain = null;
-        null === $domain && $domain = request()->domain();
-
-        /*兼容采集没有归属栏目的文档*/
-        if (empty($arctype_info['current_channel'])) {
-            $channelRow = \think\Db::name('channeltype')->field('id as channel')
-                ->where('id',1)
-                ->find();
-            $arctype_info = array_merge($arctype_info, $channelRow);
-        }
-        /*--end*/
-        
-        static $result = null;
-        null === $result && $result = model('Channeltype')->getAll('id, ctl_name', array(), 'id');
-        $ctl_name = '';
-        if ($result) {
-            $ctl_name = $result[$arctype_info['current_channel']]['ctl_name'];
-        }
-
-        static $seo_pseudo = null;
-        static $seo_dynamic_format = null;
-        if (null === $seo_pseudo || null === $seo_dynamic_format) {
-            $seoConfig = tpCache('seo');
-            $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
-            $seo_dynamic_format = !empty($seoConfig['seo_dynamic_format']) ? $seoConfig['seo_dynamic_format'] : config('ey_config.seo_dynamic_format');
-        }
-
-        if (2 == $seo_pseudo && $admin) {
-            static $lang = null;
-            null === $lang && $lang = input('param.lang/s', 'cn');
-            $typeurl = ROOT_DIR."/index.php?m=home&c=Lists&a=index&tid={$arctype_info['id']}&lang={$lang}&t=".getTime();
-        } else {
-            $typeurl = typeurl("home/{$ctl_name}/lists", $arctype_info, true, $domain, $seo_pseudo, $seo_dynamic_format);
-            // 自动隐藏index.php入口文件
-            $typeurl = auto_hide_index($typeurl);
-        }
-
-        return $typeurl;
-    }
-}
-
-if (!function_exists('get_arcurl')) 
-{
-    /**
-     * 获取文档链接
-     *
-     * @param array $arctype_info 栏目信息
-     * @param boolean $admin 后台访问链接，还是前台链接
-     */
-    function get_arcurl($arcview_info = array(), $admin = true)
-    {
-        static $domain = null;
-        null === $domain && $domain = request()->domain();
-
-        /*兼容采集没有归属栏目的文档*/
-        if (empty($arcview_info['channel'])) {
-            $channelRow = \think\Db::name('channeltype')->field('id as channel')
-                ->where('id',1)
-                ->find();
-            $arcview_info = array_merge($arcview_info, $channelRow);
-        }
-        /*--end*/
-
-        static $result = null;
-        null === $result && $result = model('Channeltype')->getAll('id, ctl_name', array(), 'id');
-        $ctl_name = '';
-        if ($result) {
-            $ctl_name = $result[$arcview_info['channel']]['ctl_name'];
-        }
-
-        static $seo_pseudo = null;
-        static $seo_dynamic_format = null;
-        if (null === $seo_pseudo || null === $seo_dynamic_format) {
-            $seoConfig = tpCache('seo');
-            $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
-            $seo_dynamic_format = !empty($seoConfig['seo_dynamic_format']) ? $seoConfig['seo_dynamic_format'] : config('ey_config.seo_dynamic_format');
-        }
-        
-        if ($admin) {
-            if (2 == $seo_pseudo) {
-                static $lang = null;
-                null === $lang && $lang = input('param.lang/s', 'cn');
-                $arcurl = ROOT_DIR."/index.php?m=home&c=View&a=index&aid={$arcview_info['aid']}&lang={$lang}&admin_id=".session('admin_id');
-            } else {
-                $arcurl = arcurl("home/{$ctl_name}/view", $arcview_info, true, $domain, $seo_pseudo, $seo_dynamic_format);
-                // 自动隐藏index.php入口文件
-                $arcurl = auto_hide_index($arcurl);
-                if (stristr($arcurl, '?')) {
-                    $arcurl .= '&admin_id='.session('admin_id');
-                } else {
-                    $arcurl .= '?admin_id='.session('admin_id');
-                }
-            }
-        } else {
-            $arcurl = arcurl("home/{$ctl_name}/view", $arcview_info, true, $domain, $seo_pseudo, $seo_dynamic_format);
-            // 自动隐藏index.php入口文件
-            $arcurl = auto_hide_index($arcurl);
-        }
-
-        return $arcurl;
-    }
-}
-
-if (!function_exists('get_askurl')) 
-{
-    /**
-     * 获取问答链接
-     *
-     * @param array $arctype_info 栏目信息
-     * @param boolean $admin 后台访问链接，还是前台链接
-     */
-    function get_askurl($url = '', $ask_info = array(), $admin = true)
-    {
-        static $domain = null;
-        null === $domain && $domain = request()->domain();
-
-        static $seo_pseudo = null;
-        static $seo_dynamic_format = null;
-        if (null === $seo_pseudo || null === $seo_dynamic_format) {
-            $seoConfig = tpCache('seo');
-            $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
-            $seo_dynamic_format = !empty($seoConfig['seo_dynamic_format']) ? $seoConfig['seo_dynamic_format'] : config('ey_config.seo_dynamic_format');
-        }
-
-        $askurl = askurl($url, $ask_info, true, $domain, $seo_pseudo, $seo_dynamic_format);
-        // 自动隐藏index.php入口文件
-        $askurl = auto_hide_index($askurl);
-
-        return $askurl;
-    }
-}
-
-if (!function_exists('get_tagurl')) 
-{
-    /**
-     * 获取标签链接
-     *
-     * @param array $tagid 标签ID
-     */
-    function get_tagurl($tagid = '')
-    {
-        static $seo_pseudo = null;
-        static $seo_dynamic_format = null;
-        if (null === $seo_pseudo || null === $seo_dynamic_format) {
-            $seoConfig = tpCache('seo');
-            $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
-            $seo_dynamic_format = !empty($seoConfig['seo_dynamic_format']) ? $seoConfig['seo_dynamic_format'] : config('ey_config.seo_dynamic_format');
-        }
-    
-        $tagurl = tagurl("home/Tags/lists", ['tagid'=>$tagid], true, true, $seo_pseudo, $seo_dynamic_format);
-        // 自动隐藏index.php入口文件
-        $tagurl = auto_hide_index($tagurl);
-
-        return $tagurl;
-    }
-}
-
 if (!function_exists('get_homeurl')) 
 {
     /**
@@ -928,9 +545,9 @@ if (!function_exists('get_homeurl'))
         static $seo_pseudo = null;
         static $seo_dynamic_format = null;
         if (null === $seo_pseudo || null === $seo_dynamic_format) {
-            $seoConfig = tpCache('seo');
-            $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
-            $seo_dynamic_format = !empty($seoConfig['seo_dynamic_format']) ? $seoConfig['seo_dynamic_format'] : config('ey_config.seo_dynamic_format');
+            $globalConfig = tpCache('global');
+            $seo_pseudo = !empty($globalConfig['seo_pseudo']) ? $globalConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
+            $seo_dynamic_format = !empty($globalConfig['seo_dynamic_format']) ? $globalConfig['seo_dynamic_format'] : config('ey_config.seo_dynamic_format');
         }
     
         $url = url($mca, $vars, true, true, $seo_pseudo, $seo_dynamic_format);
@@ -1010,8 +627,9 @@ if (!function_exists('get_total_arc'))
         if (!empty($arctypeList[$typeid])) {
             $current_channel = $arctypeList[$typeid]['current_channel'];
             if (in_array($current_channel, $allow_release_channel)) { // 能发布文档的模型
-                $result = model('Arctype')->getHasChildren($typeid);
-                $typeidArr = get_arr_column($result, 'id');
+                static $arctypeAllSub = null;
+                null === $arctypeAllSub && $arctypeAllSub = arctypeAllSub();
+                $typeidArr = $arctypeAllSub[$typeid];
                 foreach($typeidArr as $tid)
                 {
                     $totalnum += (!empty($archivesNums[$tid]['num']) ? $archivesNums[$tid]['num'] : 0);
@@ -1127,7 +745,7 @@ if (!function_exists('menu_select'))
                     $select_html .= str_repeat('&nbsp;', $val['grade'] * 4);
                 }
                 $name = !empty($val['name']) ? $val['name'] : '默认';
-                $select_html .= htmlspecialchars(addslashes($name)) . '</option>';
+                $select_html .= htmlspecialchars_decode(addslashes($name)) . '</option>';
 
                 if (empty($val['child'])) {
                     continue;
@@ -1143,7 +761,7 @@ if (!function_exists('menu_select'))
                     {
                         $select_html .= str_repeat('&nbsp;', $val2['grade'] * 4);
                     }
-                    $select_html .= htmlspecialchars(addslashes($val2['name'])) . '</option>';
+                    $select_html .= htmlspecialchars_decode(addslashes($val2['name'])) . '</option>';
 
                     if (empty($val2['child'])) {
                         continue;
@@ -1159,7 +777,7 @@ if (!function_exists('menu_select'))
                         {
                             $select_html .= str_repeat('&nbsp;', $val3['grade'] * 4);
                         }
-                        $select_html .= htmlspecialchars(addslashes($val3['name'])) . '</option>';
+                        $select_html .= htmlspecialchars_decode(addslashes($val3['name'])) . '</option>';
                     }
                 }
             }
@@ -1285,7 +903,11 @@ if (!function_exists('showArchivesFlagStr'))
         $flaglist = ['is_head','is_recom','is_special','is_b','is_jump','is_roll','is_slide','is_diyattr'];
         foreach ($flaglist as $key => $fieldname) {
             if (!empty($archivesInfo[$fieldname]) && !empty($flagResult[$fieldname]['flag_name'])) {
-                $small_name = msubstr($flagResult[$fieldname]['flag_name'], 0, 1);
+                if (in_array($flagResult[$fieldname]['flag_name'], ['推荐','加推','标粗','有图']) || stristr($flagResult[$fieldname]['flag_name'], '最')) {
+                    $small_name = msubstr($flagResult[$fieldname]['flag_name'], 1, 1);
+                } else {
+                    $small_name = msubstr($flagResult[$fieldname]['flag_name'], 0, 1);
+                }
                 $arr[$fieldname] = [
                     'small_name'   => $small_name,
                 ];
@@ -1412,22 +1034,30 @@ if (!function_exists('checkPasswordLevel'))
 
         $level = 0;
         //根据分数来算密码强度的等级
-        if ( $result >=80 )
+        if ( $result >=80 ) {
             $level = 7;
-        else if ( $result>=70)
+        }
+        else if ( $result>=70) {
             $level = 6;
-        else if ( $result>=60)
+        }
+        else if ( $result>=60) {
             $level = 5;
-        else if ( $result>=50)
+        }
+        else if ( $result>=50) {
             $level = 4;
-        else if ( $result>=40)
+        }
+        else if ( $result>=40) {
             $level = 3;
-        else if ( $result>20)
+        }
+        else if ( $result>20) {
             $level = 2;
-        else if ( $result>0)
+        }
+        else if ( $result>0) {
             $level = 1;
-        else
+        }
+        else {
             $level = 0;
+        }
 
         return $level;
     }
@@ -1517,5 +1147,260 @@ if (!function_exists('check_single_uiset')) {
         }
 
         return $uisetRow;
+    }
+}
+
+if (!function_exists('left_menu_id')) {
+    /**
+     * 左侧菜单的ID处理
+     */
+    function left_menu_id($str = '')
+    {
+        return str_replace('|', '_', $str);
+    }
+}
+
+if (!function_exists('list_to_tree')){
+    /*
+     * list数组转化为tree数组
+     * $list            原二维数组
+     * $pk              树型数组键名
+     * $pid             属性数组关联键名
+     * $child           树型数组下级枝干下标（标识）
+     * $root            根pid的值
+     * $has_chldren     用于获取下级个数（所有）,PS:需要原二维数组$list本来就是依次层级从大到小排序
+     * return   根节点pid的值
+     */
+    function list_to_tree($list, $pk='id', $pid = 'parent_id', $child = 'children', $root = 0 ,$has_chldren = 1) {
+        //创建Tree
+        $tree = array();
+        if (is_array($list)) {
+            //创建基于主键的数组引用
+            $refer = array();
+            foreach ($list as $key => $data) {
+                $refer[$data[$pk]] = &$list[$key];
+            }
+            foreach ($list as $key => $data) {
+                //判断是否存在parent
+                $parantId = $data[$pid];
+                if ($root == $parantId) {
+                    $tree[] = &$list[$key];
+                } else {
+                    if (isset($refer[$parantId])) {
+                        $parent = &$refer[$parantId];
+                        //用于获取下级个数（所有）begin
+                        if ($has_chldren){
+                            if (isset($parent['has_chldren'])){
+                                $parent['has_chldren'] ++;
+                            }else{
+                                $parent['has_chldren'] = 1;
+                            }
+                            if (isset($list[$key]['has_chldren'])){
+                                $parent['has_chldren'] += $list[$key]['has_chldren'];
+                            }
+                        }
+                        //用于获取下级个数（所有）end
+                        $parent[$child][] = &$list[$key];
+                    }
+                }
+            }
+        }
+        return $tree;
+    }
+}
+
+if (!function_exists('tree_to_list')){
+    /*
+    * tree数组转化为list数组
+    * $tree         原树型数组
+     * $child       树型数组下级枝干下标（标识）
+     * $pk          转化后需要作为list数组键名的属性值的属性名称（为空则转换后的list下标为从0开始的顺序）
+     *
+     * return       list类型数组
+    */
+    function tree_to_list($tree, $child = 'children',$pk=''){
+        $imparr = array();
+        foreach($tree as $w) {
+            if(isset($w[$child])) {
+                $t = $w[$child];
+                unset($w[$child]);
+                if (!empty($pk)){
+                    $imparr[$w[$pk]] = $w;
+                }else{
+                    $imparr[] = $w;
+                }
+                if(is_array($t)){
+                    if (!empty($pk)){
+                        $imparr = $imparr + tree_to_list($t, $child,$pk);
+                    }else{
+                        $imparr = array_merge($imparr, tree_to_list($t, $child,$pk));
+                    }
+                }
+            } else {
+                if (!empty($pk)){
+                    $imparr[$w[$pk]] = $w;
+                }else{
+                    $imparr[] = $w;
+                }
+            }
+        }
+        return $imparr;
+
+    }
+}
+
+if (!function_exists('verify_authortoken'))
+{
+    function verify_authortoken($is_force = 0)
+    {
+        $request = request();
+        $web_basehost = $request->host(true);
+        if (false !== filter_var($web_basehost, FILTER_VALIDATE_IP) || $web_basehost == 'localhost' || file_exists('./data/conf/multidomain.txt') || preg_match('/\.(my3w\.com)$/i', $web_basehost)) {
+            $web_basehost = tpCache('web.web_basehost');
+        }
+        $web_basehost = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${4}', $web_basehost);
+        $values = array(
+            'client_domain' => urldecode($web_basehost),
+            'ip'    => serverIP(),
+            'curent_version' => getCmsVersion(),
+            'is_force' => $is_force,
+        );
+        $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+        $upgradeLogic->GetKeyData($values);
+        $url = $upgradeLogic->getServiceUrl(true).'/index.php?m=api&c=Service&a=check_authortoken';
+        $response = @httpRequest($url, 'POST', $values, [], 5);
+        if (false === $response) {
+            $url = $url.'&'.http_build_query($values);
+            $context = stream_context_set_default(array('http' => array('timeout' => 5,'method'=>'GET')));
+            $response = @file_get_contents($url, false, $context);
+        }
+        $params = json_decode($response,true);
+        
+        $web_authortoken = !empty($params['code']) ? $params['msg'] : '';
+        /*多语言*/
+        if (is_language()) {
+            $langRow = \think\Db::name('language')->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                ->order('id asc')
+                ->select();
+            foreach ($langRow as $key => $val) {
+                tpCache('web', ['web_authortoken'=>$web_authortoken], $val['mark']);
+                tpCache('php', ['php_atqueryrequest_time'=>0,'php_atqueryrequest_time2'=>0], $val['mark']);
+            }
+        } else { // 单语言
+            tpCache('web', ['web_authortoken'=>$web_authortoken]);
+            tpCache('php', ['php_atqueryrequest_time'=>0,'php_atqueryrequest_time2'=>0]);
+        }
+        /*--end*/
+
+        delFile(HTML_ROOT); // 清空缓存页面
+        session('isset_author', null);
+
+        if (false === $response || (is_array($params) && 1 == $params['code'])) {
+            return ['code'=>1, 'msg'=>'授权成功'];
+        } else {
+            $msg = empty($params['msg']) ? '域名（'.request()->host(true).'）未授权' : $params['msg'];
+            return ['code'=>0, 'msg'=>$msg];
+        }
+    }
+}
+
+if (!function_exists('get_not_role_menu_id')){
+    /*
+     * 获取因为没有打开模块没有权限的入口节点id
+     */
+    function get_not_role_menu_id(){
+        $main_lang= get_main_lang();
+        $admin_lang = get_admin_lang();
+        $shopServicemeal = array_join_string(array('cGhwLnBocF9zZXJ2aWNlbWVhbA=='));
+        $global = include APP_PATH.MODULE_NAME.'/conf/global.php';
+        $module_rele_menu = $global['module_rele_menu'];
+        $module_reverse_menu = $global['module_reverse_menu'];
+        $not_role_menu_id = [];
+        $UsersConfig = getUsersConfigData('all');
+        //有权限的  (1 == tpCache('global.web_users_switch') && $main_lang == $admin_lang)
+        //会员中心
+        if (!empty($module_rele_menu['web_users_switch']) && (1 != tpCache('global.web_users_switch') || $main_lang != $admin_lang)){
+            $not_role_menu_id = array_merge($not_role_menu_id,$module_rele_menu['web_users_switch']);
+        }
+        //商城中心 => 会员中心关闭则一起关闭
+//        if (1 == tpCache('global.web_users_switch') && 1 == getUsersConfigData('shop.shop_open') && $main_lang == $admin_lang && 1.5 <= tpCache($shopServicemeal))
+        if (!empty($module_rele_menu['shop_open']) && (1 != tpCache('global.web_users_switch') || 1 != $UsersConfig['shop_open'] || $main_lang != $admin_lang || 1.5 > tpCache($shopServicemeal))){
+            $not_role_menu_id = array_merge($not_role_menu_id,$module_rele_menu['shop_open']);
+        }
+        //会员投稿 => 会员中心关闭则一起关闭
+        if (!empty($module_rele_menu['users_open_release']) && (1 != tpCache('global.web_users_switch') || 1 != $UsersConfig['users_open_release'])){
+            $not_role_menu_id = array_merge($not_role_menu_id,$module_rele_menu['users_open_release']);
+        }
+        //会员升级 => 会员中心关闭则一起关闭
+        if (!empty($module_rele_menu['level_member_upgrade']) && (1 != tpCache('global.web_users_switch') || 1 != $UsersConfig['level_member_upgrade'])){
+            $not_role_menu_id = array_merge($not_role_menu_id,$module_rele_menu['level_member_upgrade']);
+        }
+        //支付功能 => 会员中心关闭则一起关闭
+        if (!empty($module_rele_menu['pay_open']) && (1 != tpCache('global.web_users_switch') || 1 != $UsersConfig['pay_open'])){
+            $not_role_menu_id = array_merge($not_role_menu_id,$module_rele_menu['pay_open']);
+        }
+        //插件应用
+        if (!empty($module_rele_menu['web_weapp_switch']) && (1 != tpCache('global.web_weapp_switch') || $main_lang != $admin_lang)){
+            $not_role_menu_id = array_merge($not_role_menu_id,$module_rele_menu['web_weapp_switch']);
+        }
+        //城市分站
+        if (!empty($module_rele_menu['web_citysite_open']) && (1 != tpCache('global.web_citysite_open') || $main_lang != $admin_lang)){
+            $not_role_menu_id = array_merge($not_role_menu_id,$module_rele_menu['web_citysite_open']);
+        }
+        if (!empty($module_reverse_menu['web_citysite_open']) && 1 == tpCache('global.web_citysite_open')){
+            $not_role_menu_id = array_merge($not_role_menu_id,$module_reverse_menu['web_citysite_open']);
+        }
+
+        //其他因素
+        $other_rele_menu = $global['other_rele_menu'];
+        if (!empty($other_rele_menu)){
+            $not_role_menu_id = array_merge($not_role_menu_id,$other_rele_menu);
+        }
+        // 会员支付、商城中心，只要开启任何一个，左侧菜单就必须显示订单管理，否则不显示
+        if (1 == $UsersConfig['pay_open'] || 1 == $UsersConfig['shop_open']) {
+            if (in_array(2004021, $not_role_menu_id)) {
+                $searchIndex = array_search(2004021, $not_role_menu_id);
+                if (false !== $searchIndex && isset($not_role_menu_id[$searchIndex])) {
+                    unset($not_role_menu_id[$searchIndex]);
+                }
+            }
+        }
+
+        return $not_role_menu_id;
+
+    }
+}
+
+if (!function_exists('handle_weapp_url'))
+{
+    /*
+    * 插件完整url处理成竖线分割的url字符串
+    * $url   插件完整url
+    * return  竖线分割的url字符串
+    */
+    function handle_weapp_url($url = '', $type = 0)
+    {
+        $str_url = '';
+        if (2 == $type) {
+            $arr = explode('|', $url);
+            foreach ($arr as $key => $val) {
+                $str_url .= $val;
+                if ($key % 2 == 0) {
+                    $str_url .= '&';
+                } else {
+                    $str_url .= '=';
+                }
+            }
+            $str_url = trim($str_url, '&');
+            $str_url = trim($str_url, '=');
+        } else {
+            $result = !empty($url) ? explode('m=admin&c=Weapp&a=execute', $url) : '';
+            if (!empty($result[1])) {
+                $str_url = str_replace('=', '|', $result[1]);
+                $str_url = str_replace('&', '|', $str_url);
+            }
+        }
+
+        return $str_url;
     }
 }

@@ -215,15 +215,12 @@ class Sample extends Weapp
             $title_list = get_arr_column($result, 'title');
 
             $r = $this->db->where("id",'IN',$id_arr)->delete();
-            if($r){
+            if($r !== false){
                 adminLog('删除'.$this->weappInfo['name'].'：'.implode(',', $title_list));
                 $this->success("操作成功!");
-            }else{
-                $this->error("操作失败!");
             }
-        }else{
-            $this->error("参数有误!");
         }
+        $this->error("操作失败!");
     }
     
     /**

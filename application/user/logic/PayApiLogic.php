@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -17,7 +17,7 @@ use think\Model;
 use think\Db;
 use think\Request;
 use think\Config;
-
+use app\user\logic\PayLogic;
 /**
  * 支付API逻辑处理
  * @package user\Logic
@@ -28,12 +28,24 @@ class PayApiLogic extends Model
     use \traits\controller\Jump;
 
     private $home_lang = 'cn';
+    private $param_users_id = 0;
+    private $fromApplets = false;
+    private $fromAsync = false;
+
+    public function __construct($param_users_id = 0, $fromApplets = false, $fromAsync = false) {
+        if (!empty($fromAsync)) $this->fromAsync = $fromAsync;
+        if (!empty($fromApplets)) $this->fromApplets = $fromApplets;
+        if (!empty($param_users_id)) $this->param_users_id = $param_users_id;
+        parent::__construct();
+    }
 
     /**
      * 初始化操作
      */
     public function initialize() {
         parent::initialize();
+        // 时间戳
+        $this->times             = getTime();
         // 多语言
         $this->home_lang         = get_home_lang();
         // 会员信息表
@@ -45,7 +57,11 @@ class PayApiLogic extends Model
         // 支付API配置
         $this->pay_api_config_db = Db::name('pay_api_config');
         // 会员信息
-        $this->users = GetUsersLatestData();
+        if (!empty($this->param_users_id)) {
+            $this->users = GetUsersLatestData($this->param_users_id);
+        } else {
+            $this->users = GetUsersLatestData();
+        }
         $this->users_id = $this->users['users_id'];
     }
 
@@ -72,6 +88,11 @@ class PayApiLogic extends Model
                         $new_pay_info['appid'] = $hupijiao_pay_config['pay_info'][$post['pay_mark'] . '_appid'];
                         $new_pay_info['appsecret'] = $hupijiao_pay_config['pay_info'][$post['pay_mark'] . '_appsecret'];
                         $new_pay_info['pay_type'] = $post['pay_mark'];
+                        if (!empty($hupijiao_pay_config['pay_info']['gateway_domain'])) {
+                            $new_pay_info['gateway_domain'] = $hupijiao_pay_config['pay_info']['gateway_domain'];
+                        } else {
+                            $new_pay_info['gateway_domain'] = 'https://api.xunhupay.com';
+                        }
                         $hupijiao_pay_config['pay_info'] = $new_pay_info;
                         $Config = $hupijiao_pay_config;
                     }
@@ -81,6 +102,11 @@ class PayApiLogic extends Model
                     $new_pay_info['appid'] = $hupijiao_pay_config['pay_info'][$post['pay_type'] . '_appid'];
                     $new_pay_info['appsecret'] = $hupijiao_pay_config['pay_info'][$post['pay_type'] . '_appsecret'];
                     $new_pay_info['pay_type'] = $post['pay_type'];
+                    if (!empty($hupijiao_pay_config['pay_info']['gateway_domain'])) {
+                        $new_pay_info['gateway_domain'] = $hupijiao_pay_config['pay_info']['gateway_domain'];
+                    } else {
+                        $new_pay_info['gateway_domain'] = 'https://api.xunhupay.com';
+                    }
                     $hupijiao_pay_config['pay_info'] = $new_pay_info;
                     $Config = $hupijiao_pay_config;
                 }
@@ -101,7 +127,7 @@ class PayApiLogic extends Model
             'pay_mark' => $post['pay_mark']
         ];
         $Config = $this->pay_api_config_db->where($where)->find();
-        if (empty($Config) || empty($Config['pay_info'])) $this->error('【支付接口】-【'.$Config['pay_name'].'】配置信息不全');
+        if (empty($Config) || empty($Config['pay_info'])) $this->error('请在后台【接口配置】完善【'.$Config['pay_name'].'】配置信息');
         $Config['pay_info'] = unserialize($Config['pay_info']);
 
         if (1 == $post['pay_id']) {
@@ -122,128 +148,197 @@ class PayApiLogic extends Model
     }
 
     // 订单查询
-    public function GetFindOrderData($post = [], $is_up_order = false)
+    public function GetFindOrderData($post = [], $is_up_order = false, $config = [])
     {
-        if (empty($post['unified_id']) || empty($post['unified_number']) || empty($post['transaction_type'])) $this->error('订单异常，请刷新重试');
-
-        if (1 == $post['transaction_type']) {
-            // 获取充值订单
+        if (empty($this->fromAsync)) {
+            $submit_order_type = isset($post['submit_order_type']) ? intval($post['submit_order_type']) : -1;
+            if (empty($post['unified_id']) || empty($post['unified_number']) || empty($post['transaction_type'])) $this->error('订单异常，请刷新重试');
+        }
+        // 获取充值订单
+        if (1 === intval($post['transaction_type'])) {
             $where = [
                 'users_id'     => $this->users_id,
                 'lang'         => $this->home_lang,
-                'moneyid'      => $post['unified_id'],
                 'order_number' => $post['unified_number']
             ];
+            if (empty($this->fromAsync) && !empty($post['unified_id'])) $where['moneyid'] = $post['unified_id'];
             $OrderData = $this->users_money_db->where($where)->find();
-            if (empty($OrderData)) $this->error('订单不存在或已变更');
-
-            // 判断订单状态，1未付款，2已付款，3已完成，4订单取消
-            $url = urldecode(url('user/Pay/pay_consumer_details'));
-            if (in_array($OrderData['status'], [2, 3])) {
-                $this->success('订单已支付，即将跳转', $url, true);
-            } else if ($OrderData['status'] == 4) {
-                $this->success('订单已取消，即将跳转', $url, true);
-            }
-            $OrderData['unified_amount'] = $OrderData['money'];
-            $OrderData['unified_number'] = $post['unified_number'];
-
-            // 更新订单支付方式
-            if (!empty($is_up_order)) {
-                $update = [
-                    'pay_method' => $post['pay_mark'],
-                    'wechat_pay_type' => '',
-                    'update_time' => getTime()
-                ];
-                if ('wechat' == $post['pay_mark']) {
-                    if (!isMobile()) {
-                        // PC端
-                        $wechat_pay_type = 'WeChatScanCode';
-                    } else if (isMobile() && !isWeixin()) {
-                        // 手机端浏览器
-                        $wechat_pay_type = 'WeChatH5';
-                    } else if (isMobile() && isWeixin()) {
-                        // 手机端微信
-                        $wechat_pay_type = 'WeChatInternal';
+            // 同步处理
+            if (empty($this->fromAsync)) {
+                if (empty($OrderData)) $this->error('订单不存在或已变更');
+                // 判断订单状态，1未付款，2已付款，3已完成，4订单取消
+                $url = urldecode(url('user/Pay/pay_consumer_details'));
+                if (in_array($OrderData['status'], [2, 3])) {
+                    // 订单已完成
+                    if ('wechat' === trim($OrderData['pay_method'])) {
+                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_number'], 1, '充值');
                     }
-                    if (!empty($OrderData['wechat_pay_type'])) {
-                        $ReturnData = $this->determine_pay_type($OrderData['wechat_pay_type'], $wechat_pay_type);
-                        if (!empty($ReturnData)) $this->error($ReturnData);
-                    }
-                    $update['wechat_pay_type'] = $wechat_pay_type;
+                    $this->success('订单已支付，即将跳转', $url, true);
+                } else if ($OrderData['status'] == 4) {
+                    $this->success('订单已取消，即将跳转', $url, true);
                 }
-                $this->users_money_db->where($where)->update($update);
+                // 更新订单支付方式
+                if (!empty($is_up_order)) {
+                    $update = [
+                        'pay_method' => $post['pay_mark'],
+                        'wechat_pay_type' => '',
+                        'update_time' => getTime()
+                    ];
+                    if ('wechat' == $post['pay_mark']) {
+                        if (!isMobile()) {
+                            // PC端
+                            $wechat_pay_type = 'WeChatScanCode';
+                        } else if (isMobile() && !isWeixin()) {
+                            // 手机端浏览器
+                            $wechat_pay_type = 'WeChatH5';
+                        } else if (isMobile() && isWeixin()) {
+                            // 手机端微信
+                            $wechat_pay_type = 'WeChatInternal';
+                        }
+                        if (!empty($OrderData['wechat_pay_type'])) {
+                            $ReturnData = false;//$this->determine_pay_type($OrderData['wechat_pay_type'], $wechat_pay_type);
+                            if (!empty($ReturnData)) $this->error($ReturnData);
+                        }
+                        $update['wechat_pay_type'] = $wechat_pay_type;
+                    }
+                    $this->users_money_db->where($where)->update($update);
+                }
             }
-
-        } else if (2 == $post['transaction_type']) {
-            // 获取商品订单
+            // 异步处理
+            else {
+                if (empty($OrderData)) {
+                    echo 'FAIL'; exit;
+                }
+                // 订单无需处理，直接返回结束
+                else if (!empty($OrderData['status']) && 1 !== intval($OrderData['status'])) {
+                    // 订单已完成
+                    if (in_array($OrderData['status'], [2, 3]) && 'wechat' === trim($OrderData['pay_method'])) {
+                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_number'], 1, '充值', $config);
+                    }
+                    echo 'SUCCESS'; exit;
+                }
+            }
+            $OrderData['unified_id'] = intval($OrderData['moneyid']);
+            $OrderData['unified_amount'] = unifyPriceHandle($OrderData['money']);
+            $OrderData['unified_number'] = trim($post['unified_number']);
+        }
+        // 获取商品订单
+        else if (2 === intval($post['transaction_type'])) {
             $where = [
                 'users_id'   => $this->users_id,
                 'lang'       => $this->home_lang,
-                'order_id'   => $post['unified_id'],
                 'order_code' => $post['unified_number']
             ];
+            if (empty($this->fromAsync) && !empty($post['unified_id'])) $where['order_id'] = $post['unified_id'];
             $OrderData = $this->shop_order_db->where($where)->find();
-            if (empty($OrderData)) $this->error('订单不存在或已变更');
-            
-            // 判断订单状态，1已付款(待发货)，2已发货(待收货)，3已完成(确认收货)，-1订单取消(已关闭)，4订单过期
-            $url = urldecode(url('user/Shop/shop_order_details', ['order_id' => $OrderData['order_id']]));
-            if (in_array($OrderData['order_status'], [1, 2, 3])) {
-                $this->success('订单已支付，即将跳转', $url, true);
-            } else if ($OrderData['order_status'] == 4) {
-                $this->success('订单已过期，即将跳转', $url, true);
-            } else if ($OrderData['order_status'] == -1) {
-                $this->success('订单已关闭，即将跳转', $url, true);
-            }
-            $OrderData['unified_amount'] = $OrderData['order_amount'];
-            $OrderData['unified_number'] = $post['unified_number'];
-
-            // 更新订单支付方式
-            if (!empty($is_up_order)) {
-                $update = [
-                    'pay_name' => $post['pay_mark'],
-                    'update_time' => getTime()
-                ];
-                if ('wechat' == $post['pay_mark']) {
-                    if (!isMobile()) {
-                        // PC端
-                        $wechat_pay_type = 'WeChatScanCode';
-                    } else if (isMobile() && !isWeixin()) {
-                        // 手机端浏览器
-                        $wechat_pay_type = 'WeChatH5';
-                    } else if (isMobile() && isWeixin()) {
-                        // 手机端微信
-                        $wechat_pay_type = 'WeChatInternal';
+            // 同步处理
+            if (empty($this->fromAsync)) {
+                if (empty($OrderData)) $this->error('订单不存在或已变更');
+                // 判断订单状态，1已付款(待发货)，2已发货(待收货)，3已完成(确认收货)，-1订单取消(已关闭)，4订单过期
+                $url = urldecode(url('user/Shop/shop_order_details', ['order_id' => $OrderData['order_id']]));
+                if (in_array($OrderData['order_status'], [1, 2, 3])) {
+                    if ('v3' == getUsersTplVersion() && 0 <= $submit_order_type && 1 == $OrderData['order_status']) $url = urldecode(url('user/Shop/shop_centre'));
+                    // 订单已完成
+                    if ((0 < intval($OrderData['prom_type']) || (0 === intval($OrderData['prom_type']) && 2 === intval($OrderData['logistics_type']))) && in_array($OrderData['order_status'], [2, 3]) && 'wechat' === trim($OrderData['pay_name'])) {
+                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_code'], 2);
                     }
-                    if (!empty($OrderData['wechat_pay_type'])) {
-                        $ReturnData = $this->determine_pay_type($OrderData['wechat_pay_type'], $wechat_pay_type);
-                        if (!empty($ReturnData)) $this->error($ReturnData);
-                    }
-                    $update['wechat_pay_type'] = $wechat_pay_type;
+                    $this->success('订单已支付，即将跳转', $url, $returnData['data']);
+                } else if ($OrderData['order_status'] == 4) {
+                    $this->success('订单已过期，即将跳转', $url, true);
+                } else if ($OrderData['order_status'] == -1) {
+                    $this->success('订单已关闭，即将跳转', $url, true);
                 }
-                $this->shop_order_db->where($where)->update($update);
+                // 更新订单支付方式
+                if (!empty($is_up_order)) {
+                    $update = [
+                        'pay_name' => $post['pay_mark'],
+                        'update_time' => getTime()
+                    ];
+                    if ('wechat' == $post['pay_mark']) {
+                        if (!isMobile()) {
+                            // PC端
+                            $wechat_pay_type = 'WeChatScanCode';
+                        } else if (isMobile() && !isWeixin()) {
+                            // 手机端浏览器
+                            $wechat_pay_type = 'WeChatH5';
+                        } else if (isMobile() && isWeixin()) {
+                            // 手机端微信
+                            $wechat_pay_type = 'WeChatInternal';
+                        }
+                        if (!empty($OrderData['wechat_pay_type'])) {
+                            $ReturnData = $this->determine_pay_type($OrderData['wechat_pay_type'], $wechat_pay_type);
+                            if (!empty($ReturnData)) $this->error($ReturnData);
+                        }
+                        $update['wechat_pay_type'] = $wechat_pay_type;
+                    }
+                    $this->shop_order_db->where($where)->update($update);
+                    $OrderData['pay_name'] = $post['pay_mark'];
+                }
             }
-        } else if (3 == $post['transaction_type']) {
-            // 获取会员升级订单
+            // 异步处理
+            else {
+                if (empty($OrderData)) {
+                    echo 'FAIL'; exit;
+                }
+                // 订单无需处理，直接返回结束
+                else if (isset($OrderData['order_status']) && 0 !== intval($OrderData['order_status'])) {
+                    // 订单已完成
+                    if ((0 < intval($OrderData['prom_type']) || (0 === intval($OrderData['prom_type']) && 2 === intval($OrderData['logistics_type']))) && in_array($OrderData['order_status'], [2, 3]) && 'wechat' === trim($OrderData['pay_name'])) {
+                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_code'], 2, $config);
+                    }
+                    echo 'SUCCESS'; exit;
+                }
+            }
+
+            $OrderData['unified_id'] = intval($OrderData['order_id']);
+            $OrderData['unified_amount'] = unifyPriceHandle($OrderData['order_amount']);
+            $OrderData['unified_number'] = trim($post['unified_number']);
+        }
+        // 获取会员升级订单
+        else if (3 === intval($post['transaction_type'])) {
             $where = [
                 'users_id'     => $this->users_id,
                 'lang'         => $this->home_lang,
-                'moneyid'      => $post['unified_id'],
                 'order_number' => $post['unified_number']
             ];
+            if (empty($this->fromAsync) && !empty($post['unified_id'])) $where['moneyid'] = $post['unified_id'];
             $OrderData = $this->users_money_db->where($where)->find();
-            if (empty($OrderData)) $this->error('订单不存在或已变更');
+            // 同步处理
+            if (empty($this->fromAsync)) {
+                if (empty($OrderData)) $this->error('订单不存在或已变更');
 
-            // 判断订单状态，1未付款，2已付款，3已完成，4订单取消
-            $url = urldecode(url('user/Level/level_centre'));
-            if (in_array($OrderData['status'], [2, 3])) {
-                $this->success('订单已支付，即将跳转', $url, true);
-            } else if ($OrderData['status'] == 4) {
-                $this->success('订单已取消，即将跳转', $url, true);
+                // 判断订单状态，1未付款，2已付款，3已完成，4订单取消
+                $url = urldecode(url('user/Level/level_centre'));
+                if (!empty($OrderData['status']) && in_array($OrderData['status'], [2, 3])) {
+                    // 订单已完成
+                    if ('wechat' === trim($OrderData['pay_name'])) {
+                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_number'], 3, '会员升级');
+                    }
+                    $this->success('订单已支付，即将跳转', $url, true);
+                } else if ($OrderData['status'] == 4) {
+                    $this->success('订单已取消，即将跳转', $url, true);
+                }
             }
-            $OrderData['unified_amount'] = $OrderData['money'];
-            $OrderData['unified_number'] = $post['unified_number'];
-        } else if (8 == $post['transaction_type']) {
-            // 获取商品订单
+            // 异步处理
+            else {
+                if (empty($OrderData)) {
+                    echo 'FAIL'; exit;
+                }
+                // 订单无需处理，直接返回结束
+                else if (!empty($OrderData['status']) && 1 !== intval($OrderData['status'])) {
+                    // 订单已完成
+                    if (in_array($OrderData['status'], [2, 3]) && 'wechat' === trim($OrderData['pay_name'])) {
+                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_number'], 3, '会员升级', $config);
+                    }
+                    echo 'SUCCESS'; exit;
+                }
+            }
+            $OrderData['unified_id'] = intval($OrderData['moneyid']);
+            $OrderData['unified_amount'] = unifyPriceHandle($OrderData['money']);
+            $OrderData['unified_number'] = trim($post['unified_number']);
+        }
+        // 获取视频订单
+        else if (8 == $post['transaction_type']) {
             $where = [
                 'users_id'   => $this->users_id,
                 'lang'       => $this->home_lang,
@@ -254,7 +349,8 @@ class PayApiLogic extends Model
             if (empty($OrderData)) $this->error('订单不存在或已变更', url('user/Media/index'));
             
             $url = url('user/Media/index');
-            if (in_array($OrderData['order_status'], [1])) $this->error('订单已支付，即将跳转！', $url, true);
+            if (in_array($OrderData['order_status'], [1])) $this->success('订单已支付，即将跳转！', $url, true);
+            $OrderData['unified_id'] = $post['unified_id'];
             $OrderData['unified_amount'] = $OrderData['order_amount'];
             $OrderData['unified_number'] = $post['unified_number'];
 
@@ -276,15 +372,16 @@ class PayApiLogic extends Model
                         $wechat_pay_type = 'WeChatInternal';
                     }
                     if (!empty($OrderData['wechat_pay_type'])) {
-                        $ReturnData = $this->determine_pay_type($OrderData['wechat_pay_type'], $wechat_pay_type);
+                        $ReturnData = false;//$this->determine_pay_type($OrderData['wechat_pay_type'], $wechat_pay_type);
                         if (!empty($ReturnData)) $this->error($ReturnData);
                     }
                     $update['wechat_pay_type'] = $wechat_pay_type;
                 }
                 Db::name('media_order')->where($where)->update($update);
             }
-        } else if (9 == $post['transaction_type']) {
-            //文章购买
+        }
+        // 文章购买
+        else if (9 == $post['transaction_type']) {
             $where = [
                 'users_id'   => $this->users_id,
                 'lang'       => $this->home_lang,
@@ -292,12 +389,138 @@ class PayApiLogic extends Model
                 'order_code' => $post['unified_number']
             ];
             $OrderData = Db::name('article_order')->where($where)->find();
-            if (empty($OrderData)) $this->error('订单不存在或已变更', url('user/Article/index'));
+            if (empty($OrderData)) $this->error('订单不存在或已变更', url('user/Users/article_index'));
 
-            $url = url('user/Article/index');
-            if (in_array($OrderData['order_status'], [1])) $this->error('订单已支付，即将跳转！', $url, true);
+            $url = url('user/Users/article_index');
+            if (in_array($OrderData['order_status'], [1])) $this->success('订单已支付，即将跳转！', $url, true);
             $OrderData['unified_amount'] = $OrderData['order_amount'];
             $OrderData['unified_number'] = $post['unified_number'];
+            $OrderData['unified_id'] = $post['unified_id']; 
+
+            // 更新订单支付方式
+            if (!empty($is_up_order)) {
+                $update = [
+                    'pay_name' => $post['pay_mark'],
+                    'update_time' => getTime()
+                ];
+                if ('wechat' == $post['pay_mark']) {
+                    if (!isMobile()) {
+                        // PC端
+                        $wechat_pay_type = 'WeChatScanCode';
+                    } else if (isMobile() && !isWeixin()) {
+                        // 手机端浏览器
+                        $wechat_pay_type = 'WeChatH5';
+                    } else if (isMobile() && isWeixin()) {
+                        // 手机端微信
+                        $wechat_pay_type = 'WeChatInternal';
+                    }
+                    if (!empty($OrderData['wechat_pay_type'])) {
+                        $ReturnData = false;//$this->determine_pay_type($OrderData['wechat_pay_type'], $wechat_pay_type);
+                        if (!empty($ReturnData)) $this->error($ReturnData);
+                    }
+                    $update['wechat_pay_type'] = $wechat_pay_type;
+                }
+                Db::name('article_order')->where($where)->update($update);
+            }
+        }
+        // 下载模型购买
+        else if (10 == $post['transaction_type']) {
+            $where = [
+                'users_id'   => $this->users_id,
+                'lang'       => $this->home_lang,
+                'order_id'   => $post['unified_id'],
+                'order_code' => $post['unified_number']
+            ];
+            $OrderData = Db::name('download_order')->where($where)->find();
+            if (empty($OrderData)) $this->error('订单不存在或已变更', url('user/Users/download_index'));
+
+            $url = url('user/Users/download_index');
+            if (in_array($OrderData['order_status'], [1])) $this->success('订单已支付，即将跳转！', $url, true);
+            $OrderData['unified_amount'] = $OrderData['order_amount'];
+            $OrderData['unified_number'] = $post['unified_number'];
+            $OrderData['unified_id'] = $post['unified_id'];
+
+            // 更新订单支付方式
+            if (!empty($is_up_order)) {
+                $update = [
+                    'pay_name' => $post['pay_mark'],
+                    'update_time' => getTime()
+                ];
+                if ('wechat' == $post['pay_mark']) {
+                    if (!isMobile()) {
+                        // PC端
+                        $wechat_pay_type = 'WeChatScanCode';
+                    } else if (isMobile() && !isWeixin()) {
+                        // 手机端浏览器
+                        $wechat_pay_type = 'WeChatH5';
+                    } else if (isMobile() && isWeixin()) {
+                        // 手机端微信
+                        $wechat_pay_type = 'WeChatInternal';
+                    }
+                    if (!empty($OrderData['wechat_pay_type'])) {
+                        $ReturnData = false;//$this->determine_pay_type($OrderData['wechat_pay_type'], $wechat_pay_type);
+                        if (!empty($ReturnData)) $this->error($ReturnData);
+                    }
+                    $update['wechat_pay_type'] = $wechat_pay_type;
+                }
+                Db::name('download_order')->where($where)->update($update);
+            }
+        }
+        // 会员充值套餐订单
+        else if (20 == $post['transaction_type']) {
+            $where = [
+                'users_id'   => $this->users_id,
+                'lang'       => $this->home_lang,
+                'order_pay_code' => $post['order_pay_code'],
+            ];
+            if (empty($this->fromAsync) && !empty($post['order_id'])) $where['order_id'] = $post['order_id'];
+            if (empty($this->fromAsync) && !empty($post['unified_id'])) $where['order_id'] = $post['unified_id'];
+            if (empty($this->fromAsync) && !empty($post['order_code'])) $where['order_code'] = $post['order_code'];
+            $OrderData = Db::name('users_recharge_pack_order')->where($where)->find();
+            // 同步处理
+            if (empty($this->fromAsync)) {
+                if (empty($OrderData)) {
+                    $this->error('无效订单');
+                } else if (!empty($OrderData['order_status']) && 1 < intval($OrderData['order_status'])) {
+                    // 订单已完成
+                    if (in_array($OrderData['order_status'], [2, 3]) && 'wechat' === trim($OrderData['order_pay_name'])) {
+                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_pay_code'], 20, '充值');
+                    }
+                    $this->success('支付完成');
+                }
+            }
+            // 异步处理
+            else {
+                if (empty($OrderData)) {
+                    echo 'FAIL'; exit;
+                }
+                // 订单无需处理，直接返回结束
+                else if (!empty($OrderData['order_status']) && 1 < intval($OrderData['order_status'])) {
+                    // 订单已完成
+                    if (in_array($OrderData['order_status'], [2, 3]) && 'wechat' === trim($OrderData['order_pay_name'])) {
+                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_pay_code'], 20, '充值', $config);
+                    }
+                    echo 'SUCCESS'; exit;
+                }
+            }
+            $OrderData['unified_id'] = intval($OrderData['order_id']);
+            $OrderData['unified_amount'] = unifyPriceHandle($OrderData['order_pay_prices']);
+            $OrderData['unified_number'] = trim($post['order_pay_code']);
+        }
+        // 多商家订单
+        else if (99 === intval($post['transaction_type'])) {
+            // 获取商品订单
+            $where = [
+                'users_id'   => $this->users_id,
+                'unified_id' => $post['unified_id'],
+                'unified_number' => $post['unified_number']
+            ];
+            $OrderData = Db::name('shop_order_unified_pay')->where($where)->find();
+            if (empty($OrderData)) $this->error('订单不存在或已变更..');
+
+            // 判断订单状态，0未付款，1已付款
+            $url = urldecode(url('user/Shop/shop_centre'));
+            if (in_array($OrderData['pay_status'], [1])) $this->success('订单已支付，即将跳转...', $url, true);
 
             // 更新订单支付方式
             if (!empty($is_up_order)) {
@@ -322,10 +545,12 @@ class PayApiLogic extends Model
                     }
                     $update['wechat_pay_type'] = $wechat_pay_type;
                 }
-                Db::name('article_order')->where($where)->update($update);
+                Db::name('shop_order_unified_pay')->where($where)->update($update);
+                $OrderData['pay_name'] = $post['pay_mark'];
             }
         }
-
+        
+        $OrderData['transaction_type'] = $post['transaction_type'];
         return $OrderData;
     }
 
@@ -333,44 +558,57 @@ class PayApiLogic extends Model
     public function UseWeChatPay($Post = [], $Order = [], $PayInfo = [])
     {
         if (isset($PayInfo['is_open_wechat']) && 0 == $PayInfo['is_open_wechat']) {
-            $total_fee    = $Order['unified_amount'];
+            $total_fee = $Order['unified_amount'];
             $out_trade_no = $Order['unified_number'];
 
+            // PC端电脑微信扫码支付
             if (!isMobile()) {
-                $Param = [
+                $params = [
                     'unified_number' => $Post['unified_number'],
                     'transaction_type' => $Post['transaction_type']
                 ];
-                $ResultData['url_qrcode'] = url('user/PayApi/pay_wechat_png', $Param);
-                $this->success('订单支付中', null, $ResultData);
-
-            } else if (isMobile() && !isWeixin()) {
-                // 移动端非微信H5页面支付
-                $weixin_url   = model('PayApi')->getMobilePay($out_trade_no, $total_fee, $PayInfo, $Post['transaction_type']);
-                if (!empty($weixin_url['return_code']) && 'FAIL' == $weixin_url['return_code']) {
-                    $this->error('商户微信支付H5支付尚未配置完成，请在配置开通成功后支付');
+                $result['url_qrcode'] = url('user/PayApi/pay_wechat_png', $params);
+                $this->success('订单支付中', null, $result);
+            }
+            // 移动端浏览器微信H5支付
+            else if (isMobile() && !isWeixin()) {
+                $result = model('PayApi')->getMobilePay($out_trade_no, $total_fee, $PayInfo, $Post['transaction_type']);
+                if (!empty($result['return_code']) && 'FAIL' == $result['return_code']) $this->error($result['return_msg']);
+                $this->success('订单支付中', $result);
+            }
+            // 移动端微信内支付
+            else if (isMobile() && isWeixin()) {
+                if (isWeixinApplets()) {
+                    $params = [
+                        'is_applets' => 1,
+                        'unified_id' => $Order['unified_id'],
+                        'unified_number' => $Order['unified_number'],
+                        'transaction_type' => $Order['transaction_type']
+                    ];
+                    $this->success('订单支付中', null, $params);
                 }
-                $this->success('订单支付中', $weixin_url);
-            
-            } else if (isMobile() && isWeixin()) {
-                if (!empty($Post['openid'])) {
-                    // 小程序支付
-                    $Paydata = model('PayApi')->getWechatPay($Post['openid'], $out_trade_no, $total_fee, $PayInfo, 1, $Post['transaction_type']);
-                    if (!empty($Paydata)) echo json_encode($Paydata);
 
-                } else if (!empty($this->users_id)) {
-                    // 是否使用余额支付
+                // 小程序支付
+                if (!empty($Post['openid'])) {
+                    $result = model('PayApi')->getWechatPay($Post['openid'], $out_trade_no, $total_fee, $PayInfo, 1, $Post['transaction_type']);
+                    if (!empty($result)) echo json_encode($result);
+                }
+                // 移动端微信内支付
+                else if (!empty($this->users_id)) {
                     $where = [
                         'users_id' => $this->users_id,
                         'lang'     => $this->home_lang
                     ];
                     $open_id = Db::name('users')->where($where)->getField('open_id');
-                    if (empty($open_id)) $this->error('手机端微信使用本站账号登录仅可余额支付！');
-                    
-                    // 手机端微信支付
-                    $Paydata = model('PayApi')->getWechatPay($open_id, $out_trade_no, $total_fee, $PayInfo, 0, $Post['transaction_type']);
-                    if (!empty($Paydata)) $this->success('订单支付中', null, $Paydata);
+                    // if (empty($open_id)) $this->error('手机端微信使用本站账号登录仅可余额支付！');
 
+                    // 手机端微信支付
+                    $result = model('PayApi')->getWechatPay($open_id, $out_trade_no, $total_fee, $PayInfo, 0, $Post['transaction_type']);
+                    if (!empty($result['postCode']) && 'error' === $result['postCode']) {
+                        $this->error($result['return_msg']);
+                    } else if (!empty($result)) {
+                        $this->success('订单支付中', null, $result);
+                    }
                 } else {
                     $this->error('使用本站账号登录仅可余额支付！');
                 }
@@ -420,7 +658,6 @@ class PayApiLogic extends Model
     {
         vendor('wechatpay.lib.WxPayApi');
         vendor('wechatpay.lib.WxPayConfig');
-
         // 实例化加载订单号
         $WxPayOrderQuery  = new \WxPayOrderQuery;
         $WxPayOrderQuery->SetOut_trade_no($Order['unified_number']);
@@ -438,7 +675,6 @@ class PayApiLogic extends Model
 
         // 返回结果
         $WeChatOrder = $WxPayApi->orderQuery($WxPayConfig, $WxPayOrderQuery);
-
         if (isset($WeChatOrder['return_code']) && $WeChatOrder['return_code'] == 'SUCCESS' && $WeChatOrder['result_code'] == 'SUCCESS') {
             if ($WeChatOrder['trade_state'] == 'SUCCESS' && !empty($WeChatOrder['transaction_id'])) {
                 $this->OrderProcessing($Post, $Order, $WeChatOrder, $Config);
@@ -476,7 +712,7 @@ class PayApiLogic extends Model
             $AliPayOrder = json_decode(json_encode($AliPayOrder), true);
 
             if ('40004' == $AliPayOrder['code'] && 'Business Failed' === $AliPayOrder['msg']) {
-                $this->success('正在建立订单信息');
+                $this->success('订单已提交，尚未支付');
             } else if ('10000' == $AliPayOrder['code'] && 'WAIT_BUYER_PAY' === $AliPayOrder['trade_status']) {
                 $this->success('订单已建立，尚未支付');
             } else if ('10000' == $AliPayOrder['code'] && 'TRADE_SUCCESS' === $AliPayOrder['trade_status']) {
@@ -489,119 +725,201 @@ class PayApiLogic extends Model
     }
 
     // 订单统一处理
-    public function OrderProcessing($Post = [], $Order = [], $PayDetails = [], $Config = [])
+    public function OrderProcessing($Post = [], $Order = [], $PayDetails = [], $config = [], $queryOrder = true)
     {
-        if (1 == $Post['transaction_type']) {
-            // 付款成功后，订单并未修改状态时，修改订单状态并返回
-            $Result['email'] = false;
-            $Result['mobile'] = false;
-            $url = url('user/Pay/pay_consumer_details');
+        if (!empty($PayDetails) && !empty($queryOrder)) {
+            $total_amount = 0;
+            $out_trade_no = '';
+            if (!empty($PayDetails['total_fee'])) {
+                $total_amount = $PayDetails['total_fee'] / 100;
+                $out_trade_no = $PayDetails['out_trade_no'];
+            } else if (!empty($PayDetails['total_amount'])) {
+                $total_amount = $PayDetails['total_amount'];
+                $out_trade_no = $PayDetails['out_trade_no'];
+            } else if (!empty($PayDetails['txnAmt'])) {
+                $total_amount = $PayDetails['txnAmt'] / 100;
+                $out_trade_no = $PayDetails['out_trade_no'];
+            } else if (!empty($PayDetails['payment_info']['total_fee'])) {
+                $total_amount = $PayDetails['payment_info']['total_fee'] / 100;
+                $out_trade_no = $PayDetails['out_order_no'];
+            }
+            if (!empty($out_trade_no) && !empty($total_amount)) {
+                $payLogicObj = new PayLogic();
+                $OrderData = $payLogicObj->checkAmount($out_trade_no, $total_amount, $Post['transaction_type']);
+                if (empty($OrderData)) $this->error("支付失败，支付金额与订单金额不相符");
+            }
+        }
 
-            if ($Order['status'] == 1) {
+        // 查询实时订单信息 
+        $Order = $this->GetFindOrderData($Post, false, $config);
+
+        // 充值订单处理
+        if (1 === intval($Post['transaction_type'])) {
+            // 付款成功后，订单并未修改状态时，修改订单状态并返回
+            if (1 === intval($Order['status'])) {
+                // 返回参数
+                $result_0['email'] = false;
+                $result_0['mobile'] = false;
+                $url = url('user/Pay/pay_consumer_details');
                 // 订单更新条件
                 $where = [
                     'moneyid' => $Order['moneyid'],
-                    'users_id' => $this->users_id
+                    'users_id' => $this->users_id,
+                    'order_number' => strval($Order['order_number']),
                 ];
-
                 // 订单更新数据，更新为已付款
-                $data = [
-                    'status'        => 2,
-                    'pay_details'   => serialize($PayDetails),
-                    'update_time'   => getTime()
+                $update = [
+                    'status' => 2,
+                    'pay_details' => serialize($PayDetails),
+                    'update_time' => $this->times
                 ];
-
                 // 订单更新
-                $ResultID = $this->users_money_db->where($where)->update($data);
-
+                $result_1 = $this->users_money_db->where($where)->update($update);
                 // 订单更新后续操作
-                if (!empty($ResultID)) {
-                    // 同步修改会员的金额
-                    $UsersWhere = [
-                        'users_id' => $this->users_id,
-                        'lang'     => $this->home_lang
-                    ];
-                    $UpUsersData = [
-                        'users_money' => Db::raw('users_money+'.($Order['money']))
-                    ];
-                    $ReturnID = Db::name('users')->where($UsersWhere)->update($UpUsersData);
-
+                if (!empty($result_1)) {
+                    // 更新增加会员余额
+                    $result_2 = Db::name('users')->where(['users_id' => intval($this->users_id)])->setInc('users_money', $Order['money']);
                     // 用户充值金额后续操作
-                    if (!empty($ReturnID)) {
+                    if (!empty($result_2)) {
                         // 业务处理完成，订单已完成
-                        $data2 = [
+                        $update = [
                             'status'      => 3,
                             'update_time' => getTime()
                         ];
-                        $this->users_money_db->where($where)->update($data2);
-                        // 返回
-                        $this->success('充值成功，即将跳转', $url, $Result);
+                        $this->users_money_db->where($where)->update($update);
+
+                        // 推送微信发货推送表记录
+                        if ('wechat' === trim($Order['pay_method'])) {
+                            // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_number'], 1, '充值', $config);
+                        }
+
+                        // 同步处理
+                        if (empty($this->fromAsync)) {
+                            $this->success('充值成功', $url, $result_0);
+                        }
+                        // 异步处理
+                        else {
+                            echo 'SUCCESS'; exit;
+                        }
                     } else {
-                        $this->success('付款成功，但未充值成功，请联系管理员。', $url, $Result);
+                        // 同步处理
+                        if (empty($this->fromAsync)) {
+                            $this->success('支付成功，余额充值失败，请联系客服', $url, $result_0);
+                        }
+                        // 异步处理
+                        else {
+                            echo 'FAIL'; exit;
+                        }
                     }
                 } else {
-                    $this->success('付款成功，数据错误，未能充值成功，请联系管理员。', $url, $Result);
+                    // 同步处理
+                    if (empty($this->fromAsync)) {
+                        $this->success('支付成功，订单更新失败，请联系客服', $url, $result_0);
+                    }
+                    // 异步处理
+                    else {
+                        echo 'FAIL'; exit;
+                    }
                 }
-            } else if (in_array($Order['status'], [2, 3])) {
-                // 返回
-                $this->success('充值成功，即将跳转', $url, $Result);
-            } else if ($Order['status'] == 4) {
-                // 返回
-                $this->success('订单已取消，即将跳转', $url, $Result);
             }
-        } else if (2 == $Post['transaction_type']) {
+        }
+        // 商品订单处理
+        else if (2 === intval($Post['transaction_type'])) {
             // 付款成功后，订单并未修改状态时，修改订单状态并返回
             if (empty($Order['order_status'])) {
-                $returnData = pay_success_logic($this->users_id, $Order['order_code'], $PayDetails, 'wechat');
+                $async = $this->fromAsync ? false : true;
+                $returnData = pay_success_logic($this->users_id, $Order['order_code'], $PayDetails, $Order['pay_name'], $async, [], $config);
                 if (is_array($returnData)) {
-                    if (1 == $returnData['code']) {
-                        $this->success($returnData['msg'], $returnData['url'], $returnData['data']);
-                    } else {
-                        $this->error($returnData['msg']);
+                    // 同步处理
+                    if (empty($this->fromAsync)) {
+                        if (1 === intval($returnData['code'])) {
+                            if (!empty($this->fromApplets)) {
+                                $returnData['data']['url'] = 1 == input('param.fenbao/d') ? '' : '/pages/order/index';
+                                $this->success('支付完成', $returnData['data']['url'], $returnData['data']);
+                            } else {
+                                $this->success($returnData['msg'], $returnData['url'], $returnData['data']);
+                            }
+                        } else {
+                            $this->error($returnData['msg']);
+                        }
+                    }
+                    // 异步处理
+                    else {
+                        if (1 === intval($returnData['code'])) {
+                            echo 'SUCCESS'; exit;
+                        } else {
+                            echo 'FAIL'; exit;
+                        }
                     }
                 }
+            } else {
+                // 同步处理
+                if (empty($this->fromAsync)) {
+                    $returnData = [];
+                    $users = \think\Db::name('users')->field('*')->find($Order['users_id']);
+                    // 邮箱发送
+                    $returnData['email'] = GetEamilSendData(tpCache('smtp'), $users, $Order, 1, $Order['pay_name']);
+                    // 手机发送
+                    $returnData['mobile'] = GetMobileSendData(tpCache('sms'), $users, $Order, 1, $Order['pay_name']);
+                    $this->success('已支付', url('user/Shop/shop_centre'), $returnData);
+                }
             }
-        } else if (3 == $Post['transaction_type']) {
-            // 付款成功后，订单并未修改状态时，修改订单状态并返回
-            $Result['email']  = false;
-            $Result['mobile'] = false;
+        }
+        // 会员升级处理
+        else if (3 === intval($Post['transaction_type'])) {
+            $result_0['email']  = false;
+            $result_0['mobile'] = false;
             $url = url('user/Level/level_centre');
-
-            if ($Order['status'] == 1) {
-                // 订单更新条件
+            // 更新升级订单
+            if (1 === intval($Order['status'])) {
+                // 更新条件
                 $where = [
                     'moneyid' => $Order['moneyid'],
-                    'users_id' => $this->users_id
+                    'users_id' => $this->users_id,
+                    'order_number' => strval($Order['order_number']),
                 ];
-
-                // 订单更新数据，更新为已付款
-                $UpMoneyData = $this->GetUpMoneyData(session('UsersTypeData'), $Order['pay_method']);
-
-                // 订单更新
-                $ResultID = $this->users_money_db->where($where)->update($UpMoneyData);
-
+                // 更新数据
+                $usersTypeData = !empty($Order['cause']) ? unserialize($Order['cause']) : session('UsersTypeData');
+                $update = $this->GetUpMoneyData($usersTypeData, $Order['pay_method']);
+                // 执行更新
+                $resultID = $this->users_money_db->where($where)->update($update);
                 // 订单更新后续操作
-                if (!empty($ResultID)) {
-                    $Where = [
+                if (!empty($resultID)) {
+                    $where = [
                         'users_id' => $Order['users_id'],
                     ];
-
                     // 获取更新会员数据数组
-                    $UpUsersData = $this->GetUpUsersData(session('UsersTypeData'));
-                    $ReturnID = $this->users_db->where($Where)->update($UpUsersData);
-                    
-                    // 用户充值金额后续操作
-                    if (!empty($ReturnID)) {
-                        // 返回
-                        $this->success('升级成功', $url, $Result);
-                    } else {
-                        $this->success('付款成功，数据错误，升级失败，请联系管理员', $url, $Result);
+                    $update = $this->GetUpUsersData($usersTypeData);
+                    $resultID = $this->users_db->where($where)->update($update);
+                    if (!empty($resultID)) {
+                        // 推送微信发货推送表记录
+                        if ('wechat' === trim($Order['pay_method'])) {
+                            // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_number'], 3, '会员升级', $config);
+                        }
+                        if (!empty($this->fromApplets)) $url = 1 == input('param.fenbao/d') ? '' : '/pages/user/index';
+                        $result_0['url'] = $url;
+                        // 同步处理
+                        if (empty($this->fromAsync)) {
+                            $this->success('升级成功', $url, $result_0);
+                        }
+                        // 异步处理
+                        else {
+                            echo 'SUCCESS'; exit;
+                        }
                     }
-                } else {
-                    $this->success('付款成功，数据错误，升级失败，请联系管理员', $url, $Result);
+                }
+                // 同步处理
+                if (empty($this->fromAsync)) {
+                    $this->success('支付成功，升级失败，请联系客服', $url, $result_0);
+                }
+                // 异步处理
+                else {
+                    echo 'FAIL'; exit;
                 }
             }
-        } else if (8 == $Post['transaction_type']) {
+        }
+        // 视频订单处理
+        else if (8 === intval($Post['transaction_type'])) {
             // 付款成功后，订单并未修改状态时，修改订单状态并返回
             if (empty($Order['order_status'])) {
                 // 订单更新条件
@@ -624,12 +942,18 @@ class PayApiLogic extends Model
 
                 // 订单更新后续操作
                 if (!empty($ResultID)) {
+                    // 推送微信发货推送表记录
+                    if ('wechat' === trim($Order['pay_name'])) {
+                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_code'], 8, $Order['product_name'], $config);
+                    }
                     // 订单操作完成，返回跳转
                     $ViewUrl = cookie($this->users_id . '_' . $Order['product_id'] . '_EyouMediaViewUrl');
                     $this->success('支付成功，处理订单完成', $ViewUrl, true);
                 }
             }
-        }else if (9 == $Post['transaction_type']) {
+        }
+        // 文章订单处理
+        else if (9 === intval($Post['transaction_type'])) {
             // 付款成功后，订单并未修改状态时，修改订单状态并返回
             if (empty($Order['order_status'])) {
                 // 订单更新条件
@@ -652,10 +976,122 @@ class PayApiLogic extends Model
 
                 // 订单更新后续操作
                 if (!empty($ResultID)) {
+                    // 推送微信发货推送表记录
+                    if ('wechat' === trim($Order['pay_name'])) {
+                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_code'], 9, $Order['product_name'], $config);
+                    }
                     // 订单操作完成，返回跳转
                     $ViewUrl = cookie($this->users_id . '_' . $Order['product_id'] . '_EyouArticleViewUrl');
                     $this->success('支付成功，处理订单完成', $ViewUrl, true);
                 }
+            }
+        }
+        // 下载订单处理
+        else if (10 === intval($Post['transaction_type'])) {
+            // 付款成功后，订单并未修改状态时，修改订单状态并返回
+            if (empty($Order['order_status'])) {
+                // 订单更新条件
+                $OrderWhere = [
+                    'order_id'  => $Order['order_id'],
+                    'users_id'  => $this->users_id,
+                    'lang'      => $this->home_lang
+                ];
+
+                // 订单更新数据，更新为已付款
+                $OrderData = [
+                    'order_status' => 1,
+                    'pay_details'  => serialize($PayDetails),
+                    'pay_time'     => getTime(),
+                    'update_time'  => getTime()
+                ];
+
+                // 订单更新
+                $ResultID = Db::name('download_order')->where($OrderWhere)->update($OrderData);
+
+                // 订单更新后续操作
+                if (!empty($ResultID)) {
+                    // 推送微信发货推送表记录
+                    if ('wechat' === trim($Order['pay_name'])) {
+                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_code'], 10, $Order['product_name'], $config);
+                    }
+                    // 订单操作完成，返回跳转
+                    $ViewUrl = cookie($this->users_id . '_' . $Order['product_id'] . '_EyouDownloadViewUrl');
+                    $this->success('支付成功，处理订单完成', $ViewUrl, true);
+                }
+            }
+        }
+        // 会员充值套餐订单处理
+        else if (20 === intval($Post['transaction_type'])) {
+            // 更新订单为已支付
+            $where = [
+                'users_id' => $this->users_id,
+                'order_id' => $Order['order_id'],
+                'order_code' => $Order['order_code'],
+                'order_pay_code' => $Order['order_pay_code'],
+            ];
+            $update = [
+                'order_status' => 2,
+                'order_pay_time' => $this->times,
+                'order_pay_details' => serialize($PayDetails),
+                'update_time' => $this->times,
+            ];
+            $result_1 = Db::name('users_recharge_pack_order')->where($where)->update($update);
+            if (!empty($result_1)) {
+                // 根据会员充值套餐给会员充储值余额
+                $result_2 = Db::name('users')->where(['users_id' => $this->users_id])->setInc('users_money', $Order['order_face_value']);
+                if (!empty($result_2)) {
+                    // 更新订单为已充值
+                    $update = [
+                        'order_status' => 3,
+                        'update_time' => $this->times,
+                    ];
+                    Db::name('users_recharge_pack_order')->where($where)->update($update);
+                    // 增加充值套餐的销售量
+                    $where = [
+                        'pack_id' => $Order['pack_id'],
+                    ];
+                    Db::name('users_recharge_pack')->where($where)->setInc('pack_sales_num');
+                    // 会员当前余额
+                    $usersMoney = Db::name('users')->where('users_id', $this->users_id)->getField('users_money');
+                    $insert = [
+                        'users_id' => $this->users_id,
+                        'money' => unifyPriceHandle($Order['order_face_value']),
+                        'users_money' => unifyPriceHandle($usersMoney),
+                        'cause' => $Order['order_pack_names'] . '(充值套餐)',
+                        'cause_type' => 1,
+                        'status' => 3,
+                        'pay_method' => !empty($Order['order_pay_name']) ? trim($Order['order_pay_name']) : '',
+                        'pay_details' => serialize($PayDetails),
+                        'order_number' => $Order['order_pay_code'],
+                        'lang' => $this->home_lang,
+                        'add_time' => $this->times,
+                        'update_time' => $this->times,
+                    ];
+                    Db::name('users_money')->insertGetId($insert);
+
+                    // 推送微信发货推送表记录
+                    if ('wechat' === trim($Order['order_pay_name'])) {
+                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_pay_code'], 20, '充值', $config);
+                    }
+
+                    // 同步处理
+                    if (empty($this->fromAsync)) {
+                        // 充值成功
+                        $this->success('充值成功');
+                    }
+                    // 异步处理
+                    else {
+                        echo 'SUCCESS'; exit;
+                    }
+                }
+            }
+        }
+        // 多商家订单处理
+        else if (99 === intval($Post['transaction_type'])) {
+            // 付款成功后，订单并未修改状态时，修改订单状态并返回
+            if (!empty($Order) && empty($Order['pay_status'])) {
+                $multiMerchantLogic = new \app\user\logic\MultiMerchantLogic;
+                $multiMerchantLogic->unifiedPaySuccessHandle($Order, $Post['pay_mark'], $PayDetails);
             }
         }
     }
@@ -674,18 +1110,18 @@ class PayApiLogic extends Model
             switch ($OrderPayMethodType) {
                 case 'WeChatScanCode':
                     // PC端微信扫码支付
-                    return '已在PC端浏览器中微信扫码生成订单，请到PC端浏览器完成支付！';
+                    return '该订单已使用微信扫码创建订单，根据微信支付规则，请在PC端浏览器扫码支付';
                     break;
                 case 'WeChatInternal':
                     // 手机微信端H5支付
-                    return '已在手机端微信中生成订单，请到手机端微信完成支付！';                
+                    return '该订单已使用微信JSAPI创建订单，根据微信支付规则，请使用手机微信进行支付';
                     break;
                 case 'WeChatH5':
                     // 手机端浏览器H5支付
-                    return '已在手机端浏览器中生成订单，请到手机端浏览器完成支付！';                
+                    return '该订单已使用手机浏览器创建订单，根据微信支付规则，请使用手机浏览器进行支付';
                     break;
                 default:
-                    return '错误提示：102，选择支付方式错误，请刷新后重试~~';
+                    return '微信支付方法选择错误，请刷新后重试~~';
                     break;
             }
         } else {
@@ -748,8 +1184,17 @@ class PayApiLogic extends Model
                     $UpUsersData = $this->GetUpUsersData($UsersTypeData, true);
                     $ReturnID = $this->users_db->where($Where)->update($UpUsersData);
                     if (!empty($ReturnID)) {
+                        // 跳转链接
+                        $referurl = input('param.referurl/s', null, 'htmlspecialchars_decode,urldecode');
+                        if (empty($referurl)) {
+                            $referurl = cookie('referurl');
+                            if (empty($referurl)) {
+                                $referurl = url('user/Level/level_centre');
+                            }
+                        }
+                        cookie('referurl', null);
                         // 支付完成返回
-                        $ReturnData = $this->GetReturnData(0, 1, '余额支付完成！', url('user/Level/level_centre'));
+                        $ReturnData = $this->GetReturnData(0, 1, '余额支付完成！', $referurl);
                         $this->success($ReturnData);
                     }
                 }
@@ -930,15 +1375,26 @@ class PayApiLogic extends Model
             $ReturnDataNew['url_qrcode'] = null;
         } else if (isMobile() && isWeixin()) {
             // 手机微信端支付
-            if (empty($this->users['open_id'])) {
-                // 如果会员没有openid则使用扫码支付方式
-                $Param = [
-                    'unified_number' => $MoneyData['order_number'],
-                    'transaction_type' => 3
-                ];
-                $url = url('user/PayApi/pay_wechat_png', $Param);
+            // if (empty($this->users['open_id'])) {
+            //     // 如果会员没有openid则使用扫码支付方式
+            //     $Param = [
+            //         'unified_number' => $MoneyData['order_number'],
+            //         'transaction_type' => 3
+            //     ];
+            //     $url = url('user/PayApi/pay_wechat_png', $Param);
+            // } else {
+            //     $url = null;
+            //     if (isWeixinApplets()) { 
+            //         $ReturnOrderData['is_applets'] = 1;
+            //     } else {
+            //         $Paydata = model('PayApi')->getWechatPay($this->users['open_id'], $MoneyData['order_number'], $MoneyData['money'], $PayInfo, 0, 3);
+            //         $ReturnOrderData['PayData'] = $Paydata;
+            //     }
+            // }
+            $url = null;
+            if (isWeixinApplets()) { 
+                $ReturnOrderData['is_applets'] = 1;
             } else {
-                $url = null;
                 $Paydata = model('PayApi')->getWechatPay($this->users['open_id'], $MoneyData['order_number'], $MoneyData['money'], $PayInfo, 0, 3);
                 $ReturnOrderData['PayData'] = $Paydata;
             }
@@ -995,7 +1451,6 @@ class PayApiLogic extends Model
     // 拼装更新会员数据数组
     private function GetUpUsersData($data = array(), $balance = false)
     {
-        $time = getTime();
         // 会员期限定义数组
         $limit_arr = Config::get('global.admin_member_limit_arr');
         // 到期天数
@@ -1003,19 +1458,19 @@ class PayApiLogic extends Model
         // 更新会员属性表的数组
         $result = [
             'level' => $data['level_id'],
-            'update_time' => $time,
+            'update_time' => $this->times,
             'level_maturity_days' => Db::raw('level_maturity_days+'.($maturity_days)),
         ];
 
         // 如果是余额支付则追加数组
         if (!empty($balance)) $result['users_money'] = Db::raw('users_money-'.($data['price']));
-        
+
         // 判断是否需要追加天数，maturity_code在Base层已计算，1表示终身会员天数
         if (1 != $this->users['maturity_code']) {
             // 判断是否到期，到期则执行，3表示会员在期限内，不需要进行下一步操作
             if (3 != $this->users['maturity_code']) {
                 // 追加天数数组
-                $result['open_level_time']     = $time;
+                $result['open_level_time']     = $this->times;
                 $result['level_maturity_days'] = $maturity_days;
             }
         }
@@ -1091,12 +1546,14 @@ class PayApiLogic extends Model
 
         $time = getTime();
         // 拼装数组存入会员购买等级表
+        $UsersMoney =  strval($this->users['users_money']) - strval($UsersTypeData['price']);
         $AddMoneyData = [
             'users_id'     => $this->users_id,
             // 订单生成规则
             'order_number' => date('Ymd') . $time . rand(10,100),
             // 金额
             'money'        => $UsersTypeData['price'],
+            'users_money'  => unifyPriceHandle($UsersMoney),
             // 购买的产品等级ID(level_id)
             'cause'        => serialize($UsersTypeData),
             // 购买消费标记
@@ -1108,6 +1565,8 @@ class PayApiLogic extends Model
             'wechat_pay_type' => $wechat_pay_type,
             // 支付详情
             'pay_details'  => serialize($details),
+            // 如果时升级订单则存在升级会员级别ID
+            'level_id'     => $UsersTypeData['level_id'],
             'lang'         => $this->home_lang,
             'add_time'     => $time,
             'update_time'  => $time
@@ -1119,30 +1578,29 @@ class PayApiLogic extends Model
     // 拼装更新金额明细表数据数组
     private function GetUpMoneyData($data = array(), $pay_method = 'balance')
     {
+        // 支付方式
+        $pay_method_arr = config('global.pay_method_arr');
+        $pay_method_new = !empty($pay_method_arr[$pay_method]) ? $pay_method_arr[$pay_method] : '其他支付';
+        // 微信支付则执行
         $wechat_pay_type = '';
-        if ('balance' == $pay_method) {
-            $pay_method_new = '余额';
-        } else if ('alipay' == $pay_method) {
-            $pay_method_new = '支付宝';
-        } else if ('wechat' == $pay_method) {
+        if ('wechat' == $pay_method) {
             if (isMobile() && !isWeixin()) {
                 // 手机浏览器端支付
                 $wechat_pay_type = 'WeChatH5';
+            } else if (isMobile() && isWeixinApplets()) {
+                // 手机微信小程序支付
+                $wechat_pay_type = 'WeChatApplets';
             } else if (isMobile() && isWeixin()) {
                 // 手机微信端支付
                 $wechat_pay_type = 'WeChatInternal';
             } else {
                 // PC端扫码支付
                 $wechat_pay_type = 'WeChatScanCode';
-            } 
-            $pay_method_new = '微信';
-        } else {
-            $pay_method_new = $pay_method;
-            $pay_method = 'Hupijiaopay' != $pay_method ? 'wechat' : $pay_method;
+            }
         }
-
-        $details = '会员当前级别为【' . $this->users['level_name'] . '】，使用' . $pay_method_new . '支付【 ' . $data['type_name'] . '】，支付金额为' . $data['price'];
-
+        // 订单详情
+        $details = '会员当前级别为【' . $this->users['level_name'] . '】，使用' . $pay_method_new . '【 ' . $data['type_name'] . '】，支付金额为' . $data['price'];
+        // 订单数据
         $result = [
             'cause'           => serialize($data),
             'money'           => $data['price'],
@@ -1150,9 +1608,10 @@ class PayApiLogic extends Model
             'pay_method'      => $pay_method,
             'wechat_pay_type' => $wechat_pay_type,
             'pay_details'     => serialize($details),
+            'level_id'        => $data['level_id'],
             'update_time'     => getTime()
         ];
-
+        if ('balance' == $pay_method && empty($this->fromApplets)) $result['users_money'] = $this->users['users_money'] - $result['money'];
         return $result;
     }
 }

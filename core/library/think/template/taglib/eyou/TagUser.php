@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -16,7 +16,7 @@ namespace think\template\taglib\eyou;
 use think\Db;
 
 /**
- * 会员中心
+ * 会员中心 
  */
 class TagUser extends Base
 {
@@ -38,13 +38,13 @@ class TagUser extends Base
      * 会员中心
      * @author wengxianhu by 2018-4-20
      */
-    public function getUser($type = 'default', $img = '', $currentstyle = '', $txt = '', $txtid = '', $afterhtml = '')
+    public function getUser($type = 'default', $img = '', $currentclass = '', $txt = '', $txtid = '', $afterhtml = '')
     {
         $result = false;
 
-        if ($this->home_lang != $this->main_lang) {
-            return false;
-        }
+        // if (self::$home_lang != self::$main_lang) {
+        //     return false;
+        // }
 
         $web_users_switch = tpCache('web.web_users_switch');
         $users_open_register = getUsersConfigData('users.users_open_register');
@@ -77,17 +77,18 @@ class TagUser extends Base
                             $url = url('user/Users/'.$type);
                         } 
 
-                        $t_uniqid = md5(getTime().uniqid(mt_rand(), TRUE));
+                        $t_uniqid = md5(getTime().uniqid(mt_rand(), TRUE).rand(0, 1000));
+                        $t_uniqid = "v".msubstr($t_uniqid, 26, 6);
                         // A标签ID
-                        $result['id'] = md5("ey_{$type}_{$this->users_id}_{$t_uniqid}");
+                        $result['id'] = "ey_{$type}_{$t_uniqid}";
                         // A标签里的文案ID
-                        $result['txtid'] = !empty($txtid) ? md5($txtid) : md5("ey_{$type}_txt_{$this->users_id}_{$t_uniqid}");
+                        $result['txtid'] = !empty($txtid) ? "ey_".md5($txtid) : "ey_".md5("{$type}_txt_{$t_uniqid}");
                         // 文字文案
                         $result['txt'] = $txt;
                         // 购物车的数量ID
-                        $result['cartid'] = md5("ey_{$type}_cartid_{$this->users_id}_{$t_uniqid}");
+                        $result['cartid'] = "ey_".md5("{$type}_cartid_{$t_uniqid}");
                         // IMG标签里的ID
-                        // $result['imgid'] = md5("ey_{$type}_img_{$this->users_id}_{$t_uniqid}");
+                        // $result['imgid'] = "ey_".md5("{$type}_img_{$t_uniqid}");
                         // 图片文案
                         $result['img'] = $img;
                         // 链接
@@ -95,13 +96,16 @@ class TagUser extends Base
                         // 标签类型
                         $result['type'] = $type;
                         // 图片样式类
-                        $result['currentstyle'] = $currentstyle;
+                        $result['currentclass'] = $result['currentstyle'] = $currentclass;
                         // 登陆后显示的Html代码
                         $result['afterhtml'] = $afterhtml;
+                        if ($this->users_id){
+                            $result['cart_num'] = Db::name('shop_cart')->where(['users_id'=>$this->users_id])->sum('product_num');
+                        }
                         break;
-
                     case 'info':
-                        $t_uniqid = md5(getTime().uniqid(mt_rand(), TRUE));
+                        $t_uniqid = md5(getTime().uniqid(mt_rand(), TRUE).rand(0, 1000));
+                        $t_uniqid = "ey_infoid_v".msubstr($t_uniqid, 26, 6);
                         $result = $this->getUserInfo();
                         foreach ($result as $key => $val) {
                             $html_key = md5($key.'-'.$t_uniqid);
@@ -113,15 +117,42 @@ class TagUser extends Base
 
                     case 'userinfo':
                         {
-                            $t_uniqid = md5(getTime().uniqid(mt_rand(), TRUE).rand(0, 1000));
                             $result['carturl'] = url('user/Shop/shop_cart_list');
                             $result['userurl'] = url('user/Users/index');
                             $result['regurl'] = url('user/Users/reg');
                             $result['loginurl'] = url('user/Users/login');
                             // html元素标签ID
-                            $result['htmlid'] = 'ey_'.md5("{$this->users_id}_{$t_uniqid}");
+                            $t_uniqid = md5(getTime().uniqid(mt_rand(), TRUE).rand(0, 1000));
+                            $result['htmlid'] = "ey_htmlid_v".msubstr($t_uniqid, 26, 6);
                             // 登录按钮的事件
-                            $result['loginPopupId'] = " id='ey_login_id_1609665117' ";
+                            $result['loginPopupId'] = " id='ey_login_id_v665117' ";
+                        }
+                        break;
+                        
+                    case 'collect': // 总收藏数
+                        {
+                            $t_uniqid = md5(getTime().uniqid(mt_rand(), TRUE).rand(0, 1000));
+                            $t_uniqid = "v".msubstr($t_uniqid, 26, 6);
+                            // A标签ID
+                            $result['id'] = "ey_".md5("{$type}_{$t_uniqid}");
+                            // A标签里的文案ID
+                            $result['txtid'] = !empty($txtid) ? "ey_".md5($txtid) : "ey_".md5("{$type}_txt_{$t_uniqid}");
+                            // 文字文案
+                            $result['txt'] = $txt;
+                            // 总收藏的数量ID
+                            $result['collectid'] = "ey_".md5("{$type}_collectid_{$t_uniqid}");
+                            // IMG标签里的ID
+                            // $result['imgid'] = "ey_".md5("{$type}_img_{$t_uniqid}");
+                            // 图片文案
+                            $result['img'] = $img;
+                            // 链接
+                            $result['url'] = url('user/Users/collection_index');
+                            // 标签类型
+                            $result['type'] = $type;
+                            // 图片样式类
+                            $result['currentclass'] = $result['currentstyle'] = $currentclass;
+                            // 登陆后显示的Html代码
+                            $result['afterhtml'] = $afterhtml;
                         }
                         break;
 
@@ -153,32 +184,34 @@ class TagUser extends Base
                     case 'logout':
                     case 'cart':
                         $hidden = <<<EOF
-<script type="text/javascript" src="{$this->root_dir}/public/static/common/js/tag_user.js?v={$version}"></script>
-<script type="text/javascript">
-    var tag_user_result_json = {$result_json};
-    tag_user(tag_user_result_json);
-</script>
+<script type="text/javascript">var tag_user_{$type}_json = {$result_json};</script>
+
+EOF;
+                        break;
+
+                    case 'collect':
+                        $hidden = <<<EOF
+<script type="text/javascript">var tag_user_collect_json = {$result_json};</script>
+
 EOF;
                         break;
 
                     case 'info':
                         $hidden = <<<EOF
-<script type="text/javascript" src="{$this->root_dir}/public/static/common/js/tag_user.js?v={$version}"></script>
-<script type="text/javascript">
-    var tag_user_result_json = {$result_json};
-    tag_user_info(tag_user_result_json);
-</script>
+<script type="text/javascript">var tag_user_info_json = {$result_json};</script>
+
 EOF;
                         break;
 
                     case 'userinfo':
-                        $hidden = <<<EOF
-<script type="text/javascript" src="{$this->root_dir}/public/static/common/js/tag_userinfo.js?v={$version}"></script>
-<script type="text/javascript">
-    var tag_user_result_json = {$result_json};
-    tag_userinfo_1608459452(tag_user_result_json);
-</script>
+                        static $userinfo_num = null;
+                        if (null === $userinfo_num || !stristr($hidden, 'tag_userinfo_json')) {
+                            $userinfo_num = 1;
+                            $hidden = <<<EOF
+<script type="text/javascript">var tag_userinfo_json = {$result_json};</script>
+
 EOF;
+                        }
                         break;
                 }
                 $result['hidden'] = $hidden;

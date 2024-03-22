@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -30,16 +30,23 @@ class TagStatic extends Base
      * 资源文件加载
      * @author 小虎哥 by 2018-4-20
      */
-    public function getStatic($file = '', $lang = '', $href = '', $code='')
+    public function getStatic($file = '', $lang = '', $href = '', $code='', $site = '', $version = null)
     {
         if (empty($file)) {
             return '标签static报错：缺少属性 file 或 href 。';
         }
 
         /*多语言*/
-        $paramlang = input('param.lang/s');
+        $paramlang = self::$home_lang;
         if (!empty($lang)) {
             $paramlang = $lang;
+        }
+        /*--end*/
+
+        /*多城市站点*/
+        $paramsite = self::$home_site;
+        if (!empty($site)) {
+            $paramsite = $site;
         }
         /*--end*/
 
@@ -58,10 +65,13 @@ class TagStatic extends Base
             $is_mobile = isMobile();
         }
 
+        static $site_config = null;
+        if (self::$city_switch_on && null == $site_config) {
+            $site_config = tpCache('site');
+        }
+
         $file = !empty($href) ? $href : $file;
 
-        static $request = null;
-        null == $request && $request = Request::instance();
         $parseStr = '';
 
         // 文件方式导入
@@ -70,7 +80,8 @@ class TagStatic extends Base
             $file = $val;
             // ---判断本地文件是否存在，否则返回false，以免@get_headers方法导致崩溃
             if (is_http_url($file)) { // 判断http路径
-                if (preg_match('/^http(s?):\/\/'.$request->host(true).'/i', $file)) { // 判断当前域名的本地服务器文件(这仅用于单台服务器，多台稍作修改便可)
+                $update_time = getTime();
+                if (preg_match('/^http(s?):\/\/'.self::$request->host(true).'/i', $file)) { // 判断当前域名的本地服务器文件(这仅用于单台服务器，多台稍作修改便可)
                     // $pattern = '/^http(s?):\/\/([^.]+)\.([^.]+)\.([^\/]+)\/(.*)$/';
                     $pattern = '/^http(s?):\/\/([^\/]+)(.*)$/';
                     preg_match_all($pattern, $file, $matches);//正则表达式
@@ -87,14 +98,11 @@ class TagStatic extends Base
                         if (!file_exists(realpath(ltrim($filename, '/')))) {
                             continue;
                         }
-                        $file = $request->domain().$filename;
+                        $file = self::$request->domain().$filename;
                     }
                 } else { // 不是本地文件禁止使用该方法
-                    return $this->toHtml($file);
+                    return $this->toHtml($file, $update_time, $version);
                 }
-
-                $update_time = getTime();
-
             } else {
                 if (!preg_match('/^\//i',$file)) {
                     if (!empty($is_mobile)) {
@@ -110,10 +118,24 @@ class TagStatic extends Base
                         if (!empty($is_mobile) && preg_match('/^([a-zA-Z0-9_-]+)\/'.$users_wap_tpl_dir.'\//i', $file)) {
                             $file = '/template/'.TPL_THEME.'pc/'.$file;
                         } else {
-                            $file = '/template/'.THEME_STYLE_PATH.'/'.$file;
+                            if (self::$city_switch_on && !empty($site_config['site_template']) && !empty($paramsite) && !preg_match('/^users(_([^\/]*))?\//i', $file)) { // 多城市站点的独立模板
+                                if (file_exists('./template/'.THEME_STYLE_PATH.'/city/'.$paramsite)) {
+                                    $file = '/template/'.THEME_STYLE_PATH.'/city/'.$paramsite.'/'.$file;
+                                } else if (file_exists('./template/'.THEME_STYLE_PATH.'/'.$paramsite)) {
+                                    $file = '/template/'.THEME_STYLE_PATH.'/'.$paramsite.'/'.$file;
+                                } else {
+                                    $file = '/template/'.THEME_STYLE_PATH.'/'.$file;
+                                }
+                            } else { // 默认模板
+                                $file = '/template/'.THEME_STYLE_PATH.'/'.$file;
+                            }
                         }
                     } else {
-                        $file = '/template/plugins/'.$code.'/'.THEME_STYLE.'/'.$file;
+                        if ($is_mobile && file_exists('./template/plugins/'.$code.'/mobile/'.$file)) {
+                            $file = '/template/plugins/'.$code.'/mobile/'.$file;
+                        } else {
+                            $file = '/template/plugins/'.$code.'/'.THEME_STYLE.'/'.$file;
+                        }
                     }
                 } else {
 /*
@@ -142,20 +164,25 @@ class TagStatic extends Base
                     }
                 }
                 /*--end*/
-                if (!file_exists(ltrim($file, '/'))) {
+                $new_file = preg_replace('/\?(.*)$/i', '', $file);
+                if (!file_exists(ltrim($new_file, '/'))) {
                     continue;
                 }
 
                 try{
-                    $fileStat = stat(ROOT_PATH . ltrim($file, '/'));
-                    $update_time = !empty($fileStat['mtime']) ? $fileStat['mtime'] : getTime();
+                    if (self::$request->controller() == 'Buildhtml') {
+                        $update_time = getTime();
+                    } else {
+                        $fileStat = stat(ROOT_PATH . ltrim($new_file, '/'));
+                        $update_time = !empty($fileStat['mtime']) ? $fileStat['mtime'] : getTime();
+                    }
                 } catch (\Exception $e) {
                     $update_time = getTime();
                 }
             }
             // -------------end---------------
 
-            $parseStr .= $this->toHtml($file, $update_time);
+            $parseStr .= $this->toHtml($file, $update_time, $version);
         }
 
         return $parseStr;
@@ -167,20 +194,32 @@ class TagStatic extends Base
      * @param intval $update_time 文件时间戳
      * @author 小虎哥 by 2018-4-20
      */
-    private function toHtml($file = '', $update_time = '')
+    private function toHtml($file = '', $update_time = '', $version = null)
     {
         $parseStr = '';
         if (!is_http_url($file)) {
             $file = $this->root_dir.$file; // 支持子目录
         }
-        $update_time_str = !empty($update_time) ? '?t='.$update_time : '';
-        $type = strtolower(substr(strrchr($file, '.'), 1));
+        if (!empty($update_time) && !empty($version)) {
+            $update_time_str = '?v='.$update_time;
+        } else {
+            $update_time_str = '';
+        }
+        $type = preg_replace('/^(.*)\.([a-z]+)([^a-z]*)(.*)$/i', '${2}', strtolower($file));
         switch ($type) {
             case 'js':
-                $parseStr .= '<script type="text/javascript" src="' . $file . $update_time_str.'"></script>';
+                $file = get_absolute_url($file);
+                $parseStr =<<<EOF
+<script language="javascript" type="text/javascript" src="{$file}{$update_time_str}"></script>
+
+EOF;
                 break;
             case 'css':
-                $parseStr .= '<link rel="stylesheet" type="text/css" href="' . $file . $update_time_str.'" />';
+                $file = get_absolute_url($file);
+                $parseStr =<<<EOF
+<link href="{$file}{$update_time_str}" rel="stylesheet" media="screen" type="text/css" />
+
+EOF;
                 break;
             case 'jpg':
             case 'jpeg':
@@ -189,6 +228,7 @@ class TagStatic extends Base
             case 'bmp':
             case 'gif':
             case 'webp':
+                $file = get_absolute_url($file);
                 $parseStr .= $file . $update_time_str;
                 break;
             case 'php':

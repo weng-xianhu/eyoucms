@@ -1,0 +1,172 @@
+{eyou:commentlist name="$Comment" id="field"}
+{eq name="$key" value="0"}
+<style type="text/css">
+	.appraise-ul li:first-child {
+		padding-top: 6px;
+	}
+	.appraise-ul li {
+		position: relative;
+		padding: 18px 0;
+	}
+	.appraise-ul li .cmt_user {
+		line-height: 20px;
+	}
+	.appraise-ul li .cmt_user img {
+		width: 20px !important;
+		height: 20px !important;
+		border-radius: 50%;
+		vertical-align: middle;
+	}
+	.appraise-ul li .cmt_user .user {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		margin-left: 12px;
+		display: inline-block;
+		color: #262626;
+		max-width: 98px;
+		vertical-align: middle;
+	}
+	.appraise-ul li .cmt_user .z_comment-star {
+		position: relative;
+		display: inline-block;
+		margin: -2px 0 -2px 6px;
+		vertical-align: middle;
+	}
+	.z_comment-star {
+		display: inline-block;
+		width: 78px;
+		height: 14px;
+		background: url(__PUBLIC__/static/common/images/star.png) no-repeat
+	}
+
+	.z_star0 {
+		background-position: -80px 0
+	}
+
+	.z_star1 {
+		background-position: -64px 0
+	}
+
+	.z_star2 {
+		background-position: -48px 0
+	}
+
+	.z_star3 {
+		background-position: -32px 0
+	}
+
+	.z_star4 {
+		background-position: -16px 0
+	}
+
+	.z_star5 {
+		background-position: 0 0
+	}
+	.appraise-ul li .cmt_user .date {
+		float: right;
+		color: #999;
+		margin-left: -60px;
+		font-size: 12px;
+	}
+	.appraise-ul li .cmt_cnt {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		/* display: -webkit-box; */
+		/* -webkit-line-clamp: 3; */
+		/* -webkit-box-orient: vertical; */
+		position: relative;
+		line-height: 1.5;
+		font-size: 13px;
+		margin: 18px 0;
+		word-break: break-all;
+        word-wrap:break-word;
+        text-align:justify;
+		/* white-space: normal; */
+		/* max-height: 126px; */
+	}
+	.appraise-ul li .cmt_att {
+		white-space: nowrap;
+		-webkit-overflow-scrolling: touch;
+		overflow: hidden;
+		overflow-x: auto;
+		margin-right: -10px;
+	}
+	.appraise-ul li .cmt_att .img {
+		display: inline-block;
+		width: 80px;
+		height: 80px;
+		margin-right: 6px;
+		border-radius: 6px;
+		overflow: hidden;
+		text-align: center;
+		vertical-align: middle;
+		background-color: #f3f3f3;
+		background-image: url(__PUBLIC__/static/common/images/not_adv.jpg);
+		background-size: cover;
+	}
+	.appraise-ul li .cmt_att .img img {
+		width: auto;
+		display: inline-block;
+		height: auto;
+		min-width: 80px !important;
+		max-height: 80px !important;
+		max-width: unset !important;
+	}
+    .appraise-ul li .cmt-ge {
+    	font-size: 12px;
+        color: #bfbfbf;
+        margin-top: 10px;
+    }
+	.appraise-ul li:after {
+		content: "";
+		height: 0;
+		display: block;
+		border-bottom: 1px solid #ddd;
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+	}
+	.appraise-ul li .cmt_ucnt {
+		overflow: hidden;
+		/* text-overflow: ellipsis; */
+		/* display: -webkit-box; */
+		/* -webkit-line-clamp: 3; */
+		/* -webkit-box-orient: vertical; */
+		position: relative;
+		line-height: 1.5;
+		font-size: 13px;
+		margin: 10px 0 0 0;
+		word-break: break-all;
+        word-wrap:break-word;
+        text-align:justify;
+		/* white-space: normal; */
+		/* max-height: 126px; */
+	}
+</style>
+{/eq}
+
+<li>
+	<div class="cmt_user">
+		<img src="{$field.head_pic}">
+		<span class="user">{$field.nickname}</span>
+		<span class="z_comment-star z_star{$field.total_score}"><span></span></span>
+		<span class="date">{$field.add_time|date='Y-m-d H:i:s',###}</span>
+	</div>
+	<div class="cmt_cnt">{$field.content}</div>
+	<div class="cmt_att">
+		{eyou:volist name="$field.upload_img" id="img"}
+			{eyou:notempty name="$img"}
+				<span class="img"> <img src="{$img}"> </span>
+			{/eyou:notempty}
+		{/eyou:volist}
+	</div>
+    <div class="cmt-ge">
+    	{notempty name="$field.spec_value"}[ {$field.spec_value} ]{else/}{/notempty} 
+    </div>
+	<div class="cmt_ucnt" {empty name="$field.admin_reply.adminReply"} style="display: none;" {/empty}>
+		回复：<span style="color: red;">{$field.admin_reply.adminReply}</span>
+	</div>
+</li>
+{/eyou:commentlist}

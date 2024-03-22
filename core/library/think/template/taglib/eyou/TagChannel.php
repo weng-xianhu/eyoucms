@@ -21,7 +21,7 @@ use think\Request;
  */
 class TagChannel extends Base
 {
-    public $currentstyle = '';
+    public $currentclass = '';
     
     //初始化
     protected function _initialize()
@@ -29,13 +29,7 @@ class TagChannel extends Base
         parent::_initialize();
         /*应用于文档列表*/
         if ($this->aid > 0) {
-            $cacheKey = 'tagChannel_'.strtolower('home_'.CONTROLLER_NAME.'_'.ACTION_NAME);
-            $cacheKey .= "_{$this->aid}";
-            $this->tid = cache($cacheKey);
-            if ($this->tid == false) {
-                $this->tid = Db::name('archives')->where('aid', $this->aid)->getField('typeid');
-                cache($cacheKey, $this->tid);
-            }
+            $this->tid = $this->get_aid_typeid($this->aid);
         }
         /*--end*/
     }
@@ -46,16 +40,16 @@ class TagChannel extends Base
      * @param boolean $self 包括自己本身
      * @author wengxianhu by 2018-4-26
      */
-    public function getChannel($typeid = '', $type = 'top', $currentstyle = '', $notypeid = '')
+    public function getChannel($typeid = '', $type = 'top', $currentclass = '', $notypeid = '')
     {
-        $this->currentstyle = $currentstyle;
+        $this->currentclass = $currentclass;
         $typeid  = !empty($typeid) ? $typeid : $this->tid;
 
         /*多语言*/
         if (!empty($typeid)) {
             $typeid = model('LanguageAttr')->getBindValue($typeid, 'arctype');
             if (empty($typeid)) {
-                echo '标签channel报错：找不到与第一套【'.$this->main_lang.'】语言关联绑定的属性 typeid 值 。';
+                echo '标签channel报错：找不到与第一套【'.self::$main_lang.'】语言关联绑定的属性 typeid 值 。';
                 return false;
             }
         }
@@ -65,6 +59,7 @@ class TagChannel extends Base
             /*应用于没有指定tid的列表，默认获取该控制器下的第一级栏目ID*/
             // http://demo.eyoucms.com/index.php/home/Article/lists.html
             $map = array(
+                'lang' => self::$home_lang,
                 'parent_id' => 0,
                 'is_hidden' => 0,
                 'status'    => 1,
@@ -74,8 +69,23 @@ class TagChannel extends Base
             if (!empty($channeltype_info)) {
                 $map['channeltype'] = $channeltype_info['id'];
             }
-            $typeid = Db::name('arctype')->where($map)->order('sort_order asc')->limit(1)->getField('id');
+            $group_user_where = $this->diy_get_users_group_arctype_query_builder();   //会员分组查询条件
+            if (empty($group_user_where)){
+                $typeid = Db::name('arctype')->where($map)->order('sort_order asc')->limit(1)->getField('id');
+            }else{
+                $typeid = Db::name('arctype')->alias("a")->join("weapp_users_group_arctype b",'a.id = b.type_id','left')
+                    ->where($map)->where($group_user_where)->order('sort_order asc')->limit(1)->getField('id');
+            }
             /*--end*/
+        }
+
+        if (self::$language_split) {
+            $this->lang = Db::name('arctype')->where(['id'=>$typeid])->cache(true, EYOUCMS_CACHE_TIME, 'arctype')->value('lang');
+            if ($this->lang != self::$home_lang) {
+                $lang_title = Db::name('language_mark')->where(['mark'=>self::$home_lang])->value('cn_title');
+                echo "标签channel报错：【{$lang_title}】语言 typeid 值不存在。";
+                return false;
+            }
         }
 
         $result = $this->getSwitchType($typeid, $type, $notypeid);
@@ -155,20 +165,38 @@ class TagChannel extends Base
             'c.is_del'    => 0, // 回收站功能
         );
         $fields = "c.*, c.id as typeid, count(s.id) as has_children, '' as children";
-        $res = Db::name('arctype')
-            ->field($fields)
-            ->alias('c')
-            ->join('__ARCTYPE__ s','s.parent_id = c.id','LEFT')
-            ->where($map)
-            ->where('c.lang', $this->home_lang)
-            ->group('c.id')
-            ->order('c.parent_id asc, c.sort_order asc, c.id')
-            ->cache(true,EYOUCMS_CACHE_TIME,"arctype")
-            ->select();
+        $group_user_where = $this->diy_get_users_group_arctype_query_builder('d.');   //会员分组查询条件
+        if(empty($group_user_where)){
+            $res = Db::name('arctype')
+                ->field($fields)
+                ->alias('c')
+                ->join('__ARCTYPE__ s','s.parent_id = c.id','LEFT')
+                ->where($map)
+                ->where('c.lang', $this->lang)
+                ->group('c.id')
+                ->order('c.parent_id asc, c.sort_order asc, c.id')
+                ->cache(true,EYOUCMS_CACHE_TIME,"arctype")
+                ->select();
+        }else{
+            $res = Db::name('arctype')
+                ->field($fields)
+                ->alias('c')
+                ->join('__ARCTYPE__ s','s.parent_id = c.id','LEFT')
+                ->join("weapp_users_group_arctype d",'c.id = d.type_id','left')
+                ->where($map)
+                ->where('c.lang', $this->lang)
+                ->where($group_user_where)
+                ->group('c.id')
+                ->order('c.parent_id asc, c.sort_order asc, c.id')
+                ->cache(true,EYOUCMS_CACHE_TIME,"arctype")
+                ->select();
+        }
+
         /*--end*/
         if ($res) {
             $ctl_name_list = model('Channeltype')->getAll('id,ctl_name', array(), 'id');
             foreach ($res as $key => $val) {
+                $val['extends'] = '';
                 /*获取指定路由模式下的URL*/
                 if ($val['is_part'] == 1) {
                     $val['typeurl'] = $val['typelink'];
@@ -178,19 +206,29 @@ class TagChannel extends Base
                             $typeurl .= ROOT_DIR;
                         }
                         $typeurl .= '/'.trim($val['typeurl'], '/');
+                        if (preg_match('/\/([\w\-]+)$/i', $typeurl)) {
+                            $typeurl .= '/';
+                        }
                         $val['typeurl'] = $typeurl;
                     }
+
+                    if (!empty($val['target'])) {
+                        $val['extends'] .= " target='_blank' ";
+                    }
+                    if (!empty($val['nofollow'])) {
+                        $val['extends'] .= " rel='nofollow' ";
+                    }
                 } else {
-                    $ctl_name = $ctl_name_list[$val['current_channel']]['ctl_name'];
+                    $ctl_name = !empty($ctl_name_list[$val['current_channel']]['ctl_name']) ? $ctl_name_list[$val['current_channel']]['ctl_name'] : '';
                     $val['typeurl'] = typeurl('home/'.$ctl_name."/lists", $val);
                 }
                 /*--end*/
 
                 /*标记栏目被选中效果*/
                 if ($val['id'] == $typeid || $val['id'] == $this->tid) {
-                    $val['currentstyle'] = $this->currentstyle;
+                    $val['currentclass'] = $val['currentstyle'] = $this->currentclass;
                 } else {
-                    $val['currentstyle'] = '';
+                    $val['currentclass'] = $val['currentstyle'] = '';
                 }
                 /*--end*/
 
@@ -279,11 +317,21 @@ class TagChannel extends Base
             'status'  => 1,
             'is_del'    => 0, // 回收站功能
         );
-        $res = Db::name('arctype')->field('parent_id')
-            ->where($map)
-            ->where('lang', $this->home_lang)
-            ->group('parent_id')
-            ->select();
+        $group_user_where = $this->diy_get_users_group_arctype_query_builder('b.');   //会员分组查询条件
+        if (empty($group_user_where)){
+            $res = Db::name('arctype')->field('parent_id')
+                ->where($map)
+                ->group('parent_id')
+                ->select();
+        }else{
+            $res = Db::name('arctype')->alias("a")->field('parent_id')
+                ->join("weapp_users_group_arctype b",'a.id = b.type_id','left')
+                ->where($map)
+                ->where($group_user_where)
+                ->group('parent_id')
+                ->select();
+        }
+
         /*--end*/
 
         /*获取上一级栏目ID对应下的子孙栏目*/
@@ -318,23 +366,32 @@ class TagChannel extends Base
             'status'    => 1,
         );
         !empty($notypeid) && $map['id'] = ['NOTIN', $notypeid]; // 排除指定栏目ID
-        $res = $arctypeLogic->arctype_list(0, 0, false, $arctype_max_level, $map);
+        $group_user_where = $this->diy_get_users_group_arctype_query_builder('b.');   //会员分组查询条件
+        $res = $arctypeLogic->arctype_list(0, 0, false, $arctype_max_level, $map,true,$group_user_where);
         /*--end*/
 
         if (count($res) > 0) {
             $topTypeid = $this->getTopTypeid($this->tid);
             $ctl_name_list = model('Channeltype')->getAll('id,ctl_name', array(), 'id');
-            $currentstyleArr = [
+            $currentclassArr = [
                 'tid'   => 0,
-                'currentstyle'  => '',
+                'currentclass'  => '',
+                'currentstyle'  => '', // 加强兼容性
                 'grade' => 100,
                 'is_part'   => 0,
             ]; // 标记选择栏目的数组
 
             // 问答栏目ID
-            $ask_topTypeid = Db::name('arctype')->where(['channeltype'=>51,'is_del'=>0,'status'=>1])->getField('id');
+            $group_user_where = $this->diy_get_users_group_arctype_query_builder('b.');   //会员分组查询条件
+            if (empty($group_user_where)){
+                $ask_topTypeid = Db::name('arctype')->where(['channeltype'=>51,'is_del'=>0,'status'=>1])->getField('id');
+            }else{
+                $ask_topTypeid = Db::name('arctype')->alias("a")->join("weapp_users_group_arctype b",'a.id = b.type_id','left')
+                    ->where(['channeltype'=>51,'is_del'=>0,'status'=>1])->where($group_user_where)->getField('id');
+            }
 
             foreach ($res as $key => $val) {
+                $val['extends'] = '';
                 /*获取指定路由模式下的URL*/
                 if ($val['is_part'] == 1) {
                     $val['typeurl'] = $val['typelink'];
@@ -344,7 +401,17 @@ class TagChannel extends Base
                             $typeurl .= ROOT_DIR;
                         }
                         $typeurl .= '/'.trim($val['typeurl'], '/');
+                        if (preg_match('/\/([\w\-]+)$/i', $typeurl)) {
+                            $typeurl .= '/';
+                        }
                         $val['typeurl'] = $typeurl;
+                    }
+
+                    if (!empty($val['target'])) {
+                        $val['extends'] .= " target='_blank' ";
+                    }
+                    if (!empty($val['nofollow'])) {
+                        $val['extends'] .= " rel='nofollow' ";
                     }
                 } else {
                     $ctl_name = $ctl_name_list[$val['current_channel']]['ctl_name'];
@@ -357,26 +424,27 @@ class TagChannel extends Base
                 /*--end*/
 
                 /*标记栏目被选中效果*/
-                $val['currentstyle'] = '';
+                $val['currentclass'] = $val['currentstyle'] = '';
                 $pageurl = request()->url(true);
                 $typelink = htmlspecialchars_decode($val['typelink']);
                 if (CONTROLLER_NAME == 'Ask') { // 问答模型
                     $topTypeid = $ask_topTypeid;
                 }
                 if ($val['id'] == $topTypeid || (!empty($typelink) && stristr($pageurl, $typelink))) {
-                    $is_currentstyle = false;
-                    if ($topTypeid != $this->tid && 0 == $currentstyleArr['is_part'] && $val['grade'] <= $currentstyleArr['grade']) { // 当前栏目不是顶级栏目，按外部链接优先
-                        $is_currentstyle = true;
+                    $is_currentclass = false;
+                    if ($topTypeid != $this->tid && 0 == $currentclassArr['is_part'] && $val['grade'] <= $currentclassArr['grade']) { // 当前栏目不是顶级栏目，按外部链接优先
+                        $is_currentclass = true;
                     }
-                    else if ($topTypeid == $this->tid && $val['grade'] < $currentstyleArr['grade']) 
+                    else if ($topTypeid == $this->tid && $val['grade'] < $currentclassArr['grade']) 
                     { // 当前栏目是顶级栏目，按顺序优先
-                        $is_currentstyle = true;
+                        $is_currentclass = true;
                     }
 
-                    if ($is_currentstyle) {
-                        $currentstyleArr = [
+                    if ($is_currentclass) {
+                        $currentclassArr = [
                             'tid'   => $val['id'],
-                            'currentstyle'  => $this->currentstyle,
+                            'currentclass'  => $this->currentclass,
+                            'currentstyle'  => $this->currentclass, // 加强兼容性
                             'grade' => $val['grade'],
                             'is_part'   => $val['is_part'],
                         ];
@@ -386,14 +454,14 @@ class TagChannel extends Base
 
                 // 封面图
                 $val['litpic'] = handle_subdir_pic($val['litpic']);
-
+                
                 $res[$key] = $val;
             }
 
             // 循环处理选中栏目的标识
             foreach ($res as $key => $val) {
-                if (!empty($currentstyleArr) && $val['id'] == $currentstyleArr['tid']) {
-                    $val['currentstyle'] = $currentstyleArr['currentstyle'];
+                if (!empty($currentclassArr) && $val['id'] == $currentclassArr['tid']) {
+                    $val['currentclass'] = $val['currentstyle'] = $currentclassArr['currentclass'];
                 }
                 $res[$key] = $val;
             }

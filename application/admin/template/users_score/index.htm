@@ -2,14 +2,11 @@
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-    {include file="member/bar" /}
+{include file="member/left" /}
+<div class="page min-hg-c-10" style="min-width:auto;margin-left:100px;">
+    {include file="users_score/bar" /}
     <div class="flexigrid">
-        <div class="mDiv">
-            <div class="ftitle">
-                {include file="users_score/bar" /}
-            </div>
-            
+        <div class="mDiv pt0">
             <form class="navbar-form form-inline" action="{:url('UsersScore/index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
@@ -23,7 +20,7 @@
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索用户名...">
                         <input type="submit" class="btn" value="搜索">
-						<i class="fa fa-search"></i>
+						<i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -36,8 +33,8 @@
                         <th class="sign w40 none" axis="col0">
                             <div class="tc">选择</div>
                         </th>
-                        <th abbr="article_show" axis="col5" class="w40">
-                            <div class="tc">ID</div>
+                        <th abbr="article_show" axis="col5" class="w60">
+                            <div class="tc">序号</div>
                         </th>
                         <th abbr="article_title" axis="col3">
                             <div class="pdl10">用户名</div>
@@ -68,7 +65,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -78,18 +77,24 @@
                                 <div class="w40 tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.id}"></div>
                             </td>
                             <td class="sort">
-                                <div class="w40 tc">
-                                    {$vo.id}
+                                <div class="w60 tc">
+                                    {if condition="$pager->nowPage > 1"}
+                                        {$pager->listRows * ($pager->nowPage-1) + $k+1}
+                                    {else /}
+                                        {$k+1}
+                                    {/if}
                                 </div>
                             </td>
                             <td style="width: 100%">
                                 <div class="pdl10">
-                                    {$vo.username}
+                                    <a href="javascript:void(0);" data-href="{:url('Member/users_edit', ['id'=>$vo.users_id, 'iframe'=>1,'layer'=>1])}" onclick="openFullframe(this, '会员详情', '100%', '100%');">
+                                        <img src="{$vo.head_pic|get_head_pic=###,false,$vo['sex']}" alt="" style="max-width: 35px;">  &nbsp;&nbsp;{$vo.nickname}
+                                    </a>
                                 </div>
                             </td>
                             <td>
                                 <div class="w120 tc">
-                                    +{$vo.score}
+                                    {$vo.score}
                                 </div>
                             </td>
                             <td>
@@ -114,10 +119,12 @@
                 </table>
             </div>
         </div>
+        {notempty name="list"}
         <div class="footer-oper">
             {include file="public/page" /}
             <div style="clear:both"></div>
         </div>
+        {/notempty}
     </div>
 </div>
 <script>

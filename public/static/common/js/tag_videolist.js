@@ -1,24 +1,24 @@
 // 一进来视频文档内页，默认就自动播放
 if (vars1612143009.player == 'default') {
-    changeVideoUrl1586341922(vars1612143009.file_id_0, vars1612143009.aid, vars1612143009.uhash_0);
+    changeVideoUrl341922(vars1612143009.file_id_0, vars1612143009.aid, vars1612143009.uhash_0);
 }
 
-function changeVideoUrl1586341922(id, aid, uhash, type) {
+function changeVideoUrl341922(id, aid, uhash, type) {
     if (document.getElementById("VideoDiv13579")) {
         if (video_sp_1618221427 && video_sp_1618221427 == 'sp1') {
-            console.log('函数：changeVideoUrl1586341922_sp1');
-            changeVideoUrl1586341922_sp1(id, aid, uhash, type); // 第一套demo视频模板
+            console.log('函数：changeVideoUrl341922_sp1');
+            changeVideoUrl341922_sp1(id, aid, uhash, type); // 第一套demo视频模板
         } else {
-            console.log('函数：changeVideoUrl1586341922_sp2');
-            changeVideoUrl1586341922_sp2(id, aid, uhash, type); // 知了那套
+            console.log('函数：changeVideoUrl341922_sp2');
+            changeVideoUrl341922_sp2(id, aid, uhash, type); // 知了那套
         }
     } else {
-        console.log('函数：changeVideoUrl1586341922_sp3');
-        changeVideoUrl1586341922_sp3(id, aid, uhash, type); // 易而优
+        console.log('函数：changeVideoUrl341922_sp3');
+        changeVideoUrl341922_sp3(id, aid, uhash, type); // 易而优
     }
 }
 
-function changeVideoUrl1586341922_sp1(id, aid, uhash, type) {
+function changeVideoUrl341922_sp1(id, aid, uhash, type) {
     submitPlayRecord(); // 记录播放时长
     //步骤一:创建异步对象
     var ajax = new XMLHttpRequest();
@@ -103,7 +103,7 @@ function changeVideoUrl1586341922_sp1(id, aid, uhash, type) {
     }
 }
 
-function changeVideoUrl1586341922_sp2(id, aid, uhash, type) {
+function changeVideoUrl341922_sp2(id, aid, uhash, type) {
     submitPlayRecord(); // 记录播放时长
     //步骤一:创建异步对象
     var ajax = new XMLHttpRequest();
@@ -124,6 +124,12 @@ function changeVideoUrl1586341922_sp2(id, aid, uhash, type) {
             if (document.getElementById('fid1616057948')) {
                 document.getElementById('fid1616057948').value = id;
             }
+            // 焦点
+            $(".VideoCur341922").each(function(){
+                $(this).parent().removeClass('cur');
+            });
+            $('.VideoCur341922_'+id).parent().addClass('cur');
+            $('.text-white').text($('.VideoCur341922_'+id).attr('data-file_title'));
             if (res.code == 1) {
                 if (res.data.txy_video_html) {
                     // 腾讯云点播视频
@@ -189,9 +195,9 @@ function changeVideoUrl1586341922_sp2(id, aid, uhash, type) {
     }
 }
 
-function changeVideoUrl1586341922_sp3(id, aid, uhash, type) {
+function changeVideoUrl341922_sp3(id, aid, uhash, type) {
     if (type == 'play' || type == 'list') {
-        checkAuth_1586341922(id, aid, type);
+        checkAuth_v341922(id, aid, type);
         return false;
     }
     submitPlayRecord(); // 记录播放时长
@@ -277,7 +283,7 @@ function changeVideoUrl1586341922_sp3(id, aid, uhash, type) {
     }
 }
 
-function checkAuth_1586341922(fid, aid, type) {
+function checkAuth_v341922(fid, aid, type) {
     var url = vars1612143009.root_dir + "/index.php?m=home&c=View&a=play&aid="+aid+"&fid="+fid;
     //步骤一:创建异步对象
     var ajax = new XMLHttpRequest();
@@ -322,7 +328,7 @@ function checkAuth_1586341922(fid, aid, type) {
                             if (res.url) {
                                 html = '<div class="buy_div"><p style="color: #ffffff;text-align:center;">' + res.msg + '</p><p class="buy_ap"><a href="' + res.url + '" class="buy_a">立即购买</a></p></div>';
                             } else {
-                                html = '<div class="buy_div"><p class="buy_price_p">￥' + res.price + '</p><p class="buy_ap"><a  href="javascript:void(0);" onClick="MediaOrderBuy_1586341922(' + aid + ');" class="buy_a">立即购买</a></p></div>';
+                                html = '<div class="buy_div"><p class="buy_price_p">￥' + res.price + '</p><p class="buy_ap"><a  href="javascript:void(0);" onClick="MediaOrderBuy_v341922(' + aid + ');" class="buy_a">立即购买</a></p></div>';
                             }
                             document.getElementById("video_play_20200520_" + aid).parentNode.innerHTML = html;
                         } else {
@@ -367,7 +373,7 @@ function checkAuth_1586341922(fid, aid, type) {
     }
 }
 
-function MediaOrderBuy_1586341922(aid) {
+function MediaOrderBuy_v341922(aid) {
     // 步骤一:创建异步对象
     var ajax = new XMLHttpRequest();
     //步骤二:设置请求的url参数,参数一是请求的类型,参数二是请求的url,可以带参数,动态的传递参数starName到服务端

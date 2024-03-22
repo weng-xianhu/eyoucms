@@ -1,0 +1,208 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="member/left" /}
+<div class="page min-hg-c-10" style="min-width:auto;margin-left:100px;">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <ul class="tab-base nc-row">
+                <li>
+                    <a {if condition="in_array($Request.action, ['log_off_index'])"}class="current"{/if} href='{:url("Member/log_off_index")}'><span>注销列表</span></a>
+                </li>
+                <li>
+                    <a {if condition="in_array($Request.action, ['log_off_set'])"}class="current"{/if} href='{:url("Member/log_off_set")}'><span>注销设置</span></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th abbr="username" axis="col5" class="w60">
+                            <div class="tc">序号</div>
+                        </th>
+                        <th abbr="username" axis="col5" class="w200">
+                            <div class="tc">会员账号</div>
+                        </th>
+                        <th abbr="nickname" axis="col3">
+                            <div class="tc">昵称</div>
+                        </th>
+                        <th abbr="mobile" axis="col4" class="w200">
+                            <div class="tc">手机</div>
+                        </th>
+                        <th abbr="status" axis="col6" class="w200">
+                            <div class="tc">状态</div>
+                        </th>
+                        <th abbr="add_time" axis="col6" class="w200">
+                            <div class="tc">申请时间</div>
+                        </th>
+                        <th axis="col1" class="w400">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                    <tr>
+                        <td class="no-data" align="center" axis="col0" colspan="50">
+                            <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                        </td>
+                    </tr>
+                    {else/}
+                    {volist name="list" id="vo"}
+                    <tr>
+                        <td class="sort">
+                            <div class="w60 tc">
+                                {$cur_key-$key}
+                            </div>
+                        </td>
+                        <td class="sort">
+                            <div class="w200 tc">
+                                {$vo.username}
+                            </div>
+                        </td>
+                        <td style="width: 100%;" >
+                            <div class="tc">
+                                {$vo.nickname}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="w200 tc">
+                                {empty name="$vo.mobile"}
+                                <span class="grey">未填写</span>
+                                {else/}
+                                {$vo.mobile}
+                                {/empty}
+                                
+                            </div>
+                        </td>
+                        <td>
+                            <div class="w200 tc">
+                                {if condition="0 == $vo.status"}
+                                <span style="color: #ff9900">待审核</span>
+                                {elseif condition="1 == $vo.status"}
+                                <span class="green">注销成功</span>
+                                {elseif condition="2 == $vo.status"}
+                                <span class="red">审核拒绝</span>
+                                {/if}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="w200 tc">
+                                {$vo.add_time|date='Y-m-d H:i:s',###}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="w400 tc">
+                                {eq name="$vo.status" value="0"}
+                                <a class="btn red" href="javascript:void(0)" data-href="{:url('Member/users_edit',array('id'=>$vo['users_id']))}" onclick="openFullframe(this, '会员信息', '100%', '100%');"><i class="fa fa-trash-o"></i>会员信息</a>
+                                <a class="btn red" href="javascript:void(0)" data-href="{:url('Member/handle_log_off',array('id'=>$vo['id'],'status'=>1))}" onclick="handle_log_off(this,1);"><i class="fa fa-trash-o"></i>审核通过</a>
+                                <a class="btn red" href="javascript:void(0)" data-href="{:url('Member/handle_log_off',array('id'=>$vo['id'],'status'=>2))}" onclick="handle_log_off(this,2);"><i class="fa fa-trash-o"></i>审核拒绝</a>
+                                {else /}
+                                    {notempty name="$vo.admin_id"}
+                                        <a class="btn red" href="javascript:void(0)" data-href="{:url('Member/log_off_see',array('id'=>$vo['id']))}" onclick="openFullframe(this, '详情', '600px', '210px');"><i class="fa fa-trash-o"></i>查看操作记录</a>
+                                    {else /}
+                                        <a class="btn grey" href="javascript:void(0)"><i class="fa fa-trash-o"></i>查看操作记录</a>
+                                    {/notempty}
+                                {/eq}
+                            </div>
+                        </td>
+                    </tr>
+                    {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        {$pageStr}
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+    function handle_log_off(obj,status) {
+        if (1 == status){
+            var title = '此操作不可恢复，确定注销账号？';
+            var btn = ['确定', '取消']; //按钮
+            // 删除按钮
+            layer.confirm(title, {
+                title: false,
+                btn: btn //按钮
+            }, function () {
+                $.ajax({
+                    type: "POST",
+                    url: $(obj).data('href'),
+                    data: {_ajax:1},
+                    dataType: 'json',
+                    success: function (data) {
+                        layer.closeAll();
+                        if(data.code == 1){
+                            layer.msg(data.msg, {icon:1, time: 1000}, function(){
+                                window.location.reload();
+                            });
+                        }else{
+                            layer.alert(data.msg, {icon: 2, title:false});
+                        }
+                    },
+                    error:function(){
+                        layer.closeAll();
+                    }
+                });
+            }, function (index) {
+                layer.closeAll(index);
+            });
+        } else{
+            layer.prompt({
+                formType: 2,
+                placeholder: '请输入拒绝注销原因',
+                title: '请输入拒绝注销原因',
+                btnAlign:'r',
+                closeBtn: 3,
+            }, function(value, index, elem){
+                layer.close(index);
+                $.ajax({
+                    type : 'post',
+                    url : $(obj).data('href'),
+                    data : {refuse_reason:value, _ajax:1},
+                    dataType : 'json',
+                    success : function(res){
+                        layer.closeAll();
+                        if(res.code == 1){
+                            layer.msg(res.msg, {icon: 1, time:1000}, function(){
+                                window.location.reload();
+                            });
+                        }else{
+                            layer.msg(res.msg, {icon: 2, time:1000});
+                        }
+                    },
+                    error:function(){
+                        layer.closeAll();
+                        layer.alert('未知错误', {icon: 2, title:false});
+                    }
+                })
+
+            });
+        }
+    }
+</script>
+{include file="public/footer" /}

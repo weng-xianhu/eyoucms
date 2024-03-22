@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 namespace think;
 
@@ -652,7 +661,7 @@ class Validate
                 $result = $value instanceof File;
                 break;
             case 'image':
-                $result = $value instanceof File && in_array($this->getImageType($value->ey_getFilename()), [1, 2, 3, 6, 15, 18]); // by 小虎哥
+                $result = $value instanceof File && in_array($this->getImageType($value->ey_getFilename()), [1, 2, 3, 6, 15, 18, 8080]); // by 小虎哥
                 // $result = $value instanceof File && in_array($this->getImageType($value->getRealPath()), [1, 2, 3, 6, 15]);
                 break;
             case 'token':
@@ -677,8 +686,19 @@ class Validate
             return exif_imagetype($image);
         } else {
             try {
-                $info = getimagesize($image);
-                return $info ? $info[2] : false;
+                $info = @getimagesize($image);
+                if ($info) {
+                    return $info[2];
+                } else {
+                    if (function_exists('simplexml_load_file')) {
+                        $svgXML = simplexml_load_file($image);
+                        $xmlattributes = $svgXML->attributes();
+                        if (is_object($xmlattributes)) {
+                            return 8080;
+                        }
+                    }
+                    return false;
+                }
             } catch (\Exception $e) {
                 return false;
             }
@@ -813,7 +833,7 @@ class Validate
             list($w, $h) = $rule;
             return $w == $width && $h == $height;
         } else {
-            return in_array($this->getImageType($file->ey_getFilename()), [1, 2, 3, 6, 15, 18]); // by 小虎哥
+            return in_array($this->getImageType($file->ey_getFilename()), [1, 2, 3, 6, 15, 18, 8080]); // by 小虎哥
             // return in_array($this->getImageType($file->getRealPath()), [1, 2, 3, 6, 15]);
         }
     }

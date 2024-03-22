@@ -1,7 +1,12 @@
 
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="{if condition="'Sample' == $Request.param.sc && 'index' == $Request.param.sa"}{:url("Weapp/index")}{else /}{:weapp_url("Sample/Sample/index")}{/if}" title="返回列表"><i class="fa fa-chevron-left"></i></a>
-            
+        <div class="item-title">
+            <a class="back_xin" href="{if condition="'Sample' == $Request.param.sc && 'index' == $Request.param.sa"}{:url("Weapp/index")}{else /}{:weapp_url("Sample/Sample/index")}{/if}" title="返回列表"><i class="iconfont e-fanhui"></i></a>
+            <a class="back_sz mt10" href="javascript:void(0);" onclick="click_to_eyou_1575506523('{:weapp_url("Sample/Sample/doc")}', '使用教程');"><i class="ui_tips"></i>使用教程</a>
+            <div class="subject">
+                <h3>{$weappInfo['name']}</h3>
+                <h5></h5>
+            </div>
             <ul class="tab-base nc-row">
                 <li>
                 {eq name="$Request.param.sa" value="index"}
@@ -16,14 +21,6 @@
                     <a href="javascript:void(0);" class="tab current"><span>插件配置</span></a>
                 {else /}
                     <a href="{:weapp_url("Sample/Sample/conf")}" class="tab"><span>插件配置</span></a>
-                {/range}
-                </li>
-
-                <li>
-                {range name="$Request.param.sa" value="doc" type='in'}
-                    <a href="javascript:void(0);" class="tab current"><span>使用指南</span></a>
-                {else /}
-                    <a href="{:weapp_url("Sample/Sample/doc")}" class="tab"><span>使用指南</span></a>
                 {/range}
                 </li>
             </ul>

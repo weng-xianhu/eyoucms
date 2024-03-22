@@ -26,13 +26,21 @@ function btn_upgrade(obj, type)
         return false;
     }
     
+    var version = $(obj).data('version');
+    var max_version = $(obj).data('max_version');
+    var curent_version = $(obj).data('curent_version');
     var intro = $("#upgrade_intro").html();
     var notice = $("#upgrade_notice").html();
     intro += '<style type="text/css">.layui-layer-content{height:270px!important;text-align:left!important;}</style>';
-    // filelist = filelist.replace(/\n/g,"<br/>");
+    // 截图前50个文件记录
+    var filelist_arr = filelist.split('<br>');
+    if (filelist_arr.length > 50) {
+        filelist_arr = filelist_arr.slice(0,50);
+        filelist_arr.push("……");
+        filelist_arr.push("<a href='https://www.eyoucms.com/plus/upgrade.php?version="+curent_version+"-"+version+"' target='_blank'>此次更新涉及的全部文件，点击这里查看！</a>");
+        filelist = filelist_arr.join('<br>');
+    }
     v = notice + intro + '<br/>' + filelist;
-    var max_version = $(obj).data('max_version');
-    var version = $(obj).data('version');
     var title = '检测系统最新版本：'+version;
     var btn = [];
     if (0 == type) {
@@ -58,8 +66,12 @@ function btn_upgrade(obj, type)
     //询问框
     parent.layer.confirm(v, {
             title: title
+            ,shade: layer_shade
             ,area: ['580px','400px']
             ,btn: btn //按钮
+            ,success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
             ,btn3: function(index){
                 var url = $(obj).data('tips_url');
                 $.getJSON(url, {show_popup_upgrade:-1,_ajax:1}, function(){});
@@ -98,9 +110,13 @@ function checkdir(obj) {
         url  : $(obj).data('check_authority'),
         timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
         data : {filelist:0,_ajax:1},
-        error: function(request) {
+        error: function(e) {
+            var msg = e.responseText;
+            if (msg.indexOf('错误代码') == -1) {
+                msg = "检测不通过，可能被服务器防火墙拦截，请添加白名单！";
+            }
             parent.layer.closeAll();
-            parent.layer.alert("检测不通过，可能被服务器防火墙拦截，请添加白名单，或者联系技术协助！", {icon: 2, title:false}, function(){
+            parent.layer.alert(msg, {icon: 2, title:false}, function(){
                 top.location.reload();
             });
         },
@@ -112,7 +128,7 @@ function checkdir(obj) {
                 //提示框
                 if (2 == res.data.code) { 
                     var alert = parent.layer.alert(res.msg, {icon: 2, title:false, btn: ['立即查看']}, function(){
-                        window.parent.open('http://www.eyoucms.com/plus/view.php?aid=9105');
+                        window.parent.open('https://www.eyoucms.com/plus/view.php?aid=9105');
                     });
                 } else {
                     var confirm = parent.layer.confirm(res.msg, {
@@ -185,7 +201,18 @@ function upgrade(obj){
                         }
 
                         if (true == finish) {
-                            export_data();
+                            parent.layer.closeAll();
+                            var full = parent.layer.alert(title, {
+                                    title: false,
+                                    icon: 1,
+                                    closeBtn: 0,
+                                    btn: btn //按钮
+                                }, function(){
+                                    parent.layer.close(full);
+                                    top.location.href = eyou_basefile;
+                                }
+                            );
+                            // export_data();
                         } else {
                             var full = parent.layer.alert(title, {
                                     title: false,
@@ -216,10 +243,30 @@ function upgrade(obj){
             else if (-2 == res.data.code) {
                 parent.layer.closeAll();
                 parent.layer.alert(res.msg, {icon: 2, title:false, btn: ['立即查看']}, function(){
-                    window.parent.open('http://www.eyoucms.com/plus/view.php?aid=9105');
+                    window.parent.open('https://www.eyoucms.com/plus/view.php?aid=9105');
                 });
             }
-            else{
+            else if (-3 == res.data.code) {
+                parent.layer.closeAll();
+                var msg = '<style type="text/css">.layui-layer-content{text-align:left!important;}</style>' + res.msg;
+                parent.layer.alert(msg, {
+                    shade: layer_shade,
+                    area: ['480px', '230px'],
+                    move: false,
+                    title: '温馨提示',
+                    btnAlign:'r',
+                    closeBtn: 3,
+                    btn: ['购买授权', '确定'],
+                    success: function(){
+                        $(".layui-layer-btn", window.parent.document).find('a.layui-layer-btn1').removeClass('layui-layer-btn1').addClass('layui-layer-btn2');
+                        $(".layui-layer-btn", window.parent.document).find('a.layui-layer-btn0').removeClass('layui-layer-btn0').addClass('layui-layer-btn1');
+                        $(".layui-layer-btn", window.parent.document).find('a.layui-layer-btn2').removeClass('layui-layer-btn2').addClass('layui-layer-btn0');
+                    }
+                }, function(){
+                    window.open('https://www.eyoucms.com/buy');
+                });
+            }
+            else {
                 parent.layer.closeAll();
                 parent.layer.alert(res.msg, {icon: 2, title:false}, function(){
                     top.location.reload();
@@ -326,7 +373,9 @@ function backup_data(tab){
                     }, 1000);
                     return;
                 }
-                backup_data(res.tab);
+                setTimeout(function () {
+                    backup_data(res.tab);
+                }, 350);
             } else {
                 var full = parent.layer.alert('已升级最新版本！', {
                         title: false,

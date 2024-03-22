@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 namespace think;
 
@@ -26,7 +35,7 @@ class App
     /**
      * @var bool 应用调试模式
      */
-    public static $debug = true;
+    public static $debug = false;
 
     /**
      * @var string 应用类库命名空间
@@ -86,16 +95,21 @@ class App
             $_thinks = self::thinkEncode(0);
             $request->filter($config['default_filter']);
 
+            // 多城市切换 by 小虎哥
+            self::switchCitysite();
+
             // 多语言切换 by 小虎哥
-            $config['lang_switch_on'] && self::switchLanguage();
+            self::switchLanguage();
 
             // 默认语言
             Lang::range($config['default_lang']);
             // 开启多语言机制 检测当前语言
             $_cltname = self::thinkEncode(5);
-            $config['lang_switch_on'] && Lang::detect();
+            $system_home_default_lang = tpCache('global.system_home_default_lang');
+            if ($config['lang_switch_on'] || (!empty($system_home_default_lang) && $system_home_default_lang != 'cn')){
+                Lang::detect();
+            }
             $request->langset(Lang::range());
-
             // 加载系统语言包
             Lang::load([
                 THINK_PATH . 'lang' . DS . $request->langset() . EXT,
@@ -317,7 +331,7 @@ class App
                 /*加载插件的行为扩展文件 by 小虎哥*/
                 $weappRow = \think\Db::name('weapp')->field('code')->where([
                     'status'    => 1,
-                ])->cache(true, null, "weapp")->select();
+                ])->cache(true, null, "weapp")->order('sort_order asc, id asc')->select();
                 if (!empty($weappRow)) {
                     foreach ($weappRow as $key => $val) {
                         $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'behavior'.DS.$module.'tags' . EXT;
@@ -328,9 +342,9 @@ class App
                                     $configData = include $configFile;
                                     if (0 == $configData['scene']) { // PC与手机端
                                         Hook::import(include $file);
-                                    } else if (1 == $configData['scene'] && isMobile()) { // 手机端
+                                    } else if (1 == $configData['scene'] && self::isMobile()) { // 手机端
                                         Hook::import(include $file);
-                                    } else if (2 == $configData['scene'] && !isMobile()) { // PC端
+                                    } else if (2 == $configData['scene'] && !self::isMobile()) { // PC端
                                         Hook::import(include $file);
                                     }
                                 }
@@ -362,6 +376,26 @@ class App
         }
 
         return Config::get();
+    }
+
+    /**
+     * 检测是否使用手机访问
+     * @access private
+     * @return bool
+     */
+    private static function isMobile()
+    {
+        if (isset($_SERVER['HTTP_VIA']) && stristr($_SERVER['HTTP_VIA'], "wap")) {
+            return true;
+        } elseif (isset($_SERVER['HTTP_ACCEPT']) && strpos(strtoupper($_SERVER['HTTP_ACCEPT']), "VND.WAP.WML")) {
+            return true;
+        } elseif (isset($_SERVER['HTTP_X_WAP_PROFILE']) || isset($_SERVER['HTTP_PROFILE'])) {
+            return true;
+        } elseif (isset($_SERVER['HTTP_USER_AGENT']) && preg_match('/(blackberry|configuration\/cldc|hp |hp-|htc |htc_|htc-|iemobile|kindle|midp|mmp|motorola|mobile|nokia|opera mini|opera |Googlebot-Mobile|YahooSeeker\/M1A1-R2D2|android|iphone|ipod|mobi|palm|palmos|pocket|portalmmm|ppc;|smartphone|sonyericsson|sqh|spv|symbian|treo|up.browser|up.link|vodafone|windows ce|xda |xda_)/i', $_SERVER['HTTP_USER_AGENT'])) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -475,7 +509,11 @@ class App
     private static function getParamValue($param, &$vars, $type)
     {
         $name  = $param->getName();
-        $class = $param->getClass();
+        if (PHP_MAJOR_VERSION >= 8) { // php8或以上版本
+            $class = $param->getType();
+        } else {
+            $class = $param->getClass();
+        }
 
         if ($class) {
             $className = $class->getName();
@@ -775,5 +813,17 @@ class App
     private static function switchLanguage() 
     {
         switch_language();
+    }
+
+    /**
+     * 多城市切换
+     *
+     * @author 小虎哥
+     * @param string $lang   语言变量值
+     * @return void
+     */
+    private static function switchCitysite() 
+    {
+        switch_citysite();
     }
 }

@@ -1,0 +1,11 @@
+<div class="ftitle_nav">
+    {volist name="$gbTypeList" id="vo"}
+    <div class="fbutton">
+        <a href="{$vo.url}">
+            <div class="{$vo.class}" title="{$vo.name}〔{$vo.count}〕">
+                {$vo.name}<span>{$vo.count}</span>
+            </div>
+        </a>
+    </div>
+    {/volist}
+</div>

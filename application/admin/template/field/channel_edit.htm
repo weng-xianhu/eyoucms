@@ -4,13 +4,23 @@
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-i">
     <form class="form-horizontal" id="post_form" action="{:url('Field/channel_edit')}" method="post">
         <!-- 常规选项 -->
         <div class="ncap-form-default tab_div_1">
+            {if condition="!empty($type) && 'all' == $type"}
             <dl class="row">
                 <dt class="tit">
-                    <label for="title"><em>*</em>字段标题</label>
+                    <label><em>*</em>所属模型</label>
+                </dt>
+                <dd class="opt">
+                    {$channeltype_list[$info.channel_id]['title']}
+                </dd>
+            </dl>
+            {/if}
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>字段名称</label>
                 </dt>
                 <dd class="opt">
                     <input type="text" value="{$info.title|default=''}" name="title" id="title" class="input-txt">
@@ -19,11 +29,11 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="name"><em>*</em>字段名称</label>
+                    <label for="name"><em>*</em>字段标识</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" value="{$info.name|default=''}" name="name" id="name" placeholder="只允许字母、数字和下划线的任意组合" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9a-zA-Z_]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-zA-Z_]/g,''));">
-                    <p class="notic">保持唯一性，不可与主表、附加表重复</p>
+                    <input type="text" value="{$info.name|default=''}" name="name" id="name" placeholder="支持字母、数字和下划线，不能和别的标识值相同" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9a-zA-Z_]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-zA-Z_]/g,''));">
+                    <p class="notic">保持唯一性</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -59,9 +69,11 @@
                         <span id='CityId'>
                             <select id="city" onchange="GetRegionData(this,'city');">
                                 <option value="{$region.parent_id}">请选择</option>
+                                {notempty name="$City"}
                                 {volist name='$City' id='C_V'}
                                     <option {if condition="$C_V.id == $region.region_id"} selected {/if} value="{$C_V.id}">{$C_V.name}</option>
                                 {/volist}
+                                {/notempty}
                             </select>    
                         </span>
 
@@ -83,6 +95,23 @@
                     </dd>
                     <input type="hidden" name="region_data[region_ids]" id='region_ids' value='{$region.region_ids}' style="width: 100%;">
                 </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>三级区域联动</label>
+                    </dt>
+                    <dd class="opt">
+                        <div class="onoff">
+                            <label for="SetType_1" class="cb-enable {eq name='$info.set_type' value='1'}selected{/eq}">是</label>
+                            <input id="SetType_1" name="set_type" value="1" type="radio" onclick="change_set_type(this);">
+
+                            <label for="SetType_0" class="cb-disable {empty name='$info.set_type'}selected{/empty}">否</label>
+                            <input id="SetType_0" name="set_type" value="0" type="radio" onclick="change_set_type(this);">
+                        </div>
+                        &nbsp;
+                        <span class="err"></span>
+                        <p class="notic">是否开启三级联动</p>
+                    </dd>
+                </dl>
             </div>
 
             <dl class="row" id="dl_dfvalue">
@@ -93,7 +122,7 @@
                     <textarea rows="5" cols="60" id="dfvalue" name="dfvalue" placeholder="如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。" style="height:60px;">{$info.dfvalue|default=''}</textarea>
                     <textarea rows="5" cols="60" name="old_dfvalue" style="display: none;">{$info.dfvalue|default=''}</textarea>
                     <span class="err"></span>
-                    <p class="notic">1、如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。<br/>2、特殊符号会被过滤掉，比如：&、=、?等</p>
+                    <p class="notic">1、如果定义字段类型为下拉框、单选项、多选项时，默认值为必填项，不支持反斜杠 \ ，可以用斜杠 / 代替。<br/>2、特殊符号会被过滤掉，比如：&、=、?等<br/>3、定义字段类型为多选项时，默认值最多为64项，超出则截取前64项</p>
                 </dd>
             </dl>
             <dl class="row" id="dl_dfvalue_unit">
@@ -102,21 +131,17 @@
                 </dt>
                 <dd class="opt">
                     <input type="text" value="{$info.dfvalue_unit|default=''}" name="dfvalue_unit" id="dfvalue_unit" placeholder="比如：元、个、件等等" class="input-txt">
-                    <p class="notic">比如：元、个、件等等</p>
+                    <p class="notic"></p>
                 </dd>
             </dl>
             <dl class="row" id='IsRelease' {eq name='$userConfig.users_open_release' value='0'} style="display: none;" {/eq}>
                 <dt class="tit">
-                    <label>应用于投稿</label>
+                    <label>支持投稿</label>
                 </dt>
                 <dd class="opt">
-                    <div class="onoff">
-                        <label for="IsRelease_1" class="cb-enable {if condition='$info.is_release == 1'}selected{/if}">是</label>
-                        <input id="IsRelease_1" name="is_release" value="1" type="radio" {if condition="$info.is_release == 1"}checked="checked"{/if}>
-
-                        <label for="IsRelease_0" class="cb-disable {if condition='!isset($info.is_release) || empty($info.is_release)'}selected{/if}">否</label>
-                        <input id="IsRelease_0" name="is_release" value="0" type="radio" {if condition="!isset($info.is_release) || empty($info.is_release)"}checked="checked"{/if}>
-                    </div>
+                    <label class="curpoin"><input id="IsRelease_1" name="is_release" value="1" type="radio" {if condition="$info.is_release == 1"}checked="checked"{/if}>是</label>
+                    &nbsp;
+                    <label class="curpoin"><input id="IsRelease_0" name="is_release" value="0" type="radio" {if condition="!isset($info.is_release) || empty($info.is_release)"}checked="checked"{/if}>否</label>
                     &nbsp;
                     <span class="err"></span>
                     <p class="notic">是否应用于会员投稿中</p>
@@ -124,39 +149,19 @@
             </dl>
             <dl class="row" id='IsScreening' style="display: none;">
                 <dt class="tit">
-                    <label>应用于筛选</label>
+                    <label>支持筛选</label>
                 </dt>
                 <dd class="opt">
-                    <div class="onoff">
-                        <label for="IsScreening_1" class="cb-enable {if condition='$info.is_screening == 1'}selected{/if}">是</label>
-                        <input id="IsScreening_1" name="is_screening" value="1" type="radio" {if condition="$info.is_screening == 1"}checked="checked"{/if}>
-
-                        <label for="IsScreening_0" class="cb-disable {if condition='!isset($info.is_screening) || empty($info.is_screening)'}selected{/if}">否</label>
-                        <input id="IsScreening_0" name="is_screening" value="0" type="radio" {if condition="!isset($info.is_screening) || empty($info.is_screening)"}checked="checked"{/if}>
-                        <input type="hidden" name="IsScreening_status" value="0">
-                    </div>
+                    <label class="curpoin"><input id="IsScreening_1" name="is_screening" value="1" type="radio" {if condition="$info.is_screening == 1"}checked="checked"{/if}>是</label>
+                    &nbsp;
+                    <label class="curpoin"><input id="IsScreening_0" name="is_screening" value="0" type="radio" {if condition="!isset($info.is_screening) || empty($info.is_screening)"}checked="checked"{/if}>否</label>
+                    <input type="hidden" name="IsScreening_status" value="0">
                     &nbsp;
                     <span class="err"></span>
                     <p class="notic">是否应用于列表的条件筛选中</p>
-                    <a id="call_tags_help" href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=7881','筛选标签调用')" class="{if condition='!isset($info.is_screening) || empty($info.is_screening)'}none{/if}">查看标签调用</a>
+                    <a id="call_tags_help" href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=7881&origin_eycms=1','筛选标签调用')" class="{if condition='!isset($info.is_screening) || empty($info.is_screening)'}none{/if}">查看标签调用</a>
                 </dd>
             </dl>
-            <!-- <dl class="row" id='IsSelect' style="display: none;">
-                <dt class="tit">
-                    <label>筛选是否多选</label>
-                </dt>
-                <dd class="opt">
-                    <div class="onoff">
-                        <label for="IsMultiSelect_1" class="cb-enable {if condition='$info.IsMultiSelect == 1'}selected{/if}">是</label>
-                        <input id="IsMultiSelect_1" name="is_multi_select" value="1" type="radio" {if condition="$info.IsMultiSelect == 1"}checked="checked"{/if}>
-
-                        <label for="IsMultiSelect_0" class="cb-disable {if condition='!isset($info.IsMultiSelect) || empty($info.IsMultiSelect)'}selected{/if}">否</label>
-                        <input id="IsMultiSelect_0" name="is_multi_select" value="0" type="radio" {if condition="!isset($info.IsMultiSelect) || empty($info.IsMultiSelect)"}checked="checked"{/if}>
-                    </div>
-                    <span class="err"></span>
-                    <p class="notic">选择是则在筛选中可多选，否则只能单选</p>
-                </dd>
-            </dl> -->
             <dl class="row">
                 <dt class="tit">
                     <label>提示文字</label>
@@ -204,6 +209,20 @@
     </form>
 </div>
 <script type="text/javascript">
+    function change_set_type(obj) {
+        var val = $(obj).val();
+        if (1 == val) {
+            // $("#IsScreening_1").prop('checked', false);
+            // $("#IsScreening_0").prop('checked', true);
+            // $("#IsScreening").find('label').eq(1).removeClass('selected');
+            // $("#IsScreening").find('label').eq(2).addClass('selected');
+            // $("#IsScreening").hide();
+            $("#call_tags_help").hide();
+        } else {
+            // $("#IsScreening").show();
+        }
+    }
+
     $(function(){
         // 判断是否隐藏第二级地区选择栏
         var parent_array = {$parent_array};
@@ -252,6 +271,13 @@
             } else {
                 $('#label_dfvalue').html('默认值');
             }
+            if (0 <= $.inArray(dtype, ['text','multitext'])) {
+                $('#dfvalue').attr('placeholder', '前端将默认显示输入的默认值');
+            } else if (0 <= $.inArray(dtype, ['checkbox','radio','select'])) {
+                $('#dfvalue').attr('placeholder', '此处填写被选择的项目(用“,”分开，如“男,女”)。');
+            } else {
+                $('#dfvalue').attr('placeholder', '前端将默认显示输入的默认值');
+            }
             if (0 <= $.inArray(dtype, ['region','checkbox','radio','select'])) {
                 $('#IsScreening').show();
                 $('input[name=IsScreening_status]').val(1);
@@ -264,6 +290,11 @@
                 $('#dl_dfvalue_unit').show();
             } else {
                 $('#dl_dfvalue_unit').hide();
+            }
+            //如果开启了区域三级联动 隐藏用于筛选
+            var set_type = "{$info.set_type|default=0}";
+            if (1 == set_type && 'region' == dtype ) {
+                // $("#IsScreening").hide();
             }
         }
     });
@@ -307,9 +338,9 @@
                     $('#city').empty().html(res);
                 }
             },
-            error : function() {
+            error : function(e) {
                 layer.closeAll();
-                layer.alert(ey_unknown_error, {icon: 5});
+                layer.alert(e.responseText, {icon: 5});
             }
         });
     }
@@ -375,6 +406,11 @@
             
             if (0 <= $.inArray($('input[name=dtype]:checked').val(), ['radio','checkbox','select'])) {
                 var dfvalue = $.trim($('#dfvalue').val());
+                if(dfvalue.indexOf('\\') != -1){
+               　　  showErrorMsg('默认值不支持反斜杠 \\ ，可用斜杠 / 代替');
+                    $('#dfvalue').focus();
+                    return false;
+            　　}
                 data = dfvalue.split(',');
                 for(var i = 0;i < data.length ;i++) {
                     for(var j = i+1;j < data.length;j++) {
@@ -385,6 +421,13 @@
                         }
                     }
                 }
+                if (0 <= $.inArray($('input[name=dtype]:checked').val(), ['checkbox'])) {
+                    if (64 < data.length) {
+                        showErrorMsg('默认值最多填写64项！');
+                        $('#dfvalue').focus();
+                        return false;
+                    }
+                }
             }
         }
         if (0 >= parseInt($('#typeid').find('option:selected').length)) {
@@ -393,11 +436,11 @@
             return false;
         }
 
-        // 字段应用于筛选时，指定栏目必须指定一个或多个栏目
+        // 字段支持筛选时，指定栏目必须指定一个或多个栏目
         if (1 == parseInt($('input:radio[name="is_screening"]:checked').val())) {
             if (0 == parseInt($('#typeid').find('option:selected').val())) {
                 if (1 >= $('#typeid').val().length) {
-                    showErrorMsg('字段应用于筛选时，栏目必须指定一个或多个！');
+                    showErrorMsg('字段支持筛选时，栏目必须指定一个或多个！');
                     $('#typeid').focus();
                     return false;
                 }
@@ -415,7 +458,7 @@
                 if(res.code == 1){
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                         _parent.window.location.reload();
                     });
                 }else{

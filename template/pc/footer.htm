@@ -1,16 +1,16 @@
 <footer class="bg-main">
 	<div class="container-layout">
 		<ul>
-			{eyou:channel type="top" row="4" id="field"}
+			{eyou:models type="top" row="4" id="field"}
 			<li class="float-left item-{$i} hidden-l hidden-s">
 				<h3 class="text-middle margin-big-bottom">{$field.typename}</h3>
 				<ul>
-					{eyou:channel name="$field.children" row="100" id="field2"}
+					{eyou:models name="$field.children" row="100" id="field2"}
 					<li><a href="{$field2.typeurl}" title="{$field2.typename}">{$field2.typename}</a></li>
-					{/eyou:channel}
+					{/eyou:models}
 				</ul>
 			</li>
-			 {/eyou:channel}
+			 {/eyou:models}
 			
 			<li class="float-left item-5">
 				{eyou:type typeid='54'}
@@ -19,7 +19,7 @@
 				<div class="contact">
 					<div class="media media-x margin-big-bottom">
 						<span class="float-left radius-circle bg-yellow text-white text-center">
-							<i class="fa fa-map-marker fa-fw" aria-hidden="true"></i>
+							<i class="iconfont icon-map-pin" aria-hidden="true"></i>
 						</span>
 						<div class="media-body">
 							<p>{eyou:global name='web_attr_16' /}<p>
@@ -28,7 +28,7 @@
 					
 					<div class="media media-x margin-big-bottom">
 						<span class="float-left radius-circle bg-yellow text-white text-center">
-							<i class="fa-fw fa fa-phone"></i>
+							<i class="iconfont icon-dianhua"></i>
 						</span>
 						<div class="media-body">
 							<p>
@@ -38,7 +38,7 @@
 					</div>
 					<div class="media media-x margin-big-bottom">
 						<span class="float-left radius-circle bg-yellow text-white text-center">
-							<i class="fa fa-envelope fa-fw"></i>
+							<i class="iconfont icon-youxiang"></i>
 						</span>
 						<div class="media-body">
 							<p>
@@ -55,28 +55,22 @@
 		</ul>
 	</div>
 	<div class="blank-middle"></div>
-	<!-- 友情链接 -->
+    <!-- 友情链接 begin -->
 	<div class="container-layout">
 		<div class="line">	
 			<div class="tab">
 				<div class="tab-head">
 					<ul class="tab-nav">
 						<li class="active"><a href="#friend-1">友情链接</a></li>
-						<!-- <li><a href="#friend-2">友情链接-图片</a> </li> -->
 					</ul>
 				</div>
 				<div class="tab-body">
 					<div class="tab-panel active flink" id="friend-1">
-						{eyou:flink titlelen='45' type='text'}
+						{eyou:links titlelen='45' type='text'}
 							<a href="{$field.url}" {$field.target}>{$field.title} </a>
-						{/eyou:flink}
+						{/eyou:links}
+						<a href="{eyou:Diyurl type='tags' /}">Tag标签大全</a>
 					</div>
-					<!-- <div class="tab-panel flink" id="friend-2">
-						{eyou:flink titlelen='45' type='image'}
-							<a href="{$field.url}" {$field.target}><img src="{$field.logo}"> </a>
-						{/eyou:flink}
-					</div> -->
-
 				</div>
 			</div>	
 		</div>	
@@ -86,18 +80,97 @@
 	<div class="container-layout">
 		<div class="line">
 			<div class="copyright height">
+                <!-- 底部版权 begin -->
 				<div class="x8">
-					{eyou:global name='web_copyright' /}　{eyou:global name='web_recordnum' /}
+					{eyou:global name='web_copyright' /}　{eyou:global name='web_recordnum' /}  {eyou:global name='web_garecordnum' /}
 				</div>
+                <!-- 底部版权 end -->
+                <!-- 网站地图 begin -->
 				<div class="x4 text-right">
 					<a href="{eyou:global name='web_basehost' /}/sitemap.xml">SiteMap</a>
 				</div>
+                <!-- 网站地图 end -->
 			</div>
 		</div>
 	</div>
 </footer>
-<!--底部版权-->
 
-<!-- 应用插件标签 start --> 
+<!-- 登录弹窗 begin -->
+<div id="log">
+    <div class="dialog" style="min-width: 418px;">
+        <div class="dialog-head">
+            <span class="dialog-close close rotate-hover"></span>
+        </div>
+        <div class="dialog-body">
+            <div class="register">
+                <div class="blank-middle"></div>
+                <div class="tab text-center">
+                  <ul>
+                    <li id="signtab1" onclick="setTab('signtab',1,2)" class="">账号登录</li>
+                  </ul>
+                </div>
+                <!-- 登录 begin -->
+                <div id="con_signtab_1">
+                    <form method="post" id="popup_login_submit">
+                        <!-- 用户名 begin -->
+                        <div class="form-group">
+                            <div class="field ">
+                                <input type='text' name='username' id='username' class="input text-main radius-none" value="" data-validate="required:必填" placeholder="用户名">
+                            </div>
+                        </div>
+                        <!-- 用户名 end -->
+                        <!-- 密码 begin -->
+                        <div class="form-group">
+                            <div class="field ">
+                                <input type='password'  name='password' id="password" class="input text-main radius-none" placeholder="密码" value=""/>
+                            </div>
+                        </div>
+                        <!-- 密码 end -->
+                        <!-- 验证码包括手机验证码专用样式input-group begin -->
+                        <div class="form-group" id="ey_login_vertify">
+                            <div class="field ">
+                                <div class="input-group">
+                                    <input type='text'  name='vertify' autocomplete="off" class="input text-main radius-none" placeholder="图形验证码" value=""/>
+                                    <span class="addon"><img src="{eyou:url link='api/Ajax/vertify' vars='type=users_login' /}" class="chicuele" id="imgVerifys" onclick="ey_fleshVerify();" title="看不清？点击更换验证码" align="absmiddle"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 验证码包括手机验证码专用样式input-group end -->
+                        <!-- 提交 begin -->
+                        <div class="form-button">
+                            <input type="hidden" name="referurl" value=""/>
+                            <input type="hidden" name="website" value="website"/>
+                            <input type="button" name="submit" onclick="popup_login_submit();" class="button bg-yellow button-large button-block border-none radius-none text-white" value="提交"/>
+                        </div>
+                        <!-- 提交 end -->
+                        {:equal_pop_login()}
+                    </form>
+                    <p class="margin-top text-right">
+                        <a href="{:url('user/Users/reg')}">注册账号</a>&nbsp;|&nbsp;
+                        <a href="{:url('user/Users/retrieve_password')}">忘记密码</a>
+                    </p>
+                </div>
+                <!-- 登录 end -->
+
+
+                <!-- 第三方账号登录 begin -->
+                <div id="ey_third_party_login">
+                    <div class="blank-middle"></div>
+                    <div class="line"><span class="text-gray bg-white text-default">社交账号登录</span><hr></div>
+                    <div class="blank-small"></div>
+                    <div class="bnt-login">
+                        <a id="ey_third_party_qqlogin" title="QQ登录" href="{eyou:url link='plugins/QqLogin/login' seo_pseudo='1' seo_inlet='0' /}" class="qq"><i class="iconfont icon-qq"></i></a>
+                        <a id="ey_third_party_wxlogin" title="微信登录" href="{eyou:url link='plugins/WxLogin/login' seo_pseudo='1' seo_inlet='0' /}" class="weixin"><i class="iconfont icon-weixin"></i></a>
+                        <a id="ey_third_party_wblogin" title="微博登录" href="{eyou:url link='plugins/Wblogin/login' seo_pseudo='1' seo_inlet='0' /}" class="weibo"><i class="iconfont icon-weibo"></i></a>
+                    </div>
+                </div>
+                <!-- 第三方账号登录 end -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 登录弹窗 end -->
+
+<!-- 应用插件标签 begin --> 
 {eyou:weapp type='default' /} 
 <!-- 应用插件标签 end -->

@@ -52,13 +52,15 @@ class UsersNotice extends Base
             foreach ($list as $k=>$v) {
                 $usernames_str = '';
                 if ($v['users_id']) {
-                    $usernames_arr = explode(',', $v['usernames']);
+                    $usernames_arr = explode(',', $v['users_id']);
                     if (count($usernames_arr) > 3) {
                         for ($i = 0; $i < 3; $i++) {
                             $usernames_str .= $usernames_arr[$i] . ',';
                         }
                         $usernames_str .= ' ...';
                         $list[$k]['usernames'] = $usernames_str;
+                    }else{
+                        $list[$k]['usernames'] =  $v['users_id'];
                     }
                 }else{
                     $list[$k]['usernames'] = '全站会员';
@@ -75,12 +77,61 @@ class UsersNotice extends Base
     }
 
     /**
+     * 站内通知 - 新增
+     */
+    public function add()
+    {
+        $web_is_authortoken = tpCache('global.web_is_authortoken');
+        if (-1 == $web_is_authortoken) {
+            $this->error('该功能仅限于商业授权域名！');
+        }
+        
+        if (IS_POST) {
+            $post = input('post.');
+
+            /*组装存储数据*/
+            $nowData = array(
+                'add_time'    => getTime(),
+                'update_time'    => getTime(),
+            );
+            empty($post['usernames']) && $post['usernames'] = "";
+            $saveData = array_merge($post, $nowData);
+            /*--end*/
+            $insertId = Db::name('users_notice')->insertGetId($saveData);
+
+            if ($insertId) {
+                //未读消息数+1
+                if (!empty($post['users_id'])){
+                    Db::name('users')->where(['users_id' => ['IN', $post['users_id']]])->setInc('unread_notice_num');
+                }else{
+                    Db::name('users')->where(['users_id' => ['gt', 0]])->setInc('unread_notice_num');
+                }
+                
+                if (!empty($post['users_id'])){
+                    adminLog('新增站内通知：通知会员id为：'.$post['users_id'].' ,新增站内通知：通知会员名为：'.$post['usernames']); // 写入操作日志
+                }else{
+                    adminLog('新增全站通知'); // 写入操作日志
+                }
+                $this->success("操作成功", url('UsersNotice/index'));
+            }else{
+                $this->error("操作失败");
+            }
+            exit;
+        }
+
+        $listname = Db::name('users')->order('users_id desc')->field('users_id,username')->select();
+        $this->assign('listname', $listname);
+        return $this->fetch();
+    }
+
+    /**
      * 站内通知 - 编辑
      */
     public function edit()
     {
         if (IS_POST) {
             $post = input('post.');
+            $post['id'] = intval($post['id']);
             if (isset($post['usernames'])) unset($post['usernames']);
             if (isset($post['users_id'])) unset($post['users_id']);
 
@@ -242,5 +293,95 @@ class UsersNotice extends Base
             }
         }
         $this->error('操作失败');
+    }
+
+    public function select_users()
+    {
+        $list = array();
+
+        $param = input('param.');
+        $condition = array();
+        // 应用搜索条件
+        foreach (['keywords','origin_type','level'] as $key) {
+            if (isset($param[$key]) && $param[$key] !== '') {
+                if ($key == 'keywords') {
+                    $condition['a.username|a.nickname|a.mobile|a.email|a.users_id'] = array('LIKE', "%{$param[$key]}%");
+                } else {
+                    $condition['a.'.$key] = array('eq', $param[$key]);
+                }
+            }
+        }
+
+        $condition['a.is_del'] = 0;
+        $condition['a.lang'] = array('eq', $this->admin_lang);
+        $orderby = "a.users_id desc";
+
+        $users_db = Db::name('users');
+
+        $count = $users_db->alias('a')->where($condition)->count();
+        $Page = new Page($count, config('paginate.list_rows'));
+        $list = $users_db->field('a.*,b.level_name')
+            ->alias('a')
+            ->join('__USERS_LEVEL__ b', 'a.level = b.level_id', 'LEFT')
+            ->where($condition)
+            ->order($orderby)
+            ->limit($Page->firstRow.','.$Page->listRows)
+            ->select();
+        $users_ids = [];
+        foreach ($list as $key => $val) {
+            $users_ids[] = $val['users_id'];
+        }
+
+        /*微信登录插件*/
+        $wxlogin = [];
+        if (is_dir('./weapp/WxLogin/')) {
+            $wxlogin = Db::name('weapp_wxlogin')->where(['users_id'=>['IN', $users_ids]])->getAllWithIndex('users_id');
+        }
+        $this->assign('wxlogin',$wxlogin);
+        /*end*/
+
+        /*QQ登录插件*/
+        $qqlogin = [];
+        if (is_dir('./weapp/QqLogin/')) {
+            $qqlogin = Db::name('weapp_qqlogin')->where(['users_id'=>['IN', $users_ids]])->getAllWithIndex('users_id');
+        }
+        $this->assign('qqlogin',$qqlogin);
+        /*end*/
+
+        /*微博登录插件*/
+        $wblogin = [];
+        if (is_dir('./weapp/Wblogin/')) {
+            $wblogin = Db::name('weapp_wblogin')->where(['users_id'=>['IN', $users_ids]])->getAllWithIndex('users_id');
+        }
+        $this->assign('wblogin',$wblogin);
+        /*end*/
+
+        $show = $Page->show();
+        $this->assign('page',$show);
+        $this->assign('list',$list);
+        $this->assign('pager',$Page);
+
+        //计算会员人数
+        $levelCountList = [
+            'all' => [
+                'level_id'      => 0,
+                'level_name'    => '全部会员',
+                'level_count'   => 0,
+            ],
+        ];
+        $LevelData = model('UsersLevel')->getList('level_id, level_name', [], 'level_id');
+        $levelCountRow = Db::name('users')->field('count(users_id) as num, level')->order('level asc')->group('level')->getAllWithIndex('level');
+        foreach ($LevelData as $key => $val) {
+            $level_num = empty($levelCountRow[$val['level_id']]) ? 0 : $levelCountRow[$val['level_id']]['num'];
+            $levelCountList[$val['level_id']] = [
+                'level_id'      => $val['level_id'],
+                'level_name'    => $val['level_name'],
+                'level_count'   => $level_num,
+            ];
+            $levelCountList['all']['level_count'] += $level_num;
+        }
+        $this->assign('levelCountList', $levelCountList);
+
+        return $this->fetch('users_notice/select_users');
     }
 }

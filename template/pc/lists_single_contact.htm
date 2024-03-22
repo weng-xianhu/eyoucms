@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>{$eyou.field.seo_title}</title>
+<meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<meta name="description" content="{$eyou.field.seo_description}" />
+<link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
+{eyou:static file="skin/style/pintuer.css" /}
+{eyou:static file="skin/style/header.css" /}
+{eyou:static file="skin/style/style.css" /}
+{eyou:static file="skin/style/iconfont.css" /}
+<!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
+</head>
+<body>
+<!--公用头部 begin -->
+{eyou:include file="header.htm" /}
+<!-- 公用头部 end -->    
+<!--公用栏目图片 begin -->
+{eyou:include file="banner.htm" /}
+<!-- 公用栏目图片 end -->   
+<div class="blank-large"></div>
+<div class="container inside">
+	<div class="line">
+		<div class="x9">
+			<h2>{$eyou.field.typename}</h2>
+			<!-- 地址 -->
+			<p class="height-big text-middle">办公时间：周一到周六，早上9:00到下午6:00</p>
+			<div class="blank-big"></div>
+			<div class="contact">
+				<div class="media media-x">
+					<span class="float-left"><i class="iconfont icon-map-pin text-black"></i></span>
+					<div class="media-body">
+						<p class="text-middle"><strong>地址</strong></p>
+						<p class="text-middle">{eyou:global name='web_attr_16' /}<p>
+					</div>
+				</div>
+
+				<div class="media media-x">
+					<span class="float-left"><i class="iconfont icon-dianhua text-black"></i></span>
+					<div class="media-body">
+						<p class="text-middle"><strong>电话</strong></p>
+						<p class="text-large Conv_DINCondensedC"><a href="tel:{eyou:global name='web_attr_1' /}">{eyou:global name='web_attr_1' /}</a><p>
+					</div>
+				</div>
+
+				<div class="media media-x">
+					<span class="float-left"><i class="iconfont icon-youxiang text-black"></i></span>
+					<div class="media-body">
+						<p class="text-middle"><strong>邮箱</strong></p>
+						<p class="text-middle"><a href="mailto:{eyou:global name='web_attr_15' /}">{eyou:global name='web_attr_15' /}</a></p>
+					</div>
+				</div>
+				<div class="blank-middle"></div>
+			</div>
+		</div>
+		<div class="x3">
+			<div class="blank-big"></div>
+			<div class="wx text-center">
+				<p class="text-middle height-big">公众号</p>
+				<p class="text-middle height-big text-yellow">了解我们的团队日常</p>
+				<img src="{eyou:global name='web_attr_17' /}" alt="{eyou:global name='web_name' /}" class="img-responsive">
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="layout">
+	<div class="line home-contact">
+		<div class="x6">
+			<div class="gb">
+				<div class="guestbook">
+					<div class="title-block-c text-center">
+						<h2 class="text-white">在线反馈</h2>
+					</div>
+					<div class="blank-middle"></div>
+					{eyou:form type='default' formid='1' id='field'}
+					<form method="POST" action="{$field.action}" {$field.formhidden} onsubmit="{$field.submit}" >
+						<div class="form-group">
+							<div class="field">
+							<input type='text' id='attr_26' name='{$field.attr_26}' class="input text-main radius-none" placeholder="{$field.itemname_26}" value=""/>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="field">
+							<input type='text' id='attr_27' name='{$field.attr_27}' class="input text-main radius-none" placeholder="{$field.itemname_27}" value=""/>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<div class="field">
+							 <select name="{$field.attr_28}" id="attr_28">
+							   <option value="">{$field.itemname_28}</option>
+							   {eyou:volist name='$field.options_28' id='vo'}
+							   <option value="{$vo.value}">{$vo.value}</option>
+							   {/eyou:volist}
+							 </select>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<div class="field"><textarea class="textarea" id='attr_29' name='{$field.attr_29}' placeholder="{$field.itemname_29}" value="" rows="3" /></textarea> </div>
+						</div>
+						<div class="blank"></div>
+						<div class="form-button">
+							<input class="button bg-yellow button-large button-block border-none radius-none text-white" type="submit" value="提交"/>
+						</div>
+						{$field.hidden}
+					</form>
+					{/eyou:form}
+				</div>
+			</div>
+		</div>
+		<div class="x6">
+			<img src="{eyou:global name='web_templets_pc' /}/skin/images/ibkpic.jpg" alt='{$eyou.field.title}' class="img-responsive" />
+		</div>
+	</div>
+</div>
+<!--网站公用底部 begin -->
+{eyou:include file="footer.htm" /}
+<!--网站公用底部 end -->
+{eyou:static file="skin/js/pintuer.js" /}
+{eyou:static file="skin/js/common.js" /}
+</body>
+</html>

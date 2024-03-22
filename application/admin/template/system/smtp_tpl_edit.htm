@@ -62,7 +62,7 @@
             success: function(res){
                 layer.closeAll();
                 if (res.code == 1) {
-                    layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    layer.msg(res.msg, {shade: 0.1, time: 1000}, function(){
                         window.location.href = res.url;
                     });
                 } else {
@@ -71,7 +71,7 @@
             },
             error: function(e){
                 layer.closeAll();
-                layer.alert(ey_unknown_error, {icon:5, title:false});
+                layer.alert(e.responseText, {icon:5, title:false});
             }
         });
 

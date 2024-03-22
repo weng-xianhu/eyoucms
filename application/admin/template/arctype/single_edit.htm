@@ -9,15 +9,18 @@
     {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
 {/eq}
 
-<body style="background-color: #FFF; overflow: auto;min-width:auto;">
+<body class="bodysy-w">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width:auto;box-shadow:none;">
+<div id="geduan_div" class="h10"></div>
+<div id="page_div" class="page min-hg-c mb-20" style="min-width:auto;box-shadow:none;">
     <div class="fixed-bar">
-        <div class="item-title"><a class="back" href="javascript:history.back();" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+        <div class="item-title">
+            <a class="back_xin" href="javascript:history.back();"><i class="iconfont e-fanhui"></i></a>
+            <a class="back_sz" href="javascript:void(0);"  data-href="{:url('Arctype/help')}" onclick="openHelpframe(this, '设置与帮助', '500px', '100%', 'r');" title="设置与帮助"><i class="iconfont e-shezhi-tongyong"></i></a>
             <div class="subject">
-                <h3>{$info.typename|default=''} - 内容管理</h3>
+                <h3>{$info.typename|default=''}</h3>
                 <h5></h5>
             </div>
         </div>
@@ -29,9 +32,11 @@
         </div>
         <!-- 常规选项 -->
         <div class="ncap-form-default">
-            <div class="bot">
+            <div class="bot2">
+                <input type="hidden" name="archives" value="{$archives|default=0}">
                 <input type="hidden" name="gourl" value="{$gourl|default=''}">
                 <input type="hidden" name="typeid" id="typeid" value="{$info.id|default=''}">
+                <input type="hidden" id="editor_addonFieldExt" value="{$editor_addonFieldExt|default=''}">
                 <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
             </div>
         </div> 
@@ -40,17 +45,20 @@
 <script type="text/javascript">
     function check_submit(){
         layer_loading('正在处理');
-        $('#post_form').submit();
+        setTimeout(function (){
+            editor_auto_210607();
+            $('#post_form').submit();
+        }, 1);
     }
 
     /* 生成静态页面代码 */
     var typeid = "{$typeid}";
     if(typeid > 0){
         $.ajax({
-            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
-            type:'POST',
+            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__+"&t_id="+typeid+"&ctl_name=Arctype&_ajax=1",
+            type:'GET',
             dataType:'json',
-            data:{'typeid':typeid,ctl_name:'Arctype',_ajax:1},
+            data:{},
             success:function(data){}        
         });
     }
@@ -58,3 +66,13 @@
 </script>
 
 {include file="public/footer" /}
+<script>
+    try{
+        var mt20_1649209614 = sessionStorage.getItem("mt20_1649209614");
+        if (mt20_1649209614 == 1){
+            $("#geduan_div").removeClass("h10");
+        }else{
+            $("#geduan_div").addClass("h10");
+        }
+    }catch(e){}
+</script>

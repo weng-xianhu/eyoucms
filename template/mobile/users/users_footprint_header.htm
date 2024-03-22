@@ -1,0 +1,10 @@
+<div class="oper-row">
+    <!-- 足迹导航栏 -->
+    <div class="oper-row-roll">
+        
+        <a class="oper-row-button {if condition="$Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'footprint_index'"} active {/if}" href="{eyou:url link='user/Users/footprint_index'/}"> 浏览记录 </a>
+        <a class="oper-row-button {if condition="$Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Download' && $Think.const.ACTION_NAME == 'index'"} active {/if}" href="{eyou:url link='user/Download/index'/}"> 下载记录 </a>
+        <a class="oper-row-button {if condition="$Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Media' && $Think.const.ACTION_NAME == 'play_index'"} active {/if}" href="{eyou:url link='user/Media/play_index'/}"> 播放记录 </a>
+    </div>
+    <!-- 足迹导航栏 -->
+</div>

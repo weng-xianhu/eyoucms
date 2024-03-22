@@ -1,6 +1,13 @@
 <div class="sDiv2">  
+    <select name="arcrank" class="select" style="margin:0px 5px;">
+        <option value="">--状态--</option>
+        <option value="1" {eq name="$Request.param.arcrank" value="1" } selected="true" {/eq}>销售中</option>
+        <option value="-1" {eq name="$Request.param.arcrank" value="-1" } selected="true" {/eq}>仓库中</option>
+    </select>
+</div>
+<div class="sDiv2">  
     <select name="typeid" class="select" style="margin:0px 5px;">
-        <option value="">--所有栏目--</option>
+        <option value="">--分类--</option>
         {$arctype_html}
     </select>
 </div>
@@ -8,6 +15,11 @@
 <script type="text/javascript">
     $(document).ready(function() {
         $('#searchForm select[name=typeid]').change(function() {
+            $('#searchForm').submit();
+        });
+    });
+    $(document).ready(function() {
+        $('#searchForm select[name=arcrank]').change(function() {
             $('#searchForm').submit();
         });
     });
@@ -19,10 +31,10 @@
                 title: '快捷发布商品',
                 fixed: true, //不固定
                 shadeClose: false,
-                shade: 0.3,
+                shade: layer_shade,
                 maxmin: true, //开启最大化最小化按钮
                 area: ['600px', '520px'],
-                content: "//{$Request.host}{$Request.baseFile}?m=admin&c=shopProduct&a=release&lang={$Request.param.lang}"
+                content: "//{$website_host}{$Request.baseFile}?m=admin&c=shopProduct&a=release&lang={$Request.param.lang}"
             });
         } else {
             layer.alert('至少要新增一个产品模型的栏目！', {icon: 5, title: false, btn: ['进入栏目管理']}, function(index){
@@ -36,3 +48,31 @@
         }
     }
 </script>
+
+{notempty name="$global.web_citysite_open"}
+<div class="sDiv2">  
+    <select name="province_id" id="province_id" class="select" style="margin:0px 5px;" onchange="set_city_list(0);">
+        <option value="0">全国</option>
+        {volist name=':get_site_province_list()' id='vo'}
+        <option value="{$vo.id}" {eq name="$Request.param.province_id" value="$vo.id" } selected="true" {/eq}>{$vo.name}</option>
+        {/volist}
+    </select>
+    <select name="city_id" id="city_id" class="select" style="margin:0px 5px;display: none;" onchange="set_area_list(0);">
+        <option value="">--请选择--</option>
+    </select>
+    <select name="area_id" id="area_id" class="select" style="margin:0px 5px;display: none;">
+        <option value="">--请选择--</option>
+    </select>
+</div>
+<script type="text/javascript">
+    try {
+        set_city_list({$Request.param.city_id|default=0});
+        set_area_list({$Request.param.area_id|default=0});
+    }catch(e){}
+    $(document).ready(function(){
+        $('#searchForm select[name=province_id],#searchForm select[name=city_id],#searchForm select[name=area_id]').change(function(){
+            $('#searchForm').submit();
+        });
+    });
+</script>
+{/notempty}

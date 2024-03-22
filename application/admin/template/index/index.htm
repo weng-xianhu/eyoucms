@@ -10,15 +10,23 @@
 <!-- Apple devices fullscreen -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="shortcut icon" type="image/x-icon" href="__ROOT_DIR__/favicon.ico" media="screen"/>
-<title>{$global.web_name|default=''}-{notempty name="$is_eyou_authortoken"}易优CMS企业网站管理系统{/notempty}{$version}</title>
+<title>后台管理-{notempty name="$is_eyou_authortoken"}易优企业建站系统{/notempty}{$version}</title>
 <script type="text/javascript">
     var eyou_basefile = "{$Request.baseFile}";
     var module_name = "{$Think.const.MODULE_NAME}";
     var SITEURL = window.location.host + eyou_basefile + "/" + module_name;
-    var GetUploadify_url = "{:url('Uploadify/upload')}";
+    var GetUploadify_url = "{:url('Uploadimgnew/upload')}";
+    // 插件专用旧版上传图片框
+    if ('Weapp@execute' == "{$Think.const.CONTROLLER_NAME}@{$Think.const.ACTION_NAME}") {
+      GetUploadify_url = "{:url('Uploadify/upload')}";
+    }
     var __root_dir__ = "__ROOT_DIR__";
     var __lang__ = "{$admin_lang}";
-    var VarSecurityPatch = "{$security_patch|default='0'}";
+    var VarSecurityPatch = {$security_patch|default=0};
+    var __seo_pseudo__ = {$global['seo_pseudo']|default=1};
+    var __web_xss_filter__ = {$global['web_xss_filter']|default=0};
+    var __is_mobile__ = {$is_mobile|default=0};
+    var __security_ask_open__ = {$global['security_ask_open']|default=0};
 </script>
 
 <link href="__SKIN__/css/main.css?v={$version}" rel="stylesheet" type="text/css">
@@ -26,13 +34,17 @@
 <link href="__SKIN__/font/css/font-awesome.min.css" rel="stylesheet" />
 <link href="__SKIN__/font/css/iconfont.css?v={$version}" rel="stylesheet" />
 <link href="__SKIN__/css/diy_style.css?v={$version}" rel="stylesheet" type="text/css" />
-{include file="public/theme_css" /}
-<script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
+{if condition="file_exists(ROOT_PATH.'public/static/admin/css/theme_style.css')"}
+    <link href="__SKIN__/css/theme_style.css?v={$version}_{$global['web_theme_style_uptime']|default=0}" rel="stylesheet" type="text/css">
+{elseif condition="file_exists(APP_PATH.'admin/template/public/theme_css.htm') && function_exists('hex2rgba')" /}
+    {include file="public/theme_css" /}
+{/if}
+<script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
 <script type="text/javascript" src="__SKIN__/js/common.js?v={$version}"></script>
 <script type="text/javascript" src="__SKIN__/js/jquery-ui/jquery-ui.min.js"></script>
 <script type="text/javascript" src="__SKIN__/js/jquery.cookie.js"></script>
 <script type="text/javascript" src="__SKIN__/js/jquery.bgColorSelector.js"></script>
-<script type="text/javascript" src="__SKIN__/js/admincp.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/admincp.js?v={$version}0"></script>
 <script type="text/javascript" src="__SKIN__/js/jquery.validation.min.js"></script>
 
 <!-- <script type="text/javascript" src="__PUBLIC__/plugins/layer/layer.js"></script> -->
@@ -54,9 +66,14 @@
 {include file="public/left" /}
   <div class="admincp-container-right">
     <div class="admincp-header">
+    {if condition="($php_servicemeal >= 1 || !empty($global.system_use_language)) && 'cn' != $languages[$admin_lang]['mark']"}
+    <div class="{if condition='empty($web_language_switch) || !empty($global.web_citysite_open)'}none{/if}" id="Language_index_span" style="position: absolute;text-align: center;margin: 0 auto;width: 100%;">
+      <span style="color: red;padding: 6px 21px;display: table;margin: 10px auto;">当前编辑的是{$languages[$admin_lang]['title']|default='简体中文'}站点</span>
+    </div>
+    {/if}
       <div class="wraper">
         <div class="bgSelector"></div>
-        <div id="foldSidebar"><i class="fa fa-bars"  title="展开/收起侧边导航"></i></div>
+        <div id="foldSidebar"><i class="fa fa-bars"></i></div>
         <div class="admincp-name" id="foldSidebar2">
         </div>
         <div class="admincp-header-r">
@@ -68,13 +85,13 @@
             <div class="btn-group pull-left ey-tool">
 
               <a class="btn btn-default dropdown-toggle" target="_blank" href="{$home_url}">
-                <i class="fa fa-desktop"></i>
+                <i class="iconfont e-website"></i>
                 <span class="hidden-xs">网站首页</span>
               </a>
 
               {eq name="'System@clear_cache'|is_check_access" value="1"}
-                <a class="btn btn-default dropdown-toggle" href="javascript:void(0);" onclick="clear_cache();">
-                  <i class="fa fa-refresh"></i>
+                <a class="btn btn-default dropdown-toggle" href="javascript:void(0);" onclick="openItem('System|clear_cache');">
+                  <i class="iconfont e-shuaxin"></i>
                   <span class="hidden-xs">清除缓存</span>
                 </a>
               {/eq}
@@ -83,24 +100,24 @@
               <!-- 商业授权 -->   
               <em class="eyou_tool em_authortoken" data-expanded="close">
                 <a class="btn btn-default dropdown-toggle" href="javascript:void(0);" onclick="valide(this);">
-                  <i class="fa fa-bookmark"></i>
+                  <i class="iconfont e-shouquan"></i>
                   <span class="hidden-xs">购买授权</span>
                 </a>
                 <ul class="dropdown-menu" role="menu" aria-labelledby="shouquan">
-                    <li class="ey-tool-list text-center"><a target="_blank" class="liaojie" href="https://www.eyoucms.com/buy/"  title="购买后可去除所有版权提示">了解商业授权</a></li>
+                    <li class="ey-tool-list text-center"><a target="_blank" class="liaojie" href="https://www.eyoucms.com/buy/"  title="购买后可去除所有版权提示">去购买授权</a></li>
                     <li class="ey-tool-list text-center">
-                      <input class="btn btn-primary" type="button" onclick="$('.em_authortoken').toggleClass('open');openItem('Index|authortoken');" value="检测是否正版" />
+                      <input class="btn btn-primary" type="button" onclick="$('.em_authortoken').toggleClass('open');openItem('Index|authortoken|is_force|1');" value="购买后校验" />
                     </li>
                 </ul>
                </em>
-              <!-- 商业授权 -->   
+              <!-- 商业授权 -->
               {/notempty}
 
               <!-- 多语言 -->
               {if condition="$php_servicemeal >= 1 || !empty($global.system_use_language)"}
-              <em id="Language_index" class="eyou_tool em_lang" data-expanded="close" {if condition='empty($web_language_switch)'}style="display: none;"{/if}>
-                <a class="btn btn-default dropdown-toggle" title="支持多语言切换" href="javascript:void(0);" onclick="valide(this);">
-                  <i class="fa fa-globe"></i>
+              <em id="Language_index" class="eyou_tool em_lang" data-expanded="close" {if condition='empty($web_language_switch) || !empty($global.web_citysite_open)'}style="display: none;"{/if}>
+                <a class="btn btn-default dropdown-toggle" href="javascript:void(0);" onclick="valide(this);">
+                  <i class="iconfont e-duoyuyan"></i>
                   <span class="hidden-xs" id="language_title">{$languages[$admin_lang]['title']|default='简体中文'}</span>
                 </a>
                 <ul class="dropdown-menu" role="menu" aria-labelledby="shouquan">
@@ -108,7 +125,7 @@
                     <li class="ey-tool-list text-center lang"><a class="liaojie" href="?lang={$vo.mark}">{$vo.title}</a></li>
                   {/volist}
                     <li class="ey-tool-list text-center" id="addlang">
-                      <button class="btn btn-primary" type="button" onclick="$('.em_lang').toggleClass('open');openItem('Language|index');" /><i class="fa fa-globe"></i>&nbsp;多语言设置</button>
+                      <button class="btn btn-primary" type="button" onclick="$('.em_lang').toggleClass('open');openItem('Language|index');" />语言管理</button>
                     </li>
                 </ul>
                </em>
@@ -116,12 +133,19 @@
               <!-- 多语言 -->   
 
               <!-- 小程序 start --> 
-              {eq name="'Diyminipro@page_edit'|is_check_access" value="1"}
-              <a id="Diyminipro_theme_index" class="btn btn-default dropdown-toggle" href="{:url('Diyminipro/page_edit')}" target="_blank" {if condition='$web_diyminipro_switch == -1'} style="display: none;" {/if} title="可视化小程序">
-                <i class="fa fa-compass"></i>
-                <span class="hidden-xs">小程序</span>
-              </a>
-              {/eq}
+              {notempty name="$diyminipro_list"}
+              <em class="eyou_tool em_diyminipro" data-expanded="close">
+                <a class="btn btn-default dropdown-toggle" href="javascript:void(0);" onclick="valide(this);">
+                  <i class="iconfont e-xiaochengxu"></i>
+                  <span class="hidden-xs">小程序</span>
+                </a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="shouquan">
+                    {volist name="$diyminipro_list" id="vo"}
+                    <li class="ey-tool-list text-center"><a class="liaojie d-pic" href="{if condition="$vo['code'] == 'Diyminipro'"}{:url($vo['code'].'/page_edit')}{else /}{:weapp_url($vo['code'].'/'.$vo['code'].'/page_edit')}{/if}" target="_blank" onclick="$('.em_diyminipro').toggleClass('open');"><img src="{$vo['litpic']}" width="36" height="36">{$vo.name}</a></li>
+                    {/volist}
+                </ul>
+               </em>
+              {/notempty}
               <!-- 小程序 end --> 
 
               <!-- 服务器升级 -->
@@ -141,7 +165,7 @@
             
             <div class="admin_user_dropup">
               <div class="admin_user_dropup_bt">
-                <img id="admin_head_pic" tptype="admin_avatar" src="{$admin_info.head_pic|get_head_pic=###}" style="cursor: pointer;width: 34px;height: 34px;">
+                <img id="admin_head_pic" tptype="admin_avatar" src="{$admin_info.head_pic|get_head_pic=###,true}" style="cursor: pointer;width: 34px;height: 34px;">
                 <i class="fa fa-angle-down" aria-hidden="true"></i>
                 {empty name="$is_eyou_authortoken"}
                 <span class="info-num UnreadNotify1615518028 {empty name='$notice_count'}none{/empty}">{$notice_count}</span>
@@ -150,7 +174,9 @@
               <div class="admin_user_dropup_con">
                 <ul>
                   <li><a href="javascript:void(0);" onclick="openItem('Admin|admin_edit|id|{$admin_info['admin_id']}');">个人信息</a></li>
-                  <li><a href="javascript:void(0);" data-href="{:url('Encodes/theme_conf')}" onclick="openFullframe(this, '皮肤设置', '80%', '80%');">皮肤设置</a></li>
+                  {eq name="'Index@theme_index'|is_check_access" value="1"}
+                  <li><a href="javascript:void(0);" onclick="openItem('Index|theme_index');">主题风格</a></li>
+                  {/eq}
                   {empty name="$is_eyou_authortoken"}
                   <li><a href="javascript:void(0);" onclick="openItem('UsersNotice|admin_notice_index');">站内通知</a><span class="info-num UnreadNotify1615518028 {empty name='$notice_count'}none{/empty}">{$notice_count}</span></li>
                   {/empty}
@@ -176,32 +202,81 @@
     </div>
     <div class="top-border"></div>
     <div class="scroll-wrapper">
-      <iframe src="" id="workspace" name="workspace" style="overflow-y: auto" frameborder="0" width="100%" height="95%" scrolling="yes" onload="window.parent"></iframe>
+      <iframe src="{:url('Index/welcome')}" id="workspace" name="workspace" class="iframe_loading" style="overflow-y: auto" frameborder="0" width="100%" height="95%" scrolling="yes" onload="window.parent"></iframe>
       <script type="text/javascript">ajax_system_1610425892();</script>
     </div>
   </div>
 </div>
 <script type="text/javascript">
 
-  /* 定时查询未读的站内信 --- 暂定为60秒查询一次 */
   $(function() {
-    var is_author = {$is_eyou_authortoken|default='0'};
-    if (is_author == 0) {
-        window.setInterval(UnreadNotify1615518028, 60000);
-    }
-    function UnreadNotify1615518028() {
-      $.ajax({
-          url : "{:url('Notify/count_unread_notify')}",
-          type: 'post',
-          data: {'_ajax': 1},
-          dataType: 'JSON',
-          success: function(res) {
-              if (1 == res.code) {
-                $('.UnreadNotify1615518028').empty().html(res.data.notice_count);
+      // iframe 框架显示加载图标，提高体验
+      $(".iframe_loading").load(function(){
+          // setTimeout(function(){
+              $('.iframe_loading').removeClass('iframe_loading');
+          // }, 500);
+      })
+
+      /* 定时查询未读的站内信 --- 暂定为60秒查询一次 */
+      var is_author = {$is_eyou_authortoken|default='0'};
+      if (is_author == 0) {
+          window.setInterval(UnreadNotify1615518028, 1*60*1000);
+      }
+      function UnreadNotify1615518028() {
+        $.ajax({
+            url : "{:url('Notify/count_unread_notify', ['_ajax'=>1])}",
+            type: 'get',
+            data: {},
+            dataType: 'JSON',
+            success: function(res) {
+                if (1 == res.code) {
+                  $('.UnreadNotify1615518028').empty().html(res.data.notice_count);
+                }
+            }
+        });
+      }
+
+      // 轮询更新sitemap.html网站地图
+      function UpdateSitemap1647228884(){
+          $.ajax({
+              url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_sitemap_html&lang="+__lang__,
+              type: 'get',
+              data: {},
+              dataType: 'JSON',
+              success: function(res) {
+
               }
-          }
-      });
-    }
+          });
+      }
+      var sitemap_html = {$global['sitemap_html']|default=0};
+      if (1 == sitemap_html) {
+          window.setInterval(UpdateSitemap1647228884, 2*60*1000);
+      }
+
+      repair_language_data();
+      function repair_language_data() {
+        setTimeout(function(){
+          $.ajax({
+              url : "{:url('Ajax/repair_language_data', ['_ajax'=>1])}",
+              type: 'get',
+              data: {},
+              dataType: 'JSON',
+              success: function(res) {
+
+              }
+          });
+        },1500);
+      }
+
+      shopOrderPreHandle();
+      function shopOrderPreHandle() {
+        $.ajax({
+          url : "{:url('Shop/shopOrderPreHandle')}",
+          type: 'post',
+          data: {_ajax: 1},
+          dataType: 'JSON'
+        });
+      }
   });
   /* END */
 
@@ -216,14 +291,17 @@
   }
 
   // 清除缓存
-  function clear_cache()
+  function clear_cache(clearall)
   {
+      if (!clearall) {
+          clearall = 0;
+      }
       layer_loading('正在清除');
       $.ajax({
           url: "{:url('System/clear_cache', ['_ajax'=>1])}",
           type: 'post',
           dataType: 'JSON',
-          data: {clearall: 1},
+          data: {clearall: clearall},
           success: function(res){
               layer.closeAll();
               if (res.code == 1) {
@@ -239,16 +317,6 @@
           }
       });
   }
-
-  // 功能地图
-  // function switch_map()
-  // {
-  //     $('.eycms_cont_left .sub-menu a', window.parent.document).removeClass('on');
-  //     $('.eycms_cont_left .sub-menu dl.jslist dt', window.parent.document).removeClass('on');
-  //     $('#Index_switch_map', window.parent.document).addClass('on');
-  //     var url = "{:url('Index/switch_map')}";
-  //     workspace.window.location.href = url;
-  // }
 </script>
 </body>
 </html>

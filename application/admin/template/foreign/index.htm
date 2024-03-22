@@ -1,0 +1,238 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page min-hg-c-10">
+    {include file="foreign/bar" /}
+    <form class="form-horizontal" id="post_form" action="" method="post">
+        <div id="explanation" class="explanation">
+            <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+                <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+            </div>
+            <ul>
+                <li>仅支持伪静态及静态URL模式，设置入口：SEO模块>URL模式选择</li>
+                <li>开启助手，能帮助用户解决网站提示需要改为英文或其他语言的问题</li>
+                <li style="text-indent: 1em;">1. 在单语言情况下，所有语言统一显示英文</li>
+                <li style="text-indent: 1em;">2. 在多语言情况下，中文显示中文，其他语言统一显示英文</li>
+            </ul>
+        </div>
+        <div class="flexigrid htitx mt20">
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div id="anchor-sms" class="tc">配置修改</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">
+                        <label>是否启用</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin">
+                            <input type="radio" name="foreign_is_status" id="input_is_status_1" value="1" {if condition="!empty($foreignData['foreign_is_status'])"} checked="checked" {/if} />启用
+                        </label>&nbsp;&nbsp;
+                        <label class="curpoin">
+                            <input type="radio" name="foreign_is_status" id="input_is_status_0" value="0" {if condition="empty($foreignData['foreign_is_status'])"} checked="checked" {/if} />关闭
+                        </label>&nbsp;&nbsp;
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>语言包变量</label>
+                    </dt>
+                    <dd class="opt">
+                        {if condition="!empty($foreignData['foreign_is_status'])"}
+                        <a href="javascript:void(0);" data-href="{:url('Foreign/official_pack_index')}" class="ncap-btn ncap-btn-green" onclick="openFullframe(this, '语言包变量', '90%', '90%');">管理</a>
+                        {else /}
+                        <a href="javascript:void(0);" class="ncap-btn grey" onclick="showErrorAlert('先启用外贸助手并保存', 4);">管理</a>
+                        {/if}
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row subrow" {if condition="$global['seo_pseudo'] == 1"} title="动态URL模式不支持启用" {/if}>
+                    <dt class="tit">
+                        <label>文档URL格式</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin"><input type="radio" name="seo_titleurl_format" value="0" {if condition="empty($global.seo_titleurl_format)"}checked="checked"{/if} onclick="selectFormat(this);">系统默认</label>&nbsp;&nbsp;
+                        <label class="curpoin"><input type="radio" name="seo_titleurl_format" value="1" {if condition="!empty($global.seo_titleurl_format)"}checked="checked"{/if} onclick="selectFormat(this);">外贸链接</label>&nbsp;&nbsp;
+                        <span class="err"></span>
+                        <p class="notic2 {if condition="!empty($global.seo_titleurl_format)"} none {/if}" id="notic_seo_titleurl_format_0">以文档ID作为结尾文件名，示例：{$Request.domain}__ROOT_DIR__/news/123.html</p>
+                        <p class="notic2 {if condition="empty($global.seo_titleurl_format)"} none {/if}" id="notic_seo_titleurl_format_1">以文档标题的中文拼音或英文作为结尾文件名，示例：{$Request.domain}__ROOT_DIR__/news/wenzhangbiaoti.html</p>
+                    </dd>
+                </dl>
+                <div class="div_seo_titleurl_format_0" {if condition="!empty($global.seo_titleurl_format)"} style="display: none;" {/if}>
+                    <dl class="row subrow" {if condition="$global['seo_pseudo'] == 1"} title="动态URL模式不支持启用" {/if}>
+                        <dt class="tit">
+                            <label>文档URL文件名</label>
+                        </dt>
+                        <dd class="opt">
+                            <label class="curpoin"><input type="radio" name="foreign_clear_htmlfilename" value="1" {if condition="!empty($foreignData.foreign_clear_htmlfilename)"}checked="checked"{/if}>自动清空</label>&nbsp;&nbsp;
+                            <label class="curpoin"><input type="radio" name="foreign_clear_htmlfilename" value="0" {if condition="empty($foreignData.foreign_clear_htmlfilename)"}checked="checked"{/if}>继续保留</label>&nbsp;&nbsp;
+                            <span class="err"></span>
+                            <p class="notic2">清空后，访问文档页恢复成以文档ID结尾的URL，示例：{$Request.domain}__ROOT_DIR__/news/123.html</p>
+                        </dd>
+                    </dl>
+                </div>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="basic_indexname">面包屑首页名</label>
+                    </dt>
+                    <dd class="opt">
+                        <input id="basic_indexname" name="basic_indexname" value="{$global.basic_indexname|default='首页'}" class="input-txt" type="text" />
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <div class="bot">
+                    <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">保存设置</a>
+                </div>
+            </div>
+            <div class="hDiv" {if condition="empty($global.seo_titleurl_format) || $global['seo_pseudo'] == 1"} style="display: none; {/if}">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div id="anchor-sms" class="tc">文档更新</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default" {if condition="empty($global.seo_titleurl_format) || $global['seo_pseudo'] == 1"} style="display: none; {/if}">
+                <dl class="row subrow" {if condition="$global['seo_pseudo'] == 1"} title="动态URL模式不支持启用" {/if}>
+                    <dt class="tit">
+                        <label>更新文档URL</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin"><input type="radio" name="foreign_htmlfilename_mode" value="0" {if condition="empty($foreignData.foreign_htmlfilename_mode)"} checked="checked" {/if} onclick="select2Format(this);">外贸文档名</label>&nbsp;&nbsp;
+                        <label class="curpoin"><input type="radio" name="foreign_htmlfilename_mode" value="1" {if condition="!empty($foreignData.foreign_htmlfilename_mode)"} checked="checked" {/if} onclick="select2Format(this);">ID文档名</label>&nbsp;&nbsp;
+                        <span class="err"></span>
+                        <p class="notic2 {if condition="!empty($foreignData.foreign_htmlfilename_mode)"} none {/if}" id="notic_foreign_htmlfilename_mode_0">以文档标题的中文拼音或英文作为结尾文件名，示例：{$Request.domain}__ROOT_DIR__/news/wenzhangbiaoti.html</p>
+                        <p class="notic2 {if condition="empty($foreignData.foreign_htmlfilename_mode)"} none {/if}" id="notic_foreign_htmlfilename_mode_1">以文档ID作为结尾文件名，示例：{$Request.domain}__ROOT_DIR__/news/123.html</p>
+                    </dd>
+                </dl>
+                <div class="bot">
+                    <a class="ncap-btn-big ncap-btn-green" type="button" id="submitBtn" onclick="handle_archives(this);">立即更新</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+
+    $(function(){
+        var seo_pseudo = {$global['seo_pseudo']|default=1};
+        if (1 == seo_pseudo) {
+            $('dl.subrow input[type=radio]').prop('disabled', true);
+        }
+    });
+
+    function selectFormat(obj)
+    {
+        $('.div_seo_titleurl_format_0').hide();
+        $('.div_seo_titleurl_format_1').hide();
+        $('#notic_seo_titleurl_format_0').hide();
+        $('#notic_seo_titleurl_format_1').hide();
+        if ($('input[name=seo_titleurl_format]:checked').val() == 0) {
+            $('.div_seo_titleurl_format_0').show();
+            $('#notic_seo_titleurl_format_0').show();
+        } else {
+            $('.div_seo_titleurl_format_1').show();
+            $('#notic_seo_titleurl_format_1').show();
+        }
+    }
+
+    // 判断输入框是否为空
+    function checkForm(){
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Foreign/conf_save', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                        window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    function select2Format(obj)
+    {
+        $('#notic_foreign_htmlfilename_mode_0').hide();
+        $('#notic_foreign_htmlfilename_mode_1').hide();
+        if ($('input[name=foreign_htmlfilename_mode]:checked').val() == 0) {
+            $('#notic_foreign_htmlfilename_mode_0').show();
+        } else {
+            $('#notic_foreign_htmlfilename_mode_1').show();
+        }
+    }
+
+    /**
+     * 批量更新URL
+     */
+    function handle_archives(obj)
+    {
+        var foreign_htmlfilename_mode = $('input[name=foreign_htmlfilename_mode]:checked').val();
+        var confirm = layer.confirm('批量更新文档成外贸链接，是否更新？', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确认', '取消'], //按钮
+            success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
+        }, function () {
+            layer.close(confirm);
+            var url = "{:url('Foreign/htmlfilename_handel')}";
+            if (url.indexOf('?') > -1) {
+                url += '&';
+            } else {
+                url += '?';
+            }
+            url += 'foreign_htmlfilename_mode='+foreign_htmlfilename_mode;
+            var index = layer.open({type: 2,title: '开始更新',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
+        }, function (index) {
+            layer.closeAll(index);
+        });
+    }
+</script>
+{include file="public/footer" /}

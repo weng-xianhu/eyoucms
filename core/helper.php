@@ -1,7 +1,16 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 //------------------------
-// 助手函数
+// ThinkPHP 助手函数
 //-------------------------
 
 use think\Cache;
@@ -79,7 +88,77 @@ if (!function_exists('lang')) {
      */
     function lang($name, $vars = [], $lang = '')
     {
+        if (in_array($name, ['sys1','sys2','sys3','sys4','sys5'])) {
+            static $foreignData = null;
+            if (null === $foreignData) {
+                $foreignData = tpSetting('foreign', [], 'cn');
+            }
+            $foreign_is_status = empty($foreignData['foreign_is_status']) ? 0 : intval($foreignData['foreign_is_status']);
+            if (!empty($foreign_is_status)) {
+                if (preg_match('/^sys(\d+)$/i', $name)) {
+                    $name = str_replace('sys', 'page', $name);
+                }
+                return foreign_lang($name, $lang);
+            }
+        }
         return Lang::get($name, $vars, $lang);
+    }
+}
+
+if (!function_exists('foreign_lang')) {
+    /**
+     * 获取外贸助手语言变量值
+     * @param  string $name [description]
+     * @param  string $lang [description]
+     * @return [type]       [description]
+     */
+    function foreign_lang($name = '', $lang = '')
+    {
+        if (!in_array(MODULE_NAME, ['admin'])) {
+            empty($lang) && $lang = get_current_lang();
+            static $foreignData = null;
+            if (null === $foreignData) {
+                $foreignData = tpSetting('foreign', [], 'cn');
+            }
+            $foreign_is_status = empty($foreignData['foreign_is_status']) ? 0 : intval($foreignData['foreign_is_status']);
+            if (empty($foreign_is_status)) {
+                $lang = 'cn';
+            } else {
+                $lang_switch_on = config('lang_switch_on');
+                if (!$lang_switch_on) {
+                    $lang = 'en';
+                } else {
+                    if (in_array($lang, ['cn','zh'])) {
+                        $lang = 'cn';
+                    } else {
+                        $lang = 'en';
+                    }
+                }
+            }
+        } else {
+            $lang = 'cn';
+        }
+
+        $cacheKey = md5('common_ForeignPack_getForeignPack_list');
+        $result = cache($cacheKey);
+        if (empty($result)) {
+            $result = [];
+            $list = \think\Db::name('foreign_pack')->where(['id'=>['gt',0]])->select();
+            foreach ($list as $key => $val) {
+                $index_key = md5($val['name'].'_'.$val['lang']);
+                $result[$index_key] = $val;
+            }
+            cache($cacheKey, $result, null, 'foreign_pack');
+        }
+
+        if (empty($name)) {
+            $data = $result;
+        } else {
+            $index_key = md5($name.'_'.$lang);
+            $data = empty($result[$index_key]) ? '' : $result[$index_key]['value'];
+        }
+
+        return $data;
     }
 }
 
@@ -146,6 +225,49 @@ if (!function_exists('input')) {
             $data = eyPreventShell($data) ? $data : '';
         }
         /*--end*/
+
+        static $city_switch_on = null;
+        null === $city_switch_on && $city_switch_on = config('city_switch_on');
+        if (!empty($city_switch_on)) {
+            if (('site' == $key || preg_match('/^site\//i', $key)) && in_array($method, ['param','get']) && stristr(request()->baseFile(), 'index.php')) {
+                $current_site = '';
+                /*兼容伪静态多城市切换*/
+                $pathinfo = request()->pathinfo();
+                if (!empty($pathinfo)) {
+                    $s_arr = explode('/', $pathinfo);
+                    if ('m' == $s_arr[0]) {
+                        $s_arr[0] = $s_arr[1];
+                    }
+                    $count = \think\Db::name('citysite')->where(['domain'=>$s_arr[0]])->cache(true, EYOUCMS_CACHE_TIME, 'citysite')->count();
+                    if (!empty($count)) {
+                        $current_site = $s_arr[0];
+                    }
+                }
+                /*--end*/
+
+                /*支持独立域名配置*/
+                // if (empty($current_site)) {
+                //     $subDomain = request()->subDomain();
+                //     if (!empty($subDomain) && 'www' != $subDomain) {
+                //         $siteInfo = \think\Db::name('citysite')->where('domain',$subDomain)->cache(true, EYOUCMS_CACHE_TIME, 'citysite')->find();
+                //         if (!empty($siteInfo['is_open'])) {
+                //             $current_site = $siteInfo['domain'];
+                //         }
+                //     }
+                // }
+                /*--end*/
+
+                if (isset($data['site'])) {
+                    $site = trim($data['site'], '/');
+                    $site = trim($site);
+                    empty($site) && $data['site'] = $current_site;
+                } else if (is_string($data)) {
+                    $site = trim($data, '/');
+                    $site = trim($site);
+                    empty($site) && $data = $current_site;
+                }
+            }
+        }
 
         return $data;
     }
@@ -321,6 +443,23 @@ if (!function_exists('dump')) {
     }
 }
 
+if (!function_exists('dynamic_url')) {
+    /**
+     * Url生成(默认动态URL)
+     * @param string        $url 路由地址
+     * @param string|array  $vars 变量
+     * @param bool|string   $suffix 生成的URL后缀
+     * @param bool|string   $domain 域名
+     * @param string          $seo_pseudo URL模式
+     * @param string          $seo_pseudo_format URL格式
+     * @return string
+     */
+    function dynamic_url($url = '', $vars = '', $suffix = true, $domain = false, $seo_pseudo = 1, $seo_pseudo_format = 1, $seo_inlet = 0)
+    {
+        return url($url, $vars, $suffix, $domain, $seo_pseudo, $seo_pseudo_format, $seo_inlet);
+    }
+}
+
 if (!function_exists('url')) {
     /**
      * Url生成
@@ -379,6 +518,8 @@ if (!function_exists('weapp_url')) {
             'sc'     => $sc,
             'sa'     => $sa,
         );
+        // 手机端后端管理插件则执行
+        if ('Mbackend' == $sm) $params_array['isMobile'] = 1;
 
         if (is_string($vars)) {
             $vars = rtrim($vars, '&');
@@ -709,14 +850,14 @@ if (!function_exists('hookexec')) {
      */
     function hookexec($class, $params = null, $extra = null)
     {
-        $keys = "hookexec_{$class}_".json_encode($params)."_".json_encode($extra);
+        $keys = md5("hookexec_{$class}_".json_encode($params)."_".json_encode($extra));
         $value = cache($keys);
         $mcaArr = explode('/', $class);
         $m = !empty($mcaArr[0]) ? $mcaArr[0] : '';
         $c = !empty($mcaArr[1]) ? $mcaArr[1] : '';
         $a = !empty($mcaArr[2]) ? $mcaArr[2] : '';
         if(true === config('app_debug') || empty($value)){
-            $exist = \think\Db::query('SHOW TABLES LIKE "'.config('database.prefix').'weapp"');
+            $exist = \think\Db::query('SHOW TABLES LIKE \''.config('database.prefix').'weapp\'');
             if (!empty($exist)) {
                 $row = M('weapp')->field('id,code')->where(array('code'=>$m,'status'=>1))->find();
                 $value = -1;
@@ -960,7 +1101,7 @@ if (!function_exists('code_validate')) {
         $md5Str = md5('~'.base64_decode(config($keys)).'~');
 
         if ($tokenStr != $md5Str) {
-            $tmp = 'I+aguOW/g+eoi+W6j+iiq+evoeaUue+8jOivt+WwveW/q+i/mOWOn++8jOaEn+iwouS6q+eUqOW8gOa6kOWFjei0uUV5b3VDbXPkvIHkuJrlu7rnq5nns7vnu58uIw==';
+            $tmp = 'I+aguOW/g+eoi+W6j+iiq+evoeaUue+8jOivt+WwveW/q+i/mOWOn++8jOaEn+iwouS6q+eUqOW8gOa6kEV5b3VDbXPkvIHkuJrlu7rnq5nns7vnu58uIw==';
             $msg = base64_decode($tmp);
             $msg = trim($msg, '#');
             die($msg);
@@ -971,7 +1112,7 @@ if (!function_exists('code_validate')) {
 
     if (!function_exists('DedeM')) {
         /**
-         * 兼容织梦CMS
+         * 兼容写法
          * @param string $name 表名
          * @return DB对象
          */

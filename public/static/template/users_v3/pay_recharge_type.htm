@@ -1,0 +1,93 @@
+{eyou:sppayapilist id='vo'}
+{eyou:notempty name="$vo.pay_id"}
+<li class="J_bank" id="paymethod_{$vo.pay_mark}" onclick="SelectPayMethod('{$vo.pay_id}', '{$vo.pay_mark}');"><img src="{$vo.pay_img}"></li>
+{/eyou:notempty}
+{$vo.hidden}
+{/eyou:sppayapilist}
+<input type="hidden" id="PayID">
+<input type="hidden" id="PayMark">
+
+{eyou:if condition="1 != $data.transaction_type && 1 == $data.pay_balance_open"}
+    <li class="J_bank" id="PayBalancePayment" onclick="PayBalancePayment();"><img src="{eyou:static file='users/skin/images/pay_yiyou2.png' /}"></li>
+    <script type="text/javascript">
+        // 余额支付，购买商品+视频支付使用
+        function PayBalancePayment() {
+            layer.confirm('确认使用余额支付？', {
+                title: false,
+                btn: ['立即支付']
+            }, function() {
+                layer.closeAll();
+                $('.payment-list li').removeClass('selected');
+                $('#PayBalancePayment').addClass('selected');
+                var unified_id = '{$data.unified_id}';
+                var unified_number = '{$data.unified_number}';
+                var transaction_type = '{$data.transaction_type}';
+                if (!unified_number || !unified_id) layer.msg('订单号异常，请刷新重试', {time: 1500});
+
+                // 禁止再次点击余额支付
+                $('#PayBalancePayment').prop("disabled", true).css("pointer-events", "none");
+
+                // 发送请求
+                layer_loading('订单处理中');
+                $.ajax({
+                    url: '{$RootDir}/index.php?m=user&c=PayApi&a=balance_payment&_ajax=1',
+                    data: {unified_id: unified_id, unified_number: unified_number, transaction_type: transaction_type},
+                    type:'post',
+                    dataType:'json',
+                    success:function(res){
+                        layer.closeAll();
+                        if (1 == res.code) {
+                            if (!res.data.mobile && !res.data.email) {
+                                layer.msg(res.msg, {time: 1500}, function() {
+                                    window.location.href = res.url;
+                                });
+                            } else {
+                                if (res.data.mobile) SendMobile(res.data.mobile);
+                                if (res.data.email) SendEmail(res.data.email);
+                                layer.msg(res.msg, {time: 1500}, function() {
+                                    window.location.href = res.url;
+                                });
+                            }
+                        } else {
+                            PayIsRecharge(res.msg, res.url);
+                        }
+                    }
+                });
+            });
+        }
+
+        // 是否要去充值
+        function PayIsRecharge(msg ,url) {
+            layer.confirm(msg, {
+                title: false,
+                btn: ['去充值','其他方式支付'],
+                cancel: function(index, layero){ 
+                    $('#PayBalancePayment').prop("disabled", false).css("pointer-events", "");
+                }
+            }, function() {
+                // 去充值
+                window.open(url); 
+                
+                layer.confirm('是否充值成功，立即支付？', {
+                    title: false,
+                    btn: ['立即支付','其他方式支付'],
+                    cancel: function(index, layero){ 
+                        $('#PayBalancePayment').prop("disabled", false).css("pointer-events", "");
+                    }
+                }, function() {
+                    // 立即支付
+                    PayBalancePayment();
+
+                }, function(index) {
+                    // 选择其他方式支付时，恢复禁用的余额支付按钮
+                    $('#PayBalancePayment').prop("disabled", false).css("pointer-events", "");
+                    layer.closeAll(index);
+                });
+            }, function(index) {
+                // 选择其他方式支付时，恢复禁用的余额支付按钮
+                $('#PayBalancePayment').prop("disabled", false).css("pointer-events", "");
+                layer.closeAll(index);
+            });
+        }
+    </script>
+{/eyou:if}

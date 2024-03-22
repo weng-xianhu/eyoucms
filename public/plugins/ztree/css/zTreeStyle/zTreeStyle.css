@@ -10,14 +10,23 @@ website:	http://code.google.com/p/jquerytree/
 
 .ztree * {padding:0; margin:0; font-size:12px; font-family: Verdana, Arial, Helvetica, AppleGothic, sans-serif}
 .ztree {margin:0; padding:20px 5px 0; color:#333}
-.ztree li{padding:0; margin:0; list-style:none; line-height:14px; text-align:left; white-space:nowrap; outline:0}
+.ztree li{padding:0;margin:0;list-style:none;line-height: 0px;text-align:left;white-space:nowrap;outline:0;}
 .ztree li ul{ margin:0; padding:0 0 0 18px}
 .ztree li ul.line{ background:url(./img/line_conn.gif) 0 0 repeat-y;}
 
-.ztree li a {padding:1px 3px 0 0; margin:0; cursor:pointer; height:17px; color:#333; background-color: transparent;
-	text-decoration:none; vertical-align:top; display: inline-block}
+.ztree li a {
+	padding: 2px 3px 2px 0;
+	margin: 4px 0;
+	cursor:pointer;
+	height:17px;
+	color:#333;
+	background-color: transparent;
+	text-decoration:none;
+	vertical-align:top;
+	display: inline-grid;
+	}
 .ztree li a:hover {text-decoration:underline}
-.ztree li a.curSelectedNode {padding-top:0px; background-color:#FFE6B0; color:black; height:26px; border:1px #FFB951 solid; opacity:0.8;}
+.ztree li a.curSelectedNode { background-color:#FFE6B0; color:black; height:26px; border:1px #FFB951 solid; opacity:0.8;}
 .ztree li a.curSelectedNode_Edit {padding-top:0px; background-color:#FFE6B0; color:black; height:16px; border:1px #FFB951 solid; opacity:0.8;}
 .ztree li a.tmpTargetNode_inner {padding-top:0px; background-color:#316AC5; color:white; height:16px; border:1px #316AC5 solid;
 	opacity:0.8; filter:alpha(opacity=80)}
@@ -53,7 +62,7 @@ website:	http://code.google.com/p/jquerytree/
 .ztree li span.button.chk.radio_true_part_focus {background-position:-42px -42px}
 .ztree li span.button.chk.radio_true_disable {background-position:-42px -56px}
 
-.ztree li span.button.switch {width:18px; height:18px}
+.ztree li span.button.switch {width:18px;height:18px;margin: 6px 0;}
 .ztree li span.button.root_open{background-position:-92px -54px}
 .ztree li span.button.root_close{background-position:-74px -54px}
 .ztree li span.button.roots_open{background-position:-92px 0}

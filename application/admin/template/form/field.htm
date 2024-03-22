@@ -1,0 +1,223 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="form/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv pt0">
+            <div class="ftitle">
+                {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                    {eq name="'Form@field_add'|is_check_access" value="1"}
+                    <div class="fbutton">
+                        <a href="javascript:void(0);" data-href="{:url('Form/field_add')}" onclick="openFullframe(this, '新增表单', '400px', '380px');">
+                            <div class="add">
+                                <span><i class="layui-icon layui-icon-addition"></i>新增表单</span>
+                            </div>
+                        </a>
+                    </div>
+                    {/eq}
+                {/if}
+            </div>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                   <thead>
+                    <tr>
+                        <th abbr="article_title" axis="col3" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4">
+                            <div class="text-l10">表单名称</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w80">
+                            <div class="tc">留言总数</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w80">
+                            <div class="tc">启用</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4" class="w150">
+                            <div class="tc">创建时间</div>
+                        </th>
+                        <th axis="col1" class="w250">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead> 
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <form id="PostForm">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%">
+                        <tbody id="Template">
+                        {empty name="list"}
+                            <tr id="null-data">
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <div class="no_row">
+                                        <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {else/}
+                            {foreach name="list" item="vo" key="k" }
+                            <tr class="tr">
+                                <td class="sort">
+                                    <div class="w40 tc">
+                                        <input type="hidden" name="id[]" value="{$vo.form_id}">
+                                        {eq name='$main_lang' value='$admin_lang'}
+                                            {$vo.form_id}
+                                        {else /}
+                                            {$main_form_list[$vo['form_id']]['form_id']|default=$vo['form_id']}
+                                        {/eq}
+                                    </div>
+                                </td>
+                                <td style="width: 100%">
+                                    <div class="text-l10">
+                                        {$vo.form_name}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="w80 tc">
+                                        <a href="javascript:void(0);" data-href="{:url('Form/index', ['typeid'=>$vo['form_id'],'iframe'=>1])}" onclick="openFullframe(this, '查看表单数据', '100%', '100%');" class="btn blue">{$form_list_count[$vo['form_id']]['count']|default='0'}</a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="w80 tc">
+                                        {if condition='$vo.status == 1'}
+                                            <span class="yes" {eq name="$Think.const.CONTROLLER_NAME.'@field_save'|is_check_access" value="1"}onClick="changeTableVal('form','form_id','{$vo.form_id}','status',this);"{/eq}><i class="fa fa-check-circle"></i>是</span>
+                                        {else /}
+                                            <span class="no" {eq name="$Think.const.CONTROLLER_NAME.'@field_save'|is_check_access" value="1"}onClick="changeTableVal('form','form_id','{$vo.form_id}','status',this);"{/eq}><i class="fa fa-ban"></i>否</span>
+                                        {/if}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="w150 tc">
+                                        {$vo.add_time|MyDate='Y-m-d H:i:s',###}
+                                    </div>
+                                </td>
+                                <td class="operation">
+                                    <div class="w250 tc">
+                                        {eq name="'Form@field_edit'|is_check_access" value="1"}
+                                            <a href="javascript:void(0);" data-href="{:url('Form/field_edit',array('id'=>$vo['form_id']))}" class="btn blue" onclick="openFullframe(this, '编辑表单', '400px', '380px');">编辑</a>
+                                            <i></i>
+                                        {/eq}
+                                        {eq name="'Form@attribute_index'|is_check_access" value="1"}
+                                        <a href="javascript:void(0);" data-href="{:url('Form/attribute_index', ['typeid'=>$vo['form_id']])}" onclick="openFullframe(this, '字段列表', '100%', '100%');" class="btn blue">字段列表</a>
+                                        <i></i>
+                                        {/eq}
+                                        {notempty name="$vo.attr_auto"}
+                                            <a href="javascript:void(0);" data-url="{:url('Form/label_call', ['form_id'=>$vo['form_id']])}" onclick="LabelCall(this);" class="btn blue">标签调用</a>
+                                        {else /}
+                                            <a href="javascript:void(0);" data-href="https://www.eyoucms.com/plus/view.php?aid=29138&origin_eycms=1" onclick="openFullframe(this,'查看 form 手动表单标签');" class="btn blue">标签调用</a>
+                                        {/notempty}
+                                        <i></i>
+                                        {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                                            {eq name="'Form@field_del'|is_check_access" value="1"}
+                                            <a class="btn red" href="javascript:void(0);" data-url="{:url('Form/field_del', ['_ajax'=>1])}" data-title="{$vo.form_name}" data-id="{$vo.form_id}" onClick="delForm(this);">删除</a>
+                                            {/eq}
+                                        {else /}
+                                            {eq name="'Form@field_del'|is_check_access" value="1"}
+                                                <a class="btn grey" href="javascript:void(0);" title="请切换到主语言删除">删除</a>
+                                            {/eq}
+                                        {/if}
+                                    </div>
+                                </td>
+                            </tr>
+                            {/foreach}
+                        {/empty}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        {notempty name="list"}
+        <div class="tDiv">
+            <div class="tDiv2">
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        {/notempty}
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+
+    // 删除
+    function delForm(obj){
+        layer.confirm('确认彻底删除？该表单的数据将一起清空。', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id'),_ajax:1},
+                dataType : 'json',
+                success : function(res){
+                    layer.closeAll();
+                    if(res.code == 1){
+                        showSuccessMsg(res.msg);
+                        window.location.reload();
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }
+
+    //标签调用
+    function LabelCall(obj) {
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: '查看 form 自动标签',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            content: $(obj).data('url'),
+            area: ['780px', '430px']
+        });
+    }
+</script>
+
+{include file="public/footer" /}

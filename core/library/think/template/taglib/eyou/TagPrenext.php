@@ -13,6 +13,7 @@
 
 namespace think\template\taglib\eyou;
 
+use think\Db;
 use think\Request;
 
 /**
@@ -43,24 +44,31 @@ class TagPrenext extends Base
         $typeid = $channelRes['typeid'];
         $controller_name = $channelRes['ctl_name'];
 
+        $condition = [];
+        // 多城市分站与全国的显示逻辑
+        $this->site_show_archives($condition, 'archives');
+
         if ($get == 'next') {
             /* 下一篇 */
+            $condition['a.typeid'] = $typeid;
+            $condition['a.aid'] = ['GT', $aid];
+            $condition['a.channel'] = $channel;
+            $condition['a.status'] = 1;
+            $condition['a.lang'] = self::$home_lang;
+            $condition['a.is_del'] = 0;
+            $condition['a.arcrank'] = ['EGT', 0];
             $result = M('archives')->field('b.*, a.*')
                 ->alias('a')
                 ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
-                ->where([
-                    'a.typeid'  => $typeid,
-                    'a.aid'     => ['GT', $aid],
-                    'a.channel' => $channel,
-                    'a.status'  => 1,
-                    'a.lang'    => $this->home_lang,
-                    'a.is_del'  => 0,
-                    'a.arcrank' => ['EGT', 0],
-                ])
+                ->where($condition)
                 ->order('a.aid asc')
                 ->find();
             if (!empty($result)) {
-                $result['arcurl'] = arcurl('home/'.$controller_name.'/view', $result);
+                if (1 == $result['is_jump']) {
+                    $result['arcurl'] = $result['jumplinks'];
+                } else {
+                    $result['arcurl'] = arcurl('home/'.$controller_name.'/view', $result);
+                }
                 /*封面图*/
                 if (empty($result['litpic'])) {
                     $result['is_litpic'] = 0; // 无封面图
@@ -71,23 +79,26 @@ class TagPrenext extends Base
                 /*--end*/
             }
         } else {
-            /* 上一篇 */
+            /* 上一篇 */ 
+            $condition['a.typeid'] = $typeid;
+            $condition['a.aid'] = ['LT', $aid];
+            $condition['a.channel'] = $channel;
+            $condition['a.status'] = 1;
+            $condition['a.lang'] = self::$home_lang;
+            $condition['a.is_del'] = 0;
+            $condition['a.arcrank'] = ['EGT', 0];
             $result = M('archives')->field('b.*, a.*')
                 ->alias('a')
                 ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
-                ->where([
-                    'a.typeid'  => $typeid,
-                    'a.aid'     => ['LT', $aid],
-                    'a.channel' => $channel,
-                    'a.status'  => 1,
-                    'a.lang'    => $this->home_lang,
-                    'a.is_del'  => 0,
-                    'a.arcrank' => ['EGT', 0],
-                ])
+                ->where($condition)
                 ->order('a.aid desc')
                 ->find();
             if (!empty($result)) {
-                $result['arcurl'] = arcurl('home/'.$controller_name.'/view', $result);
+                if (1 == $result['is_jump']) {
+                    $result['arcurl'] = $result['jumplinks'];
+                } else {
+                    $result['arcurl'] = arcurl('home/'.$controller_name.'/view', $result);
+                }
                 /*封面图*/
                 if (empty($result['litpic'])) {
                     $result['is_litpic'] = 0; // 无封面图

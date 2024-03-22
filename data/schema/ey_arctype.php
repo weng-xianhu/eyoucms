@@ -72,6 +72,33 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'diy_dirpath' => 
+  array (
+    'name' => 'diy_dirpath',
+    'type' => 'varchar(200)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'rulelist' => 
+  array (
+    'name' => 'rulelist',
+    'type' => 'varchar(200)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'ruleview' => 
+  array (
+    'name' => 'ruleview',
+    'type' => 'varchar(200)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'englist_name' => 
   array (
     'name' => 'englist_name',
@@ -256,6 +283,51 @@ return array (
   array (
     'name' => 'update_time',
     'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'target' => 
+  array (
+    'name' => 'target',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'nofollow' => 
+  array (
+    'name' => 'nofollow',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'typearcrank' => 
+  array (
+    'name' => 'typearcrank',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'empty_logic' => 
+  array (
+    'name' => 'empty_logic',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'page_limit' => 
+  array (
+    'name' => 'page_limit',
+    'type' => 'varchar(10)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

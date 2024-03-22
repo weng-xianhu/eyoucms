@@ -30,20 +30,16 @@ class TagHotwords extends Base
      * 获取网站搜索的热门关键字
      * @author wengxianhu by 2018-4-20
      */
-    public function getHotwords($num = 0, $subday = 0, $maxlength = 0)
+    public function getHotwords($num = 0, $subday = 0, $maxlength = 0, $orderby = '', $ordermode = '')
     {
         $nowtime = getTime();
         if(empty($subday)) $subday = 365;
         if(empty($num)) $num = 6;
         if(empty($maxlength)) $maxlength = 20;
         $maxlength = $maxlength + 1;
+        $maxlength = $maxlength * 3;
         $mintime = $nowtime - ($subday * 24 * 3600);
-
-        if($sort == 'rand') $orderby = 'rand() ';
-        else if($sort == 'sort_order') $orderby=' sort_order ASC, id desc ';
-        else if($sort == 'hot') $orderby=' searchNum DESC, id desc ';
-        else if($sort == 'new') $orderby=' id DESC ';
-        else $orderby = 'sort_order asc, searchNum desc, id desc ';
+        $orderby = $this->getOrderBy($orderby, $ordermode, true);
 
         $result = Db::name('search_word')->field('word,searchNum')
             ->where("update_time > {$mintime} AND length(word) < {$maxlength}")
@@ -64,5 +60,38 @@ class TagHotwords extends Base
         }
 
         return $result;
+    }
+
+    // 获取查询排序
+    private function getOrderBy($orderby,$ordermode,$isrand=false)
+    {
+        switch ($orderby) {
+            case 'hot':
+                $orderby = "is_hot desc, searchNum {$ordermode}, id desc";
+                break;
+            case 'new':
+                $orderby = "id {$ordermode}";
+                break;
+            case 'sort_order':
+                $orderby = "sort_order {$ordermode}, id desc";
+                break;
+            case 'rand':
+                if (true === $isrand) {
+                    $orderby = "rand()";
+                } else {
+                    $orderby = "id {$ordermode}";
+                }
+                break;
+
+            default:
+            {
+                if (empty($orderby)) {
+                    $orderby = 'sort_order asc, is_hot desc, searchNum desc, id desc';
+                }
+                break;
+            }
+        }
+
+        return $orderby;
     }
 }

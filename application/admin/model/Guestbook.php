@@ -41,7 +41,8 @@ class Guestbook extends Model
 
         // 同时删除属性内容
         Db::name('guestbook_attr')->where([
-                'aid'   => ['IN', $aidArr]
+                'aid'   => ['IN', $aidArr],
+                'form_type' => 0,
             ])->delete();
     }
 }

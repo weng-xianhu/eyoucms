@@ -2927,7 +2927,7 @@ class PHPMailer
             return quoted_printable_encode($string);
         }
         // Fall back to a pure PHP implementation
-        $string = str_replace(
+        $string = str_ireplace(
             array('%20', '%0D%0A.', '%0D%0A', '%'),
             array(' ', "\r\n=2E", "\r\n", '='),
             rawurlencode($string)

@@ -7,13 +7,13 @@
     <div class="flexigrid">
         <div class="mDiv">
             <div class="ftitle">
-				<div class="fbutton">
-				    <a href="{:weapp_url('Sample/Sample/add')}">
-				        <div class="add" title="新增">
-				            <span class="red"><i class="fa fa-plus"></i>新增</span>
-				        </div>
-				    </a>
-				</div>
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-href="{:weapp_url('Sample/Sample/add')}" onclick="openFullframe(this, '新增链接');">
+                        <div class="add">
+                            <span><i class="layui-icon layui-icon-addition"></i>新增链接</span>
+                        </div>
+                    </a>
+                </div>
             </div>
             <form class="navbar-form form-inline" action="{:weapp_url('Sample/Sample/index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
@@ -32,7 +32,7 @@
                     <thead>
                     <tr>
                         <th class="sign w40" axis="col0">
-                            <div class="tc"><input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);"></div>
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                         </th>
                         <th abbr="article_show" axis="col5" class="w40">
                             <div class="tc">ID</div>
@@ -41,7 +41,7 @@
                             <div class="tc">网站名称</div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="">链接地址</div>
+                            <div style="text-align: left; padding-left: 10px;" class="">链接地址</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w100">
                             <div class="tc">新窗口</div>
@@ -67,7 +67,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -86,8 +88,8 @@
                                     <a href="{:weapp_url('Sample/Sample/edit',array('id'=>$vo['id']))}">{$vo.title}</a>
                                 </div>
                             </td>
-                            <td style="width: 100%">
-                                <div style="">
+                            <td class="" style="width: 100%;">
+                                <div class="tl" style="padding-left: 10px;">
                                     {$vo.url}
                                 </div>
                             </td>
@@ -105,10 +107,11 @@
                                     {$vo.update_time|MyDate='Y-m-d H:i:s',###}
                                 </div>
                             </td>
-                            <td>
+                            <td class="operation">
                                 <div class="w120 tc">
-                                    <a href="{:weapp_url('Sample/Sample/edit',array('id'=>$vo['id']))}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
-                                    <a class="btn red"  href="javascript:void(0)" data-url="{:weapp_url('Sample/Sample/del')}" data-id="{$vo.id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    <a href="{:weapp_url('Sample/Sample/edit',array('id'=>$vo['id']))}" class="btn blue">编辑</a>
+                                    <i></i>
+                                    <a class="btn red"  href="javascript:void(0)" data-url="{:weapp_url('Sample/Sample/del')}" data-id="{$vo.id}" onClick="delfun(this);">删除</a>
                                 </div>
                             </td>
                             <td class="sort">
@@ -127,12 +130,12 @@
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
-                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
                 </div>
                 <div class="fbutton">
                     <a onclick="batch_del(this, 'ids');" data-url="{:weapp_url('Sample/Sample/del')}">
-                        <div class="add" title="批量删除">
-                            <span><i class="fa fa-close"></i>批量删除</span>
+                        <div class="add">
+                            <span>批量删除</span>
                         </div>
                     </a>
                 </div>
@@ -158,8 +161,6 @@
             </div>
             <div style="clear:both"></div>
         </div>
-        <!--分页位置-->
-        {$pageStr}
     </div>
 </div>
 <script>
@@ -172,6 +173,17 @@
         // 点击刷新数据
         $('.fa-refresh').click(function(){
             location.href = location.href;
+        });
+        
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
         });
     });
 </script>

@@ -31,11 +31,11 @@ class TagAsklist extends Base
      * 获取分页列表
      * @author wengxianhu by 2018-4-20
      */
-    public function getAsklist($limit = '', $orderby = '', $orderway = '')
+    public function getAsklist($limit = '', $orderby = '', $ordermode = '')
     {
-        empty($orderway) && $orderway = 'desc';
+        empty($ordermode) && $ordermode = 'desc';
         // 给排序字段加上表别名
-        $orderby = $this->getOrderBy($orderby,$orderway);
+        $orderby = $this->getOrderBy($orderby,$ordermode);
 
         $result = Db::name('ask')
             ->alias('a')
@@ -79,44 +79,44 @@ class TagAsklist extends Base
         return $result;
     }
 
-    private function getOrderBy($orderby,$orderway){
+    private function getOrderBy($orderby,$ordermode){
         switch ($orderby) {
             case 'click': // 浏览点击量
-                $orderby = "a.click {$orderway}";
+                $orderby = "a.click {$ordermode}";
                 break;
 
-            case 'id': // 兼容织梦的写法
+            case 'id': // 兼容写法
             case 'aid':
             case 'ask_id':
-                $orderby = "a.ask_id {$orderway}";
+                $orderby = "a.ask_id {$ordermode}";
                 break;
 
             case 'now':
-            case 'new': // 兼容织梦的写法
-            case 'pubdate': // 兼容织梦的写法
+            case 'new': // 兼容写法
+            case 'pubdate': // 兼容写法
             case 'add_time':
-                $orderby = "a.add_time {$orderway}";
+                $orderby = "a.add_time {$ordermode}";
                 break;
 
-            case 'sortrank': // 兼容织梦的写法
+            case 'sortrank': // 兼容写法
             case 'sort_order':
-                $orderby = "a.sort_order {$orderway}";
+                $orderby = "a.sort_order {$ordermode}";
                 break;
 
             case 'recom': // 推荐
-                $orderby = "a.is_recom {$orderway}";
+                $orderby = "a.is_recom {$ordermode}";
                 break;
 
             case 'replies': // 问题回复量
-                $orderby = "a.replies {$orderway}";
+                $orderby = "a.replies {$ordermode}";
                 break;
 
             case 'solve_time': // 解决时间
-                $orderby = "a.solve_time {$orderway}";
+                $orderby = "a.solve_time {$ordermode}";
                 break;
 
             case 'money': // 悬赏金额
-                $orderby = "a.money {$orderway}";
+                $orderby = "a.money {$ordermode}";
                 break;
 
             case 'rand':

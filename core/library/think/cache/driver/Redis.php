@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 namespace think\cache\driver;
 
@@ -32,7 +41,16 @@ class Redis extends Driver
     public function __construct($options = [])
     {
         if (!extension_loaded('redis')) {
-            throw new \BadFunctionCallException('not support: redis');
+            throw new \BadFunctionCallException('请检查是否安装或启用redis');
+        }
+        $redis_config_file = WEAPP_PATH.'Redis'.DS.'conf'.DS.'config.php';
+        if (file_exists($redis_config_file)) {
+            require_once($redis_config_file);
+            if (defined('WEAPP_REDIS_OPEN') && WEAPP_REDIS_OPEN == 1) {
+                $this->options['host'] = WEAPP_REDIS_HOST;
+                $this->options['port'] = WEAPP_REDIS_PORT;
+                $this->options['password'] = WEAPP_REDIS_PWD;
+            }
         }
         if (!empty($options)) {
             $this->options = array_merge($this->options, $options);
@@ -153,7 +171,7 @@ class Redis extends Driver
      */
     public function rm($name)
     {
-        return $this->handler->delete($this->getCacheKey($name));
+        return $this->handler->del($this->getCacheKey($name));
     }
 
     /**
@@ -168,7 +186,7 @@ class Redis extends Driver
             // 指定标签清除
             $keys = $this->getTagItem($tag);
             foreach ($keys as $key) {
-                $this->handler->delete($key);
+                $this->handler->del($key);
             }
             $this->rm('tag_' . md5($tag));
             return true;

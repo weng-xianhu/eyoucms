@@ -2,19 +2,19 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
  * ============================================================================
- * Author: 陈风任 <491085389@qq.com>
- * Date: 2018-12-25
+ * Author: 小虎哥 <1105415366@qq.com>
+ * Date: 2018-4-3
  */
-
 namespace app\admin\controller;
 
 use think\Page;
 use think\Db;
+use think\Cache;
 use app\common\logic\ArctypeLogic;
 // use app\admin\logic\RecycleBinLogic;
 
@@ -29,7 +29,11 @@ class RecycleBin extends Base
 
     public function _initialize() {
         parent::_initialize();
-        $this->language_access(); // 多语言功能操作权限
+        if (empty($this->globalConfig['language_split'])) {
+            if (!preg_match('/^(arctype_)/i', ACTION_NAME)) {
+                $this->language_access(); // 多语言功能操作权限
+            }
+        }
         $this->arctypeLogic = new ArctypeLogic(); 
         // $this->recyclebinLogic = new RecycleBinLogic();
         
@@ -42,6 +46,14 @@ class RecycleBin extends Base
         $this->guestbook_attribute  = Db::name('guestbook_attribute');  // 留言表单数据表
         $this->guestbook_attr         = Db::name('guestbook_attr');         // 留言表单内容表
         $this->arctype_channel_id = config('global.arctype_channel_id');
+
+        /*产品参数 - 新旧兼容*/
+        $is_old_product_attr = tpSetting('system.system_old_product_attr', [], 'cn');
+        $this->assign('is_old_product_attr',$is_old_product_attr);
+        /*--end*/
+
+        $menu = input('param.menu/d', 0);
+        $this->assign('menu',$menu);
     }
 
     /**
@@ -101,14 +113,13 @@ class RecycleBin extends Base
                 if ($row) {
                     $id_arr = [$row['id']];
                     // 多语言处理逻辑
-                    if (is_language()) {
-                        $attr_name_arr = 'tid'.$row['id'];
+                    $attr_name_arr = 'tid'.$row['id'];
+                    if (is_language() && empty($this->globalConfig['language_split'])) {
                         $id_arr = Db::name('language_attr')->where([
                                 'attr_name'  => $attr_name_arr,
                                 'attr_group' => 'arctype',
                             ])->column('attr_value');
-                        
-                        $list = $this->arctype->field('id,del_method')
+                        $list = $this->arctype->field('id,del_method,parent_id')
                             ->where([
                                 'id' => ['IN', $id_arr],
                             ])
@@ -135,7 +146,7 @@ class RecycleBin extends Base
                 // 栏目逻辑
                 $map = 'is_del=1';
                 // 多语言处理逻辑
-                if (is_language()) {
+                if (is_language() && empty($this->globalConfig['language_split'])) {
                     $where = $map.' and (';
                     $ids = get_arr_column($list, 'id');
                     !empty($ids) && $where .= 'id IN ('.implode(',', $ids).') OR parent_id IN ('.implode(',', $ids).')';
@@ -180,7 +191,7 @@ class RecycleBin extends Base
 
                 // 还原三级栏目时需要一并还原顶级栏目
                 // 多语言处理逻辑
-                if (is_language()) {
+                if (is_language() && empty($this->globalConfig['language_split'])) {
                     foreach ($list as $key => $value) {
                         $parent_id = intval($value['parent_id']);
                         if (0 < $parent_id) {
@@ -210,10 +221,21 @@ class RecycleBin extends Base
                 $r = $this->archives->where($where1)->update($data);
 
                 if (false !== $r) {
-                    delFile(CACHE_PATH);
+                    // 还原多语言栏目关联绑定
+                    if (!empty($attr_name_arr)) {
+                        Db::name('language_attribute')->where([
+                                'attr_name'     => ['IN',$attr_name_arr],
+                                'attr_group'    => 'arctype',
+                            ])->update([
+                                'is_del'    => 0,
+                                'update_time'   => getTime(),
+                            ]);
+                    }
+                    /*--end*/
+                    Cache::clear();
                     adminLog('还原栏目：'.$row['typename']);
                     /*清空sql_cache_table数据缓存表 并 添加查询执行语句到mysql缓存表*/
-                    Db::name('sql_cache_table')->query('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
+                    Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
                     model('SqlCacheTable')->InsertSqlCacheTable(true);
                     /* END */
                     $this->success('操作成功');
@@ -232,9 +254,9 @@ class RecycleBin extends Base
         if (IS_POST) {
             $post = input('post.');
             if (!isset($post['del_id']) || empty($post['del_id'])) $this->error('未选择栏目');
-            $del_id = $post['del_id'];
+            $post['del_id'] = eyIntval($post['del_id']);
             $typename = '';
-            foreach($del_id as $k=>$v){
+            foreach($post['del_id'] as $k=>$v){
                 // 当前栏目信息
                 $row = $this->arctype->field('id, parent_id, current_channel, typename')
                     ->where([
@@ -246,14 +268,13 @@ class RecycleBin extends Base
                 if ($row) {
                     $id_arr = [$row['id']];
                     // 多语言处理逻辑
-                    if (is_language()) {
-                        $attr_name_arr = 'tid'.$row['id'];
+                    $attr_name_arr = 'tid'.$row['id'];
+                    if (is_language() && empty($this->globalConfig['language_split'])) {
                         $id_arr = Db::name('language_attr')->where([
                             'attr_name'  => $attr_name_arr,
                             'attr_group' => 'arctype',
                         ])->column('attr_value');
-
-                        $list = $this->arctype->field('id,del_method')
+                        $list = $this->arctype->field('id,del_method,parent_id')
                             ->where([
                                 'id' => ['IN', $id_arr],
                             ])
@@ -281,7 +302,7 @@ class RecycleBin extends Base
                 //$map = 'is_del=1';
                 $map = '1=1';
                 // 多语言处理逻辑
-                if (is_language()) {
+                if (is_language() && empty($this->globalConfig['language_split'])) {
                     $where = $map.' and (';
                     $ids = get_arr_column($list, 'id');
                     !empty($ids) && $where .= 'id IN ('.implode(',', $ids).') OR parent_id IN ('.implode(',', $ids).')';
@@ -328,7 +349,7 @@ class RecycleBin extends Base
 
                 // 还原三级栏目时需要一并还原顶级栏目
                 // 多语言处理逻辑
-                if (is_language()) {
+                if (is_language() && empty($this->globalConfig['language_split'])) {
                     foreach ($list as $key => $value) {
                         $parent_id = intval($value['parent_id']);
                         if (0 < $parent_id) {
@@ -358,13 +379,24 @@ class RecycleBin extends Base
                 $r = $this->archives->where($where1)->update($data);
 
                 if (false !== $r) {
-                    delFile(CACHE_PATH);
+                    // 还原多语言栏目关联绑定
+                    if (!empty($attr_name_arr)) {
+                        Db::name('language_attribute')->where([
+                            'attr_name'     => ['IN',$attr_name_arr],
+                            'attr_group'    => 'arctype',
+                        ])->update([
+                            'is_del'    => 0,
+                            'update_time'   => getTime(),
+                        ]);
+                    }
+                    /*--end*/
+                    Cache::clear();
                 }
                 $typename .= $row['typename'].',';
             }
             adminLog('还原栏目：'.trim($typename,','));
             /*清空sql_cache_table数据缓存表 并 添加查询执行语句到mysql缓存表*/
-            Db::name('sql_cache_table')->query('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
+            Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
             model('SqlCacheTable')->InsertSqlCacheTable(true);
             /* END */
             $this->success('操作成功');
@@ -377,28 +409,6 @@ class RecycleBin extends Base
      */
     public function arctype_del()
     {
-        // if (IS_POST) {
-        //     $post = input('post.');
-        //     $post['del_id'] = eyIntval($post['del_id']);
-
-        //     /*当前栏目信息*/
-        //     $row = Db::name('arctype')->field('id, current_channel, typename')
-        //         ->where([
-        //             'id'    => $post['del_id'],
-        //             'lang'  => $this->admin_lang,
-        //         ])
-        //         ->find();
-            
-        //     $r = model('arctype')->del($post['del_id']);
-        //     if (false !== $r) {
-        //         adminLog('删除栏目：'.$row['typename']);
-        //         $this->success('删除成功');
-        //     } else {
-        //         $this->error('删除失败');
-        //     }
-        // }
-        // $this->error('非法访问');
-
         if (IS_POST) {
             $del_id = input('post.del_id/d', 0);
             if(!empty($del_id)){
@@ -411,17 +421,17 @@ class RecycleBin extends Base
                     ->find();
                 if ($row) {
                     $id_arr = $row['id'];
+                    $attr_name_arr = [];
+                    $attr_name_arr[] = 'tid'.$row['id'];
                     // 多语言处理逻辑
-                    if (is_language()) {
-                        $attr_name_arr = 'tid'.$row['id'];
+                    if (is_language() && empty($this->globalConfig['language_split'])) {
                         $id_arr_tmp = Db::name('language_attr')->where([
-                                'attr_name'  => $attr_name_arr,
+                                'attr_name'  => ['IN',$attr_name_arr],
                                 'attr_group' => 'arctype',
                             ])->column('attr_value');
                         if (!empty($id_arr_tmp)) {
                             $id_arr = $id_arr_tmp;
                         }
-                        
                         $list = $this->arctype->field('id,del_method')
                             ->where([
                                 'id' => ['IN', $id_arr],
@@ -444,7 +454,7 @@ class RecycleBin extends Base
                 // 栏目逻辑
                 $map = 'is_del=1';
                 // 多语言处理逻辑
-                if (is_language()) {
+                if (is_language() && empty($this->globalConfig['language_split'])) {
                     $where = $map.' and (';
                     $ids = get_arr_column($list, 'id');
                     !empty($ids) && $where .= 'id IN ('.implode(',', $ids).') OR parent_id IN ('.implode(',', $ids).')';
@@ -474,24 +484,38 @@ class RecycleBin extends Base
                 
                 // 栏目数据删除
                 $r = $this->arctype->where($where)->delete();
-                if($r){
-                    // Tag标签删除
-                    Db::name('taglist')->where([
-                            'typeid'    => ['IN', $ids],
-                        ])->delete();
-                    // 内容数据删除
-                    $r = $this->archives->where($where1)->delete();
-                    $msg = '';
-                    if (!$r) {
-                        $msg = '，文档清空失败！';
+                if($r !== false){
+                    model('Archives')->del($ids); // 删除文档
+                    // 删除多语言栏目关联绑定
+                    if (!empty($attr_name_arr)) {
+                        if (get_admin_lang() == get_main_lang()) {
+                            Db::name('language_attribute')->where([
+                                    'attr_name' => ['IN', $attr_name_arr],
+                                    'attr_group'    => 'arctype',
+                                ])->delete();
+                        }
+                        if (empty($this->globalConfig['language_split'])) {
+                            Db::name('language_attr')->where([
+                                    'attr_name' => ['IN', $attr_name_arr],
+                                    'attr_group'    => 'arctype',
+                                ])->delete();
+                        } else {
+                            Db::name('language_attr')->where([
+                                    'attr_value' => ['IN', $ids],
+                                    'attr_group'    => 'arctype',
+                                ])->delete();
+                        }
                     }
+                    /*--end*/
+                    \think\Cache::clear('taglist');
+                    \think\Cache::clear('archives');
+                    \think\Cache::clear('arctype');
                     adminLog('删除栏目：'.$row['typename']);
-                    $this->success("操作成功".$msg);
+                    $this->success("操作成功");
                 }
             }
-            $this->error("操作失败!");
         }
-        $this->error('非法访问');
+        $this->error('操作失败');
     }
 
     /**
@@ -502,9 +526,9 @@ class RecycleBin extends Base
         if (IS_POST) {
             $post = input('post.');
             if (!isset($post['del_id']) || empty($post['del_id'])) $this->error('未选择栏目');
-            $del_id = $post['del_id'];
+            $post['del_id'] = eyIntval($post['del_id']);
             $typename = '';
-            foreach($del_id as $k=>$v){
+            foreach($post['del_id'] as $k=>$v){
                 // 当前栏目信息
                 $row = $this->arctype->field('id, parent_id, current_channel, typename')
                     ->where([
@@ -514,9 +538,10 @@ class RecycleBin extends Base
                     ->find();
                 if ($row) {
                     $id_arr = $row['id'];
+                    $attr_name_arr = [];
+                    $attr_name_arr[] = 'tid'.$row['id'];
                     // 多语言处理逻辑
-                    if (is_language()) {
-                        $attr_name_arr = 'tid'.$row['id'];
+                    if (is_language() && empty($this->globalConfig['language_split'])) {
                         $id_arr_tmp = Db::name('language_attr')->where([
                             'attr_name'  => $attr_name_arr,
                             'attr_group' => 'arctype',
@@ -524,7 +549,6 @@ class RecycleBin extends Base
                         if (!empty($id_arr_tmp)) {
                             $id_arr = $id_arr_tmp;
                         }
-
                         $list = $this->arctype->field('id,del_method')
                             ->where([
                                 'id' => ['IN', $id_arr],
@@ -545,7 +569,7 @@ class RecycleBin extends Base
 //                    $map = 'is_del=1';
                     $map = '1=1';
                     // 多语言处理逻辑
-                    if (is_language()) {
+                    if (is_language() && empty($this->globalConfig['language_split'])) {
                         $where = $map.' and (';
                         $ids = get_arr_column($list, 'id');
                         !empty($ids) && $where .= 'id IN ('.implode(',', $ids).') OR parent_id IN ('.implode(',', $ids).')';
@@ -575,17 +599,41 @@ class RecycleBin extends Base
 
                     // 栏目数据删除
                     $r = $this->arctype->where($where)->delete();
-                    if($r){
+                    if($r !== false){
                         // Tag标签删除
                         Db::name('taglist')->where([
                             'typeid'    => ['IN', $ids],
                         ])->delete();
                         // 内容数据删除
                         $this->archives->where($where1)->delete();
+                        // 删除多语言栏目关联绑定
+                        if (!empty($attr_name_arr)) {
+                            if (get_admin_lang() == get_main_lang()) {
+                                Db::name('language_attribute')->where([
+                                        'attr_name' => ['IN', $attr_name_arr],
+                                        'attr_group'    => 'arctype',
+                                    ])->delete();
+                            }
+                            if (empty($this->globalConfig['language_split'])) {
+                                Db::name('language_attr')->where([
+                                        'attr_name' => ['IN', $attr_name_arr],
+                                        'attr_group'    => 'arctype',
+                                    ])->delete();
+                            } else {
+                                Db::name('language_attr')->where([
+                                        'attr_value' => ['IN', $ids],
+                                        'attr_group'    => 'arctype',
+                                    ])->delete();
+                            }
+                        }
+                        /*--end*/
                     }
                     $typename .= $row['typename'].',';
                 }
             }
+            \think\Cache::clear('taglist');
+            \think\Cache::clear('archives');
+            \think\Cache::clear('arctype');
             adminLog('删除栏目：'.trim($typename,','));
             $this->success('操作成功');
         }
@@ -691,7 +739,7 @@ class RecycleBin extends Base
 
                 if (!empty($typeids)) {
                     // 多语言处理逻辑
-                    if (is_language()) {
+                    if (is_language() && empty($this->globalConfig['language_split'])) {
                         $attr_name_arr = [];
                         foreach ($typeids as $key => $val) {
                             array_push($attr_name_arr, 'tid'.$val);
@@ -722,10 +770,11 @@ class RecycleBin extends Base
                                 'update_time'   => getTime(),
                             ]);
                         if ($r2) {
-                            delFile(CACHE_PATH);
+                            $_POST['aids'] = $id_arr;
+                            Cache::clear();
                             adminLog('还原文档：'.implode('|', get_arr_column($row, 'title')));
                             /*清空sql_cache_table数据缓存表 并 添加查询执行语句到mysql缓存表*/
-                            Db::name('sql_cache_table')->query('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
+                            Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
                             model('SqlCacheTable')->InsertSqlCacheTable(true);
                             /* END */
                             $this->success('操作成功');
@@ -770,14 +819,19 @@ class RecycleBin extends Base
                     $row2Group = group_same_key($row, 'channel');
                     if (!empty($row2Group)) {
                         $channelids = array_keys($row2Group);
-                        $channeltypeRow = Db::name('channeltype')->field('id,table')
+                        $channeltypeRow = Db::name('channeltype')->field('id,table,ifsystem')
                             ->where([
                                 'id'    => ['IN', $channelids],
                             ])->getAllWithIndex('id');
                         foreach ($row2Group as $key => $val) {
                             $table = $channeltypeRow[$key]['table'];
                             $aidarr_tmp = get_arr_column($val, 'aid');
-                            model($table)->afterDel($id_arr);
+                            if (!empty($channeltypeRow[$key]['ifsystem'])){
+                                model($table)->afterDel($id_arr);
+                            }else{
+                                model("Custom")->afterDel($id_arr,$table);
+                            }
+
                         }
                     }
                     /*--end*/
@@ -962,7 +1016,7 @@ class RecycleBin extends Base
             /*--end*/
             
             // 多语言处理逻辑
-            if (is_language()) {
+            if (is_language() && empty($this->globalConfig['language_split'])) {
                 $attr_name_arr = [];
                 foreach ($id_arr as $key => $val) {
                     array_push($attr_name_arr, 'attr_'.$val);
@@ -1004,7 +1058,7 @@ class RecycleBin extends Base
         $id_arr = eyIntval($id_arr);
         if(IS_POST && !empty($id_arr)){
             // 多语言处理逻辑
-            if (is_language()) {
+            if (is_language() && empty($this->globalConfig['language_split'])) {
                 $attr_name_arr = [];
                 foreach ($id_arr as $key => $val) {
                     array_push($attr_name_arr, 'attr_'.$val);
@@ -1112,7 +1166,7 @@ class RecycleBin extends Base
             /*--end*/
 
             // 多语言处理逻辑
-            if (is_language()) {
+            if (is_language() && empty($this->globalConfig['language_split'])) {
                 $attr_name_arr = [];
                 foreach ($id_arr as $key => $val) {
                     array_push($attr_name_arr, 'attr_'.$val);
@@ -1133,6 +1187,7 @@ class RecycleBin extends Base
             $r = $this->guestbook_attribute->where([
                     'attr_id'   => ['IN', $id_arr],
                 ])->update([
+                    'is_showlist'    => 0,
                     'is_del'    => 0,
                     'update_time'   => getTime(),
                 ]);
@@ -1140,9 +1195,8 @@ class RecycleBin extends Base
                 adminLog('还原留言表单：'.implode(',', get_arr_column($row, 'attr_name')));
                 $this->success("操作成功!");
             }
-            $this->error("操作失败!");
         }
-        $this->error("参数有误!");
+        $this->error("操作失败!");
     }
 
     /**
@@ -1154,7 +1208,7 @@ class RecycleBin extends Base
         $id_arr = eyIntval($id_arr);
         if(IS_POST && !empty($id_arr)){
             // 多语言处理逻辑
-            if (is_language()) {
+            if (is_language() && empty($this->globalConfig['language_split'])) {
                 $attr_name_arr = [];
                 foreach ($id_arr as $key => $val) {
                     array_push($attr_name_arr, 'attr_'.$val);
@@ -1186,8 +1240,7 @@ class RecycleBin extends Base
                 adminLog('删除留言表单：'.implode(',', get_arr_column($row, 'attr_name')));
                 $this->success("操作成功!");
             }
-            $this->error("操作失败!");
         }
-        $this->error("参数有误!");
+        $this->error("操作失败!");
     }
 }

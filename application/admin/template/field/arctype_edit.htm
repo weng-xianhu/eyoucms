@@ -10,7 +10,7 @@
         <div class="ncap-form-default tab_div_1">
             <dl class="row">
                 <dt class="tit">
-                    <label for="title"><em>*</em>字段标题</label>
+                    <label for="title"><em>*</em>字段名称</label>
                 </dt>
                 <dd class="opt">
                     <input type="text" value="{$info.title|default=''}" name="title" id="title" class="input-txt">
@@ -19,10 +19,10 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="name"><em>*</em>字段名称</label>
+                    <label for="name"><em>*</em>字段标识</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" value="{$info.name|default=''}" name="name" id="name" placeholder="只允许字母、数字和下划线的任意组合" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9a-zA-Z_]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-zA-Z_]/g,''));">
+                    <input type="text" value="{$info.name|default=''}" name="name" id="name" placeholder="支持字母、数字和下划线，不能和别的标识值相同" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9a-zA-Z_]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-zA-Z_]/g,''));">
                     <p class="notic">保持唯一性，不可与主表、附加表重复</p>
                 </dd>
             </dl>
@@ -50,7 +50,7 @@
                     <textarea rows="5" cols="60" id="dfvalue" name="dfvalue" placeholder="如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。" style="height:60px;">{$info.dfvalue|default=''}</textarea>
                     <textarea rows="5" cols="60" name="old_dfvalue" style="display: none;">{$info.dfvalue|default=''}</textarea>
                     <span class="err"></span>
-                    <p class="notic">1、如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)。<br/>2、特殊符号会被过滤掉，比如：&、=、?等</p>
+                    <p class="notic">1、如果定义字段类型为下拉框、单选项、多选项时，此处填写被选择的项目(用“,”分开，如“男,女,人妖”)，不支持反斜杠 \ ，可以用斜杠 / 代替。<br/>2、特殊符号会被过滤掉，比如：&、=、?等<br/>3、定义字段类型为多选项时，默认值最多为64项，超出则截取前64项</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -72,6 +72,21 @@
                     <p class="notic">越小越靠前</p>
                 </dd>
             </dl> -->
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title" id="select_title">指定栏目</label>
+                </dt>
+                <dd class="opt">
+                    <select name="typeids[]" id="typeid" style="width: 300px;" size="15" multiple="true">
+                        <option value="0" {if condition="empty($typeids) || in_array(0, $typeids)"}selected="true"{/if}>
+                        —指定所有栏目—
+                        </option>
+                        {$select_html}
+                    </select>
+                    <span class="err"></span>
+                    <p class="red">(按 Ctrl 可以进行多选)</p>
+                </dd>
+            </dl>
         </div>
         <!-- 常规选项 -->
         <div class="ncap-form-default">
@@ -155,6 +170,11 @@
             
             if (0 <= $.inArray($('input[name=dtype]:checked').val(), ['radio','checkbox','select'])) {
                 var dfvalue = $.trim($('#dfvalue').val());
+                if(dfvalue.indexOf('\\') != -1){
+               　　  showErrorMsg('默认值不支持反斜杠 \\ ，可用斜杠 / 代替');
+                    $('#dfvalue').focus();
+                    return false;
+            　　}
                 data = dfvalue.split(',');
                 for(var i = 0;i < data.length ;i++) {
                     for(var j = i+1;j < data.length;j++) {
@@ -163,6 +183,13 @@
                             $('#dfvalue').focus();
                             return false;
                         }
+                    }
+                }
+                if (0 <= $.inArray($('input[name=dtype]:checked').val(), ['checkbox'])) {
+                    if (64 < data.length) {
+                        showErrorMsg('默认值最多填写64项！');
+                        $('#dfvalue').focus();
+                        return false;
                     }
                 }
             }
@@ -179,7 +206,7 @@
                 if(res.code == 1){
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                         _parent.window.location.reload();
                     });
                 }else{

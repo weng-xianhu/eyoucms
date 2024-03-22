@@ -1,0 +1,47 @@
+<div class="sidebar-second ">
+    <ul>
+        <li class="sidebar-second-title">会员中心</li>
+
+        {eq name="'Member@users_index'|is_check_access" value="1"}
+        <li>
+            <a {if condition="in_array($Think.const.ACTION_NAME, ['users_index','users_edit'])"}class="active"{/if} href='{:url("Member/users_index")}'>会员列表</a>
+        </li>
+        {/eq}
+
+        {eq name="'Member@level_index'|is_check_access" value="1"}
+        <li>
+            <a {if condition="in_array($Request.action, ['level_index','level_add','level_edit'])"}class="active"{/if} href='{:url("Member/level_index")}'>会员级别</a>
+        </li>
+        {/eq}
+
+        {eq name="'Member@attr_index'|is_check_access" value="1"}
+        <li>
+            <a {if condition="in_array($Request.action, ['attr_index','attr_add','attr_edit'])"}class="active"{/if} href='{:url("Member/attr_index")}'>会员字段</a>
+        </li>
+        {/eq}
+
+        {eq name="'Member@users_config'|is_check_access" value="1"}
+        <li>
+            <a {if condition="in_array($Request.action, ['users_config'])"}class="active"{/if} href='{:url("Member/users_config")}'>功能配置</a>
+        </li>
+        {/eq}
+                
+        {if condition="$php_servicemeal > 1"}
+            {eq name="'UsersScore@conf'|is_check_access" value="1"}
+            <li>
+                <a {if condition="in_array($Think.const.CONTROLLER_NAME, ['UsersScore'])"}class="active"{/if} href='{:url("UsersScore/conf")}'>积分管理</a>
+            </li>
+            {/eq}
+        {/if}
+        {eq name="'Member@recharge_pack_list'|is_check_access" value="1"}
+        <li>
+            <a {if condition="preg_match('/^recharge_/i', $Request.action)"}class="active"{/if} href='{:url("Member/recharge_pack_list")}'>充值套餐</a>
+        </li>
+        {/eq}
+        {eq name="'Member@log_off_index'|is_check_access" value="1"}
+        <li>
+            <a {if condition="in_array($Request.action, ['log_off_index'])"}class="active"{/if} href='{:url("Member/log_off_index")}'>会员注销</a>
+        </li>
+        {/eq}
+    </ul>
+</div>

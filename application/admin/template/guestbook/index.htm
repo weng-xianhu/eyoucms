@@ -1,19 +1,28 @@
 {include file="public/layout" /}
 
-<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width: auto;">
+<body class="bodysy-w">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width: auto;box-shadow:none;">
+<div  id="page_div"  class="page" style="margin-top: 15px;min-width: auto;box-shadow:none;">
     <div class="flexigrid" {eq name='$Request.param.archives' value='1'}style="margin-top: 0px;"{/eq}>
         <div class="mDiv" {eq name='$Request.param.archives' value='1'}style="padding: 5px 0px;"{/eq}>
             <div class="ftitle">
-                {eq name="$Think.const.CONTROLLER_NAME.'@excel_export'|is_check_access" value="1"}
+                {eq name="'Guestbook@ajax_excel_export'|is_check_access" value="1"}
                 <div class="fbutton">
-                    <a href="javascript:void(0);" onclick="excel_export(this, 'ids');" data-url="{:url('Guestbook/excel_export')}">
-                        <div class="add" title="导出Excel">
+
+                    {if condition="$Request.param.typeid > 0"}
+                    <a href="javascript:void(0);" onclick="excel_export(this, 'ids');" data-url="{:url('Guestbook/ajax_excel_export')}">
+                        <div class="add">
                             <span><i class="fa fa-reply"></i>导出Excel</span>
                         </div>
                     </a>
+                    {else /}
+                    <a href="javascript:void(0);" onclick="showErrorMsg('请指定所属栏目！');">
+                        <div class="add">
+                            <span><i class="fa fa-reply"></i>导出Excel</span>
+                        </div>
+                    </a>
+                    {/if}
                 </div>
                 {/eq}
             </div>
@@ -31,9 +40,9 @@
                         <input type="hidden" name="typeid" id="typeid" value="{$Request.param.typeid|default=''}">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="模糊搜索...">
                         <input type="submit" class="btn" value="搜索">
-						<i class="fa fa-search"></i>
+                        <i class="iconfont e-sousuo"></i>
                     </div>
-                    
+
                 </div>
             </form>
         </div>
@@ -93,7 +102,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -155,7 +166,7 @@
                             </td>
                             <td class="operation">
                                 <div class="w120 tc">
-                                    <a class="btn blue" href="javascript:void(0);" data-href="{:url('Guestbook/details', ['aid'=>$vo['aid']])}" onclick="openFullframe(this, '查看ID={$vo.aid}的数据');$('#td_is_read_{$vo.aid}').html('已读');">查看</a>
+                                    <a class="btn blue" href="javascript:void(0);" data-href="{:url('Guestbook/details', ['aid'=>$vo['aid']])}" onclick="openFullframe(this, '留言详情', '800px', '80%');$('#td_is_read_{$vo.aid}').html('已读');">查看</a>
                                     {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
                                     <i></i>
                                     <a class="btn red" href="javascript:void(0);" data-url="{:url('Guestbook/del')}" data-id="{$vo.aid}" onClick="delfun(this);">删除</a>
@@ -170,6 +181,7 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        {notempty name="list"}
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
@@ -178,7 +190,7 @@
                 {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
                 <div class="fbutton">
                     <a onclick="batch_del(this, 'ids');" data-url="{:url('Guestbook/del')}">
-                        <div class="add" title="批量删除">
+                        <div class="add">
                             <span>批量删除</span>
                         </div>
                     </a>
@@ -188,6 +200,7 @@
             </div>
             <div style="clear:both"></div>
         </div>
+        {/notempty}
     </div>
 </div>
 <script type="text/javascript">
@@ -203,7 +216,7 @@
             $('input[type=checkbox]').prop('checked',this.checked);
         });
     });
-    
+
     layui.use('laydate', function(){
         var laydate = layui.laydate;
         //执行一个laydate实例
@@ -227,7 +240,7 @@
             location.href = location.href;
         });
     });
-    
+
     function excel_export(obj,name) {
         var url = $(obj).attr('data-url');
         var aid = [];

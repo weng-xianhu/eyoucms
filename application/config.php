@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -24,9 +24,44 @@ if (file_exists($constsant_path)) {
 $lang_switch_on = false;
 $langnum_file = DATA_PATH.'conf'.DS.'lang_enable_num.txt';
 if (file_exists($langnum_file)) {
-    $langnum = file_get_contents($langnum_file);
-    if (1 < $langnum) {
+    $langnum = @file_get_contents($langnum_file);
+    if (!empty($langnum) && 1 < $langnum) {
         $lang_switch_on = true;
+    }
+}
+
+// 不支持http请求的api，就通过文件改为https
+$service_ey = 'aHR0cDovL3NlcnZpY2UuZXlvdWNtcy5jb20=';
+$service_ey_token = '0763150235251e259b1a47f2838ecc26';
+$service_ey2 = 'aHR0cDovL3NlcnZpY2UuNWZhLmNu';
+if (file_exists("./data/conf/https_service.txt")) {
+    $service_ey = 'aHR0cHM6Ly9zZXJ2aWNlLmV5b3VjbXMuY29t';
+    $service_ey_token = '010fbcb69eb7f820b7297b4dc706e302';
+    $service_ey2 = 'aHR0cHM6Ly9zZXJ2aWNlLjVmYS5jbg==';
+}
+
+// 多城市开启\禁用
+$city_switch_on = false;
+$citysite_file = DATA_PATH.'conf'.DS.'citysite.txt';
+if (false === $lang_switch_on && file_exists($citysite_file)) {
+    $citysite_value = @file_get_contents($citysite_file);
+    if (!empty($citysite_value) && 0 < intval($citysite_value)) {
+        $city_switch_on = true;
+    }
+}
+
+// redis缓存
+$redis_enable = $cache_prefix = '';
+$redis_config_file = WEAPP_PATH.'Redis'.DS.'conf'.DS.'config.php';
+if (file_exists($redis_config_file)) {
+    require_once($redis_config_file);
+    if (defined('WEAPP_REDIS_OPEN') && WEAPP_REDIS_OPEN == 1) {
+        $redis_enable = 'redis';
+        if (defined('WEAPP_REDIS_CACHE_PREFIX')) {
+            $cache_prefix = WEAPP_REDIS_CACHE_PREFIX;
+        } else {
+            $cache_prefix = $serial_number.'_';
+        }
     }
 }
 
@@ -36,7 +71,7 @@ $session_conf = [
     // SESSION_ID的提交变量,解决flash上传跨域
     'var_session_id' => '',
     // SESSION 前缀
-    'prefix'         => 'think',
+    'prefix'         => !empty($redis_enable) ? $redis_enable : 'think',
     // 驱动方式 支持redis memcache memcached
     'type'           => '',
     // 是否自动开启 SESSION
@@ -54,7 +89,10 @@ if (file_exists($session_file)) {
     if (!empty($session_conf_tmp)) {
         $session_conf_tmp = json_decode($session_conf_tmp, true);
         if (!empty($session_conf_tmp) && is_array($session_conf_tmp)) {
+            isset($session_conf_tmp['expire']) && $session_conf_tmp['expire'] = intval($session_conf_tmp['expire']);
             $session_conf = array_merge($session_conf, $session_conf_tmp);
+        } else {
+            $session_conf = array_merge($session_conf, ['expire'=>7200]);
         }
     }
 }
@@ -104,6 +142,8 @@ return array(
     'controller_suffix'      => false,
     // 是否https链接
     'is_https'               => false,
+    // 是否开启多城市
+    'city_switch_on'         => $city_switch_on,
 
     // +----------------------------------------------------------------------
     // | 模块设置
@@ -235,7 +275,7 @@ return array(
         'apart_level' => ['error','sql','notice'],
         // 日志记录级别
         'level' => array('log','info','notice','error','sql'),
-        // 日志开关  1 开启 0 关闭
+        // 日志开关  1 开启 0 关闭，最好同时开启 app_debug
         'switch' => 0,
     ),
 
@@ -253,11 +293,11 @@ return array(
 
     'cache'                  => array(
         // 驱动方式
-        'type'   => 'File',
+        'type'   => !empty($redis_enable) ? $redis_enable : 'File',
         // 缓存保存目录
         'path'   => CACHE_PATH,
         // 缓存前缀
-        'prefix' => '',
+        'prefix' => $cache_prefix,
         // 缓存有效期 0表示永久缓存
         'expire' => 0,
     ),
@@ -308,8 +348,9 @@ return array(
     'AUTH_CODE' => "!*&^eyoucms<>|?", //安装完毕之后不要改变，否则所有密码都会出错
     
     // 核心字符串
-    'service_ey' => "aHR0cDovL3NlcnZpY2UuZXlvdWNtcy5jb20=",
-    'service_ey_token' => "0763150235251e259b1a47f2838ecc26",
+    'service_ey' => $service_ey,
+    'service_ey_token' => $service_ey_token,
+    'service_ey2' => $service_ey2,
     
     // +----------------------------------------------------------------------
     // | 验证码
@@ -394,38 +435,38 @@ return array(
         'home_Index_index'      => ['filename'=>'index', 'cache'=>7200],
         // [普通伪静态]文章
         'home_Article_index'    => ['filename'=>'channel', 'cache'=>7200],
-        'home_Article_lists'    => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
-        'home_Article_view'     => ['filename'=>'view', 'p'=>array('dirname','aid'), 'cache'=>7200],
+        'home_Article_lists'    => ['filename'=>'lists', 'p'=>array('page','tid'), 'cache'=>7200],
+        'home_Article_view'     => ['filename'=>'view', 'p'=>array('dirname','page','aid'), 'cache'=>7200],
         // [普通伪静态]产品
         'home_Product_index'    => ['filename'=>'channel', 'cache'=>7200],
-        'home_Product_lists'    => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
-        'home_Product_view'     => ['filename'=>'view', 'p'=>array('dirname','aid'), 'cache'=>7200],
+        'home_Product_lists'    => ['filename'=>'lists', 'p'=>array('page','tid'), 'cache'=>7200],
+        'home_Product_view'     => ['filename'=>'view', 'p'=>array('dirname','page','aid'), 'cache'=>7200],
         // [普通伪静态]图集
         'home_Images_index'     => ['filename'=>'channel', 'cache'=>7200],
-        'home_Images_lists'     => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
-        'home_Images_view'      => ['filename'=>'view', 'p'=>array('dirname','aid'), 'cache'=>7200],
+        'home_Images_lists'     => ['filename'=>'lists', 'p'=>array('page','tid'), 'cache'=>7200],
+        'home_Images_view'      => ['filename'=>'view', 'p'=>array('dirname','page','aid'), 'cache'=>7200],
         // [普通伪静态]下载
         'home_Download_index'   => ['filename'=>'channel', 'cache'=>7200],
-        'home_Download_lists'   => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
-        'home_Download_view'    => ['filename'=>'view', 'p'=>array('dirname','aid'), 'cache'=>7200],
+        'home_Download_lists'   => ['filename'=>'lists', 'p'=>array('page','tid'), 'cache'=>7200],
+        'home_Download_view'    => ['filename'=>'view', 'p'=>array('dirname','page','aid'), 'cache'=>7200],
         // [普通伪静态]视频
         'home_Media_index'    => ['filename'=>'channel', 'cache'=>7200],
-        'home_Media_lists'    => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
-        'home_Media_view'     => ['filename'=>'view', 'p'=>array('dirname','aid'), 'cache'=>7200],
+        'home_Media_lists'    => ['filename'=>'lists', 'p'=>array('page','tid'), 'cache'=>7200],
+        'home_Media_view'     => ['filename'=>'view', 'p'=>array('dirname','page','aid'), 'cache'=>7200],
         // [普通伪静态]专题
         'home_Special_index'     => ['filename'=>'channel', 'cache'=>7200],
-        'home_Special_lists'     => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
-        'home_Special_view'      => ['filename'=>'view', 'p'=>array('dirname','aid'), 'cache'=>7200],
+        'home_Special_lists'     => ['filename'=>'lists', 'p'=>array('page','tid'), 'cache'=>7200],
+        'home_Special_view'      => ['filename'=>'view', 'p'=>array('dirname','page','aid'), 'cache'=>7200],
         // [普通伪静态]单页
         'home_Single_index'     => ['filename'=>'channel', 'cache'=>7200],
-        'home_Single_lists'     => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
+        'home_Single_lists'     => ['filename'=>'lists', 'p'=>array('page','tid'), 'cache'=>7200],
         // [超短伪静态]列表页
-        'home_Lists_index'      => ['filename'=>'lists', 'p'=>array('tid','page'), 'cache'=>7200],
+        'home_Lists_index'      => ['filename'=>'lists', 'p'=>array('page','tid'), 'cache'=>7200],
         // [超短伪静态]内容页
-        'home_View_index'       => ['filename'=>'view', 'p'=>array('dirname','aid'), 'cache'=>7200],
+        'home_View_index'       => ['filename'=>'view', 'p'=>array('dirname','page','aid'), 'cache'=>7200],
         // [标签页伪静态]列表页
         'home_Tags_index'       => ['filename'=>'tags', 'cache'=>7200],
-        'home_Tags_lists'       => ['filename'=>'tags', 'p'=>array('tagid','page'), 'cache'=>7200],
+        'home_Tags_lists'       => ['filename'=>'tags', 'p'=>array('page', 'tagid'), 'cache'=>7200],
     ],
 
     // +----------------------------------------------------------------------
@@ -445,5 +486,6 @@ return array(
         4   => ['scene'=>4], // 找回密码
         5   => ['scene'=>5], // 订单付款
         6   => ['scene'=>6], // 订单发货
+        20  => ['scene'=>20], // 会员投稿提醒
     ],
 );

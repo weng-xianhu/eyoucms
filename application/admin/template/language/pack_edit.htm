@@ -1,17 +1,16 @@
 {include file="public/layout" /}
-<body class="bodystyle">
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width: auto;">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;min-width:auto;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width:auto;">
-    {include file="language/bar" /}
+<div class="page pb10" style="min-width: auto;box-shadow:none;">
     <form class="form-horizontal" id="post_form" action="{:url('Language/pack_edit')}" method="post">
-        <div class="ncap-form-default">
+        <div class="ncap-form-default pb10">
             <dl class="row">
                 <dt class="tit">
                     <label for="name"><em>*</em>变量名</label>
                 </dt>
-                <dd class="opt">
+                <dd class="opt" style="width: auto;">
                     {eq name='$row.is_syn' value='1'}
                     {$row.name}
                     <input type="hidden" name="name" value="{$row.name}" />
@@ -25,20 +24,20 @@
                     {/eq}
                 </dd>
             </dl>
-            <dl class="row"><dt class="tit"><label><b>语言名称</b></label></dt><dd class="opt"><label><b>变量值</b></label></dd></dl>
+            <dl class="row"><dt class="tit"><label><b>语言名称</b></label></dt><dd class="opt" style="width: auto;"><label><b>变量值</b></label></dd></dl>
             {volist name='$languageRow' id='vo'}
             <dl class="row">
                 <dt class="tit">
                     <label for="value">{$vo.title}</label>
                 </dt>
-                <dd class="opt">
+                <dd class="opt" style="width: auto;">
                     <input type="text" name="value[{$vo.mark}]" value="{$values[$vo['mark']]['value']}" class="input-txt">
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
             </dl>
             {/volist}
-            <div class="bot">
+            <div class="bot mt30">
                 <input type="hidden" id="old_name" value="{$row.name}">
                 <input type="hidden" name="id" value="{$row.id}">
                 <input type="hidden" name="official" value="{$official|default='0'}">
@@ -48,10 +47,32 @@
     </form>
 </div>
 <script type="text/javascript">
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     // 判断输入框是否为空
     function checkForm(){
         layer_loading('正在处理');
-        $('#post_form').submit();
+        $.ajax({
+            type : 'post',
+            url : "{:url('Language/pack_edit', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
     }
 </script>
 {include file="public/footer" /}

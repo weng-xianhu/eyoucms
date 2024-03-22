@@ -10,8 +10,6 @@
     {eyou:static file="users/skin/css/bootstrap.min.css"/}
     {eyou:static file="users/skin/css/basic.css"/}
     {eyou:static file="users/skin/css/eyoucms.css"/}
-    {eyou:static file="users/skin/css/shop.css"/}
-    {eyou:static  file="users/skin/css/tb_style.css"/}
     <!-- 新样式 2020-11-25 -->
     {eyou:static file="users/skin/css/element/index.css" /}
     {eyou:static file="users/skin/css/e-user.css" /}
@@ -28,7 +26,7 @@
 <!-- END -->
 <div class="ey-body-bg">
     <div class="ey-body">
-        <div class="ey-container w1200">
+        <div class="ey-container w1226">
             <!-- 侧边 -->
             {eyou:include file="users/users_left.htm" /}
             <!-- END -->
@@ -66,8 +64,8 @@
                             {empty name="$list"}
                             <tr>
                                 <td  align="center" axis="col0" colspan="50">
-                                    <div class="cell pt50 pb50 tc">
-                                        <span class="mb10"><img id='litpic_img'  src="__PUBLIC__/static/common/images/null-data.png"/></span>
+                                    <div class="cell pt100 tc">
+                                        <span class="mb10"><img id='litpic_img'  src="{eyou:static file='users/skin/images/null-data.png' /}"/></span>
                                     </div>
                                 </td>
                             </tr>

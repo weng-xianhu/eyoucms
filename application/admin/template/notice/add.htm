@@ -1,0 +1,134 @@
+{include file="public/layout" /}
+<style>
+    .ncap-form-default dl.row {position: unset;}
+    .comboTreeDropDownContainer {width: 388px !important;}
+    .multiplesFilter {border: 0 !important;border-bottom: solid 1px #eee !important;outline: none !important; }
+    .comboTreeDropDownContainer {box-shadow: 0 0 8px rgba(0,0,0,0.2);border-radius: 4px!important;background-color: #FFF !important;border: solid 1px #eee !important;}
+    .multiplesFilter{height: 30px !important;}
+</style>
+{eq name="$editor.editor_select" value="1"}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
+    {load href="__PUBLIC__/plugins/Ueditor/lang/zh-cn/zh-cn.js" /}
+{else/}
+    {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
+{/eq}
+<link href="__SKIN__/css/notice.css?v={$version}" rel="stylesheet" type="text/css">
+
+<script type="text/javascript" src="__SKIN__/js/icontains.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/comboTreePlugin.js?v={$version}"></script>
+<body class="bodystyle" style="overflow-y: scroll;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    
+    <form class="form-horizontal" id="post_form" action="{:url('Encodes/users_notice_add')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="usernames">通知对象</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="users_id" placeholder="请输入会员ID或添加会员，可以多选，全站通知不选" id="users_id" class="input-txt" autocomplete="off" onkeyup="this.value=this.value.replace(/，/ig,',');" onpaste="this.value=this.value.replace(/，/ig,',');">
+                    &nbsp;
+                    <a href="javascript:void(0);" onclick="openFullframe(this, '用户选择', '90%', '90%');" data-href="{:url('UsersNotice/select_users')}" class="ncap-btn ncap-btn-green">添加会员</a>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                    <p class="notic2"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="title"><em>*</em>通知标题</label>
+                </dt>
+                <dd class="opt">
+                    <input type="text" name="title" value="" id="title" class="input-txt">
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="remark"><em>*</em>通知内容</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="60" id="remark" name="remark" style="height:150px;"></textarea>
+                    <!-- <textarea class="span12 ckeditor" id="remark" placeholder="通知内容" name="remark" ></textarea>
+                    <div class="opt-moreOper">
+                        <p>
+                            <a href="javascript:void(0);" onclick="remote_to_local_remark();" class="ncap-btn2">远程图片本地化</a>&nbsp;
+                            <a href="javascript:void(0);" onclick="replace_links_remark();" class="ncap-btn2">清除非本站链接</a>&nbsp;
+                        </p>
+                    </div> -->
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <div class="bot">
+                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function select_users() {
+
+    }
+    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+    // 判断输入框是否为空
+    function checkForm(){
+        if($('input[name=title]').val() == ''){
+            showErrorMsg('通知标题不能为空！');
+            $('input[name=title]').focus();
+            return false;
+        }
+		if($('textarea[name=remark]').val() == ''){
+            showErrorMsg('通知内容不能为空！');
+            $('textarea[name=remark]').focus();
+            return false;
+        }
+
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Encodes/users_notice_add', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {shade: 0.1, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
+    }
+
+    function choose(uid) {
+        var ids = $('#users_id').val();
+        if ('' == ids){
+            $('#users_id').val(uid);
+        } else{
+            ids = ids.split(',');
+            var index = $.inArray(uid,ids);
+            if (index > -1) {
+                ids.splice(index,1)
+            }else {
+                ids.push(uid);
+            }
+            ids.join(',');
+            $('#users_id').val(ids);
+        }
+    }
+</script>
+{include file="public/footer" /}

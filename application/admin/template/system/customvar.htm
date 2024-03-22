@@ -1,0 +1,119 @@
+{include file="public/layout" /}
+<script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
+<body class="system-web" style="overflow-y: scroll;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page">
+    {include file="system/bar" /}
+    <form method="post" id="handlepost" action="{:url('System/customvar')}" enctype="multipart/form-data" name="form1">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit" style="width: auto">
+                    <label><b>自定义变量</b></label>
+                    &nbsp;&nbsp;<a href="javascript:void(0);" onclick="customvar_index(this);">[管理]</a>
+                </dt>
+            </dl>
+            {volist name="eyou_row" id="vo"}
+            <dl class="row" id="dl_{$vo['attr_var_name']}">
+                <dt class="tit">
+                    <label for="{$vo['attr_var_name']}">{$vo['attr_name']}</label>
+                </dt>
+                <dd class="opt">
+                    {switch name="$vo['attr_input_type']" }
+                        {case value="1"}
+
+                        {/case}
+                        {case value="2"}
+                        <textarea rows="5" cols="60" id="{$vo['attr_var_name']}" name="{$vo['attr_var_name']}" style="height:36px;">{$vo.value|default=''}</textarea>
+                        {/case}
+                        {case value="3"}
+                        <div class="input-file-show">
+                            <span class="show">
+                                <a id="img_a_{$vo['attr_var_name']}" class="nyroModal" rel="gal" href="{$vo.value|default='javascript:void(0);'}" target="_blank">
+                                    <i id="img_i_{$vo['attr_var_name']}" class="fa fa-picture-o" {notempty name="$vo.value"}onmouseover="layer_tips=layer.tips('<img src={$vo.value|default=''} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                                </a>
+                            </span>
+                            <span class="type-file-box">
+                                <input type="text" id="{$vo['attr_var_name']}" name="{$vo['attr_var_name']}" value="{$vo.value|default=''}" class="type-file-text" autocomplete="off">
+                                <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                                <input class="type-file-file" onClick="GetUploadify(1,'','allimg','{$vo['attr_var_name']}_img_call_back')" size="30" hidefocus="true" nc_type="change_site_logo" title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
+                            </span>
+                        </div>
+                        <script type="text/javascript">
+                            function {$vo['attr_var_name']}_img_call_back(fileurl_tmp)
+                            {
+                                $("#{$vo['attr_var_name']}").val(fileurl_tmp);
+                                $("#img_a_{$vo['attr_var_name']}").attr('href', fileurl_tmp);
+                                $("#img_i_{$vo['attr_var_name']}").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
+                            }
+                        </script>
+                        {/case}
+                        {case value="4"}
+                            <div class="onoff">
+                                <label for="{$vo['attr_var_name']}1" class="cb-enable {if condition='isset($vo.value) AND $vo.value eq 1'}selected{/if}">开启</label>
+                                <label for="{$vo['attr_var_name']}0" class="cb-disable {if condition='!isset($vo.value) OR empty($vo.value)'}selected{/if}">关闭</label>
+                                <input id="{$vo['attr_var_name']}1" name="{$vo['attr_var_name']}" value="1" type="radio" {if condition="isset($vo.value) AND $vo.value eq 1"} checked="checked"{/if}>
+                                <input id="{$vo['attr_var_name']}0" name="{$vo['attr_var_name']}" value="0" type="radio" {if condition="!isset($vo.value) OR empty($vo.value)"} checked="checked"{/if}>
+                            </div>
+                        {/case}
+                        {default /}
+                        <input id="{$vo['attr_var_name']}" name="{$vo['attr_var_name']}" value="{$vo.value|default=''}" class="input-txt" type="text" />
+                    {/switch}
+                </dd>
+                {eq name="$web_cmsmode" value="2"}
+                <dd class="variable">
+                    <div><p>{$vo['attr_var_name']}</p></div>
+                    <div class="r">
+                        {eq name="$vo['attr_input_type']" value="4"}
+                        <a href="javascript:void(0);" onclick="showtext('{$vo['attr_var_name']}');" class="ui-btn3 blue {$vo['attr_var_name']}" data-clipboard-text="{{php} echo 'eyou:empty name=\'$eyou.global.';{/php}{$vo['attr_var_name']}'} 关闭 {{php} echo 'eyou:else /} 开启 {/eyou:empty';{/php}}">复制标签</a>
+                        {else /}
+                        <a href="javascript:void(0);" onclick="showtext('{$vo['attr_var_name']}');" class="ui-btn3 blue {$vo['attr_var_name']}" data-clipboard-text="{{php} echo 'eyou:global name=\'';{/php}{$vo['attr_var_name']}{php} echo '\' /';{/php}}">复制标签</a>
+                        {/eq}
+                    </div>
+                </dd>
+                {/eq}
+            </dl>
+            {/volist}
+            <div class="bot">
+                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+
+    $(function(){
+        // tipsText();
+    });
+
+    function adsubmit(){
+        layer_loading("正在处理");
+        $('#handlepost').submit();
+    }
+
+    function customvar_index(obj)
+    {
+        //iframe窗
+        var iframes = layer.open({
+            type: 2,
+            title: '自定义变量列表',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            area: ['100%', '100%'],
+            content: "{:url('System/customvar_index')}",
+            /*end: function(){
+                layer.load();
+                window.location.reload();
+            }*/
+        });
+        layer.full(iframes);
+    }
+
+    function showtext(classname){
+        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:5});}); 
+    }
+
+</script>
+
+{include file="public/footer" /}

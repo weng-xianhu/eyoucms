@@ -4,9 +4,9 @@
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page ksedit" style="min-width: auto;">
+<div id="page_div" class="page ksedit min-hg-c mb-20" style="min-width:auto;box-shadow:none;">
     <form class="form-horizontal" id="post_form" action="{:url('shopProduct/release')}" method="post">
-        <div class="ncap-form-default">
+        <div class="ncap-form-default" style="padding: 0;">
             <dl class="row">
                 <dt class="tit">
                     <label for="title"><em>*</em>发布至</label>
@@ -46,7 +46,7 @@
             var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
             parent.layer.close(parentObj);
 
-            var url = "//{$Request.host}{$Request.baseFile}?m=admin&c=shopProduct&a=release&lang={$Request.param.lang}";
+            var url = "//{$website_host}{$Request.baseFile}?m=admin&c=shopProduct&a=release&lang={$Request.param.lang}";
             if (url.indexOf('?') > -1) {
                 url += '&';
             } else {
@@ -60,3 +60,13 @@
 </script>
 
 {include file="public/footer" /}
+<script>
+    try{
+        var mt20_1649209614 = sessionStorage.getItem("mt20_1649209614");
+        if (mt20_1649209614 == 1){
+            $("#geduan_div").removeClass("h10");
+        }else{
+            $("#geduan_div").addClass("h10");
+        }
+    }catch(e){}
+</script>

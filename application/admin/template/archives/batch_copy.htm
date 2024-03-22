@@ -7,6 +7,14 @@
     <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/bootstrap/css/bootstrap.min.css">
     {load href="__STATIC__/common/js/jquery.min.js" /}
     {load href="__PUBLIC__/plugins/layer-v3.1.0/layer.js" /}
+    <script type="text/javascript">
+        var eyou_basefile = "{$Request.baseFile}";
+        var module_name = "{$Think.const.MODULE_NAME}";
+        var __root_dir__ = "__ROOT_DIR__";
+        var __lang__ = "{$admin_lang}";
+        var __main_lang__ = "{$main_lang}";
+    </script>
+    <script src="__SKIN__/js/global.js?v={$version}"></script>
     <style type="text/css">
         .container-fluid {
             padding: 10px 10px;
@@ -25,26 +33,25 @@
 			padding: 4px 0;
         }
         .btn{
-            background-color: #4fc0e8;
+            background-color: #3398cc;
             color: #FFF;
             border-radius: 4px;
             padding: 6px 20px;
         }
         .btn:hover {
             color: #FFF;
-            background-color: #3aa8cf;
+            background-color: #2189be;
 
         }
         .controls{
             margin: 0 auto;
         }
         .notic{
-            border:1px dashed #cae9f5;
             border-radius:6px;
             padding: 10px 16px;
-            margin-top: 10px;
-            background-color:#e7f6fc;
-            color: #0d7fca;
+            margin: 0;
+            color: #0ba4da !important;
+            background-color: rgba(79, 192, 232, 0.11) !important;
         }
         em{
             color: red;
@@ -71,6 +78,11 @@
                 <form class="form-horizontal" id="post_form" method="POST" action="{$form_action|default=''}" onsubmit="check_submit();">
                     <div class="control-group">
                         <div class="controls">
+                            <p class="notic">只支持复制到相同模型栏目</p>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls">
                             <label class="control-label" for="inputEmail"><em>*</em> 复制到栏目：</label>
                             <select id="typeid" name="typeid" class="select">
                                 {$arctype_html}
@@ -80,16 +92,11 @@
                     </div>
                     <div class="control-group">
                         <div class="controls">
-                            <label class="control-label" for="inputEmail"><em>*</em> 每篇复制数量：</label>
-                            <input type="text" name="num" value="5" class="input" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'');">
+                            <label class="control-label" for="inputEmail"><em>*</em> 每篇复制数：</label>
+                            <input type="text" name="num" value="5" class="input" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'');" autocomplete="off">
                         </div>
                     </div>
-                    <div class="control-group">
-                        <div class="controls">
-                            <p class="notic">复制到的目标栏目必须和当前模型类型一致，否则程序会自动忽略不符合的文档。</p>
-                        </div>
-                    </div>
-                    <div class="control-group">
+                    <div class="control-group" style="margin-top: 30px;">
                         <div class="controls" style="text-align: center;">
 							<input type="hidden" name="_ajax" value="1">
 							<input type="button" class="btn" value="确认提交" onclick="check_submit();" />
@@ -115,7 +122,7 @@
                 success: function(res){
                     layer.closeAll();
                     if (res.code == 1) {
-                        parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                             parent.window.location.reload();
                             parent.layer.close(parentObj);
                         });

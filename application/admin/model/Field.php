@@ -33,7 +33,7 @@ class Field extends Model
      */
     public function getFieldTypeAll($field = '*', $index_key = '')
     {
-        $cacheKey = "admin-Field-getFieldTypeAll-{$field}-{$index_key}";
+        $cacheKey = md5("admin-Field-getFieldTypeAll-{$field}-{$index_key}");
         $result = cache($cacheKey);
         if (!empty($result)) {
             return $result;
@@ -76,10 +76,24 @@ class Field extends Model
         /*编辑时显示的数据*/
         $addonRow = array();
         if (0 < intval($aid)) {
-            if (6 == $channel_id) {
+            if (1 == $channel_id) {
+                $tableExt = 'article';
+            } else if (2 == $channel_id) {
+                $tableExt = 'product';
+            } else if (3 == $channel_id) {
+                $tableExt = 'images';
+            } else if (4 == $channel_id) {
+                $tableExt = 'download';
+            } else if (5 == $channel_id) {
+                $tableExt = 'media';
+            } else if (6 == $channel_id) {
+                $tableExt = 'single';
                 $aid = Db::name('archives')->where(array('typeid'=>$aid, 'channel'=>$channel_id))->getField('aid');
+            } else if (7 == $channel_id) {
+                $tableExt = 'special';
+            } else {
+                $tableExt = Db::name('channeltype')->where('id', $channel_id)->getField('table');
             }
-            $tableExt = Db::name('channeltype')->where('id', $channel_id)->getField('table');
             $tableExt .= '_content';
             $addonRow = Db::name($tableExt)->field('*')->where('aid', $aid)->find();
         }
@@ -192,9 +206,50 @@ class Field extends Model
                         if (array_key_exists($val['name'], $addonRow)) {
                             $val['trueValue'] = explode(',', $addonRow[$val['name']]);
                         } else {
-                            $dfTrueValue = !empty($RegionData[0]) ? $RegionData[0]['id'] : '';
-                            $val['trueValue'] = array($dfTrueValue);
+                            if ( !empty($val['set_type']) && 1 == $val['set_type']){
+                                $val['trueValue'] = [];
+                            }else{
+                                $dfTrueValue = !empty($RegionData[0]) ? $RegionData[0]['id'] : '';
+                                $val['trueValue'] = array($dfTrueValue);
+                            }
                         }
+                        if ( !empty($val['set_type']) && 1 == $val['set_type']){
+                            //三级联动的需要处理
+                            $rid = $val['dfvalue'][0]['id'];
+                            $region_data = Db::name('region')->where('id',$rid)->find();//这里查出来可能是省级1或者市级2,区域3
+                            $val['region_level'] = $region_data['level'];
+                            $region_arr = [['id'=>-1,'name'=>'请选择']];
+                            if (2 == $region_data['level']){
+                                $province_list = get_province_list();
+                                $val['city_list'] = array_merge($region_arr,$val['dfvalue']);
+                                $val['trueValue'][0] = $region_data['parent_id'];
+                                $val['dfvalue'] = $province_list;
+                            }elseif (3 == $region_data['level']){
+                                $province_list = get_province_list();
+                                $province_id = Db::name('region')->where('id',$region_data['parent_id'])->value('parent_id');
+                                $val['area_list'] = array_merge($region_arr,$val['dfvalue']);
+                                $val['dfvalue'] = $province_list;
+                                $val['trueValue'][0] = $province_id;
+                                $val['trueValue'][1] = $region_data['parent_id'];
+                                if (empty($val['trueValue'][2])) $val['trueValue'][2] = -1;
+                            }
+                            if (!empty($val['trueValue'][1])){
+                                $field_region_type = config('global.field_region_type');
+                                //如果是4个特殊的直辖市,市的数据直接显示到区
+                                if (in_array($val['trueValue'][0],$field_region_type)){
+                                    $city_ids = Db::name('region')->where(['level'=>2,'parent_id'=>$val['trueValue'][0]])->column('id');
+                                    $city_list = Db::name('region')->where(['level'=>3])->where('parent_id','in',$city_ids)->select();
+                                }else{
+                                    $city_list = Db::name('region')->where(['level'=>2,'parent_id'=>$val['trueValue'][0]])->select();
+                                }
+                                $val['city_list'] = array_merge($region_arr,$city_list);
+                            }
+                            if (!empty($val['trueValue'][2]) && $val['trueValue'][2] > 0){
+                                $area_list = Db::name('region')->where(['level'=>3,'parent_id'=>$val['trueValue'][1]])->select();
+                                $val['area_list'] = array_merge($region_arr,$area_list);
+                            }
+                        }
+
                         break;
                     }
 
@@ -398,6 +453,44 @@ class Field extends Model
                         $val = implode(',', $val);
                         break;
                     }
+                    case 'region':
+                    {
+                        if (!is_numeric($val)) { // 三级联动
+                            //选择全国的时候干掉城市区域的值
+                            if ($val[0] == 0){
+                                if (isset($val[1])) unset($val[1]);
+                                if (isset($val[2])) unset($val[2]);
+                            }else{
+                                $parent_data = Db::name('region')->where('id',$val[0])->find();
+                                if (!empty($parent_data) && !empty($parent_data['parent_id'])){
+                                    //只有市级和区域能选择
+                                    array_unshift($val,$parent_data['parent_id']);
+                                    //只有区域能选择
+                                    if (3 == $parent_data['level']){
+                                        $parent_id = Db::name('region')->where('id',$val[0])->value('parent_id');
+                                        array_unshift($val,$parent_id);
+                                    }
+
+                                }
+                            }
+                            //三级联动的需要选择
+                            $val = implode(',', $val);
+                        } else {
+                            if (is_array($val)) {
+                                $new_val = [];
+                                foreach ($val as $_k => $_v) {
+                                    $_v = trim($_v);
+                                    if (!empty($_v)) {
+                                        $new_val[] = $_v;
+                                    }
+                                }
+                                $val = $new_val;
+                            } else {
+                                $val = trim($val);
+                            }
+                        }
+                        break;
+                    }
 
                     case 'switch':
                     case 'int':
@@ -424,13 +517,14 @@ class Field extends Model
                         foreach ($val as $k2 => $v2) {
                             $v2 = trim($v2);
                             if (!empty($v2)) {
+                                $intro = !empty($imgsIntroArr[$k2]) ? $imgsIntroArr[$k2] : '';
                                 $imgData[] = [
                                     'image_url' => $v2,
-                                    'intro'     => !empty($imgsIntroArr[$k2]) ? $imgsIntroArr[$k2] : '',
+                                    'intro'     => $intro,
                                 ];
                             }
                         }
-                        $val = serialize($imgData);
+                        $val = !empty($imgData) ? serialize($imgData) : '';
                         break;
                     }
 
@@ -496,7 +590,18 @@ class Field extends Model
                     
                     default:
                     {
-                        $val = trim($val);
+                        if (is_array($val)) {
+                            $new_val = [];
+                            foreach ($val as $_k => $_v) {
+                                $_v = trim($_v);
+                                if (!empty($_v)) {
+                                    $new_val[] = $_v;
+                                }
+                            }
+                            $val = $new_val;
+                        } else {
+                            $val = trim($val);
+                        }
                         break;
                     }
                 }

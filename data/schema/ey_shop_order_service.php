@@ -27,6 +27,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'merchant_id' => 
+  array (
+    'name' => 'merchant_id',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'order_id' => 
   array (
     'name' => 'order_id',
@@ -39,7 +48,7 @@ return array (
   'order_code' => 
   array (
     'name' => 'order_code',
-    'type' => 'varchar(20)',
+    'type' => 'varchar(50)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -144,6 +153,33 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'manual_refund' => 
+  array (
+    'name' => 'manual_refund',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'manual_time' => 
+  array (
+    'name' => 'manual_time',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'refund_note' => 
+  array (
+    'name' => 'refund_note',
+    'type' => 'varchar(500)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'refund_price' => 
   array (
     'name' => 'refund_price',
@@ -177,6 +213,24 @@ return array (
     'type' => 'tinyint(1) unsigned',
     'notnull' => false,
     'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'audit_time' => 
+  array (
+    'name' => 'audit_time',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'refund_remark' => 
+  array (
+    'name' => 'refund_remark',
+    'type' => 'varchar(500)',
+    'notnull' => false,
+    'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),

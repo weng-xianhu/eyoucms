@@ -1,70 +1,60 @@
-<div class="item-from-row" id="xiazai">
-    <div class="ey-con ey-row mt10">
-        <div class="item-from-flex">
-            <div class="item-flex wb25">
-                <div class="item-tit">
-                    下载限制：
-                </div>
-            </div>
-            <div class="item-flex-r wb75">
-                <div class="select">
-                    <select name="arc_level_id" id="arc_level_id">
-
-                    </select>
-                </div>
-                <span class="err"></span>
-                <p class="notic"></p>
+<div class="item-from-flex">
+    <div class="item-flex-l">
+        <div class="item-tit">下载限制：</div>
+        <div class="item-con">
+            <div class="select">
+                <select name="arc_level_id" id="arc_level_id">
+                    
+                </select>
             </div>
         </div>
     </div>
+    <div class="item-flex-r"> <i class="el-icon-arrow-right"></i> </div>
+</div>
 
-    <div class="ey-con ey-row mt10">
-        <div class="item-from-flex">
-            <div class="item-flex wb25">
-                <div class="item-tit">
-                    上传文件：
-                </div>
-            </div>
-            <div class="item-flex-r wb75">
-                <div class="layui-upload" id="download-layui-upload">
-                    <button type="button" class="layui-btn layui-btn-normal none" id="buttonList" >选择多文件</button>
-                    <label><input type="checkbox" value="1"  id="remote-file-checkbox" onclick="ClickRemoteFile(this);">远程地址</label>
-                    <div class="layui-upload-list">
-                        <table class="layui-table">
-                            <thead>
-                            <tr>
-                                <th>文件名</th>
-                                <th class="th_server_name" style="display: none;">服务器名称</th>
-                                <th>大小</th>
-                                <th>状态</th>
-                                <th>操作</th>
-                            </tr>
-                            </thead>
-                            <tbody id="demoList"></tbody>
-                        </table>
-                    </div>
-                    <div style="display: none;" id='ClickRemoteFile'>
-                        <div id='Template20210507'>
-
-                        </div>
-                        <a onclick="GetTemplateAddr(2);" style="cursor: pointer;">
-                            更多远程地址
-                        </a>
-                    </div>
-                    <button style="display:none;" type="button" class="layui-btn" id="buttonListAction">批量重传</button>
-                </div>
-                <span class="err"></span>
-                <p class="notic"></p>
+<div class="item-from-flex">
+    <div class="item-flex-l">
+        <div class="item-tit">上传文件：</div>
+        <div class="item-con">
+            <div class="layui-upload" id="download-layui-upload">
+                <button type="button" class="addr_y none" id="buttonList">选择多文件</button>
+                <label><input type="checkbox" value="1" onclick="ClickRemoteFile(this);">远程地址</label>
             </div>
         </div>
     </div>
 </div>
+
+<div class="item-from-flex pt0">
+    <div class="layui-upload-list mt0" style="overflow: auto;">
+        <div class="layui-upload-list mt0">
+            <table class="layui-table article-download-table mt0">
+                <thead>
+                    <tr>
+                        <th>文件名</th>
+                        <th class="th_server_name" style="display: none;">服务器名称</th>
+                        <th class="th_server_size">大小</th>
+                        <th class="th_server_state">状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="demoList">
+                    
+                </tbody>
+            </table>
+        </div>
+        <div style="display: none;" id='ClickRemoteFile'>
+            <div id='Template20210507'></div>
+            <a class="add_download" onclick="GetTemplateAddr(2);">+添加远程地址</a>
+        </div>
+        <button style="display:none;" type="button" class="layui-btn" id="buttonListAction">批量重传</button>
+    </div>
+</div>
+
 <script type="text/javascript">
     var admin_id = "{$Think.session.users_id|default='1'}";
     var t2_1598602098 = '';
 
-    function search_mouseover(th)
-    {
+    function search_mouseover(th) {
         var sinput_id = $(th).attr('data-sinput_id');
         $('#search_keywords_list_'+sinput_id).show();
         try{
@@ -72,17 +62,18 @@
         }catch(e){}
     }
 
-    function search_mouseout(th)
-    {
+    function search_mouseout(th) {
         var sinput_id = $(th).attr('data-sinput_id');
         var setFunc = $("#search_keywords_list_"+sinput_id).hide();
-        t2_1598602098 = setTimeout('"'+setFunc+'"',1000);
+        t2_1598602098 = setTimeout('"'+setFunc+'"', 1000);
     }
+
     function select_sname(th) {
         var sinput_id = $(th).attr('data-sinput_id');
         var sname = $(th).attr('data-sname');
         $("#"+sinput_id).val(sname);
     }
+
     function searchServername(th) {
         var sinput_id = $(th).attr('id');
         $.ajax({
@@ -102,8 +93,6 @@
                             html += '<div class="hottxt">'+i+'</div>';
                             html += '</a>';
                         });
-                        // return false;
-
                         $('#search_keywords_list_'+sinput_id).html(html).show();
                     } else {
                         $('#search_keywords_list_'+sinput_id).hide();
@@ -114,6 +103,7 @@
             }
         });
     }
+
     function round_num() {
         var num = '';
         for(var i=0;i<3;i++)
@@ -152,8 +142,8 @@
                 append_html += '<input type="text" name="fileupload[server_name][]" value="腾讯云服务器" id="severname_qiniuyun_'+i+'" onclick="searchServername(this);" autocomplete="off">';
                 append_html += '<div class="help-hot-list" style="display: none;" id="search_keywords_list_severname_qiniuyun_'+i+'"></div>';
                 append_html += '</td>';
-                append_html += '<td>'+ (file.size/1014).toFixed(1) +' KB</td>';
-                append_html += '<td id="upload-'+ timestamp +'">上传腾讯云…请稍等</td>';
+                append_html += '<td class="th_server_size">'+ (file.size/1014).toFixed(1) +' KB</td>';
+                append_html += '<td class="th_server_state" id="upload-'+ timestamp +'">上传腾讯云…请稍等</td>';
                 append_html += '<td><button class="layui-btn layui-btn-xs layui-btn-danger demo-delete" style="line-height:unset;height: unset;" onclick="DeleteFile(this);">移除</button>';
                 append_html += '</td>';
                 append_html += '</tr>';
@@ -240,8 +230,8 @@
                 append_html += '<input type="text" name="fileupload[server_name][]" value="七牛云服务器" id="severname_qiniuyun_'+i+'" onclick="searchServername(this);" autocomplete="off">';
                 append_html += '<div class="help-hot-list" style="display: none;" id="search_keywords_list_severname_qiniuyun_'+i+'"></div>';
                 append_html += '</td>';
-                append_html += '<td>'+ (file.size/1014).toFixed(1) +' KB</td>';
-                append_html += '<td>等待上传</td>';
+                append_html += '<td class="th_server_size">'+ (file.size/1014).toFixed(1) +' KB</td>';
+                append_html += '<td class="th_server_state">等待上传</td>';
                 append_html += '<td><button class="layui-btn layui-btn-xs layui-btn-danger demo-delete" style="line-height:unset;height: unset;" onclick="DeleteFile(this);">移除</button>';
                 append_html += '</td>';
                 append_html += '</tr>';
@@ -362,8 +352,8 @@
                 append_html += '<input type="text" name="fileupload[server_name][]" value="阿里云服务器" id="severname_qiniuyun_'+i+'" onclick="searchServername(this);" autocomplete="off">';
                 append_html += '<div class="help-hot-list" style="display: none;" id="search_keywords_list_severname_qiniuyun_'+i+'"></div>';
                 append_html += '</td>';
-                append_html += '<td>'+ (file.size/1014).toFixed(1) +' KB</td>';
-                append_html += '<td>等待上传</td>';
+                append_html += '<td class="th_server_size">'+ (file.size/1014).toFixed(1) +' KB</td>';
+                append_html += '<td class="th_server_state">等待上传</td>';
                 append_html += '<td><button class="layui-btn layui-btn-xs layui-btn-danger demo-delete" style="line-height:unset;height: unset;" onclick="DeleteFile(this);">移除</button>';
                 append_html += '</td>';
                 append_html += '</tr>';
@@ -480,7 +470,7 @@
             if (0 == length){
                 var template_div20210507_html = '';
                 for (var i=1;i<4;i++) {
-                    template_div20210507_html += '<div class="template_div20210507">远程地址'+i+'：<input type="text" name="remote_file[]" value="" placeholder="http://" style="width: 50%;">\n' ;
+                    template_div20210507_html += '<div class="template_div20210507"><div style=" display: block; margin-bottom: 5px; ">远程地址'+i+'：<input type="text" name="remote_file[]" value="" placeholder="http://" style="width: 250px;"></div>\n' ;
                     $.each(attr_field20210507, function (index, value) {
                         var field_use_style = '';
                         if(1 != value.field_use){
@@ -489,13 +479,13 @@
                         if('server_name' == value.field_name){
                             template_div20210507_html += '<span class="ey_'+value.field_name+'" '+field_use_style+'>\n' +
                                 '<span class="title_'+value.field_name+'">'+value.field_title+'</span>：' +
-                                '<input type="text" name="'+value.field_name+'[]" id="'+value.field_name+'_remote_'+i+'" style="width: 7%;" onclick="searchServername(this);" autocomplete="off" value="'+default_servername20210507+'" >\n' +
+                                '<input type="text" name="'+value.field_name+'[]" id="'+value.field_name+'_remote_'+i+'" style="width: 80px;" onclick="searchServername(this);" autocomplete="off" value="'+default_servername20210507+'" >\n' +
                                 '<div class="help-hot-list remote-hot-list" style="display: none;" data-test_val="5434" id="search_keywords_list_'+value.field_name+'_remote_'+i+'"></div>\n' +
                                 '</span>\n' ;
                         }else{
                             template_div20210507_html += '<span class="ey_'+value.field_name+'" '+field_use_style+'>\n' +
                                 '<span class="title_'+value.field_name+'">'+value.field_title+'</span>：' +
-                                '<input type="text" name="'+value.field_name+'[]" id="'+value.field_name+'_remote_'+i+'" style="width: 7%;"></span>\n' ;
+                                '<input type="text" name="'+value.field_name+'[]" id="'+value.field_name+'_remote_'+i+'" style="width: 80px;"></span>\n' ;
                         }
                     });
 
@@ -563,7 +553,7 @@
         if (num > 1) {
             for (var i = 0; i < num; i++) {
                 SerialNum++;
-                html_div +=['<div class="template_div20210507">远程地址'+SerialNum+'：<input type="text" name="remote_file[]" value="" placeholder="http://" style="width: 50%;"> '];
+                html_div +=['<div class="template_div20210507"><div style=" display: block; margin-bottom: 5px; ">远程地址'+SerialNum+'：<input type="text" name="remote_file[]" value="" placeholder="http://" style="width: 250px;"></div> '];
 
                 if (data) {
                     for (var j = 0; j < data.length; j++) {
@@ -573,7 +563,7 @@
                             }else {
                                 html_div += ['<span  style="display:none;" class="ey_' + data[j]['field_name'] + '"> '];
                             }
-                            html_div +=['<span class="title_'+data[j]['field_name']+'"> '+data[j]['field_title']+'</span>：<input type="text" name="'+data[j]['field_name']+'[]" id="'+data[j]['field_name']+'_remote_'+SerialNum+'" style="width: 7%;" onclick="searchServername(this);" autocomplete="off" value="'+default_servername+'">'+
+                            html_div +=['<span class="title_'+data[j]['field_name']+'"> '+data[j]['field_title']+'</span>：<input type="text" name="'+data[j]['field_name']+'[]" id="'+data[j]['field_name']+'_remote_'+SerialNum+'" style="width: 80px;" onclick="searchServername(this);" autocomplete="off" value="'+default_servername+'">'+
                             '<div class="help-hot-list" style="display: none;" id="search_keywords_list_'+data[j]['field_name']+'_remote_'+SerialNum+'"></div>'+
                             '</span>'];
                         }else{
@@ -582,7 +572,7 @@
                             }else {
                                 html_div += ['<span  style="display:none;" class="ey_' + data[j]['field_name'] + '"> '];
                             }
-                            html_div +=['<span class="title_'+data[j]['field_name']+'"> '+data[j]['field_title']+'</span>：<input type="text" name="'+data[j]['field_name']+'[]" id="'+data[j]['field_name']+'_'+SerialNum+'" style="width: 7%;"></span>'];
+                            html_div +=['<span class="title_'+data[j]['field_name']+'"> '+data[j]['field_title']+'</span>：<input type="text" name="'+data[j]['field_name']+'[]" id="'+data[j]['field_name']+'_'+SerialNum+'" style="width: 80px;"></span>'];
                         }
                     }
                 }
@@ -592,7 +582,7 @@
         }else{
             SerialNum++;
             html_div +=
-                ['<div class="template_div20210507">远程地址'+SerialNum+'：<input type="text" name="remote_file[]" value="" placeholder="http://" style="width: 50%;">'];
+                ['<div class="template_div20210507"><div style=" display: block; margin-bottom: 5px; ">远程地址'+SerialNum+'：<input type="text" name="remote_file[]" value="" placeholder="http://" style="width: 250px;"></div>'];
             if (data) {
                 for (var j = 0; j < data.length; j++) {
                     if (data[j]['field_name'] == 'server_name') {
@@ -601,7 +591,7 @@
                         }else {
                             html_div += ['<span  style="display:none;" class="ey_' + data[j]['field_name'] + '"> '];
                         }
-                        html_div +=['<span class="title_'+data[j]['field_name']+'"> '+data[j]['field_title']+'</span>：<input type="text" name="'+data[j]['field_name']+'[]" id="'+data[j]['field_name']+'_remote_'+SerialNum+'" style="width: 7%;" onclick="searchServername(this);" autocomplete="off" value="'+default_servername+'">'+
+                        html_div +=['<span class="title_'+data[j]['field_name']+'"> '+data[j]['field_title']+'</span>：<input type="text" name="'+data[j]['field_name']+'[]" id="'+data[j]['field_name']+'_remote_'+SerialNum+'" style="width: 80px;" onclick="searchServername(this);" autocomplete="off" value="'+default_servername+'">'+
                         '<div class="help-hot-list" style="display: none;" id="search_keywords_list_'+data[j]['field_name']+'_remote_'+SerialNum+'"></div>'+
                         '</span>'];
                     }else{
@@ -610,7 +600,7 @@
                         }else {
                             html_div += ['<span  style="display:none;" class="ey_' + data[j]['field_name'] + '"> '];
                         }
-                        html_div +=['<span class="title_'+data[j]['field_name']+'"> '+data[j]['field_title']+'</span>：<input type="text" name="'+data[j]['field_name']+'[]" id="'+data[j]['field_name']+'_'+SerialNum+'" style="width: 7%;"></span>'];
+                        html_div +=['<span class="title_'+data[j]['field_name']+'"> '+data[j]['field_title']+'</span>：<input type="text" name="'+data[j]['field_name']+'[]" id="'+data[j]['field_name']+'_'+SerialNum+'" style="width: 80px;"></span>'];
                     }
                 }
             }
@@ -646,8 +636,8 @@
                                 '<td  class="th_server_name"><input type="text" name="fileupload[server_name][]" value="'+default_servername20210507+'" id="severname_local_' + index + '" onclick="searchServername(this);" autocomplete="off">',
                                 '<div class="help-hot-list" style="display: none;" id="search_keywords_list_severname_local_' + index + '"></div>',
                                 '</td>',
-                                '<td>' + (file.size / 1014).toFixed(1) + ' KB</td>',
-                                '<td>等待上传</td>',
+                                '<td class="th_server_size">' + (file.size / 1014).toFixed(1) + ' KB</td>',
+                                '<td class="th_server_state">等待上传</td>',
                                 '<td>',
                                 // '<button class="layui-btn layui-btn-xs demo-reload layui-hide">重传</button>',
                                 '<button class="layui-btn layui-btn-xs layui-btn-danger demo-delete" style="line-height:unset;height: unset;">移除</button>',
@@ -662,8 +652,8 @@
                                 '<td  class="th_server_name" style="display: none;"><input type="text" name="fileupload[server_name][]" value="'+default_servername20210507+'" id="severname_local_' + index + '" onclick="searchServername(this);" autocomplete="off">',
                                 '<div class="help-hot-list" style="display: none;" id="search_keywords_list_severname_local_' + index + '"></div>',
                                 '</td>',
-                                '<td>' + (file.size / 1014).toFixed(1) + ' KB</td>',
-                                '<td>等待上传</td>',
+                                '<td class="th_server_size">' + (file.size / 1014).toFixed(1) + ' KB</td>',
+                                '<td class="th_server_state">等待上传</td>',
                                 '<td>',
                                 // '<button class="layui-btn layui-btn-xs demo-reload layui-hide">重传</button>',
                                 '<button class="layui-btn layui-btn-xs layui-btn-danger demo-delete" style="line-height:unset;height: unset;">移除</button>',
@@ -703,7 +693,7 @@
                     var tr = demoListView.find('tr#upload-'+ index),
                         tds = tr.children();
                     tds.eq(0).html(res.file_name);
-                    tds.eq(3).html('<span style="color: #5FB878;">'+res.msg+'</span>');
+                    tds.eq(3).html('<span style="color: #5FB878;white-space: nowrap;">'+res.msg+'</span>');
                     tds.eq(4).html('<span class="layui-btn layui-btn-xs layui-btn-danger" style="line-height:unset;height: unset;" onclick="DeleteFile(this);">移除</span>'+html);
 
                     // 清空操作
@@ -714,7 +704,7 @@
             error: function(res, index, upload){
                 var tr = demoListView.find('tr#upload-'+ index),
                     tds = tr.children();
-                tds.eq(3).html('<span style="color: #FF5722;">'+res.msg+'</span>');
+                tds.eq(3).html('<span style="color: #FF5722;white-space: nowrap;">'+res.msg+'</span>');
             }
         });
     });

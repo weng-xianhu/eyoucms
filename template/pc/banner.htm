@@ -1,4 +1,4 @@
-<!-- 频道banner,可在栏目图片里编辑 -->
+<!-- 栏目图片，判断当前栏目是否有上传图片，如果没有则调用顶级栏目图片 -->
 <div class="channel-banner" {eyou:notempty name='$eyou.field.typelitpic'} style="background-image: url({$eyou.field.typelitpic})" {eyou:else /} style="background-image: url({$eyou.field.typeid|gettoptype=###,'litpic'})" {/eyou:notempty}> 
 	<div class="banner-info">
 		<div class="container text-center">
@@ -7,4 +7,3 @@
 		</div>
 	</div>
 </div>
-<!-- 频道banner end -->	

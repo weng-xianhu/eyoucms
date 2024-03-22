@@ -78,7 +78,7 @@ class ProductLogic extends Model
                 if($val['attr_input_type'] == 3)
                 {
                     $str .= "<dd class='opt'><textarea class='span12 ckeditor' id='attr_{$attr_id}' name='attr_{$attr_id}[]'>".($aid ? $v['attr_value'] : $val['attr_values'])."</textarea><span class='err' tyle='color:#F00; display:none;'></span><p class='notic'></p></dd>";
-                    $url = url('Ueditor/index', array('savepath'=>'product'));
+                    $url = url('Ueditor/index', array('savepath'=>'allimg'));
                     $str .= <<<EOF
 <script type="text/javascript">
     UE.getEditor("attr_{$attr_id}",{
@@ -133,27 +133,27 @@ EOF;
             foreach($curAttrVal as $k =>$v) {
                 $str .= "<dl class='row attr_{$attr_id}'>";
                 $addDelAttr = ''; // 加减符号
-                $str .= "<dt class='tit pl5'><label for='attr_{$attr_id}'>$addDelAttr {$val['attr_name']}</label></dt>";
+                $str .= "<dt class='sort-e pl0'><input size='4' type='text' size='10' value='". $v['sort_order'] ."' name='new_attr_sort_order[{$attr_id}]' placeholder='100'></dt>";
+                $str .= "<dt class='tit pl5'><input type='text' size='10' value='$addDelAttr {$val['attr_name']}' name='attr_{$attr_id}' readonly='readonly'/></dt>";
                         
                 // 单行文本框
                 if($val['attr_input_type'] == 0) {
-                    $str .= "<dd class='opt'><input type='text' size='40' value='".($aid ? $v['attr_value'] : $val['attr_values'])."' name='shop_attr_{$attr_id}[]' /><span class='err' tyle='color:#F00; display:none;'></span><p class='notic'></p></dd>";
+                    $str .= "<dd class='opt pl5'><input type='text' size='40' value='".($aid ? $v['attr_value'] : $val['attr_values'])."' name='shop_attr_{$attr_id}[]' /><a class='text_a grey' href='javascript:void(0);' >&nbsp;&nbsp;删除</a></dd>";
                 }
 
                 // 下拉列表框（一行代表一个可选值）
                 if($val['attr_input_type'] == 1) {
-                    $str .= "<dd class='opt'><select name='shop_attr_{$attr_id}[]'><option value='0'>无</option>";
-                    $tmp_option_val = explode(PHP_EOL, $val['attr_values']);
-                    foreach($tmp_option_val as $k2=>$v2)
+                    // <option value='0'>无</option>
+                    $str .= "<dd class='opt pl5'><select name='shop_attr_{$attr_id}[]' style='width: 306px;'>"; $tmp_option_val = explode(PHP_EOL, $val['attr_values']); foreach($tmp_option_val as $k2=>$v2)
                     {
                         // 编辑的时候 有选中值
-                        $v2 = preg_replace("/\s/","",$v2);
-                        if($v['attr_value'] == $v2)
+                        // $v2 = preg_replace("/\s/","",$v2);
+                        if(trim($v['attr_value']) == trim($v2))
                             $str .= "<option selected='selected' value='{$v2}'>{$v2}</option>";
                         else
                             $str .= "<option value='{$v2}'>{$v2}</option>";
                     }
-                    $str .= "</select><span class='err' tyle='color:#F00; display:none;'></span><p class='notic'></p></dd>";                
+                    $str .= "</select><a class='text_a grey' href='javascript:void(0);' >&nbsp;&nbsp;删除</a></dd>";                
                 }
 
                 // 多行文本框
@@ -164,7 +164,7 @@ EOF;
                 // 富文本编辑器
                 if($val['attr_input_type'] == 3) {
                     $str .= "<dd class='opt'><textarea class='span12 ckeditor' id='attr_{$attr_id}' name='shop_attr_{$attr_id}[]'>".($aid ? $v['attr_value'] : $val['attr_values'])."</textarea><span class='err' tyle='color:#F00; display:none;'></span><p class='notic'></p></dd>";
-                    $url = url('Ueditor/index', array('savepath'=>'product'));
+                    $url = url('Ueditor/index', array('savepath'=>'allimg'));
                     $str .= <<<EOF
 <script type="text/javascript">
     UE.getEditor("attr_{$attr_id}",{
@@ -225,11 +225,11 @@ EOF;
         $ShopProductAttr = Db::name('ShopProductAttr');
         
         if($product_attr_id > 0) {
-            return $ShopProductAttr->where(['product_attr_id'=>$product_attr_id])->select();
+            return $ShopProductAttr->where(['product_attr_id'=>$product_attr_id])->order('sort_order asc')->select();
         }
 
         if($aid > 0 && $attr_id > 0) {
-            return $ShopProductAttr->where(['aid'=>$aid,'attr_id'=>$attr_id])->select();
+            return $ShopProductAttr->where(['aid'=>$aid,'attr_id'=>$attr_id])->order('sort_order asc')->select();
         }
     }
 
@@ -238,7 +238,7 @@ EOF;
      * @param int $aid  产品id
      * @param int $typeid  产品栏目id
      */
-    public function saveProductAttr($aid, $typeid)
+    public function saveProductAttr($aid, $typeid, $postData = [])
     {  
         $aid = intval($aid);
         $typeid = intval($typeid);
@@ -262,6 +262,9 @@ EOF;
                           
         // post 提交的属性  以 attr_id _ 和值的 组合为键名    
         $post = input("post.");
+        if (!isset($post['title'])) {
+            $post = $postData;
+        }
         foreach($post as $k => $v)
         {
             $attr_id = str_replace('attr_','',$k);
@@ -304,7 +307,7 @@ EOF;
      * @param int $aid  产品id
      * @param int $typeid  产品栏目id
      */
-    public function saveShopProductAttr($aid, $typeid)
+    public function saveShopProductAttr($aid, $typeid, $postData = [])
     {  
         $aid = intval($aid);
         $typeid = intval($typeid);
@@ -319,11 +322,15 @@ EOF;
         $productAttrList = $ShopProductAttr->where('aid = '.$aid)->select();
         $old_product_attr = array(); // 数据库中的的属性  以 attr_id _ 和值的 组合为键名
         foreach($productAttrList as $k => $v) {
-            $old_product_attr[$v['attr_id'].'_'.$v['attr_value']] = $v;
+            $old_product_attr[$v['attr_id'].'_'.$v['attr_value'].'_'.$v['sort_order']] = $v;
         }
 
         // post 提交的属性  以 attr_id _ 和值的 组合为键名
         $post = input("post.");
+        if (!isset($post['title'])) {
+            $post = $postData;
+        }
+        $sort_order = $post['new_attr_sort_order'];
         foreach($post as $k => $v) {
             $attr_id = str_replace('shop_attr_', '', $k);
             if(!strstr($k, 'shop_attr_')) continue;
@@ -331,13 +338,14 @@ EOF;
                 $v2 = trim($v2);
                 if(empty($v2)) continue;
 
-                $tmp_key = $attr_id . "_" . $v2;
+                $tmp_key = $attr_id . "_" . $v2 . "_" . $sort_order[$attr_id];
                 if(!array_key_exists($tmp_key, $old_product_attr)) {
                     // 数据库中不存在 说明要做删除操作
                     $adddata = array(
                         'aid'         => $aid,
                         'attr_id'     => $attr_id,
                         'attr_value'  => $v2,
+                        'sort_order'  => $sort_order[$attr_id],
                         'add_time'    => getTime(),
                         'update_time' => getTime(),
                     );

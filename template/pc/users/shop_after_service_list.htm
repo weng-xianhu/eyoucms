@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>售后列表-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/eyoucms.css"/}
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/tag_global.js"/}
+    </head>
+
+    <body class="centre shop">
+        {eyou:include file="users/users_header.htm" /}
+        <div class="breadcrumbs"></div>
+        <div class="ey-body-bg">
+            <div class="ey-body pd0">
+                <div class="ey-container w1226">
+                    {eyou:include file="users/users_left.htm" /}
+                    <div class="ey-con fr">
+                        <div class="el-main xin_mian main-bg">
+                            <div class="el-row shop-oper">
+                                <h1 class="title"> 售后服务 </h1>
+                            </div>
+                            <div class="service-step-box mt30">
+                                <div class="service-section">
+                                    <div class="section-hd is-noborder"><h2 class="section-title">选择订单中的商品</h2></div>
+                                    <div class="section-bd">
+                                        <div class="xm-goods-list-wrap">
+                                            <ul class="xm-goods-list service-goods-list clearfix">
+                                                {eyou:volist name="$eyou.field" id="vo"}
+                                                <li class="xm-goods-item">
+                                                    <div class="figure figure-img"><img src="{$vo.litpic}"></div>
+                                                    <h3 class="title">
+                                                        {$vo.product_name}&nbsp;
+                                                        {eyou:volist name='$vo.product_spec_list' id='spec'}{$spec.value}&nbsp;{/eyou:volist}
+                                                    </h3>
+                                                    <p class="rank"></p>
+                                                    <div class="actions">
+                                                        <a href="{$vo.url}" class="el-button el-button--primary el-button--small">{empty name="$vo.apply_service"}申请{else/}查看{/empty}售后</a>
+                                                    </div>
+                                                </li>
+                                                {/eyou:volist}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {eyou:include file="users/users_footer.htm" /}

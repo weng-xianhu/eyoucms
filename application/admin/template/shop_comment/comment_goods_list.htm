@@ -1,0 +1,136 @@
+{include file="public/layout" /}
+<body  style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width:400px;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div id="page_div" class="page min-hg-c mb-20" style="min-width: auto; box-shadow: none;">
+    <div class="flexigrid flexigrid2" style="min-height: 600px;">
+        <div class="mDiv pt0">
+            <form class="navbar-form form-inline" id="searchForm" action="{:url('ShopComment/comment_goods_list')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="商品搜索...">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="iconfont e-sousuo"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%;">
+                    <thead style="background-color: #f2f2f2; line-height: 40px;">
+                        <tr>
+                            <th abbr="article_title" axis="col3" class="w70">
+                                <div class="tc sort_style"><a href="{:getArchivesSortUrl('aid')}">ID&nbsp;<i {eq name='$Request.param.orderby' value='aid'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
+                            </th>
+                            <th align="center" abbr="article_title" axis="col3" class="w60">
+                                <div class="tc">商品</div>
+                            </th>
+                            <th align="left" abbr="article_title" axis="col3" class="">
+                                <div class="ml15"></div>
+                            </th>
+                            <th align="left" abbr="" axis="col3" class="w80">
+                                <div class="tc sort_style"><a href="{:getArchivesSortUrl('stock_count')}">库存&nbsp;<i {eq name='$Request.param.orderby' value='stock_count'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
+                            </th>
+                            <th align="left" abbr="" axis="col3" class="w80">
+                                <div class="tc sort_style"><a href="{:getArchivesSortUrl('users_price')}">售价&nbsp;<i {eq name='$Request.param.orderby' value='users_price'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
+                            </th>
+                            <th abbr="article_time" axis="col6" class="w80">
+                                <div class="tc sort_style"><a href="{:getArchivesSortUrl('sales_num')}">销量&nbsp;<i {eq name='$Request.param.orderby' value='sales_num'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
+                            </th>
+                            <th axis="col1" class="w80">
+                                <div class="tc">操作</div>
+                            </th>
+                            <th abbr="article_time" axis="col6" class="w60">
+                                <div class="tc sort_style"><a href="{:getArchivesSortUrl('sort_order')}">排序&nbsp;<i {eq name='$Request.param.orderby' value='sort_order'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {empty name="list"}
+                            <tr>
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                </td>
+                            </tr>
+                        {else/}
+                            {foreach name="list" item="vo" key="k" }
+                                <tr>
+                                    <td class="sort">
+                                        <div class="tc w70">{$vo.aid}</div>
+                                    </td>
+
+                                    <td class="w60">
+                                        <div class="tc">
+                                            <img width="60" height="60" src="{$vo.litpic}">
+                                        </div>
+                                    </td>
+
+                                    <td class="goods-item">
+                                        <div class="fl" style="padding-left: 10px;">
+                                           <div class="title">
+                                                {$vo.title}
+                                           </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="w80"> <div class="tc">{$vo.stock_count}</div> </td>
+
+                                    <td class="w80"> <div class="tc">￥{$vo.users_price}</div> </td>
+
+                                    <td class="w80"> <div class="tc">{$vo.sales_num}</div> </td>
+
+                                    <td align="center" class="operation">
+                                        <div class="tc w80"> <a href="JavaScript:void(0);" data-id="{$vo.aid}" data-litpic="{$vo.litpic}" data-title="{$vo.title}" onclick="parent.goodsSelect(this);" class="btn blue" id="a_{$vo.aid}">选择</a> </div>
+                                    </td>
+
+                                    <td class="sort">
+                                        <div class="w60 tc">
+                                            {$vo.sort_order}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {/foreach}
+                        {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="footer-oper"> <div class="nav-dropup"></div> {include file="public/page" /} </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        try {
+            if (typeof(eval('is_conceal_1649209614')) == "function" && is_conceal_1649209614()) {
+                $(".page").css("margin-left","");
+            } else {
+                $(".page").css("margin-left","115px");
+            }
+
+            var mt20_1649209614 = sessionStorage.getItem("mt20_1649209614");
+            if (mt20_1649209614 == 1){
+                $("#geduan_div").removeClass("h10");
+            } else {
+                $("#geduan_div").addClass("h10");
+            }
+        } catch(e) {}
+
+        // 提示请选择商品
+        var parentAddGoodsID = parent.addGoodsID;
+        var parentAddGoodsMsg = parent.addGoodsMsg;
+        if (parseInt(parentAddGoodsID) === 0 && parseInt(parentAddGoodsMsg) === 1) {
+            layer.msg('请选择商品', {icon: 5, time: 1000});
+            parent.addGoodsMsg = 0;
+        }
+
+        // 标记已选择的商品
+        var goodsID = $('#goods_id', window.parent.document).val();
+        if (parseInt(goodsID) > 0) $('#a_' + goodsID).css('color', 'red').html('已选');
+    });
+</script>
+{include file="public/footer" /}

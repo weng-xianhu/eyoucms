@@ -5,8 +5,8 @@
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 {include file="shop/left" /}
-<div class="page" style="min-width:auto; margin-left:98px;">
-    <div class="flexigrid">
+<div class="page">
+    <div class="flexigrid htitx">
         <form class="form-horizontal" id="post_form" action="{:url('Shop/conf')}" method="post">
             <div class="hDiv">
                 <div class="hDivBox">
@@ -62,6 +62,15 @@
 
                 <dl class="row">
                     <dt class="tit">
+                        <label for="username">快递公司</label>
+                    </dt>
+                    <dd class="opt" style="line-height: 30px;">
+                        <a href="javascript:void(0);" onclick="SelectExpress();" class="ncap-btn ncap-btn-green">设置快递公司</a>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit">
                         <label for="username">运费模板</label>
                     </dt>
                     <dd class="opt" style="line-height: 30px;">
@@ -97,7 +106,7 @@
 
                 <dl class="row">
                     <dt class="tit">
-                        <label for="username">商品规格</label>
+                        <label for="username">商品多规格</label>
                     </dt>
                     <dd class="opt" style="line-height: 30px;">
                         <input type="hidden" id="TestPass" name="TestPass" value="{$TestPass}">
@@ -110,56 +119,96 @@
                         </span>-->
                     </dd>
                 </dl>
-
-                <dl class="row none">
-                    <dt class="tit">订单提醒</dt>
-                    <dd class="opt">
-                        <ul class="nc-row ncap-waybill-list">
-                            <li style="width: 100%;">
-                                <label class="label" onmouseover="layer_tips = layer.tips('对管理员发送邮件提醒', this, {time:100000});" onmouseout="layer.close(layer_tips);">
-                                    <input class="check" type="checkbox" name="smtp_shop_order_pay" {if condition="!empty($smtp.smtp_shop_order_pay)"} value="1" checked="checked" {/if} onclick="OpenSmtp(this);"><span>管理员邮箱</span>
-                                </label>
-                            </li>
-                        </ul>
-                    </dd>
-                </dl>
-
-                <dl class="row none">
-                    <dt class="tit">发货提醒</dt>
-                    <dd class="opt">
-                        <ul class="nc-row ncap-waybill-list">
-                            <li style="width: 100%;">
-                                <label class="label" onmouseover="layer_tips = layer.tips('对用户发送邮件提醒', this, {time:100000});" onmouseout="layer.close(layer_tips);">
-                                    <input class="check" type="checkbox" name="smtp_shop_order_send" {if condition="!empty($smtp.smtp_shop_order_send)"} value="1" checked="checked" {/if} onclick="OpenSmtp(this);"><span>用户邮箱</span>
-                                </label>
-                            </li>
-                        </ul>
-                    </dd>
-                </dl>
-
-                <script type="text/javascript">
-                    function OpenSmtp(obj) {
-                        if (true == $(obj).is(':checked')) {
-                            $.ajax({
-                                type: "post",
-                                url : "{:url('Shop/FindSmptConfig', ['_ajax'=>1])}",
-                                data: {field:$(obj).attr('name')},
-                                dataType: 'json',
-                                success: function (res) {
-                                    layer.closeAll();
-                                    if(res.code == 0) {
-                                        $(obj).removeAttr("checked");
-                                        layer.alert(res.msg, {title:false, closeBtn:0, btn:['确认', '取消']}, function(){
-                                            window.location.href = res.url;
-                                        });
-                                    }
-                                }
-                            });
-                        }
-                    }
-                </script>
             </div>
 
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">订单设置</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit" style="width: 120px;">
+                        <label for="order_unpay_close_time">未付款关闭时间</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" id="order_unpay_close_time" name="order[order_unpay_close_time]" value="{$userConfig.order_unpay_close_time|default='0'}"/><span class="ml10">分钟</span>
+                        <p class="notic">订单创建后多长时间未付款将自动关闭，订单自动关闭后商品库存将自动补回<br/><span style="color: red;">0表示不关闭未付款订单</span></p>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit" style="width: 120px;">
+                        <label for="order_auto_receipt_time">发货后收货时间</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" id="order_auto_receipt_time" name="order[order_auto_receipt_time]" value="{$userConfig.order_auto_receipt_time|default='0'}"/><span class="ml10">天后</span>
+                        <p class="notic">订单发货后自动收货时间<br/><span style="color: red;">0表示不自动确认收货</span></p>
+                    </dd>
+                </dl>
+
+                <dl class="row">
+                    <dt class="tit" style="width: 120px;">
+                        <label for="order_right_protect_time">收货后可维权时间</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" id="order_right_protect_time" name="order[order_right_protect_time]" value="{$userConfig.order_right_protect_time|default='0'}"/><span class="ml10">天内</span>
+                        <p class="notic">订单确认收货完成后，多长时间内可申请维权<br/><span style="color: red;">0表示订单不允许维权，修改为0仅影响修改之后的订单</span></p>
+                    </dd>
+                </dl>
+            </div>
+
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">评价设置</div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit"> <label>商品评价</label> </dt>
+                    <dd class="opt">
+                        <label> <input type="radio" name="shop[shop_open_comment]" value="1" {if condition="$userConfig.shop_open_comment == 1"} checked="checked" {/if}/>开启 </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label> <input type="radio" name="shop[shop_open_comment]" value="0" {if condition="!isset($userConfig.shop_open_comment) || empty($userConfig.shop_open_comment)"} checked="checked" {/if}/>关闭 </label>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit"> <label>评价审核</label> </dt>
+                    <dd class="opt">
+                        <label> <input type="radio" name="shop[shop_open_comment_audit]" value="1" {if condition="$userConfig.shop_open_comment_audit == 1"} checked="checked" {/if}/>开启 </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label> <input type="radio" name="shop[shop_open_comment_audit]" value="0" {if condition="$userConfig.shop_open_comment_audit == 0"} checked="checked" {/if}/>关闭 </label>
+                    </dd>
+                </dl>
+            </div>
             <div class="hDiv">
                 <div class="hDivBox">
                     <table cellspacing="0" cellpadding="0" style="width: 100%">
@@ -186,7 +235,7 @@
                         <label for="addr_contact_person">联系人</label>
                     </dt>
                     <dd class="opt">
-                        <input type="text" id="addr_contact_person" style="width: 30%;" name="addr[addr_contact_person]" value='{if condition="!isset($userConfig.addr_contact_person) || empty($userConfig.addr_contact_person)"}商家客服{else/}{$userConfig.addr_contact_person}{/if}'/>
+                        <input type="text" id="addr_contact_person" style="width: 30%;" name="addr[addr_contact_person]" value="{$userConfig.addr_contact_person|default=''}"/>
                     </dd>
                 </dl>
 
@@ -195,7 +244,7 @@
                         <label for="addr_contact_phone">联系号码</label>
                     </dt>
                     <dd class="opt">
-                        <input type="text" id="addr_contact_phone" style="width: 30%;" maxlength="11" name="addr[addr_contact_phone]" value='{if condition="!isset($userConfig.addr_contact_phone) || empty($userConfig.addr_contact_phone)"}18388888888{else/}{$userConfig.addr_contact_phone}{/if}'/>
+                        <input type="text" id="addr_contact_phone" style="width: 30%;" maxlength="11" name="addr[addr_contact_phone]" value="{$userConfig.addr_contact_phone|default=''}"/>
                     </dd>
                 </dl>
 
@@ -204,7 +253,7 @@
                         <label for="addr_shipping_addr">收货地址</label>
                     </dt>
                     <dd class="opt">
-                        <input type="text" id="addr_shipping_addr" style="width: 30%;" name="addr[addr_shipping_addr]" value='{if condition="!isset($userConfig.addr_shipping_addr) || empty($userConfig.addr_shipping_addr)"}北京市 西城区 西长安街街道{else/}{$userConfig.addr_shipping_addr}{/if}'/>
+                        <input type="text" id="addr_shipping_addr" style="width: 30%;" name="addr[addr_shipping_addr]" value="{$userConfig.addr_shipping_addr|default=''}"/>
                     </dd>
                 </dl>
             </div>
@@ -222,6 +271,16 @@
 <script type="text/javascript">
 
     $(function(){
+        try{
+            if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
+                $(".page").css("margin-left","");
+                $(".page").css("min-width","");
+            }else{
+                $(".page").css("margin-left","100px");
+                $(".page").css("min-width","auto");
+            }
+        }catch(e){}
+
         // 点击刷新数据
         $('.fa-refresh').click(function(){
             location.href = location.href;
@@ -240,6 +299,23 @@
         if (1 == ForceUse) $('#shop_micro0').attr("disabled", "disabled");
     });
 
+    // 设置快递公司
+    function SelectExpress() {
+        var url = "{:url('Shop/order_express', ['select'=>1])}";
+        //iframe窗
+        layer.open({
+            type: 2,
+            title: '设置快递公司',
+            move: false,
+            shadeClose: false,
+            maxmin: false, //开启最大化最小化按钮
+            shade: layer_shade,
+            closeBtn: 3,
+            area: ['60%', '80%'],
+            content: url
+        });
+    }
+
     // 设置运费模板
     function SetShipping() {
         var url = "{:url('Shop/shipping_template')}";
@@ -247,8 +323,11 @@
         layer.open({
             type: 2,
             title: '运费模板管理',
+            move: false,
             shadeClose: false,
             maxmin: false, //开启最大化最小化按钮
+            shade: layer_shade,
+            closeBtn: 3,
             area: ['60%', '80%'],
             content: url
         });
@@ -267,25 +346,27 @@
                     //询问框
                     var layer_str = '<style type="text/css">.layui-layer-content{text-align:left!important;}</style>'+res.data.msg;
                     var confirm = layer.confirm(layer_str, {
-                            title: false,
-                            area: ['80%','80%'],
-                            btn: ['已完成，验证下','下次再操作'],
+                            shade: layer_shade,
+                            move: false,
+                            title: '提示',
+                            btnAlign:'r',
+                            closeBtn: 3,
+                            area: ['50%','80%'],
+                            btn: ['确定','取消'],
                             cancel: function(){
                                 window.location.href = "{:url('Shop/conf',['close'=>1])}";
                             }
                         }, function (){
                             VerifyLatestTemplate(name);
 
-                        }, function(){
-                            window.location.href = "{:url('Shop/conf',['close'=>1])}";
-                        }
+                        }, 
                     );  
                 }else{
                     layer.alert(res.msg, {icon: 2, title:false});
                 }
             },
-            error:function(){
-                layer.alert(ey_unknown_error, {icon: 2, title:false});
+            error:function(e){
+                layer.alert(e.responseText, {icon: 2, title:false});
             }
         });
     }
@@ -316,9 +397,9 @@
                     });
                 }
             },
-            error:function(){
+            error:function(e){
                 layer.closeAll();
-                layer.alert(ey_unknown_error, {icon: 2, title:false});
+                layer.alert(e.responseText, {icon: 2, title:false});
             }
         });
     }

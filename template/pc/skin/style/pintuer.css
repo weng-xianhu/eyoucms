@@ -3,10 +3,10 @@ body,div,span,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,ad
 article,aside,details,figcaption,figure,dialog,footer,header,hgroup,menu,nav,section {display:block}
 body {font-size:14px;color:#333;background:#fff;font-family:"Microsoft YaHei","simsun","Helvetica Neue",Arial,Helvetica,sans-serif}
 img {border:0;vertical-align:bottom}
-::-webkit-input-placeholder {color:#888888}
-:-moz-placeholder {color:#888888}
-::-moz-placeholder {color:#888888}
-:-ms-input-placeholder {color:#ccc}
+::-webkit-input-placeholder {color:#666}
+:-moz-placeholder {color:#666}
+::-moz-placeholder {color:#666}
+:-ms-input-placeholder {color:#666}
 * {-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}
 *:before,*:after {-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}
 button::-moz-focus-inner,input::-moz-focus-inner {padding:0;border:0}
@@ -899,7 +899,7 @@ a.text-white:hover,.bg-inverse a:hover {color:#EBEBEB}
 .slidemenu-body {width:auto;padding:15px}
 .slidemenu-foot {padding:10px 15px}
 .icon-slidemenu:before {content:"\f0c9";font-size:24px}
-[class*='icon-']:before {display:inline-block;font-family:"FontAwesome";font-weight:normal;font-style:normal;vertical-align:baseline;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
 a {color:#333;text-decoration:none}
 a:focus,a:hover {color:#EFB273}
 .text-main,a.text-main:link,a.text-main:visited,.button.border-main,blockquote.border-main strong,.pager.border-main a,.pager-prev.border-main,.pager-next.border-main,.nav a:hover,.nav-menu.nav-pills .active ul a:hover,.bg-inverse .nav-menu ul a:hover,.bg-inverse .nav.nav-menu.nav-tabs ul a:hover,.bg-inverse .nav.nav-menu.nav-tabs .active ul a:hover,.bg-inverse .nav.nav-menu.nav-pills ul a:hover,.bg-inverse .nav.nav-menu.nav-pills .active ul a:hover {color:#383838}

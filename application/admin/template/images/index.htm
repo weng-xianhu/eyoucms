@@ -18,7 +18,7 @@
                         <input type="hidden" name="typeid" id="typeid" value="{$Request.param.typeid|default=''}">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="标题搜索...">
                         <input type="submit" class="btn" value="搜索">
-                        <i class="fa fa-search"></i>
+                        <i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -37,11 +37,11 @@
                         <th abbr="article_title" axis="col3" class="">
                             <div style="text-align: left; padding-left: 10px;" class="">标题</div>
                         </th>
-                        <th abbr="article_time" axis="col6" class="w100">
+                        <th abbr="article_time" axis="col6" class="w120">
                             <div class="tc">所属栏目</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w50">
-                            <div class="tc"><a href="{:getArchivesSortUrl('arcrank')}">审核&nbsp;<i {eq name='$Request.param.orderway' value='asc'}class="fa fa-sort"{else /}class="fa fa-sort"{/eq}></i></a></div>
+                            <div class="tc sort_style"><a href="{:getArchivesSortUrl('arcrank')}">审核&nbsp;<i {eq name='$Request.param.orderby' value='arcrank'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w50">
                             <div class="tc">推荐</div>
@@ -56,7 +56,7 @@
                             <div class="tc">操作</div>
                         </th>
                         <th abbr="article_time" axis="col6" class="w60">
-                            <div class="tc">排序</div>
+                            <div class="tc sort_style"><a href="{:getArchivesSortUrl('sort_order')}">排序&nbsp;<i {eq name='$Request.param.orderby' value='sort_order'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
                         </th>
                        
                     </tr>
@@ -71,7 +71,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -88,10 +90,10 @@
                             <td style="width: 100%;">
                                 <div class="tl" style="padding-left: 10px;">
                                     {notempty name="$vo.is_litpic"}
-                                        <i class="fa fa-picture-o color_z" onmouseover="layer_tips=layer.tips('<img src={$vo.litpic} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});" onmouseout="layer.close(layer_tips);"></i>
+                                        <i class="fa fa-picture-o color_z" onmouseover="layer_tips=layer.tips('<img src={$vo.litpic} class=\'layer_tips_img\'>',this,{tips: [3, '#fff'],skin:'layer-yourskin-mt0'});" onmouseout="layer.close(layer_tips);"></i>
                                     {/notempty}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
-                                    <a href="{:url('Images/edit',array('id'=>$vo['aid']))}" style="{eq name="vo.is_b" value="1"} font-weight: bold;{/eq}">{$vo.title}</a>
+                                    <a href="{:url('Images/edit',array('id'=>$vo['aid'], 'callback_url'=>$callback_url))}" style="{eq name="vo.is_b" value="1"} font-weight: bold;{/eq}">{$vo.title}</a>
                                     {else /}
                                     {$vo.title}
                                     {/eq}
@@ -104,7 +106,7 @@
                                 </div>
                             </td>
                             <td align="center" class="">
-                                <div class="w100 tc"><a href="{:url('Images/index', array('typeid'=>$vo['typeid'], 'tab'=>3))}">{$vo.typename|default='<i class="red">数据出错！</i>'}</a></div>
+                                <div class="w120 tc ellipsis"><a href="{:url('Images/index', array('typeid'=>$vo['typeid'], 'tab'=>3))}" title="{$vo.typename}">{$vo.typename|default='<i class="red">数据出错！</i>'}</a></div>
                             </td>
                             <td align="center" class="">
                                 <div class="tc w50">
@@ -137,11 +139,11 @@
                             <td class="operation">
                                 <div class="w160 tc">
                                     {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
-                                    <a href="{:url('Images/edit',array('id'=>$vo['aid']))}" class="btn blue">编辑</a>
+                                    <a href="{:url('Images/edit',array('id'=>$vo['aid'], 'callback_url'=>$callback_url))}" class="btn blue">编辑</a>
                                     <i></i>
                                     {/eq}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
-                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Images/del')}" data-id="{$vo.aid}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Images/del')}" data-id="{$vo.aid}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
                                     <i></i>
                                     {/eq}
                                     <a href="{$vo.arcurl}" class="btn blue" target="_blank">浏览</a>
@@ -165,6 +167,7 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        {notempty name="list"}
         <div class="footer-oper">
             <span class="ml15">
                 <input type="checkbox" autocomplete="off" class="checkAll">
@@ -184,7 +187,7 @@
                     <a href="javascript:void(0);" onclick="func_move(this, 'ids');" data-url="{:url('Archives/move', array('typeid'=>$Request.param.typeid))}">移动文档</a>
                     {/eq}
                     {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
-                    <a href="javascript:void(0);" onclick="batch_del(this, 'ids');" data-url="{:url('Images/del')}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}>删除文档</a>
+                    <a href="javascript:void(0);" onclick="batch_del(this, 'ids');" data-url="{:url('Images/del')}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}>删除文档</a>
                     {/eq}
                     {eq name="'Archives@check'|is_check_access" value="1"}
                     <hr class="layui-bg-gray">
@@ -194,10 +197,11 @@
                 </div>
             </div>
             {eq name="'RecycleBin@archives_index'|is_check_access" value="1"}
-                {neq name='$recycle_switch' value='1'}  <a href="{:url('RecycleBin/archives_index')}" class="layui-btn layui-btn-primary" title="回收站">回收站</a>{/neq}
+                {neq name="$global['web_recycle_switch']" value='1'}  <a href="{:url('RecycleBin/archives_index')}" class="layui-btn layui-btn-primary" title="回收站">回收站</a>{/neq}
             {/eq}
             {include file="public/page" /}
         </div>
+        {/notempty}
     </div>
 </div>
 <script type="text/javascript">
@@ -254,7 +258,17 @@
             }
         })
         if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 2, title:false});
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
             return;
         }
 
@@ -265,9 +279,9 @@
             title: '移动文档',
             fixed: true, //不固定
             shadeClose: false,
-            shade: 0.3,
+            shade: layer_shade,
             maxmin: false, //开启最大化最小化按钮
-            area: ['350px', '260px'],
+            area: ['480px', '360px'],
             content: url
         });
     }
@@ -286,7 +300,17 @@
             }
         })
         if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 2, title:false});
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
             return;
         }
 
@@ -312,9 +336,9 @@
                     layer.alert(data.msg, {icon: 2, title:false});
                 }
             },
-            error:function(){
+            error:function(e){
                 layer.closeAll();
-                layer.alert(ey_unknown_error, {icon: 2, title:false});
+                layer.alert(e.responseText, {icon: 2, title:false});
             }
         });
         // }, function (index) {

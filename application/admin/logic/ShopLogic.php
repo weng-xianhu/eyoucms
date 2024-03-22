@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -72,7 +72,10 @@ class ShopLogic extends Model
     public function syn_theme_shop()
     {
         error_reporting(0);//关闭所有错误报告
-        if ('v1.0.1' > $this->version) {
+        $web_users_tpl_theme = tpCache('web.web_users_tpl_theme');
+        empty($web_users_tpl_theme) && $web_users_tpl_theme = 'users';
+        $shop_tpl_list = glob("./{$this->planPath_pc}{$web_users_tpl_theme}/shop_*");
+        if (empty($shop_tpl_list)) {
             return $this->OneKeyUpgrade();
         } else {
             return true;
@@ -488,9 +491,9 @@ class ShopLogic extends Model
         }
         $mysqlinfo = \think\Db::query("SELECT VERSION() as version");
         $mysql_version  = $mysqlinfo[0]['version'];
-        $vaules = array(
+        $values = array(
             'type'  => 'theme_shop',
-            'domain'=>$_SERVER['HTTP_HOST'], //用户域名                
+            'domain'=>request()->host(), //用户域名                
             'key_num'=>$this->version, // 用户版本号
             'to_key_num'=>$to_key_num, // 用户要升级的版本号                
             'add_time'=>time(), // 升级时间
@@ -502,7 +505,7 @@ class ShopLogic extends Model
         );
         // api_Service_upgradeLog
         $tmp_str = 'L2luZGV4LnBocD9tPWFwaSZjPVVwZ3JhZGUmYT11cGdyYWRlTG9nJg==';
-        $url = base64_decode($this->service_ey).base64_decode($tmp_str).http_build_query($vaules);
+        $url = base64_decode($this->service_ey).base64_decode($tmp_str).http_build_query($values);
         @httpRequest($url);
     }
 
@@ -553,5 +556,44 @@ class ShopLogic extends Model
             $rs = @unlink($d.$tfile);
             return true;
         }
+    }
+
+    /**
+     * 列出营销功能里已使用的模块
+     * @return [type] [description]
+     */
+    public function marketLogic()
+    {
+        // 列出已使用的功能模块
+        $func = [];
+        // 整点秒杀功能是否被用
+        $sharpCount = Db::name('sharp_goods')->where(['sharp_goods_id'=>['gt',0]])->count();
+        if (!empty($sharpCount)) {
+            $func[] = 'sharp';
+        }
+        // 优惠券功能是否被用
+        $couponCount = Db::name('shop_coupon')->where(['coupon_id'=>['gt',0]])->count();
+        if (!empty($couponCount)) {
+            $func[] = 'coupon';
+        }
+        // 返回值
+        return $func;
+    }
+
+    /**
+     * 列出功能地图里已使用的模块
+     * @return [type] [description]
+     */
+    public function useFuncLogic()
+    {
+        // 列出已使用的功能模块
+        $func = [];
+        // 积分兑换功能是否被用 - 暂时不禁用了，先留着用
+        $memgiftCount = Db::name('memgift')->where(['gift_id'=>['gt',0]])->count();
+        if (true || !empty($memgiftCount)) {
+            $func[] = 'memgift';
+        }
+        // 返回值
+        return $func;
     }
 }

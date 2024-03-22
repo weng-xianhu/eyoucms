@@ -1,0 +1,149 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div id="page_div" class="page">
+    {include file="form/bar" /}
+    <div class="flexigrid">
+        <div class="mDiv pt0">
+            {include file="form/index_bar" /}
+            <form id="searchForm" class="navbar-form form-inline" action="{:url('Form/baidu_diyminipro_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <select name="count_type" class="select" style="margin: 0px 5px;" onchange="formCountSubmit(this);">
+                            {volist name='$formCountList' id='vo'}
+                            <option value="{$vo.type}" {eq name='$count_type' value='$vo.type'}selected{/eq}>{$vo.name}留言 ({$vo.count})</option>
+                            {/volist}
+                        </select>
+                    </div>
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="模糊搜索..." autocomplete="off">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="iconfont e-sousuo"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="hDiv" style="background-color: #fff;">
+            <div class="hDivBox">
+                {empty name="list"}
+                <div class="no-data" >
+                    <div class="no_row">
+                        <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                    </div>
+                </div>
+                {else/}
+                <div class="guestbook-boxes jsGridView">
+                    {foreach name="list" item="vo" key="k" }
+                    <div class="guestbook-box-wrapper">
+                        <div class="guestbook-box">
+                            <div class="guestbook-box-header">
+                                <span>
+                                    <a href="{:url('Form/baidu_diyminipro_index', ['form_id'=>$vo.form_id])}">{$vo.form_name|default='<i class="red">数据出错！</i>'}</a>
+                                </span>
+                                <div class="more-wrapper">
+                                    <div id="td_is_read_{$vo.list_id}">
+                                        {eq name='$vo.is_read' value='1'}<div class="days-yes">已读</div>{else /}<div class="days-no">未读</div>{/eq}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="guestbook-box-content">
+                                {volist name="$vo.field_list" id="field"}
+                                    {elt name="$i" value="4"}
+                                        <p>{$field.field_name}：{$field.field_value}</p>
+                                    {/elt}
+                                {/volist}
+                            </div>
+                            <div class="guestbook-box-footer">
+                                <div class="participants"><span>{$vo.add_time|date='Y-m-d H:i:s',###}</span></div>
+                                <div class="guestbook-btn-more">
+                                    <a href="javascript:void(0);" data-href="{:url('Form/baidu_diyminipro_details', ['list_id'=>$vo['list_id'], 'form_id'=>$vo['form_id']])}" onclick="openDetails(this, '#td_is_read_{$vo.list_id}');">查看</a>
+                                    {eq name="'Form@baidu_diyminipro_del'|is_check_access" value="1"}
+                                    <i></i>
+                                    <a href="javascript:void(0);" data-url="{:url('Form/baidu_diyminipro_del')}" data-id="{$vo.list_id}" form_name="{$vo.form_name}" onclick="delDetails(this);">删除</a>
+                                    {/eq}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {/foreach}
+                </div>
+                {/empty}
+            </div>
+        </div>
+
+        <div class="tDiv nobdb">
+            <div class="tDiv2">
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function formCountSubmit(obj) {
+        layer_loading('正在处理');
+        $('#searchForm').submit();
+    }
+
+    // 留言详情
+    function openDetails(obj, name) {
+        var iframes = layer.open({
+            type: 2,
+            title: '查看详情',
+            fixed: true,
+            shadeClose: false,
+            shade: layer_shade,
+            offset: 'auto',
+            area: ['800px','80%'],
+            anim: 5,
+            content: $(obj).data('href'),
+            btn: ['关闭'],
+            success: function() {
+                $(name).html('<div class="days-yes">已读</div>');
+            },
+            yes: function(index, layero) {
+                layer.closeAll();
+            }
+        });
+    }
+
+    // 留言删除
+    function delDetails(obj) {
+        layer.confirm('不可恢复，确认彻底删除<span style="color: red;">' + $(obj).attr('form_name') + '</span>表单数据？', {
+            shade: layer_shade,
+            title: '提示',
+            closeBtn: 3,
+            btnAlign: 'r',
+            btn: ['确定','取消'],
+            area: ['480px', '200px'],
+            success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
+        }, function() {
+            $.ajax({
+                url : $(obj).attr('data-url'),
+                data: {list_id: $(obj).attr('data-id'), _ajax: 1},
+                type: 'post',
+                dataType: 'json',
+                success: function(res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {time: 1500}, function() {
+                            window.location.reload();
+                        });
+                    } else {
+                        layer.msg(res.msg, {time: 1500});
+                    }
+                }
+            });
+        }, function(index) {
+            layer.closeAll(index);
+        });
+    }
+</script>
+
+{include file="public/footer" /}

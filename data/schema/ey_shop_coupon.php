@@ -75,18 +75,18 @@ return array (
   'coupon_price' => 
   array (
     'name' => 'coupon_price',
-    'type' => 'decimal(10,2)',
+    'type' => 'decimal(10,0)',
     'notnull' => false,
-    'default' => '0.00',
+    'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),
   'conditions_use' => 
   array (
     'name' => 'conditions_use',
-    'type' => 'varchar(10)',
+    'type' => 'decimal(10,0)',
     'notnull' => false,
-    'default' => '',
+    'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),

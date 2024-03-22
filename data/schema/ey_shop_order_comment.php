@@ -66,9 +66,9 @@ return array (
   'content' => 
   array (
     'name' => 'content',
-    'type' => 'varchar(1000)',
+    'type' => 'text',
     'notnull' => false,
-    'default' => '',
+    'default' => NULL,
     'primary' => false,
     'autoinc' => false,
   ),
@@ -111,6 +111,15 @@ return array (
   'is_anonymous' => 
   array (
     'name' => 'is_anonymous',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'is_new_comment' => 
+  array (
+    'name' => 'is_new_comment',
     'type' => 'tinyint(1) unsigned',
     'notnull' => false,
     'default' => '0',

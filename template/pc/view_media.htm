@@ -4,40 +4,43 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>{$eyou.field.seo_title}</title>
-<meta name="description" content="{$eyou.field.seo_description}" />
 <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<meta name="description" content="{$eyou.field.seo_description}" />
 <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
 {eyou:static file="skin/style/pintuer.css" /}
 {eyou:static file="skin/style/header.css" /}
 {eyou:static file="skin/style/style.css" /}
-{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+{eyou:static file="skin/style/iconfont.css" /}
 <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
 </head>
 <body>
-<!--网站公用头部——开始-->
+<!--公用头部 begin -->
 {eyou:include file="header.htm" /}
+<!-- 公用头部 end -->    
 <div class="layout bg-black">
+    <!--当前位置 begin -->
     <div class="container">
         <div class="line">
             <div class="xl12 xs12 xm12 xb12">
                 <div class="nav-bread">
-                    <i class="fa fa-home margin-small-right" aria-hidden="true"></i>{eyou:position/}
+                    <i class="iconfont icon-home margin-small-right" aria-hidden="true"></i>{eyou:position/}
                 </div>
             </div>
         </div>
     </div>
+    <!--当前位置 end -->
     <div class="container">
         <div class="line bg-main">
             <div class="xl12 xs12 xm9 bm9">
                 <div class="jw-video">
-                    <!--  视频 begin-->
+                    <!--  视频 begin -->
                     {eyou:videoplay aid='$eyou.field.aid' autoplay='off' id='video'}
-                        <video {$video.id} loop='loop' width="100%" controls='true' preload="auto" controlslist='nodownload' ref='video' oncontextmenu="return false">
+                        <video {$video.id} loop='loop' controls='true' preload="auto" controlslist='nodownload' ref='video' oncontextmenu="return false">
                             <source src="{$video.file_url}" type="video/mp4">
                         </video>
                         {$video.hidden}
                     {/eyou:videoplay}
-                    <!--  视频 end-->
+                    <!--  视频 end -->
                 </div>
                 <!-- 播放权限遮罩 begin -->
                 <div class="jw-video-expense text-center" id="VideoDiv13579" style="display: none;">
@@ -55,7 +58,7 @@
                     <span class="margin-left margin-right text-gray">{$eyou.field.total_video}课时</span>
                     <span class="text-gray">总时长：{$eyou.field.total_duration}</span>
                 </div>
-                <!-- 课程目录 -->
+                <!-- 课程目录 begin -->
                 <ul class="video-period-list">
                 {eyou:videolist aid='$eyou.field.aid' id='video'}
                 <li>
@@ -83,20 +86,20 @@
         <div class="line">
             <div class="xl12 xs12 xm9 bm9">
                 <div class="video-title">
+                    <!-- 标题 begin -->
                     <h1 class="text-white">{$eyou.field.title}</h1>
-                    <!-- 课程目录<span>{$eyou.field.total_video}课时</span>  -->
-                    <!-- <p class="video-catalogue text-gray"><i class="fa fa-clock margin-small-right"></i>时长<span class="total-time">{$eyou.field.total_duration}</span></p> -->
+                    <!-- 标题 end -->
                     <div class="blank"></div>
-                    <p class="video-catalogue text-gray hidden-l"><i class="fa fa-clock margin-small-right"></i>发布时间：<span class="total-time">{$eyou.field.add_time|MyDate='y-m-d',###}</span></p>
+                    <p class="video-catalogue text-gray hidden-l"><i class="iconfont icon-clock margin-small-right"></i>更新时间：<span class="total-time">{$eyou.field.update_time|MyDate='y-m-d',###}</span></p>
                     <div class="blank hidden-l"></div>
                     <p class="hidden-l">
-                    {eyou:notempty name='$eyou.field.courseware' /}<a href="{$eyou.field.courseware}" target="_blank" class="button radius button-small bg-yellow border-none margin-right"><i class="fa fa-cloud-download margin-small-right"></i>本课素材</a>{eyou:else /}{/eyou:notempty}
+                    {eyou:notempty name='$eyou.field.courseware' /}<a href="{$eyou.field.courseware}" target="_blank" class="button radius button-small bg-yellow border-none margin-right"><i class="iconfont icon-xiazai margin-small-right"></i>本课素材</a>{eyou:else /}{/eyou:notempty}
                     </p>
                 </div>
                 <div class="blank"></div>
             </div>
             <div class="xl12 xs12 xm3 bm3">
-                <!-- 价格 -->
+                <!-- 价格 begin -->
                 <div class="video-period" id="video-period-20190425">
                 {eyou:gt name="$eyou.field.users_price" value="0"}
                     <div class="price Conv_DINCondensedC text-white float-left">￥{$eyou.field.users_price}</div>
@@ -123,39 +126,35 @@
             <div class="xl12 xs12 xm9 xb9">
                 <div class="sidebar-l">
                     <div class="bg-white radius">
-                    <!-- 详细内容 -->
+                    <!-- 详细内容 begin -->
                     <div class="video-detail">
                         <div class="tab">
                             <div class="tab-head">
                                 <ul class="tab-nav">
                                     <li class="active"><a href="#overview">课程介绍</a></li>
-                                    <!-- <li><a href="#comment">课程交流</a> </li> -->
                                 </ul>
                             </div>
                             <div class="tab-body">
                                 <div class="tab-panel active" id="overview">
                                     <div class="article">
                                         <div class="post">
+                                            <!-- 内容详情 begin -->
                                             {$eyou.field.content}
+                                            <!-- 内容详情 end -->
                                         </div>
-                                    </div><!-- post  -->
-                                </div>
-                                <!-- <div class="tab-panel" id="comment">
-                                    <div class="video-comment">
                                     </div>
-                                </div> -->
+                                </div>
 
                             </div>
 
                         </div>
                     </div>
-                    <!-- 详细内容 end-->
                     </div>
                     <div class="blank-small"></div>
 
-                    <!-- 上下篇 begin -->
                     <div class="prenext-text bg-white padding-big-left padding-big-right padding-top padding-bottom radius">
                         <div class="line">
+                            <!-- 上一篇 begin -->
                             <div class="xl12 xs12 xm6 xb6 text-l">
                                 {eyou:prenext get='pre' titlelen='30'}
                                     <span class="text-gray">上一篇：</span>
@@ -164,6 +163,8 @@
                                     <a class="text-gray" >上一篇：到头啦！</a>
                                 {/eyou:prenext}
                             </div>
+                            <!-- 下一篇 end -->
+                            <!-- 下一篇 begin -->
                             <div class="xl12 xs12 xm6 xb6 text-r">
                                 {eyou:prenext get='next' titlelen='30'}
                                     <span class="text-gray">下一篇：</span>
@@ -172,14 +173,13 @@
                                     <a class="text-gray">下一篇：真没啦！</a>
                                 {/eyou:prenext}
                             </div>
+                            <!-- 下一篇 end -->
                        </div>
                     </div>
-                    <!-- 上下篇 end -->
                     <div class="blank-small"></div>
 
                 </div>
-            </div><!-- sidebar-l -->
-
+            </div>
             <div class="xl12 xs12 xm3 xb3">
                 <div class="sidebar-r">
                     <div class="title-l">
@@ -187,12 +187,12 @@
                     </div>
                     <div class="blank-small"></div>
                     <div class="list-post-x">
-                        {eyou:arclist row='5' orderby='rand'}
+                        {eyou:artlist loop='5' orderby='rand'}
                             <div class="media media-x">
                                 {eyou:eq name='$field.is_litpic' value='1'}
                                 <div class="thumb-md float-left radius">
                                     <a href="{$field.arcurl}" title="{$field.title}"><img src="{$field.litpic}" class="img-responsive" alt="{$field.title}"></a>
-                                    <div class="playicon border-none text-center radius text-white text-small" href="{$field.arcurl}"><i class="fa fa-play"></i></div>
+                                    <div class="playicon border-none text-center radius text-white text-small" href="{$field.arcurl}"><i class="iconfont icon-bofang"></i></div>
                                     <div class="playtime radius-rounded text-center text-white text-small">{$field.total_duration}</div>
                                 </div>
                                 {/eyou:eq}
@@ -200,7 +200,7 @@
                                     <h3><a href="{$field.arcurl}" class="text-middle">{$field.title}</a></h3>
                                 </div>
                             </div>
-                        {/eyou:arclist}
+                        {/eyou:artlist}
                     </div>
                 </div>
             </div>
@@ -209,9 +209,9 @@
     </div>
     <div class="blank-large"></div>
 </div>
-<!--网站公用底部——开始-->
+<!--网站公用底部 begin -->
 {eyou:include file="footer.htm" /}
-<!--网站公用底部——结束-->
+<!--网站公用底部 end -->
 {eyou:static file="skin/js/pintuer.js" /}
 {eyou:static file="skin/js/common.js" /}
 </body>

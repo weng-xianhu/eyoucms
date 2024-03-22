@@ -157,9 +157,9 @@ class Archives extends Model
         $result = false;
         while (true)
         {
-            $singleModel = new \app\home\model\Single();
+            $singleModel = new \app\home\model\Single;
             $result = $singleModel->getInfoByTypeid($typeid);
-            if (empty($result['content']) && preg_match('/^lists_single(_(.*))?\.htm$/i', $result['templist'])) {
+            if (!empty($result['empty_logic']) && empty($result['content']) && preg_match('/^lists_single(_(.*))?\.htm$/i', $result['templist'])) {
                 $map = array(
                     'parent_id'       => $result['typeid'],
                     'current_channel' => 6,

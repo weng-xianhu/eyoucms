@@ -39,7 +39,7 @@ class GuestbookAttribute extends Model
     public function syn_add_language_attribute($attr_id)
     {
         /*单语言情况下不执行多语言代码*/
-        if (!is_language()) {
+        if (!is_language() || tpCache('language.language_split')) {
             return true;
         }
         /*--end*/
@@ -109,6 +109,7 @@ class GuestbookAttribute extends Model
             $count           = Db::name('guestbook_attribute')->where([
                     'typeid'    => $typeid,
                     'is_showlist'   => 1,
+                    'is_del'   => 0,
                     'lang'   => $this->admin_lang,
                 ])->count();
             if ($count >= 4) {

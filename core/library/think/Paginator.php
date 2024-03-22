@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: zhangyajun <448901948@qq.com>
+// +----------------------------------------------------------------------
 
 namespace think;
 
@@ -18,19 +27,19 @@ abstract class Paginator implements ArrayAccess, Countable, IteratorAggregate, J
     protected $items;
 
     /** @var integer 当前页 */
-    protected $currentPage;
+    public $currentPage;
 
     /** @var  integer 最后一页 */
-    protected $lastPage;
+    public $lastPage;
 
     /** @var integer|null 数据总数 */
-    protected $total;
+    public $total;
 
     /** @var  integer 每页的数量 */
     protected $listRows;
 
     /** @var bool 是否有下一页 */
-    protected $hasMore;
+    public $hasMore;
 
     /** @var array 一些配置 */
     protected $options = [
@@ -133,6 +142,16 @@ abstract class Paginator implements ArrayAccess, Countable, IteratorAggregate, J
         $url = $path;
 
         /*-----------------URL模式------------------*/
+        $tags_html = 0;
+        $tags_seo_pseudo = 0;
+        if (is_dir('./weapp/Tags/')) {
+            $tags_html = config('tpcache.plus_tags_html');
+            if (!empty($tags_html)) {
+                $tagsModel = new \weapp\Tags\model\TagsModel;
+                $tagsConfData = $tagsModel->getWeappData();
+                $tags_seo_pseudo = empty($tagsConfData['data']['seo_pseudo']) ? 2 : intval($tagsConfData['data']['seo_pseudo']);
+            }
+        }
         // URL模式
         static $seo_pseudo = null;
         null === $seo_pseudo && $seo_pseudo = config('ey_config.seo_pseudo');
@@ -141,26 +160,6 @@ abstract class Paginator implements ArrayAccess, Countable, IteratorAggregate, J
         null === $url_screen_var && $url_screen_var = config('global.url_screen_var');
         if (3 == $seo_pseudo) { // 伪静态模式 by 小虎哥
             if (!isset($this->options['query'][$url_screen_var])) { // 不是筛选URL
-                // static $seo_rewrite_format = null;
-                // null === $seo_rewrite_format && $seo_rewrite_format = config('ey_config.seo_rewrite_format');
-                // if (1 == intval($seo_rewrite_format)) {
-                //     if (!stristr($url, '.html')) {
-                //         $url .= '/';
-                //     }
-                // }
-                
-                // tag标签分页
-                if (!empty($tagid)) {
-                    if (1 >= $this->currentPage) {
-                        1 < $page && $url = preg_replace('/\.html$/i', "_{$page}.html", $url);
-                    } else {
-                        $url = preg_replace('/\/'.$tagid.'_(\d+)\.html$/i', "/{$tagid}.html", $url);
-                        1 < $page && $url = preg_replace('/\.html$/i', "_{$page}.html", $url);
-                    }
-                    unset($parameters[$this->options['var_page']]);
-                    unset($this->options['query']['tagid']);
-                }
-                
                 // 栏目分页
                 if (!empty($typeid)) {
                     if (stristr($url, '.html')) {
@@ -186,8 +185,29 @@ abstract class Paginator implements ArrayAccess, Countable, IteratorAggregate, J
         }
         /*------------------------end*/
 
-        if (2 != $seo_pseudo && 1 == $page) { // 排除静态页面模式
-            unset($parameters[$this->options['var_page']]);
+        // tag静态化插件与内置的tag伪静态路由通用
+        $ctl_act = MODULE_NAME.'@'.CONTROLLER_NAME.'@'.ACTION_NAME;
+        if (($ctl_act != 'plugins@Tags@buildpclists' && 2 == $tags_seo_pseudo) || 3 == $tags_seo_pseudo || (3 == $seo_pseudo && empty($tags_html))) {
+            if (!isset($this->options['query'][$url_screen_var])) { // 不是筛选URL
+                // tag标签分页
+                if (!empty($tagid)) {
+                    if (1 >= $this->currentPage) {
+                        1 < $page && $url = preg_replace('/\.html$/i', "_{$page}.html", $url);
+                    } else {
+                        $url = preg_replace('/\/'.$tagid.'_(\d+)\.html$/i', "/{$tagid}.html", $url);
+                        1 < $page && $url = preg_replace('/\.html$/i', "_{$page}.html", $url);
+                    }
+                    unset($parameters[$this->options['var_page']]);
+                    unset($parameters['tagid']);
+                    unset($this->options['query']['tagid']);
+                }
+            }
+        }
+
+        if (empty($tags_html)) {
+            if (2 != $seo_pseudo && 1 == $page) { // 排除静态页面模式
+                unset($parameters[$this->options['var_page']]);
+            }
         }
 
         if (!empty($parameters)) {
@@ -196,6 +216,7 @@ abstract class Paginator implements ArrayAccess, Countable, IteratorAggregate, J
             }
             $url .= '?' . http_build_query($parameters, null, '&');
         }
+        $url = get_absolute_url($url,"url");
         return $url . $this->buildFragment();
     }
 

@@ -65,7 +65,7 @@ function ShopEditAddress(addr_id){
     //iframe窗
     layer.open({
         type: 2,
-        title: '添加收货地址',
+        title: '修改收货地址',
         shadeClose: false,
         maxmin: false, //开启最大化最小化按钮
         area: [width, height],
@@ -135,7 +135,7 @@ function SelectEd(idname,addr_id)
                 // 计算总价+运费
                 var TotalAmount_old = $('#TotalAmount_old').val();
                 var AmountNew = Number(TotalAmount_old) + Number(res.data);
-                $('#TotalAmount').html(AmountNew.toFixed(2));
+                $('#TotalAmount').html(parseFloat(AmountNew.toFixed(2)));
             }
         });
     }
@@ -154,6 +154,7 @@ function ShopPaymentPage(){
     url += '_ajax=1';
     
     $.ajax({
+        async: false,
         url : url,
         data: $('#theForm').serialize(),
         type:'post',

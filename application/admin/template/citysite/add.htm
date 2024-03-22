@@ -1,0 +1,219 @@
+{include file="public/layout" /}
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;min-width: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width: auto;box-shadow:none;">
+    <form class="form-horizontal" id="post_form" action="{:url('Citysite/add')}" method="post">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">上级区域</dt>
+                <dd class="opt" style="width: auto;"> 
+                    <div class="onoff">
+                        <select name="province_id" id="province_id" onchange="set_city_list(0);">
+                            <option value="0">默认顶级</option>
+                            {volist name='$province_all' id='vo'}
+                            <option value="{$vo.id}" {eq name="$province_id" value="$vo.id" } selected {/eq}>{$vo.name}</option>
+                            {/volist}
+                        </select>
+                        <select name="city_id" id="city_id" class="none ml5">
+                            <option value="0">--请选择--</option>
+                        </select>
+                    </div>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label><em>*</em>区域名称</label>
+                </dt>
+                <dd class="opt" style="width: auto;"> 
+                    <input type="text" name="name" id="name" class="input-txt" autocomplete="off">
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="domain"><em>*</em>英文名称</label>
+                </dt>
+                <dd class="opt" style="width: auto;"> 
+                    <input type="text" name="domain" id="domain" value="" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9a-z]/g,'');" onpaste="this.value=this.value.replace(/[^0-9a-z]/g,'');" autocomplete="off">
+                    &nbsp;<a href="javascript:void(0);" onclick="get_name_pinyin(this);" class="ncap-btn ncap-btn-green">获取拼音</a>
+                    <span class="err"></span>
+                    <p class="notic">数字与小写字母的组合，前台访问：http://www.yourweb.com/英文名称</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="is_open">二级域名</label>
+                </dt>
+                <dd class="opt" style="width: auto;"> 
+                    <label class="curpoin"><input type="radio" name="is_open" value="1">开启</label>&nbsp;&nbsp;
+                    <label class="curpoin"><input type="radio" name="is_open" value="0" checked="checked">关闭</label>
+                    <span class="err"></span>
+                    <p class="notic2 none" id="is_open_tips">
+                        先做好二级域名 <span class="span_domain">demo</span>.{$Request.rootDomain} 的解析及绑定 ，访问链接 {$Request.scheme}://<span class="span_domain">demo</span>.{$rootDomain}
+                    </p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="showall">主站文档</label>
+                </dt>
+                <dd class="opt" style="width: auto;"> 
+                    <label class="curpoin"><input type="radio" name="showall" value="1" checked="checked">显示</label>&nbsp;&nbsp;
+                    <label class="curpoin"><input type="radio" name="showall" value="0">隐藏</label>
+                    <span class="err"></span>
+                    <p class="notic">
+                        列表页面是否显示主站（所属区域为“全国”）的文档
+                    </p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="sort_order">SEO设置</label>
+                </dt>
+                <dd class="opt" style="width: auto;"> 
+                    <label class="curpoin"><input type="radio" name="seoset" value="1">自定义</label>&nbsp;&nbsp;
+                    <label class="curpoin"><input type="radio" name="seoset" value="0" checked="checked">引用系统默认</label>
+                    <span class="err"></span>
+                    <p class="notic">系统默认分站SEO在功能配置里统一填写</p>
+                </dd>
+            </dl>
+            <div class="none" id="div_seoset_html">
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="seo_title">SEO标题</label>
+                    </dt>
+                    <dd class="opt" style="width: auto;"> 
+                        <input type="text" value="" name="seo_title" id="seo_title" class="input-txt" autocomplete="off">
+                        <p class="notic">一般不超过80个字符</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>SEO关键词</label>
+                    </dt>
+                    <dd class="opt" style="width: auto;">           
+                        <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:20px;" autocomplete="off"></textarea>
+                        <span class="err"></span>
+                        <p class="notic">一般不超过100个字符，多个关键词请用英文逗号（,）隔开，建议3到5个关键词。</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>SEO描述</label>
+                    </dt>
+                    <dd class="opt" style="width: auto;">           
+                        <textarea rows="5" cols="60" id="seo_description" name="seo_description" style="height:60px;" autocomplete="off"></textarea>
+                        <span class="err"></span>
+                        <p class="notic">一般不超过200个字符</p>
+                        <p class="notic2">{region}代表区域名称</p>
+                    </dd>
+                </dl>
+            </div>
+            <div class="bot"><a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a></div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+	var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+
+    $(function () {
+        try {
+            set_city_list({$city_id|default=0});
+        }catch(e){}
+
+        $('input[name=seoset]').click(function(){
+            var seoset = $(this).val();
+            if (0 == seoset) {
+                $('#div_seoset_html').hide();
+            } else {
+                $('#div_seoset_html').show();
+            }
+        });
+
+        $('input[name=domain]').keyup(function(){
+            var domain = $(this).val();
+            $('.span_domain').html(domain);
+        });
+
+        $('input[name=is_open]').click(function(){
+            var is_open = $(this).val();
+            if (1 == is_open) {
+                $('#is_open_tips').show();
+            } else {
+                $('#is_open_tips').hide();
+            }
+        });
+    });
+
+    // 判断输入框是否为空
+    function checkForm(){
+        if($('input[name=name]').val() == ''){
+            showErrorMsg('区域名称不能为空！');
+            $('input[name=name]').focus();
+            return false;
+        }
+        if($('input[name=domain]').val() == ''){
+            showErrorMsg('路径不能为空！');
+            $('input[name=domain]').focus();
+            return false;
+        }
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Citysite/add', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    var _parent = parent;
+                    _parent.layer.close(parentObj);
+                    _parent.layer.msg(res.msg, {icon: 1, shade: layer_shade, time: 1000}, function(){
+                        _parent.window.location.reload();
+                    });
+                }else{
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    function get_name_pinyin(obj)
+    {
+        var name = $('input[name=name]').val();
+        if ($.trim(name) == '') {
+            showErrorMsg('区域名称不能为空！');
+            $('input[name=name]').focus();
+            return false;
+        }
+        $(obj).html('正在处理');
+        $.ajax({
+            url: "{:url('Citysite/ajax_get_name_pinyin', ['_ajax'=>1])}",
+            type: 'POST',
+            dataType: 'JSON',
+            data: {name: name},
+            success: function(res){
+                $(obj).html('获取拼音');
+                if (res.code == 1) {
+                    $('input[name=domain]').val(res.data.pinyin);
+                    return true;
+                } else {
+                    showErrorMsg('获取失败');
+                    return false;
+                }
+            },
+            error: function(e){
+                $(obj).html('获取拼音');
+                showErrorMsg(e.responseText);
+                return false;
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

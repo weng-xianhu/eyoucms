@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>订单支付-{eyou:global name='web_name' /}</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    {eyou:static file="users/skin/css/basic.css" /}
+    {eyou:static file="users/skin/css/eyoucms.css" /}
+	<!-- 新样式 2020-11-25 -->
+	{eyou:static file="users/skin/css/element/index.css" /}
+	{eyou:static file="users/skin/css/e-user.css" /}
+    {eyou:include file="users/skin/css/diy_css.htm" /}
+
+    {eyou:static file="/public/static/common/js/jquery.min.js"/}
+    {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+    {eyou:static file="users/skin/js/global.js" /}
+	<style>
+        .pay-item{border:1px solid #eee;height: 50px;position: relative;}
+		.pay-item-select{border:1px solid #1E9FFF;}
+        .pay-item-select::after{position: absolute;right: 4px;bottom: 0;content: "";width:6px;height: 12px;border-bottom: 2px solid #fff;border-right: 2px solid #fff;-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);transform: rotate(45deg);}
+        .pay-item.pay-item-select span {position: absolute;right: 0;bottom: 0;width: 0;height: 0;border-bottom: 20px solid #1E9FFF;border-left: 20px solid transparent;}
+        .button-wrapper{text-align: right;margin-top: 20px;}
+        .layui-btn{height: 32px;line-height: 32px;border: 1px solid transparent;padding: 0 15px;background-color:#1E9FFF;color: #fff;white-space: nowrap;text-align: center;font-size: 14px;border-radius: 2px;cursor: pointer;}
+        .main-bg{margin-bottom: 0 !important;padding-bottom: 0 !important; }
+	</style>
+</head>
+
+<body>
+<div class="ey-container">
+	<div class="el-main main-bg">
+		<div class="el-form-item" style="text-align: center;">
+			<div class="el-form-item__content pay-type-select">
+				<!-- 支付API列表，套板请务必将整块代码一起复制，包含隐藏域 -->
+				<script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
+				{eyou:sppayapilist id='vo'}
+				{eyou:notempty name="$vo.pay_id"}
+				{neq name="$vo.pay_mark" value="Hupijiaopay"}
+				{eyou:php}$pay_mark_vars = "users/skin/images/".$vo['pay_mark'].".png";{/eyou:php}
+				<div class="pay-item"  onclick="LayerPaySelect(this);" data-mark="{$vo.pay_mark}" data-parameter="'{$vo.pay_id}','{$vo.pay_mark}'">
+					<a href="JavaScript:void(0);" >
+						<!--onclick="SelectPayMethodLayer('{$vo.pay_id}', '{$vo.pay_mark}');"-->
+						<img src="{eyou:empty name='$vo.pay_img'}{eyou:static file='$pay_mark_vars' /}{eyou:else/}{$vo.pay_img}{/eyou:empty}">
+                        <span></span>
+					</a>
+				</div>
+				{/neq}
+				{/eyou:notempty}
+				{$vo.hidden}
+				{/eyou:sppayapilist}
+				<input type="hidden" id="PayID">
+				<input type="hidden" id="PayMark">
+				<!-- END -->
+				
+				{eyou:if condition="1 != $data.transaction_type && 1 == $data.pay_balance_open"}
+				<div class="pay-item" data-toggle="modal" data-target="#pay-order-modal" onclick="LayerPaySelect(this);"  data-mark="balance" data-parameter="'{$data.unified_id}','{$data.unified_number}','{$data.transaction_type}'">
+					<a  href="JavaScript:void(0);" id="PayBalancePayment" >
+						<!--onclick="PayBalancePayment('{$data.unified_id}','{$data.unified_number}','{$data.transaction_type}');"-->
+						<img src="{eyou:static file='users/skin/images/pay_yiyou.png' /}" >
+                        <span></span>
+					</a>
+					<!--<span>拥有余额：￥{$users.users_money}</span>-->
+				</div>
+				<script type="text/javascript">
+					// 余额支付，购买商品+视频支付使用
+					function PayBalancePayment(unified_id,unified_number,transaction_type) {
+						if (!unified_number || !unified_id) layer.msg('订单号异常，请刷新重试', {time: 1500});
+
+						// 禁止再次点击余额支付
+						$('#PayBalancePayment').prop("disabled", true).css("pointer-events", "none");
+						var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+						// 发送请求
+						layer_loading('订单处理中');
+						$.ajax({
+							url: '{$RootDir}/index.php?m=user&c=PayApi&a=balance_payment&_ajax=1',
+							data: {unified_id: unified_id, unified_number: unified_number, transaction_type: transaction_type},
+							type:'post',
+							dataType:'json',
+							success:function(res){
+								layer.closeAll();
+								var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+								 var _parent = parent;
+								_parent.layer.close(parentObj);
+								if (1 == res.code) {
+									if (!res.data.mobile && !res.data.email) {
+										_parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+											_parent.window.location.reload();
+										});
+									} else {
+										if (res.data.mobile) SendMobile(res.data.mobile);
+										if (res.data.email) SendEmail(res.data.email);
+										_parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+											_parent.window.location.reload();
+										});
+									}
+								} else {
+									_parent.PayIsRecharge(res.msg, res.url,unified_id,unified_number,transaction_type);
+								}
+							}
+						});
+					}
+				</script>
+				{/eyou:if}
+			</div>
+            <div class="button-wrapper"><button type="button" class="layui-btn layui-btn-sm" id="confirm">确认支付{$data.order_amount}元</button></div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+    $(function(){
+        // 默认支付方式
+        $($('.el-form-item__content .pay-item')[0]).trigger("click");
+    });
+    
+	function LayerPaySelect(obj) {
+        $(".pay-item").each(function(){
+            $(this).removeClass('pay-item-select');
+        });
+        $(obj).addClass('pay-item-select');
+        var mark = $(obj).attr('data-mark')
+        if (mark){
+            var parameter = $(obj).attr('data-parameter')
+            if ('balance' == mark){
+                $('#confirm').attr("onclick","PayBalancePayment("+parameter+");");
+            }else{
+                $('#confirm').attr("onclick","SelectPayMethodLayer("+parameter+");");
+            }
+        }
+    }
+    // function confirm(e) {
+	 //    var mark = $('.pay-item-select').attr('data-mark')
+		// if (mark){
+    //         var parameter = $('.pay-item-select').attr('data-parameter')
+    //         if ('balance' == mark){
+    //             $(e).attr("onclick","PayBalancePayment("+parameter+");");
+    //         }else{
+    //             $(e).attr("onclick","SelectPayMethodLayer("+parameter+");");
+    //         }
+		// }
+    // }
+</script>
+</body>

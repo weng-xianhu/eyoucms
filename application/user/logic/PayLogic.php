@@ -40,6 +40,7 @@ class PayLogic extends Model
         $this->users_type_manage_db  = Db::name('users_type_manage');   // 会员升级分类价格表
         $this->media_order_db        = Db::name('media_order');         // 视频订单表
         $this->article_order_db      = Db::name('article_order');       // 文章订单表
+        $this->download_order_db      = Db::name('download_order');       // 下载模型订单表
     }
 
     /*----------支付宝回调开始----------*/
@@ -51,7 +52,21 @@ class PayLogic extends Model
             }
         }
         $param = $data = $_GET;
-
+        if (empty($param['total_amount']) && !empty($param['total_fee'])){
+            $param['total_amount'] = $param['total_fee'];
+        }
+        $OrderData = $this->checkAmount($param['out_trade_no'],$param['total_amount'],$param['transaction_type']);
+        if(empty($OrderData)){
+            if (!empty($param['is_notify']) && 1 == $param['is_notify']) {
+                echo 'fail'; exit;
+            }else{
+                $retData = [
+                    'code' => 0,
+                    'msg'  => '支付失败，支付金额与订单金额不相符',
+                ];
+                return $retData;
+            }
+        }
         // 支付宝配置信息
         $where = [
             'pay_id' => 2,
@@ -60,7 +75,17 @@ class PayLogic extends Model
         $pay_alipay_config = Db::name('pay_api_config')->where($where)->getField('pay_info');
         if (empty($pay_alipay_config)) {
             $pay_alipay_config = getUsersConfigData('pay.pay_alipay_config');
-            if (empty($pay_alipay_config)) return false;
+            if (empty($pay_alipay_config)) {
+                if (!empty($param['is_notify']) && 1 == $param['is_notify']) {
+                    echo 'fail'; exit;
+                }else{
+                    $retData = [
+                        'code' => 0,
+                        'msg'  => '支付宝配置不正确',
+                    ];
+                    return $retData;
+                }
+            }
         }
         $pay_alipay_config = unserialize($pay_alipay_config);
 
@@ -72,20 +97,20 @@ class PayLogic extends Model
                 $Return = $this->GetNewAliPayRsa2Return($data, $pay_alipay_config);
                 if (!empty($Return)) {
                     $return = $this->NewAliPayProcessing($param);
-                    if (1 == $param['is_notify']) {
+                    if (!empty($param['is_notify']) && 1 == $param['is_notify']) {
                         echo $return; exit;
                     }else{
                         return $return;
                     }
                 }else{
-                    if (1 == $param['is_notify']) {
+                    if (!empty($param['is_notify']) && 1 == $param['is_notify']) {
                         echo 'fail'; exit;
                     }else{
-                        $msg = [
+                        $retData = [
                             'code' => 0,
                             'msg'  => '订单验证失败！',
                         ];
-                        return $msg;
+                        return $retData;
                     }                      
                 }
                 break;
@@ -94,22 +119,22 @@ class PayLogic extends Model
             case '1':
                 // 旧版获取MD5加密的sign
                 $Sign = $this->GetOldAliPayMd5Sign($data, $pay_alipay_config['code']);
-                if ($Sign == $data['sign']){;
+                if ($Sign == $data['sign']){
                     $return = $this->OldAliPayProcessing($param);
-                    if (1 == $param['is_notify']) {
+                    if (!empty($param['is_notify']) && 1 == $param['is_notify']) {
                         echo $return; exit;
                     }else{
                         return $return;
                     }
                 }else{
-                    if (1 == $param['is_notify']) {
+                    if (!empty($param['is_notify']) && 1 == $param['is_notify']) {
                         echo "fail"; exit;
                     }else{
-                        $msg = [
+                        $retData = [
                             'code' => 0,
                             'msg'  => '订单验证失败！',
                         ];
-                        return $msg;
+                        return $retData;
                     }
                 }
                 break;
@@ -130,6 +155,18 @@ class PayLogic extends Model
             // 会员充值或升级支付回调处理
             $return = $this->MoneyOrderProcessing($param, $order_amount);
             return $return;
+        }else if (8 == $param['transaction_type']) {
+            // 视频购买
+            $return = $this->MediaOrderProcessing($param, $order_amount);
+            return $return;
+        }else if (9 == $param['transaction_type']) {
+            // 文章购买
+            $return = $this->ArticleOrderProcessing($param, $order_amount);
+            return $return;
+        }else if (10 == $param['transaction_type']) {
+            // 下载购买
+            $return = $this->DownloadOrderProcessing($param, $order_amount);
+            return $return;
         }
     }
 
@@ -146,6 +183,18 @@ class PayLogic extends Model
         }else if (1 == $param['transaction_type'] || 3 == $param['transaction_type']) {
             // 会员充值或升级支付回调处理
             $return = $this->MoneyOrderProcessing($param, $order_amount);
+            return $return;
+        }else if (8 == $param['transaction_type']) {
+            // 视频购买
+            $return = $this->MediaOrderProcessing($param, $order_amount);
+            return $return;
+        }else if (9 == $param['transaction_type']) {
+            // 文章购买
+            $return = $this->ArticleOrderProcessing($param, $order_amount);
+            return $return;
+        }else if (10 == $param['transaction_type']) {
+            // 文章购买
+            $return = $this->DownloadOrderProcessing($param, $order_amount);
             return $return;
         }
     }
@@ -235,12 +284,203 @@ class PayLogic extends Model
             return $msg;
         }
     }
+    // 文章购买支付回调处理
+    private function ArticleOrderProcessing($param = array(), $order_amount = null)
+    {
+        if (!empty($param['out_trade_no']) && !empty($param['trade_no'])) {
+            $OrderWhere = [
+                // 订单号
+                'order_code' => $param['out_trade_no'],
+                // 实际支付金额
+                'order_amount' => $order_amount,
+            ];
+            $OrderData = $this->article_order_db->where($OrderWhere)->find();
+            $ViewUrl = cookie($OrderData['users_id'] . '_' . $OrderData['product_id'] . '_EyouArticleViewUrl');
+            if (!empty($OrderData)) {
+                // 支付宝付款成功后，订单并未修改状态时，修改订单状态并返回
+                if (0 == $OrderData['order_status']) {
+                    // 订单更新数据，更新为已付款
+                    $OrderData = [
+                        'order_status' => 1,
+                        'pay_details'  => serialize($param),
+                        'pay_time'     => getTime(),
+                        'update_time'  => getTime()
+                    ];
+
+                    // 订单更新
+                    $returnData = $this->article_order_db->where($OrderWhere)->update($OrderData);
+                    if (!empty($returnData)) {
+                        if (1 == $param['is_notify']) {
+                            return "success";
+                        } else {
+                            $retData = [
+                                'code' => 1,
+                                'msg'  => '订单支付完成！',
+                                'url'  => $ViewUrl,
+                            ];
+                            return $retData;
+                        }
+                    }
+                }else{
+                    if (1 == $param['is_notify']) {
+                        return "success";
+                    }else{
+                        $msg = [
+                            'code' => 1,
+                            'msg'  => '订单支付完成！',
+                            'url'  => $ViewUrl
+                        ];
+                        return $msg;
+                    }
+                }
+            }
+        }
+
+        if (1 == $param['is_notify']) {
+            return "fail";
+        }else{
+            $retData = [
+                'code' => 0,
+                'msg'  => '订单处理失败，如已确认付款，请联系管理员！',
+                'url'  => '',
+            ];
+            return $retData;
+        }
+    }
+
+    // 视频购买支付回调处理
+    private function MediaOrderProcessing($param = array(), $order_amount = null)
+    {
+        if (!empty($param['out_trade_no']) && !empty($param['trade_no'])) {
+            $OrderWhere = [
+                // 订单号
+                'order_code' => $param['out_trade_no'],
+                // 实际支付金额
+                'order_amount' => $order_amount,
+            ];
+            $OrderData = $this->media_order_db->where($OrderWhere)->find();
+            $ViewUrl = cookie($OrderData['users_id'] . '_' . $OrderData['product_id'] . '_EyouMediaViewUrl');
+            if (!empty($OrderData)) {
+                // 支付宝付款成功后，订单并未修改状态时，修改订单状态并返回
+                if (0 == $OrderData['order_status']) {
+                    // 订单更新数据，更新为已付款
+                    $OrderData = [
+                        'order_status' => 1,
+                        'pay_details'  => serialize($param),
+                        'pay_time'     => getTime(),
+                        'update_time'  => getTime()
+                    ];
+
+                    $returnData = $this->media_order_db->where($OrderWhere)->update($OrderData);
+                    if (!empty($returnData)) {
+                        if (1 == $param['is_notify']) {
+                            return "success";
+                        } else {
+                            $retData = [
+                                'code' => 1,
+                                'msg'  => '订单支付完成！',
+                                'url'  => $ViewUrl,
+                            ];
+                            return $retData;
+                        }
+                    }
+                }else{
+                    if (1 == $param['is_notify']) {
+                        return "success";
+                    }else{
+                        $msg = [
+                            'code' => 1,
+                            'msg'  => '订单支付完成！',
+                            'url'  => $ViewUrl
+                        ];
+                        return $msg;
+                    }
+                }
+            }
+        }
+
+        if (1 == $param['is_notify']) {
+            return "fail";
+        }else{
+            $retData = [
+                'code' => 0,
+                'msg'  => '订单处理失败，如已确认付款，请联系管理员！',
+                'url'  => '',
+            ];
+            return $retData;
+        }
+    }
+
+    // 下载模型购买支付回调处理
+    private function DownloadOrderProcessing($param = array(), $order_amount = null)
+    {
+        if (!empty($param['out_trade_no']) && !empty($param['trade_no'])) {
+            $OrderWhere = [
+                // 订单号
+                'order_code' => $param['out_trade_no'],
+                // 实际支付金额
+                'order_amount' => $order_amount,
+            ];
+            $OrderData = $this->download_order_db->where($OrderWhere)->find();
+            $ViewUrl = cookie($OrderData['users_id'] . '_' . $OrderData['product_id'] . '_EyouDownloadViewUrl');
+            if (!empty($OrderData)) {
+                // 支付宝付款成功后，订单并未修改状态时，修改订单状态并返回
+                if (0 == $OrderData['order_status']) {
+                    // 订单更新数据，更新为已付款
+                    $OrderData = [
+                        'order_status' => 1,
+                        'pay_details'  => serialize($param),
+                        'pay_time'     => getTime(),
+                        'update_time'  => getTime()
+                    ];
+
+                    // 订单更新
+                    $returnData = $this->download_order_db->where($OrderWhere)->update($OrderData);
+                    if (!empty($returnData)) {
+                        if (1 == $param['is_notify']) {
+                            return "success";
+                        } else {
+                            $retData = [
+                                'code' => 1,
+                                'msg'  => '订单支付完成！',
+                                'url'  => $ViewUrl,
+                            ];
+                            return $retData;
+                        }
+                    }
+                }else{
+                    if (1 == $param['is_notify']) {
+                        return "success";
+                    }else{
+                        $msg = [
+                            'code' => 1,
+                            'msg'  => '订单支付完成！',
+                            'url'  => $ViewUrl
+                        ];
+                        return $msg;
+                    }
+                }
+            }
+        }
+
+        if (1 == $param['is_notify']) {
+            return "fail";
+        }else{
+            $retData = [
+                'code' => 0,
+                'msg'  => '订单处理失败，如已确认付款，请联系管理员！',
+                'url'  => '',
+            ];
+            return $retData;
+        }
+    }
 
     // 支付宝订单处理流程
     // 参数1为支付宝返回数据集
     // 参数2为充值记录表数据集
     // 参数3为订单实际付款金额
     private function MoneyUnifiedProcessing($param, $MoneyData, $PayMoney){
+        $referurl = input('param.referurl/s', null, 'urldecode,base64_decode');
         // 支付宝付款成功后，订单并未修改状态时，修改订单状态并返回
         if ($MoneyData['status'] == 1) {
             // 当前时间
@@ -294,7 +534,7 @@ class PayLogic extends Model
                         $msg = [
                             'code' => 1,
                             'msg'  => '支付完成',
-                            'url'  => url('user/Level/level_centre'),
+                            'url'  => !empty($referurl) ? $referurl : url('user/Level/level_centre'),
                         ];
                         return $msg;
                     }
@@ -319,7 +559,7 @@ class PayLogic extends Model
             $msg = [
                 'code' => 1,
                 'msg'  => '支付完成',
-                'url'  => url('user/Level/level_centre'),
+                'url'  => !empty($referurl) ? $referurl : url('user/Level/level_centre'),
             ];
             return $msg;
         }
@@ -370,7 +610,7 @@ class PayLogic extends Model
         $sign = '';
         foreach ($param as $key => $value)
         {
-            if ($key != 'sign' && $key != 'sign_type' && $key != 'transaction_type' && $key != 'is_notify' && $key != 'm' && $key != 'c' && $key != 'a')
+            if (!in_array($key, ['sign','sign_type','transaction_type','is_notify','m','c','a','referurl']))
             {
                 $sign .= "$key=$value&";
             }
@@ -405,6 +645,9 @@ class PayLogic extends Model
         unset($data['a']);
         unset($data['transaction_type']);
         unset($data['is_notify']);
+        if (isset($data['referurl'])) {
+            unset($data['referurl']);
+        }
 
         // 获取返回值
         $return = $alipaySevice->check($data);
@@ -416,6 +659,10 @@ class PayLogic extends Model
     /*----------微信回调开始----------*/
     public function wechat_return($GetData = [])
     {
+        $OrderData = $this->checkAmount($GetData['out_trade_no'],$GetData['total_amount'],$GetData['transaction_type']);
+        if(empty($OrderData)){
+            return "支付失败，支付金额与订单金额不相符";
+        }
         // 查询订单是否真实已支付
         $PayOrder = $this->WeChatPayOrderInquire($GetData['out_trade_no']);
         
@@ -466,7 +713,6 @@ class PayLogic extends Model
                     // 购物订单无需处理，直接返回结束
                     echo 'FAIL'; exit;
                 }
-
             } else if (3 == $attach[2]) {
                 // 会员升级
                 $where = [
@@ -526,6 +772,46 @@ class PayLogic extends Model
                     echo 'SUCCESS'; exit;
                 } else {
                     // 视频订单无需处理，直接返回结束
+                    echo 'FAIL'; exit;
+                }
+            }else if (10 == $attach[2]) {
+                // 下载模型购买
+                $where = [
+                    'order_code' => $GetData['out_trade_no']
+                ];
+                if (!empty($attach[3])) $where['users_id'] = $attach[3];
+                // 文章订单查询
+                $OrderStatus = $this->download_order_db->where($where)->getField('order_status');
+                if (empty($OrderStatus) && 0 == $OrderStatus) {
+                    // 下载模型订单支付成功后续处理
+                    $Result = $this->DownloadPayProcessing($GetData, $where);
+                    // 返回结束
+                    if (!empty($Result)) echo 'SUCCESS'; exit;
+                } else if (in_array($OrderStatus, [1])) {
+                    // 视频订单已完成处理，直接返回结束
+                    echo 'SUCCESS'; exit;
+                } else {
+                    // 视频订单无需处理，直接返回结束
+                    echo 'FAIL'; exit;
+                }
+            }else if (99 == $attach[2]){
+                // 商品购买
+                $where = [
+                    'order_code' => $GetData['out_trade_no']
+                ];
+                if (!empty($attach[3])) $where['users_id'] = $attach[3];
+                // 购物订单查询
+                $OrderStatus = $this->shop_order_db->where($where)->getField('order_status');
+                if (empty($OrderStatus) && 0 == $OrderStatus) {
+                    // 购物订单支付成功后续处理
+                    $Result = $this->ProductPayProcessing($attach[3], $GetData['out_trade_no'], $GetData);
+                    // 返回结束
+                    if (!empty($Result)) echo 'SUCCESS'; exit;
+                } else if (in_array($OrderStatus, [1, 2, 3])) {
+                    // 购物订单已完成处理，直接返回结束
+                    echo 'SUCCESS'; exit;
+                } else {
+                    // 购物订单无需处理，直接返回结束
                     echo 'FAIL'; exit;
                 }
             }
@@ -694,6 +980,58 @@ class PayLogic extends Model
         // 返回执行结果
         return $Return;
     }
+    // 会员购买下载模型处理
+    private function DownloadPayProcessing($GetData = [], $Where = [])
+    {
+        // 订单更新数据，更新为已付款
+        $OrderData = [
+            'order_status' => 1,
+            'pay_details'  => serialize($GetData),
+            'pay_time'     => getTime(),
+            'update_time'  => getTime()
+        ];
+
+        // 订单更新
+        $UpdateID = $this->download_order_db->where($Where)->update($OrderData);
+        $Return = !empty($UpdateID) ? true : false;
+
+        // 返回执行结果
+        return $Return;
+    }
     
     /*----------微信回调结束----------*/
+    //检验订单支付金额是否相符
+    public function checkAmount($unified_number = '', $unified_amount = 0, $transaction_type = 2)
+    {
+        $OrderData = [];
+        // 商城订单购买支付回调处理
+        if (2 === intval($transaction_type)) {
+            $OrderData = $this->shop_order_db->where(['order_code' => $unified_number,'order_amount' => $unified_amount])->find();
+        }
+        // 会员充值或升级支付回调处理
+        else if (1 === intval($transaction_type) || 3 == intval($transaction_type)) {
+            $OrderData = $this->users_money_db->where(['money' => $unified_amount,'order_number' => $unified_number])->find();
+        }
+        // 视频购买
+        else if (8 === intval($transaction_type)) {
+            $OrderData = $this->media_order_db->where(['order_code' => $unified_number,'order_amount' => $unified_amount])->find();
+        }
+        // 文章购买
+        else if (9 === intval($transaction_type)) {
+            $OrderData = $this->article_order_db->where(['order_code' =>$unified_number,'order_amount' => $unified_amount])->find();
+        }
+        // 下载模型购买
+        else if (10 === intval($transaction_type)) {
+            $OrderData = $this->download_order_db->where(['order_code' =>$unified_number,'order_amount' => $unified_amount])->find();
+        }
+        // 会员充值套餐购买
+        else if (20 === intval($transaction_type)) {
+            $OrderData = Db::name('users_recharge_pack_order')->where(['order_pay_code'=>$unified_number, 'order_pay_prices'=>$unified_amount])->find();
+        }
+        // 多商家商城购买
+        else if (99 === intval($transaction_type)) {
+            $OrderData = Db::name("shop_order_unified_pay")->where(['unified_number' => $unified_number,'unified_amount' => $unified_amount])->find();
+        }
+        return $OrderData;
+    }
 }

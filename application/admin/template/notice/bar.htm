@@ -1,0 +1,42 @@
+
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back_xin" href="javascript:history.back();" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>站内信</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                <!-- {eq name="'UsersNotice@notice'|is_check_access" value="1"}
+                <li>
+                    <a href="{:url('UsersNotice/notice')}" {if condition="in_array($Request.action, ['notice'])"}class="current"{/if}>
+                    <span>基础通知</span>
+                    </a>
+                </li>
+                {/eq} -->
+                {eq name="'UsersNotice@admin_notice_index'|is_check_access" value="1"}
+                <li>
+                    <a href="{:url('UsersNotice/admin_notice_index')}" {if condition="in_array($Request.action, ['admin_notice_index'])"}class="current"{/if}>
+                    <span>站长通知</span>
+                    </a>
+                </li>
+                {/eq}
+
+                <!-- {eq name="'UsersNotice@index'|is_check_access" value="1"}
+                <li>
+                    <a href="{:url('UsersNotice/index')}" {if condition="in_array($Request.action, ['index'])"}class="current"{/if}>
+                    <span>会员通知</span>
+                    </a>
+                </li>
+                {/eq}
+                
+                {eq name="'Notify@notify_tpl'|is_check_access" value="1"}
+                <li>
+                    <a href="{:url('Notify/notify_tpl')}" {if condition="in_array($Request.action, ['notify_tpl'])"}class="current"{/if}>
+                    <span>自定义模板</span>
+                    </a>
+                </li>
+                {/eq} -->
+            </ul>
+        </div>
+    </div>

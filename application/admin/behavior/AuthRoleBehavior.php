@@ -87,7 +87,11 @@ class AuthRoleBehavior
         /*只有相应的控制器和操作名才执行，以便提高性能*/
         $ctl = strtolower(self::$controllerName);
         $act = strtolower(self::$actionName);
-        $actArr = ['add','edit','del'];
+        if ('archives' == $ctl && in_array($act, ['check','uncheck'])) { // 审核信息\取消审核信息
+            $act = 'changetableval';
+        }
+
+        $actArr = ['add','edit','del','rebackdraft'];
         if ('weapp' == $ctl && 'execute' == $act) {
             $sa = input('param.sa/s');
             foreach ($actArr as $key => $cud) {
@@ -112,7 +116,7 @@ class AuthRoleBehavior
                     $auth_role_info = !empty($admin_info['auth_role_info']) ? $admin_info['auth_role_info'] : [];
                     $cudArr = !empty($auth_role_info['cud']) ? $auth_role_info['cud'] : [];
                     if (!in_array($act, $cudArr)) {
-                        if ('changetableval' == $act) {
+                        if ('changetableval' == $act && 'index' == $ctl) {
                             // 审核信息
                             if ('archives' == $post['table'] && 'arcrank' == $post['field']) {
                                 $this->error('您没有操作权限，请联系超级管理员分配权限', null, '', 2);
@@ -125,7 +129,7 @@ class AuthRoleBehavior
                             // 审核信息
                             if (IS_POST && 'edit' == $act) {
                                 $archivesInfo = M('archives')->field('arcrank,admin_id')->find($post['aid']);
-                                if (-1 == $archivesInfo['arcrank'] && $archivesInfo['arcrank'] != $post['arcrank']) {
+                                if (-1 == $archivesInfo['arcrank'] && isset($post['arcrank']) && $archivesInfo['arcrank'] != $post['arcrank']) {
                                     $this->error('您没有操作权限，请联系超级管理员分配权限', url('Archives/edit', ['id'=>$post['aid']]), '', 3);
                                 }
                             }
@@ -147,34 +151,40 @@ class AuthRoleBehavior
         /*只有相应的控制器和操作名才执行，以便提高性能*/
         $ctl = strtolower(self::$controllerName);
         $act = strtolower(self::$actionName);
-        if ('weapp' == $ctl && 'execute' == $act) {
-            $sc = input('param.sc/s');
-            $sm = input('param.sm/s');
-            $sa = input('param.sa/s');
-            $admin_info = self::$admin_info;
-            $auth_role_info = !empty($admin_info['auth_role_info']) ? $admin_info['auth_role_info'] : [];
-            $plugins = !empty($auth_role_info['permission']['plugins']) ? $auth_role_info['permission']['plugins'] : [];
-            // 插件本身设置的权限列表
-            $config = include WEAPP_PATH.$sc.DS.'config.php';
-            $plugins_permission = !empty($config['permission']) ? array_keys($config['permission']) : [];
-            // 管理员拥有的插件具体权限
-            $admin_permission = !empty($plugins[$sc]['child']) ? $plugins[$sc]['child'] : [];
-            // 没有赋给管理员的插件具体权限
-            $diff_plugins_perm = array_diff($plugins_permission, $admin_permission);
-            // 检测插件权限
-            $bool = true;
-            if (empty($plugins_permission) && !isset($plugins[$sc])) {
-                $bool = false;
-            } else if (!empty($plugins_permission)) {
-                foreach ($diff_plugins_perm as $key => $val) {
-                    if (strtolower($sm.'@'.$sa) == strtolower($val)) {
-                        $bool = false;
-                        break;
+        if ('weapp' == $ctl) {
+            if ('execute' == $act) {
+                $sc = input('param.sc/s');
+                $sm = input('param.sm/s');
+                $sa = input('param.sa/s');
+                $admin_info = self::$admin_info;
+                $auth_role_info = !empty($admin_info['auth_role_info']) ? $admin_info['auth_role_info'] : [];
+                $plugins = !empty($auth_role_info['permission']['plugins']) ? $auth_role_info['permission']['plugins'] : [];
+                // 插件本身设置的权限列表
+                $config = include WEAPP_PATH.$sm.DS.'config.php';
+                $plugins_permission = !empty($config['permission']) ? array_keys($config['permission']) : [];
+                // 管理员拥有的插件具体权限
+                $admin_permission = !empty($plugins[$sm]['child']) ? $plugins[$sm]['child'] : [];
+                // 没有赋给管理员的插件具体权限
+                $diff_plugins_perm = array_diff($plugins_permission, $admin_permission);
+                // 检测插件权限
+                $bool = true;
+                if (empty($plugins_permission) && !isset($plugins[$sm])) {
+                    $bool = false;
+                } else if (!empty($plugins_permission)) {
+                    foreach ($diff_plugins_perm as $key => $val) {
+                        if (strtolower($sm.'@'.$sa) == strtolower($val)) {
+                            $bool = false;
+                            break;
+                        }
                     }
                 }
-            }
-            if (!$bool) {
-                $this->error('您没有操作权限，请联系超级管理员分配权限');
+                if (!$bool) {
+                    $this->error('您没有操作权限，请联系超级管理员分配权限');
+                }
+            } else if (in_array($act, ['plugin','mybuy'])) {
+                if (0 < intval(session('admin_info.role_id'))) {
+                    $this->error('您没有操作权限，只允许创始人和超级管理员操作');
+                }
             }
         }
         /*--end*/

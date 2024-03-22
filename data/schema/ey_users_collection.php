@@ -14,7 +14,7 @@ return array (
     'name' => 'users_id',
     'type' => 'int(10)',
     'notnull' => false,
-    'default' => NULL,
+    'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),
@@ -48,7 +48,7 @@ return array (
   'title' => 
   array (
     'name' => 'title',
-    'type' => 'varchar(50)',
+    'type' => 'varchar(200)',
     'notnull' => false,
     'default' => '',
     'primary' => false,

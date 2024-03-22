@@ -46,7 +46,14 @@ class Images extends Model
     {
         $post['aid'] = $aid;
         $addonFieldExt = !empty($post['addonFieldExt']) ? $post['addonFieldExt'] : array();
-        model('Field')->dealChannelPostData($post['channel'], $post, $addonFieldExt);
+        $FieldModel = new \app\admin\model\Field;
+        $FieldModel->dealChannelPostData($post['channel'], $post, $addonFieldExt);
+        
+        // 处理外贸链接
+        if (is_dir('./weapp/Waimao/')) {
+            $waimaoLogic = new \weapp\Waimao\logic\WaimaoLogic;
+            $waimaoLogic->update_htmlfilename($aid, $post, $opt);
+        }
 
         // ---------多图
         model('ImagesUpload')->saveimg($aid, $post);
@@ -55,14 +62,20 @@ class Images extends Model
         // --处理TAG标签
         model('Taglist')->savetags($aid, $post['typeid'], $post['tags'], $post['arcrank'], $opt);
 
-        // 处理mysql缓存表数据
-        if (isset($post['arcrank']) && -1 == $post['arcrank'] && -1 == $post['old_arcrank'] && !empty($post['users_id'])) {
-            // 待审核
-            model('SqlCacheTable')->UpdateDraftSqlCacheTable($post, $opt);
-        } else if (isset($post['arcrank'])) {
-            // 已审核
-            $post['old_typeid'] = intval($post['attr']['typeid']);
-            model('SqlCacheTable')->UpdateSqlCacheTable($post, $opt, 'images');
+        if ('edit' == $opt) {
+            // 清空sql_cache_table数据缓存表 并 添加查询执行语句到mysql缓存表
+            Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
+            model('SqlCacheTable')->InsertSqlCacheTable(true);
+        } else {
+            // 处理mysql缓存表数据
+            if (isset($post['arcrank']) && -1 == $post['arcrank'] /*&& -1 == $post['old_arcrank']*/ && !empty($post['users_id'])) {
+                // 待审核
+                model('SqlCacheTable')->UpdateDraftSqlCacheTable($post, $opt);
+            } else if (isset($post['arcrank'])) {
+                // 已审核
+                $post['old_typeid'] = intval($post['attr']['typeid']);
+                model('SqlCacheTable')->UpdateSqlCacheTable($post, $opt, 'images');
+            }
         }
     }
 
@@ -193,7 +206,7 @@ class Images extends Model
         if (!empty($result)) {
             //20210603大黄注释 删掉文档不删掉服务器的图片,否则复制的文档图片无法显示
 //            foreach ($result as $key => $val) {
-//                $image_url = preg_replace('#^(/[/\w]+)?(/public/upload/|/uploads/)#i', '$2', $val['image_url']);
+//                $image_url = preg_replace('#^(/[/\w\-]+)?(/public/upload/|/uploads/)#i', '$2', $val['image_url']);
 //                if (!is_http_url($image_url) && file_exists('.'.$image_url) && preg_match('#^(/uploads/|/public/upload/)(.*)/([^/]+)\.([a-z]+)$#i', $image_url)) {
 //                    @unlink(realpath('.'.$image_url));
 //                }

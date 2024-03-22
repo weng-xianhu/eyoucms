@@ -25,10 +25,9 @@
             <table>
                 <tr>
                     <td width="80"><var id="lang_search1"></var>: </td>
-                    <td><input id="findtxt" type="text" class="int" /></td>
+                    <td><input id="findtxt" type="text" class="int" onkeyup="this.value=this.value.indexOf('.')!=-1?'':this.value;" onpaste="this.value=this.value.indexOf('.')!=-1?'':this.value;"/></td>
                 </tr>
                 <!--<tr>-->
-
                     <!--<td colspan="2"><span style="color:red"><var id="lang_searchReg"></var></span></td>-->
                 <!--</tr>-->
                 <tr>
@@ -59,7 +58,7 @@
             <table>
                 <tr>
                     <td width="80"><var id="lang_search2"></var>: </td>
-                    <td><input id="findtxt1" type="text" class="int"  /></td>
+                    <td><input id="findtxt1" type="text" class="int"  onkeyup="this.value=this.value.indexOf('.')!=-1?'':this.value;" onpaste="this.value=this.value.indexOf('.')!=-1?'':this.value;"/></td>
                 </tr>
                 <!--<tr>-->
 
@@ -67,7 +66,7 @@
                 <!--</tr>-->
                 <tr>
                     <td><var id="lang_replace"></var>: </td>
-                    <td><input id="replacetxt" type="text" class="int" /></td>
+                    <td><input id="replacetxt" type="text" class="int" onkeyup="this.value=this.value.indexOf('.')!=-1?'':this.value;" onpaste="this.value=this.value.indexOf('.')!=-1?'':this.value;"/></td>
                 </tr>
                 <tr>
                     <td><var id="lang_case_sensitive2"></var></td>

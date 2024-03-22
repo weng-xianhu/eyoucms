@@ -1,22 +1,33 @@
 {include file="public/layout" /}
+<script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
 <body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit; min-width:auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page" style="min-width:auto;box-shadow:none;">
     <div class="flexigrid">
+        <div id="explanation" class="explanation">
+            <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+                <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+            </div>
+            <ul>
+                <li>参数启用后，请确认前端模板是否正确调用此标签，具体使用方法可查看官方标签手册</li>
+            </ul>
+        </div>
+        <br>
         <div class="hDiv">
             <div class="hDivBox">
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
                     <thead>
                     <tr>
-                        <th class="sign w10" axis="col0">
-                            <div class="tc"></div>
-                        </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="">参数名称</div>
+                            <div class="tl pl10">参数名称</div>
                         </th>
                         <th axis="col1" class="w80">
                             <div class="tc">启用</div>
+                        </th>
+                        <th axis="col1" class="w80">
+                            <div class="tc">操作</div>
                         </th>
                     </tr>
                     </thead>
@@ -30,17 +41,16 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
                         {foreach name="list" item="vo" key="k" }
                         <tr>
-                            <td class="sign">
-                                <div class="w10 tc"></div>
-                            </td>
                             <td style="width: 100%">
-                                <div style="">
+                                <div class="tl pl10">
                                     <input type="text" data-id='{$vo.field_id}' id="{$vo.field_name}" data-name="{$vo.field_name}" onchange="UpFieldTitle(this)" value="{$vo.field_title}">
                                     {eq name="$vo.field_name" value="server_name"}
                                     &nbsp;&nbsp;&nbsp;&nbsp;<a href="{:url('Download/set_servername')}" style="color: white;" class="ncap-btn ncap-btn-green" id="submitBtn">设置</a>
@@ -54,6 +64,13 @@
                                     </label>
                                 </div>
                             </td>
+                            <td>
+                                <div class="w80 tc">
+                                    <a href="javascript:void(0);" onclick="showtext('{$vo.field_name}');" class="btn blue {$vo.field_name}" data-clipboard-text="{$field.{$vo.field_name}}">标签调用</a>
+                                </div>
+                            </td>
+                            
+                            
                         </tr>
                         {/foreach}
                     {/empty}
@@ -149,6 +166,10 @@
             }
         });
     }
+    function showtext(classname){
+        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:5});}); 
+    }
+
 </script>
 
 {include file="public/footer" /}

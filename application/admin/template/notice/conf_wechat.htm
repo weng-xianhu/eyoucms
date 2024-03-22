@@ -1,0 +1,238 @@
+{include file="public/layout" /}
+<body class="eyou_body_xin">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="notice/left" /}
+<div id="geduan_div" class="h10"></div>
+<div class="page" style="min-width:auto;margin-left:115px;padding-bottom: 15px;">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back_xin" href="{:url('Weapp/index')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>微信公众号</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    <!-- 操作说明 -->
+    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); margin-bottom: 15px;">
+        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+            <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+        </div>
+        <ul>
+            <li>1，微信公众号：登录 <a href="https://mp.weixin.qq.com" target="_blank">微信公众号平台</a>，在“设置与开发->基本配置”里获取AppID、AppSecret的值，设置IP白名单等。配置可通用于消息通知等。<span style="color: red;">(注：必须是已认证的服务号）</span></li>
+            <!-- <li>2，微站点：微信号、二维码是在微站点开启 <span style="color: red;">强制微信模式</span> 时在PC和移动端展示</li> -->
+        </ul>
+    </div>
+    <div class="flexigrid htitx">
+        <form class="form-horizontal" id="wechat_post_form" action="{:url('UsersNotice/conf_wechat')}" method="post">
+            <div class="ncap-form-default" style="position: sticky;">
+                {notempty name='$ipTips'}
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="url" style="color: red;">注意事项</label>
+                    </dt>
+                    <dd class="opt">
+                        {$ipTips}
+                        <span class="err"></span>
+                        <p class=""></p>
+                    </dd>
+                </dl>
+                {/notempty}
+                {notempty name='$data.apiurl'}
+                <!-- <dl class="row">
+                    <dt class="tit">
+                        <label for="url">服务器地址(URL)</label>
+                    </dt>
+                    <dd class="opt">
+                        {$data.apiurl}
+                        <a href="javascript:void(0);" onclick="showtext('apiurl');" class="ncap-btn ncap-btn-green apiurl" data-clipboard-text="{$data.apiurl}">复制URL</a>
+                        <span class="err"></span>
+                        <p class="">请登录微信公众平台-【开发】-【基本配置】 - 写入服务器地址(URL)</p>
+                    </dd>
+                </dl> -->
+                {/notempty}
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="appid"><em id="em_appid" {empty name='$data.appid'}style="display: none;"{/empty}>*</em>AppID</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="appid" id="appid" value="{$data.appid|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">开发者ID</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="appsecret"><em id="em_appsecret" {empty name='$data.appsecret'}style="display: none;"{/empty}>*</em>AppSecret</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="appsecret" id="appsecret" value="{$data.appsecret|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">开发者密码</p>
+                    </dd>
+                </dl>
+                <dl class="row none">
+                    <dt class="tit">
+                        <label for="url"><em id="em_token">*</em>令牌(Token)</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="token" placeholder="" value="{$data.token}" id="token" class="input-txt">
+                        <span class="err"></span>
+                        <p class="notic">公众号平台的Token要与这里的Token保持一致，请登录微信公众平台-【开发】-【基本配置】查看</p>
+                    </dd>
+                </dl>
+                <dl class="row" {empty name='$data.appid'}style="display: none;"{/empty}>
+                    <dt class="tit">
+                        <label for="title">认证情况</label>
+                    </dt>
+                    <dd class="opt"> 
+                        {if condition="isset($data['type']) && $data['type'] == 2"}
+                            <font color="green">已认证</font>（必须是服务号）
+                        {else /}
+                            <font color="red">未认证</font>（必须是已认证的服务号）
+                        {/if}
+                        <input type="hidden" name="type" value="{$data.type|default=1}">
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <div class="bot" style="padding-bottom:0px;">
+                        <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                        &nbsp;<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=10166&origin_eycms=1','微信公众号配置')" style="font-size: 12px;padding-left: 10px;position:absolute;top: 30px">不会配置？</a>
+                    </div>
+                </dl>
+            </div>
+            <div class="" style="position: absolute;top: 0px;left: 750px;">
+                <dl class="row {empty name='$wechat_qrcodeurl'}none{/empty}" id="dl_wechat_qrcode" style="background: #fff;">
+                    <dd class="opt">
+                        <span id="wechat_span_qrcode"></span>
+                        <div class="ercodepic">
+                            <img id="wechat_img_qrcode" src="__STATIC__/common/images/loading.gif" width="23" height="23" />
+                        </div>
+                        <p class="notic"></p>
+                    </dd>
+                    <dt class="tit" style="text-align: center;line-height: 32px;font-size: 15px;">
+                        <label for="baidu_qrcode">扫码订阅消息推送</label>
+                    </dt>
+                </dl>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function(){
+        $('#appid, #appsecret').keyup(function(){
+            var appid = $.trim($('#appid').val());
+            var appsecret = $.trim($('#appsecret').val());
+            if (appid != '' || appsecret != '') {
+                $('#em_appid').show();
+                $('#em_appsecret').show();
+            } else {
+                $('#em_appid').hide();
+                $('#em_appsecret').hide();
+            }
+        });
+
+        function ajax_get_wechat_qrcode()
+        {
+            var appid = $.trim($('#appid').val());
+            var appsecret = $.trim($('#appsecret').val());
+            if (appid != '' && appsecret != '') {
+                $('#dl_wechat_qrcode').show();
+
+                var wechat_qrcodeurl = "{$wechat_qrcodeurl}";
+                if (wechat_qrcodeurl != '') {
+                    $('#wechat_img_qrcode').attr('src', wechat_qrcodeurl);
+                    setTimeout(function(){
+                        $('#wechat_img_qrcode').attr('width', 122).attr('height', 122);
+                    },100);
+                }
+            }
+
+            $.ajax({
+                url: "{:url('UsersNotice/ajax_get_wechat_qrcode', ['_ajax'=>1])}",
+                type: 'GET',
+                dataType: 'JSON',
+                data: {},
+                success: function (res) {
+                    if (1 == res.code) {
+                        $('#wechat_span_qrcode').hide();
+                        $('#wechat_img_qrcode').attr('src', '');
+                        $('#wechat_img_qrcode').attr('src', res.data.qrcodeurl).attr('width', 122).attr('height', 122).show();
+                    } else {
+                        $('#wechat_span_qrcode').html(res.msg);
+                        $('#wechat_img_qrcode').hide();
+                        return false;
+                    }
+                },
+                error: function (e) {
+                    $('#wechat_span_qrcode').html(e.responseText);
+                    $('#wechat_img_qrcode').hide();
+                    return false;
+                }
+            });
+        }
+        ajax_get_wechat_qrcode();
+    });
+
+    // 判断输入框是否为空
+    function checkForm(){
+        var appid = $.trim($('#appid').val());
+        var appsecret = $.trim($('#appsecret').val());
+        if (appid != '' || appsecret != '') {
+            if(appid == ''){
+                showErrorMsg('AppID不能为空！');
+                $('input[name=appid]').focus();
+                return false;
+            }
+            if(appsecret == ''){
+                showErrorMsg('AppSecret不能为空！');
+                $('input[name=appsecret]').focus();
+                return false;
+            }
+        }
+        layer_loading('正在处理');
+        $.ajax({
+            url: "{:url('UsersNotice/conf_wechat', ['_ajax'=>1])}",
+            type: 'POST',
+            dataType: 'JSON',
+            data: $('#wechat_post_form').serialize(),
+            success: function (res) {
+                layer.closeAll();
+                if (1 == res.code) {
+                    layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                        window.location.reload();
+                    });
+                } else {
+                    showErrorAlert(res.msg);
+                    return false;
+                }
+            },
+            error: function (e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+                return false;
+            }
+        });
+    }
+
+    // 加载图片显示
+    function wechat_pic_call_back(fileurl_tmp) {
+        $("#wechat_pic").val(fileurl_tmp);
+        $("#img_a_wechat_pic").attr('href', fileurl_tmp);
+        $("#img_i_wechat_pic").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" width=300 height=300>',this,{tips: [1, '#fff']});");
+    }
+
+</script>
+
+<script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
+<script type="text/javascript">
+    function showtext(classname){
+        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:2});}); 
+    }
+</script>
+
+{include file="public/footer" /}

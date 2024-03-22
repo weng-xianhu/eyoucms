@@ -24,7 +24,7 @@
     var __lang__ = "{$admin_lang}";
     var __main_lang__ = "{$main_lang}";
 </script>  
-<script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
+{load href="__STATIC__/common/js/jquery.min.js" /}
 <script type="text/javascript" src="__SKIN__/js/jquery-ui/jquery-ui.min.js"></script>
 <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
 <script src="__SKIN__/js/global.js?v={$version}"></script>
@@ -41,7 +41,7 @@
             </div>
             {/volist} 
         </div>
-        <div class="navboxs_bt" onclick="check_submit();">确认提交</div>
+        <div class="navboxs_bt" onclick="check_confirm();">确认提交</div>
     </form>
 
     <script type="text/javascript">
@@ -61,7 +61,33 @@
         var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
 
         // 表单提交
-        function check_submit(){
+        function check_confirm(){
+            if (0 < $('input[name*=checkedids]:checked').length) {
+                submit_form();
+            } else {
+                layer.confirm('没有勾选项，快捷导航模块将被隐藏，不再显示。', {
+                        shade: layer_shade,
+                        area: ['380px', '180px'],
+                        move: false,
+                        title: '提示',
+                        btnAlign:'r',
+                        closeBtn: 3,
+                        btn: ['确定', '取消'] ,//按钮
+                        success: function () {
+                            $(".layui-layer-content").css('text-align', 'left');
+                        }
+                    }, function(){
+                        submit_form();
+                    }, function(index){
+                        layer.close(index);
+                    }
+                );
+            }
+            return false;
+        }
+
+        function submit_form()
+        {
             layer_loading('正在处理');
             $.ajax({
                 url: "{:url('Index/ajax_quickmenu', ['_ajax'=>1])}",
@@ -73,7 +99,7 @@
                     if (res.code == 1) {
                         var _parent = parent;
                         _parent.layer.close(parentObj);
-                        _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                             _parent.gourl(res.url);
                         });
                     } else {
@@ -82,11 +108,9 @@
                 },
                 error: function(e){
                     layer.closeAll();
-                    layer.alert(ey_unknown_error, {icon:5, time:1500});
+                    layer.alert(e.responseText, {icon:5, time:1500});
                 }
             });
-
-            return false;
         }
     </script>
     {include file="public/footer" /}

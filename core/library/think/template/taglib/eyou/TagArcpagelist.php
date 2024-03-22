@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -54,7 +54,7 @@ class TagArcpagelist extends Base
         $arcmulti_db = Db::name('arcmulti');
         $arcmultiRow = $arcmulti_db->field('attstr,querysql')->where(['tagid'=>$tagidmd5])->find();
         if (empty($arcmultiRow)) {
-            return false;
+            return [];
         } else {
             // 取出属性并解析为变量
             $attarray = unserialize(stripslashes($arcmultiRow['attstr']));
@@ -64,15 +64,17 @@ class TagArcpagelist extends Base
             $queryRow = Db::query($querysql);
             $totalNum = !empty($queryRow) ? $queryRow[0]['totalNum'] : 0;
             if (intval($attarray['row']) >= $totalNum) {
-                return false;
+                return [];
             }
         }
 
         $result = [];
         $version = getCmsVersion();
-        $result['onclick'] = ' data-page="1" data-tips="'.$tips.'" data-loading="'.$loading.'" data-root_dir="'.$this->root_dir.'" data-tagidmd5="'.$tagidmd5.'" data-lang="'.$this->home_lang.'"  onClick="tag_arcpagelist_multi(this,\''.$tagid.'\','.intval($pagesize).',\''.$callback.'\');" ';
+        $keywords = input('param.keywords/s');
+        $result['onclick'] = ' data-page="1" data-tips="'.$tips.'" data-loading="'.$loading.'" data-root_dir="'.$this->root_dir.'" data-tagidmd5="'.$tagidmd5.'" data-lang="'.self::$home_lang.'" data-keywords="'.$keywords.'"  onClick="tag_arcpagelist_multi(this,\''.$tagid.'\','.intval($pagesize).',\''.$callback.'\');" ';
+        $srcurl = get_absolute_url("{$this->root_dir}/public/static/common/js/tag_arcpagelist.js?v={$version}");
         $result['js'] = <<<EOF
-<script type="text/javascript" src="{$this->root_dir}/public/static/common/js/tag_arcpagelist.js?v={$version}"></script>
+<script language='javascript' type='text/javascript' src='{$srcurl}'></script>
 EOF;
 
         return $result;

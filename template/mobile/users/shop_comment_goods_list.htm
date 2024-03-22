@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>评价服务-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"/>
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/userfont/iconfont-m.css" /}
+        {eyou:static file="users/skin/userfont/iconfont.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm" /}
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/tag_global.js"/}
+        {eyou:static file="/public/static/common/js/mobile_global.js"/}
+    </head>
+
+    <body>
+        <div class="ey-header-status">
+            <div class="header-status-l">
+                <a href="javascript:history.go(-1);"><i class="el-icon-arrow-left"></i></a>
+            </div>
+            <div class="header-status-m">发表评价</div>
+            <div class="header-status-r"></div>
+        </div>
+        <div class="h50"></div>
+
+        <div class="ey-container">
+            <form id="post_form">
+                <input type="hidden" name="newCommnet" value="1">
+                <input type="hidden" name="order_id" value="{$eyou.field.order.order_id}"/>
+                <input type="hidden" name="order_code" value="{$eyou.field.order.order_code}"/>
+                <div class="comment-main">
+                    {eyou:volist name="$eyou.field.goods" id="vo"}
+                    <input type="hidden" class="text" name="details_id[{$vo.details_id}]" value="{$vo.details_id}">
+                    <input type="hidden" class="text" name="product_id[{$vo.details_id}]" value="{$vo.product_id}">
+                    <div class="comment-box">
+                        <div class="comment-goods">
+                            <div class="comment-goods-l">
+                                <div class="img"><a href="{$vo.arcurl}"><img src="{$vo.litpic}"></a></div>
+                            </div>
+                            <div class="comment-goods-r">
+                                <div class="title"><a href="{$vo.arcurl}">{$vo.product_name}</a></div>
+                                <div class="f12 fc9">{eyou:volist name='$vo.product_spec_list' id='spec'} {$spec.value}&nbsp; {/eyou:volist}</div>
+                            </div>
+                        </div>
+                        <div class="comment-box-t">
+                            <div class="mr10 fw700">描述相符</div>
+                            <div class="ey-start-ment curpoin">
+                                <input type="hidden" name="total_score[{$vo.details_id}]" id="total_score_{$vo.details_id}" value="5">
+                                <i class="iconfont icon-xingxing total-score-{$vo.details_id} active" onclick="totalScore(0, {$vo.details_id});"></i>
+                                <i class="iconfont icon-xingxing total-score-{$vo.details_id} active" onclick="totalScore(1, {$vo.details_id});"></i>
+                                <i class="iconfont icon-xingxing total-score-{$vo.details_id} active" onclick="totalScore(2, {$vo.details_id});"></i>
+                                <i class="iconfont icon-xingxing total-score-{$vo.details_id} active" onclick="totalScore(3, {$vo.details_id});"></i>
+                                <i class="iconfont icon-xingxing total-score-{$vo.details_id} active" onclick="totalScore(4, {$vo.details_id});"></i>
+                            </div>
+                        </div>
+                        <div class="comment-box-m">
+                            <textarea class="el-input__inner" name="content[{$vo.details_id}]" style="min-height: 80px;" rows="3" placeholder="请在此处输入您的评价"></textarea>
+                        </div>
+                        <div class="comment-box-b">
+                            <div class="img-list" data-numlimit="6" id="uploadCommentImg_{$vo.details_id}">
+                                <div class="img-item img-add">
+                                    <div class="img-add-btn">
+                                        <div class="img-add" onclick="uploadCommentImg({$vo.details_id});">
+                                            <div class="img-add-text">
+                                                <span class="icon"><i class="iconfont-m icon-shangchuantupianshipin"></i></span>
+                                                <span>限6张</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {/eyou:volist}
+                </div>
+                <div class="h50"></div>
+                <div class="public-btn">
+                    <a href="JavaScript:void(0);" onclick="submitComment(this);" data-url="{$eyou.SubmitUrl}">确认提交</a>
+                </div>
+            </form>
+        </div>
+        <!-- 上传评价图片模板 -->
+        <div id="uploadCommentImgTpl" style="display: none;">
+            <div class="img-item">
+                <input type="hidden">
+                <div class="img"><img src=""></div>
+                <span class="close"><i class="el-icon-error"></i></span>
+            </div>
+        </div>
+        {eyou:static file="users/skin/js/shop_comment_goods_list.js"/}
+    </body>
+</html>

@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006-2016 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 namespace think\template\taglib;
 
@@ -501,10 +510,10 @@ class Cx extends Taglib
             $version = getCmsVersion();
             switch ($type) {
                 case 'js':
-                    $parseStr .= '<script type="text/javascript" src="' . $val . '?v='.$version.'"></script>';
+                    $parseStr .= '<script type="text/javascript" src="' . $val . '?t='.$version.'"></script>';
                     break;
                 case 'css':
-                    $parseStr .= '<link rel="stylesheet" type="text/css" href="' . $val . '?v='.$version.'" />';
+                    $parseStr .= '<link rel="stylesheet" type="text/css" href="' . $val . '?t='.$version.'" />';
                     break;
                 case 'php':
                     $parseStr .= '<?php include "' . $val . '"; ?>';

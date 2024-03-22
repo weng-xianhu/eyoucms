@@ -6,6 +6,12 @@
 .pagination > li {
     display: inline;
 }
+.pagination > li.disabled a {
+    color: #cfcfcf;
+}
+.pagination > li.disabled a:hover, .pagination > li.disabled a:focus{
+    color: #cfcfcf;
+}
 .pagination > li > a, .pagination > li > span {
     background-color: #fff;
     border: 1px solid #ddd;

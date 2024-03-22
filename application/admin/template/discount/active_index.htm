@@ -1,0 +1,182 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="shop/left" /}
+<div class="page" style="margin-left:100px;">
+    {include file="discount/bar" /}
+    <div class="flexigrid">
+        <!-- 操作说明 -->
+        <div id="explanation" class="explanation">
+            <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
+                <h4 title="提示相关设置操作时应注意的要点">提示</h4>
+                <span title="收起提示" id="explanationZoom" style="display: block;"></span>
+            </div>
+            <ul>
+                <li style="color: red;">注意：该功能仅限于【可视化微信小程序（商城版）】插件</li>
+            </ul>
+        </div>
+        <div class="mDiv">
+            <div class="ftitle">
+               {eq name="$Think.const.CONTROLLER_NAME.'@active_add'|is_check_access" value="1"}
+                   <div class="fbutton" style="float: none;">
+                       <a href="javascript:void(0);" data-href="{:url('Discount/active_add')}" onclick="openFullframe(this, '限时折扣 - 新增活动', '100%', '100%');">
+                           <div class="add">
+                               <span><i class="layui-icon layui-icon-addition"></i>新增活动</span>
+                           </div>
+                       </a>
+                   </div>
+               {/eq}
+            </div>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                        </th>
+                        <th abbr="id" axis="col5" class="w60">
+                            <div class="tc">活动ID</div>
+                        </th>
+                        <th abbr="id" axis="col5" class="w200">
+                            <div class="tc">活动名称</div>
+                        </th>
+                        <th abbr="info" axis="col3">
+                            <div class="text-l10">活动日期</div>
+                        </th>
+                        <th abbr="ac_id" axis="col4"  class="w100">
+                            <div class="tc">预热</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w50">
+                            <div class="tc">显示</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">更新时间</div>
+                        </th>
+                        <th axis="col1" class="w120">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="list" item="vo" key="k" }
+                        <tr>
+                            <td class="sign">
+                                <div class="w40 tc"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.active_id}"></div>
+                            </td>
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {$vo.active_id}
+                                </div>
+                            </td>
+                            <td class="sort">
+                                <div class="w200 tc">
+                                    {$vo.active_name}
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div class="text-l10">
+                                    {$vo.start_date|date='Y-m-d H:i:s',###} 至 {$vo.end_date|date='Y-m-d H:i:s',###}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {if condition="$vo['preheat'] eq 1"}
+                                    <span title="{$vo.preheat_time|date='Y-m-d H:i:s',###}">是</span>
+                                    {else /}
+                                    否
+                                    {/if}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w50 tc">
+                                    {if condition="$vo['status'] eq 1"}
+                                    <span class="yes" {eq name="'Discount@add'|is_check_access" value="1"}onClick="changeTableVal('sharp_active','active_id','{$vo.active_id}','status',this);"{/eq}><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                    <span class="no" {eq name="'Discount@add'|is_check_access" value="1"}onClick="changeTableVal('sharp_active','active_id','{$vo.active_id}','status',this);"{/eq}><i class="fa fa-ban"></i>否</span>
+                                    {/if}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {$vo.update_time|date='Y-m-d',###}
+                                </div>
+                            </td>
+                            <td class="operation">
+                                <div class="w120 tc">
+                                    {eq name="'Discount@active_edit'|is_check_access" value="1"}
+                                    <a href="{:url('Discount/active_edit',array('id'=>$vo['active_id']))}" class="btn blue">编辑</a>
+                                    {/eq}
+                                    {eq name="'Discount@active_del'|is_check_access" value="1"}
+                                    <i></i>
+                                    <a class="btn red"  href="javascript:void(0)" data-url="{:url('Discount/active_del')}" data-id="{$vo.active_id}" onClick="delfun(this);">删除</a>
+                                    {/eq}
+                                </div>
+                            </td>
+                           
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" autocomplete="off" class="checkAll">
+                </div>
+                {eq name="'Discount@active_del'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Discount/active_del')}" class="layui-btn layui-btn-primary">
+                        <span>批量删除</span>
+                    </a>
+                </div>
+                {/eq}
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+    });
+</script>
+
+{include file="public/footer" /}

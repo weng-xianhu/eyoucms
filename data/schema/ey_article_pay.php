@@ -30,9 +30,9 @@ return array (
   'size' => 
   array (
     'name' => 'size',
-    'type' => 'int(11)',
+    'type' => 'float(10,2)',
     'notnull' => false,
-    'default' => '1',
+    'default' => '1.00',
     'primary' => false,
     'autoinc' => false,
   ),

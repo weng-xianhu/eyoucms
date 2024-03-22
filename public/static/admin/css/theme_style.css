@@ -1,0 +1,139 @@
+
+    /*官方内置样式表，升级会覆盖变动，请勿修改，否则后果自负*/
+
+    /*左侧收缩图标*/
+    #foldSidebar i { font-size: 24px;color:#3398cc; }
+    /*左侧菜单*/
+    .eycms_cont_left{ background:#3398cc; }
+    .eycms_cont_left dl dd a:hover,.eycms_cont_left dl dd a.on,.eycms_cont_left dl dt.on{ background:#2189be; }
+    .eycms_cont_left dl dd a:active{ background:#2189be; }
+    .eycms_cont_left dl.jslist dd{ background:#3398cc; }
+    .eycms_cont_left dl.jslist dd a:hover,.eycms_cont_left dl.jslist dd a.on{ background:#2189be; }
+    .eycms_cont_left dl.jslist:hover{ background:#2189be; }
+    /*栏目操作*/
+    .cate-dropup .cate-dropup-con a:hover{ background-color: #3398cc; }
+    /*按钮*/
+    a.ncap-btn-green { background-color: #3398cc; }
+    a:hover.ncap-btn-green { background-color: #2189be; }
+    .flexigrid .sDiv2 .btn:hover { background-color: #3398cc; }
+    .flexigrid .mDiv .fbutton div.add{background-color: #3398cc; border: none;}
+    .flexigrid .mDiv .fbutton div.add:hover{ background-color: #2189be;}
+    .flexigrid .mDiv .fbutton div.adds{color:#3398cc;border: 1px solid #3398cc;}
+    .flexigrid .mDiv .fbutton div.adds:hover{ background-color: #3398cc;}
+    /*选项卡字体*/
+    .tab-base a.current,
+    .tab-base a:hover.current {color:#3398cc !important;}
+    .tab-base a.current:after,
+    .tab-base a:hover.current:after {background-color: #3398cc;}
+    .addartbtn input.btn:hover{ border-bottom: 1px solid #3398cc; }
+    .addartbtn input.btn.selected{ color: #3398cc;border-bottom: 1px solid #3398cc;}
+    /*会员导航*/
+    .member-nav-group .member-nav-item .btn.selected{background: #3398cc;border: 1px solid #3398cc;box-shadow: -1px 0 0 0 #3398cc;}
+    .member-nav-group .member-nav-item:first-child .btn.selected{border-left: 1px solid #3398cc !important;}
+        
+    /* 商品订单列表标题 */
+   .flexigrid .mDiv .ftitle h3 {border-left: 3px solid #3398cc;} 
+    
+    /*分页*/
+    .pagination > .active > a, .pagination > .active > a:focus, 
+    .pagination > .active > a:hover, 
+    .pagination > .active > span, 
+    .pagination > .active > span:focus, 
+    .pagination > .active > span:hover { border-color: #3398cc;color:#3398cc; }
+    
+    .layui-form-onswitch {border-color: #3398cc !important;background-color: #3398cc !important;}
+    .onoff .cb-enable.selected { background-color: #3398cc !important;border-color: #3398cc !important;}
+    .onoff .cb-disable.selected {background-color: #3398cc !important;border-color: #3398cc !important;}
+    .pcwap-onoff .cb-enable.selected { background-color: #3398cc !important;border-color: #3398cc !important;}
+    .pcwap-onoff .cb-disable.selected {background-color: #3398cc !important;border-color: #3398cc !important;}
+    input[type="text"]:focus,
+    input[type="text"]:hover,
+    input[type="text"]:active,
+    input[type="password"]:focus,
+    input[type="password"]:hover,
+    input[type="password"]:active,
+    textarea:hover,
+    textarea:focus,
+    textarea:active { border-color:rgba(51,152,204,0.8);box-shadow: 0 0 0 1px rgba(51,152,204,0.5) !important;}
+    .input-file-show:hover .type-file-button {background-color:#3398cc !important; }
+    .input-file-show:hover {border-color: #3398cc !important;box-shadow: 0 0 5px rgba(51,152,204,0.5) !important;}
+    .input-file-show:hover span.show a,
+    .input-file-show span.show a:hover { color: #3398cc !important;}
+    .input-file-show:hover .type-file-button {background-color: #3398cc !important; }
+    .color_z { color: #3398cc !important;}
+    a.imgupload{
+        background-color: #3398cc !important;
+        border-color: #3398cc !important;
+    }
+    /*专题节点按钮*/
+    .ncap-form-default .special-add{background-color:#3398cc;border-color:#3398cc;}
+    .ncap-form-default .special-add:hover{background-color:#2189be;border-color:#2189be;}
+    
+    /*更多功能标题*/
+    .on-off_panel .title::before {background-color:#3398cc;}
+    .on-off_panel .on-off_list-caidan .icon_bg .on{color: #3398cc;}
+    .on-off_panel .e-jianhao {color: #3398cc;}
+    
+     /*内容菜单*/
+    .ztree li a:hover{color:#3398cc !important;}
+    .ztree li a.curSelectedNode{background-color: #3398cc !important; border-color:#3398cc !important;}
+    .layout-left .on-off-btn {background-color: #3398cc !important;}
+
+    /*框架正在加载*/
+    .iframe_loading{width:100%;background:url(/public/static/admin/images/loading-0.gif) no-repeat center center;}
+    
+    .layui-btn-normal {background-color: #3398cc;}
+    .layui-laydate .layui-this{background-color: #3398cc !important;}
+    .laydate-day-mark::after {background-color: #3398cc !important;}
+	
+    /*上传框*/
+    .upload-body .upload-con .image-header .image-header-l .layui-btn {
+        background: #3398cc !important;
+        border-color: #3398cc !important;
+    }
+    .upload-body .layui-tab-brief>.layui-tab-title .layui-this {
+        color: #3398cc !important;
+    }
+    .upload-body .layui-tab-brief>.layui-tab-title .layui-this:after {
+        border-bottom-color: #3398cc !important;
+    }
+    .layui-layer-btn .layui-layer-btn0 {
+        border-color: #3398cc !important;
+        background-color: #3398cc !important;
+    }
+    .upload-body .layui-btn-yes {
+        background: #3398cc !important;
+        border-color: #3398cc !important;
+    }
+    .pagination li.active a {
+        color: #3398cc !important;
+    }
+    .upload-nav .item.active {
+        color: #3398cc !important;
+    }
+    .upload-body .upload-con .group-item.active a {
+        color: #3398cc !important;
+    }
+    .upload-body .upload-con .group-item.active {
+        color: #3398cc !important;
+        background-color: rgba(51,152,204,0.1);
+    }
+    .pagination li.active {
+        border-color: #3398cc !important;
+    }
+    .upload-body .layui-btn-normal {
+        background-color: #3398cc !important;
+    }
+    .upload-body .upload-con .image-list li.up-over .image-select-layer i {
+        color: #3398cc !important;
+    }
+    .upload-body .upload-con .image-list li .layer .close {
+        color: #3398cc !important;
+    }
+    .upload-dirimg-con .ztree li a.curSelectedNode {
+         background-color: #FFE6B0 !important; 
+         border-color: #FFB951 !important; 
+    }
+    /*.plug-item-content .plug-item-bottm a, .plug-item-content .plug-status .yes {
+        color: #3398cc !important;
+    }*/

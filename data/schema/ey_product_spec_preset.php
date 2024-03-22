@@ -54,6 +54,24 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'merchant_id' => 
+  array (
+    'name' => 'merchant_id',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'product_add' => 
+  array (
+    'name' => 'product_add',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'lang' => 
   array (
     'name' => 'lang',

@@ -20,7 +20,7 @@
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div class="page min-hg-c-10">
     
     <form class="form-horizontal" id="post_form" action="{:url('UsersNotice/edit')}" method="post">
         <div class="ncap-form-default">
@@ -30,7 +30,7 @@
                 </dt>
                 <dd class="opt">
                     <span>
-                        {$row.usernames|default='全站会员'}
+                        {$row.users_id|default='全站会员'}
                     </span>
                     <input type="hidden" name="users_id" value="{$row.users_id|default=''}" id="ids" class="input-txt" autocomplete="off">
                     <span class="err"></span>
@@ -98,7 +98,7 @@
                 if(res.code == 1){
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {shade: 0.1, time: 1000}, function(){
                         _parent.window.location.reload();
                     });
                 }else{
@@ -115,7 +115,7 @@
 <script type="text/javascript">
     /*
     UE.getEditor('remark',{
-        serverUrl :"{:url('Ueditor/index',array('savepath'=>'ueditor'))}",
+        serverUrl :"{:url('Ueditor/index',array('savepath'=>'allimg'))}",
         zIndex: 999,
         initialFrameWidth: "100%", //初化宽度
         initialFrameHeight: 450, //初化高度

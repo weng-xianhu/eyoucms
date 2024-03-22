@@ -1,24 +1,25 @@
 {include file="public/layout" /}
-<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit; height: calc( 100% - 40px );">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit; height: calc( 100% - 40px );">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width: auto;">
-    {neq name="$Request.param.newframe" value='1'}
-    {include file="member/bar" /}
-    {/neq}
-    <div class="flexigrid">
-        {neq name="$Request.param.newframe" value='1'}
-        <div class="mDiv">
-			<form class="navbar-form form-inline" action="{:url('Member/level_index')}" method="get" onsubmit="layer_loading('正在处理');">
-			    {$searchform.hidden|default=''}
-            <div class="ftitle">
-                 {include file="member/users_bar" /}
-            </div>
-            </form>
+{include file="member/left" /}
+<div class="page min-hg-c-20" style="min-width:auto;margin-left:100px;">
+    <!-- <div class="fixed-bar">
+        <div class="item-title">
+            <ul class="tab-base nc-row">
+                {eq name="'Member@level_index'|is_check_access" value="1"}
+                <li>
+                    <a {if condition="in_array($Request.action, ['level_index','level_add','level_edit'])"}class="current"{/if} href='{:url("Member/level_index")}'>
+                        <span>会员级别</span>
+                    </a>
+                </li>
+                {/eq}
+            </ul>
         </div>
-        {/neq}
+    </div> -->
+    <div class="flexigrid">
         <!-- 操作说明 -->
-        <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+        <div id="explanation" class="explanation">
             <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
                 <h4 title="提示相关设置操作时应注意的要点">提示</h4>
                 <span title="收起提示" id="explanationZoom" style="display: block;"></span>
@@ -37,7 +38,7 @@
                             <div class="tc"></div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div  style="padding-left: 15px;">级别名称</div>
+                            <div style="padding-left: 15px;">级别名称</div>
                         </th>
                         <th abbr="article_time" axis="col4" class="w160">
                             <div class="tc">会员等级值</div>
@@ -65,9 +66,9 @@
                         <tbody id="Template">
                         {empty name="list"}
                             <tr>
-                                <td class="no-data" align="center" axis="col0" colspan="50">
-                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
-                                </td>
+                                <div class="">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </tr>
                         {else/}
                             {foreach name="list" item="vo" key="k" }
@@ -160,7 +161,7 @@
             {/eq}
             {eq name="'Level@index'|is_check_access" value="1"}
             <div class="fbutton">
-                <a href="javascript:void(0);" data-href="{:U('Level/index')}" onclick="openFullframe(this, '升级套餐管理', '100%', '100%');" class="layui-btn layui-btn-primary">
+                <a href="javascript:void(0);" data-href="{:U('Level/index')}" onclick="openFullframe(this, '升级套餐管理', '80%', '80%');" class="layui-btn layui-btn-primary">
                     <span class="red">升级套餐管理</span>
                 </a>
             </div>
@@ -259,9 +260,17 @@
 
     // 删除
     function usersdel(obj){
-        layer.confirm('此操作不可恢复，确认彻底删除<span style="color:red;">'+$(obj).attr('data-level_name')+'</span>？', {
-            title: false,
-            btn: ['确定','取消'] //按钮
+        layer.confirm('确认彻底删除<span style="color:red;">'+$(obj).attr('data-level_name')+'</span>？', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定','取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function(){
             layer_loading('正在处理');
             // 确定

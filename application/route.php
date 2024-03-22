@@ -16,7 +16,7 @@ $route = [
     '__pattern__' => [
         'tid' => '[\-\w]+',
         'dirname' => '[\-\w]+',
-        'aid' => '[\-\w]+',
+        'aid' => '(.*)',
     ],
     '__alias__' => [],
     '__domain__' => [],
@@ -28,8 +28,7 @@ config('tpcache', $globalTpCache);
 
 $goto = input('param.goto/s');
 $goto = trim($goto, '/');
-
-// 会员中心模板风格 
+// 会员中心模板风格
 $web_users_tpl_theme = !empty($globalTpCache['web_users_tpl_theme']) ? $globalTpCache['web_users_tpl_theme'] : config('ey_config.web_users_tpl_theme');
 config('ey_config.web_users_tpl_theme', $web_users_tpl_theme);
 
@@ -49,9 +48,9 @@ if (empty($web_tpl_theme)) {
 config('ey_config.web_tpl_theme', $web_tpl_theme);
 !empty($web_tpl_theme) && $web_tpl_theme .= '/';
 
-/*辨识响应式模板，还是PC与移动的分离模板*/
+/*辨识是否代码适配，还是PC与移动的分离模板*/
 $num = 0;
-$response_type = 0; // 默认是响应式
+$response_type = 0; // 默认是代码适配
 $tpldirList = ["template/{$web_tpl_theme}pc/index.htm","template/{$web_tpl_theme}mobile/index.htm"];
 foreach ($tpldirList as $key => $val) {
     if (file_exists($val)) {
@@ -82,13 +81,26 @@ config('ey_config.system_home_default_lang', $system_home_default_lang);
 // 是否https链接
 $is_https = !empty($globalTpCache['web_is_https']) ? true : config('is_https');
 config('is_https', $is_https);
+// 前台默认区域
+// $site_default_home = !empty($globalTpCache['site_default_home']) ? $globalTpCache['site_default_home'] : config('ey_config.site_default_home');
+// config('ey_config.site_default_home', $site_default_home);
 
 // 是否存在问答插件
 $is_ask_weapp = false;
 if (is_dir('./weapp/Ask/')) {
     $is_ask_weapp = true;
 }
-
+//是否存在tags插件
+$is_tags_weapp = false;
+if (is_dir('./weapp/Tags/')) {
+    $weappList = \think\Db::name('weapp')->where([
+        'status'    => 1,
+    ])->cache(true, EYOUCMS_CACHE_TIME, 'weapp')
+    ->getAllWithIndex('code');
+    if (!empty($weappList['Tags'])) {
+        $is_tags_weapp = true;
+    }
+}
 $uiset = input('param.uiset/s', 'off');
 if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
     config('ey_config.seo_inlet', 0);
@@ -117,34 +129,56 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
     config('ey_config.seo_inlet', $seo_inlet);
 
     if (3 == $seo_pseudo) {
-        $lang_rewrite = [];
-        $lang_rewrite_str = '';
-        /*多语言*/
-        $lang = input('param.lang/s');
-        if (is_language()) {
-            if (!stristr($request->baseFile(), 'index.php')) {
-                if (!empty($lang) && $lang != $system_home_default_lang) {
-                    $lang_rewrite_str = '<lang>/';
+        $request = request();
+        $lang_rewrite = $site_rewrite = [];
+        $lang_rewrite_str = $site_rewrite_str = '';
+        if (config('city_switch_on')) { // 多城市与多语言只能开启一个，多城市优先级高于多语言
+            if (stristr($request->baseFile(), 'index.php')) {
+                $site = input('param.site/s');
+                if (!empty($site) && $request->subDomain() != $site) {
+                    $site_rewrite_str .= '<site>/';
                 }
-            } else {
-                if (get_current_lang() != get_default_lang()) {
-                    $lang_rewrite_str .= '<lang>/';
+            }
+
+            if (!empty($site_rewrite_str)) {
+                $site_rewrite = [
+                    // 首页
+                    $site_rewrite_str.'$' => [
+                        'home/Index/index',
+                        ['method' => 'get', 'ext' => ''],
+                        'cache'=>1
+                    ],
+                ];
+            }
+            $lang_rewrite_str = $site_rewrite_str;
+        }
+        else { // 多语言
+            $lang = input('param.lang/s');
+            if (is_language()) {
+                if (!stristr($request->baseFile(), 'index.php')) {
+                    if (!empty($lang) && $lang != $system_home_default_lang) {
+                        $lang_rewrite_str = '<lang>/';
+                    }
+                } else {
+                    if (get_current_lang() != get_default_lang()) {
+                        $lang_rewrite_str .= '<lang>/';
+                    }
                 }
+            }
+
+            if (!empty($lang_rewrite_str)) {
+                $lang_rewrite = [
+                    // 首页
+                    $lang_rewrite_str.'$' => [
+                        'home/Index/index',
+                        ['method' => 'get', 'ext' => ''],
+                        'cache'=>1
+                    ],
+                ];
             }
         }
 
-        if (!empty($lang_rewrite_str)) {
-            $lang_rewrite = [
-                // 首页
-                $lang_rewrite_str.'$' => [
-                    'home/Index/index',
-                    ['method' => 'get', 'ext' => ''],
-                    'cache'=>1
-                ],
-            ];
-        }
-        /*--end*/
-        if (1 == $seo_rewrite_format || 3 == $seo_rewrite_format) { // 精简伪静态
+        if (in_array($seo_rewrite_format, [1,3,4])) { // 精简伪静态
             $home_rewrite = [
                 // 会员中心
                 $lang_rewrite_str.'user$' => [
@@ -172,24 +206,7 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
                     ['ext' => ''], 
                     'cache'=>1
                 ],
-                // 标签伪静态
-                $lang_rewrite_str.'tags$' => [
-                    'home/Tags/index',
-                    ['method' => 'get', 'ext' => ''], 
-                    'cache'=>1
-                ],
-                $lang_rewrite_str.'tags/<tagid>_<page>$' => [
-                    'home/Tags/lists',
-                    ['method' => 'get', 'ext' => 'html'], 
-                    ['tagid' => '[\d]+', 'page' => '[\d]+'],
-                    'cache'=>1
-                ],
-                $lang_rewrite_str.'tags/<tagid>$' => [
-                    'home/Tags/lists',
-                    ['method' => 'get', 'ext' => 'html'], 
-                    ['tagid' => '[\d]+'],
-                    'cache'=>1
-                ],
+
                 // 搜索伪静态
                 $lang_rewrite_str.'sindex$' => [
                     'home/Search/index',
@@ -202,7 +219,40 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
                     'cache'=>1
                 ],
             ];
-
+            if (config('city_switch_on')) {
+                $lang_rewrite_str_1 = str_replace('<site>/', '', $lang_rewrite_str);
+                $home_rewrite += [
+                    // 多城市站点主页
+                    $lang_rewrite_str_1.'citysite$' => [
+                        'home/Citysite/index',
+                        ['method' => 'get', 'ext' => ''],
+                        'cache'=>1
+                    ],
+                ];
+            }
+            if (false === $is_tags_weapp){
+                $lang_rewrite_str_1 = str_replace('<site>/', '', $lang_rewrite_str);
+                $home_rewrite += [
+                    // 标签伪静态
+                    $lang_rewrite_str_1.'tags$' => [
+                        'home/Tags/index',
+                        ['method' => 'get', 'ext' => ''],
+                        'cache'=>1
+                    ],
+                    $lang_rewrite_str_1.'tags/<tagid>_<page>$' => [
+                        'home/Tags/lists',
+                        ['method' => 'get', 'ext' => 'html'],
+                        ['tagid' => '[\d]+', 'page' => '[\d]+'],
+                        'cache'=>1
+                    ],
+                    $lang_rewrite_str_1.'tags/<tagid>$' => [
+                        'home/Tags/lists',
+                        ['method' => 'get', 'ext' => 'html'],
+                        ['tagid' => '[\d]+'],
+                        'cache'=>1
+                    ],
+                ];
+            }
             if (false === $is_ask_weapp) {
                 // 问答模型
                 $home_rewrite += [
@@ -237,7 +287,6 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
                     ],
                 ];
             }
-
             $home_rewrite += [
                 // 列表页 - 分页
                 $lang_rewrite_str.'<tid>/list_<typeid>_<page>$' => [
@@ -261,6 +310,43 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
                     'cache'=>1
                 ],
             ];
+            if ($seo_rewrite_format == 4) { // 父目录/当前目录/
+                $arctype_list = get_all_arctype();
+                foreach ($arctype_list as $key=>$val){
+                    $parent_dir = ""; //$val['dirname']."/";
+                    if (!empty($val['parent_id'])) {
+                        $parent_dir = get_all_parent_dirpath($val['parent_id'],$arctype_list,$parent_dir);
+                    } else {
+                        $parent_dir = get_all_parent_dirpath($val['id'],$arctype_list,$parent_dir);
+                    }
+                    $dirname = trim(str_ireplace("/", "-", $parent_dir),"-");
+                    if(!empty($dirname)){
+                        $home_rewrite += [
+                            // 列表页 - 分页
+                            $lang_rewrite_str.$parent_dir.'<tid>/list_<typeid>_<page>$' => [
+                                'home/Lists/index?'.$dirname,
+                                ['method' => 'get', 'ext' => ''],
+                                ['tid' => $__pattern__['tid'], 'typeid' => '[\d]+', 'page' => '[\d]+'],
+                                'cache'=>1
+                            ],
+                            // 列表页
+                            $lang_rewrite_str.$parent_dir.'<tid>$' => [
+                                'home/Lists/index?'.$dirname,
+                                ['method' => 'get', 'ext' => ''],
+                                ['tid' => $__pattern__['tid']],
+                                'cache'=>1
+                            ],
+                            // 内容页
+                            $lang_rewrite_str.$parent_dir.'<dirname>/<aid>$' => [
+                                'home/View/index?'.$dirname,
+                                ['method' => 'get', 'ext' => 'html'],
+                                ['dirname' => $__pattern__['dirname'], 'aid' => $__pattern__['aid']],
+                                'cache'=>1
+                            ],
+                        ];
+                    }
+                }
+            }
         } else {
             $home_rewrite = [
                 // 会员中心
@@ -410,24 +496,6 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
                     ['tid' => $__pattern__['tid']], 
                     'cache'=>1
                 ],
-                // 标签伪静态
-                $lang_rewrite_str.'tags$' => [
-                    'home/Tags/index',
-                    ['method' => 'get', 'ext' => ''], 
-                    'cache'=>1
-                ],
-                $lang_rewrite_str.'tags/<tagid>_<page>$' => [
-                    'home/Tags/lists',
-                    ['method' => 'get', 'ext' => 'html'], 
-                    ['tagid' => '[\d]+', 'page' => '[\d]+'], 
-                    'cache'=>1
-                ],
-                $lang_rewrite_str.'tags/<tagid>$' => [
-                    'home/Tags/lists',
-                    ['method' => 'get', 'ext' => 'html'], 
-                    ['tagid' => '[\d]+'], 
-                    'cache'=>1
-                ],
                 // 搜索伪静态
                 $lang_rewrite_str.'sindex$' => [
                     'home/Search/index',
@@ -447,7 +515,40 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
                     'cache'=>1
                 ],
             ];
-
+            if (config('city_switch_on')) {
+                $lang_rewrite_str_1 = str_replace('<site>/', '', $lang_rewrite_str);
+                $home_rewrite += [
+                    // 多城市站点主页
+                    $lang_rewrite_str_1.'citysite$' => [
+                        'home/Citysite/index',
+                        ['method' => 'get', 'ext' => ''],
+                        'cache'=>1
+                    ],
+                ];
+            }
+            if (false === $is_tags_weapp){
+                $lang_rewrite_str_1 = str_replace('<site>/', '', $lang_rewrite_str);
+                $home_rewrite += [
+                    // 标签伪静态
+                    $lang_rewrite_str_1.'tags$' => [
+                        'home/Tags/index',
+                        ['method' => 'get', 'ext' => ''],
+                        'cache'=>1
+                    ],
+                    $lang_rewrite_str_1.'tags/<tagid>_<page>$' => [
+                        'home/Tags/lists',
+                        ['method' => 'get', 'ext' => 'html'],
+                        ['tagid' => '[\d]+', 'page' => '[\d]+'],
+                        'cache'=>1
+                    ],
+                    $lang_rewrite_str_1.'tags/<tagid>$' => [
+                        'home/Tags/lists',
+                        ['method' => 'get', 'ext' => 'html'],
+                        ['tagid' => '[\d]+'],
+                        'cache'=>1
+                    ],
+                ];
+            }
             if (false === $is_ask_weapp) {
                 // 问答模型
                 $home_rewrite += [
@@ -518,12 +619,11 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
             }
             /*--end*/
         }
-        $home_rewrite = array_merge($lang_rewrite, $home_rewrite);
+        $home_rewrite = array_merge($lang_rewrite, $site_rewrite, $home_rewrite);
     }
     else if (2 == $seo_pseudo) {
-        $lang_rewrite_str = '';
+        $lang_rewrite_str = $site_rewrite_str = '';
         $home_rewrite = [];
-
         if (false === $is_ask_weapp) {
             // 问答模型
             $home_rewrite += [
@@ -569,5 +669,4 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
 }
 
 $route = array_merge($route, $home_rewrite);
-
 return $route;

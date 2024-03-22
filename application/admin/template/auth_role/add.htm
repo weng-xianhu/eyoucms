@@ -13,7 +13,7 @@
                     <label for="name"><em>*</em>角色名称</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="name" id="name" value="" class="input-txt">
+                    <input type="text" name="name" id="name" value="" class="input-txt" autocomplete="off">
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
@@ -53,6 +53,16 @@
                     <p class="notic"></p>
                 </dd>
             </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="name">功能地图</label>
+                </dt>
+                <dd class="opt">
+                    <label><input type="checkbox" name="switch_map" value="1" />允许操作</label>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
             <dl class="row" id="dl_only_oneself">
                 <dt class="tit">
                     <label for="name">文档权限</label>
@@ -83,6 +93,7 @@
                     <p><label><input type="checkbox" name="cud[]" value="edit" checked="checked" />编辑信息</label></p>
                     <p><label><input type="checkbox" name="cud[]" value="del" checked="checked" />删除信息</label></p>
                     <p><label><input type="checkbox" name="cud[]" value="changetableval" checked="checked" />审核信息</label></p>
+                    <p class="none"><label><input type="checkbox" name="cud[]" value="rebackdraft" checked="checked" />退回信息</label></p>
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
@@ -101,42 +112,11 @@
                           {if condition="1002 == $vo2['id']"}
                             <div class="admin_poplistdiv">
                                 <h2>{$vo2.name}</h2>
-                                {php}$first_arctype_id = 0;{/php}
-                                {if condition="! empty($arctypes)"}
+                                {if condition="! empty($arctype_p_html)"}
                                 <p>
-                                    {php}$first_arctype_id = '';{/php}
-                                    {foreach name="arctypes" item="arctype" key="k"}
-                                        {if condition="isset($arctype_array[$arctype['id']])"}
-                                            {if condition="$k>0"}
-                                            <em class="arctype_bg expandable"></em>
-                                            {else /}
-                                            <em class="arctype_bg collapsable"></em>
-                                            {php}$first_arctype_id = $arctype['id'];{/php}
-                                            {/if}
-                                        {/if}
-                                        <label><input type="checkbox" class="arctype_cbox arctype_id_{$arctype.id}" value="{$arctype.id}" />{$arctype.typename}</label>
-                                    {/foreach}
+                                    {$arctype_p_html}
                                 </p>
-                                
-                                {foreach name="arctypes" item="arctype"}
-                                {if condition="isset($arctype_array[$arctype['id']])"}
-                                    <div class="arctype_child" id="arctype_child_{$arctype['id']}"{if condition="$first_arctype_id==$arctype['id']"} style="display: block;"{/if}>
-                                    {foreach $arctype_array[$arctype['id']] as $item}
-                                        <div class="arctype_child1">
-                                            <label><input type="checkbox" class="arctype_cbox arctype_id_{$item.id}" value="{$item.id}" data-pid="{$item.parent_id}" />{$item.typename}</label>
-                                        </div>
-                                        {if condition="isset($arctype_array[$item['id']])"}
-                                        <div class="arctype_child2" id="arctype_child_{$item['id']}">
-                                            <span class="button level1 switch center_docu"></span>
-                                            {foreach $arctype_array[$item['id']] as $vo}
-                                            <label><input type="checkbox" class="arctype_cbox" value="{$vo.id}" data-pid="{$vo.parent_id}" data-tpid="{$item.parent_id}" />{$vo.typename}</label>
-                                            {/foreach}
-                                        </div>
-                                        {/if}
-                                    {/foreach}
-                                    </div>
-                                {/if}
-                                {/foreach}
+                                {$arctype_child_html}
                                 {/if}
                             </div>
                           {else /}
@@ -190,7 +170,7 @@
         $('#postForm input[name="tmp_role_id"]').bind('click', function(){
             changeRole($(this).val());
         });
-        $('.arctype_bg').bind('click', function(){
+        $(".rolecss").on("click",".arctype_bg",function(){
             var acid = $(this).next().find('input').val(), input = 'arctype_child_' + acid;
             $('.arctype_child').hide();
             if( $(this).attr('class').indexOf('expandable') == -1 ){
@@ -201,40 +181,52 @@
                 $('#'+input).show();
             }
         });
-        $('.arctype_cbox').bind('click', function(){
+        //循环判断选中上级
+        function checked_pid(pid) {
+            if (0 < $('input[data-pid="'+pid+'"]:checked').length) {
+                $('.arctype_id_'+pid).prop('checked', 'checked');
+                var pid1 = $('.arctype_id_'+pid).data('pid');
+                if (pid1){
+                    checked_pid(pid1);
+                }
+            }
+            return false;
+        }
+        //循环判断取消上级
+        function cancel_pid(pid) {
+            if (1 > $('#arctype_child_'+pid).find('input[type="checkbox"]:checked').length) {
+                $('.arctype_id_'+pid).removeAttr('checked');
+                var pid1 = $('.arctype_id_'+pid).data('pid');
+                if (pid1){
+                    cancel_pid(pid1);
+                }
+            }
+            return false;
+        }
+        $(".rolecss").on("click",".arctype_cbox",function () {
             var acid = $(this).val(), input = 'arctype_child_' + acid;
             var pid = $(this).data('pid');
             var tpid = $(this).data('tpid');
-            if($(this).attr('checked')){
-                if (0 < $('input[data-pid="'+pid+'"]:checked').length) {
-                    $('.arctype_id_'+pid).attr('checked', 'checked');
-                }
-                if (0 < $('#arctype_child_'+tpid).find('input[type="checkbox"]:checked').length) {
-                    $('.arctype_id_'+tpid).attr('checked', 'checked');
-                }
-                $('#'+input).find('input[type="checkbox"]').attr('checked', 'checked');
-            }else{
-                if (1 > $('input[data-pid="'+pid+'"]:checked').length) {
-                    $('.arctype_id_'+pid).removeAttr('checked');
-                }
-                if (1 > $('#arctype_child_'+tpid).find('input[type="checkbox"]:checked').length) {
-                    $('.arctype_id_'+tpid).removeAttr('checked');
-                }
-                $('#'+input).find('input[type="checkbox"]').removeAttr('checked');
+            if($(this).prop('checked')){  //选中，所有直系上级全部选中,所有管辖下级选中
+                checked_pid(pid);
+                $('#'+input).find('input[type="checkbox"]').prop('checked', 'checked');  //选中所有下级
+            }else{    //取消，判断同级是否全部为取消状态，取消直系上级
+                $('#'+input).find('input[type="checkbox"]').removeAttr('checked');  //取消所有下级
+                cancel_pid(pid);
             }
         });
         $('#select_cud').bind('click', function(){
-            if($(this).attr('checked')){
-                $('#postForm input[name^="cud"]').attr('checked', 'checked');
+            if($(this).prop('checked')){
+                $('#postForm input[name^="cud"]').prop('checked', 'checked');
             }else{
                 $('#postForm input[name^="cud"]').removeAttr('checked');
             }
         });
 
         $('#select_all_permission').bind('click', function(){
-            if($(this).attr('checked')){
-                $('#postForm input[name^="permission"]').attr('checked', 'checked');
-                $('#postForm .arctype_cbox').attr('checked', 'checked');
+            if($(this).prop('checked')){
+                $('#postForm input[name^="permission"]').prop('checked', 'checked');
+                $('#postForm .arctype_cbox').prop('checked', 'checked');
             }else{
                 $('#postForm input[name^="permission"]').removeAttr('checked');
                 $('#postForm .arctype_cbox').removeAttr('checked');
@@ -248,13 +240,13 @@
     function hasSelectAll(){
         var c = true;
         $('#postForm input[name^="permission"],#postForm .arctype_cbox').each(function(idx, ele){
-            if(! $(ele).attr('checked')){
+            if(! $(ele).prop('checked')){
                 c = false;
                 return;
             }
         });
         if(c){
-            $('#select_all_permission').attr('checked', 'checked');
+            $('#select_all_permission').prop('checked', 'checked');
         }else{
             $('#select_all_permission').removeAttr('checked');
         }
@@ -262,13 +254,13 @@
 
         var c = true;
         $('#postForm input[name^="cud"]').each(function(idx, ele){
-            if(! $(ele).attr('checked')){
+            if(! $(ele).prop('checked')){
                 c = false;
                 return;
             }
         });
         if(c){
-            $('#select_cud').attr('checked', 'checked');
+            $('#select_cud').prop('checked', 'checked');
         }else{
             $('#select_cud').removeAttr('checked');
         }
@@ -277,7 +269,7 @@
     function changeRole(value){
         if (-1 == value) {
             $('#postForm input[type="checkbox"]').attr("checked","checked");
-            $('#postForm input[name="only_oneself"]').removeAttr('checked');
+            // $('#postForm input[name="only_oneself"]').removeAttr('checked');
             return;
         }
         $('#postForm input[type="checkbox"]').removeAttr('checked');
@@ -286,25 +278,28 @@
             if(item.id == value){
                 if(item.language){
                     item.language.map(function(row){
-                        $('#postForm input[name^="language"][value="'+row+'"]').attr('checked', 'checked');
+                        $('#postForm input[name^="language"][value="'+row+'"]').prop('checked', 'checked');
                     });
                 }
 
                 if(item.online_update){
-                    $('#postForm input[name="online_update"]').attr('checked', 'checked');
+                    $('#postForm input[name="online_update"]').prop('checked', 'checked');
+                };
+                if(item.switch_map){
+                    $('#postForm input[name="switch_map"]').prop('checked', 'checked');
                 };
                 // if(item.editor_visual){
-                //     $('#postForm input[name="editor_visual"]').attr('checked', 'checked');
+                //     $('#postForm input[name="editor_visual"]').prop('checked', 'checked');
                 // };
                 if(item.only_oneself){
-                    $('#postForm input[name="only_oneself"]').attr('checked', 'checked');
+                    $('#postForm input[name="only_oneself"]').prop('checked', 'checked');
                 };
                 if(item.check_oneself){
-                    $('#postForm input[name="check_oneself"]').attr('checked', 'checked');
+                    $('#postForm input[name="check_oneself"]').prop('checked', 'checked');
                 };
                 if(item.cud){
                     item.cud.map(function(row){
-                        $('#postForm input[name^="cud"][value="'+row+'"]').attr('checked', 'checked');
+                        $('#postForm input[name^="cud"][value="'+row+'"]').prop('checked', 'checked');
                     });
                 }
 
@@ -313,17 +308,21 @@
                         if(p == 'plugins'){
                             if(item.permission[p]){
                                 for(var pluginId in item.permission[p]){
-                                    $('#postForm input[name="permission['+p+']['+pluginId+'][code]"][value="'+pluginId+'"]').attr('checked', 'checked');
+                                    $('#postForm input[name="permission['+p+']['+pluginId+'][code]"][value="'+pluginId+'"]').prop('checked', 'checked');
                                     if(item.permission[p][pluginId].child){
                                         item.permission[p][pluginId].child.map(function(row){
-                                            $('#postForm input[name="permission['+p+']['+pluginId+'][child][]"][value="'+row+'"]').attr('checked', 'checked');
+                                            $('#postForm input[name="permission['+p+']['+pluginId+'][child][]"][value="'+row+'"]').prop('checked', 'checked');
                                         });
                                     }
                                 }
                             }
+                        } else if (p == 'arctype') {
+                            item.permission[p].map(function(row){
+                                $('#postForm .arctype_id_'+row).prop('checked', 'checked');
+                            });
                         }else{
                             item.permission[p].map(function(row){
-                                $('#postForm input[name="permission['+p+'][]"][value="'+row+'"]').attr('checked', 'checked');
+                                $('#postForm input[name="permission['+p+'][]"][value="'+row+'"]').prop('checked', 'checked');
                             });
                         }
                         
@@ -338,7 +337,7 @@
 
     function postSubmit(){
         if($('input[name=name]').val() == '' ){
-            showErrorMsg('组名称不能为空！');
+            showErrorMsg('角色名称不能为空！');
             $('input[name=name]').focus();
             return false;
         }
@@ -375,7 +374,7 @@
                     if(res.code == 1){
                         var _parent = parent;
                         _parent.layer.close(parentObj);
-                        _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                        _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
                             _parent.window.location.reload();
                         });
                     }else{
@@ -399,7 +398,7 @@
                         var str = '<p><label><input type="radio" name="role_id" value="'+res.data.role_id+'" onclick="changeRole('+res.data.role_id+');" checked="checked" />'+res.data.role_name+'</label></p>';
                         parent.custom_role(str, res.data.role_id, res.data.admin_role_list);
                         parent.layer.close(parentObj);
-                        parent.layer.msg(res.msg, {shade: 0.3, time: 1000});
+                        parent.layer.msg(res.msg, {shade: layer_shade, time: 1000});
                     } else {
                         parent.showErrorMsg(res.msg);
                     }

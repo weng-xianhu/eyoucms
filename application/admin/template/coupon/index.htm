@@ -1,13 +1,22 @@
 {include file="public/layout" /}
 
-<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4; padding: 20px; ">
+<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4; padding: 10px 0 10px 10px; ">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 {include file="shop/left" /}
-<div class="page" style="margin-left:98px;">
-    <div class="flexigrid">
+<div class="page">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back_xin" href="{:url('Shop/market_index')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>优惠券</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+     <div class="flexigrid">
         <!-- 操作说明 -->
-        <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); width: 99%; height: 100%;">
+        <div id="explanation" class="explanation">
             <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
                 <h4 title="提示相关设置操作时应注意的要点">提示</h4>
                 <span title="收起提示" id="explanationZoom" style="display: block;"></span>
@@ -27,6 +36,7 @@
                     </a>
                 </div>
                 {/eq}
+                
             </div>
             <form class="navbar-form form-inline" id="searchForm" action="{:url('Coupon/index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
@@ -35,7 +45,7 @@
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="优惠券...">
                         <input type="submit" class="btn" value="搜索">
-                        <i class="fa fa-search"></i>
+                        <i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -85,13 +95,15 @@
             <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
                 <table style="width: 100%">
                     <tbody>
-                        {empty name="list"}
-                        <tr>
-                            <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
-                            </td>
-                        </tr>
-                        {else/}
+	                    {empty name="list"}
+	                    <tr>
+	                        <td class="no-data" align="center" axis="col0" colspan="50">
+	                            <div class="no_row">
+	                                <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+	                            </div>
+	                        </td>
+	                    </tr>
+	                    {else/}
                         {foreach name="list" item="vo" key="k" }
                         <tr>
                             <td class="sign">
@@ -106,15 +118,15 @@
                             </td>
                             <td>
                                 <div class="w80 tc">
-                                    {eq name="$vo['coupon_type']" value='1'}
+                                    {if condition='1 == $vo.coupon_type'}
                                     全站通用
-                                    {/eq}
-                                    {eq name="$vo['coupon_type']" value='2'}
+                                    {elseif condition='2 == $vo.coupon_type' /}
                                     指定商品
-                                    {/eq}
-                                    {eq name="$vo['coupon_type']" value='3'}
+                                    {elseif condition='3 == $vo.coupon_type' /}
                                     指定分类
-                                    {/eq}
+                                    {elseif condition='4 == $vo.coupon_type' /}
+                                    指定分类
+                                    {/if}
                                 </div>
                             </td>
                             <td>
@@ -154,10 +166,15 @@
                                     </a>
                                     {/eq}
                                     {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
-                                    <i></i>
-                                    <a class="btn red" href="javascript:void(0);" data-url="{:url('Coupon/del')}" data-id="{$vo.coupon_id}" onClick="delfun(this);">
-                                        删除
-                                    </a>
+                                        <i></i>
+                                        <a class="btn red" href="javascript:void(0);" data-url="{:url('Coupon/del')}" data-id="{$vo.coupon_id}" onClick="delfun(this);">
+                                            删除
+                                        </a>
+                                    {else /}
+                                        <i></i>
+                                        <a class="btn grey" href="javascript:void(0);" >
+                                            删除
+                                        </a>
                                     {/eq}
                                 </div>
                             </td>
@@ -178,6 +195,7 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        
         <div class="footer-oper">
             <span class="ml15">
                 <input type="checkbox" class="checkAll">
@@ -191,6 +209,14 @@
     </div>
 </div>
 <script type="text/javascript">
+    try{
+        if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
+            $(".page").css("margin-left","");
+        }else{
+            $(".page").css("margin-left","100px");
+        }
+    }catch(e){}
+
     $(function(){
         $('input[name*=ids]').click(function(){
             if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {

@@ -33,6 +33,7 @@ class Media extends Base
     }
 
     // 视频订单列表页
+    /*
     public function index()
     {
         // 定义数组
@@ -141,10 +142,8 @@ class Media extends Base
             $hidden .= '<input type="hidden" name="m" value="user" />';
             $hidden .= '<input type="hidden" name="c" value="Media" />';
             $hidden .= '<input type="hidden" name="a" value="index" />';
-            /*多语言*/
             $lang = Request::instance()->param('lang/s');
             !empty($lang) && $hidden .= '<input type="hidden" name="lang" value="'.$lang.'" />';
-            /*--end*/
         }
         // 搜索的URL
         $searchurl = url('user/Media/index');
@@ -156,6 +155,7 @@ class Media extends Base
 
         return $this->fetch('users/media_index');
     }
+    */
 
     /**
      * 播放记录
@@ -163,7 +163,8 @@ class Media extends Base
     public function play_index()
     {
         $condition['a.users_id']    = $this->users_id;
-        $condition['b.users_price'] = ['>', 0];
+        $condition['b.lang']    = $this->home_lang;
+        // $condition['b.users_price'] = ['>', 0];
         // 分页
         $count = $this->media_play_record_db
             ->alias('a')
@@ -171,9 +172,10 @@ class Media extends Base
             ->where($condition)
             ->group('a.aid')->count();
 
-        $Page = new Page($count, 10);
+        $Page = $pager = new Page($count, 10);
         $show = $Page->show();
         $this->assign('page', $show);
+        $this->assign('pager', $pager);
 
         $total_field = 'select sum(file_time) as total_time from ' . PREFIX . 'media_file where aid= a.aid';
 
@@ -181,7 +183,7 @@ class Media extends Base
         $list = $this->media_play_record_db
             ->where($condition)
             ->alias('a')
-            ->field("a.file_id,a.aid,sum(a.play_time) as sum_play_time,max(a.update_time) as last_update_time,c.*,b.*,({$total_field}) as total_time,(sum(a.play_time)/({$total_field})) as process")
+            ->field("a.id as play_id,a.file_id,a.aid,sum(a.play_time) as sum_play_time,max(a.update_time) as last_update_time,c.*,b.*,({$total_field}) as total_time,(sum(a.play_time)/({$total_field})) as process")
             ->join('archives b', 'a.aid=b.aid', 'inner')
             ->join('arctype c', 'b.typeid=c.id', 'left')
             ->group('a.aid')
@@ -211,14 +213,31 @@ class Media extends Base
         $eyou['field']['total_time'] = $total_time;
         $this->assign('eyou', $eyou);
 
+        $this->assign('delurl', url('user/Media/media_play_del'));
         return $this->fetch('users/users_media_play_index');
+    }
 
+    public function media_play_del()
+    {
+        if (IS_AJAX_POST) {
+            $id_arr = input('del_id/a');
+            $id_arr = eyIntval($id_arr);
+            if (!empty($id_arr)) {
+                $where = [
+                    'id' => ['IN', $id_arr],
+                    'users_id' => $this->users_id,
+                ];
+                $result = $this->media_play_record_db->where($where)->delete(true);
+                if (!empty($result)) $this->success('删除成功');
+            }
+        }
+        $this->error('删除失败');
     }
 
     // 视频产品购买接口
-    public function media_order_buy() {
+    public function media_order_buy()
+    {
         if (IS_AJAX_POST) {
-            
             // 提交的订单信息判断
             $post = input('post.');
             if (empty($post) || empty($post['aid'])) $this->error('操作异常，请刷新重试');
@@ -226,31 +245,35 @@ class Media extends Base
             // 查询是否已购买
             $where = [
                 'order_status' => 1,
-                'product_id' => $post['aid'],
+                'product_id' => intval($post['aid']),
                 'users_id' => $this->users_id
             ];
             $MediaCount = Db::name('media_order')->where($where)->count();
             if (!empty($MediaCount)) $this->error('你已购买过，请直接观看');
 
+            // 查看是否已生成过订单
+            $where['order_status'] = 0;
+            $mediaOrder = Db::name('media_order')->where($where)->order('order_id desc')->find();
+
             // 查询视频文档内容
-            $Where = [
+            $where = [
                 'is_del' => 0,
                 'status' => 1,
                 'aid' => $post['aid'],
                 'arcrank' => ['>', -1]
             ];
-            $list = Db::name('archives')->where($Where)->find();
+            $list = Db::name('archives')->where($where)->find();
             if (empty($list)) $this->error('操作异常，请刷新重试');
+            $list['users_price'] = get_discount_price($this->users['level_discount'], $list['users_price']);
 
-            // 查看是否已生成过订单
-            $where['order_status'] = 0;
-            $MediaOrder = Db::name('media_order')->where($where)->order('order_id desc')->find();
-            if (!empty($MediaOrder)) {
-                $OrderID = $MediaOrder['order_id'];
+            // 订单生成规则
+            $time = getTime();
+            $orderCode = date('Y') . $time . rand(10, 100);
+            if (!empty($mediaOrder)) {
+                $OrderID = $mediaOrder['order_id'];
                 // 更新订单信息
-                $time = getTime();
                 $OrderData = [
-                    'order_code'      => date('Y') . $time . rand(10,100),
+                    'order_code'      => $orderCode,
                     'users_id'        => $this->users_id,
                     'mobile'          => !empty($this->users['mobile']) ? $this->users['mobile'] : '',
                     'order_status'    => 0,
@@ -265,9 +288,8 @@ class Media extends Base
                 Db::name('media_order')->where('order_id', $OrderID)->update($OrderData);
             } else {
                 // 生成订单并保存到数据库
-                $time = getTime();
                 $OrderData = [
-                    'order_code'      => date('Y') . $time . rand(10,100),
+                    'order_code'      => $orderCode,
                     'users_id'        => $this->users_id,
                     'mobile'          => !empty($this->users['mobile']) ? $this->users['mobile'] : '',
                     'order_status'    => 0,
@@ -289,29 +311,23 @@ class Media extends Base
             // 保存成功
             if (!empty($OrderID)) {
                 // 支付结束后返回的URL
-                $ReturnUrl = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : url('user/Media/index');
+                $return_url = input('param.return_url/s', url('user/Media/index'));
+                $ReturnUrl = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : $return_url;
                 cookie($this->users_id . '_' . $post['aid'] . '_EyouMediaViewUrl', $ReturnUrl);
-
                 // 对ID和订单号加密，拼装url路径
                 $Paydata = [
                     'type' => 8,
                     'order_id' => $OrderID,
                     'order_code' => $OrderData['order_code'],
                 ];
-
                 // 先 json_encode 后 md5 加密信息
                 $Paystr = md5(json_encode($Paydata));
-
                 // 清除之前的 cookie
                 Cookie::delete($Paystr);
-
                 // 存入 cookie
                 cookie($Paystr, $Paydata);
-
                 // 跳转链接
-                $PaymentUrl = urldecode(url('user/Pay/pay_recharge_detail',['paystr'=>$Paystr]));
-
-                $this->success('订单已生成！', $PaymentUrl);
+                $this->success('订单已生成！', urldecode(url('user/Pay/pay_recharge_detail', ['paystr' => $Paystr])));
             }
         } else {
             abort(404);

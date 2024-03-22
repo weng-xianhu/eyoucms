@@ -7,7 +7,7 @@
         var __root_dir__ = "__ROOT_DIR__";
         var __lang__ = "{$admin_lang}";
     </script>
-    <script type="text/javascript" src="__SKIN__/js/jquery.js"></script>
+    <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
     <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
 </head>
 <style>
@@ -95,7 +95,8 @@
 
 <script type="text/javascript">
     $('#a_close_pop').hide();
-    var typeid = "{$typeid}";
+    var typeid = {$typeid|default=0};
+    var uphtmltype = {$uphtmltype|default=0};
     var findex = 0;   // 本次执行的下标
     var achieve = 0; // 已完成文档数
     var allpagetotal = 0;
@@ -103,11 +104,17 @@
     var timestamp1 = Date.parse(new Date());
     function send(){
         $.ajax({
-            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildArticle&lang="+__lang__,
-            type:'POST',
+            url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildArticle&lang="+__lang__+"&id="+typeid+"&findex="+findex+"&achieve="+achieve+"&uphtmltype="+uphtmltype+"&_ajax=1",
+            type:'GET',
             dataType:'json',
-            data:{'id':typeid,'findex':findex,'achieve':achieve,_ajax:1},
+            data:{},
+            timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
             beforeSend:function(){
+                if (achieve == 0) {
+                    $("#title").html('数据优化中');
+                    $(".progress-bar").css('width','0.5%');
+                    $(".percent").text('0.5');
+                }
             },
             success:function(res){
                 findex = res.data.findex;

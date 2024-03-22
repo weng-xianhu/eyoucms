@@ -17,7 +17,7 @@
         .status-ico-error{background-position: -97px 0}
 		@media (max-width: 767px) {.system-message{width: 90%;box-shadow:none!important;}}
     </style>
-    <script type="text/javascript" src="__PUBLIC__/static/common/js/jquery.tools.min.js"></script>
+    <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version|default='v1.6.4'}"></script>
     <script type="text/javascript">
         $(function(){
             var height2=$('.system-message').height();
@@ -35,7 +35,11 @@
             <div class="status-ico status-ico-ok"></div>
             <p class="success">
                 {in name=':get_current_lang()' value='cn,zh'}
-                    {$msg|strip_tags=###}
+                    {if condition="stristr($msg, '__html__')"}
+                        {$msg|str_replace='__html__','',###}
+                    {else /}
+                        {$msg|strip_tags=###}
+                    {/if}
                 {else /}
                     success
                 {/in}
@@ -43,19 +47,20 @@
             {/case}
             {case value="0"}
             <div class="status-ico status-ico-error"></div>
-            <p class="error">{$msg|strip_tags=###}</p>
+            <p class="error">
+                {if condition="stristr($msg, '__html__')"}
+                    {$msg|str_replace='__html__','',###}
+                {else /}
+                    {$msg|strip_tags=###}
+                {/if}
+            </p>
             {/case}
         {/switch}
         <p class="jump">
-            {in name=':get_current_lang()' value='cn,zh'}
-                {eq name=':get_current_lang()' value='zh'}
-                    頁面自動 <a id="href" href="{$url}">跳轉</a> 等待時間： <b id="wait" data-data="{$data}">{$wait}</b>
-                {else /}
-                    页面自动 <a id="href" href="{$url}">跳转</a> 等待时间： <b id="wait" data-data="{$data}">{$wait}</b>
-                {/eq}
-            {else /}
-                Waiting time for page auto <a id="href" href="{$url}">jump</a>: <b id="wait" data-data="{$data}">{$wait}</b>
-            {/in}
+            {php}
+                $foreign_msg = sprintf(foreign_lang('gbook12', get_current_lang()), '<a id="href" href="'.$url.'">', '</a>');
+            {/php}
+            {$foreign_msg} <b id="wait" data-data="{$data}">{$wait}</b>
         </p>
     </div>
     <script type="text/javascript">
@@ -74,12 +79,21 @@
             var gbook_submit = document.getElementById('wait').getAttribute("data-data");
             var data = gbook_submit.split("|");
             if (data.length > 0 && data[0] == 'gbook_submit') {
+                //发送邮箱
                 $.ajax({
                     type: "post",
-                    data: {type:data[0],tid:data[1],aid:data[2],_ajax:1},
+                    data: {type:data[0],tid:data[1],aid:data[2],form_type:data[3],_ajax:1},
                     dataType: 'json',
                     // timeout: 3000,
                     url: "{:url('api/Ajax/send_email')}",
+                });
+                //发送短信
+                $.ajax({
+                    type: "post",
+                    data: {scene:11,_ajax:1},
+                    dataType: 'json',
+                    // timeout: 3000,
+                    url: "{:url('api/Ajax/SendMobileCode')}",
                 });
             }
             /*--end*/

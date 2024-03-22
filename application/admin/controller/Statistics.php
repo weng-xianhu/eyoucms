@@ -14,13 +14,23 @@
 namespace app\admin\controller;
 use think\Db;
 use think\Config;
+use app\admin\logic\ShopLogic;
 
 // 数据统计
 class Statistics extends Base {
 
+    public $ShopLogic;
+    public $UsersConfigData = [];
+
     public function _initialize() {
         parent::_initialize();
         $this->language_access(); // 多语言功能操作权限
+
+        // 会员中心配置信息
+        $this->UsersConfigData = getUsersConfigData('all');
+        $this->assign('userConfig',$this->UsersConfigData);
+        
+        $this->ShopLogic = new ShopLogic;
     }
     
     /**
@@ -28,6 +38,10 @@ class Statistics extends Base {
      */
     public function index()
     {
+        // 列出营销功能里已使用的模块
+        $marketFunc = $this->ShopLogic->marketLogic();
+        $this->assign('marketFunc', $marketFunc);
+
         // 近七日成交量成交额折线图数据
         $LineChartData = $this->GetLineChartData();
         $this->assign('DealNum', $LineChartData['DealNum']);
@@ -117,7 +131,7 @@ class Statistics extends Base {
     public function GetTimeCycletData($Start = null, $End = null)
     {
         $param = input('param.');
-        if (0 != $param['Year']) {
+        if (!empty($param['Year']) && 0 != $param['Year']) {
             $param['Start'] = strtotime("-0 year -{$param['Year']} month -0 day");
             $param['End']   = getTime();
         } else {

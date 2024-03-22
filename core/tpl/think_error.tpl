@@ -18,9 +18,14 @@
     if(!function_exists('parse_file')){
         function parse_file($file, $line)
         {
+            /*提高体验 by 小虎哥*/
             $rootPath = realpath(dirname($_SERVER['SCRIPT_FILENAME']));
+            if (!stristr($file, $rootPath)) {
+                $rootPath = dirname($rootPath);
+            }
             $filestr = str_replace($rootPath, '', $file);
             return $filestr." 第 {$line} 行左右";
+            /*--end*/
         }
     }
 
@@ -113,7 +118,7 @@
             font-weight: 400;
         }
         h3{
-            margin: 12px;
+            /*margin: 12px;*/
             font-size: 16px;
             font-weight: bold;
         }
@@ -313,14 +318,14 @@
 </head>
 <body>
     <div class="echo">
-        <?php echo $echo;?>
+
     </div>
     <div class="exception">
         <div class="info">
             <div>
-                <h2><?php echo sprintf('报错 %s', parse_file($file, $line)); ?></h2>
+                <h2>当前页面出现致命错误，详细报错请切换至"开发模式"调试</h2>
             </div>
-            <div><h1><?php echo htmlspecialchars_decode(nl2br(htmlentities($message))); ?></h1></div>
+            <div><h3 style="font-weight: normal;">切换方法：后台>基本信息>核心设置>勾选开发模式并保存</h3></div>
         </div>
     </div>
 

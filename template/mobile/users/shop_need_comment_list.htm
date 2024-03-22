@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>待评价订单-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/bootstrap.min.css"/}
+        {eyou:static file="users/skin/css/basic.css"/}
+        {eyou:static file="users/skin/css/eyoucms.css"/}
+        <!-- 新样式 2020-12-8 -->
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/tag_global.js"/}
+        {eyou:static file="/public/static/common/js/mobile_global.js"/}
+    </head>
+
+<body>
+    <!-- 头部 -->
+    {eyou:include file="users/users_header.htm" /}
+    <!-- 头部结束 -->
+    <div class="ey-header-status">
+        <div class="header-status-l">
+            <a href="{eyou:url link='user/Users/index'/}"><i class="el-icon-arrow-left"></i></a>
+        </div> 
+        <div class="header-status-m">评价列表</div> 
+        <div class="header-status-r"> </div>
+    </div>
+
+    <div class="h50"></div>
+    <div class="oper-row" >
+        <!-- 订单导航栏 -->
+        <div class="oper-row-roll">
+            <a class="oper-row-button active" href="{eyou:url link='user/ShopComment/need_comment_list'/}">待评价</a>
+            <a class="oper-row-button" href="{eyou:url link='user/ShopComment/index'/}">已评价</a>
+        </div>
+        <!-- 订单导航栏结束 -->
+    </div>
+    <div class="ey-container">
+        
+        <div class="ey-con clearfix" >
+            {eyou:empty name="$eyou.field"}
+            <!-- 订单数据为空 -->
+            <div class="ey-row min-hg-c-102 flex flex-center">
+                <div class="tc mt-50">
+                    <p class=""><img id='litpic_img' src="{eyou:static file='users/skin/images/null-data.png' /}"/></p>
+                    <p class="fc9">当前暂无订单记录哦~</p>
+                </div>
+            </div>
+            {eyou:else/}
+            <div class="goods-con">
+                <!-- 获取订单数据列表 -->
+                {eyou:volist name="$eyou.field" id="vo"}
+                <div class="goods-item mb10">
+                    <div class="item-top">
+                        <div class="item-top-l">订单号：{$vo.order_code}</div>
+                        <div class="item-top-r red">{$field.order_status_name}</div>
+                    </div> 
+                    <div class="item-main">
+                        <!-- 获取订单商品 -->
+                        
+                        <div class="item-commen">
+                            {eyou:volist name="$vo.goods" id="v"}
+                            <div class="item-con-l">
+                                <a href="{$v.arcurl}" class="pro-pic"><img src="{$v.litpic}"></a>
+                            </div>
+                            {/eyou:volist}
+                        </div>
+                        
+                    </div>
+                    <div class="item-total">
+                        <div class="item-total-l">共{$vo.goods|count}件商品</div>
+                        <div class="item-total-r">
+                            实付款：￥<span class="fb">{$vo.order_amount}</span>
+                        </div>
+                    </div>
+                    <div class="item-bottom">
+                        <div class="item-bottom-r">
+                            <a href="{$vo.OrderDetailsUrl}" class="el-button is-round el-button--small">订单详情</a>
+                            <a href="{$vo.CommentProduct}" class="el-button el-button--primary is-round el-button--small">立即评价</a>
+                        </div>
+                    </div>
+                </div>
+                {/eyou:volist}
+             </div>
+        </div>
+
+        <div class="dataTables_paginate">
+            <ul class="pagination">
+                {eyou:sppageorder listitem="index,end,pre,next" listsize="2"/}
+            </ul>
+        </div>
+        {/eyou:empty}
+    </div>
+    
+</body>
+</html>

@@ -22,6 +22,7 @@ use think\Cache;
 class TagChannel extends Base
 {
     public $currentstyle = '';
+    public $channelid = '';
 
     //初始化
     protected function _initialize()
@@ -38,14 +39,16 @@ class TagChannel extends Base
     public function getChannel($typeid = '', $type = 'top', $currentstyle = '', $showalltext = 'off', $channelid = '', $notypeid = '')
     {
         $this->currentstyle = $currentstyle;
+        $this->channelid = $channelid;
+        $typeid = intval($typeid);
         if (empty($typeid)) {
             if ($this->aid > 0) { // 应用于文档列表
                 $this->tid = Db::name('archives')->where('aid', $this->aid)->cache(true,EYOUCMS_CACHE_TIME,"archives")->getField('typeid');
             }
             $typeid = $this->tid;
-            if (!empty($channelid) && empty($typeid)) {
-                $type = 'channel';
-            }
+//            if (!empty($channelid) && empty($typeid)) {
+//                $type = 'channel';
+//            }
         }
         $result = $this->getSwitchType($typeid, $type, $showalltext, $channelid, $notypeid);
 
@@ -103,7 +106,6 @@ class TagChannel extends Base
                     'data'=> !empty($result) ? $result : false,
                 ];
                 break;
-
             case 'channel': // 该模型的全部顶级栏目以及子栏目
                 $result = $this->getChannelTop($channelid, $showalltext, $notypeid);
                 break;
@@ -144,7 +146,7 @@ class TagChannel extends Base
         if (empty($typeid)) {
             $result = $treeData;
         } else {
-            $cacheKey = 'think\template\taglib\api\TagChannel-getTree-'.json_encode(func_get_args());
+            $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.json_encode(func_get_args()));
             $result = Cache::get($cacheKey);
             if (empty($result)) {
                 if (isset($treeData[$typeid])) {
@@ -194,14 +196,16 @@ class TagChannel extends Base
      */
     public function getALL($type = '', $showAllTxt = 'off')
     {
-        $cacheKey = 'think\template\taglib\api\TagChannel-getALL-'.json_encode(func_get_args());
+        $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.json_encode(func_get_args()));
         $returnData = Cache::get($cacheKey);
         if (empty($returnData)) {
             $data = Db::name('arctype')->field('id,current_channel,parent_id,typename,grade,litpic,seo_title,seo_keywords,seo_description,sort_order, 0 as sub_level')->where([
+                'is_part' => 0,
                 'is_hidden'   => 0,
                 'status'  => 1,
                 'is_del'  => 0, // 回收站功能
-                'lang'  => $this->main_lang,
+                'lang'  => self::$home_lang,
+                'current_channel' => ['not in',[4,5,51]],
             ])->order(['sort_order' => 'asc', 'id' => 'asc'])->select();
             $all = !empty($data) ? $data : [];
             $tree = [];
@@ -284,12 +288,15 @@ class TagChannel extends Base
         $arctype_max_level = intval(config('global.arctype_max_level')); // 栏目最多级别
         /*获取所有显示且有效的栏目列表*/
         $map = array(
+            'c.is_part' => 0,
             'c.is_hidden'   => 0,
             'c.status'  => 1,
             'c.is_del'    => 0, // 回收站功能
-            'c.lang'    => $this->main_lang,
+            'c.lang'    => self::$home_lang,
+            'c.weapp_code'    => '',
         );
-        $fields = "c.id,c.id as typeid,c.parent_id,c.typename,c.litpic,count(s.id) as has_children, '' as children";
+        $map['c.current_channel'] = ['not in',[4,5,51]];
+        $fields = "c.id,c.id as typeid,c.parent_id,c.typename,c.litpic,c.current_channel,count(s.id) as has_children, '' as children";
         $res = Db::name('arctype')
             ->field($fields)
             ->alias('c')
@@ -303,6 +310,7 @@ class TagChannel extends Base
         if ($res) {
             $arctypelist = [];
             foreach ($res as $key => $val) {
+                $val['typename'] = htmlspecialchars_decode($val['typename']);
                 /*标记栏目被选中效果*/
                 if ($val['id'] == $typeid || $val['id'] == $this->tid) {
                     $val['currentstyle'] = $this->currentstyle;
@@ -410,12 +418,15 @@ class TagChannel extends Base
 
         /*获取指定栏目ID的上一级栏目ID列表*/
         $map = array(
+            'is_part' => 0,
             'id'   => array('in', $typeid),
             'is_hidden'   => 0,
             'status'  => 1,
             'is_del'    => 0, // 回收站功能
-            'lang'  => $this->main_lang,
+            'lang'  => self::$home_lang,
         );
+        $map['current_channel'] = ['not in',[4,5,51]];
+
         $res = Db::name('arctype')->field('parent_id')
             ->where($map)
             ->group('parent_id')
@@ -452,11 +463,16 @@ class TagChannel extends Base
             'is_hidden' => 0,
             'is_del'    => 0, // 回收站功能
             'status'    => 1,
+            'is_part' => 0,
         );
+        if (!empty($this->channelid)){
+            $map['current_channel'] = $this->channelid;
+        }else{
+            $map['current_channel'] = ['not in',[4,5,51]];
+        }
         !empty($notypeid) && $map['id'] = ['NOTIN', $notypeid]; // 排除指定栏目ID
         $res = $arctypeLogic->arctype_list(0, 0, false, $arctype_max_level, $map);
         /*--end*/
-
         if (count($res) > 0) {
             $topTypeid = $this->getTopTypeid($this->tid);
             $currentstyleArr = [
@@ -467,6 +483,7 @@ class TagChannel extends Base
             ]; // 标记选择栏目的数组
 
             foreach ($res as $key => $val) {
+                $val['typename'] = htmlspecialchars_decode($val['typename']);
                 $val['litpic'] = $this->get_default_pic($val['litpic']); // 封面图
                 /*标记栏目被选中效果*/
                 $val['currentstyle'] = '';
@@ -562,7 +579,7 @@ class TagChannel extends Base
                 'is_hidden' => 0,
                 'is_del'    => 0, // 回收站功能
                 'status'    => 1,
-                'lang'=>$this->main_lang,
+                'lang'=>self::$home_lang,
             ])->select();
         foreach ($row as $key => $val) {
             if ('on' == $showalltext && $key == 0) {

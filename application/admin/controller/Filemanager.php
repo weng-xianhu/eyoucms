@@ -94,9 +94,9 @@ class Filemanager extends Base
                 $this->error('请选择上传图片！');
                 exit;
             } else {
-                $image_type = tpCache('basic.image_type');
+                $image_type = tpCache('global.image_type');
                 $fileExt = !empty($image_type) ? str_replace('|', ',', $image_type) : config('global.image_ext');
-                $image_upload_limit_size = intval(tpCache('basic.file_size') * 1024 * 1024);
+                $image_upload_limit_size = intval(tpCache('global.file_size') * 1024 * 1024);
                 $result = $this->validate(
                     ['file' => $file], 
                     ['file'=>'image|fileSize:'.$image_upload_limit_size.'|fileExt:'.$fileExt],

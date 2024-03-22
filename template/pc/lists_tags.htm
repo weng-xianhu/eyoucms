@@ -4,18 +4,21 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>{$eyou.field.seo_title}</title>
-<meta name="description" content="{$eyou.field.seo_description}" />
 <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<meta name="description" content="{$eyou.field.seo_description}" />
 <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
 {eyou:static file="skin/style/pintuer.css" /}
 {eyou:static file="skin/style/header.css" /}
 {eyou:static file="skin/style/style.css" /}
-{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+{eyou:static file="skin/style/iconfont.css" /}
 <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
 </head>
 <body>
+<!--公用头部 begin -->
 {eyou:include file="header.htm" /}
+<!-- 公用头部 end -->    
 <div class="layout bg-gray">
+    <!--当前位置 begin -->
 	<div class="container">
 		<div class="line">
 			<div class="x6">
@@ -25,11 +28,12 @@
 			</div>
 			<div class="x6 text-right">
 				<div class="nav-bread">
-					<i class="fa fa-home margin-small-right"></i>{eyou:position/}<a href="{eyou:diyurl type='tags'}">TAG标签</a>
+					<i class="iconfont icon-home margin-small-right"></i>{eyou:position/}<a href="{eyou:diyurl type='tags'}">TAG标签</a>
 				</div>
 			</div>
 		</div>
 	</div>
+    <!--当前位置 end -->
 	<div class="container">
 		<div class="line">
 			<div class="x12">
@@ -37,24 +41,26 @@
 					{eyou:list titlelen='60' pagesize='20'}
 					<li class="dot">
 						<a href="{$field.arcurl}" title="{$field.title}">【{$field.typename}】{$field.title}</a>
-						<span>{$field.add_time|MyDate='Y-m-d',###}</span>
+						<span>{$field.update_time|MyDate='Y-m-d',###}</span>
 					</li>
 					{/eyou:list}
 				</ul>
 			</div>
-			<!-- 分页 -->
 			<div class="x12 text-center">
 				<div class="blank-small"></div>
+                <!-- 分页 begin -->
 				<ul class="pagination">
 				   {eyou:pagelist listitem='pre,pageno,next' listsize='9' /}
 				</ul>
+                <!-- 分页 end -->
 				<div class="blank-large"></div>
 			</div>
-			<!-- 分页 -->
 		</div>
 	</div>
 </div>
+<!--网站公用底部 begin -->
 {eyou:include file="footer.htm" /}
+<!--网站公用底部 end -->
 {eyou:static file="skin/js/pintuer.js" /}
 {eyou:static file="skin/js/common.js" /}
 </body>

@@ -7,7 +7,7 @@
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit; min-width:400px;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width: 400px;">
+<div class="page min-hg-c-10" style="min-width: 400px;">
     <div class="flexigrid">
         <form class="form-horizontal" id="postAlipayForm" onselectstart="return false;">
             <input type="hidden" name="pay_id" value="{$Config.pay_id}">
@@ -17,12 +17,9 @@
                         <label>支付功能</label>
                     </dt>
                     <dd class="opt">
-                        <div class="onoff">
-                            <label for="is_open_alipay0" class="cb-enable {if condition='!isset($pay_info.is_open_alipay) || empty($pay_info.is_open_alipay)'}selected{/if}">开启</label>
-                            <label for="is_open_alipay1" class="cb-disable {if condition='isset($pay_info.is_open_alipay) && $pay_info.is_open_alipay == 1'}selected{/if}">关闭</label>
-                            <input id="is_open_alipay0" name="pay_info[is_open_alipay]" value="0" type="radio" {if condition="!isset($pay_info.is_open_alipay) || empty($pay_info.is_open_alipay)"} checked="checked"{/if}>
-                            <input id="is_open_alipay1" name="pay_info[is_open_alipay]" value="1" type="radio" {if condition="isset($pay_info.is_open_alipay) && $pay_info.is_open_alipay == 1"} checked="checked"{/if}>
-                        </div>
+                        <label class="curpoin"><input id="is_open_alipay0" name="pay_info[is_open_alipay]" value="0" type="radio" {if condition="!isset($pay_info.is_open_alipay) || empty($pay_info.is_open_alipay)"} checked="checked"{/if}>开启</label>
+                        &nbsp;
+                        <label class="curpoin"><input id="is_open_alipay1" name="pay_info[is_open_alipay]" value="1" type="radio" {if condition="isset($pay_info.is_open_alipay) && $pay_info.is_open_alipay == 1"} checked="checked"{/if}>关闭</label>
                     </dd>
                 </dl>
                 <dl class="row">
@@ -45,7 +42,7 @@
                 <div id="new_version" {if condition="$pay_info.version == 1 || $php_version == 1"}class="none"{/if}>
                     <dl class="row">
                         <dt class="tit">
-                            <label>支付终端</label>
+                            <label><em class="em_empty {notempty name='$pay_info.is_open_alipay'} none {/notempty}">*</em>支付终端</label>
                         </dt>
                         <dd class="opt">
                             <ul class="nc-row ncap-waybill-list">
@@ -59,8 +56,8 @@
                                         <input class="check" type="checkbox" name="pay_terminal[mobile]" value="2" {if condition="!empty($Config.pay_terminal.mobile)"} checked="checked" {/if} onclick="ConfigDetect(this);">移动端
                                         <input type="hidden" name="pay_terminal[m_mark]" id="mobile_mark" value="{$Config.pay_terminal.m_mark}">
                                     </label>
-                                    <a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=11848', '终端签约教程');" style="font-size: 12px; padding-left: 10px; position: absolute;">[终端签约教程]</a>
-                                    <!-- <a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=11848', '终端签约教程');" id="UseTutorial" {if condition="in_array(2, $Config.pay_terminal)"} style="font-size: 12px; padding-left: 10px; position: absolute;" {else/} style="font-size: 12px; padding-left: 10px; position: absolute; display: none;" {/if}>[使用教程]</a> -->
+                                    <a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=11848&origin_eycms=1', '终端签约教程');" style="font-size: 12px; padding-left: 10px; position: absolute;">[终端签约教程]</a>
+                                    <!-- <a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=11848&origin_eycms=1', '终端签约教程');" id="UseTutorial" {if condition="in_array(2, $Config.pay_terminal)"} style="font-size: 12px; padding-left: 10px; position: absolute;" {else/} style="font-size: 12px; padding-left: 10px; position: absolute; display: none;" {/if}>[使用教程]</a> -->
                                 </li>
                             </ul>
                         </dd>
@@ -70,7 +67,7 @@
                             <label for="username"><em class="em_empty {notempty name='$pay_info.is_open_alipay'} none {/notempty}">*</em>支付宝APPID</label>
                         </dt>
                         <dd class="opt">
-                            <input type="text" name="pay_info[app_id]" id="app_id" value="{$pay_info.app_id|default=''}" class="input-txt">
+                            <input type="text" name="pay_info[app_id]" id="app_id" value="{$pay_info.app_id|default=''}" class="input-txt" autocomplete="off">
                             <p class="notic">请输入您的支付宝APPID，用于支付宝支付。</p>
                         </dd>
                     </dl>
@@ -79,7 +76,7 @@
                             <label for="username"><em class="em_empty {notempty name='$pay_info.is_open_alipay'} none {/notempty}">*</em>商户私钥</label>
                         </dt>
                         <dd class="opt">
-                            <textarea rows="5" cols="80" id="merchant_private_key" name="pay_info[merchant_private_key]" style="height:120px;">{$pay_info.merchant_private_key|default=''}</textarea>
+                            <textarea rows="5" cols="80" id="merchant_private_key" name="pay_info[merchant_private_key]" style="height:120px;" autocomplete="off">{$pay_info.merchant_private_key|default=''}</textarea>
                             <p class="notic">请输入您的商户私钥，用于支付宝支付。</p>
                         </dd>
                     </dl>
@@ -88,7 +85,7 @@
                             <label for="username"><em class="em_empty {notempty name='$pay_info.is_open_alipay'} none {/notempty}">*</em>支付宝公钥</label>
                         </dt>
                         <dd class="opt">
-                            <textarea rows="5" cols="80" id="alipay_public_key" name="pay_info[alipay_public_key]" style="height:106px;">{$pay_info.alipay_public_key|default=''}</textarea>
+                            <textarea rows="5" cols="80" id="alipay_public_key" name="pay_info[alipay_public_key]" style="height:106px;" autocomplete="off">{$pay_info.alipay_public_key|default=''}</textarea>
                             <p class="notic">请输入您的支付宝公钥，用于支付宝支付。</p>
                         </dd>
                     </dl>
@@ -100,7 +97,7 @@
                             <label for="username"><em class="em_empty {notempty name='$pay_info.is_open_alipay'} none {/notempty}">*</em>支付宝账号</label>
                         </dt>
                         <dd class="opt">
-                            <input type="text" name="pay_info[account]" id="account" value="{$pay_info.account|default=''}" class="input-txt">
+                            <input type="text" name="pay_info[account]" id="account" value="{$pay_info.account|default=''}" class="input-txt" autocomplete="off">
                             <p class="notic">请输入您的支付宝账号，用于支付宝支付。</p>
                         </dd>
                     </dl>
@@ -109,7 +106,7 @@
                             <label for="username"><em class="em_empty {notempty name='$pay_info.is_open_alipay'} none {/notempty}">*</em>交易安全校验码</label>
                         </dt>
                         <dd class="opt">
-                            <input type="text" name="pay_info[code]" id="code" value="{$pay_info.code|default=''}" class="input-txt">
+                            <input type="text" name="pay_info[code]" id="code" value="{$pay_info.code|default=''}" class="input-txt" autocomplete="off">
                             <p class="notic">请输入您的交易安全校验码，用于支付宝支付。</p>
                         </dd>
                     </dl>
@@ -118,7 +115,7 @@
                             <label for="username"><em class="em_empty {notempty name='$pay_info.is_open_alipay'} none {/notempty}">*</em>合作者身份ID</label>
                         </dt>
                         <dd class="opt">
-                            <input type="text" name="pay_info[id]" id="id" value="{$pay_info.id|default=''}" class="input-txt">
+                            <input type="text" name="pay_info[id]" id="id" value="{$pay_info.id|default=''}" class="input-txt" autocomplete="off">
                             <p class="notic">请输入您的合作者身份ID，用于支付宝支付。</p>
                         </dd>
                     </dl>
@@ -126,7 +123,7 @@
                 <dl class="row">
                     <div class="bot" style="padding-bottom: 0px;">
                         <a href="JavaScript:void(0);" onclick="alipayset();" class="ncap-btn-big ncap-btn-green" id="submitAlipayBtn">确认提交</a>
-                        &nbsp;<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=11284','支付宝支付配置教程')" style="font-size: 12px;padding-left: 10px;position:absolute;top: 30px">不会配置？</a>
+                        &nbsp;<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=11284&origin_eycms=1','支付宝支付配置教程')" style="font-size: 12px;padding-left: 10px;position:absolute;top: 30px">不会配置？</a>
                     </div>
                 </dl>
             </div>
@@ -179,6 +176,10 @@
             var switch_set = $("#postAlipayForm input[name='pay_info[version]']:checked").val();
             if (switch_set == 0) {
                 // 新版判断
+                if($('#postAlipayForm input[name="pay_terminal[computer]"]:checked').val() != 1 && $('#postAlipayForm input[name="pay_terminal[mobile]"]:checked').val() != 1){
+                    layer.alert('至少勾选一个支付终端！', {icon: 2, title:false});
+                    return false;
+                }
                 if($('#postAlipayForm #app_id').val() == ''){
                     layer.alert('支付APPID不能为空！', {icon: 2, title:false});
                     return false;
@@ -223,7 +224,7 @@
                 if (1 == res.code) {
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000});
+                    _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000});
                 } else {
                     showErrorAlert(res.msg);
                 }
@@ -255,9 +256,16 @@
                 if (1 != computerMark) {
                     var msg = '<span style="color: red;">【电脑网站支付】</span>';
                     layer.confirm('是否已在支付宝应用能力列表中签约'+msg+'能力？', {
-                        title: false,
-                        closeBtn: 0,
+                        shade: layer_shade,
+                        area: ['480px', '190px'],
+                        move: false,
+                        title: '提示',
+                        btnAlign:'r',
+                        closeBtn: 3,
                         btn: ['已签约，不再提醒', '未签约'],
+                        success: function () {
+                              $(".layui-layer-content").css('text-align', 'left');
+                          }
                     }, function() {
                         $('#computer_mark').val(1);
                         layer.closeAll();
@@ -271,9 +279,16 @@
                 if (2 != mobileMark) {
                     var msg = '<span style="color: red;">【手机网站支付】</span>';
                     layer.confirm('是否已在支付宝应用能力列表中签约'+msg+'能力？', {
-                        title: false,
-                        closeBtn: 0,
+                        shade: layer_shade,
+                        area: ['480px', '190px'],
+                        move: false,
+                        title: '提示',
+                        btnAlign:'r',
+                        closeBtn: 3,
                         btn: ['已签约，不再提醒', '未签约'],
+                        success: function () {
+                              $(".layui-layer-content").css('text-align', 'left');
+                          }
                     }, function() {
                         $('#mobile_mark').val(2);
                         layer.closeAll();

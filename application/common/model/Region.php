@@ -62,9 +62,9 @@ class Region extends Model
      * 获取子地区
      * @author wengxianhu by 2017-7-26
      */
-    public function getList($parent_id = 0, $field = '*', $index_key = '')
+    public function getList($parent_id = 0, $field = '*', $index_key = '',$level = 0)
     {
-        $result = $this->getAll($parent_id, $field, $index_key);
+        $result = $this->getAll($parent_id, $field, $index_key,$level);
 
         return $result;
     }
@@ -73,20 +73,33 @@ class Region extends Model
      * 获取全部地区
      * @author wengxianhu by 2017-7-26
      */
-    public function getAll($parent_id = false, $field = '*', $index_key = '')
+    public function getAll($parent_id = false, $field = '*', $index_key = '',$level = 0)
     {
-        $map = array();
-        if (false !== $parent_id) {
-            $map['parent_id'] = $parent_id;
-        }
+        // $args = [$parent_id, $field, $index_key, $level];
+        // $cacheKey = 'region-'.md5(__CLASS__.__FUNCTION__.json_encode($args));
+        // $result = cache($cacheKey);
+        // if (empty($result)) {
+            $map = [];
+            if (false !== $parent_id) {
+                if (is_array($parent_id)) {
+                    $map['parent_id'] = ['IN', $parent_id];
+                } else {
+                    $map['parent_id'] = $parent_id;
+                }
+            }
+            if (0 !== $level) {
+                $map['level'] = $level;
+            }
+            $result = Db::name('region')->field($field)
+                ->where($map)
+                ->select();
 
-        $result = Db::name('region')->field($field)
-            ->where($map)
-            ->select();
+            if (!empty($index_key)) {
+                $result = convert_arr_key($result, $index_key);
+            }
 
-        if (!empty($index_key)) {
-            $result = convert_arr_key($result, $index_key);
-        }
+            // cache($cacheKey, $result, null, "region");
+        // }
 
         return $result;
     }

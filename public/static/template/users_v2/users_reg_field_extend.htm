@@ -17,6 +17,71 @@
     </script>
     <!-- 单张图 end -->
 {/eyou:case}
+
+{eyou:case value="imgs"}
+<!-- 多张图 start -->
+<div class="form-group group_z images_upload_main">
+    <div class="input-group input-group-icon">
+        <span class="input-group-addon"><i class="fa fa-shield"></i></span>
+        <button type="button" style="height: 42px;padding: 0 10px; border-width: 1px;" class="el-button el-button--primary is-plain el-button--small" onClick="GetUploadify(100,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back', '', '{$vo.title}');">
+            <i class="el-icon-paperclip"></i>{$vo.title}&nbsp;&nbsp;+
+        </button>
+    </div>
+    <div style="margin: 5px 0;padding: 3px;border: 1px dashed #ebeced;display: none;" id="upload_imgs_{$vo.fieldArr}_{$vo.name|default=''}">
+        <!--上传填充-->
+    </div>
+    
+    <!-- 上传图片显示的样板 start -->
+    <div class="{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl" style="display: none;">
+        <div class="fieldext_upload fieldext_upload_html">
+            <div class="images_upload_item">
+                <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="">
+                <a href="" target="_blank">
+                    <img src="__STATIC__/admin/images/add-button.jpg" width="42" height="42">
+                </a>
+                <a class="delete" href="javascript:void(0)" title="删除"></a>
+            </div>
+        </div>
+    </div>
+    <!-- 上传图片显示的样板 end -->
+</div>
+<script type="text/javascript">
+    var GetUploadify_url = "{:url('user/Uploadify/upload',['resource'=>'reg'])}";
+
+    // 上传多图回调函数
+    function {$vo.fieldArr}_{$vo.name|default=''}_call_back(paths){
+        var  last_div = $(".{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl").html();
+        for (var i=0;i<paths.length ;i++ )
+        {
+            if ($("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html").length == 0) {
+                $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''}").css('display','');
+            }
+            $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''}").append(last_div);  // 插入一个 新图片
+
+
+            $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+            $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('img').attr('src',paths[i]);// 修改他的图片路径
+            $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('');
+            $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+        }
+    }
+    /*
+ * 上传之后删除组图input
+ * @access   public
+ * @val      string  删除的图片input
+ */
+    function {$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(obj,path)
+    {
+        $(obj).parent().parent().remove();
+        if ($("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html").length == 0) {
+            $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''}").css('display','none');
+        }
+    }
+</script>
+<!-- 多张图 end -->
+{/eyou:case}
+
+
 {case value="file"}
 {eyou:static file="/public/plugins/layui/css/layui.css" /}
 {eyou:static file="/public/plugins/layui/layui.js" /}

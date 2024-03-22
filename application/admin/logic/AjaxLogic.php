@@ -13,6 +13,7 @@
 
 namespace app\admin\logic;
 
+use think\Config;
 use think\Model;
 use think\Db;
 
@@ -41,8 +42,60 @@ class AjaxLogic extends Model
      */
     public function login_handle()
     {
+        // $this->repairAdmin(); // 修复管理员ID为0的问题
         $this->saveBaseFile(); // 存储后台入口文件路径，比如：/login.php
-        $this->clear_session_file(); // 清理过期的data/session文件
+        clear_session_file(); // 清理过期的data/session文件
+    }
+
+    /**
+     * 修复管理员
+     * @return [type] [description]
+     */
+    private function repairAdmin()
+    {
+        $row = [];
+        $result = Db::name('admin')->field('admin_id,user_name')->order('add_time asc')->select();
+        $total = count($result);
+        foreach ($result as $key => $val) {
+            $pre_admin_id = $next_admin_id = 0;
+            if (empty($val['admin_id'])) {
+                if (1 == $total) {
+                    Db::name('admin')->where(['user_name'=>$val['user_name']])->update(['admin_id'=>1, 'update_time'=>getTime()]);
+                } else {
+                    $pre_admin_id = empty($key) ? 0 : $result[$key - 1]['admin_id'];
+                    if ($key < ($total - 1)) {
+                        $next_admin_id = $result[$key + 1]['admin_id'];
+                    } else {
+                        $next_admin_id = $pre_admin_id + 2;
+                    }
+
+                    if (($next_admin_id - $pre_admin_id) >= 2) {
+                        $admin_id = $pre_admin_id + 1;
+                        Db::name('admin')->where(['user_name'=>$val['user_name']])->update(['admin_id'=>$admin_id, 'update_time'=>getTime()]);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 清理未存在的左侧菜单
+     * @return [type] [description]
+     */
+    public function admin_menu_clear()
+    {
+        $del_ids = [];
+        $codeArr = Db::name('weapp')->column('code');
+        $list = Db::name('admin_menu')->where(['controller_name'=>'Weapp','action_name'=>'execute'])->select();
+        foreach ($list as $key => $val) {
+            $code = preg_replace('/^(.*)\|sm\|([^\|]+)\|sc\|(.*)$/i', '${2}', $val['param']);
+            if (!in_array($code, $codeArr)) {
+                $del_ids[] = $val['id'];
+            }
+        }
+        if (!empty($del_ids)) {
+            Db::name('admin_menu')->where(['id'=>['IN', $del_ids]])->delete();
+        }
     }
 
     /**
@@ -50,10 +103,58 @@ class AjaxLogic extends Model
      */
     public function welcome_handle()
     {
+        getVersion('version_themeusers', 'v1.0.1', true);
+        getVersion('version_themeshop', 'v1.0.1', true);
+        $this->addChannelFile(); // 自动补充自定义模型的文件
         $this->saveBaseFile(); // 存储后台入口文件路径，比如：/login.php
         $this->renameInstall(); // 重命名安装目录，提高网站安全性
+        $this->renameSqldatapath(); // 重命名数据库备份目录，提高网站安全性
         $this->del_adminlog(); // 只保留最近一个月的操作日志
-        tpversion(); // 统计装载量，请勿删除，谢谢支持！
+        model('Member')->batch_update_userslevel(); // 批量更新会员过期等级
+        // tpversion(); // 统计装载量，请勿删除，谢谢支持！
+    }
+    
+    /**
+     * 自动补充自定义模型的文件
+     */
+    public function addChannelFile()
+    {
+        try {
+            $list = Db::name('channeltype')->where([
+                'ifsystem'  => 0,
+                ])->select();
+            if (!empty($list)) {
+                $cmodSrc = "data/model/application/common/model/CustomModel.php";
+                $cmodContent = @file_get_contents($cmodSrc);
+                $hctlSrc = "data/model/application/home/controller/CustomModel.php";
+                $hctlContent = @file_get_contents($hctlSrc);
+                $hmodSrc = "data/model/application/home/model/CustomModel.php";
+                $hmodContent = @file_get_contents($hmodSrc);
+                foreach ($list as $key => $val) {
+                    $file = "application/common/model/{$val['ctl_name']}.php";
+                    if (!file_exists($file)) {
+                        $cmodContent = str_replace('CustomModel', $val['ctl_name'], $cmodContent);
+                        $cmodContent = str_replace('custommodel', strtolower($val['nid']), $cmodContent);
+                        $cmodContent = str_replace('CUSTOMMODEL', strtoupper($val['nid']), $cmodContent);
+                        @file_put_contents($file, $cmodContent);
+                    }
+                    $file = "application/home/controller/{$val['ctl_name']}.php";
+                    if (!file_exists($file)) {
+                        $hctlContent = str_replace('CustomModel', $val['ctl_name'], $hctlContent);
+                        $hctlContent = str_replace('custommodel', strtolower($val['nid']), $hctlContent);
+                        $hctlContent = str_replace('CUSTOMMODEL', strtoupper($val['nid']), $hctlContent);
+                        @file_put_contents($file, $hctlContent);
+                    }
+                    $file = "application/home/model/{$val['ctl_name']}.php";
+                    if (!file_exists($file)) {
+                        $hmodContent = str_replace('CustomModel', $val['ctl_name'], $hmodContent);
+                        $hmodContent = str_replace('custommodel', strtolower($val['nid']), $hmodContent);
+                        $hmodContent = str_replace('CUSTOMMODEL', strtoupper($val['nid']), $hmodContent);
+                        @file_put_contents($file, $hmodContent);
+                    }
+                }
+            }
+        } catch (\Exception $e) {}
     }
     
     /**
@@ -62,11 +163,51 @@ class AjaxLogic extends Model
     public function del_adminlog()
     {
         try {
-            $mtime = strtotime("-1 month");
-            Db::name('admin_log')->where([
-                'log_time'  => ['lt', $mtime],
-                ])->delete();
+            $is_system = true;
+            if (file_exists(ROOT_PATH.'weapp/Equal/logic/EqualLogic.php')) {
+                $equalLogic = new \weapp\Equal\logic\EqualLogic;
+                if (method_exists($equalLogic, 'del_adminlog')) {
+                    $is_system = false;
+                    $equalLogic->del_adminlog();
+                }
+            }
+            else if (file_exists(ROOT_PATH.'weapp/Systemdoctor/logic/SystemdoctorLogic.php')) {
+                $systemdoctorLogic = new \weapp\Systemdoctor\logic\SystemdoctorLogic;
+                if (method_exists($systemdoctorLogic, 'del_adminlog')) {
+                    $is_system = false;
+                    $systemdoctorLogic->del_adminlog();
+                }
+            }
+            if ($is_system) {
+                $mtime = strtotime("-1 month");
+                Db::name('admin_log')->where([
+                    'log_time'  => ['lt', $mtime],
+                    ])->delete();
+            }
         } catch (\Exception $e) {}
+    }
+
+    /*
+     * 修改备份数据库目录
+     */
+    private function renameSqldatapath() {
+        $default_sqldatapath = config('DATA_BACKUP_PATH');
+        if (is_dir('.'.$default_sqldatapath)) { // 还是符合初始默认的规则的链接方式
+            $dirname = get_rand_str(20, 0, 1);
+            $new_path = '/data/sqldata_'.$dirname;
+            if (@rename(ROOT_PATH.ltrim($default_sqldatapath, '/'), ROOT_PATH.ltrim($new_path, '/'))) {
+                /*多语言*/
+                if (is_language()) {
+                    $langRow = \think\Db::name('language')->order('id asc')->select();
+                    foreach ($langRow as $key => $val) {
+                        tpCache('web', ['web_sqldatapath'=>$new_path], $val['mark']);
+                    }
+                } else { // 单语言
+                    tpCache('web', ['web_sqldatapath'=>$new_path]);
+                }
+                /*--end*/
+            }
+        }
     }
 
     /**
@@ -80,28 +221,45 @@ class AjaxLogic extends Model
         }
         $install_path = ROOT_PATH.'install';
         if (is_dir($install_path) && file_exists($install_path)) {
-            $install_time = DEFAULT_INSTALL_DATE;
-            $constsant_path = APP_PATH.'admin/conf/constant.php';
-            if (file_exists($constsant_path)) {
-                require_once($constsant_path);
-                defined('INSTALL_DATE') && $install_time = INSTALL_DATE;
-            }
+            $install_time = get_rand_str(20, 0, 1);
             $new_path = ROOT_PATH.'install_'.$install_time;
             @rename($install_path, $new_path);
-        } else { // 修补v1.1.6版本删除的安装文件 install.lock
-            if(!empty($_SESSION['isset_install_lock']))
-                return true;
-            $_SESSION['isset_install_lock'] = 1;
+        }
+        else {
+            $dirlist = glob('install_*');
+            $install_dirname = current($dirlist);
+            if (!empty($install_dirname)) {
+                /*---修补v1.1.6版本删除的安装文件 install.lock start----*/
+                if (!empty($_SESSION['isset_install_lock'])) {
+                    return true;
+                }
+                $_SESSION['isset_install_lock'] = 1;
+                /*---修补v1.1.6版本删除的安装文件 install.lock end----*/
 
-            $install_time = DEFAULT_INSTALL_DATE;
-            $constsant_path = APP_PATH.'admin/conf/constant.php';
-            if (file_exists($constsant_path)) {
-                require_once($constsant_path);
-                defined('INSTALL_DATE') && $install_time = INSTALL_DATE;
-            }
-            $filename = ROOT_PATH.'install_'.$install_time.DS.'install.lock';
-            if (!file_exists($filename)) {
-                @file_put_contents($filename, '');
+                $install_path = ROOT_PATH.$install_dirname;
+                if (preg_match('/^install_[0-9]{10}$/i', $install_dirname)) {
+                    $install_time = get_rand_str(20, 0, 1);
+                    $install_dirname = 'install_'.$install_time;
+                    $new_path = ROOT_PATH.$install_dirname;
+                    if (@rename($install_path, $new_path)) {
+                        $install_path = $new_path;
+                        /*多语言*/
+                        if (is_language()) {
+                            $langRow = \think\Db::name('language')->order('id asc')->select();
+                            foreach ($langRow as $key => $val) {
+                                tpSetting('install', ['install_dirname'=>$install_time], $val['mark']);
+                            }
+                        } else { // 单语言
+                            tpSetting('install', ['install_dirname'=>$install_time]);
+                        }
+                        /*--end*/
+                    }
+                }
+
+                $filename = $install_path.DS.'install.lock';
+                if (!file_exists($filename)) {
+                    @file_put_contents($filename, '');
+                }
             }
         }
     }
@@ -112,45 +270,19 @@ class AjaxLogic extends Model
      */
     private function saveBaseFile()
     {
-        $baseFile = $this->request->baseFile();
+        $data = [];
+        $data['web_adminbasefile'] = $this->request->baseFile();
+        $data['web_cmspath'] = ROOT_DIR; // EyouCMS安装目录
         /*多语言*/
         if (is_language()) {
             $langRow = \think\Db::name('language')->field('mark')->order('id asc')->select();
             foreach ($langRow as $key => $val) {
-                tpCache('web', ['web_adminbasefile'=>$baseFile], $val['mark']);
+                tpCache('web', $data, $val['mark']);
             }
         } else { // 单语言
-            tpCache('web', ['web_adminbasefile'=>$baseFile]);
+            tpCache('web', $data);
         }
         /*--end*/
-    }
-
-    /**
-     * 清理过期的data/session文件
-     */
-    public function clear_session_file()
-    {
-        $path = \think\Config::get('session.path');
-        if (!empty($path) && file_exists($path)) {
-            $time = getTime();
-            $web_login_expiretime = tpCache('web.web_login_expiretime');
-            empty($web_login_expiretime) && $web_login_expiretime = config('login_expire');
-            $files = glob($path.'/sess_*');
-            foreach ($files as $key => $file) {
-                clearstatcache(); // 清除文件状态缓存
-                $filemtime = filemtime($file);
-                if (false === $filemtime) {
-                    $filemtime = $time;
-                }
-                $filesize = filesize($file);
-                if (false === $filesize) {
-                    $filesize = 1;
-                }
-                if (empty($filesize) || (($time - $filemtime) > ($web_login_expiretime + 300))) {
-                    @unlink($file);
-                }
-            }
-        }
     }
 
     /**
@@ -248,128 +380,39 @@ class AjaxLogic extends Model
     {
         model('Language')->setLangNum();
     }
-
-    /**
-     * 同步内置模型内置的附加表字段
-     */
-    public function admin_logic_model_addfields()
+    
+    // 记录当前是否多站点到文件里
+    public function system_citysite_file()
     {
-        // 修复部分用户的所有模型都不出现编辑器的问题
-        $syn_admin_logic_video_addfields_2 = tpCache('syn.syn_admin_logic_video_addfields_2', [], 'cn');
-        if (empty($syn_admin_logic_video_addfields_2)) {
-            try{
-                $total = Db::name('channelfield_bind')->where(['id'=>['gt', 0]])->count();
-                if (1 == $total) {
-                    $channel_id = 5;
-                    $field_id = Db::name('channelfield')->where(['channel_id'=>$channel_id,'name'=>'content'])->value('id');
-                    if (!empty($field_id)) {
-                        $count = Db::name('channelfield_bind')->where(['field_id'=>['NEQ', $field_id]])->count();
-                        if (empty($count)) {
-                            Db::name('channelfield_bind')->where(['field_id'=>$field_id])->delete();
-                            Db::name('channelfield')->where(['channel_id'=>$channel_id])->delete();
-                        }
-                    }
+        $key = base64_decode('cGhwLnBocF9zZXJ2aWNlbWVhbA==');
+        $value = tpCache($key);
+        if (2 > $value) {
+            /*多语言*/
+            if (is_language()) {
+                $langRow = Db::name('language')->order('id asc')->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('web', ['web_citysite_open'=>0], $val['mark']);
                 }
-            }catch(\Exception $e){}
-            tpCache('syn', ['syn_admin_logic_video_addfields_2'=>1], 'cn');
-        }
-
-        // 内置视频模型的自定义字段
-        $syn_admin_logic_video_addfields = tpCache('syn.syn_admin_logic_video_addfields', [], 'cn');
-        if ($syn_admin_logic_video_addfields < 5) {
-            try{
-                $channel_id = 5;
-                $result = Db::name('channelfield')->field('id,name,ifmain')->where(['channel_id'=>$channel_id])->getAllWithIndex('name');
-                if (empty($result)) {
-                    $fieldLogic = new \app\admin\logic\FieldLogic;
-                    $fieldLogic->synChannelTableColumns($channel_id);
-                    $result = Db::name('channelfield')->field('id,name,ifmain')->where(['channel_id'=>$channel_id])->getAllWithIndex('name');
-                }
-
-                $bindRow = Db::name('channelfield_bind')->field('field_id')->where(['typeid'=>0])->getAllWithIndex('field_id');
-                if (!empty($bindRow)) {
-                    $addData = [];
-                    foreach ($result as $key => $val) {
-                        if (empty($val['ifmain']) && empty($bindRow[$val['id']])) {
-                            $addData[] = [
-                                'typeid'      => 0,
-                                'field_id'    => $val['id'],
-                                'add_time'    => getTime(),
-                                'update_time' => getTime(),
-                            ];
-                        }
-                    }
-                    !empty($addData) && model('ChannelfieldBind')->saveAll($addData);
-                }
-            }catch(\Exception $e){}
-            tpCache('syn', ['syn_admin_logic_video_addfields'=>5], 'cn');
-        }
-
-        // 内置专题模型的自定义字段
-        $syn_admin_logic_special_addfields = tpCache('syn.syn_admin_logic_special_addfields', [], 'cn');
-        if ($syn_admin_logic_special_addfields < 5) {
-            try{
-                $channel_id = 7;
-                $result = Db::name('channelfield')->field('id,name,ifmain')->where(['channel_id'=>$channel_id])->getAllWithIndex('name');
-                if (empty($result)) {
-                    $fieldLogic = new \app\admin\logic\FieldLogic;
-                    $fieldLogic->synChannelTableColumns($channel_id);
-                    $result = Db::name('channelfield')->field('id,name,ifmain')->where(['channel_id'=>$channel_id])->getAllWithIndex('name');
-                }
-
-                $bindRow = Db::name('channelfield_bind')->field('field_id')->where(['typeid'=>0])->getAllWithIndex('field_id');
-                if (!empty($bindRow)) {
-                    $addData = [];
-                    foreach ($result as $key => $val) {
-                        if (empty($val['ifmain']) && empty($bindRow[$val['id']])) {
-                            $addData[] = [
-                                'typeid'      => 0,
-                                'field_id'    => $val['id'],
-                                'add_time'    => getTime(),
-                                'update_time' => getTime(),
-                            ];
-                        }
-                    }
-                    !empty($addData) && model('ChannelfieldBind')->saveAll($addData);
-                }
-            }catch(\Exception $e){}
-            tpCache('syn', ['syn_admin_logic_special_addfields'=>5], 'cn');
-        }
-    }
-
-    /**
-     * 补充后台登录logo与背景图
-     * @return [type] [description]
-     */
-    public function admin_logic_1608884981()
-    {
-        $syn_admin_logic_1608884981 = tpCache('syn.syn_admin_logic_1608884981', [], 'cn');
-        if (empty($syn_admin_logic_1608884981)) {
-            $web_adminlogo = Db::name('config')->where(['name'=>'web_adminlogo'])->value('value');
-            $web_loginlogo = str_ireplace('logo', 'login-logo', $web_adminlogo);
-            $web_loginbgimg = str_ireplace('logo', 'login-bg', $web_adminlogo);
-            $web_loginbgimg = str_ireplace('.png', '.jpg', $web_adminlogo);
-            $data = [
-                'web_adminlogo' => $web_adminlogo,
-                'web_loginlogo' => $web_loginlogo,
-                'web_loginbgimg' => $web_loginbgimg,
-            ];
-            tpCache('web', $data);
-            tpCache('syn', ['syn_admin_logic_1608884981'=>1], 'cn');
-        }
-
-        $syn_admin_logic_1608884981_2 = tpCache('syn.syn_admin_logic_1608884981_2', [], 'cn');
-        if (empty($syn_admin_logic_1608884981_2)) {
-            $source = realpath('public/static/admin/images/logo.png');
-            $destination = realpath('public/static/admin/images/login-logo.png');
-            @copy($source, $destination);
-            
-            tpCache('syn', ['syn_admin_logic_1608884981_2'=>1], 'cn');
+            } else { // 单语言
+                tpCache('web', ['web_citysite_open'=>0]);
+            }
+            /*--end*/
+            model('Citysite')->setCitysiteOpen();
         }
     }
 
     public function admin_logic_1609900642()
     {
+        // 更新自定义的样式表文件
+        $version = getVersion();
+        $syn_admin_logic_1697156935 = tpSetting('syn.admin_logic_1697156935', [], 'cn');
+        if ($version != $syn_admin_logic_1697156935) {
+            $r = $this->admin_update_theme_css();
+            if ($r !== false) {
+                tpSetting('syn', ['admin_logic_1697156935'=>$version], 'cn');
+            }
+        }
+
         $vars1 = 'cGhwLnBo'.'cF9zZXJ2aW'.'NlaW5mbw==';
         $vars1 = base64_decode($vars1);
         $data = tpCache($vars1);
@@ -405,515 +448,1299 @@ class AjaxLogic extends Model
     }
 
     /**
-     * 内置手机端会员中心底部菜单数据
+     * 更新后台自定义的样式表文件
      * @return [type] [description]
      */
-    public function admin_logic_1610086647()
+    public function admin_update_theme_css()
     {
-        $admin_logic_1610086647 = tpCache('syn.admin_logic_1610086647', [], 'cn');
-        if (empty($admin_logic_1610086647)) {
-            try{
-                /*多语言*/
-                if (is_language()) {
-                    $langRow = Db::name('language')->field('mark')->order('id asc')->select();
-                    foreach ($langRow as $key => $val) {
-                        $saveData = [
-                            [
-                            'title'    => '首页',
-                            'mca'    => 'home/Index/index',
-                            'icon'    => 'shouye',
-                            'sort_order'    => 100,
-                            'status'        => 1,
-                            'display'        => 1,
-                            'lang'          => $val['mark'],
-                            'add_time'      => getTime(),
-                            'update_time'   => getTime(),
-                            ],
-                            [
-                                'title'    => '下载',
-                                'mca'    => 'user/Download/index',
-                                'icon'    => 'xiazai',
-                                'sort_order'    => 100,
-                                'status'        => 1,
-                                'display'        => 1,
-                                'lang'          => $val['mark'],
-                                'add_time'      => getTime(),
-                                'update_time'   => getTime(),
-                            ],
-                            [
-                                'title'    => '发布',
-                                'mca'    => 'user/UsersRelease/article_add',
-                                'icon'    => 'fabu',
-                                'sort_order'    => 100,
-                                'status'        => 1,
-                                'display'        => 1,
-                                'lang'          => $val['mark'],
-                                'add_time'      => getTime(),
-                                'update_time'   => getTime(),
-                            ],
-                            [
-                                'title'    => '我的',
-                                'mca'    => 'user/Users/centre',
-                                'icon'    => 'geren',
-                                'sort_order'    => 100,
-                                'status'        => 1,
-                                'display'        => 1,
-                                'lang'          => $val['mark'],
-                                'add_time'      => getTime(),
-                                'update_time'   => getTime(),
-                            ],
-                        ];
-                        Db::name('users_bottom_menu')->insertAll($saveData);
-                    }
-                } else { // 单语言
-                    $saveData = [
-                        [
-                            'title'    => '首页',
-                            'mca'    => 'home/Index/index',
-                            'icon'    => 'shouye',
-                            'sort_order'    => 100,
-                            'status'        => 1,
-                            'display'        => 1,
-                            'lang'          => get_main_lang(),
-                            'add_time'      => getTime(),
-                            'update_time'   => getTime(),
-                        ],
-                        [
-                            'title'    => '下载',
-                            'mca'    => 'user/Download/index',
-                            'icon'    => 'xiazai',
-                            'sort_order'    => 100,
-                            'status'        => 1,
-                            'display'        => 1,
-                            'lang'          => get_main_lang(),
-                            'add_time'      => getTime(),
-                            'update_time'   => getTime(),
-                        ],
-                        [
-                            'title'    => '发布',
-                            'mca'    => 'user/UsersRelease/article_add',
-                            'icon'    => 'fabu',
-                            'sort_order'    => 100,
-                            'status'        => 1,
-                            'display'        => 1,
-                            'lang'          => get_main_lang(),
-                            'add_time'      => getTime(),
-                            'update_time'   => getTime(),
-                        ],
-                        [
-                            'title'    => '我的',
-                            'mca'    => 'user/Users/centre',
-                            'icon'    => 'geren',
-                            'sort_order'    => 100,
-                            'status'        => 1,
-                            'display'        => 1,
-                            'lang'          => get_main_lang(),
-                            'add_time'      => getTime(),
-                            'update_time'   => getTime(),
-                        ],
-                    ];
-                    Db::name('users_bottom_menu')->insertAll($saveData);
-                }
-                /*--end*/
-                tpCache('syn', ['admin_logic_1610086647'=>1], 'cn');
-            }catch(\Exception $e){}
+        $r = false;
+        $file = APP_PATH.'admin/template/public/theme_css.htm';
+        if (file_exists($file)) {
+            $view = \think\View::instance(\think\Config::get('template'), \think\Config::get('view_replace_str'));
+            $view->assign('global', tpCache('global'));
+            $css = $view->fetch($file);
+            $css = str_replace(['<style type="text/css">','</style>'], '', $css);
+            @chmod($file, 0755);
+            $r = @file_put_contents(ROOT_PATH.'public/static/admin/css/theme_style.css', $css);
         }
+
+        return $r;
     }
 
     /**
-     * 内置余额支付开关，控制前台余额支付显示\隐藏 (v1.6.1节点去掉)
-     * 于2021-01-29，v1.5.2版本添加 --- 陈风任
-     */
-    public function admin_logic_balance_pay()
-    {
-        $syn_admin_logic_balance_pay = tpCache('syn.syn_admin_logic_balance_pay', [], 'cn');
-        if (empty($syn_admin_logic_balance_pay)) {
-            getUsersConfigData('pay', ['pay_balance_open'=>1]);
-            tpCache('syn', ['syn_admin_logic_balance_pay'=>1], 'cn');
-        }
-    }
-
-    /**
-     * 纠正栏目的topid字段值(v1.6.1节点去掉)
+     * 更新会员中心自定义的样式表文件
      * @return [type] [description]
      */
-    public function admin_logic_arctype_topid()
+    public function users_update_theme_css()
     {
-        $syn_admin_logic_arctype_topid = tpCache('syn.syn_admin_logic_arctype_topid', [], 'cn');
-        if ($syn_admin_logic_arctype_topid < 2) {
-            $level_0_arr = Db::name('arctype')->field('id, topid')->where('grade', 0)->getAllWithIndex('id');
-            if (!empty($level_0_arr)) {
-                $saveData = [];
-                $level_1_arr = Db::name('arctype')->field('id, parent_id')->where(['grade'=>1, 'topid'=>0])->select();
-                foreach ($level_1_arr as $key => $val) {
-                    $topid = !empty($level_0_arr[$val['parent_id']]) ? intval($level_0_arr[$val['parent_id']]['id']) : 0;
-                    $saveData[] = [
-                        'id'    => $val['id'],
-                        'topid' => $topid,
-                        'update_time'   => getTime(),
-                    ];
-                }
-                if (!empty($saveData)) {
-                    model('Arctype')->saveAll($saveData);
-                }
-            }
-
-            $level_1_arr = Db::name('arctype')->field('id, topid')->where('grade', 1)->getAllWithIndex('id');
-            if (!empty($level_1_arr)) {
-                $saveData = [];
-                $level_2_arr = Db::name('arctype')->field('id, parent_id')->where(['grade'=>2, 'topid'=>0])->select();
-                foreach ($level_2_arr as $key => $val) {
-                    $topid = !empty($level_1_arr[$val['parent_id']]) ? intval($level_1_arr[$val['parent_id']]['topid']) : 0;
-                    $saveData[] = [
-                        'id'    => $val['id'],
-                        'topid' => $topid,
-                        'update_time'   => getTime(),
-                    ];
-                }
-                if (!empty($saveData)) {
-                    model('Arctype')->saveAll($saveData);
-                }
-            }
-            
-            \think\Cache::clear("arctype");
-            tpCache('syn', ['syn_admin_logic_arctype_topid'=>2], 'cn');
-        }
+        
     }
 
-    /**
-     * 文档图片自适应修改为默认关闭(v1.6.1节点去掉)
-     */
-    public function admin_logic_1610086648()
+    // 评价主表评分由原先的(好评、中评、差评)转至实际星评数(1、2、3、4、5)(v1.6.1节点去掉--陈风任)
+    public function admin_logic_1651114275()
     {
-        $syn_admin_logic_1610086648 = tpCache('syn.syn_admin_logic_1610086648', [], 'cn');
-        if (empty($syn_admin_logic_1610086648)) {
-            $row = Db::name('config')->where(['name'=>'basic_img_style_wh'])->find();
-            if (empty($row)) {
-                tpCache('basic', ['basic_img_style_wh'=>0]);
+        $Prefix = config('database.prefix');
+        $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'shop_order_comment\'');
+        if (!empty($isTable)) {
+            $orderCommentTableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}shop_order_comment");
+            $orderCommentTableInfo = get_arr_column($orderCommentTableInfo, 'Field');
+            if (!empty($orderCommentTableInfo) && !in_array('is_new_comment', $orderCommentTableInfo)){
+                $sql = "ALTER TABLE `{$Prefix}shop_order_comment` ADD COLUMN `is_new_comment`  tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '是否新版评价：0否，1是' AFTER `is_anonymous`;";
+                @Db::execute($sql);
+                schemaTable('shop_order_comment');
             }
-            tpCache('syn', ['syn_admin_logic_1610086648'=>1], 'cn');
-        }
-    }
-
-    /**
-     * 补充站内信模板的数据(v1.6.1节点去掉)
-     */
-    public function admin_logic_1614829120()
-    {
-        $syn_admin_logic_1614829120 = tpCache('syn.syn_admin_logic_1614829120', [], 'cn');
-        if (empty($syn_admin_logic_1614829120)) {
-            try{
-                $saveData = [
-                    [
-                        'tpl_id'    => 1,
-                        'tpl_name'    => '留言表单',
-                        'tpl_title'    => '您有新的留言消息，请到内容管理中查看！',
-                        'tpl_content'    => '${content}',
-                        'send_scene'    => 1,
-                        'is_open'        => 1,
-                        'lang'          => get_main_lang(),
-                        'add_time'      => getTime(),
-                        'update_time'   => getTime(),
-                    ],
-                    [
-                        'tpl_id'    => 5,
-                        'tpl_name'    => '订单付款',
-                        'tpl_title'    => '您有新的待发货订单消息，请到商城订单查看！',
-                        'tpl_content'    => '${content}',
-                        'send_scene'    => 5,
-                        'is_open'        => 1,
-                        'lang'          => get_main_lang(),
-                        'add_time'      => getTime(),
-                        'update_time'   => getTime(),
-                    ],
-                    [
-                        'tpl_id'    => 6,
-                        'tpl_name'    => '订单发货',
-                        'tpl_title'    => '您有新的待收货订单消息，请到会员订单查看！',
-                        'tpl_content'    => '${content}',
-                        'send_scene'    => 6,
-                        'is_open'        => 1,
-                        'lang'          => get_main_lang(),
-                        'add_time'      => getTime(),
-                        'update_time'   => getTime(),
-                    ],
-                ];
-                $r = Db::name('users_notice_tpl')->insertAll($saveData);
-                if ($r !== false) {
-                    tpCache('syn', ['syn_admin_logic_1614829120'=>1], 'cn');
-                }
-            }catch(\Exception $e){}
-        }
-
-        $syn_admin_logic_1614829121 = tpCache('syn.syn_admin_logic_1614829121', [], 'cn');
-        if (empty($syn_admin_logic_1614829121)) {
-            try{
-                $r = Db::name('users_notice_tpl')->where(['lang'=>['NEQ', get_main_lang()]])->delete();
-                if ($r !== false) {
-                    tpCache('syn', ['syn_admin_logic_1614829121'=>1], 'cn');
-                }
-            }catch(\Exception $e){}
-        }
-    }
-
-    /**
-     * 补充邮箱/短信模板的数据(v1.6.1节点去掉)
-     */
-    public function admin_logic_1616123192()
-    {
-        $syn_admin_logic_1616123192 = tpCache('syn.syn_admin_logic_1616123192', [], 'cn');
-        if (empty($syn_admin_logic_1616123192)) {
-            try{
-                /*多语言*/
-                if (is_language()) {
-                    /*邮箱模板 start*/
-                    Db::name('smtp_tpl')->where(['send_scene'=>5])->update([
-                            'tpl_name'  => '订单付款',
-                            'tpl_title' => '您有新的待发货订单消息，请到商城订单查看！',
-                            'update_time'   => getTime(),
-                        ]);
-                    $saveData = [];
-                    $langRow = Db::name('language')->field('mark')->order('id asc')->select();
-                    foreach ($langRow as $key => $val) {
-                        $saveData = [
-                            [
-                                'tpl_name'  => '订单发货',
-                                'tpl_title' => '您有新的待收货订单消息，请到会员订单查看！',
-                                'tpl_content'   => '${content}',
-                                'send_scene'    => 6,
-                                'is_open'   => 1,
-                                'lang'          => $val['mark'],
-                                'add_time'      => getTime(),
-                                'update_time'   => getTime(),
-                            ],
-                        ];
-                        Db::name('smtp_tpl')->insertAll($saveData);
-                    }
-                    /*邮箱模板 end*/
-
-                    /*短信模板 start*/
-                    Db::name('sms_template')->where(['send_scene'=>5])->update([
-                            'tpl_title'  => '订单付款',
-                            'update_time'   => getTime(),
-                        ]);
-                    $saveData = Db::name('sms_template')->field('tpl_id', true)->where(['send_scene'=>5])->select();
-                    if (!empty($saveData)) {
-                        foreach ($saveData as $key => $val) {
-                            $val['tpl_title'] = '订单发货';
-                            $val['send_scene'] = 6;
-                            $saveData[$key] = $val;
-                        }
-                        Db::name('sms_template')->insertAll($saveData);
-                    }
-                    /*短信模板 end*/
-                }
-                else { // 单语言
-                    /*邮箱模板 start*/
-                    Db::name('smtp_tpl')->where(['send_scene'=>5])->update([
-                            'tpl_name'  => '订单付款',
-                            'tpl_title' => '您有新的待发货订单消息，请到商城订单查看！',
-                            'update_time'   => getTime(),
-                        ]);
-                    Db::name('smtp_tpl')->insert([
-                        'tpl_name'  => '订单发货',
-                        'tpl_title' => '您有新的待收货订单消息，请到会员订单查看！',
-                        'tpl_content'   => '${content}',
-                        'send_scene'    => 6,
-                        'is_open'   => 1,
-                        'lang'          => get_main_lang(),
-                        'add_time'      => getTime(),
-                        'update_time'   => getTime(),
-                    ]);
-                    /*邮箱模板 end*/
-
-                    /*短信模板 start*/
-                    Db::name('sms_template')->where(['send_scene'=>5])->update([
-                            'tpl_title'  => '订单付款',
-                            'update_time'   => getTime(),
-                        ]);
-                    $saveData = Db::name('sms_template')->field('tpl_id', true)->where(['send_scene'=>5])->select();
-                    if (!empty($saveData)) {
-                        foreach ($saveData as $key => $val) {
-                            $val['tpl_title'] = '订单发货';
-                            $val['send_scene'] = 6;
-                            $saveData[$key] = $val;
-                        }
-                        Db::name('sms_template')->insertAll($saveData);
-                    }
-                    /*短信模板 end*/
-                }
-                /*--end*/
-                tpCache('syn', ['syn_admin_logic_1616123192'=>1], 'cn');
-            }catch(\Exception $e){}
-        }
-    }
-
-    // 补充问题点赞表的like_source字段(v1.6.1节点去掉--陈风任)
-    public function admin_logic_1617069276()
-    {
-        $syn_admin_logic_ask_answer_like = tpCache('syn.syn_admin_logic_ask_answer_like', [], 'cn');
-        if (empty($syn_admin_logic_ask_answer_like)) {
-
-            $ask_ques_steps = <<<EOF
-1、写问题标题，描述具体现象。杜绝 “求救，大佬，小白…” 等和问题无关的词汇。
-2、选择问题的分类，选择正确的内容分类，能更快的得到其他人的回复。
-3、遇到的问题比较急需解决，可以给问题悬赏一定的金额报酬，能让更多同行参与进来出谋策划，从中选择自己心仪的答案。
-4、写问题内容详细描述你碰到的困难，写清楚你尝试了什么方法，错误代码，软件的版本等，更容易得到答案。
-5、点击发布。
-EOF;
-            tpSetting('ask', ['ask_ques_steps'=>$ask_ques_steps]);
-
-            $getTableInfo = Db::name('ask_answer_like')->getTableFields();
-            if (!in_array('like_source', $getTableInfo)) {
-                $Prefix = config('database.prefix');
-                $likeSql = "ALTER TABLE `{$Prefix}ask_answer_like` ADD COLUMN `like_source` tinyint(1) unsigned NOT NULL DEFAULT '2' COMMENT '点赞来源，1=点赞提问(ask_id)，2=点赞评论(answer_id)，3=点赞回复(answer_id)，默认值为2，兼容以前的那些评论数据' AFTER `click_like`";
-                Db::execute($likeSql);
-            }
-            tpCache('syn', ['syn_admin_logic_ask_answer_like'=>1], 'cn');
-        }
-    }
-
-    // 纠正商品主表的评价数(appraise字段)、收藏数(collection字段)(v1.6.1节点去掉--陈风任)
-    public function admin_logic_archives_1618279798()
-    {
-        $syn_admin_logic_archives_1618279798 = tpCache('syn.syn_admin_logic_archives_1618279798', [], 'cn');
-        if (empty($syn_admin_logic_archives_1618279798)) {
-            // 评价数据
-            $Field_0 = "product_id as aid, count('comment_id') as appraise, 0 as collection";
-            $Data_0 = Db::name('shop_order_comment')->field($Field_0)->group('aid')->select();
-
-            // 收藏数据
-            $Field_1 = "aid, count('id') as collection, 0 as appraise";
-            $Data_1 = Db::name('users_collection')->field($Field_1)->group('aid')->getAllWithIndex('aid');
-
-            // 整合数据
-            $UpdateData = [];
-            foreach ($Data_0 as $key => $value) {
-                $UpdateData[$key] = $value;
-                if ($value['aid'] == $Data_1[$value['aid']]['aid']) {
-                    $UpdateData[$key]['collection'] = $Data_1[$value['aid']]['collection'];
-                    unset($Data_1[$value['aid']]);
-                }
-            }
-
-            // 批量处理
-            $UpdateData = array_merge($UpdateData, $Data_1);
-            if (!empty($UpdateData)) {
-                $ArchivesModel = new \app\admin\model\Archives;
-                $ArchivesModel->saveAll($UpdateData);
-            }
-
-            // 标记已执行
-            tpCache('syn', ['syn_admin_logic_archives_1618279798'=>1], 'cn');
         }
     }
 
     public function admin_logic_1623036205()
     {
-        $syn_admin_logic_1623036205 = tpCache('syn.syn_admin_logic_1623036205', [], 'cn');
-        if (empty($syn_admin_logic_1623036205)) {
-            $getTableInfo = Db::name('sql_cache_table')->getTableFields();
-            if (in_array('sql_result', $getTableInfo)) {
-                $Prefix = config('database.prefix');
-                $SqlCacheTableSql = "ALTER TABLE `{$Prefix}sql_cache_table` MODIFY COLUMN `sql_result` text NOT NULL COMMENT 'mysql执行结果' AFTER `sql_name`";
-                Db::execute($SqlCacheTableSql);
+        $getTableInfo = [];
+        $Prefix = config('database.prefix');
+
+        $arr = [
+            ROOT_PATH."application/admin/model/UsersLevel.php",
+            ROOT_PATH."core/library/think/verify/bgs/3e.jpg",
+            ROOT_PATH."public/plugins/Ueditor/lang/en/images/imglabel1.png",
+            ROOT_PATH."public/plugins/Ueditor/lang/zh-cn/images/mfusisc.png",
+            ROOT_PATH."public/plugins/Ueditor/dialogs/template/images/prel2.png",
+            ROOT_PATH."public/html/article_pay.htm",
+            ROOT_PATH."public/html/download_pay.htm",
+            ROOT_PATH."public/html/comment",
+            ROOT_PATH."public/static/common/js/jquery.tools.min.js",
+        ];
+        foreach ($arr as $key => $val) {
+            if (is_dir($val)) {
+                try {
+                    delFile($val, true);
+                } catch (\Exception $e) {}
+            } else if (file_exists($val)) {
+                @unlink($val);
             }
-            // 标记已执行
-            tpCache('syn', ['syn_admin_logic_1623036205'=>1], 'cn');
         }
 
-        // 修复登录logo和背景图的切换
-        $admin_logic_1623055490 = tpCache('syn.admin_logic_1623055490', [], 'cn');
-        if (empty($admin_logic_1623055490)) {
-            $servicemeal = tpCache('php.php_servicemeal');
-            if (2 <= $servicemeal) {
-                $data = [];
-                $web_loginlogo = tpCache('web.web_loginlogo');
-                if (stristr($web_loginlogo, 'login-logo_ey.png')) {
-                    $data['web_loginlogo'] = ROOT_DIR.'/public/static/admin/images/login-logo_zy.png';
+        Db::name("admin_menu")->where(['menu_id'=>2004006])->update(['param'=>'|mt20|1|menu|1']);
+    }
+    
+    /*
+    * 初始化原来的菜单栏目
+    */
+    public function initialize_admin_menu(){
+        $total = Db::name("admin_menu")->count();
+        if (empty($total)){
+            $menuArr = getAllMenu();
+            $insert_data = [];
+            foreach ($menuArr as $key => $val){
+                foreach ($val['child'] as $nk=>$nrr) {
+                    $sort_order = 100;
+                    $is_switch = 1;
+                    if ($nrr['id'] == 2004){
+                        $sort_order = 10000;
+                        $is_switch = 0;
+                    }
+                    $insert_data[] = [
+                        'menu_id' => $nrr['id'],
+                        'title' => $nrr['name'],
+                        'controller_name' => $nrr['controller'],
+                        'action_name' => $nrr['action'],
+                        'param' => !empty($nrr['param']) ? $nrr['param'] : '',
+                        'is_menu' => $nrr['is_menu'],
+                        'is_switch' => $is_switch,
+                        'icon' =>  $nrr['icon'],
+                        'sort_order' => $sort_order,
+                        'add_time' => getTime(),
+                        'update_time' => getTime()
+                    ];
                 }
-                $web_loginbgimg_model = tpCache('web.web_loginbgimg_model');
-                if ($web_loginbgimg_model != 'custom') {
-                    $data['web_loginbgimg'] = ROOT_DIR.'/public/static/admin/loginbg/login-bg-3.png';
-                }
-                !empty($data) && tpCache('web', $data);
             }
-            tpCache('syn', ['admin_logic_1623055490'=>1], 'cn');
+            Db::name("admin_menu")->insertAll($insert_data);
+        }
+    }
+    
+    //1.5.9相关
+    public function admin_logic_1658220528(){
+        $Prefix = config('database.prefix');
+        $archivesTableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}archives");
+        $archivesTableInfo = get_arr_column($archivesTableInfo, 'Field');
+        if (!empty($archivesTableInfo) && !in_array('virtual_sales', $archivesTableInfo)){
+            $sql = "ALTER TABLE `{$Prefix}archives` ADD COLUMN `virtual_sales`  int(10) NULL DEFAULT 0 COMMENT '商品虚拟销售量' AFTER `sales_num`;";
+            @Db::execute($sql);
+        }
+        if (!empty($archivesTableInfo) && !in_array('sales_all', $archivesTableInfo)){
+            $sql = "ALTER TABLE `{$Prefix}archives` ADD COLUMN `sales_all`  int(10) NULL DEFAULT 0 COMMENT '虚拟总销量' AFTER `virtual_sales`;";
+            @Db::execute($sql);
+        }
+        schemaTable('archives');
+
+        $guestbookTableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}guestbook");
+        $guestbookTableInfo = get_arr_column($guestbookTableInfo, 'Field');
+        if (!empty($guestbookTableInfo) && !in_array('users_id', $guestbookTableInfo)){
+            $sql = "ALTER TABLE `{$Prefix}guestbook` ADD COLUMN `users_id`  int(11) NULL DEFAULT 0 COMMENT '用户id' AFTER `channel`;";
+            @Db::execute($sql);
+            schemaTable('guestbook');
         }
 
-        $admin_logic_1623133485 = tpCache('syn.admin_logic_1623133485', [], 'cn');
-        if (empty($admin_logic_1623133485)) {
-            $system_use_language = 0;
-            $count = Db::name('language')->count();
-            if (1 < $count) {
-                $system_use_language = 1;
+        try {
+            $specTableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}product_spec_data_handle");
+            $specTableInfo = convert_arr_key($specTableInfo, 'Field');
+            if (!empty($specTableInfo['spec_id']['Key'])) {
+                $sql = "ALTER TABLE `{$Prefix}product_spec_data_handle` DROP PRIMARY KEY;";
+                @Db::execute($sql);
+                $sql = "ALTER TABLE `{$Prefix}product_spec_data_handle` MODIFY COLUMN `spec_id`  int(10) NULL DEFAULT 0 COMMENT '对应 product_spec_data 数据表' FIRST ;";
+                @Db::execute($sql);
+                schemaTable('product_spec_data_handle');
             }
-            tpCache('system', ['system_use_language'=>$system_use_language]);
-            tpCache('syn', ['admin_logic_1623133485'=>1], 'cn');
+        } catch (\Exception $e) {
+            
+        }
+        
+        $searchTableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}search_word");
+        $searchTableInfo = get_arr_column($searchTableInfo, 'Field');
+        if (!empty($searchTableInfo) && !in_array('users_id', $searchTableInfo)){
+            $sql = "ALTER TABLE `{$Prefix}search_word` ADD COLUMN `users_id`  int(11) NULL DEFAULT 0 COMMENT '用户id' AFTER `sort_order`;";
+            @Db::execute($sql);
+        }
+        if (!empty($searchTableInfo) && !in_array('ip', $searchTableInfo)){
+            $sql = "ALTER TABLE `{$Prefix}search_word` ADD COLUMN `ip`  varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT 'ip' AFTER `users_id`;";
+            @Db::execute($sql);
+            schemaTable('search_word');
+        }
+        if (!empty($searchTableInfo) && !in_array('is_hot', $searchTableInfo)){
+            $sql = "ALTER TABLE `{$Prefix}search_word` ADD COLUMN `is_hot`  tinyint(1) NULL DEFAULT 0 COMMENT '是否热搜' AFTER `ip`;";
+            @Db::execute($sql);
+            schemaTable('search_word');
         }
 
-        // 标记用户是否使用旧产品参数
-        $syn_admin_logic_1623377269 = tpSetting('syn.syn_admin_logic_1623377269', [], 'cn');
-        if (empty($syn_admin_logic_1623377269)) {
-            $aids = Db::name('product_attr')->where(['product_attr_id'=>['GT',0]])->column('aid');
-            if (empty($aids)) {
-                $system_old_product_attr = 0;
-            } else {
-                $count = Db::name('archives')->where(['aid'=>['IN', $aids]])->count();
-                if (empty($count)) { // 这里会误伤正在新增旧产品参数，还没有发布文档的用户
-                    $system_old_product_attr = 0;
-                    // Db::name('product_attr')->where(['product_attr_id'=>['GT', 0]])->delete();
-                    // Db::name('product_attribute')->where(['attr_id'=>['GT', 0]])->delete();
+        $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'search_locking\'');
+        if (empty($isTable)) {
+            $tableSql = <<<EOF
+CREATE TABLE IF NOT EXISTS `{$Prefix}search_locking` (
+  `id` int(10) NOT NULL AUTO_INCREMENT,
+  `users_id` int(10) DEFAULT '0' COMMENT '用户ID',
+  `ip` varchar(20) DEFAULT '' COMMENT 'ip',
+  `locking_time` int(11) DEFAULT '0' COMMENT '锁定时间',
+  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='搜索记录锁定表';
+EOF;
+            $r = @Db::execute($tableSql);
+            if ($r !== false) {
+                schemaTable('search_locking');
+            }
+        }
+
+        // 优化主表字段的长度
+        $admin_logic_1673941712 = tpSetting('syn.admin_logic_1673941712', [], 'cn');
+        if (empty($admin_logic_1673941712)) {
+            @Db::execute("ALTER TABLE `{$Prefix}archives` MODIFY COLUMN `htmlfilename`  varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '自定义文件名' AFTER `collection`");
+            tpSetting('syn', ['admin_logic_1673941712'=>1], 'cn');
+        }
+        
+        // 积分字段优化
+        $admin_logic_1676854942 = tpSetting('syn.admin_logic_1676854942', [], 'cn');
+        if (empty($admin_logic_1676854942)) {
+            @Db::execute("ALTER TABLE `{$Prefix}users_score` MODIFY COLUMN `score`  varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '积分' AFTER `reply_id`");
+            tpSetting('syn', ['admin_logic_1676854942'=>1], 'cn');
+        }
+
+        // 更新旧的商品虚拟总销量
+        $this->handleProductSalesAll();
+
+        // 同步模板的付费选择支付文件到前台模板指定位置
+        $this->copy_tplpayfile();
+
+        // 新增海外地区
+        $this->add_haiwai_region();
+        // 新增河南济源市地区
+        $this->add_henan_jiyuan_region();
+
+        // 默认收货后可维权时间
+        $admin_logic_1678762367 = tpSetting('syn.admin_logic_1678762367', [], 'cn');
+        if (empty($admin_logic_1678762367)) {
+            getUsersConfigData('order', ['order_right_protect_time' => 7]);
+            tpSetting('syn', ['admin_logic_1678762367'=>1], 'cn');
+        }
+
+        Db::name("admin_menu")->where(['menu_id'=>2004018])->update(['title'=>'留言中心']);
+        Db::name("region")->where(['id'=>10961])->update(['name'=>'新吴区', 'initial'=>'X']);
+        Db::name("region")->where(['id'=>10962])->update(['name'=>'梁溪区', 'initial'=>'L']);
+        Db::name("region")->where(['id'=>['IN',['10969','10976']]])->delete();
+
+        // 升级v1.6.3版本要处理的数据
+        $this->eyou_v163_handle_data();
+        // 升级v1.6.4版本要处理的数据
+        $this->eyou_v164_handle_data();
+        // 升级v1.6.5版本要处理的数据
+        $this->eyou_v165_handle_data();
+        // 升级v1.6.6版本要处理的数据
+        $this->eyou_v166_handle_data();
+    }
+
+    // 升级v1.6.3版本要处理的数据
+    private function eyou_v163_handle_data()
+    {
+        // 主题风格同步兼容旧版本数据
+        $this->theme_syn_olddata();
+
+        // 处理站点状态的模板页面
+        $admin_logic_1687676445 = tpSetting('syn.admin_logic_1687676445', [], 'cn');
+        if (empty($admin_logic_1687676445)) {
+            $webConfig = tpCache('web');
+            if (empty($webConfig['web_status_tpl'])) {
+                /*多语言*/
+                $web_basehost = empty($webConfig['web_basehost']) ? request()->domain() : $webConfig['web_basehost'];
+                $web_basehost = preg_replace('/^(([^\:\.]+):)?(\/\/)?([^\/\:]*)(\:\d+)?(.*)$/i', '${1}${3}${4}${5}', $web_basehost);
+                $web_status_tpl = $web_basehost.ROOT_DIR.'/public/close.html';
+                if (is_language()) {
+                    $langRow = \think\Db::name('language')->order('id asc')
+                        ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                        ->select();
+                    foreach ($langRow as $key => $val) {
+                        tpCache('web', ['web_status_tpl'=>$web_status_tpl], $val['mark']);
+                    }
                 } else {
-                    $system_old_product_attr = 1;
+                    tpCache('web', ['web_status_tpl'=>$web_status_tpl]);
                 }
+                /*--end*/
             }
-            tpSetting('system', ['system_old_product_attr'=>$system_old_product_attr], 'cn');
-
-            // 新参数属性表加多语言字段
-            schemaTable('shop_product_attribute');
-            $getTableInfo = Db::name('shop_product_attribute')->getTableFields();
-            if (!in_array('lang', $getTableInfo)) {
-                $Prefix = config('database.prefix');
-                $SqlCacheTableSql = "ALTER TABLE `{$Prefix}shop_product_attribute` ADD COLUMN `lang`  varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'cn' COMMENT '语言标识' AFTER `sort_order`";
-                $r = Db::execute($SqlCacheTableSql);
-                if ($r !== false) {
-                    schemaTable('shop_product_attribute');
-                    Db::name('shop_product_attribute')->where(['attr_id'=>['GT',0]])->update(['lang'=>get_main_lang(), 'update_time'=>getTime()]);
+            tpSetting('syn', ['admin_logic_1687676445'=>1], 'cn');
+        }
+        
+        // 处理编辑器常用配置
+        $admin_logic_1687767523 = tpSetting('syn.admin_logic_1687767523', [], 'cn');
+        if (empty($admin_logic_1687767523)) {
+            $editor = tpSetting('editor', [], get_default_lang());
+            if (!empty($editor['editor_select']) || !empty($editor['editor_remote_img_local']) || !empty($editor['editor_img_clear_link'])) {
+                /*多语言*/
+                if (is_language()) {
+                    $langRow = \think\Db::name('language')->order('id asc')
+                        ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                        ->select();
+                    foreach ($langRow as $key => $val) {
+                        tpSetting('editor', $editor, $val['mark']);
+                    }
+                } else {
+                    tpSetting('editor',$editor);
                 }
+                /*--end*/
             }
-
-            // 新参数分组表加多语言字段
-            schemaTable('shop_product_attrlist');
-            $getTableInfo = Db::name('shop_product_attrlist')->getTableFields();
-            if (!in_array('lang', $getTableInfo)) {
-                $Prefix = config('database.prefix');
-                $SqlCacheTableSql = "ALTER TABLE `{$Prefix}shop_product_attrlist` ADD COLUMN `lang`  varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'cn' COMMENT '语言标识' AFTER `sort_order`;";
-                $r = Db::execute($SqlCacheTableSql);
-                if ($r !== false) {
-                    schemaTable('shop_product_attrlist');
-                    Db::name('shop_product_attrlist')->where(['list_id'=>['GT',0]])->update(['lang'=>get_main_lang(), 'update_time'=>getTime()]);
-                }
-            }
-
-            tpSetting('syn', ['syn_admin_logic_1623377269'=>1], 'cn');
+            tpSetting('syn', ['admin_logic_1687767523'=>1], 'cn');
         }
 
-        // 纠正支付宝支付配置支付终端数据
-        $syn_admin_logic_1625725290 = tpSetting('syn.syn_admin_logic_1625725290', [], 'cn');
-        if (empty($syn_admin_logic_1625725290)) {
-            $PayInfo = Db::name('pay_api_config')->where(['pay_id'=>'2'])->getField('pay_info');
-            $PayInfo = !empty($PayInfo) ? unserialize($PayInfo) : [];
-            $PayTerminal = ['computer' => 0, 'c_mark' => 0, 'mobile' => 0, 'm_mark' => 0];
-            if (!empty($PayInfo['app_id']) && !empty($PayInfo['merchant_private_key']) && !empty($PayInfo['alipay_public_key'])) {
-                $PayTerminal = ['computer' => 1, 'c_mark' => 1, 'mobile' => 0, 'm_mark' => 0];
+        // 搜索敏感词默认值
+        $admin_logic_1685584104 = tpSetting('syn.admin_logic_1685584104', [], 'cn');
+        if (empty($admin_logic_1685584104)) {
+            $searchConf = tpCache('search');
+            if (!isset($searchConf['search_tabu_words'])) {
+                $search_tabu_words = ['<','>','"',';',',','@','&','#','\\','*'];
+                $searchConf['search_tabu_words'] = implode(PHP_EOL, $search_tabu_words);
             }
-            $UpAliPay = [
-                'update_time' => getTime(),
-                'pay_terminal' => serialize($PayTerminal)
+            /*多语言*/
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('search', $searchConf, $val['mark']);
+                }
+            } else {
+                tpCache('search', $searchConf);
+            }
+            /*--end*/
+            tpSetting('syn', ['admin_logic_1685584104'=>1], 'cn');
+        }
+
+        // 处理网站防止被刷的默认开关值
+        $admin_logic_1682580429 = tpSetting('syn.admin_logic_1682580429', [], 'cn');
+        if (empty($admin_logic_1682580429)) {
+            /*多语言*/
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('web', ['web_anti_brushing'=>'0'], $val['mark']);
+                }
+            } else {
+                tpCache('web', ['web_anti_brushing'=>'0']);
+            }
+            /*--end*/
+            tpSetting('syn', ['admin_logic_1682580429'=>1], 'cn');
+        }
+    }
+
+    // 升级v1.6.4版本要处理的数据
+    private function eyou_v164_handle_data()
+    {
+        $Prefix = config('database.prefix');
+
+        // 删除大数据影响的索引
+        $admin_logic_1689071584 = tpSetting('syn.admin_logic_1689071584', [], 'cn');
+        if (empty($admin_logic_1689071584)) {
+            try {
+                @Db::execute("ALTER TABLE `{$Prefix}archives` DROP INDEX `aid`;");
+            } catch (\Exception $e) {
+                
+            }
+            tpSetting('syn', ['admin_logic_1689071584'=>1], 'cn');
+        }
+    }
+
+    // 升级v1.6.5版本要处理的数据
+    private function eyou_v165_handle_data()
+    {
+        // $this->eyou_v165_del_func();
+        $this->syn_handle_table_data();
+        $this->syn_handle_formdata();
+        $this->syn_handle_linksgroupdata();
+        $this->syn_handle_recycle_switch();
+        $this->syn_handle_foreign_pack();
+        $this->syn_handle_tougao_tpl();
+        $this->syn_handle_update_archives();
+        $this->syn_handle_create_index();
+    }
+
+    // 升级v1.6.6版本要处理的数据
+    private function eyou_v166_handle_data()
+    {
+        $this->syn_handle166_table_data();
+    }
+
+    private function syn_handle166_table_data()
+    {
+        $Prefix = config('database.prefix');
+
+        /*$syn_admin_logic_1703473857 = tpSetting('syn.syn_admin_logic_1703473857', [], 'cn');
+        if (empty($syn_admin_logic_1703473857)) {
+            try{
+                $r = true;
+                Db::name('arcrank')->where(['rank'=>-2])->delete();
+                $saveData = Db::name('arcrank')->field('id', true)->where(['rank'=>0])->select();
+                if (!empty($saveData)) {
+                    $addData = [];
+                    foreach ($saveData as $key => $val) {
+                        $val['rank'] = -2;
+                        $val['name'] = '退回稿件';
+                        $addData[] = $val;
+                    }
+                    $r = Db::name('arcrank')->insertAll($addData);
+                }
+                if ($r !== false) {
+                    tpSetting('syn', ['syn_admin_logic_1703473857'=>1], 'cn');
+                }
+            }catch(\Exception $e){}
+        }*/
+
+        // 退回稿件
+        $tableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}archives");
+        $tableInfo = get_arr_column($tableInfo, 'Field');
+        if (!empty($tableInfo) && !in_array('reason', $tableInfo)){
+            try {
+                $sql = "ALTER TABLE `{$Prefix}archives` ADD COLUMN `reason`  text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '退回原因' AFTER `editor_img_clear_link`;";
+                @Db::execute($sql);
+                @Db::execute("UPDATE `{$Prefix}archives` SET `reason`='';");
+                schemaTable('archives');
+            } catch (\Exception $e) {}
+        }
+    }
+
+    private function syn_handle_table_data()
+    {
+        $Prefix = config('database.prefix');
+
+        $admin_logic_1701050542 = tpSetting('syn.admin_logic_1701050542', [], 'cn');
+        if (empty($admin_logic_1701050542)) {
+            $data = [
+                'seo_uphtml_after_home13' => 1,
+                'seo_uphtml_after_channel13' => 1,
+                'seo_uphtml_after_pernext13' => 1,
             ];
-            $ResultID = Db::name('pay_api_config')->where(['pay_id'=>'2'])->update($UpAliPay);
-            !empty($ResultID) && tpSetting('syn', ['syn_admin_logic_1625725290'=>1], 'cn');
+            /*多语言*/
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('seo', $data, $val['mark']);
+                }
+            } else {
+                tpCache('seo', $data);
+            }
+            /*--end*/
+            tpSetting('syn', ['admin_logic_1701050542'=>1], 'cn');
+        }
+
+        $admin_logic_1701855768 = tpSetting('syn.admin_logic_1701855768', [], 'cn');
+        if (empty($admin_logic_1701855768)) {
+            $data = [
+                'seo_uphtml_editafter_home' => 0,
+                'seo_uphtml_editafter_channel' => 0,
+                'seo_uphtml_editafter_pernext' => (int)tpCache('seo.seo_uphtml_after_pernext'),
+            ];
+            /*多语言*/
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('seo', $data, $val['mark']);
+                }
+            } else {
+                tpCache('seo', $data);
+            }
+            /*--end*/
+            tpSetting('syn', ['admin_logic_1701855768'=>1], 'cn');
+        }
+
+        $admin_logic_1700638990 = tpSetting('syn.admin_logic_1700638990', [], 'cn');
+        if (empty($admin_logic_1700638990)) {
+            $pay_open = (int) Db::name('users_config')->where(['name'=>'pay_open'])->value('value');
+            //同步会员中心手机端底部菜单开关
+            Db::name('users_bottom_menu')->where([
+                    'mca'   => ['IN',['user/Pay/pay_account_recharge']]
+                ])->update([
+                    'status'    => $pay_open,
+                    'update_time'   => getTime(),
+                ]);
+            tpSetting('syn', ['admin_logic_1700638990'=>1], 'cn');
+        }
+
+        $admin_logic_1700789211 = tpSetting('syn.admin_logic_1700789211', [], 'cn');
+        if (empty($admin_logic_1700789211)) {
+            try {
+                $count = Db::name('foreign_pack')->where(['name'=>'page6','type'=>1,'lang'=>'cn'])->count();
+                if (empty($count)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('1', 'page6', '第%s页', 'cn', '100', '1543890216', '1543890216');");
+                }
+            } catch (\Exception $e) {}
+            try {
+                $count = Db::name('foreign_pack')->where(['name'=>'page6','type'=>1,'lang'=>'en'])->count();
+                if (empty($count)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('1', 'page6', '%s', 'en', '100', '1543890216', '1543890216');");
+                }
+            } catch (\Exception $e) {}
+            tpSetting('syn', ['admin_logic_1700789211'=>1], 'cn');
+        }
+
+        try {
+            $tableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}users_recharge_pack");
+            $tableInfo = get_arr_column($tableInfo, 'Field');
+            if (!empty($tableInfo) && !in_array('pack_pay_prices', $tableInfo)){
+                $sql = "ALTER TABLE `{$Prefix}users_recharge_pack` ADD COLUMN `pack_pay_prices`  decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT '会员充值套餐购买价格' AFTER `pack_face_value`;";
+                @Db::execute($sql);
+                if (in_array('pack_pay_prices', $tableInfo) && in_array('pack_buy_prices', $tableInfo)){
+                    @Db::execute("UPDATE `{$Prefix}users_recharge_pack` SET `pack_pay_prices`=`pack_buy_prices`;");
+                }
+                schemaTable('users_recharge_pack');
+            }
+            if (!empty($tableInfo) && in_array('pack_buy_prices', $tableInfo)){
+                $sql = "ALTER TABLE `{$Prefix}users_recharge_pack` DROP COLUMN `pack_buy_prices`;";
+                @Db::execute($sql);
+                schemaTable('users_recharge_pack');
+            }
+        } catch (\Exception $e) {}
+    }
+
+    /**
+     * 创建索引
+     * @return [type] [description]
+     */
+    private function syn_handle_create_index()
+    {
+        $admin_logic_1700621159 = tpSetting('syn.admin_logic_1700621159', [], 'cn');
+        if (empty($admin_logic_1700621159)) {
+            $Prefix = config('database.prefix');
+            try {
+                @Db::execute("CREATE INDEX `add_time` ON `{$Prefix}archives`(`add_time`) USING BTREE ;");
+            } catch (\Exception $e) {}
+            try {
+                @Db::execute("CREATE INDEX `union_id` ON `{$Prefix}users`(`union_id`) USING BTREE ;");
+            } catch (\Exception $e) {}
+            try {
+                @Db::execute("CREATE INDEX `username` ON `{$Prefix}users`(`username`) USING BTREE ;");
+            } catch (\Exception $e) {}
+            try {
+                @Db::execute("CREATE INDEX `mobile` ON `{$Prefix}users`(`mobile`) USING BTREE ;");
+            } catch (\Exception $e) {}
+            try {
+                @Db::execute("CREATE INDEX `open_id` ON `{$Prefix}users`(`open_id`) USING BTREE ;");
+            } catch (\Exception $e) {}
+            try {
+                @Db::execute("CREATE INDEX `users_id` ON `{$Prefix}users_list`(`users_id`) USING BTREE ;");
+            } catch (\Exception $e) {}
+            tpSetting('syn', ['admin_logic_1700621159'=>1], 'cn');
+        }
+    }
+
+    /**
+     * 更新 远程图片本地化/清除非本站链接
+     * @return [type] [description]
+     */
+    private function syn_handle_update_archives()
+    {
+        $syn_admin_logic_1700106425 = tpSetting('syn.syn_admin_logic_1700106425', [], 'cn');
+        if (empty($syn_admin_logic_1700106425)) {
+            try{
+                $Prefix = config('database.prefix');
+                $editor = tpSetting('editor');
+                $editor_remote_img_local = !isset($editor['editor_remote_img_local']) ? 1 : intval($editor['editor_remote_img_local']);
+                $editor_img_clear_link = !isset($editor['editor_img_clear_link']) ? 1 : intval($editor['editor_img_clear_link']);
+                @Db::execute("UPDATE `{$Prefix}archives` SET `editor_remote_img_local`={$editor_remote_img_local};");
+                @Db::execute("UPDATE `{$Prefix}archives` SET `editor_img_clear_link`={$editor_img_clear_link};");
+                tpSetting('syn', ['syn_admin_logic_1700106425'=>1], 'cn');
+            }catch(\Exception $e){}
+        }
+    }
+
+    /**
+     * 同步投稿提醒的模板
+     * @return [type] [description]
+     */
+    private function syn_handle_tougao_tpl()
+    {
+        $syn_admin_logic_1700016487 = tpSetting('syn.syn_admin_logic_1700016487', [], 'cn');
+        if (empty($syn_admin_logic_1700016487)) {
+            try{
+                $r = true;
+                Db::name('sms_template')->where(['send_scene'=>20])->delete();
+                $saveData = Db::name('sms_template')->field('tpl_id', true)->where(['send_scene'=>0])->select();
+                if (!empty($saveData)) {
+                    $addData = [];
+                    foreach ($saveData as $key => $val) {
+                        $val['tpl_title'] = '投稿提醒';
+                        $val['send_scene'] = 20;
+                        $val['sms_sign'] = '';
+                        $val['sms_tpl_code'] = '';
+                        $val['tpl_content'] = '您有新的会员投稿，请查看！';
+                        $val['is_open'] = 0;
+                        $addData[] = $val;
+                    }
+                    $r = Db::name('sms_template')->insertAll($addData);
+                }
+                if ($r !== false) {
+                    tpSetting('syn', ['syn_admin_logic_1700016487'=>1], 'cn');
+                }
+            }catch(\Exception $e){}
+        }
+
+        $syn_admin_logic_1700016488 = tpSetting('syn.syn_admin_logic_1700016488', [], 'cn');
+        if (empty($syn_admin_logic_1700016488)) {
+            try{
+                $r = true;
+                Db::name('smtp_tpl')->where(['send_scene'=>20])->delete();
+                $saveData = Db::name('smtp_tpl')->field('tpl_id', true)->where(['send_scene'=>2])->select();
+                if (!empty($saveData)) {
+                    $addData = [];
+                    foreach ($saveData as $key => $val) {
+                        $val['tpl_name'] = '投稿提醒';
+                        $val['tpl_title'] = '您有新的投稿文档，请及时查看！';
+                        $val['send_scene'] = 20;
+                        $val['is_open'] = 0;
+                        $addData[] = $val;
+                    }
+                    $r = Db::name('smtp_tpl')->insertAll($addData);
+                }
+                if ($r !== false) {
+                    tpSetting('syn', ['syn_admin_logic_1700016488'=>1], 'cn');
+                }
+            }catch(\Exception $e){}
+        }
+
+        $syn_admin_logic_1700016489 = tpSetting('syn.syn_admin_logic_1700016489', [], 'cn');
+        if (empty($syn_admin_logic_1700016489)) {
+            try{
+                $r = true;
+                Db::name('users_notice_tpl')->where(['send_scene'=>20])->delete();
+                $saveData = Db::name('users_notice_tpl')->field('tpl_id', true)->where(['send_scene'=>1])->select();
+                if (!empty($saveData)) {
+                    $addData = [];
+                    foreach ($saveData as $key => $val) {
+                        $val['tpl_name'] = '投稿提醒';
+                        $val['tpl_title'] = '您有新的投稿文档，请及时查看！';
+                        $val['send_scene'] = 20;
+                        $val['is_open'] = 0;
+                        $addData[] = $val;
+                    }
+                    $r = Db::name('users_notice_tpl')->insertAll($addData);
+                }
+                if ($r !== false) {
+                    tpSetting('syn', ['syn_admin_logic_1700016489'=>1], 'cn');
+                }
+            }catch(\Exception $e){}
+        }
+    }
+
+    /**
+     * 处理外贸助手功能数据表
+     * @return [type] [description]
+     */
+    private function syn_handle_foreign_pack()
+    {
+        $Prefix = config('database.prefix');
+/*
+        $admin_logic_1699261141 = tpSetting('syn.admin_logic_1699261141', [], 'cn');
+        if (empty($admin_logic_1699261141)) {
+            $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'foreign_pack\'');
+            if (empty($isTable)) {
+                $tableSql = <<<EOF
+CREATE TABLE IF NOT EXISTS `{$Prefix}foreign_pack` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `type` int(4) DEFAULT '0' COMMENT '分类：1=列表，2=留言',
+  `name` varchar(50) NOT NULL DEFAULT '' COMMENT '变量名',
+  `value` text NOT NULL COMMENT '变量值',
+  `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
+  `sort_order` int(10) DEFAULT '0' COMMENT '排序号',
+  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='外贸助手语言包变量';
+EOF;
+                $r = @Db::execute($tableSql);
+                if ($r !== false) {
+                    schemaTable('foreign_pack');
+                    try {
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('1', '1', 'page1', '首页', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('2', '1', 'page2', '上一页', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('3', '1', 'page3', '下一页', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('4', '1', 'page4', '末页', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('5', '1', 'page5', '共<strong>%s</strong>页 <strong>%s</strong>条', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('6', '1', 'page1', 'Home', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('7', '1', 'page2', 'Pre', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('8', '1', 'page3', 'Next', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('9', '1', 'page4', 'Last', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('10', '1', 'page5', 'Road <strong>%s</strong> page <strong>%s</strong> strip', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('11', '2', 'gbook1', '操作成功', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('12', '2', 'gbook1', 'success', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('14', '2', 'gbook2', 'The same IP cannot be submitted repeatedly within %s seconds!', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('13', '2', 'gbook2', '同一个IP在%s秒之内不能重复提交！', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('15', '2', 'gbook3', '%s不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('16', '2', 'gbook3', '%s Cannot be empty!', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('17', '2', 'gbook4', '%s格式不正确！', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('18', '2', 'gbook4', '%s Incorrect format!', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('19', '2', 'gbook5', '图片验证码不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('20', '2', 'gbook5', 'Picture verification code cannot be empty!', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('21', '2', 'gbook6', '图片验证码不正确！', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('22', '2', 'gbook6', 'The picture verification code is incorrect!', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('23', '2', 'gbook7', '请输入手机号码！', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('24', '2', 'gbook7', 'Please enter your mobile number!', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('25', '2', 'gbook8', '手机号码和手机验证码不一致，请重新输入！', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('26', '2', 'gbook8', 'Mobile phone number and mobile phone verification code are inconsistent, please re-enter!', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('27', '2', 'gbook9', '手机验证码已被使用或超时，请重新发送！', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('28', '2', 'gbook9', 'The mobile phone verification code has been used or timed out. Please resend it!', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('29', '2', 'gbook10', '请输入手机验证码！', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('30', '2', 'gbook10', 'Please enter the mobile phone verification code!', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('31', '2', 'gbook11', '表单缺少标签属性{\$field.hidden}', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('32', '2', 'gbook11', 'The form is missing label attribute {\$field.hidden}', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('33', '2', 'gbook12', '页面自动 %s跳转%s 等待时间：', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('34', '2', 'gbook12', 'Page automatic %sjump%s waiting time：', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('35', '2', 'gbook13', '%s至少选择一项！', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('36', '2', 'gbook13', 'Select at least one item to %s', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('37', '2', 'gbook14', '请选择%s', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('38', '2', 'gbook14', 'Please select %s', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('39', '2', 'gbook15', '请输入正确的手机号码！', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('40', '2', 'gbook15', 'Please enter the correct mobile number！', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('41', '2', 'gbook16', '图片验证码', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('42', '2', 'gbook16', 'Picture verification code', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('43', '2', 'gbook17', '手机验证码', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('44', '2', 'gbook17', 'Mobile verification code', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('45', '2', 'gbook18', '获取验证码', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('46', '2', 'gbook18', 'Get verification code', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('47', '2', 'gbook19', '看不清？点击更换验证码', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('48', '2', 'gbook19', 'Can\'t see clearly? Click to change the verification code', 'en', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('49', '2', 'gbook20', '看不清？%s点击更换%s', 'cn', '100', '1543890216', '1543890216');");
+                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('50', '2', 'gbook20', 'Can\'t see clearly? %sClick to replace%s', 'en', '100', '1543890216', '1543890216');");
+                    } catch (\Exception $e) {
+                        
+                    }
+                }
+                tpSetting('syn', ['admin_logic_1699261141'=>1], 'cn');
+            }
+        }
+*/
+        $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'foreign_pack\'');
+        if (!empty($isTable)) {
+            $row = Db::name('foreign_pack')->where(['type'=>3,'name'=>'system1'])->count();
+            if (empty($row)) {
+                try {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system1', '图', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system1', 'pic', 'en', '100', '1543890216', '1543890216');");
+                } catch (\Exception $e) {
+                    
+                }
+            }
+        }
+    }
+
+    /**
+     * 处理回收站开关，多语言情况下同步
+     * @return [type] [description]
+     */
+    private function syn_handle_recycle_switch()
+    {
+        $admin_logic_1698799687 = tpSetting('syn.admin_logic_1698799687', [], 'cn');
+        if (empty($admin_logic_1698799687)) {
+            $web_recycle_switch = Db::name('setting')->where(['name'=>'recycle_switch', 'inc_type'=>'recycle'])->value('value');
+            $web_recycle_switch = intval($web_recycle_switch);
+            /*多语言*/
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('web', ['web_recycle_switch'=>$web_recycle_switch], $val['mark']);
+                }
+            } else {
+                tpCache('web', ['web_recycle_switch'=>$web_recycle_switch]);
+            }
+            /*--end*/
+            tpSetting('syn', ['admin_logic_1698799687'=>1], 'cn');
+        }
+    }
+
+    /**
+     * 同步处理在添加多语言时，友情链接分组没有同步到其他语言里
+     * @return [type] [description]
+     */
+    private function syn_handle_linksgroupdata()
+    {
+        $admin_logic_1698733259 = tpSetting('syn.admin_logic_1698733259', [], 'cn');
+        if (empty($admin_logic_1698733259)) {
+            $r = true;
+            $main_lang = get_main_lang();
+            $linksGroupList = Db::name('links_group')->order('lang asc, id asc')->select();
+
+            $languageAttributeList = Db::name('language_attribute')->where(['attr_group'=>'links_group'])->order('attr_name asc')->getAllWithIndex('attr_name');
+            $addData = [];
+            foreach ($linksGroupList as $key => $val) {
+                if ($main_lang == $val['lang']) {
+                    if (!isset($languageAttributeList['linksgroup'.$val['id']])) {
+                        $addData[] = [
+                            'attr_title' => $val['group_name'],
+                            'attr_name' => "linksgroup{$val['id']}",
+                            'attr_group' => 'links_group',
+                            'add_time' => getTime(),
+                            'update_time' => getTime(),
+                        ];
+                    }
+                }
+            }
+            if (!empty($addData)) {
+                $r = Db::name('language_attribute')->insertAll($addData);
+            }
+
+            if ($r !== false) {
+                $languageAttrList = Db::name('language_attr')->where(['attr_group'=>'links_group'])->order('lang asc, attr_name asc')->getAllWithIndex('attr_value');
+                $addData = [];
+                foreach ($linksGroupList as $key => $val) {
+                    if (!isset($languageAttrList[$val['id']])) {
+                        $addData[] = [
+                            'attr_name' => "linksgroup{$val['id']}",
+                            'attr_value' => $val['id'],
+                            'attr_group' => 'links_group',
+                            'lang' => $val['lang'],
+                            'add_time' => getTime(),
+                            'update_time' => getTime(),
+                        ];
+                    }
+                }
+                if (!empty($addData)) {
+                    $r = Db::name('language_attr')->insertAll($addData);
+                }
+                if ($r !== false) {
+                    tpSetting('syn', ['admin_logic_1698733259'=>1], 'cn');
+                }
+            }
+        }
+    }
+
+    /**
+     * 同步处理在添加多语言时，表单属性没有同步到其他语言里
+     * @return [type] [description]
+     */
+    private function syn_handle_formdata()
+    {
+        $admin_logic_1698716726 = tpSetting('syn.admin_logic_1698716726', [], 'cn');
+        if (empty($admin_logic_1698716726)) {
+            $r = true;
+            $formAttributeList = Db::name('guestbook_attribute')->where(['form_type'=>1])->order('typeid asc, attr_id asc')->select();
+            $languageAttrList = Db::name('language_attr')->where(['attr_group'=>'form_attribute'])->order('lang asc, attr_name asc')->getAllWithIndex('attr_value');
+            $addData = [];
+            foreach ($formAttributeList as $key => $val) {
+                if (!isset($languageAttrList[$val['attr_id']])) {
+                    $addData[] = [
+                        'attr_name' => "attr_{$val['attr_id']}",
+                        'attr_value' => $val['attr_id'],
+                        'attr_group' => 'form_attribute',
+                        'lang' => $val['lang'],
+                        'add_time' => getTime(),
+                        'update_time' => getTime(),
+                    ];
+                }
+            }
+            if (!empty($addData)) {
+                $r = Db::name('language_attr')->insertAll($addData);
+            }
+            if ($r !== false) {
+                tpSetting('syn', ['admin_logic_1698716726'=>1], 'cn');
+            }
+        }
+    }
+
+    // 移除没有使用的功能模块，在index控制器也在用，要一起去掉
+    public function eyou_v165_del_func()
+    {
+        // $admin_logic_1694048251 = tpSetting('syn.admin_logic_1694048251', [], 'cn');
+        // if (empty($admin_logic_1694048251)) {
+        //     $shopLogic = new \app\admin\logic\ShopLogic;
+        //     // 列出营销功能里已使用的模块
+        //     $marketFunc = $shopLogic->marketLogic();
+        //     if (empty($marketFunc)) {
+        //         Db::name('admin_menu')->where(['menu_id'=>2008005])->update(['is_menu'=>0, 'update_time'=>getTime()]);
+        //     }
+        //     // 列出功能地图里已使用的模块
+        //     $useFunc = $shopLogic->useFuncLogic();
+        //     if (!in_array('memgift', $useFunc)) {
+        //         Db::name('admin_menu')->where(['menu_id'=>2004023])->update(['is_menu'=>0, 'update_time'=>getTime()]);
+        //     }
+
+        //     tpSetting('syn', ['admin_logic_1694048251'=>1], 'cn');
+        // }
+    }
+
+    private function add_haiwai_region()
+    {
+        $admin_logic_1677555001 = tpSetting('syn.admin_logic_1677555001', [], 'cn');
+        if (empty($admin_logic_1677555001)) {
+            $count = Db::name('region')->where(['name'=>'海外','level'=>1])->count();
+            if (empty($count)) {
+                $insertid1 = Db::name('region')->insertGetId([
+                        'name' => '海外',
+                        'level' => 1,
+                        'parent_id' => 0,
+                        'initial' => 'H',
+                    ]);
+                if (!empty($insertid1)) {
+                    $insertid2 = Db::name('region')->insertGetId([
+                            'name' => '海外',
+                            'level' => 2,
+                            'parent_id' => $insertid1,
+                            'initial' => 'H',
+                        ]);
+                    if (!empty($insertid2)) {
+                        Db::name('region')->insertGetId([
+                                'name' => '海外',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'H',
+                            ]);
+                    }
+                    tpSetting('syn', ['admin_logic_1677555001'=>1], 'cn');
+                }
+            }
+        }
+    }
+
+    private function add_henan_jiyuan_region()
+    {
+        $admin_logic_1698388181 = tpSetting('syn.admin_logic_1698388181', [], 'cn');
+        if (empty($admin_logic_1698388181)) {
+            $count = Db::name('region')->where(['name'=>'济源市','parent_id'=>21387])->count();
+            if (empty($count)) {
+                $insertid2 = Db::name('region')->insertGetId([
+                        'name' => '济源市',
+                        'level' => 2,
+                        'parent_id' => 21387,
+                        'initial' => 'J',
+                    ]);
+                if (!empty($insertid2)) {
+                    Db::name('region')->insertAll([
+                            [
+                                'name' => '沁园街道',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'Q',
+                            ],
+                            [
+                                'name' => '济水街道',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'J',
+                            ],
+                            [
+                                'name' => '北海街道',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'B',
+                            ],
+                            [
+                                'name' => '天坛街道',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'T',
+                            ],
+                            [
+                                'name' => '玉泉街道',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'Y',
+                            ],
+                            [
+                                'name' => '克井镇',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'K',
+                            ],
+                            [
+                                'name' => '五龙口镇',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'W',
+                            ],
+                            [
+                                'name' => '轵城镇',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'Z',
+                            ],
+                            [
+                                'name' => '承留镇',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'C',
+                            ],
+                            [
+                                'name' => '邵原镇',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'S',
+                            ],
+                            [
+                                'name' => '坡头镇',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'P',
+                            ],
+                            [
+                                'name' => '梨林镇',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'L',
+                            ],
+                            [
+                                'name' => '大峪镇',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'D',
+                            ],
+                            [
+                                'name' => '思礼镇',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'S',
+                            ],
+                            [
+                                'name' => '王屋镇',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'W',
+                            ],
+                            [
+                                'name' => '下冶镇',
+                                'level' => 3,
+                                'parent_id' => $insertid2,
+                                'initial' => 'X',
+                            ],
+                        ]);
+                    tpSetting('syn', ['admin_logic_1698388181'=>1], 'cn');
+                }
+            }
+        }
+    }
+
+    // 添加商城订单主表字段(消费获得积分数(obtain_scores)；订单是否已赠送积分(is_obtain_scores))
+    public function admin_logic_1677653220()
+    {
+        $Prefix = config('database.prefix');
+        // 订单表字段查询
+        $shopOrderTableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}shop_order");
+        $shopOrderTableInfo = get_arr_column($shopOrderTableInfo, 'Field');
+
+        // 订单是否允许申请售后维权
+        if (!empty($shopOrderTableInfo) && !in_array('allow_service', $shopOrderTableInfo)) {
+            $sql0 = "ALTER TABLE `{$Prefix}shop_order` ADD COLUMN `allow_service`  tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '订单是否允许申请售后维权，0=允许申请维权，1=不允许申请维权' AFTER `confirm_time`";
+            @Db::execute($sql0);
+            schemaTable('shop_order');
+        }
+
+        // 消费获得积分数
+        if (!empty($shopOrderTableInfo) && !in_array('obtain_scores', $shopOrderTableInfo)) {
+            $sql1 = "ALTER TABLE `{$Prefix}shop_order` ADD COLUMN `obtain_scores`  int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '消费获得积分数' AFTER `allow_service`;";
+            @Db::execute($sql1);
+            schemaTable('shop_order');
+        }
+
+        // 该订单是否已赠送积分
+        if (!empty($shopOrderTableInfo) && !in_array('is_obtain_scores', $shopOrderTableInfo)) {
+            $sql2 = "ALTER TABLE `{$Prefix}shop_order` ADD COLUMN `is_obtain_scores`  tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '该订单是否已赠送积分，0=未赠送，1=已赠送' AFTER `obtain_scores`;";
+            @Db::execute($sql2);
+            schemaTable('shop_order');
+        }
+    }
+
+    // 更新会员积分数据表，积分类型字段 type
+    public function admin_logic_1680749290()
+    {
+        $admin_logic_1680749290 = tpSetting('syn.admin_logic_1680749290', [], 'cn');
+        if (empty($admin_logic_1680749290)) {
+            // 表前缀
+            $Prefix = config('database.prefix');
+            // 会员积分表更新
+            $sql = "ALTER TABLE `{$Prefix}users_score` MODIFY COLUMN `type`  tinyint(2) NULL DEFAULT 1 COMMENT '类型:1-提问,2-回答,3-最佳答案4-悬赏退回,5-每日签到,6-管理员编辑,7-问题悬赏/获得悬赏,8-消费赠送积分,9-积分兑换/退回,10-登录赠送积分' AFTER `id`;";
+            @Db::execute($sql);
+            schemaTable('users_score');
+            // 增加会员登录日志表
+            $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'users_login_log\'');
+            if (empty($isTable)) {
+                $tableSql = <<<EOF
+CREATE TABLE IF NOT EXISTS `{$Prefix}users_login_log` (
+  `log_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '会员日志自增ID',
+  `users_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员ID',
+  `log_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '日志时间，年月日(例:20230406)',
+  `log_count` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '日志次数',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '创建时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`log_id`),
+  UNIQUE KEY `users_id` (`users_id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='会员登录日志';
+EOF;
+                $result = @Db::execute($tableSql);
+                if ($result !== false) schemaTable('users_login_log');
+            }
+            // 设置已完成执行
+            tpSetting('syn', ['admin_logic_1680749290'=>1], 'cn');
+        }
+    }
+
+    /**
+     * 更新旧的商品虚拟总销量
+     * @return [type] [description]
+     */
+    private function handleProductSalesAll()
+    {
+        $admin_logic_1675243579 = tpSetting('syn.admin_logic_1675243579', [], 'cn');
+        if (empty($admin_logic_1675243579)) {
+            $productList = Db::name('archives')->field('aid,sales_num,virtual_sales,sales_all')
+                ->where(['channel'=>2])
+                ->select();
+            if (!empty($productList)) {
+                $specList = Db::name('product_spec_data')->field('aid,count(aid) as total')
+                    ->group('aid')
+                    ->getAllWithIndex('aid');
+                $salesList = Db::name('product_spec_value')->field('aid,sum(spec_sales_num) as spec_sales_num,count(aid) as spec_counts')
+                    ->group('aid')
+                    ->getAllWithIndex('aid');
+                $saveData = [];
+                foreach ($productList as $key => $val) {
+                    if (!empty($specList[$val['aid']]['total'])) { // 多规格
+                        $spec_counts = empty($salesList[$val['aid']]['spec_counts']) ? 0 : $salesList[$val['aid']]['spec_counts'];
+                        $spec_sales_num = empty($salesList[$val['aid']]['spec_sales_num']) ? 0 : $salesList[$val['aid']]['spec_sales_num'];
+                        $saveData[] = [
+                            'aid' => $val['aid'],
+                            'sales_all' => $spec_sales_num, // + ($spec_counts * $val['virtual_sales']),
+                        ];
+                    } else {
+                        $saveData[] = [
+                            'aid' => $val['aid'],
+                            'sales_all' => $val['sales_num'] + $val['virtual_sales'],
+                        ];
+                    }
+                }
+                if (!empty($saveData)) {
+                    model('Archives')->saveAll($saveData);
+                }
+            }
+            tpSetting('syn', ['admin_logic_1675243579'=>1], 'cn');
+        }
+    }
+
+    /**
+     * 同步模板的付费选择支付文件到前台模板指定位置
+     * @return [type] [description]
+     */
+    public function copy_tplpayfile($channel = 0)
+    {
+        $shop_open_comment = getUsersConfigData('shop.shop_open_comment');
+        $channelRow = Db::name('channeltype')->where(['status'=>1])->getAllWithIndex('id');
+        foreach ($channelRow as $key => $val) {
+            $data = json_decode($val['data'], true);
+            $val['data'] = empty($data) ? [] : $data;
+            $channelRow[$key] = $val;
+        }
+        $source_path = ROOT_PATH.'public/html/template/';
+        $dest_path = ROOT_PATH.'template/'.THEME_STYLE_PATH.'/system/';
+        if (stristr($dest_path, '/pc/system/')) {
+            tp_mkdir($dest_path);
+            if (!empty($channelRow[1]['data']['is_article_pay'])) {
+                if (in_array($channel, [0,1]) && !file_exists($dest_path.'article_pay.htm') && file_exists($source_path.'pc/system/article_pay.htm')) {
+                    @copy($source_path.'pc/system/article_pay.htm', $dest_path.'article_pay.htm');
+                }
+            }
+            if (!empty($channelRow[4]['data']['is_download_pay'])) {
+                if (in_array($channel, [0,4]) && !file_exists($dest_path.'download_pay.htm') && file_exists($source_path.'pc/system/download_pay.htm')) {
+                    @copy($source_path.'pc/system/download_pay.htm', $dest_path.'download_pay.htm');
+                }
+            }
+            if (!empty($shop_open_comment)) {
+                if (in_array($channel, [0,2]) && !file_exists($dest_path.'product_comment.htm') && file_exists($source_path.'pc/system/product_comment.htm')) {
+                    @copy($source_path.'pc/system/product_comment.htm', $dest_path.'product_comment.htm');
+                }
+            }
+        }
+
+        $dest_path = ROOT_PATH.'template/'.THEME_STYLE_PATH;
+        $dest_path = preg_replace('/\/pc$/i', '/mobile', $dest_path);
+        if (file_exists($dest_path)) {
+            $dest_path .= '/system/';
+            tp_mkdir($dest_path);
+            if (!empty($channelRow[1]['data']['is_article_pay'])) {
+                if (in_array($channel, [0,1]) && !file_exists($dest_path.'article_pay.htm') && file_exists($source_path.'mobile/system/article_pay.htm')) {
+                    @copy($source_path.'mobile/system/article_pay.htm', $dest_path.'article_pay.htm');
+                }
+            }
+            if (!empty($channelRow[4]['data']['is_download_pay'])) {
+                if (in_array($channel, [0,4]) && !file_exists($dest_path.'download_pay.htm') && file_exists($source_path.'mobile/system/download_pay.htm')) {
+                    @copy($source_path.'mobile/system/download_pay.htm', $dest_path.'download_pay.htm');
+                }
+            }
+            if (!empty($shop_open_comment)) {
+                if (in_array($channel, [0,2]) && !file_exists($dest_path.'product_comment.htm') && file_exists($source_path.'mobile/system/product_comment.htm')) {
+                    @copy($source_path.'mobile/system/product_comment.htm', $dest_path.'product_comment.htm');
+                }
+                if (in_array($channel, [0,2]) && !file_exists($dest_path.'comment_list.htm') && file_exists($source_path.'mobile/system/comment_list.htm')) {
+                    @copy($source_path.'mobile/system/comment_list.htm', $dest_path.'comment_list.htm');
+                }
+            }
+        }
+    }
+
+    public function admin_logic_1685094852()
+    {
+        $syn_admin_logic_1685094852 = tpSetting('syn.admin_logic_1685094852', [], 'cn');
+        if (empty($syn_admin_logic_1685094852)) {
+            $articlePay = Db::name('article_pay')->field('id, size, update_time')->select();
+            if (!empty($articlePay)) {
+                foreach ($articlePay as $key => $value) {
+                    $value['size'] = intval(floatval($value['size']) * floatval(1024));
+                    $value['update_time'] = getTime();
+                    Db::name('article_pay')->where('id', $value['id'])->update($value);
+                }
+            }
+            tpSetting('syn', ['admin_logic_1685094852'=>1], 'cn');
+        }
+    }
+
+    // 运费模板数据同步--陈风任
+    public function admin_logic_1687687709()
+    {
+        $syn_admin_logic_1687687709 = tpSetting('syn.admin_logic_1687687709', [], 'cn');
+        if (empty($syn_admin_logic_1687687709)) {
+            // 查询地址表是否存在海外区域
+            $where = [
+                'level' => 1,
+                'name' => '海外',
+                'parent_id' => 0,
+            ];
+            $region = Db::name('region')->where($where)->find();
+
+            // 查询运费模板表是否已添加海外区域
+            $where = [
+                'province_id' => $region['id'],
+                'template_region' => $region['name'],
+            ];
+            $template = Db::name('shop_shipping_template')->where($where)->find();
+
+            // 判断是否需要添加运费模板数据
+            if (!empty($region) && empty($template)) {
+                // 添加运费模板数据
+                $insert = [
+                    'update_time' => getTime(),
+                    'province_id' => $region['id'],
+                    'template_region' => $region['name'],
+                ];
+                Db::name('shop_shipping_template')->insert($insert);
+            }
+
+            tpSetting('syn', ['admin_logic_1687687709'=>1], 'cn');
+        }
+    }
+
+    /**
+     * 主题风格同步兼容旧版本数据
+     * @return [type] [description]
+     */
+    private function theme_syn_olddata()
+    {
+        $admin_logic_1681199467 = tpSetting('syn.admin_logic_1681199467', [], 'cn');
+        if (empty($admin_logic_1681199467)) {
+            $count = Db::name('admin_theme')->where(['is_system'=>0,'theme_type'=>1])->count();
+            if (empty($count)) {
+                $globalConfig = tpCache('global');
+                // 后台logo/登录logo
+                if (-1 == $globalConfig['web_is_authortoken']) {
+                    if (empty($globalConfig['web_adminlogo'])) {
+                        $globalConfig['web_adminlogo'] = ROOT_DIR.'/public/static/admin/images/logo_ey.png';
+                    }
+                    if (empty($globalConfig['web_loginlogo'])) {
+                        $globalConfig['web_loginlogo'] = ROOT_DIR.'/public/static/admin/images/login-logo_ey.png';
+                    }
+                } else {
+                    if (empty($globalConfig['web_adminlogo'])) {
+                        $globalConfig['web_adminlogo'] = ROOT_DIR.'/public/static/admin/images/logo.png';
+                    }
+                    if (empty($globalConfig['web_loginlogo'])) {
+                        if ($globalConfig['php_servicemeal'] >= 2) {
+                            $globalConfig['web_loginlogo'] = ROOT_DIR.'/public/static/admin/images/login-logo_zy.png';
+                        } else {
+                            $globalConfig['web_loginlogo'] = ROOT_DIR.'/public/static/admin/images/login-logo.png';
+                        }
+                    }
+                }
+                $addData = [
+                    'theme_type' => 1,
+                    'theme_title' => '默认主题',
+                    'theme_pic' => ROOT_DIR.'/public/static/admin/images/theme/theme_pic_default.png',
+                    'theme_color_model' => empty($globalConfig['web_theme_color_model']) ? 1 : $globalConfig['web_theme_color_model'],
+                    'theme_main_color' => empty($globalConfig['web_theme_color']) ? '#3398cc' : $globalConfig['web_theme_color'],
+                    'theme_assist_color' => empty($globalConfig['web_assist_color']) ? '#2189be' : $globalConfig['web_assist_color'],
+                    'login_logo' => empty($globalConfig['web_loginlogo']) ? ROOT_DIR.'/public/static/admin/login/login-logo.png' : $globalConfig['web_loginlogo'],
+                    'login_bgimg_model' => empty($globalConfig['web_loginbgimg_model']) ? 1 : $globalConfig['web_loginbgimg_model'],
+                    'login_bgimg' => empty($globalConfig['web_loginbgimg']) ? ROOT_DIR.'/public/static/admin/loginbg/login-bg-1.png' : $globalConfig['web_loginbgimg'],
+                    'login_tplname' => '',
+                    'admin_logo' => empty($globalConfig['web_adminlogo']) ? ROOT_DIR.'/public/static/admin/logo/logo.png' : $globalConfig['web_adminlogo'],
+                    'welcome_tplname' => '',
+                    'is_system' => 0,
+                    'sort_order' => 100,
+                    'lang' => get_admin_lang(),
+                    'add_time' => getTime(),
+                    'update_time' => getTime(),
+                ];
+                $theme_id = Db::name('admin_theme')->insertGetId($addData);
+                if (!empty($theme_id)) {
+                    /*多语言*/
+                    if (is_language()) {
+                        $langRow = \think\Db::name('language')->order('id asc')
+                            ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                            ->select();
+                        foreach ($langRow as $key => $val) {
+                            tpCache('web', ['web_theme_styleid'=>$theme_id], $val['mark']);
+                        }
+                    } else {
+                        tpCache('web', ['web_theme_styleid'=>$theme_id]);
+                    }
+                    /*--end*/
+                    tpSetting('syn', ['admin_logic_1681199467'=>1], 'cn');
+                }
+            }
         }
     }
 }

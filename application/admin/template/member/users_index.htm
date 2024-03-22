@@ -1,27 +1,119 @@
 {include file="public/layout" /}
 
-<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
-    {include file="member/bar" /}
-    <div class="flexigrid">
-        <div class="mDiv">
+{include file="member/left" /}
+<div class="page min-hg-c-10" style="min-width:auto;margin-left:100px;">
+    <div class="flexigrid flexigrid-xin member_lt">
+        <div class="mDiv pt0">
             <div class="ftitle">
-                {include file="member/users_bar" /}
+                {eq name="'Member@users_batch_add'|is_check_access" value="1"}
+                    <div class="fbutton">
+                        <a href="javascript:void(0);" data-href="{:url('Member/users_batch_add')}" onclick="openFullframe(this, '新增会员','60%','80%');">
+                            <div class="add" title="新增会员">
+                                <span><i class="layui-icon layui-icon-addition"></i>新增会员</span>
+                            </div>
+                        </a>
+                    </div>
+                {/eq}
             </div>
-            
-            <form class="navbar-form form-inline" id="searchForm" action="{:url('Member/users_index')}" method="get" onsubmit="layer_loading('正在处理');">
-                {$searchform.hidden|default=''}
-                <div class="sDiv">
-                    <div class="sDiv2 fl" style="margin-right: 6px;">
-                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索用户名...">
-                        <input type="submit" class="btn" value="搜索">
-						<i class="fa fa-search"></i>
+        </div>
+        <div class="header-bar mb20">
+            <div class="more">
+                <div class="search">
+                    <div class="content">
+                        <form id="postForm" action="{:url('Member/users_index')}" method="get" onsubmit="layer_loading('正在处理');" style="display: unset;">
+                            {$searchform.hidden|default=''}
+
+                            <div class="ey-form-item"><label class="users-form-item-label">关键词：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="sDiv2">
+                                                <input type="text" size="50" name="keywords" value="{$Request.param.keywords}" class="qsbox w220" placeholder="会员名/昵称/手机号/邮箱/会员ID">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="ey-form-item">
+                                <label class="users-form-item-label">会员来源：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div>
+                                                <select name="source">
+                                                    <option value="">全部</option>
+                                                    <option value="1" {eq name="$Request.param.source" value="1"}selected{/eq}>PC端</option>
+                                                    <option value="2" {eq name="$Request.param.source" value="2"}selected{/eq}>H5</option>
+                                                    <option value="3" {eq name="$Request.param.source" value="3"}selected{/eq}>微信公众号</option>
+                                                    <option value="4" {eq name="$Request.param.source" value="4"}selected{/eq}>微信小程序</option>
+                                                    <option value="5" {eq name="$Request.param.source" value="5"}selected{/eq}>百度小程序</option>
+                                                    <option value="6" {eq name="$Request.param.source" value="6"}selected{/eq}>抖音小程序</option>
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ey-form-item"><label class="users-form-item-label">会员等级：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="">
+                                                <select name="level" id="level">
+                                                    <option value="" >全部</option>
+                                                    {foreach name="$level" item="vo" key="k" }
+                                                    <option value="{$vo.level_id}" {eq name="$Request.param.level" value="$vo.level_id"}selected{/eq}>{$vo.level_name}</option>
+                                                    {/foreach}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ey-form-item"><label class="users-form-item-label">注册时间：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="sDiv2">
+                                                <input type="text" name="add_time" id="eYLaydateTimeLinkage" data-max_date="{php}echo date('Y-m-d');{/php}" autocomplete="off"  class="qsbox" placeholder="会员注册时间" lay-key="1" style="width: 220px;" value="{$Request.param.add_time}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ey-form-item"><label class="users-form-item-label">黑名单：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="">
+                                                <select name="is_lock">
+                                                    <option value="">全部</option>
+                                                    <option value="-99" {eq name="$Request.param.is_lock" value="-99"}selected{/eq}>是</option>
+                                                    <option value="0" {eq name="$Request.param.is_lock" value="0"}selected{/eq}>否</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="ey-form-item" style="margin-left: 20px;">
+                            <div class="users-form-item-content">
+                                <span class="bt-xin" onclick="OrderQuery();">查询</span>
+                                <span class="bt-xin-no" onclick="OrderQuery('reset');">重置</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
+    </div>
+    <div class="flexigrid">
         <div class="hDiv">
             <div class="hDivBox">
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
@@ -37,7 +129,7 @@
                             <div class="tc">头像</div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="tl text-l10">昵称/用户名</div>
+                            <div class="tl text-l10">昵称/绑定</div>
                         </th>
                         <th abbr="ac_id" axis="col4" class="w100">
                             <div class="tc">级别</div>
@@ -61,11 +153,11 @@
                 <table style="width: 100%">
                     <tbody>
                     {empty name="list"}
-                        <tr>
-                            <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
-                            </td>
-                        </tr>
+                        <div class="no-data">
+                            <div class="no_row">
+                                <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                            </div>
+                        </div>
                     {else/}
                         {foreach name="list" item="vo" key="k" }
                         <tr>
@@ -79,7 +171,7 @@
                             </td>
                             <td class="sign">
                                 <div class="w50 tc">
-                                    <img id="img_head_pic" style="height: 40px;margin-right: 5px;float: unset;margin: auto;" src="{$vo.head_pic|get_head_pic=###}" />
+                                    <img id="img_head_pic" style="height: 40px;margin-right: 5px;float: unset;margin: auto;" src="{$vo.head_pic|get_head_pic=###,false,$vo['sex']}" />
                                 </div>
                             </td>
                             <td style="width: 100%">
@@ -91,7 +183,27 @@
                                         {$vo.nickname|default=$vo.username}
                                     {/eq}
                                     </p>
-                                    <p style="margin-top: -10px; color: #cccccc; font-size: 12px;">{$vo.username}</p>
+                                    
+                                    <p class="binding">
+                                        {if condition="$vo['is_mobile'] == 1 && !empty($vo['mobile'])"}
+                                            <img src="__STATIC__/admin/images/r_phone.png">
+                                        {/if}
+                                        {if condition="in_array($vo['thirdparty'], [5]) || !empty($wxlogin[$vo['users_id']]['openid'])"}
+                                            <img src="__STATIC__/admin/images/r_weixin.png">
+                                        {/if}
+                                        {if condition="in_array($vo['thirdparty'], [6])"}
+                                            <img src="__STATIC__/admin/images/r_wechat.png">
+                                        {/if}
+                                        {if condition="!empty($qqlogin[$vo['users_id']])"}
+                                            <img src="__STATIC__/admin/images/r_qq.png">
+                                        {/if}
+                                        {if condition="in_array($vo['thirdparty'], [4])"}
+                                            <img src="__STATIC__/admin/images/r_wxapp.png">
+                                        {/if}
+                                        {if condition="!empty($wblogin[$vo['users_id']])"}
+                                            <img src="__STATIC__/admin/images/r_wb.png">
+                                        {/if}
+                                    </p>
                                 </div>
                             </td>
                             <td>
@@ -102,9 +214,9 @@
                             <td class="">
                                 <div class="w60 tc">
                                     {eq name="$vo['is_activation']" value='1'}
-                                        <span class="yes" {eq name="'Member@users_edit'|is_check_access" value="1"}onClick="changeTableVal('users','users_id','{$vo.users_id}','is_activation',this);"{/eq}><i class="fa fa-check-circle"></i>是</span>
+                                        <span class="yes" {eq name="'Member@users_edit'|is_check_access" value="1"}onclick="changeIsActivation('users','users_id','{$vo.users_id}','is_activation',this);"{/eq} data-value="0"><i class="fa fa-check-circle"></i>是</span>
                                     {else /}
-                                        <span class="no" {eq name="'Member@users_edit'|is_check_access" value="1"}onClick="changeTableVal('users','users_id','{$vo.users_id}','is_activation',this);"{/eq}><i class="fa fa-ban"></i>否</span>
+                                        <span class="no" {eq name="'Member@users_edit'|is_check_access" value="1"}onclick="changeIsActivation('users','users_id','{$vo.users_id}','is_activation',this);"{/eq} data-value="1"><i class="fa fa-ban"></i>否</span>
                                     {/eq}
                                 </div>
                             </td>
@@ -120,7 +232,7 @@
                                     {/eq}
                                     {eq name="'Member@users_del'|is_check_access" value="1"}
 										<i></i>
-                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Member/users_del')}" data-id="{$vo.users_id}" data-admin_id="{$vo.admin_id}" data-username="{$vo.username}" onClick="usersdel(this);">删除</a>
+                                        <a class="btn red"  href="javascript:void(0);" data-url="{:url('Member/users_del')}" data-id="{$vo.users_id}" data-admin_id="{$vo.admin_id}" data-username="{$vo.username}" onclick="usersdel(this);">删除</a>
                                     {/eq}
                                 </div>
                             </td>
@@ -132,6 +244,7 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        {notempty name="list"}
         <div class="footer-oper">
             {eq name="'Member@users_del'|is_check_access" value="1"}
             <span class="ml15">
@@ -139,22 +252,16 @@
             </span>
             <div class="nav-dropup">
                 <a onclick="batch_del(this, 'ids');" data-url="{:url('Member/users_del')}" class="layui-btn layui-btn-primary">
-                    <div class="add" title="批量删除">
+                    <div class="add">
                         <span>批量删除</span>
                     </div>
                 </a>
             </div>
             {/eq}
-            {eq name="'Member@users_batch_add'|is_check_access" value="1"}
-                <a href="javascript:void(0);" data-href="{:url('Member/users_batch_add')}" class="layui-btn layui-btn-primary" onclick="openFullframe(this, '会员中心 - 批量新增会员','60%','80%');">
-                    <div class="add" title="批量新增">
-                        <span class="red">批量新增</span>
-                    </div>
-                </a>
-            {/eq}
 			{include file="public/page" /}
             <div style="clear:both"></div>
         </div>
+        {/notempty}
 	</div>
 </div>
 <script>
@@ -180,52 +287,27 @@
         $('.fa-refresh').click(function(){
             location.href = location.href;
         });
-
-        {eq name="$is_syn_theme_users" value="1"}
-            syn_theme_users();
-        {/eq}
-        function syn_theme_users()
-        {
-            layer_loading('初始化中');
-            // 确定
-            $.ajax({
-                type : 'get',
-                url : "{:url('Member/ajax_syn_theme_users')}",
-                data : {_ajax:1},
-                dataType : 'json',
-                success : function(res){
-                    layer.closeAll();
-                    if(res.code == 1){
-                        layer.msg(res.msg, {icon: 1, time: 1000}, function(){
-                            window.location.href = res.url;
-                        });
-                    }else{
-                        layer.alert(res.msg, {icon: 2, title:false}, function(){
-                            window.location.reload();
-                        });
-                    }
-                },
-                error: function(e){
-                    layer.closeAll();
-                    layer.alert(ey_unknown_error, {icon: 2, title:false}, function(){
-                        window.location.reload();
-                    });
-                }
-            })
-        }
     });
 
     // 删除
     function usersdel(obj){
         var admin_id = $(obj).data('admin_id');
         if (0 < admin_id) {
-            var title = "系统管理员前台ID，删除不可恢复？";
+            var title = "系统管理员前台ID，删除不可恢复？<br/>包含该会员数据有(订单、投稿、问答、留言等)";
         } else {
-            var title = "此操作不可恢复，确认彻底删除？";
+            var title = "是否删除该会员？删除后不可找回。<br/>包含该会员数据有(订单、投稿、问答、留言等)";
         }
         layer.confirm(title, {
-            title: false,//$(obj).attr('data-username'),
-            btn: ['确定','取消'] //按钮
+            shade: layer_shade,
+            area: ['480px', '200px'],
+            move: false,
+            title: '提示',//$(obj).attr('data-username'),
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定','取消'], //按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function(){
             layer_loading('正在处理');
             // 确定
@@ -261,13 +343,31 @@
             }
         })
         if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 2, title:false});
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
             return;
         }
         // 删除按钮
-        layer.confirm('此操作不可恢复，确认批量彻底删除？', {
-            title: false,
-            btn: ['确定', '取消'] //按钮
+        layer.confirm('确认批量彻底删除？<br/>包含该会员数据有(订单、投稿、问答、留言等)', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function () {
             layer_loading('正在处理');
             $.ajax({
@@ -284,15 +384,64 @@
                         layer.alert(data.msg, {icon: 2, title:false});
                     }
                 },
-                error:function(){
+                error:function(e){
                     layer.closeAll();
-                    layer.alert(ey_unknown_error, {icon: 2, title:false});
+                    layer.alert(e.responseText, {icon: 2, title:false});
                 }
             });
         }, function (index) {
             layer.closeAll(index);
         });
     }
-</script>
+    
+    $(document).keydown(function(event){
+        if(event.keyCode ==13){
+            OrderQuery();
+        }
+    });
 
+    // 订单查询
+    function OrderQuery(isReset) {
+        if (isReset && 'reset' == isReset) {
+            window.location.href = "{:url('Member/users_index')}";
+        } else {
+            $('#postForm').submit();
+        }
+    }
+
+    function changeIsActivation(table,id_name,id_value,field,obj) {
+        var is_activation = $(obj).data('value');
+        console.log(is_activation)
+        var title = '';
+        if (0 == is_activation) {
+            title = '确认关闭激活吗?关闭后前台该会员将无法登录!';
+        } else if (1 == is_activation) {
+            title = '确认激活吗?激活后会员将可以前台登录';
+        }
+
+        // 删除按钮
+        layer.confirm(title, {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
+        }, function () {
+            changeTableVal(table,id_name,id_value,field,obj);
+            layer.closeAll();
+        }, function (index) {
+            layer.closeAll();
+        });
+
+    }
+    
+</script>
+<!-- 日期联动选择js文件 start -->
+<script type="text/javascript" src="__PUBLIC__/static/common/js/ey_laydate_time_linkage.js?v={$version}"></script>
+<!-- 日期联动选择js文件 end -->
 {include file="public/footer" /}

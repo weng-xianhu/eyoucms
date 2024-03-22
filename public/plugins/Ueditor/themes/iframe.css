@@ -10,6 +10,10 @@ body.view img{
     max-width: 50%!important;
     height: auto!important;
 }
+body.view img.anchorclass{
+    height: 16px!important;
+    width: 15px!important;
+}
 .view {
 word-break: break-all;
 }

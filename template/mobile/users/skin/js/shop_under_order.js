@@ -1,3 +1,29 @@
+$(function() {
+    // 默认支付方式
+    $($('.pay-type-item')[0]).trigger('click');
+});
+
+// 支付方式选择
+function selectPayType(obj) {
+    var type = $(obj).data('type');
+    // 重置支付方式
+    $('#payment_type').val(type);
+    // 在线支付 or 线下支付
+    $('#payment_method').val(0);
+    if ('hdfk_payOnDelivery' == type) $('#payment_method').val(1);
+    // 重置选中标记
+    $(obj).siblings().removeClass('active').end().addClass('active');
+}
+
+// 返回指定URL页面
+function returnUrl(url) {
+    if (url) {
+        window.location.href = url;
+    } else {
+        layer.alert('没有指定URL页面', {icon:0, title: false, closeBtn: 0});
+    }
+}
+
 $( function() {
     // 小程序查询调用
     wx.miniProgram.getEnv( function(res) {
@@ -42,7 +68,7 @@ function AppletsPay() {
 }
 
 // 判断支付类型是否一致并且更新支付方式
-function WeChatPayment() {
+function wechatJsApiPay() {
     if ('yezf_balance' == $('#payment_type').val()) {
         // 微信端余额支付
         ShopPaymentPage();
@@ -204,7 +230,7 @@ function payTag(showContent, selfObj, type) {
         if ('yezf' == type) { // 余额支付
             $('#payment_type').val('yezf_balance');
         } else {
-            $('#payment_type').val('zxzf_wechat');
+            $('#payment_type').val(type);
         }
     }
 }
@@ -212,7 +238,6 @@ function payTag(showContent, selfObj, type) {
 // 支付方式选择
 function payTag2(obj) {
     var type = $(obj).data('type');
-    $('#yezf_balance_tips').hide();
     if ('hdfk_payOnDelivery' == type) { // 货到付款
         $('#payment_method').val(1);
         $('#payment_type').val('hdfk_payOnDelivery');
@@ -220,7 +245,6 @@ function payTag2(obj) {
         $('#payment_method').val(0);
         if ('yezf_balance' == type) { // 余额支付
             $('#payment_type').val('yezf_balance');
-            $('#yezf_balance_tips').show();
         } else {
             $('#payment_type').val(type);
         }

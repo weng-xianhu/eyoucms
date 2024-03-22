@@ -45,7 +45,7 @@ class Channelfield extends Model
      */
     public function getInfoByWhere($where, $field = '*')
     {
-        $result = Db::name('Channelfield')->field($field)->where($where)->cache(true,EYOUCMS_CACHE_TIME,"channelfield")->find();
+        $result = Db::name('Channelfield')->field($field)->where($where)->find();
 
         return $result;
     }

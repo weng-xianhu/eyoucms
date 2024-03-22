@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -39,19 +39,32 @@ class Article extends Model
     {
         $post['aid'] = $aid;
         $addonFieldExt = !empty($post['addonFieldExt']) ? $post['addonFieldExt'] : array();
-        model('Field')->dealChannelPostData($post['channel'], $post, $addonFieldExt);
+        $FieldModel = new \app\admin\model\Field;
+        $FieldModel->dealChannelPostData($post['channel'], $post, $addonFieldExt);
+        
+        // 处理外贸链接
+        if (is_dir('./weapp/Waimao/')) {
+            $waimaoLogic = new \weapp\Waimao\logic\WaimaoLogic;
+            $waimaoLogic->update_htmlfilename($aid, $post, $opt);
+        }
 
         // --处理TAG标签
         model('Taglist')->savetags($aid, $post['typeid'], $post['tags'], $post['arcrank'], $opt);
 
-        // 处理mysql缓存表数据
-        if (isset($post['arcrank']) && -1 == $post['arcrank'] && -1 == $post['old_arcrank'] && !empty($post['users_id'])) {
-            // 待审核
-            model('SqlCacheTable')->UpdateDraftSqlCacheTable($post, $opt);
-        } else if (isset($post['arcrank'])) {
-            // 已审核
-            $post['old_typeid'] = intval($post['attr']['typeid']);
-            model('SqlCacheTable')->UpdateSqlCacheTable($post, $opt, 'article');
+        if ('edit' == $opt) {
+            // 清空sql_cache_table数据缓存表 并 添加查询执行语句到mysql缓存表
+            Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
+            model('SqlCacheTable')->InsertSqlCacheTable(true);
+        } else {
+            // 处理mysql缓存表数据
+            if (isset($post['arcrank']) && -1 == $post['arcrank'] /*&& -1 == $post['old_arcrank']*/ && !empty($post['users_id'])) {
+                // 待审核
+                model('SqlCacheTable')->UpdateDraftSqlCacheTable($post, $opt);
+            } else if (isset($post['arcrank'])) {
+                // 已审核
+                $post['old_typeid'] = intval($post['attr']['typeid']);
+                model('SqlCacheTable')->UpdateSqlCacheTable($post, $opt, 'article');
+            }
         }
     }
 
@@ -82,6 +95,9 @@ class Article extends Model
             $result['tag_id'] = $tags['tid_arr'];
         }
 
+        // 查询栏目名称
+        $result['typename'] = !empty($typeid) ? Db::name('arctype')->where('id', $typeid)->getField('typename') : '';
+
         return $result;
     }
 
@@ -99,5 +115,7 @@ class Article extends Model
         Db::name('article_content')->where(array('aid'=>array('IN', $aidArr)))->delete();
         // 同时删除TAG标签
         model('Taglist')->delByAids($aidArr);
+        // 减少统计数
+        del_statistics_data(7, $aidArr);
     }
 }

@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 namespace think;
 
@@ -75,8 +84,12 @@ class Session
             ini_set('session.cookie_domain', $config['domain']);
         }
         if (isset($config['expire'])) {
+            // 这个是Session数据在服务器端储存的时间，如果超过这个时间，那么Session数据就自动删除
             ini_set('session.gc_maxlifetime', $config['expire']);
-            ini_set('session.cookie_lifetime', $config['expire']);
+        }
+        if (isset($config['cookie_expire'])) {
+            // 这个代表SessionID在客户端Cookie储存的时间，默认是0，代表浏览器一关闭SessionID就作废
+            ini_set('session.cookie_lifetime', $config['cookie_expire']);
         }
         if (isset($config['secure'])) {
             ini_set('session.cookie_secure', $config['secure']);

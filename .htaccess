@@ -3,7 +3,7 @@
     Options +FollowSymlinks -Multiviews
     RewriteEngine On
 
-    #http跳转到https
+    #http?????https
     #RewriteCond %{SERVER_PORT} !^443$
     #RewriteRule ^(.*)$ https://www.xxxxx.com/$1 [L,R=301]
 
@@ -13,9 +13,9 @@
     #RewriteRule ^(.*)$ index.php/$1 [QSA,PT,L]
     #RewriteRule ^(.*)$ index.php?/$1 [QSA,PT,L]
 
-    #禁止指定脚本的运行
+    #???????????????
     RewriteCond % !^$
-    RewriteRule data/(.*).(php|php3|php4|php5|php6|php7|pht|phtml|asp|aspx|jsp|exe|js|sql|perl|cgi|asa)$ – [F]
-    RewriteRule template/(.*).(php|php3|php4|php5|php6|php7|pht|phtml|asp|aspx|jsp|exe|perl|cgi|asa)$ – [F]
-    RewriteRule uploads/(.*).(php|php3|php4|php5|php6|php7|pht|phtml|asp|aspx|jsp|exe|js|perl|cgi|asa)$ – [F] 
+    RewriteRule data/(.*).(php|php3|php4|php5|php6|php7|pht|phtml|asp|aspx|jsp|exe|js|sql|perl|cgi|asa)$ ?C [F]
+    RewriteRule template/(.*).(php|php3|php4|php5|php6|php7|pht|phtml|asp|aspx|jsp|exe|perl|cgi|asa)$ ?C [F]
+    RewriteRule uploads/(.*).(php|php3|php4|php5|php6|php7|pht|phtml|asp|aspx|jsp|exe|js|perl|cgi|asa)$ ?C [F] 
 </IfModule>

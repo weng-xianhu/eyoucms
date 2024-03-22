@@ -21,7 +21,7 @@ return array (
   'typeid' => 
   array (
     'name' => 'typeid',
-    'type' => 'smallint(5) unsigned',
+    'type' => 'int(10) unsigned',
     'notnull' => false,
     'default' => '0',
     'primary' => false,
@@ -123,6 +123,15 @@ return array (
     'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'sort_order' => 
+  array (
+    'name' => 'sort_order',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '100',
     'primary' => false,
     'autoinc' => false,
   ),

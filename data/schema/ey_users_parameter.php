@@ -81,6 +81,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'placeholder' => 
+  array (
+    'name' => 'placeholder',
+    'type' => 'varchar(255)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'sort_order' => 
   array (
     'name' => 'sort_order',

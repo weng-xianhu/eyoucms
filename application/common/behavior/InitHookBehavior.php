@@ -10,7 +10,7 @@ class InitHookBehavior {
         $data = cache('hooks');
         $hooks = Db::name('hooks')->field('name,module')->where(array('status'=>1))->cache(true, EYOUCMS_CACHE_TIME, 'hooks')->select();
         if(empty($data) && !empty($hooks)){
-            $exist = \think\Db::query('SHOW TABLES LIKE "'.config('database.prefix').'weapp"');
+            $exist = \think\Db::query('SHOW TABLES LIKE \''.config('database.prefix').'weapp\'');
             if (!empty($exist)) {
                 $weappRow = Db::name('weapp')->field('code,status')->where(array('status'=>1))->getAllWithIndex('code');
                 if (!empty($hooks)) {

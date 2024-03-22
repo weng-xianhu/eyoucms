@@ -73,7 +73,8 @@ class ProductSpecValue extends Model
                     $ArcUpData[] = [
                         'aid'         => $value['product_id'],
                         'stock_count' => Db::raw('stock_count+' . ($value['num'])),
-                        'sales_num'   => Db::raw('sales_num-' . ($value['num']))
+                        'sales_num'   => Db::raw('sales_num-' . ($value['num'])),
+                        'sales_all'   => Db::raw('sales_all-' . ($value['num'])),
                     ];
                 }
             }
@@ -101,6 +102,7 @@ class ProductSpecValue extends Model
                 $ArchivesModel = new \app\user\model\Archives();
                 $ArchivesModel->saveAll($ArcUpData);
                 Db::name('archives')->where(['sales_num'=>['lt',0]])->update(['sales_num'=>0, 'update_time'=>getTime()]);
+                Db::name('archives')->where(['sales_all'=>['lt',0]])->update(['sales_all'=>0, 'update_time'=>getTime()]);
             }
         }
     }

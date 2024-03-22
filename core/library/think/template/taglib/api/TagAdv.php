@@ -35,7 +35,6 @@ class TagAdv extends Base
         if (empty($pid)) {
             return false;
         }
-        $limit = preg_replace('/[^\d\,]/i', '', $limit);
 
         // 排序
         switch ($orderby) {
@@ -45,7 +44,7 @@ class TagAdv extends Base
                 break;
 
             case 'now':
-            case 'new': // 兼容织梦的写法
+            case 'new': // 兼容写法
                 $orderby = 'a.add_time desc';
                 break;
                 

@@ -9,7 +9,7 @@
     <div class="flexigrid">
         <div class="mDiv">
             <div class="ftitle">
-                {eq name='$main_lang' value='$admin_lang'}
+                {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
                     {eq name="'Arctype@add'|is_check_access" value="1"}
                     <div class="fbutton">
                         <a href="{:url('Arctype/add')}">
@@ -31,7 +31,7 @@
                         </a>
                     </div>
                     {/eq}
-                {/eq}
+                {/if}
             </div>
         </div>
         <div class="hDiv">
@@ -47,12 +47,16 @@
                             </th>
                             <th axis="col3" class="">
                                 <div class="sundefined text-l10">
+                                    {if condition="!empty($tree['cookied_treeclicked'])"}
+                                    <img src="__SKIN__/images/tv-collapsable-last.gif" id="all_treeclicked" title="关闭所有子栏目" style="float: none;" data-status="open" onClick="treeClicked(this,'all',0);">
+                                    {else /}
                                     <img src="__SKIN__/images/tv-expandable.gif" id="all_treeclicked" title="展开所有子栏目" style="float: none;" data-status="close" onClick="treeClicked(this,'all',0);">
+                                    {/if}
                                 栏目名称
                                 </div>
                             </th>
                             <th axis="col2" class="w100">
-                                <div class="tc">所属模型</div>
+                                <div class="tc">模型</div>
                             </th>
                             <th axis="col2" class="w60">
                                 <div class="tc">显示</div>
@@ -76,7 +80,9 @@
                     <tbody>
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -87,7 +93,7 @@
             <table class="flex-table autoht" cellpadding="0" cellspacing="0" border="0" id="arctype_table" style="width: 100%">
                 <tbody id="treet1">
                 {foreach name="arctype_list" item="vo" key="k" }
-                    <tr nctype="0" {if condition="$vo['parent_id'] gt 0"} style="display:none;"{/if} class="parent_id_{$vo['parent_id']}" data-level="{$vo['level']}" data-id="{$vo['id']}">
+                    <tr nctype="0" {if condition="!in_array($vo.parent_id,$tree.cookied_treeclicked) && 0 < $vo.parent_id "} style="display:none;"{/if} class="parent_id_{$vo['parent_id']}" data-level="{$vo['level']}" data-id="{$vo['id']}">
                         <td class="sign">
                             <div class="tc w40"><input type="checkbox" name="ids[]" value="{$vo.id}" autocomplete="off"></div>
                         </td>
@@ -106,14 +112,14 @@
                               {php}
                               if (1 == $vo['level']) {
                                 echo '<span class="w40x"></span>';
-                              } elseif (2 == $vo['level']) {
-                                echo '<span class="w40x w40xc"></span>';
+                              } else if ($vo['level'] >= 2) {
+                                echo '<span class="w40x w40xc'.$vo['level'].'" style="margin-right:'.(($vo['level'] - 1) * 25).'px;"></span>';
                               }
                               {/php}
                             {/gt}
 
                             {gt name="vo.has_children" value="0"}
-                                <img src="__SKIN__/images/tv-expandable.gif" style="float: none;" fieldid="2" status="open" nc_type="flex" onClick="treeClicked(this,{$vo['id']},0);" class="has_children">
+                                <img src="{in name='$vo.id' value='$tree.cookied_treeclicked'}__SKIN__/images/tv-collapsable-last.gif{else /}__SKIN__/images/tv-expandable.gif{/in}" style="float: none;" fieldid="2" status="open" nc_type="flex" onClick="treeClicked(this,{$vo['id']},0);" class="has_children"  data-level="{$vo['level']}" data-id="{$vo['id']}">
                             {else /}
                                 <img src="__SKIN__/images/tv-collapsable-last.gif" style="float: none;" fieldid="2" status="open" nc_type="flex">
                             {/gt}
@@ -135,6 +141,13 @@
                                             &nbsp;&nbsp;<a href="{:url('Arctype/single_uiset', ['tid'=>$vo['id'], 'v'=>'mobile'])}" target="_blank" title="手机端可视化编辑"><i class="fa fa-edit"></i></a>
                                         {/if}
                                     {/if}
+                                {elseif condition="$vo['current_channel'] == 2"}
+                                    {if condition="$main_lang == $admin_lang || empty($global['language_split'])"}
+                                        <a href="javascript:void(0);" data-url="{:url('ShopProduct/index', ['typeid'=>$vo['id']])}" data-href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',['typeid'=>$vo['id']])}" onclick="shopProductIndex(this);" {neq name='$main_lang' value='$admin_lang'} title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}" {/neq}>{$vo.typename}</a>
+                                    {else /}
+                                        <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',['typeid'=>$vo['id']])}" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
+                                    {/if}
+                                    <i class="arctotal">（文档：{$vo.id|get_total_arc=###}条）</i>
                                 {elseif condition="$vo['current_channel'] == 5"}
                                     {if condition="$php_servicemeal > 1"}
                                         <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',['typeid'=>$vo['id']])}" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
@@ -160,8 +173,8 @@
                             </div>
                         </td>
                         <td class="sort">
-                            <div class="w100 tc">
-                                {$channeltype_list[$vo['current_channel']]['title']|default=''}
+                            <div class="w100 tc no-grey">
+                                {$channeltype_list[$vo['current_channel']]['ntitle']|default=''}
                             </div>
                         </td>
                         <td align="center" class="">
@@ -183,6 +196,12 @@
                                     {else /}
                                         {if condition="$vo['current_channel'] == 6" /}
                                             <a href="{:url('Arctype/single_edit',array('typeid'=>$vo['id']))}" class="btn blue">内容</a>
+                                        {elseif condition="$vo['current_channel'] == 2"}
+                                            {if condition="$main_lang == $admin_lang || empty($global['language_split'])"}
+                                                <a href="javascript:void(0);" data-url="{:url('ShopProduct/index', ['typeid'=>$vo['id']])}" data-href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',array('typeid'=>$vo['id'], 'tab'=>3))}" onclick="shopProductIndex(this);" class="btn blue">内容</a>
+                                            {else /}
+                                                <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',array('typeid'=>$vo['id'], 'tab'=>3))}" class="btn blue">内容</a>
+                                            {/if}
                                         {elseif condition="$vo['current_channel'] == 5"}
                                             {if condition="$php_servicemeal > 1"}
                                                 <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',array('typeid'=>$vo['id'], 'tab'=>3))}" class="btn blue">内容</a>
@@ -207,11 +226,11 @@
                                 <i></i>
                                 <a href="{:url('Arctype/edit',array('id'=>$vo['id']))}" class="btn blue">编辑</a>
                                 {eq name="'Arctype@add'|is_check_access" value="1"}
-                                    {if condition="!empty($vo['weapp_code'])"}
-                                    <i></i>
-                                    <a href="javascript:void(0);" class="btn grey">增加子栏目</a>
-                                    {else /}
-                                        {if condition="$main_lang == $admin_lang && empty($vo['weapp_code'])"}
+                                    {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                                        {if condition="!empty($vo['weapp_code'])"}
+                                            <i></i>
+                                            <a href="javascript:void(0);" class="btn grey">增加子栏目</a>
+                                        {else/}
                                             {if condition="$vo['grade'] < ($arctype_max_level - 1)"}
                                                 <i></i>
                                                 <a href="{:url('Arctype/add',array('parent_id'=>$vo['id']))}" class="btn blue">增加子栏目</a>
@@ -224,12 +243,12 @@
                                 {/eq}
 
                                 {eq name="'Arctype@pseudo_del'|is_check_access" value="1"}
-                                    {eq name='$main_lang' value='$admin_lang'}
-                                        <i></i><a class="btn red"  href="javascript:void(0);" data-url="{:url('Arctype/pseudo_del')}" data-id="{$vo.id}" data-typename="{$vo.typename}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
-                                    {/eq}
+                                    {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                                        <i></i><a class="btn red"  href="javascript:void(0);" data-url="{:url('Arctype/pseudo_del')}" data-id="{$vo.id}" data-typename="{$vo.typename}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
+                                    {/if}
                                 {/eq}
                                 <i></i>
-                                <a href="{$vo|get_typeurl=###}" class="btn blue" target="_blank">浏览</a>
+                                <a href="{$vo|get_typeurl=###}" class="btn blue" target="_blank">预览</a>
                             </div>
                         </td>
                         <td class="sort">
@@ -246,22 +265,24 @@
                 </tbody>
             </table>
         {/empty}
-
+        
+        {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
         <div class="footer-oper">
             <span class="ml15">
                 <input type="checkbox" class="checkAll" autocomplete="off">
             </span>
             <div class="nav-dropup">
                 {eq name="'Arctype@pseudo_del'|is_check_access" value="1"}
-                    <button class="layui-btn layui-btn-primary" onclick="batch_del_arctype(this, 'ids')"  data-url="{:url('Arctype/batch_pseudo_del')}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}>批量删除</button>
+                    <button class="layui-btn layui-btn-primary" onclick="batch_del_arctype(this, 'ids')"  data-url="{:url('Arctype/batch_pseudo_del')}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}>批量删除</button>
                 {/eq}
             </div>
             {eq name="'RecycleBin@arctype_index'|is_check_access" value="1"}
-                {neq name='$recycle_switch' value='1'}
+                {neq name="$global['web_recycle_switch']" value='1'}
                     <a href="{:url('RecycleBin/arctype_index')}" style="text-decoration:none;color: #555;" class="layui-btn layui-btn-primary" title="回收站">回收站</a>
                 {/neq}
             {/eq}
         </div>
+        {/if}
     </div>
 </div>
 <div id="div_single_uiset_select" style="display: none;">
@@ -283,6 +304,7 @@
         $('input[type=checkbox].checkAll').click(function(){
             $('input[type=checkbox]').prop('checked',this.checked);
         });
+        setCookies('admin-treeClicked-Arr',JSON.stringify({$tree.cookied_treeclicked_arr}) );
     });
     $(document).ready(function(){
         // 表格行点击选中切换
@@ -304,9 +326,16 @@
             $(".dropdown-menus").slideUp(200);
             event.stopPropagation();
         })
-
-        // treeClicked($('#all_treeclicked'), 'all', 1);
     });
+
+    function shopProductIndex(obj) {
+        var shop_open = {$usersConfig['shop_open']|default=0};
+        if (1 == shop_open) {
+            top.$('#Shop_home').attr('data-click', true).attr('data-click_url', $(obj).data('url')).click();
+        } else {
+            window.location.href = $(obj).data('href');
+        }
+    }
 
      // 点击展开 收缩节点
     function treeClicked(obj,id,reload){
@@ -320,9 +349,13 @@
             var status = $(obj).attr('data-status');
           }
           if (status == 'close') {
+              setCookies('admin-treeClicked-Arr', JSON.stringify({$tree.parent_ids}));
+              setCookies('admin-treeClicked_All', 1);//1为全部展开,0-为非全部展开
             $('tr[class^=parent_id_]').show().find('img').attr('src', '__SKIN__/images/tv-collapsable-last.gif');
             $(obj).attr('data-status', 'open').attr('title','关闭所有子栏目').attr('src','__SKIN__/images/tv-collapsable-last.gif');
           } else {
+              setCookies('admin-treeClicked-Arr', '');
+              setCookies('admin-treeClicked_All', 0);
             $('tr[data-level=0]').find('img.has_children').attr('src', '/public/static/admin/images/tv-collapsable-last.gif').trigger('click');
             $('tr[class^=parent_id_]').removeClass('trSelected');
             $(obj).attr('data-status', 'close').attr('title','展开所有子栏目').attr('src','__SKIN__/images/tv-expandable.gif');
@@ -334,20 +367,58 @@
          var src = $(obj).attr('src');
          if(src == '__SKIN__/images/tv-expandable.gif')
          {
-             // $("#treet1 tr").removeClass('tb_child');
-             // $(".parent_id_"+id).addClass('tb_child');
+             var str = getCookie('admin-treeClicked-Arr');
+             var arr = [];
+             if('' == str || null == str || 'null' == str){
+                 arr.push(id);
+             }else{
+                 arr = JSON.parse(str);
+                 if (!arr.includes(id) ){
+                    arr.push(id);
+                 }
+             }
+             arr = JSON.stringify(arr);
+             setCookies('admin-treeClicked-Arr', arr);
              $(".parent_id_"+id).show();
              $(obj).attr('src','__SKIN__/images/tv-collapsable-last.gif');
              var status = 'close';
          }else{
+             var str = getCookie('admin-treeClicked-Arr');
+
+             var arr = [];
+             var level = '';
+             var key = -1;
+             if('' != str){
+                 arr = JSON.parse(str);
+                 key = $.inArray(id,arr);
+                 if (-1 < key){
+                     arr.splice(key,1);
+                 }
+                 level = $(obj).attr('data-level');
+                 $(obj).parent().parent().parent().nextAll().each(function(){
+                     if ($(this).attr('data-level') > level){
+                         key = $.inArray(parseInt($(this).attr('data-id')),arr);
+                         if (-1 < key){
+                             arr.splice(key,1);
+                         }
+                     }else{
+                         return false;
+                     }
+                 });
+                 arr = JSON.stringify(arr);
+
+                 setCookies('admin-treeClicked-Arr', arr);
+                 setCookies('admin-treeClicked_All', 0);
+             }
+
              $(obj).attr('src','__SKIN__/images/tv-expandable.gif');     
              var status = 'open';      
              
              // 如果是点击减号, 遍历循环他下面的所有都关闭
              var tbl = document.getElementById("arctype_table");
-             cur_tr = obj.parentNode.parentNode.parentNode;
+             var cur_tr = obj.parentNode.parentNode.parentNode;
              var fnd = false;
-              for (i = 0; i < tbl.rows.length; i++)
+              for (var i = 0; i < tbl.rows.length; i++)
               {
                   var row = tbl.rows[i];
                   
@@ -383,13 +454,21 @@
     function delfun(obj){
         var title = $(obj).attr('data-typename');
         var deltype = $(obj).attr('data-deltype');
-        var confirm_title = '<font color="#ff0000">如有子栏目及文档将一起清空</font>，确认删除到回收站？';
+        var confirm_title = '确认删除到回收站？子栏目及文档将一起清空至回收站。';
         if ('del' == deltype) {
-            confirm_title = '<font color="#ff0000">如有子栏目及文档将一起清空</font>，确认直接删除？';
+            confirm_title = '确认直接删除？子栏目及文档将一起清空。';
         }
         layer.confirm(confirm_title, {
-            title: false,
-            btn: ['确定','取消'] //按钮
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            shade: layer_shade,
+            btn: ['确定','取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function(){
             layer_loading('正在处理');
             // 确定
@@ -426,17 +505,35 @@
             }
         })
         if(a.length == 0){
-            layer.alert('请至少选择一项', {icon: 5, title:false});
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
             return;
         }
         var deltype = $(obj).attr('data-deltype');
-        var confirm_title = '<font color="#ff0000">如有子栏目及文档将一起清空</font>，确认删除到回收站？';
+        var confirm_title = '确认删除到回收站？如有子栏目及文档将一起清空。';
         if ('del' == deltype) {
-            confirm_title = '<font color="#ff0000">如有子栏目及文档将一起清空</font>，确认直接删除？';
+            confirm_title = '确认直接删除？如有子栏目及文档将一起清空。';
         }
         layer.confirm(confirm_title, {
-            title: false,
-            btn: ['确定','取消'] //按钮
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            shade: layer_shade,
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定','取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function(){
             layer_loading('正在处理');
             // 确定
@@ -445,14 +542,14 @@
                 url : $(obj).attr('data-url'),
                 data : {del_id:a,deltype:deltype,_ajax:1},
                 dataType : 'json',
-                success : function(data){
+                success : function(res){
                     layer.closeAll();
-                    if(data.code == 1){
-                        layer.msg(data.msg, {icon: 6});
+                    if(res.code == 1){
+                        showSuccessMsg(res.msg);
                         window.location.reload();
                         // $('tr[data-id="'+$(obj).attr('data-id')+'"]').remove();
                     }else{
-                        layer.alert(data.msg, {icon: 5, title:false});  //alert(data);
+                        showErrorAlert(res.msg);
                     }
                 }
             })
@@ -483,17 +580,27 @@
     /* 生成静态页面代码 */
     var typeid = "{$typeid}";
     var is_del = "{$is_del}";
-    if(typeid > 0){
-      $.ajax({
-        url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=upHtml&lang="+__lang__,
-          type:'POST',
-          dataType:'json',
-          data:{'typeid':typeid,'is_del':is_del,ctl_name:'Arctype',_ajax:1},
-          success:function(data){
+    if (typeid > 0) {
+        {eq name='$eyou.seo_pseudo' value='2'}
+        $.ajax({
+            url: __root_dir__ + "/index.php?m=home&c=Buildhtml&a=upHtml&lang=" + __lang__+"&t_id="+typeid+"&is_del="+is_del+"&ctl_name=Arctype&_ajax=1",
+            type: 'GET',
+            dataType: 'json',
+            data: {},
+            success: function (data) {
 
-          }
-      });
-    } 
+            }
+        });
+        {/eq}
+        {if condition="!empty($eyou['zzbaidutoken']) && !empty($eyou['typeurl'])"}
+        // 百度自动推送
+        push_zzbaidu('{$eyou.typeurl}', '{$eyou.handle}');
+        {/if}
+        {notempty name='$eyou.bdminipro'}
+        //百度小程序 API 提交 (自动推送)
+        push_bdminipro(typeid, 1);
+        {/notempty}
+    }
     /* end */
 </script>
 

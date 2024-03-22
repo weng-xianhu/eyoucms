@@ -22,11 +22,19 @@ class Links extends Base
     public function index()
     {
         $list = array();
+        $param = input('param.');
         $keywords = input('keywords/s');
-
-        $condition = array();
-        if (!empty($keywords)) {
-            $condition['a.title'] = array('LIKE', "%{$keywords}%");
+        $keywords = trim($keywords);
+        $condition = [];
+        // 应用搜索条件
+        foreach (['keywords', 'groupid'] as $key) {
+            if (isset($param[$key]) && $param[$key] !== '') {
+                if ($key == 'keywords') {
+                    $condition['a.title'] = array('LIKE', "%{$keywords}%");
+                } else {
+                    $condition['a.'.$key] = array('eq', trim($param[$key]));
+                }
+            }
         }
 
         // 多语言
@@ -34,7 +42,7 @@ class Links extends Base
         $fields = "a.*,b.group_name";
 
         $linksM =  Db::name('links');
-        $count = $linksM->alias("a")->where($condition)->count('a.id');// 查询满足要求的总记录数
+        $count = $linksM->alias("a")->join('links_group b',"a.groupid=b.id",'LEFT')->where($condition)->count('a.id');// 查询满足要求的总记录数
         $Page = $pager = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
         $list = $linksM->alias("a")->join('links_group b',"a.groupid=b.id",'LEFT')->field($fields)->where($condition)->order('a.sort_order asc, a.id asc')->limit($Page->firstRow.','.$Page->listRows)->select();
 
@@ -42,6 +50,10 @@ class Links extends Base
         $this->assign('page',$show);// 赋值分页输出
         $this->assign('list',$list);// 赋值数据集
         $this->assign('pager',$pager);// 赋值分页对象
+
+        $links_group = Db::name('links_group')->field('id, group_name')->where(['lang'=>$this->admin_lang])->order('sort_order asc')->select();
+        $this->assign('links_group',$links_group);
+
         return $this->fetch();
     }
 
@@ -52,7 +64,19 @@ class Links extends Base
     {
         if (IS_POST) {
             $post = input('post.');
-
+            $post['target'] = !empty($post['target']) ? 1 : 0;
+            $post['nofollow'] = !empty($post['nofollow']) ? 1 : 0;
+            $post['url'] = trim($post['url']);
+            $post['url'] = preg_replace('/(<|>|;|\(|\)|\!)/i', '', $post['url']);
+            if (empty($post['url'])) {
+                $this->error('网址URL不能为空！');
+            } else if (filter_var($post['url'], FILTER_VALIDATE_URL) === false) {
+                $this->error('网址URL格式不正确！');
+            }
+            $post['title'] = trim($post['title']);
+            if (empty($post['title'])) {
+                $this->error('网站名称不能为空！');
+            }
             // 处理LOGO
             $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
             $logo = '';
@@ -66,9 +90,8 @@ class Links extends Base
             $nowData = array(
                 'typeid'    => empty($post['typeid']) ? 1 : $post['typeid'],
                 'groupid'    => empty($post['groupid']) ? 1 : $post['groupid'],
-                'url'    => trim($post['url']),
+                'url'    => $post['url'],
                 'lang'  => $this->admin_lang,
-                'sort_order'    => 100,
                 'add_time'    => getTime(),
                 'update_time'    => getTime(),
             );
@@ -84,8 +107,12 @@ class Links extends Base
             exit;
         }
 
-        $group_ids = Db::name('links_group')->field('id,group_name,status')->order("sort_order asc, id asc")->select();
-        $this->assign('group_ids',$group_ids);
+        $assign_data['group_ids'] = Db::name('links_group')->field('id,group_name,status')->where(['lang'=>$this->admin_lang])->order("sort_order asc, id asc")->select();
+
+        // 多站点，当用站点域名访问后台，发布文档自动选择当前所属区域
+        model('Citysite')->auto_location_select($assign_data);
+
+        $this->assign($assign_data);
 
         return $this->fetch();
     }
@@ -99,6 +126,20 @@ class Links extends Base
             $post = input('post.');
             $r = false;
             if(!empty($post['id'])){
+                $post['id'] = intval($post['id']);
+                $post['target'] = !empty($post['target']) ? 1 : 0;
+                $post['nofollow'] = !empty($post['nofollow']) ? 1 : 0;
+                $post['url'] = trim($post['url']);
+                $post['url'] = preg_replace('/(<|>|;|\(|\)|\!)/i', '', $post['url']);
+                if (empty($post['url'])) {
+                    $this->error('网址URL不能为空！');
+                } else if (filter_var($post['url'], FILTER_VALIDATE_URL) === false) {
+                    $this->error('网址URL格式不正确！');
+                }
+                $post['title'] = trim($post['title']);
+                if (empty($post['title'])) {
+                    $this->error('网站名称不能为空！');
+                }
                 // 处理LOGO
                 $is_remote = !empty($post['is_remote']) ? $post['is_remote'] : 0;
                 $logo = '';
@@ -112,7 +153,7 @@ class Links extends Base
                 $nowData = array(
                     'typeid'    => empty($post['typeid']) ? 1 : $post['typeid'],
                     'groupid'    => empty($post['groupid']) ? 1 : $post['groupid'],
-                    'url'    => trim($post['url']),
+                    'url'    => $post['url'],
                     'update_time'    => getTime(),
                 );
                 $data = array_merge($post, $nowData);
@@ -149,7 +190,7 @@ class Links extends Base
             $info['logo_local'] = handle_subdir_pic($info['logo']);
         }
 
-        $group_ids = Db::name('links_group')->field('id,group_name,status')->order("sort_order asc, id asc")->select();
+        $group_ids = Db::name('links_group')->field('id,group_name,status')->where(['lang'=>$this->admin_lang])->order("sort_order asc, id asc")->select();
         $this->assign('group_ids',$group_ids);
         $this->assign('info',$info);
 

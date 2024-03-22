@@ -17,7 +17,7 @@ use think\Config;
 use think\Db;
 
 /**
- * 产品规格值ID，价格，库存表
+ * 商品规格值ID，价格，库存表
  */
 class ProductSpecValue extends Model
 {
@@ -29,35 +29,45 @@ class ProductSpecValue extends Model
         $this->admin_lang = get_admin_lang();
     }
 
-    public function ProducSpecValueEditSave($post = array())
+    public function ProducSpecValueEditSave($post = [], $action = 'edit')
     {
         if (!empty($post['aid']) && !empty($post['spec_price']) && !empty($post['spec_stock'])) {
-            // 删除当前产品下的所有规格价格库存数据
-            $where = [
-                'aid'  => $post['aid'],
-                'lang' => get_admin_lang(),
-            ];
-            $this->where($where)->delete();
-
-            // 产品规格价格及规格库存
+            // 商品规格价格及规格库存
             $time = getTime();
-            $UpValue = [];
+            $saveAll = [];
             foreach ($post['spec_price'] as $kkk => $vvv) {
-                $UpValue[] = [
+                $saveAll[] = [
                     'aid'           => $post['aid'],
                     'spec_value_id' => $kkk,
                     'spec_price'    => !empty($vvv['users_price']) ? $vvv['users_price'] : 0,
                     'spec_stock'    => !empty($post['spec_stock'][$kkk]['stock_count']) ? $post['spec_stock'][$kkk]['stock_count'] : 0,
+                    'spec_crossed_price' => !empty($post['spec_crossed_price'][$kkk]['crossed_price']) ? $post['spec_crossed_price'][$kkk]['crossed_price'] : 0,
                     'spec_sales_num'=> !empty($post['spec_sales'][$kkk]['spec_sales_num']) ? $post['spec_sales'][$kkk]['spec_sales_num'] : 0,
                     'seckill_price' => !empty($post['seckill_price'][$kkk]['spec_seckill_price']) ? $post['seckill_price'][$kkk]['spec_seckill_price'] : 0,
                     'seckill_stock' => !empty($post['seckill_stock'][$kkk]['spec_seckill_stock']) ? $post['seckill_stock'][$kkk]['spec_seckill_stock'] : 0,
                     'is_seckill'    => !empty($post['seckill_stock'][$kkk]['spec_seckill_stock']) ? 1 : 0,
-                    'lang'          => get_admin_lang(),
+                    'discount_price' => !empty($post['discount_price'][$kkk]['spec_discount_price']) ? $post['discount_price'][$kkk]['spec_discount_price'] : 0,
+                    'discount_stock' => !empty($post['discount_stock'][$kkk]['spec_discount_stock']) ? $post['discount_stock'][$kkk]['spec_discount_stock'] : 0,
+                    'is_discount'    => !empty($post['discount_stock'][$kkk]['spec_discount_stock']) ? 1 : 0,
+                    'lang'          => $this->admin_lang,
                     'add_time'      => $time,
                     'update_time'   => $time,
                 ];
             }
-           Db::name('product_spec_value')->insertAll($UpValue);
+            if (!empty($saveAll)) {
+                if ('edit' === strval($action)) {
+                    // 删除当前商品下的所有规格价格库存数据
+                    $where = [
+                        'aid' => $post['aid'],
+                        'lang' => $this->admin_lang,
+                    ];
+                    $this->where($where)->delete(true);
+                    Db::name('product_spec_value_handle')->delete(true);
+                }
+
+                // 批量新增商品规格价格数据
+                $this->saveAll($saveAll);
+            }
         }
     }
 }

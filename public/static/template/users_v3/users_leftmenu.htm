@@ -1,0 +1,58 @@
+<ul> 
+    <li>
+        <div class="title">个人中心</div>
+    </li>
+    <li {if $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'index'} class="active" {/if}>
+        <a href="{eyou:url link='user/Users/index' /}">会员主页</a>
+    </li>
+    <!-- <li {if $Think.const.CONTROLLER_NAME == 'Pay' && $Think.const.ACTION_NAME == 'pay_consumer_details'} class="active" {/if}>
+        <a href="{eyou:url link='user/Pay/pay_consumer_details' /}">账户余额</a>
+    </li> -->
+    <li {if $Think.const.CONTROLLER_NAME == 'UsersNotice' && $Think.const.ACTION_NAME == 'index'} class="active" {/if}>
+        <a href="{eyou:url link='user/UsersNotice/index' /}">消息通知</a>
+    </li>
+    <li {if $Think.const.CONTROLLER_NAME == 'Shop' && $Think.const.ACTION_NAME == 'shop_address_list'} class="active" {/if}>
+        <a href="{eyou:url link='user/Shop/shop_address_list' /}">收货地址</a>
+    </li>
+    <li {if $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'collection_index'} class="active" {/if}>
+        <a href="{eyou:url link='user/Users/collection_index' /}">我的关注</a>
+    </li>
+    <!-- <li {if $Think.const.CONTROLLER_NAME == 'Users' && $Think.const.ACTION_NAME == 'test'} class="active" {/if}>
+        <a href="{eyou:url link='user/Users/test' /}">优惠劵</a>
+    </li> -->
+</ul>
+
+{if isset($usersConfig['shop_open']) && $usersConfig['shop_open'] == 1 && $php_servicemeal > 1}
+<ul>
+    <li>
+        <div class="title">订单中心</div>
+    </li>
+    
+    
+    <li {if $Think.const.CONTROLLER_NAME == 'Shop' && in_array($Think.const.ACTION_NAME, ['shop_centre', 'shop_order_details'])} class="active" {/if}>
+        <a href="{eyou:url link='user/Shop/shop_centre' /}">我的订单</a>
+    </li>
+    {eyou:if condition="$php_servicemeal >= 2 && !empty($global.web_shopcomment_switch)"}
+    <li {if $Think.const.CONTROLLER_NAME == 'ShopComment'} class="active" {/if}>
+        <a href="{eyou:url link='user/ShopComment/need_comment_list'/}"> 评价晒单</a>
+    </li>
+    {/eyou:if}
+    <li {if $Think.const.CONTROLLER_NAME == 'Shop' && in_array($Think.const.ACTION_NAME, ['after_service', 'after_service_details', 'after_service_apply','service_list'])} class="active" {/if}>
+        <a href="{eyou:url link='user/Shop/after_service' /}">售后服务</a>
+    </li>
+</ul>
+{/if}
+
+{if isset($usersConfig['users_open_release']) && $usersConfig['users_open_release'] == 1}
+<ul>
+    <li>
+        <div class="title">投稿中心</div>
+    </li>
+    <li {if $Think.const.CONTROLLER_NAME == 'UsersRelease' && $Think.const.ACTION_NAME == 'release_centre'} class="active" {/if}>
+        <a href="{:url('user/UsersRelease/release_centre', ['list'=>1])}">投稿列表</a>
+    </li>
+    <li {if $Think.const.CONTROLLER_NAME == 'UsersRelease' && ($Think.const.ACTION_NAME == 'article_add' || $Think.const.ACTION_NAME == 'article_edit')} class="active" {/if}>
+        <a href="{eyou:url link='user/UsersRelease/article_add'/}">我要投稿</a>
+    </li>
+</ul>
+{/if}

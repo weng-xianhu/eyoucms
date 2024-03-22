@@ -1,0 +1,11 @@
+    <div class="fixed-bar">
+        <div class="item-title">
+        	{in name="$Request.action" value="active_index"}
+        		<a class="back_xin" href="{:url('Discount/active_index')}" title="返回活动"><i class="iconfont e-fanhui"></i></a>
+        	{/in}
+            <ul class="tab-base nc-row">
+                <li><a href="{:url('Discount/index')}" class="tab {in name='$Request.action' value='index,add,edit'}current{/in}"><span>限时折扣商品</span></a></li>
+                <li><a href="{:url('Discount/active_index')}" class="tab {in name='$Request.action' value='active_index,active_edit,active_add'}current{/in}"><span>活动会场</span></a></li>
+            </ul>
+        </div>
+    </div>

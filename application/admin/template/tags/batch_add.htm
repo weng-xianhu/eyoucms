@@ -38,7 +38,7 @@
         
         $.ajax({
             type : 'post',
-            url : "{:url('Encodes/ajax_tags_batch_add', ['_ajax'=>1])}",
+            url : "{:url('Tags/batch_add', ['_ajax'=>1])}",
             data : $('#postForm').serialize(),
             dataType : 'json',
             success : function(res){
@@ -46,7 +46,7 @@
                 if(res.code == 1){
                     var _parent = parent;
                     _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                    _parent.layer.msg(res.msg, {shade: 0.1, time: 1000}, function(){
                         _parent.window.location.reload();
                     });
                 }else{

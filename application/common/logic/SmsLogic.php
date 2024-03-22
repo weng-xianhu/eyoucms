@@ -7,10 +7,9 @@
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
  * ============================================================================
- * Author: 易而优团队 by 陈风任 <491085389@qq.com>
- * Date: 2020-03-31
+ * Author: 小虎哥 <1105415366@qq.com>
+ * Date: 2018-4-3
  */
-
 namespace app\common\logic;
 
 use think\Model;
@@ -38,14 +37,15 @@ class SmsLogic extends Model
     {
         $sms_config = $this->config;
         $sms_type = isset($sms_config['sms_type']) ? $sms_config['sms_type'] : 1;
-        $smsTemp = Db::name('sms_template')->where(["send_scene"=> $source,"sms_type"=> $sms_type])->find();
-        if (empty($smsTemp) || empty($smsTemp['sms_sign']) || empty($smsTemp['sms_tpl_code'])|| empty($smsTemp['tpl_content'])){
+        $smsTemp = Db::name('sms_template')->where(["send_scene"=>$source,"sms_type"=>$sms_type,'lang'=>get_admin_lang()])->find();
+        if (empty($smsTemp) || empty($smsTemp['sms_sign']) || empty($smsTemp['sms_tpl_code']) || empty($smsTemp['tpl_content'])){
             return $result = ['status' => -1, 'msg' => '尚未正确配置短信模板，请联系管理员！'];
         }
         if (0 == $smsTemp['is_open']) return $result = ['status' => -1, 'msg' => '模板类型已关闭，请先开启'];
-
         $content = !empty($params['content']) ? $params['content'] : false;
-        $code    = !empty($params['code']) ? $params['code'] : $content;
+        $code = !empty($params['code']) ? $params['code'] : $content;
+        $express_time = !empty($params['express_time']) ? date('Y-m-d H:i:s', $params['express_time']) : false;
+        $product_name = !empty($params['product_name']) ? msubstr(trim($params['product_name']), 0, 15).'...' : false;
 
         if(empty($unique_id)){
             $session_id = session_id();
@@ -53,9 +53,15 @@ class SmsLogic extends Model
             $session_id = $unique_id;
         }
 
+        // ToSms短信通知插件内置代码 start
+        $toSmsBool = false;
+        if (file_exists('./weapp/ToSms/model/ToSmsModel.php')) {
+            $toSmsModel = new \weapp\ToSms\model\ToSmsModel;
+            $toSmsBool = $toSmsModel->common_SmsLogic_sendSms($sms_type);
+        }
+        // ToSms短信通知插件内置代码 end
 
-
-        if ($sms_type == 1) {
+        if ($sms_type == 1 || $toSmsBool === true) {
             if (strpos($smsTemp['tpl_content'], 'code') !== false) {
                 $smsParams = array(
                     0 => "{\"code\":\"$code\"}",
@@ -65,6 +71,7 @@ class SmsLogic extends Model
                     4 => "{\"code\":\"$code\"}",
                     5 => "{\"code\":\"$code\"}",
                     6 => "{\"code\":\"$code\"}",
+                    7 => "{\"code\":\"$code\"}",
                 );
             } else if (strpos($smsTemp['tpl_content'], 'content') !== false) {
                 $smsParams = array(
@@ -75,6 +82,7 @@ class SmsLogic extends Model
                     4 => "{\"content\":\"$content\"}",
                     5 => "{\"content\":\"$content\"}",
                     6 => "{\"content\":\"$content\"}",
+                    7 => "{\"content\":\"$content\"}",
                 );
             } else if (strpos($smsTemp['tpl_content'], 'name') !== false) {
                 $smsParams = array(
@@ -85,22 +93,21 @@ class SmsLogic extends Model
                     4 => "{\"name\":\"$name\"}",
                     5 => "{\"name\":\"$name\"}",
                     6 => "{\"name\":\"$name\"}",
+                    7 => "{\"name\":\"$name\"}",
                 );
+            } else if (20 === intval($source)) {
+                $smsParams[20] = "{\"content\":\"$content\"}";
+            } else {
+                $smsParams[6] = "{\"goods_title\":\"$product_name\",\"express_time\":\"$express_time\"}";
             }
-
             $smsParam = $smsParams[$source];
-            //提取发送短信内容
-            $msg = $smsTemp['tpl_content'];
-            $params_arr = json_decode($smsParam);
-
-            //提取发送短信内容
+            // 提取发送短信内容
             $msg = $smsTemp['tpl_content'];
             $params_arr = json_decode($smsParam);
             foreach ($params_arr as $k => $v) {
                 $msg = str_replace('${' . $k . '}', $v, $msg);
             }
-        }else{
-
+        } else {
             $params_arr = $smsParam = array_values($params);
             //提取发送短信内容
             $msg = $smsTemp['tpl_content'];
@@ -109,22 +116,50 @@ class SmsLogic extends Model
                 $msg = str_replace('{' . $index . '}', $v, $msg);
             }
         }
-
         //发送记录存储数据库
-        $log_id = Db::name('sms_log')->insertGetId(array('source' => $source,'sms_type' => $sms_type, 'mobile' => $sender, 'code' => $code, 'add_time' => time(), 'status' => 0, 'msg' => $msg, 'is_use' => 0, 'error_msg'=>''));
-        if ($sender != '' && check_mobile($sender)) {
+        $smsData = [];
+        $time = getTime();
+        $sender_arr = explode(',', $sender);
+        foreach ($sender_arr as $key => $val) {
+            $val = trim($val);
+            if (empty($val) || !check_mobile($val)) {
+                unset($sender_arr[$key]);
+                continue;
+            }
+
+            $smsData[] = [
+                'source'    => $source,
+                'sms_type'  => $sms_type,
+                'mobile'    => $val,
+                'code'      => $code,
+                'add_time'  => $time,
+                'status'    => 0,
+                'msg'       => $msg,
+                'is_use'    => 0,
+                'error_msg' => '',
+                'ip'        => clientIP(),
+                'update_time' => $time,
+            ];
+        }
+        $sender = implode(',', $sender_arr);
+        try{
+            Db::name('sms_log')->insertAll($smsData);
+        }catch (\Exception $e){
+        }
+
+        if (!empty($sender)) {
             // 如果是正常的手机号码才发送
             try {
-                $resp = $this->realSendSms($sender, $smsTemp['sms_sign'], $smsParam, $smsTemp['sms_tpl_code']);
+                $resp = $this->realSendSms($sender, $smsTemp['sms_sign'], $smsParam, $smsTemp['sms_tpl_code'], $msg);
             } catch (\Exception $e) {
                 $resp = ['status' => -1, 'msg' => $e->getMessage()];
             }
-            if ($resp['status'] == 1) {
+            if (!empty($resp['status']) && $resp['status'] == 1) {
                 // 修改发送状态为成功
-                Db::name('sms_log')->where(array('id' => $log_id))->save(array('status' => 1));
+                Db::name('sms_log')->where(['mobile'=>['IN', $sender_arr], 'update_time'=>$time])->save(['status'=>1, 'update_time'=>getTime()]);
             } else {
                 // 发送失败, 将发送失败信息保存数据库
-                Db::name('sms_log')->where(array('id' => $log_id))->update(array('error_msg'=>$resp['msg']));
+                Db::name('sms_log')->where(['mobile'=>['IN', $sender_arr], 'update_time'=>$time])->update(['error_msg'=>$resp['msg'], 'update_time'=>getTime()]);
             }
             return $resp;
         } else {
@@ -133,7 +168,7 @@ class SmsLogic extends Model
         
     }
 
-    private function realSendSms($mobile, $smsSign, $smsParam, $templateCode)
+    private function realSendSms($mobile, $smsSign, $smsParam, $templateCode, $msg = '')
     {
         if (config('sms_debug') == true) {
             return array('status' => 1, 'msg' => '专用于越过短信发送');
@@ -154,6 +189,15 @@ class SmsLogic extends Model
                 break;
             default:
                 $result = ['status' => -1, 'msg' => '不支持的短信平台'];
+                // ToSms短信通知插件内置代码 start
+                if (file_exists('./weapp/ToSms/model/ToSmsModel.php')) {
+                    $toSmsModel = new \weapp\ToSms\model\ToSmsModel;
+                    $res = $toSmsModel->common_SmsLogic_realSendSms($type, $mobile, $smsSign, $smsParam, $templateCode, $this->config, $msg);
+                    if (!empty($res)) {
+                        $result = $res;
+                    }
+                }
+                // ToSms短信通知插件内置代码 end
         }
         
         return $result;

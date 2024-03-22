@@ -10,6 +10,7 @@
     {eyou:static file="users/skin/css/basic.css" /}
     {eyou:static file="users/skin/css/eyoucms.css" /}
     {eyou:include file="users/skin/css/diy_css.htm" /}
+    {eyou:static file="/public/static/admin/font/css/iconfont.css"/}
     
     {eyou:static file="/public/static/common/js/jquery.min.js"/}
     {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
@@ -19,61 +20,184 @@
 <body class="reg regi">
 <div class="register_index ey-member">
     <div class="container">
-        <form name='theForm' id="theForm" method="post" class="form-register panel-body fv-form">
-            <div class="mip-reg-logo"><a href="{eyou:global name='web_cmsurl' /}" class="ey-logo"><img src="{eyou:global name='web_logo'/}" /></a></div>
-            <div class="mip-reg-heading">注册账号</div>
-            <div class="form-group group_z">
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                    <input type="text" name="username" required class="form-control" placeholder="用户名"/>
+        <div class="form-register panel-body fv-form">
+            <div class="mip-reg-logo">
+                <a href="{eyou:global name='web_cmsurl' /}" class="ey-logo"><img src="{eyou:global name='web_logo'/}" /></a>
+            </div>
+            <div class="mip-reg-heading">
+                <div class="tab_list">
+                    <ul>
+                        <li data-index="0" class="current">账号注册</li>
+                        <li data-index="1" >手机注册</li>
+                    </ul>
                 </div>
             </div>
-            <div class="form-group group_z">
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-                    <input type="password" name="password" required class="form-control" placeholder="登录密码"/>
+            <div class="tab_con">
+                <div class="item" style="display: block;">
+                    <form name='theForm' id="theForm" method="post" class="form-register">
+                        <div class="form-group group_z">
+                            <input type="text" id="username" name="username" required class="form-control h60" placeholder="用户名" autocomplete="off" />
+                        </div>
+                        <div class="form-group group_z">
+                            <input type="password" id="password" name="password" required class="form-control h60" placeholder="登录密码" autocomplete="off" />
+                        </div>
+                        <div class="form-group group_z">
+                            <input type="password" id="password2" name="password2" required data-password="password" class="form-control h60" placeholder="重复密码" autocomplete="off" />
+                        </div>
+
+                        <!-- 更多资料中的会员属性 -->
+                        {eyou:include file="users/users_reg_field.htm" /}
+                        <!-- 结束 -->
+
+                        {eyou:eq name="$is_vertify" value="1"}
+                            <div class="form-group">
+                                <div class="input-group input-group-icon">
+                                <div class="formText">
+                                    <input type="text" name="vertify" autocomplete="off" class="form-control" placeholder="图片验证码" />
+                                    <img src="{eyou:url link='api/Ajax/vertify' vars='type=users_reg' /}" class="chicuele" id="imgVerifys" onclick="fleshVerify();" title="看不清？点击更换验证码" align="absmiddle">
+                                </div>
+                                </div>
+                            </div>
+                        {/eyou:eq}
+                        <!-- 《用户协议》和《隐私政策》 -->
+                        <div class="clause-box">
+                            <label class="checkbox-label">
+                                <input class="checkbox" type="checkbox" name="agreement" value="1">
+                                <span class="check-mark"></span>
+                            </label>
+                            <a href="javascript:void(0)">我同意《用户协议》和《隐私政策》</a>
+                        </div>
+
+                        <input id="submitButton" type="button" onclick="checkUser();" class="btn btn-lg btn-primary btn-block group_z h60 disabled-button" value="立即注册"disabled="disabled"/>
+                        
+                        <div class="login-link clearfix">
+                            <a class="fr tr" href="{eyou:url link='user/Users/login' /}">已有账号？</a>
+                        </div>
+
+                        <!-- 第三方账号登录 -->
+                        {eyou:include file="/public/static/template/users_v3/users_loginapi.htm" /}
+                        <!-- 第三方账号登录 -->
+                    </form>
+                </div>
+                <div class="item">
+                    {eyou:static file="/public/static/common/js/mobile_reg.js"/}
+                    <form name='theMobileForm' id="theMobileForm" method="post" class="form-register">
+                        <div class="form-group group_z">
+                            <div class="input-group">
+                                 <input id="mobile" type="text" class="form-control h60" required="" name="mobile" maxlength="11" value="" placeholder="手机号码">
+                            </div>
+                        </div>
+                        <div class="form-group group_z" style="display: none;" id="vertify_div">
+                            <div class="input-group input-group-icon">
+                                <div class="formText">
+                                    <input id="mobile_vertify" type="text" name="mobile_vertify" autocomplete="off" class="form-control h60"
+                                        placeholder="图片验证码" />
+                                    <img src="{eyou:url link='api/Ajax/vertify' vars='type=users_mobile_reg' /}" class="chicuele" id="mobile_imgVerifys" onclick="mobile_fleshVerify();" title="看不清？点击更换验证码" align="absmiddle">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group group_z">
+                            <div class="input-group btn-direction">
+                                <div class="formText">
+                                    <input type="text" class="form-control h60" id="mobile_code" name="mobile_code" placeholder="手机验证码">
+                                </div>
+                                <input type="button" id="mobile_code_button" onclick="send_mobile_code();" class="btn btn-primary sento" value="点击发送">
+                            </div>
+                        </div>
+                        <input type="hidden" name="__mobile_1_token__" value="{$Request.token.__mobile_1_token__}" />
+                        <input id="mobile_submitButton" type="button" onclick="checkMobileUser1649732103();" class="btn btn-lg btn-primary btn-block group_z h60 disabled-button" value="立即注册" disabled="disabled"/>
+                        <div class="login-link">
+                            <a class="" href="{eyou:url link='user/Users/login' /}">已有账号？</a>
+                        </div>
+
+                        <!-- 第三方账号登录 -->
+                        {eyou:if condition="!empty($weapp_wxlogin) || !empty($weapp_qqlogin) || !empty($weapp_wblogin)"}
+                        <div class="qrcode-title">其它登录方式</div>
+                        <div class="login_type text-xs-center m-t-20">
+                            <!-- <p>第三方账号登录</p> -->
+                            <ul class="blocks-3 m-0">
+                                {eyou:notempty name="$weapp_qqlogin"}
+                                <li class="m-b-0"><a title="QQ登录" href="{eyou:url link='plugins/QqLogin/login' seo_pseudo='1' seo_inlet='0' /}"><img title="QQ" src="{eyou:static file='users/skin/images/login_qq.png' /}"></a></li>
+                                {/eyou:notempty}
+                        
+                                {eyou:notempty name="$weapp_wxlogin"}
+                                <li class="m-b-0"><a title="微信登录" href="{eyou:url link='plugins/WxLogin/login' seo_pseudo='1' seo_inlet='0' /}"><img title="微信" src="{eyou:static file='users/skin/images/login_wx.png' /}"></a></li>
+                                {/eyou:notempty}
+                        
+                                {eyou:notempty name="$weapp_wblogin"}
+                                <li class="m-b-0"><a title="微博登录" href="{eyou:url link='plugins/Wblogin/login' seo_pseudo='1' seo_inlet='0' /}"><img title="微博" src="{eyou:static file='users/skin/images/login_wb.png' /}"></a></li>
+                                {/eyou:notempty}
+                            </ul>
+                        </div>
+                        {/eyou:if}
+                        
+                        <!-- 第三方账号登录 -->
+                    </form>
                 </div>
             </div>
-            
-            <div class="form-group group_z">
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-                    <input type="password" name="password2" required data-password="password" class="form-control" placeholder="重复密码"/>
-                </div>
-            </div>
-
-            <!-- 更多资料中的会员属性 -->
-            {eyou:include file="users/users_reg_field.htm" /}
-            <!-- 结束 -->
-
-            {eyou:eq name="$is_vertify" value="1"}
-                <div class="form-group">
-                    <div class="input-group input-group-icon">
-                    <span class="input-group-addon"><i class="fa fa-shield"></i></span>
-                    <div class="formText">
-                        <input type="text" name="vertify" autocomplete="off" class="form-control" placeholder="图片验证码" />
-                        <img src="{eyou:url link='api/Ajax/vertify' vars='type=users_reg' /}" class="chicuele" id="imgVerifys" onclick="fleshVerify();" title="看不清？点击更换验证码" align="absmiddle">
-                    </div>
-                    </div>
-                </div>
-            {/eyou:eq}
-
-            <input type="button" onclick="checkUser();" class="btn btn-lg btn-primary btn-block group_z" value="立即注册"/>
-            <div class="login-link"><a class="" href="{eyou:url link='user/Users/login' /}">已有账号？</a></div>
-
-            <!-- 第三方账号登录 -->
-            {eyou:include file="/public/static/template/users_v2/users_loginapi.htm" /}
-            <!-- 第三方账号登录 -->
-        </form>
+        </div>
     </div>
 </div>
 
 <script type="text/javascript">
-    $(document).keydown(function(event){
-        if(event.keyCode ==13){
-            checkUser();
-            return false;
+    //切换账号登录与手机号登录
+    $(".tab_list li").click(function(){
+        var index = $(this).attr('data-index');
+        $(".tab_list li").each(function(){
+            $(this).removeClass('current');
+        });
+        $(".item").each(function(i,v){
+            if (index == i){
+                $(this).css('display','block');
+            } else{
+                $(this).css('display','none');
+            }
+        });
+        $(this).addClass('current');
+
+    });
+    
+    $(document).keydown(function(event) {
+        if (event.keyCode == 13) {
+            var index = $(".tab_list .current").attr('data-index');
+            if (0 == index) {
+                checkUser();
+            }else if(1 == index){
+                checkMobileUser1649732103();
+            }
         }
+    });
+    
+    var input = document.getElementById('username');
+    var input = document.getElementById('password');
+    var input = document.getElementById('password2');
+    var submitButton = document.getElementById('submitButton');
+    input.addEventListener('input', function() {
+      if (input.value.length > 0) {
+        submitButton.disabled = false;
+        submitButton.classList.remove('disabled-button');
+        submitButton.classList.add('enabled-button');
+      } else {
+        submitButton.disabled = true;
+        submitButton.classList.remove('enabled-button');
+        submitButton.classList.add('disabled-button');
+      }
+    });
+    
+    var mobile_input = document.getElementById('mobile');
+    var mobile_input = document.getElementById('mobile_vertify');
+    var mobile_input = document.getElementById('mobile_code');
+    var mobile_submitButton = document.getElementById('mobile_submitButton');
+    mobile_input.addEventListener('input', function() {
+      if (mobile_input.value.length > 0) {
+        mobile_submitButton.disabled = false;
+        mobile_submitButton.classList.remove('disabled-button');
+        mobile_submitButton.classList.add('enabled-button');
+      } else {
+        mobile_submitButton.disabled = true;
+        mobile_submitButton.classList.remove('enabled-button');
+        mobile_submitButton.classList.add('disabled-button');
+      }
     });
 
     function fleshVerify(){
@@ -91,6 +215,8 @@
         var username = $('#theForm input[name=username]');
         var password = $('#theForm input[name=password]');
         var password2 = $('#theForm input[name=password2]');
+        // 《用户协议》和《隐私政策》
+        var agreement = $('#theForm input[name=agreement]:checked').val();
 
         if(username.val() == ''){
             layer.msg('用户名不能为空！', {time: 1500});
@@ -104,8 +230,16 @@
             return false;
         }
 
+        {$pwdJsCode|default=''}
+
         if(password2.val() != password.val()){
             layer.msg('两次密码不一致！', {time: 1500});
+            password.focus();
+            return false;
+        }
+        // 《用户协议》和《隐私政策》
+        if (1 != agreement) {
+            layer.msg('请勾选同意《用户协议》和《隐私政策》', {time: 1500});
             password.focus();
             return false;
         }

@@ -1,0 +1,368 @@
+
+
+.page-main {
+    background: #f5f5f5
+}
+
+
+.hide {
+    display: none !important
+}
+
+.ir {
+    display: block;
+    text-align: left;
+    text-indent: -9999em;
+    overflow: hidden
+}
+
+.ndash,
+.sep {
+    margin: 0 .25em;
+    font-family: sans-serif
+}
+
+
+
+
+.page-main .section {
+    padding: 30px 48px;
+    margin-bottom: 30px;
+    background-color: #fff;
+    color: #424242
+}
+
+
+.page-main .section h2,
+.page-main .section h3,
+.page-main .section li,
+.page-main .section p {
+    margin: 0;
+    padding: 0
+}
+
+.page-main .section li,
+.page-main .section ul {
+    list-style: none
+}
+
+.page-main .money {
+    color: #ff6700;
+    font-size: 14px
+}
+
+.page-main .money em {
+    font-style: normal;
+    font-size: 24px
+}
+
+.page-main .payment-header {
+    margin-bottom: 15px
+}
+
+.page-main .payment-header .title {
+    float: left;
+    font-size: 16px;
+    color: #616161;
+    font-weight: bold;
+}
+
+.page-main .payment-header .desc {
+    float: left;
+    margin-left: 10px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #b0b0b0
+}
+
+.page-main .payment-box {
+    margin-bottom: 30px
+}
+
+.page-main .payment-list {
+    padding: 0;
+    overflow: hidden
+}
+
+.page-main .payment-list li {
+    float: left;
+    width: 130px;
+    height: 50px;
+    margin: 0 30px 20px 0;
+    padding: 5px 10px;
+    border: 1px solid #efefef;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+.page-main .payment-list li img {
+    width: 100%;
+    height: 100%;
+    vertical-align: unset;
+}
+.page-main .payment-list li:hover, .page-main .payment-list li.active {
+    border-color: rgba(255,150,0,0.4)
+}
+.page-main .payment-list li.active:before {
+    position: absolute;
+    content: "";
+    right: 0;
+    bottom: 0;
+    color: #FF7600;
+    width: 0;
+    height: 0;
+    border-bottom: 30px solid #FF7600;
+    border-left: 30px solid transparent;
+    z-index: 10;
+}
+.page-main .payment-list li i {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    color: #fff;
+    z-index: 12;
+    display: none;
+}
+.page-main .payment-list li.active i {
+    display: block;
+}
+.page-main .payment-list li input {
+    display: none
+}
+
+
+
+.page-main .payment-list .tab-active:hover {
+    border-color: #e0e0e0;
+    border-bottom-color: #fff
+}
+
+.page-main .payment-list .selected {
+    border-color: #ff6700
+}
+
+.page-main .event-desc {
+    width: 894px;
+    background-color: #fafafa;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    font-size: 12px;
+    line-height: 2;
+    position: relative
+}
+
+.page-main .event-desc p {
+    margin: 0;
+    color: #757575
+}
+
+.page-main .event-desc .more {
+    position: absolute;
+    right: 20px;
+    bottom: 20px
+}
+
+.page-main {
+    padding: 38px 0
+}
+
+
+.page-main .section-order {
+    padding-left: 183px;
+    position: relative
+}
+
+.page-main .section-order .icon-right {
+    width: 80px;
+    height: 80px;
+    line-height: 80px;
+    position: absolute;
+    top: 40px;
+    left: 50px;
+    font-size: 80px;
+    color: #83c44e;
+    text-align: center;
+    border: 2px solid #83c44e;
+    border-radius: 42px;
+    overflow: hidden
+}
+
+.page-main .order-info {
+    padding: 20px 0
+}
+
+.page-main .order-info .fl {
+    float: left
+}
+
+.page-main .order-info .fr {
+    float: right;
+    text-align: right
+}
+
+.page-main .order-info .title {
+    margin-bottom: 10px;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 36px
+}
+
+.page-main .order-info .order-time {
+    color: #616161;
+    margin-bottom: 5px;
+    line-height: 2
+}
+
+.page-main .order-info .order-time span.pay-time-tip {
+    margin: 0 5px;
+    color: #ff6700
+}
+
+.page-main .order-info .order-time .beta {
+    cursor: pointer;
+    color: #b0b0b0
+}
+
+.page-main .order-info .post-info {
+    color: #616161;
+    -webkit-transition: height .3s ease;
+    transition: height .3s ease
+}
+
+.page-main .order-info .post-info-hide {
+    visibility: hidden
+}
+
+.page-main .order-info .total {
+    margin-bottom: 10px;
+    color: #757575
+}
+
+.page-main .order-info .show-detail .iconfont {
+    font-size: 24px;
+    vertical-align: middle;
+    position: relative;
+    top: -2px
+}
+
+.page-main .order-detail {
+    height: 0;
+    overflow: hidden;
+    -webkit-transition: height .3s;
+    transition: height .3s
+}
+
+.page-main .order-detail ul {
+    padding: 20px 0 0 0;
+    margin-top: 10px;
+    border-top: 1px solid #e0e0e0
+}
+
+.page-main .order-detail li {
+    line-height: 24px;
+    margin-bottom: 8px;
+    color: #333
+}
+
+.page-main .order-detail .label {
+    float: left;
+    width: 85px
+}
+
+.page-main .order-detail .content {
+    float: left
+}
+
+.page-main .order-detail .content span {
+    display: block
+}
+
+.page-main .order-detail .order-num {
+    color: #ff6700
+}
+
+.confirm-pay .cash-title {
+    height: 50px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 18px
+}
+
+.confirm-pay .cash-title .money {
+    margin-left: 10px
+}
+
+.confirm-pay .cash-title .no-selected {
+    display: block
+}
+
+.confirm-pay .cash-title-selected .no-selected,
+.confirm-pay .cash-title .is-selected {
+    display: none
+}
+
+.confirm-pay .cash-title-selected .is-selected {
+    display: block
+}
+
+.modal-alert-pay {
+    text-align: center
+}
+
+.modal-alert-pay h3 {
+    margin: 40px 0 20px;
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 50px;
+    color: #424242
+}
+.breadcrumbs {
+    height: 40px;
+    font-size: 12px;
+    line-height: 40px;
+    background: #f5f5f5;
+    color: #757575
+}
+
+.breadcrumbs a {
+    color: #757575
+}
+
+.breadcrumbs a:hover {
+    color: #ff6700
+}
+
+.breadcrumbs .sep {
+    margin: 0 .5em;
+    color: #b0b0b0
+}
+
+.footer-detail {
+    padding: 20px 24px;
+    background-color: #fff;
+    border-top: 2px solid #f5f5f5
+}
+
+.footer-detail .handle-action {
+    float: right
+}
+
+.footer-detail .handle-action .btn {
+    float: right;
+    margin-left: 30px;
+    vertical-align: top;
+    display: inline-block;
+    width: 158px;
+    height: 38px;
+    padding: 0;
+    margin: 0;
+    color: #fff;
+    border: 1px solid #b0b0b0;
+    font-size: 14px;
+    line-height: 38px;
+    text-align: center;
+    cursor: pointer;
+    -webkit-transition: all .4s;
+    transition: all .4s;
+}

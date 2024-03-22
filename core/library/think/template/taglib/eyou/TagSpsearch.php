@@ -35,9 +35,10 @@ class TagSpsearch extends Base
         $ey_config = config('ey_config'); // URL模式
         if ('ShopComment' == Request::instance()->controller()) {
             if (2 == $ey_config['seo_pseudo'] || (1 == $ey_config['seo_pseudo'] && 1 == $ey_config['seo_dynamic_format'])) {
+                $action = Request::instance()->action() ? Request::instance()->action() : 'index';
                 $hidden .= '<input type="hidden" name="m" value="user" />';
                 $hidden .= '<input type="hidden" name="c" value="ShopComment" />';
-                $hidden .= '<input type="hidden" name="a" value="index" />';
+                $hidden .= '<input type="hidden" name="a" value="' . $action . '" />';
                 /*多语言*/
                 $lang = Request::instance()->param('lang/s');
                 !empty($lang) && $hidden .= '<input type="hidden" name="lang" value="'.$lang.'" />';
@@ -45,7 +46,7 @@ class TagSpsearch extends Base
             }
 
             // 搜索的URL
-            $searchurl = url('user/ShopComment/index');
+            $searchurl = url('user/ShopComment/' . $action . '');
         } else if ('after_service' == Request::instance()->action()) {
             if (2 == $ey_config['seo_pseudo'] || (1 == $ey_config['seo_pseudo'] && 1 == $ey_config['seo_dynamic_format'])) {
                 $hidden .= '<input type="hidden" name="m" value="user" />';

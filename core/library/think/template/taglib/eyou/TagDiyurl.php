@@ -30,17 +30,38 @@ class TagDiyurl extends Base
 
         $parseStr = "";
         
-        if (in_array($this->request->controller(), ['Search', 'Lists'])) {
+        if (in_array(self::$request->controller(), ['Search', 'Lists', 'Tags', 'Buildhtml'])) {
             // 获取URL链接上的所有参数
-            $Param = $this->request->param();
+            $Param = self::$request->get();
             // 获取已处理好的 tid
             $Param['tid'] = !empty($this->tid) ? $this->tid : '';
             // 排序条件
             $SortAsc = !empty($Param['sort_asc']) && 'desc' == $Param['sort_asc'] ? 'asc' : 'desc';
             // 伪静态下则获取 request 数据
-            $Param['m'] = !empty($Param['m']) ? $Param['m'] : $this->request->module();
-            $Param['c'] = !empty($Param['c']) ? $Param['c'] : $this->request->controller();
-            $Param['a'] = !empty($Param['a']) ? $Param['a'] : $this->request->action();
+            $Param['m'] = 'home';
+            $Param['c'] = !empty($Param['c']) ? $Param['c'] : self::$request->controller();
+            $Param['a'] = !empty($Param['a']) ? $Param['a'] : self::$request->action();
+
+            /*--------------兼容生成静态页面 start---------------*/
+            if (self::$request->controller() == 'Buildhtml') {
+                if (!empty($Param['tid'])) {
+                    $Param['c'] = 'Lists';
+                    $Param['a'] = 'index';
+                } else if (!empty($Param['tagid'])) {
+                    $Param['c'] = 'Tags';
+                    $Param['a'] = 'lists';
+                }
+                unset($Param['page']);
+                unset($Param['_ajax']);
+            }
+            /*--------------兼容生成静态页面 end---------------*/
+
+            if (empty($Param['tid'])) {
+                unset($Param['tid']);
+            }
+            if (self::$main_lang == self::$home_lang) {
+                unset($Param['lang']);
+            }
             // 当前模型、控制器、方法
             $DynamicURL = "{$Param['m']}/{$Param['c']}/{$Param['a']}";
             // 删除指定参数
@@ -53,19 +74,19 @@ class TagDiyurl extends Base
                 $urlList['NewUrl'] = $this->GetSortHtmlCode($DynamicURL, $Param, $Class, 'new');
             } else if (!empty($type) && 'AppraiseUrl' == $type) {
                 // 评价数排序(默认高到低排序)
-                $urlList['AppraiseUrl'] = $this->GetSortHtmlCode($DynamicURL, $Param, $Class, 'appraise');
+                $urlList['AppraiseUrl'] = $this->GetSortHtmlCode($DynamicURL, $Param, $Class, 'appraise', $SortAsc);
             } else if (!empty($type) && 'SalesUrl' == $type) {
                 // 销量数排序(默认高到低排序)
-                $urlList['SalesUrl'] = $this->GetSortHtmlCode($DynamicURL, $Param, $Class, 'sales');
+                $urlList['SalesUrl'] = $this->GetSortHtmlCode($DynamicURL, $Param, $Class, 'sales', $SortAsc);
             } else if (!empty($type) && 'CollectionUrl' == $type) {
                 // 收藏数排序(默认高到低排序)
-                $urlList['CollectionUrl'] = $this->GetSortHtmlCode($DynamicURL, $Param, $Class, 'collection');
+                $urlList['CollectionUrl'] = $this->GetSortHtmlCode($DynamicURL, $Param, $Class, 'collection', $SortAsc);
             } else if (!empty($type) && 'ClickUrl' == $type) {
                 // 点击数排序(默认高到低排序)
-                $urlList['ClickUrl'] = $this->GetSortHtmlCode($DynamicURL, $Param, $Class, 'click');
+                $urlList['ClickUrl'] = $this->GetSortHtmlCode($DynamicURL, $Param, $Class, 'click', $SortAsc);
             } else if (!empty($type) && 'DownloadUrl' == $type) {
                 // 下载数排序(默认高到低排序)
-                $urlList['DownloadUrl'] = $this->GetSortHtmlCode($DynamicURL, $Param, $Class, 'download');
+                $urlList['DownloadUrl'] = $this->GetSortHtmlCode($DynamicURL, $Param, $Class, 'download', $SortAsc);
             } else if (!empty($type) && 'PriceUrl' == $type) {
                 // 价格排序
                 $urlList['PriceUrl'] = $this->GetSortHtmlCode($DynamicURL, $Param, $Class, 'price', $SortAsc);
@@ -77,10 +98,18 @@ class TagDiyurl extends Base
         if (empty($parseStr)) {
             switch ($type) {
                 case "tags":     // 标签主页
-                    $parseStr = url('home/Tags/index');
+                    $parseStr = tagurl('home/Tags/index');
                     break;
                 case "login":     // 登录
                     $parseStr = url('user/Users/login');
+                    break;
+                case "login_users": // 登录后跳转到会员中心
+                    $url = url('user/Users/login');
+                    if (stristr($url, '?')) {
+                        $parseStr = $url."&referurl=".urlencode(url('user/Users/index'));
+                    } else {
+                        $parseStr = $url."?referurl=".urlencode(url('user/Users/index'));
+                    }
                     break;
                 case "reg":     // 注册
                     $parseStr = url('user/Users/reg');
@@ -91,6 +120,10 @@ class TagDiyurl extends Base
                     break;
                 case "sindex":     // 搜索主页
                     $parseStr = url('home/Search/index');
+                    break;
+                case "citysite":     // 多城市站点主页
+                    $domain = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${1}${3}${4}', tpCache('web.web_basehost'));
+                    $parseStr = url('home/Citysite/index', [], true, $domain);
                     break;
                 default:
                     {
@@ -116,7 +149,11 @@ class TagDiyurl extends Base
         // 整合参数数组
         $ParamNew = !empty($Sort) ? array_merge($Param, ['sort' => $Sort]) : $Param;
         // 若存在排序条件则执行
-        if (!empty($SortAsc)) $ParamNew['sort_asc'] = $SortAsc;
+        if (!empty($SortAsc) && isset($Param['sort']) && $Sort == $Param['sort']) {
+            $ParamNew['sort_asc'] = $SortAsc;
+        } else {
+            $ParamNew['sort_asc'] = 'desc';
+        }
         // 获取动态URL
         $DynamicURL = $this->DynamicURL($DynamicURL, $ParamNew);
         // 获取HTML代码返回
@@ -158,6 +195,13 @@ class TagDiyurl extends Base
             $ReturnUrl = ROOT_DIR . '/index.php?m=' . $GetMCA[0] . '&c=' . $GetMCA[1] . '&a=' . $GetMCA[2];
         }
         // 拼装URL及参数
+        $url_screen_var = config('global.url_screen_var');
+        foreach (['index','findex','achieve','s','page',$url_screen_var] as $_uk => $_uv) {
+            if (isset($ParamNew[$_uv])) {
+                unset($ParamNew[$_uv]);
+            }
+        }
+        $ParamNew[$url_screen_var] = 1;
         if (!empty($ParamNew)) $ReturnUrl .= '&' . http_build_query($ParamNew);
         // 返回URL
         return urldecode($ReturnUrl);

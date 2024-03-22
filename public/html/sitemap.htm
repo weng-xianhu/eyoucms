@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>{$eyou.seo_title}</title>
+</head>
+<style>
+* {
+	margin: 0px;
+	padding: 0px;
+}
+a {
+	color: grey;
+	text-decoration: none;
+}
+h1 a {
+	color: Black;
+}
+h1 {
+	font-size: 15px;
+	display: block;
+	width: 1200px;
+	margin: 0 auto;
+	border: 1px solid #eee;
+	padding: 10px;
+	color: Black;
+}
+h2 {
+	color: Black;
+	font-size: 16px;
+	margin-bottom: 10px;
+}
+a:hover {
+	color: Black;
+	text-decoration: underline;
+}
+.content {
+	width: 1200px;
+	border: 1px solid #eee;
+	margin: 0 auto;
+	padding: 10px;
+	margin-top: 10px;
+	color: #999;
+	overflow: hidden;
+}
+li {
+	text-indent: 20px;
+	list-style: disc;
+}
+.content li {
+	width: 285px;
+	text-indent: 5px;
+	float: left;
+	list-style: none;
+	height: 30px;
+}
+.content li a {
+	display: block;
+	height: 25px;
+	overflow: hidden;
+}
+</style>
+<body>
+<h1>
+    <a href="{$eyou.index.url}">{$eyou.index.title}</a>
+</h1>
+
+{notempty name="$eyou.type_list"}
+<div class="content">
+  <h2>分类</h2>
+  <ul>
+   {volist name="$eyou.type_list" id="vo"}
+    <li><a href="{$vo.url}">{$vo.title}</a></li>
+    {/volist}
+  </ul>
+</div>
+{/notempty}
+
+{notempty name="$eyou.arc_list"}
+<div class="content">
+  <h2>最新文章</h2>
+  <ul>
+  {volist name="$eyou.arc_list" id="vo"}
+    <li><a href="{$vo.url}">{$vo.title}</a></li>
+  {/volist}
+  </ul>
+</div>
+{/notempty}
+
+{notempty name="$eyou.tags_list"}
+<div class="content">
+    <h2>最新tags</h2>
+    <ul>
+        {volist name="$eyou.tags_list" id="vo"}
+        <li><a href="{$vo.url}">{$vo.title}</a></li>
+        {/volist}
+    </ul>
+</div>
+{/notempty}
+
+{notempty name="$eyou.ask_list"}
+<div class="content">
+    <h2>最新问答</h2>
+    <ul>
+        {volist name="$eyou.ask_list" id="vo"}
+        <li><a href="{$vo.url}">{$vo.title}</a></li>
+        {/volist}
+    </ul>
+</div>
+{/notempty}
+
+</body>
+</html>

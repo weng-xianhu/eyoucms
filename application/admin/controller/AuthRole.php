@@ -32,6 +32,7 @@ class AuthRole extends Base {
         $map = array();
         $pid = input('pid/d');
         $keywords = input('keywords/s');
+        $keywords = addslashes(trim($keywords));
 
         if (!empty($keywords)) {
             $map['c.name'] = array('LIKE', "%{$keywords}%");
@@ -39,7 +40,7 @@ class AuthRole extends Base {
 
         $AuthRole =  Db::name('auth_role');
         $count = $AuthRole->alias('c')->where($map)->count();// 查询满足要求的总记录数
-        $Page = new Page($count, 10);// 实例化分页类 传入总记录数和每页显示的记录数
+        $Page = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
         $fields = "c.*,s.name AS pname";
         $list = DB::name('auth_role')
             ->field($fields)
@@ -118,22 +119,36 @@ class AuthRole extends Base {
         $this->assign('auth_rule_list', $auth_rule_list);
 
         // 栏目
-        $arctype_data = $arctype_array = array();
-        $arctype = Db::name('arctype')->select();
-        if(! empty($arctype)){
-            foreach ($arctype as $item){
-                if($item['parent_id'] <= 0){
-                    $arctype_data[] = $item;
+        $arctype_list = Db::name('arctype')->where([
+                'is_del'    => 0,
+            ])->order("grade desc")->select();
+        $arctype_p_html = $arctype_child_html = "";
+        $arctype_all = list_to_tree($arctype_list);
+        foreach ($arctype_all as $key => $arctype) {
+            if (!empty($arctype['children'])) {
+                if ($key > 0) {
+                    $arctype_p_html .= '<em class="arctype_bg expandable"></em>';
+                } else {
+                    $arctype_p_html .= '<em class="arctype_bg collapsable"></em>';
                 }
-                $arctype_array[$item['parent_id']][] = $item;
+                $arctype_child_html .= '<div class="arctype_child" id="arctype_child_' . $arctype['id'] . '"';
+                if ($arctype_all[0]['id'] == $arctype['id']) {
+                    $arctype_child_html .= ' style="display: block;" ';
+                }
+                $arctype_child_html .= '>';
+                $arctype_child_html .= $this->get_arctype_child_html($arctype);
+                $arctype_child_html .= '</div>';
             }
+            $arctype_p_html .= '<label>' .
+                '<input type="checkbox" class="arctype_cbox arctype_id_' . $arctype['id'] . '" value="' . $arctype['id'] . '" ';
+            $arctype_p_html .= ' />' . $arctype['typename'] . '</label>&nbsp;';
         }
-        $this->assign('arctypes', $arctype_data);
-        $this->assign('arctype_array', $arctype_array);
+        $this->assign('arctype_p_html', $arctype_p_html);
+        $this->assign('arctype_child_html', $arctype_child_html);
 
         // 插件
         $plugins = false;
-        $web_weapp_switch = tpCache('web.web_weapp_switch');
+        $web_weapp_switch = tpCache('global.web_weapp_switch');
         if (1 == $web_weapp_switch) {
             $plugins = model('Weapp')->getList(['status'=>1]);
         }
@@ -141,17 +156,17 @@ class AuthRole extends Base {
 
         return $this->fetch();
     }
-    
+
+    //xyz修改20220315
     public function edit()
     {
         $id = input('param.id/d', 0);
-        if($id <= 0){
+        if ($id <= 0) {
             $this->error('非法访问');
         }
-
         if (IS_POST) {
             $rule = array(
-                'name'  => 'require',
+                'name' => 'require',
             );
             $msg = array(
                 'name.require' => '权限组名称不能为空！',
@@ -160,8 +175,8 @@ class AuthRole extends Base {
                 'name' => trim(input('name/s')),
             );
             $validate = new Validate($rule, $msg);
-            $result   = $validate->check($data);
-            if(!$result){
+            $result = $validate->check($data);
+            if (!$result) {
                 $this->error($validate->getError());
             }
 
@@ -169,41 +184,37 @@ class AuthRole extends Base {
             $count = $model->where('name', $data['name'])
                 ->where('id', '<>', $id)
                 ->count();
-            if(! empty($count)){
+            if (!empty($count)) {
                 $this->error('该权限组名称已存在，请检查');
             }
             $role_id = $model->saveAuthRole(input(), true);
-            if($role_id){
-                adminLog('编辑权限组：'.$data['name']);
-                $this->success('操作成功', url('AuthRole/index'), ['role_id'=>$role_id,'role_name'=>$data['name']]);
-            }else{
+            if ($role_id) {
+                adminLog('编辑权限组：' . $data['name']);
+                $this->success('操作成功', url('AuthRole/index'), ['role_id' => $role_id, 'role_name' => $data['name']]);
+            } else {
                 $this->error('操作失败');
             }
         }
-
         $model = model('AuthRole');
         $info = $model->getRole(array('id' => $id));
-        if(empty($info)){
+        if (empty($info)) {
             $this->error('数据不存在，请联系管理员！');
         }
         $this->assign('info', $info);
-
         // 权限组
         $admin_role_list = model('AuthRole')->getRoleAll();
         $this->assign('admin_role_list', $admin_role_list);
-
         // 模块组
         $modules = getAllMenu();
         $this->assign('modules', $modules);
-
         // 权限集
-        $auth_rules = get_auth_rule(['is_modules'=>1]);
+        $auth_rules = get_auth_rule(['is_modules' => 1]);
         $auth_rule_list = group_same_key($auth_rules, 'menu_id');
         foreach ($auth_rule_list as $key => $val) {
             if (is_array($val)) {
                 $sort_order = [];
                 foreach ($val as $_k => $_v) {
-                    $sort_order[$_k]  = $_v['sort_order'];
+                    $sort_order[$_k] = $_v['sort_order'];
                 }
                 array_multisort($sort_order, SORT_ASC, $val);
                 $auth_rule_list[$key] = $val;
@@ -212,28 +223,89 @@ class AuthRole extends Base {
         $this->assign('auth_rule_list', $auth_rule_list);
 
         // 栏目
-        $arctype_data = $arctype_array = array();
-        $arctype = Db::name('arctype')->select();
-        if(! empty($arctype)){
-            foreach ($arctype as $item){
-                if($item['parent_id'] <= 0){
-                    $arctype_data[] = $item;
+        $arctype_list = Db::name('arctype')->where([
+            'is_del' => 0,
+        ])->order("grade desc")->select();
+        $arctype_p_html = $arctype_child_html = "";
+        $arctype_all = list_to_tree($arctype_list);
+        foreach ($arctype_all as $key => $arctype) {
+            if (!empty($arctype['children'])) {
+                if ($key > 0) {
+                    $arctype_p_html .= '<em class="arctype_bg expandable"></em>';
+                } else {
+                    $arctype_p_html .= '<em class="arctype_bg collapsable"></em>';
                 }
-                $arctype_array[$item['parent_id']][] = $item;
+                $arctype_child_html .= '<div class="arctype_child" id="arctype_child_' . $arctype['id'] . '"';
+                if ($arctype_all[0]['id'] == $arctype['id']) {
+                    $arctype_child_html .= ' style="display: block;" ';
+                }
+                $arctype_child_html .= '>';
+                $arctype_child_html .= $this->get_arctype_child_html($arctype,$info);
+                $arctype_child_html .= '</div>';
             }
-        }
-        $this->assign('arctypes', $arctype_data);
-        $this->assign('arctype_array', $arctype_array);
+            $arctype_p_html .= '<label>' .
+                '<input type="checkbox" class="arctype_cbox arctype_id_' . $arctype['id'] . '" value="' . $arctype['id'] . '" ';
+            if (!empty($info['permission']['arctype']) && in_array($arctype['id'], $info['permission']['arctype'])) {
+                $arctype_p_html .= ' checked="checked" ';
+            }
+            $arctype_p_html .= ' />' . $arctype['typename'] . '</label>&nbsp;';
 
+        }
+        $this->assign('arctype_p_html', $arctype_p_html);
+        $this->assign('arctype_child_html', $arctype_child_html);
+        
         // 插件
         $plugins = false;
-        $web_weapp_switch = tpCache('web.web_weapp_switch');
+        $web_weapp_switch = tpCache('global.web_weapp_switch');
         if (1 == $web_weapp_switch) {
             $plugins = model('Weapp')->getList(['status'=>1]);
         }
         $this->assign('plugins', $plugins);
 
         return $this->fetch();
+    }
+    /*
+     *  递归生成$arctype_child_html
+     *  $vo             栏目tree
+     *  $info           权限集合（用于edit是否已经选中）
+     *  return          完整html
+     */
+    private function get_arctype_child_html($vo,$info = []){
+        $arctype_child_html = "";
+        if (!empty($vo['children'])) {
+            $arctype_child_html .= '<div class="arctype_child1" id="arctype_child_' . $vo['id'] . '">';
+            //判断当前下级是否还存在下级,true为竖着，false为横着
+            $has_chldren = true;
+            if ($vo['grade'] != 0 && !empty($vo['has_chldren']) && $vo['has_chldren'] == count($vo['children'])){
+                $has_chldren = false;
+            }
+            if ($has_chldren){
+                foreach ($vo['children'] as $vo1) {
+                    $arctype_child_html .= '<div class="arctype_child1">';
+                    $arctype_child_html .= ' <span class="button level1 switch center_docu"></span>
+                                            <label><input type="checkbox" class="arctype_cbox arctype_id_' . $vo1['id'] . '" value="' . $vo1['id'] . '" data-pid="' . $vo1['parent_id'] . '" data-tpid="' . $vo['parent_id'] . '"';
+                    if (!empty($info['permission']['arctype']) && in_array($vo1['id'], $info['permission']['arctype'])) {
+                        $arctype_child_html .= ' checked="checked" ';
+                    }
+                    $arctype_child_html .= '/>' . $vo1['typename'] . '</label></div>';
+                    $arctype_child_html .= $this->get_arctype_child_html($vo1,$info);
+                }
+            }else{
+                $arctype_child_html .= '<div class="arctype_child2"> <span class="button level1 switch center_docu"></span>';
+                foreach ($vo['children'] as $vo1) {
+                    $arctype_child_html .= '<label><input type="checkbox" class="arctype_cbox arctype_id_' . $vo1['id'] . '" value="' . $vo1['id'] . '" data-pid="' . $vo1['parent_id'] . '" data-tpid="' . $vo['parent_id'] . '"';
+                    if (!empty($info['permission']['arctype']) && in_array($vo1['id'], $info['permission']['arctype'])) {
+                        $arctype_child_html .= ' checked="checked" ';
+                    }
+                    $arctype_child_html .= '/>' . $vo1['typename'] . '</label>';
+                    $arctype_child_html .= $this->get_arctype_child_html($vo1,$info);
+                }
+                $arctype_child_html .= '</div>';
+            }
+            $arctype_child_html .= '</div>';
+        }
+
+        return $arctype_child_html;
     }
     
     public function del()

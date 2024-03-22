@@ -27,6 +27,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'unionid' => 
+  array (
+    'name' => 'unionid',
+    'type' => 'varchar(100)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'nickname' => 
   array (
     'name' => 'nickname',
@@ -60,6 +69,15 @@ return array (
     'type' => 'int(11)',
     'notnull' => false,
     'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'provider' => 
+  array (
+    'name' => 'provider',
+    'type' => 'varchar(25)',
+    'notnull' => false,
+    'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),

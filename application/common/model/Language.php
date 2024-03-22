@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -60,33 +60,6 @@ class Language extends Model
         }
         /*--end*/
 
-        /*复制栏目表以及关联数据*/
-        $syn_status = $this->syn_arctype($mark, $post['copy_lang']);
-        if (false === $syn_status) {
-            return $syn_status;
-        }
-        /*--end*/
-
-        /*复制阅读权限表数据*/
-        $arcrank_db = Db::name('arcrank');
-        $arcrankCount = $arcrank_db->where('lang',$mark)->count();
-        if (empty($arcrankCount)) {
-            $arcrankRow = $arcrank_db->field('id,lang',true)
-                ->where('lang', $post['copy_lang'])
-                ->order('id asc')
-                ->select();
-            if (!empty($arcrankRow)) {
-                foreach ($arcrankRow as $key => $val) {
-                    $arcrankRow[$key]['lang'] = $mark;
-                }
-                $insertNum = $arcrank_db->insertAll($arcrankRow);
-                if ($insertNum != count($arcrankRow)) {
-                    return false;
-                }
-            }
-        }
-        /*--end*/
-
         /*复制网站配置表数据*/
         $config_db = Db::name('config');
         $configCount = $config_db->where('lang',$mark)->count();
@@ -119,11 +92,11 @@ class Language extends Model
                         $configRow[$key]['value'] = $mark.$val['value'];
                     }
                     /*--end*/
-                    
+
                     /**
                      * 生成静态页面代码
                      * 新增语言的URL模式必须与第二个语言一致
-                     * 如果没有第二个语言，那么URL模式默认为动态 
+                     * 如果没有第二个语言，那么URL模式默认为动态
                      */
                     if ('seo_pseudo' == $val['name']) {
                         $configRow[$key]['value'] = $seo_pseudo_lang;
@@ -164,6 +137,33 @@ class Language extends Model
         }
         /*--end*/
 
+        /*复制栏目表以及关联数据*/
+        $syn_status = $this->syn_arctype($mark, $post['copy_lang']);
+        if (false === $syn_status) {
+            return $syn_status;
+        }
+        /*--end*/
+
+        /*复制阅读权限表数据*/
+        $arcrank_db = Db::name('arcrank');
+        $arcrankCount = $arcrank_db->where('lang',$mark)->count();
+        if (empty($arcrankCount)) {
+            $arcrankRow = $arcrank_db->field('id,lang',true)
+                ->where('lang', $post['copy_lang'])
+                ->order('id asc')
+                ->select();
+            if (!empty($arcrankRow)) {
+                foreach ($arcrankRow as $key => $val) {
+                    $arcrankRow[$key]['lang'] = $mark;
+                }
+                $insertNum = $arcrank_db->insertAll($arcrankRow);
+                if ($insertNum != count($arcrankRow)) {
+                    return false;
+                }
+            }
+        }
+        /*--end*/
+
         /*复制广告位置表以及广告表数据*/
         $syn_status = $this->syn_ad_position($mark, $post['copy_lang']);
         if (false === $syn_status) {
@@ -173,6 +173,13 @@ class Language extends Model
 
         /*复制新产品参数分组表以及新产品参数表数据*/
         $syn_status = $this->syn_shop_product_attrlist($mark, $post['copy_lang']);
+        if (false === $syn_status) {
+            return $syn_status;
+        }
+        /*--end*/
+
+        /*复制表单表数据*/
+        $syn_status = $this->syn_form($mark, $post['copy_lang']);
         if (false === $syn_status) {
             return $syn_status;
         }
@@ -228,6 +235,27 @@ class Language extends Model
         }
         /*--end*/
 
+        /*复制手机短信模板表数据*/
+        $sms_tpl_db = Db::name('sms_template');
+        $smstplCount = $sms_tpl_db->where('lang',$mark)->count();
+        if (empty($smstplCount)) {
+            $smstplRow = $sms_tpl_db->field('tpl_id,lang',true)
+                ->where('lang', $post['copy_lang'])
+                ->order('tpl_id asc')
+                ->select();
+            if (!empty($smstplRow)) {
+                foreach ($smstplRow as $key => $val) {
+                    $smstplRow[$key]['lang'] = $mark;
+                }
+                $insertObject = model('SmsTemplate')->saveAll($smstplRow);
+                $insertNum = count($insertObject);
+                if ($insertNum != count($smstplRow)) {
+                    return false;
+                }
+            }
+        }
+        /*--end*/
+
         /*复制模板语言包变量表数据*/
         $langpack_db = Db::name('language_pack');
         $langpackCount = $langpack_db->where('lang',$mark)->count();
@@ -257,7 +285,7 @@ class Language extends Model
         /*--end*/
 
         \think\Cache::clear('language');
-        delFile(RUNTIME_PATH.'cache'.DS.$mark, true);
+        delFile(CACHE_PATH.$mark);
 
         return true;
     }
@@ -301,13 +329,32 @@ class Language extends Model
     public function afterDel($id_arr = [], $lang_list = [])
     {
         if (!empty($id_arr) && !empty($lang_list)) {
+            // 至少保留一个语言是开启状态
+            $row = Db::name('language')->where(['status'=>1])->select();
+            if (empty($row)) {
+                Db::name('language')->where(['is_home_default'=>1])->update(['status'=>1,'update_time'=>getTime()]);
+            }
+
             \think\Cache::clear('language');
             foreach ($lang_list as $key => $lang) {
-                delFile(RUNTIME_PATH.'cache'.DS.$lang, true);
+                delFile(CACHE_PATH.$lang, true);
                 @unlink(APP_PATH."lang/{$lang}.php");
             }
             /*统计多语言数量*/
             $this->setLangNum();
+            // 创建时删除多余的语言数据
+            $this->delLangData($lang_list);
+        }
+    }
+
+    /**
+     * 创建时删除多余的语言数据
+     * @param  [type] $lang_list [description]
+     * @return [type]            [description]
+     */
+    public function delLangData($lang_list)
+    {
+        if (!empty($lang_list)) {
             /*同步删除模板栏目绑定表数据*/
             Db::name('language_attr')->where("lang",'IN',$lang_list)->delete();
             /*同步删除模板语言变量表数据*/
@@ -316,13 +363,16 @@ class Language extends Model
             Db::name('arcrank')->where("lang",'IN',$lang_list)->delete();
             /*同步删除基础信息表数据*/
             Db::name('config')->where("lang",'IN',$lang_list)->delete();
+            /*同步删除其他信息表数据*/
+            Db::name('setting')->where("lang",'IN',$lang_list)->delete();
             /*同步删除自定义变量表数据*/
             Db::name('config_attribute')->where("lang",'IN',$lang_list)->delete();
             /*同步删除栏目表以及文档表数据*/
             $typeids = Db::name('arctype')->where("lang",'IN',$lang_list)->column('id');
             //待删除栏目ID集合
             Db::name('arctype')->where("lang",'IN',$lang_list)->delete(); // 栏目表
-            $aids = Db::name('archives')->where("typeid",'IN',$typeids)->column('aid'); 
+            Db::name('channelfield_bind')->where("typeid",'IN',$typeids)->delete(); // 栏目与自定义字段绑定表
+            $aids = Db::name('archives')->where("typeid",'IN',$typeids)->column('aid');
             //待删除文档ID集合
             Db::name('archives')->where("aid",'IN',$aids)->delete(); // 文档主表
             Db::name('article_content')->where("aid",'IN',$aids)->delete(); // 文章内容表
@@ -335,6 +385,8 @@ class Language extends Model
             Db::name('product_content')->where("aid",'IN',$aids)->delete(); // 产品内容表
             Db::name('product_img')->where("aid",'IN',$aids)->delete(); // 产品图集表
             Db::name('single_content')->where("aid",'IN',$aids)->delete(); // 单页内容表
+            /*同步删除表单表数据*/
+            Db::name('form')->where("lang",'IN',$lang_list)->delete();
             /*同步删除产品属性表数据*/
             Db::name('product_attribute')->where("lang",'IN',$lang_list)->delete();
             /*同步删除新产品参数分组表数据*/
@@ -371,6 +423,7 @@ class Language extends Model
             Db::name('users_notice_tpl_content')->where("lang",'IN',$lang_list)->delete();
             /*会员中心移动端底部菜单表*/
             Db::name('users_bottom_menu')->where("lang",'IN',$lang_list)->delete();
+            \think\Cache::clear();
         }
     }
 
@@ -411,7 +464,10 @@ class Language extends Model
         /*复制留言属性表数据*/
         $bindgbookAttributeArr = []; // 源留言属性ID与目标留言属性ID的对应数组
         $guestbook_attribute_db = Db::name('guestbook_attribute');
-        $gbookAttributeRow = $guestbook_attribute_db->where('lang',$copy_lang)
+        $gbookAttributeRow = $guestbook_attribute_db->where([
+                'form_type' => 0,
+                'lang' => $copy_lang,
+            ])
             ->order('attr_id asc')
             ->select();
         $gbookAttributeRow = group_same_key($gbookAttributeRow, 'typeid');
@@ -421,6 +477,7 @@ class Language extends Model
         $arctype_M = model('Arctype');
         foreach ($arctypeList as $key => $val) {
             $data = $val;
+            $typeid_old = $data['id'];
             unset($data['id']);
             $data['lang'] = $mark;
             $data['typename'] = $mark.$data['typename']; // 临时测试
@@ -429,6 +486,22 @@ class Language extends Model
             if (empty($typeid)) {
                 return false; // 同步失败
             }
+            /*复制栏目与自定义字段绑定表*/
+            $channelfield_bind_list = Db::name('channelfield_bind')->where('typeid',$typeid_old)->select();
+            if (!empty($channelfield_bind_list)){
+                $channelfield_bind_insert = [];
+                foreach ($channelfield_bind_list as $k => $v) {
+                    $channelfield_bind_insert[] = [
+                        'typeid' => $typeid,
+                        'field_id' => $v['field_id'],
+                        'add_time' => getTime(),
+                        'update_time' => getTime()
+                    ];
+                }
+                //写入绑定自定义字段
+                Db::name('channelfield_bind')->insertAll($channelfield_bind_insert);
+            }
+            /*--end*/
             $bindArctypeArr[$val['id']] = $typeid;
             /*复制产品属性表数据*/
             if (!empty($productAttributeRow[$val['id']])) {
@@ -721,7 +794,6 @@ class Language extends Model
         }
 
         /*复制友情链接表数据*/
-        $bindLinksArr = []; // 源友情链接ID与目标友情链接ID的对应数组
         $links_db = Db::name('links');
         $linksRow = $links_db->where('lang',$copy_lang)
             ->order('id asc')
@@ -752,7 +824,6 @@ class Language extends Model
                     if (empty($new_links_id)) {
                         return false; // 同步失败
                     }
-                    $bindLinksArr[$v2['id']] = $new_links_id;
                 }
             }
             /*--end*/
@@ -764,7 +835,7 @@ class Language extends Model
         /*新增友情链接分组ID与源友情链接分组ID的绑定*/
         foreach ($bindLinksGroupArr as $key => $val) {
             $langAttrData[] = [
-                'attr_name' => 'linkgroup'.$key,
+                'attr_name' => 'linksgroup'.$key,
                 'attr_value'    => $val,
                 'lang'  => $mark,
                 'attr_group' => 'links_group',
@@ -773,13 +844,128 @@ class Language extends Model
             ];
         }
         /*--end*/
-        /*新增友情链接ID与源友情链接ID的绑定*/
-        foreach ($bindLinksArr as $key => $val) {
+
+        // 批量存储
+        if (!empty($langAttrData)) {
+            $insertObject = model('LanguageAttr')->saveAll($langAttrData);
+            $insertNum = count($insertObject);
+            if ($insertNum != count($langAttrData)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function isValidateStatus($field = '', $value = '')
+    {
+        $return = true;
+
+        $value = trim($value);
+        if ($value == 0 && $field == 'status') {
+            $count = Db::name('language')->where(['status'=>1])->count();
+            if ($count <= 1) {
+                $return = [
+                    'time'  => 2,
+                    'msg'   => '至少要开启一个语言',
+                ];
+            }
+        }
+
+        return $return;
+    }
+
+    /**
+     * 创建语言时，同步表单数据，并进行多语言关联绑定
+     *
+     * @param string $mark 新增语言
+     * @param string $copy_lang 复制语言
+     */
+    private function syn_form($mark = '', $copy_lang = 'cn')
+    {
+        $form_db = Db::name('form');
+
+        /*删除新增语言之前的多余数据*/
+        $count = $form_db->where('lang',$mark)->count();
+        if (!empty($count)) {
+            $form_db->where("lang",$mark)->delete();
+        }
+        /*--end*/
+
+        // 表单列表
+        $bindFormArr = []; // 源表单ID与目标表单ID的对应数组
+        $formList = $form_db->where([
+            'lang'=>$copy_lang
+            ])->order('form_id asc')
+            ->select();
+
+        if (empty($mark) || empty($formList)) {
+            return -1;
+        }
+
+        /*复制表单属性表数据*/
+        $bindformAttributeArr = []; // 源表单属性ID与目标表单属性ID的对应数组
+        $guestbook_attribute_db = Db::name('guestbook_attribute');
+        $formAttributeRow = $guestbook_attribute_db->where([
+                'form_type' => 1,
+                'lang' => $copy_lang,
+            ])
+            ->order('attr_id asc')
+            ->select();
+        $formAttributeRow = group_same_key($formAttributeRow, 'typeid');
+        /*--end*/
+
+        /*复制表单表数据*/
+        foreach ($formList as $key => $val) {
+            $data = $val;
+            unset($data['form_id']);
+            $data['lang'] = $mark;
+            $data['form_name'] = $mark.$data['form_name']; // 临时测试
+            $form_id = $form_db->insertGetId($data);
+            if (empty($form_id)) {
+                return false; // 同步失败
+            }
+            $bindFormArr[$val['form_id']] = $form_id;
+
+            // 复制表单属性表数据
+            if (!empty($formAttributeRow[$val['form_id']])) {
+                foreach ($formAttributeRow[$val['form_id']] as $_k => $_v) {
+                    $formArr = $_v;
+                    $formArr['typeid'] = $form_id;
+                    $formArr['lang'] = $mark;
+                    unset($formArr['attr_id']);
+                    $formArr['attr_name'] = $mark.$formArr['attr_name']; // 临时测试
+                    $new_attr_id = $guestbook_attribute_db->insertGetId($formArr);
+                    if (empty($new_attr_id)) {
+                        return false; // 同步失败
+                    }
+                    $bindformAttributeArr[$_v['attr_id']] = $new_attr_id;
+                }
+            }
+        }
+        /*--end*/
+
+        $langAttrData = [];
+
+        /*新增表单ID与源表单ID的绑定*/
+        foreach ($bindFormArr as $key => $val) {
             $langAttrData[] = [
-                'attr_name' => 'links'.$key,
+                'attr_name' => 'form'.$key,
                 'attr_value'    => $val,
                 'lang'  => $mark,
-                'attr_group' => 'links',
+                'attr_group' => 'form',
+                'add_time'  => getTime(),
+                'update_time'  => getTime(),
+            ];
+        }
+        /*--end*/
+        /*新增表单属性ID与源表单属性ID的绑定*/
+        foreach ($bindformAttributeArr as $key => $val) {
+            $langAttrData[] = [
+                'attr_name' => 'attr_'.$key,
+                'attr_value'    => $val,
+                'lang'  => $mark,
+                'attr_group' => 'form_attribute',
                 'add_time'  => getTime(),
                 'update_time'  => getTime(),
             ];

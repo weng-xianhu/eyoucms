@@ -4,11 +4,11 @@
 -- Server         : 127.0.0.1_3306
 -- Server Version : 5.7.26
 -- Host           : 127.0.0.1:3306
--- Database       : e5
+-- Database       : dev165
 -- 
 -- Part : #1
--- Version : #v1.5.4
--- Date : 2021-06-23 10:46:15
+-- Version : #v1.6.5
+-- Date : 2024-03-18 14:46:41
 -- -----------------------------------------
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -49,12 +49,10 @@ CREATE TABLE `ey_ad` (
 -- -----------------------------
 -- Records of `ey_ad`
 -- -----------------------------
-INSERT INTO `ey_ad` VALUES ('1', '1', '1', '共展蓝图', 'http://www.eyoucms.com', '/uploads/allimg/20190730/84c8489fe403f189c5efede63be93786.jpg', '1524215594', '0', '&lt;p&gt;填写广告的备注信息，方便于后期的跟进&lt;/p&gt;', '', '', '', '0', '', '1', '3', '0', '0', '0', 'cn', '1524215652', '1564477760');
-INSERT INTO `ey_ad` VALUES ('2', '1', '1', '易优模板库', 'http://www.eyoucms.com', '/uploads/allimg/20190730/87da15986aaca96134704c7a27154711.jpg', '0', '0', '&lt;p&gt;填写广告的备注信息，方便于后期的跟进&lt;/p&gt;', '', '', '', '0', '', '1', '2', '0', '0', '0', 'cn', '1524214017', '1564477760');
-INSERT INTO `ey_ad` VALUES ('5', '1', '1', '第三组广告', 'http://www.eyoucms.com', '/uploads/allimg/20190730/8f5e1882536879c2220c7a5bf1930b96.jpg', '0', '0', '', '', '', '', '0', '', '1', '1', '1', '1', '0', 'cn', '1553046945', '1564477760');
-INSERT INTO `ey_ad` VALUES ('7', '3', '1', '', '', '/uploads/allimg/20190722/8735c46928779e1f3057d4859aa22be9.jpg', '0', '0', '', '', '', '', '0', '', '1', '2', '0', '1', '0', 'cn', '1563764411', '1563764739');
-INSERT INTO `ey_ad` VALUES ('9', '3', '1', '', '', '/uploads/allimg/20190722/08536d1944213a1632dde5489c0f2e1a.jpg', '0', '0', '', '', '', '', '0', '', '1', '1', '0', '1', '0', 'cn', '1563764411', '1563764739');
-INSERT INTO `ey_ad` VALUES ('11', '3', '1', '', '', '/uploads/allimg/20190722/21550a2a81a09d8bf109bcaa826ec487.jpg', '0', '0', '', '', '', '', '0', '', '1', '3', '0', '1', '0', 'cn', '1563764411', '1563764739');
+INSERT INTO `ey_ad` VALUES ('1', '1', '1', '共展蓝图', 'http://www.eyoucms.com', '//update.eyoucms.com/demo/uploads/allimg/20190730/84c8489fe403f189c5efede63be93786.jpg', '1524215594', '0', '&lt;p&gt;填写广告的备注信息，方便于后期的跟进&lt;/p&gt;', '', '', '', '0', '', '1', '2', '0', '0', '0', 'cn', '1524215652', '1690166783');
+INSERT INTO `ey_ad` VALUES ('5', '1', '1', '第三组广告', 'http://www.eyoucms.com', '//update.eyoucms.com/demo/uploads/allimg/20190730/8f5e1882536879c2220c7a5bf1930b96.jpg', '0', '0', '', '', '', '', '0', '', '1', '1', '1', '1', '0', 'cn', '1553046945', '1690166783');
+INSERT INTO `ey_ad` VALUES ('7', '3', '1', '', '', '//update.eyoucms.com/demo/uploads/allimg/20190722/8735c46928779e1f3057d4859aa22be9.jpg', '0', '0', '', '', '', '', '0', '', '1', '2', '0', '1', '0', 'cn', '1563764411', '1690166812');
+INSERT INTO `ey_ad` VALUES ('9', '3', '1', '', '', '//update.eyoucms.com/demo/uploads/allimg/20190722/08536d1944213a1632dde5489c0f2e1a.jpg', '0', '0', '', '', '', '', '0', '', '1', '1', '0', '1', '0', 'cn', '1563764411', '1690166812');
 
 -- -----------------------------
 -- Table structure for `ey_ad_position`
@@ -79,8 +77,8 @@ CREATE TABLE `ey_ad_position` (
 -- -----------------------------
 -- Records of `ey_ad_position`
 -- -----------------------------
-INSERT INTO `ey_ad_position` VALUES ('1', '首页-大幻灯片', '1', '1920', '550', '广告图片的宽高度随着浏览器大小而改变', '1', 'cn', '0', '0', '1524209276', '1564477760');
-INSERT INTO `ey_ad_position` VALUES ('3', '手机端首页头部幻灯', '1', '0', '0', '', '1', 'cn', '1', '0', '1563764323', '1563764739');
+INSERT INTO `ey_ad_position` VALUES ('1', '首页-大幻灯片', '1', '1920', '550', '广告图片的宽高度随着浏览器大小而改变', '1', 'cn', '0', '0', '1524209276', '1690166783');
+INSERT INTO `ey_ad_position` VALUES ('3', '手机端首页头部幻灯', '1', '0', '0', '', '1', 'cn', '1', '0', '1563764323', '1690166812');
 
 -- -----------------------------
 -- Table structure for `ey_admin`
@@ -93,7 +91,7 @@ CREATE TABLE `ey_admin` (
   `true_name` varchar(20) DEFAULT '' COMMENT '真实姓名',
   `mobile` varchar(11) DEFAULT '' COMMENT '手机号码',
   `email` varchar(60) DEFAULT '' COMMENT 'email',
-  `password` varchar(32) NOT NULL DEFAULT '' COMMENT '密码',
+  `password` varchar(255) NOT NULL DEFAULT '' COMMENT '密码',
   `head_pic` varchar(255) DEFAULT '' COMMENT '头像',
   `last_login` int(11) DEFAULT '0' COMMENT '最后登录时间',
   `last_ip` varchar(15) DEFAULT '' COMMENT '最后登录ip',
@@ -104,6 +102,9 @@ CREATE TABLE `ey_admin` (
   `mark_lang` varchar(50) DEFAULT 'cn' COMMENT '当前语言标识',
   `status` tinyint(1) DEFAULT '1' COMMENT '状态(0=屏蔽，1=正常)',
   `syn_users_id` int(10) DEFAULT '0' COMMENT '同步注册到会员表',
+  `desc` varchar(500) DEFAULT '' COMMENT '工作内容',
+  `wechat_followed` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '记录是否关注了微信公众号，默认0；0=未关注、1=已关注',
+  `wechat_open_id` varchar(50) NOT NULL DEFAULT '' COMMENT 'open_id，关注微信公众号后存入',
   `add_time` int(11) DEFAULT '0' COMMENT '添加时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`admin_id`),
@@ -113,7 +114,7 @@ CREATE TABLE `ey_admin` (
 -- -----------------------------
 -- Records of `ey_admin`
 -- -----------------------------
-INSERT INTO `ey_admin` VALUES ('1', 'admin', '', 'admin', '', '', '18e6a423f5a873ab50c1c55c59c69517', '', '1624416358', '127.0.0.1', '3', 'ev9vbfinbmkrrl47671t77shi3', '0', '-1', 'cn', '1', '1', '1624416294', '1624416303');
+INSERT INTO `ey_admin` VALUES ('1', 'admin', '', 'admin', '', '', '$2y$11$eda83328080b2a7395257eYcNtzQOwNzHUzlve0F1MSCRLSdHqCNG', '', '1710744347', '127.0.0.1', '2', 'rm5i34g5mltd424dg9ot4520g4', '0', '-1', 'cn', '1', '0', '', '0', '', '1710744342', '0');
 
 -- -----------------------------
 -- Table structure for `ey_admin_log`
@@ -128,20 +129,108 @@ CREATE TABLE `ey_admin_log` (
   `log_time` int(11) DEFAULT '0' COMMENT '日志时间',
   PRIMARY KEY (`log_id`),
   KEY `admin_id` (`admin_id`) USING BTREE
-) ENGINE=MyISAM AUTO_INCREMENT=592 DEFAULT CHARSET=utf8 COMMENT='管理员操作日志表';
+) ENGINE=MyISAM AUTO_INCREMENT=667 DEFAULT CHARSET=utf8 COMMENT='管理员操作日志表';
 
 -- -----------------------------
 -- Records of `ey_admin_log`
 -- -----------------------------
-INSERT INTO `ey_admin_log` VALUES ('583', '1', '安全退出', '127.0.0.1', '/login.php', '1623813178');
-INSERT INTO `ey_admin_log` VALUES ('584', '-1', '访问后台', '127.0.0.1', '/login.php', '1623813179');
-INSERT INTO `ey_admin_log` VALUES ('585', '-1', '访问后台', '127.0.0.1', '/login.php', '1623813180');
-INSERT INTO `ey_admin_log` VALUES ('586', '1', '后台登录', '127.0.0.1', '/login.php', '1623813184');
-INSERT INTO `ey_admin_log` VALUES ('587', '-1', '访问后台', '127.0.0.1', '/login.php', '1624416296');
-INSERT INTO `ey_admin_log` VALUES ('588', '1', '后台登录', '127.0.0.1', '/login.php', '1624416303');
-INSERT INTO `ey_admin_log` VALUES ('589', '1', '安全退出', '127.0.0.1', '/login.php', '1624416352');
-INSERT INTO `ey_admin_log` VALUES ('590', '-1', '访问后台', '127.0.0.1', '/login.php', '1624416353');
-INSERT INTO `ey_admin_log` VALUES ('591', '1', '后台登录', '127.0.0.1', '/login.php', '1624416358');
+INSERT INTO `ey_admin_log` VALUES ('666', '1', '后台登录', '127.0.0.1', '/login.php', '1710744347');
+
+-- -----------------------------
+-- Table structure for `ey_admin_menu`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_admin_menu`;
+CREATE TABLE `ey_admin_menu` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `menu_id` int(11) DEFAULT '0',
+  `title` varchar(100) DEFAULT '' COMMENT '导航名称',
+  `controller_name` varchar(50) DEFAULT '' COMMENT '控制器',
+  `action_name` varchar(50) DEFAULT '' COMMENT '方法名',
+  `param` varchar(255) DEFAULT '' COMMENT '参数',
+  `icon` varchar(50) DEFAULT 'iconfont e-lanmuguanli' COMMENT '图标',
+  `is_menu` tinyint(1) DEFAULT '0' COMMENT '是否显示为左侧菜单',
+  `is_switch` tinyint(1) DEFAULT '0' COMMENT '是否显示在switch_map页面中',
+  `target` varchar(50) DEFAULT 'workspace' COMMENT '链接打开方式',
+  `sort_order` int(10) DEFAULT '100' COMMENT '排序号',
+  `status` tinyint(1) DEFAULT '1' COMMENT '状态，1=显示，0=隐藏',
+  `lang` varchar(20) DEFAULT 'cn' COMMENT '语言标识',
+  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `menu_id` (`menu_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8 COMMENT='外挂功能地图菜单表';
+
+-- -----------------------------
+-- Records of `ey_admin_menu`
+-- -----------------------------
+INSERT INTO `ey_admin_menu` VALUES ('1', '1005', '欢迎页', 'Index', 'welcome', '', 'fa fa-user', '0', '1', 'workspace', '100', '1', 'cn', '1650263716', '1650263716');
+INSERT INTO `ey_admin_menu` VALUES ('2', '1001', '栏目管理', 'Arctype', 'index', '|mt20|1', 'iconfont e-lanmuguanli', '1', '1', 'workspace', '100', '1', 'cn', '1650263716', '1650263716');
+INSERT INTO `ey_admin_menu` VALUES ('3', '1002', '内容管理', 'Archives', 'index', '', 'iconfont e-neirongwendang', '1', '1', 'workspace', '100', '1', 'cn', '1650263716', '1650263716');
+INSERT INTO `ey_admin_menu` VALUES ('4', '1004', '待审文档', 'Archives', 'index_draft', '|menu|1', 'iconfont e-tougao', '1', '1', 'workspace', '100', '1', 'cn', '1650263716', '1650263716');
+INSERT INTO `ey_admin_menu` VALUES ('5', '1003', '广告管理', 'AdPosition', 'index', '', 'iconfont e-guanggao', '1', '1', 'workspace', '100', '1', 'cn', '1650263716', '1650263716');
+INSERT INTO `ey_admin_menu` VALUES ('6', '2001', '基本信息', 'System', 'web', '', 'iconfont e-shezhi', '1', '1', 'workspace', '100', '1', 'cn', '1650263716', '1650263716');
+INSERT INTO `ey_admin_menu` VALUES ('7', '2002', '可视编辑', 'Uiset', 'ui_index', '', 'iconfont e-keshihuabianji', '0', '1', 'workspace', '100', '1', 'cn', '1650263716', '1650263716');
+INSERT INTO `ey_admin_menu` VALUES ('8', '2003', 'SEO模块', 'Seo', 'seo', '', 'iconfont e-seo', '1', '1', 'workspace', '100', '1', 'cn', '1650263716', '1650263716');
+INSERT INTO `ey_admin_menu` VALUES ('9', '2004', '功能地图', 'Index', 'switch_map', '', 'iconfont e-caidangongneng', '1', '0', 'workspace', '10000', '1', 'cn', '1650263716', '1650263716');
+INSERT INTO `ey_admin_menu` VALUES ('10', '2005', '插件应用', 'Weapp', 'index', '', 'iconfont e-chajian', '1', '1', 'workspace', '100', '1', 'cn', '1650263716', '1650263716');
+INSERT INTO `ey_admin_menu` VALUES ('11', '2006', '会员中心', 'Member', 'users_index', '', 'iconfont e-gerenzhongxin', '1', '1', 'workspace', '100', '1', 'cn', '1650263716', '1650263716');
+INSERT INTO `ey_admin_menu` VALUES ('12', '2008', '商城中心', 'Shop', 'home', '', 'iconfont e-shangcheng', '1', '1', 'workspace', '100', '1', 'cn', '1650263716', '1650263717');
+INSERT INTO `ey_admin_menu` VALUES ('13', '2009', '可视化小程序', 'Diyminipro', 'page_edit', '', 'fa fa-code', '0', '1', 'workspace', '100', '1', 'cn', '1650263716', '1650263716');
+INSERT INTO `ey_admin_menu` VALUES ('14', '2004018', '留言中心', 'Form', 'index', '', 'iconfont e-biaodanguanli', '0', '1', 'workspace', '100', '1', 'cn', '1677037793', '1677146423');
+
+-- -----------------------------
+-- Table structure for `ey_admin_theme`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_admin_theme`;
+CREATE TABLE `ey_admin_theme` (
+  `theme_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `theme_type` tinyint(1) DEFAULT '0' COMMENT '主题类型：1=登录页，2=欢迎页',
+  `theme_title` varchar(50) DEFAULT '' COMMENT '主题标题',
+  `theme_pic` varchar(255) DEFAULT '' COMMENT '主题效果图',
+  `theme_color_model` varchar(10) DEFAULT '' COMMENT '主题颜色模式',
+  `theme_main_color` varchar(20) DEFAULT '' COMMENT '主题主色',
+  `theme_assist_color` varchar(20) DEFAULT '' COMMENT '主题辅色',
+  `login_logo` varchar(255) DEFAULT '' COMMENT '登录图标',
+  `login_bgimg_model` varchar(10) DEFAULT '' COMMENT '登录背景图模式',
+  `login_bgimg` varchar(255) DEFAULT '' COMMENT '登录背景图',
+  `login_tplname` varchar(100) DEFAULT '' COMMENT '登录页自定义模板',
+  `admin_logo` varchar(255) DEFAULT '' COMMENT '后台Logo',
+  `welcome_tplname` varchar(100) DEFAULT '' COMMENT '欢迎页自定义模板',
+  `is_system` tinyint(1) DEFAULT '0' COMMENT '内置主题',
+  `sort_order` int(10) DEFAULT '100' COMMENT '排序号',
+  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`theme_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=101 DEFAULT CHARSET=utf8 COMMENT='后台主题风格表';
+
+-- -----------------------------
+-- Records of `ey_admin_theme`
+-- -----------------------------
+INSERT INTO `ey_admin_theme` VALUES ('1', '1', '经典蓝主题', '/public/static/admin/images/theme/theme_pic_1.png', '1', '#3398cc', '#2189be', '/public/static/admin/login/login-logo_ey.png', '1', '/public/static/admin/loginbg/login-bg-1.png', '', '/public/static/admin/logo/logo_ey.png', '', '1', '100', '1681200988', '1681200988');
+INSERT INTO `ey_admin_theme` VALUES ('2', '1', '易优橙主题', '/public/static/admin/images/theme/theme_pic_2.png', 'custom', '#197971', '#fa921b', '/public/static/admin/login/login-logo.png', '2', '/public/static/admin/loginbg/login-bg-1.png', '', '/public/static/admin/logo/logo.png', '', '1', '100', '1681866512', '1681866512');
+INSERT INTO `ey_admin_theme` VALUES ('4', '2', '商城欢迎页', '/public/static/admin/images/theme/theme_pic_4.png', '', '', '', '', '', '', '', '', 'welcome_shop.htm', '1', '100', '1681200988', '1681200988');
+INSERT INTO `ey_admin_theme` VALUES ('5', '2', '任务流欢迎页', '/public/static/admin/images/theme/theme_pic_5.png', '', '', '', '', '', '', '', '', 'welcome_taskflow.htm', '1', '100', '1681200988', '1681200988');
+INSERT INTO `ey_admin_theme` VALUES ('3', '2', '默认欢迎页', '/public/static/admin/images/theme/theme_pic_default.png', '', '', '', '', '', '', '', '', '', '1', '100', '1681200988', '1681200988');
+INSERT INTO `ey_admin_theme` VALUES ('100', '1', '默认主题', '/public/static/admin/images/theme/theme_pic_default.png', '1', '#3398cc', '#2189be', '/public/static/admin/images/login-logo_ey.png', '1', '/public/static/admin/images/login-bg.jpg', '', '/public/static/admin/images/logo_ey.png', '', '0', '100', '1692667955', '1692667955');
+
+-- -----------------------------
+-- Table structure for `ey_admin_wxlogin`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_admin_wxlogin`;
+CREATE TABLE `ey_admin_wxlogin` (
+  `wx_id` int(11) NOT NULL AUTO_INCREMENT,
+  `type` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '1=官方公众号，2=微信应用',
+  `admin_id` int(11) NOT NULL DEFAULT '0' COMMENT '用户id',
+  `openid` varchar(50) NOT NULL DEFAULT '' COMMENT 'openid',
+  `nickname` varchar(100) NOT NULL DEFAULT '' COMMENT '微信昵称',
+  `unionid` varchar(200) NOT NULL DEFAULT '' COMMENT 'unionid',
+  `headimgurl` varchar(200) NOT NULL DEFAULT '' COMMENT '头像',
+  `add_time` int(11) NOT NULL DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`wx_id`) USING BTREE,
+  KEY `openid` (`openid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='后台微信登录记录表';
+
 
 -- -----------------------------
 -- Table structure for `ey_archives`
@@ -150,10 +239,12 @@ DROP TABLE IF EXISTS `ey_archives`;
 CREATE TABLE `ey_archives` (
   `aid` int(10) NOT NULL AUTO_INCREMENT,
   `typeid` int(10) NOT NULL DEFAULT '0' COMMENT '当前栏目',
+  `stypeid` varchar(90) DEFAULT '' COMMENT '副栏目ID集合',
   `channel` int(10) NOT NULL DEFAULT '0' COMMENT '模型ID',
   `is_b` tinyint(1) DEFAULT '0' COMMENT '加粗',
-  `title` varchar(200) DEFAULT '' COMMENT '标题',
-  `litpic` varchar(250) DEFAULT '' COMMENT '缩略图',
+  `title` varchar(200) DEFAULT '' COMMENT '文档标题',
+  `subtitle` varchar(200) DEFAULT '' COMMENT '副标题',
+  `litpic` varchar(250) DEFAULT '' COMMENT '封面图片',
   `is_head` tinyint(1) DEFAULT '0' COMMENT '头条（0=否，1=是）',
   `is_special` tinyint(1) DEFAULT '0' COMMENT '特荐（0=否，1=是）',
   `is_top` tinyint(1) DEFAULT '0' COMMENT '置顶（0=否，1=是）',
@@ -163,92 +254,103 @@ CREATE TABLE `ey_archives` (
   `is_roll` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '滚动（0=否，1=是）',
   `is_slide` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '幻灯（0=否，1=是）',
   `is_diyattr` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '自定义（0=否，1=是）',
+  `origin` varchar(200) DEFAULT '' COMMENT '来源',
   `author` varchar(200) DEFAULT '' COMMENT '作者',
-  `click` int(10) DEFAULT '0' COMMENT '浏览量',
+  `click` int(10) DEFAULT '0' COMMENT '点击数',
   `arcrank` int(10) DEFAULT '0' COMMENT '阅读权限：0=开放浏览，-1=待审核稿件',
-  `jumplinks` varchar(200) DEFAULT '' COMMENT '外链跳转',
+  `jumplinks` varchar(255) DEFAULT '' COMMENT '跳转网址',
   `ismake` tinyint(1) DEFAULT '0' COMMENT '是否静态页面（0=动态，1=静态）',
   `seo_title` varchar(200) DEFAULT '' COMMENT 'SEO标题',
   `seo_keywords` varchar(200) DEFAULT '' COMMENT 'SEO关键词',
   `seo_description` text COMMENT 'SEO描述',
   `attrlist_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '参数列表ID',
+  `merchant_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '多商家ID',
+  `free_shipping` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '商品是否包邮(1包邮(免运费)  0跟随系统)',
   `users_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '会员价',
+  `crossed_price` decimal(10,2) unsigned NOT NULL DEFAULT '0.00' COMMENT '商品划线价',
+  `users_discount_type` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '产品会员折扣类型(0:系统默认折扣; 1:指定会员级别; 2:不参与折扣;)',
   `users_free` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否会员免费，默认0不免费，1为免费',
   `old_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '产品旧价',
-  `sales_num` int(10) NOT NULL DEFAULT '0' COMMENT '销售量',
+  `sales_num` int(10) NOT NULL DEFAULT '0' COMMENT '总销售量',
+  `virtual_sales` int(10) DEFAULT '0' COMMENT '商品虚拟销售量',
+  `sales_all` int(10) DEFAULT '0' COMMENT '虚拟总销量',
   `stock_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '商品库存量',
   `stock_show` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '商品库存在产品详情页是否显示，1为显示，0为不显示',
-  `prom_type` tinyint(1) unsigned DEFAULT '0' COMMENT '产品类型：0=普通产品，1=虚拟(默认手动发货)，2=虚拟(网盘)，3=虚拟(自定义文本)',
-  `tempview` varchar(200) DEFAULT '' COMMENT '文档模板文件名',
+  `prom_type` tinyint(1) unsigned DEFAULT '0' COMMENT '产品类型：0=普通产品，1=虚拟(默认手动发货)，2=虚拟(网盘)，3=虚拟(自定义文本) 4-核销',
+  `logistics_type` varchar(100) DEFAULT '1' COMMENT '商品物流支持类型(1: 物流配送; 2: 到店核销)',
+  `tempview` varchar(200) DEFAULT '' COMMENT '文档模板',
   `status` tinyint(1) DEFAULT '1' COMMENT '状态(0=屏蔽，1=正常)',
   `sort_order` int(10) DEFAULT '0' COMMENT '排序号',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `admin_id` int(10) DEFAULT '0' COMMENT '管理员ID',
   `users_id` int(10) DEFAULT '0' COMMENT '会员ID',
   `arc_level_id` int(10) DEFAULT '0' COMMENT '文档会员权限ID',
+  `restric_type` tinyint(1) DEFAULT '0' COMMENT '限制模式，0=免费，1=付费，2=会员专享，3=会员付费',
   `is_del` tinyint(1) DEFAULT '0' COMMENT '伪删除，1=是，0=否',
   `del_method` tinyint(1) DEFAULT '0' COMMENT '伪删除状态，1为主动删除，2为跟随上级栏目被动删除',
   `joinaid` int(10) DEFAULT '0' COMMENT '关联文档ID',
   `downcount` int(10) DEFAULT '0' COMMENT '下载次数',
   `appraise` int(10) DEFAULT '0' COMMENT '评价数',
   `collection` int(10) DEFAULT '0' COMMENT '收藏数',
-  `htmlfilename` varchar(250) DEFAULT '' COMMENT '自定义文件名',
+  `htmlfilename` varchar(500) DEFAULT '' COMMENT '自定义文件名',
+  `province_id` int(10) DEFAULT '0' COMMENT '省份',
+  `city_id` int(10) DEFAULT '0' COMMENT '所在城市',
+  `area_id` int(10) DEFAULT '0' COMMENT '所在区域',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  `no_vip_pay` tinyint(3) DEFAULT '0' COMMENT 'restric_type = 2 时,会员专享,非会员可付费使用,0-关闭,1-开启',
+  `editor_remote_img_local` tinyint(1) DEFAULT '1' COMMENT '远程图片本地化',
+  `editor_img_clear_link` tinyint(1) DEFAULT '1' COMMENT '清除非本站链接',
+  `reason` text COMMENT '退回原因',
   PRIMARY KEY (`aid`),
-  KEY `aid` (`typeid`,`channel`) USING BTREE
-) ENGINE=MyISAM AUTO_INCREMENT=106 DEFAULT CHARSET=utf8 COMMENT='文档主表';
+  KEY `add_time` (`add_time`) USING BTREE
+) ENGINE=MyISAM AUTO_INCREMENT=107 DEFAULT CHARSET=utf8 COMMENT='文档主表';
 
 -- -----------------------------
 -- Records of `ey_archives`
 -- -----------------------------
-INSERT INTO `ey_archives` VALUES ('1', '1', '6', '0', '关于我们', '', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '', '0', '', '', '', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526539465', '1609929468');
-INSERT INTO `ey_archives` VALUES ('2', '8', '6', '0', '公司简介', '', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '', '0', '', '', '', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526540452', '1609929701');
-INSERT INTO `ey_archives` VALUES ('4', '11', '1', '1', 'seo是什么？', '/abc/uploads/allimg/20210107/1-21010G00910428.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '132', '0', '', '0', '', '', '在了解seo是什么意思之后，才能学习seo。什么是seo，从官方解释来看，seo=Search（搜索）Engine（引擎）Optimization（优化），即搜索引擎优化。使用过百度或其他搜索引擎，在', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526545072', '1610615837');
-INSERT INTO `ey_archives` VALUES ('39', '12', '1', '0', '回顾中国饮料40年发展史，总有一款是你儿时记忆的味道', '/abc/uploads/allimg/20210107/1-21010G0125Ia.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '186', '0', '', '0', '', '', '对于记忆来说，味道往往是最美的，儿时喝过的饮料，至今回想起来依然觉得津津有味。今天是六一儿童节，青山资本梳理了中国40年来饮料发展的简史，权当节日的小消遣，顺便看看能否找到你记忆深处的那个味道？第一阶段：国人味蕾的开启时代百事可乐在华第一家工厂开业1', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1527824652', '1610615741');
-INSERT INTO `ey_archives` VALUES ('104', '66', '3', '0', '手机摄影', '/abc/uploads/allimg/20190808/17268e40477444ecbf11bcb643f321c2.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '261', '0', '', '0', '', '', 'SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。相反地，如果将', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', 'view_images.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1609986111', '1610615576');
-INSERT INTO `ey_archives` VALUES ('9', '10', '1', '0', '用户界面设计和体验设计的差别', '/abc/uploads/allimg/20210107/1-21010G0093N30.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '169', '0', '', '0', '', '', '有时候我们需要获取图集中的第一张图片，下面给出解决办法： 第一步：修改include/extend.func.php 添加  // 提取图集第一张大图', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526552582', '1610615832');
-INSERT INTO `ey_archives` VALUES ('10', '10', '1', '0', '新手科普文！什么是用户界面和体验设计？', '/abc/uploads/allimg/20210107/1-21010G0095IU.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '130', '0', '', '0', '', '', '在仿站时，我们常常会自定义很多字段，那么如何在首页调用呢，下面给出方法：一、指定channelid属性（channelid=‘17‘ 17是指内容模型里面指定的模型ID) 二、指定要调用出来的字段ad', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526552685', '1610615827');
-INSERT INTO `ey_archives` VALUES ('12', '10', '1', '1', '一文读懂互联网女皇和她的报告：互联网领域的投资圣经、选股指南', '/abc/uploads/allimg/20210107/1-21010G0101L43.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '267', '0', '', '0', '', '', '北京时间 5 月 31 日凌晨，有“互联网女皇”之称的玛丽·米克尔发布了 2018 年的互联网趋势报告，这也是她第 23 年公布互联网报告。每年的互联网女皇报告几乎都会成为每个互联网创业者的必读报告。那么，互联网女皇是谁?为什么她的报告会如此受关注呢', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526552714', '1610615823');
-INSERT INTO `ey_archives` VALUES ('13', '12', '1', '0', '网站建设的五大核心要素', '/abc/uploads/allimg/20210107/1-21010G01035129.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '160', '0', '', '0', 'SEO标', 'O关键', 'SEO描述', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526608216', '1610615818');
-INSERT INTO `ey_archives` VALUES ('14', '10', '1', '0', '网站建设，静态页面和动态页面如何选择', '/abc/uploads/allimg/20190114/1621fb9e84a97e78b1c1cac6ec6b37bd.png', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '151', '0', '', '0', '', '', '网站建设，静态页面和动态页面如何选择　　电商网站建设为什么要使用静态页面制作。我们都知道，网站制作有分为静态页面制作和动态网页制作，那么建设电商网站采用哪种网站设计技术更好呢?　　我们建设网站最终目的', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526609496', '1610615811');
-INSERT INTO `ey_archives` VALUES ('19', '12', '1', '0', '从三方面完美的体验企业网站的核心价值', '/abc/uploads/allimg/20210107/1-21010G011414W.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '146', '0', '', '0', '', '', '从三方面完美的体验企业网站的核心价值　　随着互联网的迅猛发展，一个企业的发展离不开互联网的发展，企业注重企业网站建设，那么必然会给其带来不错的效果。企业网站建设其核心价值直接体现在网站对于用户和商家而', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526610848', '1610615806');
-INSERT INTO `ey_archives` VALUES ('20', '11', '1', '0', 'CMS是如何应运而生的？', '/abc/uploads/allimg/20210107/1-21010G0120L29.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '180', '0', '', '0', '', '', '随着网络应用的丰富和发展，很多网站往往不能迅速跟进大量信息衍生及业务模式变革的脚步，常常需要花费许多时间、人力和物力来处理信息更新和维护工作；遇到网站扩充的时候，整合内外网及分支网站的工作就变得更加复', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526611606', '1610615801');
-INSERT INTO `ey_archives` VALUES ('21', '11', '1', '0', '网站设计与SEO的关系，高手是从这4个维度分析的！', '/abc/uploads/allimg/20210107/1-21010G012205c.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '296', '0', '', '0', '', '', 'SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的SEO最佳做法，它的排名将会受到影响，从而会导致真正', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526611744', '1610615796');
-INSERT INTO `ey_archives` VALUES ('27', '24', '2', '0', '华为HUAWEI NOTE 8', '/abc/uploads/allimg/20190319/ef3caff1fe91f367fe4939d664a8a5da.jpg', '0', '0', '0', '1', '0', '1', '0', '0', '0', 'admin', '289', '0', '', '0', '', '', '全向录音/指向回放、定向免提、指关节手势、分屏多窗口、语音控制、情景智能、单手操作、杂志锁屏、手机找回、无线WIFI打印、学生模式、多屏互动、运动健康全向录音/指向回放、定向免提、指关节手势、分屏多窗', '1', '1909.00', '0', '0.00', '0', '2991', '1', '0', 'view_product.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526613043', '1610615791');
-INSERT INTO `ey_archives` VALUES ('28', '26', '2', '0', '小米笔记本Air 13.3', '/abc/uploads/allimg/20190114/66109e989148356eadb4ff1eee285826.jpg', '0', '0', '0', '1', '0', '1', '0', '0', '0', 'admin', '149', '0', '', '0', '', '', '轻薄全金属机身/256GBSSD/第八代Intel酷睿i5处理器/FHD全贴合屏幕/指纹解锁/office激活不支持7天无理由退货...', '2', '4530.00', '0', '0.00', '0', '2997', '1', '0', 'view_product.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526613271', '1610615782');
-INSERT INTO `ey_archives` VALUES ('29', '27', '2', '0', ' 小米蓝牙项圈耳机', '/abc/uploads/allimg/20190114/252a53e6fbc8f441b2570f755d2bbeb8.jpg', '0', '0', '0', '1', '0', '1', '0', '0', '0', 'admin', '211', '0', '', '0', '', '', '特性M3平板定制AKG品牌高保真耳机，配合M3平板享受HiFi音质...', '3', '198.00', '0', '0.00', '0', '2997', '1', '0', 'view_product.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526613739', '1610615773');
-INSERT INTO `ey_archives` VALUES ('30', '5', '4', '0', '工程机械推土挖掘机类网站模板', '/abc/uploads/allimg/20190114/4873105f54a14f3785047bd8ecc8b5ac.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '261', '0', '', '0', '', '', '织梦新内核开发的模板，该模板属于企业通用、HTML5响应式、工程机械、挖掘机、推土机类企业使用，一款适用性很强的模板，基本可以适合各行业的企业网站！', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', 'view_download.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526614069', '1610615767');
-INSERT INTO `ey_archives` VALUES ('31', '5', '4', '0', ' dom编程-window对象', '/abc/uploads/allimg/20190731/81e62e05fe7cdfb5e9abc50852047dcf.gif', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'admin', '248', '0', '', '0', '', '', 'DOM编程－window对象 回顾 请简述一下脚本执行的原理。 JavaScript中有哪些控制语句及其含义？ 如何创建一个有参函数以及如何调用它？ 预习检查 解释名词“根节点”、“子节点”和“相邻节点“。 window对象常用的属性有哪些？ 请解', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', 'view_download.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1526614168', '1610615761');
-INSERT INTO `ey_archives` VALUES ('40', '12', '1', '0', '社交媒体时代，如何对粉丝估值？', '/abc/uploads/allimg/20210107/1-21010G01311136.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '242', '0', '', '0', '', '', '约翰·奎尔奇说，社交媒体有很多营销挑战，如何为粉丝来估值是一个大问题。从营销角度来思考，要关注强纽带和弱纽带。你可能以为，强纽带的密友产生最大的营销影响，研究发现不是这样的，产生更大的影响反而是跟你更疏远的人。演讲者｜约翰·奎尔奇（哈佛商学院教授，曾', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', 'view_article.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1527824837', '1610615736');
-INSERT INTO `ey_archives` VALUES ('37', '24', '2', '0', '华为无线快充手机', '/abc/uploads/allimg/20190319/8a405e72e2acf9c5a29da7341a0eff89.jpg', '0', '0', '0', '1', '0', '1', '0', '0', '0', 'admin', '300', '0', '', '0', '', '', '全身都是科技亮点！7nm麒麟芯片，问鼎性能巅峰，4000万超广角徕卡三摄，随手捕捉大场面', '1', '3109.00', '0', '0.00', '0', '2997', '1', '0', 'view_product.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1527507844', '1610615751');
-INSERT INTO `ey_archives` VALUES ('38', '11', '1', '0', '商梦网校：单页SEO站群技术，用10个网站优化排名！', '/abc/uploads/allimg/20210107/1-21010G012425K.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '120', '0', '', '0', '', '', 'SEO很多伙伴都了解，就是搜索引擎排名优化，通过对网站内部和外部进行优化当用户搜索相应关键词时网站能够排名在搜索引擎前面，具体可以百度搜索“网络营销课程”查看商梦网校操作的案例！但单页SEO很多伙伴可能会有点陌生，单页SEO是将单页网站与内容内容结合', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1527555069', '1610615746');
-INSERT INTO `ey_archives` VALUES ('105', '66', '3', '0', '数码蓝牙耳机产品渲染', '/abc/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '281', '0', '', '0', '', '', 'SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。相反地，如果将', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', 'view_images.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1609986111', '1610615570');
-INSERT INTO `ey_archives` VALUES ('41', '12', '1', '0', '《颠覆营销:大数据时代的商业革命》：大数据“多即少，少即多”各种行销手段早已令人眼花缭乱', '/abc/uploads/allimg/20210107/1-21010G0132R20.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '224', '0', '', '0', '', '', '各种行销手段早已令人眼花缭乱，但究其本质都是在研究客户（消费者），研究客户的所想、所需，使产品或服务有的放矢。大数据时代又给它赋予了新名词：精准营销。大数据最先应用的领域多为面对客户的行业，最先应用的情景也多为精准营销。“酒好也怕巷子深”，产品或服务', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', 'view_article.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1527825125', '1610615730');
-INSERT INTO `ey_archives` VALUES ('42', '64', '3', '0', 'VIVO X27 手机摄影', '/uploads/allimg/20190808/17268e40477444ecbf11bcb643f321c2.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '261', '0', '', '0', '', '', 'SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。相反地，如果将', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', 'view_images.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1531731387', '1565234124');
-INSERT INTO `ey_archives` VALUES ('43', '64', '3', '0', '3C数码蓝牙耳机产品渲染', '/abc/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '279', '0', '', '0', '', '', 'SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。相反地，如果将', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', 'view_images.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1531732591', '1610615719');
-INSERT INTO `ey_archives` VALUES ('44', '64', '3', '0', '喷油耳机 建模渲染', '/abc/uploads/allimg/20190808/45b6f3f95d30a97cfa4a83d315b5c4f1.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '315', '0', '', '0', '', '', 'SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。相反地，如果将', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', 'view_images.htm', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '1531732811', '1610615714');
-INSERT INTO `ey_archives` VALUES ('82', '23', '9', '0', '业务推广专员', '', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '261', '0', '', '0', '', '', '工作内容：1、负责公司手机游戏产品的在线推广；2、做好每天的推广统计，定制有效的投放策略并执行；3、完成每天的业绩要求，只要你努力，月入过万不是梦职位要求：1学历不限，欢迎优秀应届生（优秀者可放宽）；男女不限，19~24岁2.亲和力强、沟通流畅、重点', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1563528028', '1563528211');
-INSERT INTO `ey_archives` VALUES ('83', '23', '9', '0', '网络编辑员', '', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '470', '0', '', '0', '', '', '岗位职责：1、负责网站相关栏目、信息的搜集、编辑、发布等工作。2、完成信息内容的策划和日常信息的更新与维护。3、编写网站宣传资料及相关产品信息。4、配合部门编辑策划推广活动。5、部门总监下发的其他任务。任职资格：1、编辑、新闻、中文等相关专业优先，大', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1563528241', '1563528292');
-INSERT INTO `ey_archives` VALUES ('84', '9', '1', '0', '荣誉证书一', '/abc/uploads/allimg/20190722/7a6063154f58f9b76042c01674cfeb34.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '191', '0', '', '0', '', '', '', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1563761544', '1610615703');
-INSERT INTO `ey_archives` VALUES ('85', '9', '1', '0', '荣誉证书二', '/abc/uploads/allimg/20190722/9bcc063da2a8b6cfa394f8ce55264c86.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '215', '0', '', '0', '', '', '', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1563761561', '1610615688');
-INSERT INTO `ey_archives` VALUES ('86', '9', '1', '0', '荣誉证书三', '/abc/uploads/allimg/20190722/72c23e63ccabc9e3f42b16dfab17cf4e.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '245', '0', '', '0', '', '', '', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1563761575', '1610615683');
-INSERT INTO `ey_archives` VALUES ('87', '9', '1', '0', '荣誉证书四', '/abc/uploads/allimg/20190722/a519a45ce1f695da6bb656fb6f4ddcb5.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '182', '0', '', '0', '', '', '', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1563761589', '1610615678');
-INSERT INTO `ey_archives` VALUES ('89', '20', '2', '0', 'Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机', '/abc/uploads/allimg/20190731/582042862ba0d06c9408a9a1e669a067.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '233', '0', '', '0', '', '', '主体品牌Apple型号iPhone 8 Plus入网型号A1899上市年份2017年上市月份以官网信息为准基本信息机身颜色深空灰色机身长度（mm）158.4机身宽度（mm）78.1机身厚度（mm）7.5机身重量（g）202输入方式触控运营商标志或内容', '1', '1599.00', '0', '0.00', '0', '99999', '1', '0', 'view_product.htm', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1564539099', '1610615667');
-INSERT INTO `ey_archives` VALUES ('90', '24', '2', '0', '小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机', '/abc/uploads/allimg/20190731/c4539460b957fea39a9db19e61eb0afe.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '132', '0', '', '0', '', '', '主体品牌小米（MI）型号小米8屏幕指纹版入网型号以官网信息为准上市年份2018年上市月份9月基本信息机身颜色黑色机身长度（mm）154.9机身宽度（mm）74.8机身厚度（mm）7.6机身重量（g）177运营商标志或内容无机身材质分类玻璃后盖操作系统', '1', '1709.00', '0', '0.00', '0', '2997', '1', '0', 'view_product.htm', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1564539940', '1610615660');
-INSERT INTO `ey_archives` VALUES ('91', '5', '4', '0', '计算机软件系统故障及维护', '/abc/uploads/allimg/20190731/0c8845e11a94b0f765ab24259c5b06b9.gif', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '276', '0', '', '0', '', '', 'WindowsXP操作系统原理使用系统维护工具系统启动故障的修复病毒防治的一般方法循辱魂币禾赫促陛醛放忆蛔睡钱佯回改波坏敏寄锈掳长提每臣传遥抄个似计算机软件系统故障及维护计算机软件系统故障及维护13.1.1WindowsXP的架构特点WindowsX', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', 'view_download.htm', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1564565735', '1610615652');
-INSERT INTO `ey_archives` VALUES ('92', '5', '4', '0', '计算机软件系统故障及维护2', '/abc/uploads/allimg/20190808/682be7153d02d14890144bef217149d1.jpg', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'admin', '236', '0', '', '0', '', '', 'Windows操作系统只能使用2 GB,64位可使用4 GB)。接下来,NTLDR启动内建的微型文件系统驱动通过这个步骤,使NTLDR可以识别每一个用NTFS或FAT文件系统格式操作系统只能使用2 GB,64位可使用4 GB)', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', 'view_download.htm', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '1', '', '1564566264', '1610615642');
-INSERT INTO `ey_archives` VALUES ('93', '64', '3', '0', '鼠标封面设计', '/uploads/allimg/20190808/b1f94bd8a0feba4062fa19d795099af4.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '264', '0', '', '0', '', '', '软件开发是根据用户要求建造出软件系统或者系统中的软件部分的过程。软件开发是一项包括需求捕捉，需求分析，设计，实现和测试的系统工程。软件一般是用某种程序设计语言来实现的。通常采用软件开发工具可以进行开发。软件分为系统软件和应用软件。 软件并不', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1565161115', '1565232857');
-INSERT INTO `ey_archives` VALUES ('94', '23', '9', '0', '网络推广', '', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '227', '0', '', '0', '', '', '1、负责客户开发、提供客户服务、公司服务的推广、建立与维护客户关系；2、根据市场营销计划和个人销售目标，完成各阶段销售目标；3、进行市场调研，确定目标市场，收集分析竞争对象信息，制订、执行销售对策；4、与内部相关部门建立并维持良好的协作关系，以客户和', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1565225494', '1565225547');
-INSERT INTO `ey_archives` VALUES ('95', '23', '9', '0', '网络销售', '', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '174', '0', '', '0', '', '', '岗位职责：1、利用网络进行公司产品的销售及推广2、了解网络销售，有信心和良好的学习能力3、完成团队目标4、通过网络进行渠道开发和业务拓展5、熟悉互联网络，熟练使用网络交流工具和各种办公软件6、有较强的沟通能力任职要求：1、年龄18～25之间，有空杯心', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1565225576', '1565225608');
-INSERT INTO `ey_archives` VALUES ('96', '23', '9', '0', '网络安全专员', '', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '212', '0', '', '0', '', '', '任职要求： 1、年龄25-35岁，本科及以上学历，网络安全相关专业，持网络安全证书，2年以上同岗位工作经验； 2、熟知防火墙、入侵检测、网络流量识别控制等信息安全产品相关技术；熟悉网络协议、网络编程及相关网络产品开发技术； 3、具备良好的安全意识能力', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1565225609', '1565225638');
-INSERT INTO `ey_archives` VALUES ('97', '23', '9', '0', '网络运营专员', '', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '263', '0', '', '0', '', '', '岗位职责1、组织参与重要项目的创意构思、文案及客户提案, 给予前期提案、设计创意说明及后期结案报告等服务；2、执行并监督所负责项目的创意构思和文案；3、稿件思路清晰，能够完成稿件写作思路规划；4、协助领导进行创意提案，保证工作的顺利推进；5、独立撰写', '0', '0.00', '0', '0.00', '0', '99999', '1', '0', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1565225663', '1565225697');
-INSERT INTO `ey_archives` VALUES ('98', '26', '2', '0', 'MIIX520 二合一笔记本12.2英寸 i7', '/abc/uploads/allimg/20190808/7dd05a89099c482a51be7faf1bb38ad4.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '133', '0', '', '0', '', '', '', '2', '6939.00', '0', '0.00', '0', '2997', '1', '0', 'view_product.htm', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1565228564', '1610615629');
-INSERT INTO `ey_archives` VALUES ('99', '26', '2', '0', 'MIIX 520 酷睿i5笔记本', '/abc/uploads/allimg/20190808/821fcaa266d291b4f504fb9a1d412c1c.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '169', '0', '', '0', '', '', '', '2', '5239.00', '0', '0.00', '0', '2997', '1', '0', 'view_product.htm', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1565228905', '1610615619');
-INSERT INTO `ey_archives` VALUES ('100', '26', '2', '0', '小新 Air 超轻薄笔记本', '/abc/uploads/allimg/20190808/a4b1ab346ae389e638f4a424b7396ee2.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '281', '0', '', '0', '', '', '', '2', '5499.00', '0', '0.00', '0', '2997', '1', '0', 'view_product.htm', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1565229115', '1610615609');
-INSERT INTO `ey_archives` VALUES ('101', '27', '2', '0', '联想 X1无线运动蓝牙耳机', '/abc/uploads/allimg/20190808/3ade68e134d3f8fbbd3401c545541106.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '110', '0', '', '0', '', '', '', '3', '99.00', '0', '0.00', '0', '2997', '1', '0', 'view_product.htm', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1565229341', '1610615602');
-INSERT INTO `ey_archives` VALUES ('102', '28', '2', '0', '联想智能音箱MINI', '/abc/uploads/allimg/20190808/989d19deb2377e199ec63d5ef9244be8.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '223', '0', '', '0', '', '', 'CMS人性化推荐 它更懂你；可轻松实现联想SIOT设备控制', '3', '319.00', '0', '0.00', '0', '2997', '1', '0', 'view_product.htm', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1565229484', '1610615586');
-INSERT INTO `ey_archives` VALUES ('103', '28', '2', '0', '联想智能音箱G1', '/abc/uploads/allimg/20190808/13fba5d0f2454c4b8fee4ada1d3fb39b.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', 'admin', '172', '0', '', '0', '', '', '怦然心动的多彩生活 | 贴心的智能体验', '3', '539.00', '0', '0.00', '0', '2997', '1', '0', 'view_product.htm', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '', '1565229770', '1610615580');
+INSERT INTO `ey_archives` VALUES ('1', '1', '', '6', '0', '关于我们', '', '', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '', '0', '0', '', '0', '', '', '', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526539465', '1690181692', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('2', '8', '', '6', '0', '公司简介', '', '', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '', '0', '0', '', '0', '', '', '', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526540452', '1609929701', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('4', '11', '', '1', '1', 'seo是什么？', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G00910428.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '132', '0', '', '0', '', '', '在了解seo是什么意思之后，才能学习seo。什么是seo，从官方解释来看，seo=Search（搜索）Engine（引擎）Optimization（优化），即搜索引擎优化。使用过百度或其他搜索引擎，在', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526545072', '1610615837', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('39', '12', '', '1', '0', '回顾中国饮料40年发展史，总有一款是你儿时记忆的味道', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G0125Ia.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '186', '0', '', '0', '', '', '对于记忆来说，味道往往是最美的，儿时喝过的饮料，至今回想起来依然觉得津津有味。今天是六一儿童节，青山资本梳理了中国40年来饮料发展的简史，权当节日的小消遣，顺便看看能否找到你记忆深处的那个味道？第一阶段：国人味蕾的开启时代百事可乐在华第一家工厂开业1', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1527824652', '1610615741', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('104', '66', '', '3', '0', '手机摄影', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/17268e40477444ecbf11bcb643f321c2.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '261', '0', '', '0', '', '', 'SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。相反地，如果将', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1609986111', '1610615576', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('9', '10', '', '1', '0', '用户界面设计和体验设计的差别', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G0093N30.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '169', '0', '', '0', '', '', '有时候我们需要获取图集中的第一张图片，下面给出解决办法： 第一步：修改include/extend.func.php 添加  // 提取图集第一张大图', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526552582', '1610615832', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('10', '10', '', '1', '0', '新手科普文！什么是用户界面和体验设计？', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G0095IU.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '130', '0', '', '0', '', '', '在仿站时，我们常常会自定义很多字段，那么如何在首页调用呢，下面给出方法：一、指定channelid属性（channelid=‘17‘ 17是指内容模型里面指定的模型ID) 二、指定要调用出来的字段ad', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526552685', '1610615827', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('12', '10', '', '1', '1', '一文读懂互联网女皇和她的报告：互联网领域的投资圣经、选股指南', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G0101L43.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '267', '0', '', '0', '', '', '北京时间 5 月 31 日凌晨，有“互联网女皇”之称的玛丽·米克尔发布了 2018 年的互联网趋势报告，这也是她第 23 年公布互联网报告。每年的互联网女皇报告几乎都会成为每个互联网创业者的必读报告。那么，互联网女皇是谁?为什么她的报告会如此受关注呢', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526552714', '1610615823', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('13', '12', '', '1', '0', '网站建设的五大核心要素', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G01035129.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '160', '0', '', '0', 'SEO标', 'O关键', 'SEO描述', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526608216', '1610615818', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('14', '10', '', '1', '0', '网站建设，静态页面和动态页面如何选择', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190114/1621fb9e84a97e78b1c1cac6ec6b37bd.png', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '151', '0', '', '0', '', '', '网站建设，静态页面和动态页面如何选择　　电商网站建设为什么要使用静态页面制作。我们都知道，网站制作有分为静态页面制作和动态网页制作，那么建设电商网站采用哪种网站设计技术更好呢?　　我们建设网站最终目的', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526609496', '1610615811', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('19', '12', '', '1', '0', '从三方面完美的体验企业网站的核心价值', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G011414W.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '146', '0', '', '0', '', '', '从三方面完美的体验企业网站的核心价值　　随着互联网的迅猛发展，一个企业的发展离不开互联网的发展，企业注重企业网站建设，那么必然会给其带来不错的效果。企业网站建设其核心价值直接体现在网站对于用户和商家而', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526610848', '1610615806', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('20', '11', '', '1', '0', 'CMS是如何应运而生的？', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G0120L29.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '180', '0', '', '0', '', '', '随着网络应用的丰富和发展，很多网站往往不能迅速跟进大量信息衍生及业务模式变革的脚步，常常需要花费许多时间、人力和物力来处理信息更新和维护工作；遇到网站扩充的时候，整合内外网及分支网站的工作就变得更加复', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526611606', '1610615801', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('21', '11', '', '1', '0', '网站设计与SEO的关系，高手是从这4个维度分析的！', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G012205c.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '296', '0', '', '0', '', '', 'SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的SEO最佳做法，它的排名将会受到影响，从而会导致真正', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526611744', '1610615796', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('27', '24', '', '2', '0', '华为HUAWEI NOTE 8', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190319/ef3caff1fe91f367fe4939d664a8a5da.jpg', '0', '0', '0', '1', '0', '1', '0', '0', '0', '', 'admin', '289', '0', '', '0', '', '', '全向录音/指向回放、定向免提、指关节手势、分屏多窗口、语音控制、情景智能、单手操作、杂志锁屏、手机找回、无线WIFI打印、学生模式、多屏互动、运动健康全向录音/指向回放、定向免提、指关节手势、分屏多窗', '1', '0', '0', '1909.00', '0.00', '0', '0', '0.00', '0', '0', '0', '2991', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526613043', '1610615791', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('28', '26', '', '2', '0', '小米笔记本Air 13.3', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190114/66109e989148356eadb4ff1eee285826.jpg', '0', '0', '0', '1', '0', '1', '0', '0', '0', '', 'admin', '149', '0', '', '0', '', '', '轻薄全金属机身/256GBSSD/第八代Intel酷睿i5处理器/FHD全贴合屏幕/指纹解锁/office激活不支持7天无理由退货...', '2', '0', '0', '4530.00', '0.00', '0', '0', '0.00', '0', '0', '0', '2997', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526613271', '1610615782', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('29', '27', '', '2', '0', ' 小米蓝牙项圈耳机', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190114/252a53e6fbc8f441b2570f755d2bbeb8.jpg', '0', '0', '0', '1', '0', '1', '0', '0', '0', '', 'admin', '211', '0', '', '0', '', '', '特性M3平板定制AKG品牌高保真耳机，配合M3平板享受HiFi音质...', '3', '0', '0', '198.00', '0.00', '0', '0', '0.00', '0', '0', '0', '2997', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526613739', '1610615773', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('30', '5', '', '4', '0', '工程机械推土挖掘机类网站模板', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190114/4873105f54a14f3785047bd8ecc8b5ac.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '262', '0', '', '0', '', '', '易优新内核开发的模板，该模板属于企业通用、HTML5响应式、工程机械、挖掘机、推土机类企业使用，一款适用性很强的模板，基本可以适合各行业的企业网站！', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526614069', '1610615767', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('31', '5', '', '4', '0', ' dom编程-window对象', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/81e62e05fe7cdfb5e9abc50852047dcf.gif', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', 'admin', '249', '0', '', '0', '', '', 'DOM编程－window对象 回顾 请简述一下脚本执行的原理。 JavaScript中有哪些控制语句及其含义？ 如何创建一个有参函数以及如何调用它？ 预习检查 解释名词“根节点”、“子节点”和“相邻节点“。 window对象常用的属性有哪些？ 请解', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1526614168', '1610615761', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('40', '12', '', '1', '0', '社交媒体时代，如何对粉丝估值？', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G01311136.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '242', '0', '', '0', '', '', '约翰·奎尔奇说，社交媒体有很多营销挑战，如何为粉丝来估值是一个大问题。从营销角度来思考，要关注强纽带和弱纽带。你可能以为，强纽带的密友产生最大的营销影响，研究发现不是这样的，产生更大的影响反而是跟你更疏远的人。演讲者｜约翰·奎尔奇（哈佛商学院教授，曾', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1527824837', '1610615736', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('37', '24', '', '2', '0', '华为无线快充手机', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190319/8a405e72e2acf9c5a29da7341a0eff89.jpg', '0', '0', '0', '1', '0', '1', '0', '0', '0', '', 'admin', '300', '0', '', '0', '', '', '全身都是科技亮点！7nm麒麟芯片，问鼎性能巅峰，4000万超广角徕卡三摄，随手捕捉大场面', '1', '0', '0', '3109.00', '0.00', '0', '0', '0.00', '0', '0', '0', '2997', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1527507844', '1610615751', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('38', '11', '', '1', '0', '商梦网校：单页SEO站群技术，用10个网站优化排名！', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G012425K.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '121', '0', '', '0', '', '', 'SEO很多伙伴都了解，就是搜索引擎排名优化，通过对网站内部和外部进行优化当用户搜索相应关键词时网站能够排名在搜索引擎前面，具体可以百度搜索“网络营销课程”查看商梦网校操作的案例！但单页SEO很多伙伴可能会有点陌生，单页SEO是将单页网站与内容内容结合', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1527555069', '1610615746', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('105', '66', '', '3', '0', '数码蓝牙耳机产品渲染', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '282', '0', '', '0', '', '', 'SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。相反地，如果将', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1609986111', '1610615570', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('41', '12', '', '1', '0', '《颠覆营销:大数据时代的商业革命》：大数据“多即少，少即多”各种行销手段早已令人眼花缭乱', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G0132R20.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '227', '0', '', '0', '', '', '各种行销手段早已令人眼花缭乱，但究其本质都是在研究客户（消费者），研究客户的所想、所需，使产品或服务有的放矢。大数据时代又给它赋予了新名词：精准营销。大数据最先应用的领域多为面对客户的行业，最先应用的情景也多为精准营销。“酒好也怕巷子深”，产品或服务', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1527825125', '1610615730', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('42', '64', '', '3', '0', 'VIVO X27 手机摄影', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/17268e40477444ecbf11bcb643f321c2.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '261', '0', '', '0', '', '', 'SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。相反地，如果将', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1531731387', '1565234124', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('43', '64', '', '3', '0', '3C数码蓝牙耳机产品渲染', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '279', '0', '', '0', '', '', 'SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。相反地，如果将', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1531732591', '1610615719', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('44', '64', '', '3', '0', '喷油耳机 建模渲染', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/45b6f3f95d30a97cfa4a83d315b5c4f1.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '315', '0', '', '0', '', '', 'SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。相反地，如果将', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1531732811', '1610615714', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('84', '9', '', '1', '0', '荣誉证书一', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190722/7a6063154f58f9b76042c01674cfeb34.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '191', '0', '', '0', '', '', '', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1563761544', '1610615703', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('85', '9', '', '1', '0', '荣誉证书二', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190722/9bcc063da2a8b6cfa394f8ce55264c86.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '215', '0', '', '0', '', '', '', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1563761561', '1610615688', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('86', '9', '', '1', '0', '荣誉证书三', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190722/72c23e63ccabc9e3f42b16dfab17cf4e.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '245', '0', '', '0', '', '', '', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1563761575', '1610615683', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('87', '9', '', '1', '0', '荣誉证书四', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190722/a519a45ce1f695da6bb656fb6f4ddcb5.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '182', '0', '', '0', '', '', '', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1563761589', '1610615678', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('89', '20', '', '2', '0', 'Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/582042862ba0d06c9408a9a1e669a067.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '233', '0', '', '0', '', '', '主体品牌Apple型号iPhone 8 Plus入网型号A1899上市年份2017年上市月份以官网信息为准基本信息机身颜色深空灰色机身长度（mm）158.4机身宽度（mm）78.1机身厚度（mm）7.5机身重量（g）202输入方式触控运营商标志或内容', '1', '0', '0', '1599.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1564539099', '1610615667', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('90', '24', '', '2', '0', '小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/c4539460b957fea39a9db19e61eb0afe.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '132', '0', '', '0', '', '', '主体品牌小米（MI）型号小米8屏幕指纹版入网型号以官网信息为准上市年份2018年上市月份9月基本信息机身颜色黑色机身长度（mm）154.9机身宽度（mm）74.8机身厚度（mm）7.6机身重量（g）177运营商标志或内容无机身材质分类玻璃后盖操作系统', '1', '0', '0', '1709.00', '0.00', '0', '0', '0.00', '0', '0', '0', '2997', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1564539940', '1610615660', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('91', '5', '', '4', '0', '计算机软件系统故障及维护', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/0c8845e11a94b0f765ab24259c5b06b9.gif', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '276', '0', '', '0', '', '', 'WindowsXP操作系统原理使用系统维护工具系统启动故障的修复病毒防治的一般方法循辱魂币禾赫促陛醛放忆蛔睡钱佯回改波坏敏寄锈掳长提每臣传遥抄个似计算机软件系统故障及维护计算机软件系统故障及维护13.1.1WindowsXP的架构特点WindowsX', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1564565735', '1610615652', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('92', '5', '', '4', '0', '计算机软件系统故障及维护2', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/682be7153d02d14890144bef217149d1.jpg', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', 'admin', '238', '0', '', '0', '', '', 'Windows操作系统只能使用2 GB,64位可使用4 GB)。接下来,NTLDR启动内建的微型文件系统驱动通过这个步骤,使NTLDR可以识别每一个用NTFS或FAT文件系统格式操作系统只能使用2 GB,64位可使用4 GB)', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '1', '', '0', '0', '0', '1564566264', '1610615642', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('93', '64', '', '3', '0', '鼠标封面设计', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/b1f94bd8a0feba4062fa19d795099af4.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '264', '0', '', '0', '', '', '软件开发是根据用户要求建造出软件系统或者系统中的软件部分的过程。软件开发是一项包括需求捕捉，需求分析，设计，实现和测试的系统工程。软件一般是用某种程序设计语言来实现的。通常采用软件开发工具可以进行开发。软件分为系统软件和应用软件。 软件并不', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '99999', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1565161115', '1565232857', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('106', '30', '', '6', '0', '联系我们', '', '', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '', '0', '0', '', '0', '', '', '', '0', '0', '0', '0.00', '0.00', '0', '0', '0.00', '0', '0', '0', '0', '1', '0', '1', '', '1', '100', 'cn', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1690166673', '1690166673', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('98', '26', '', '2', '0', 'MIIX520 二合一笔记本12.2英寸 i7', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/7dd05a89099c482a51be7faf1bb38ad4.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '133', '0', '', '0', '', '', '', '2', '0', '0', '6939.00', '0.00', '0', '0', '0.00', '0', '0', '0', '2997', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1565228564', '1610615629', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('99', '26', '', '2', '0', 'MIIX 520 酷睿i5笔记本', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/821fcaa266d291b4f504fb9a1d412c1c.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '169', '0', '', '0', '', '', '', '2', '0', '0', '5239.00', '0.00', '0', '0', '0.00', '0', '0', '0', '2997', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1565228905', '1610615619', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('100', '26', '', '2', '0', '小新 Air 超轻薄笔记本', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/a4b1ab346ae389e638f4a424b7396ee2.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '281', '0', '', '0', '', '', '', '2', '0', '0', '5499.00', '0.00', '0', '0', '0.00', '0', '0', '0', '2997', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1565229115', '1610615609', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('101', '27', '', '2', '0', '联想 X1无线运动蓝牙耳机', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/3ade68e134d3f8fbbd3401c545541106.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '110', '0', '', '0', '', '', '', '3', '0', '0', '99.00', '0.00', '0', '0', '0.00', '0', '0', '0', '2997', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1565229341', '1610615602', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('102', '28', '', '2', '0', '联想智能音箱MINI', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/989d19deb2377e199ec63d5ef9244be8.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '223', '0', '', '0', '', '', 'CMS人性化推荐 它更懂你；可轻松实现联想SIOT设备控制', '3', '0', '0', '319.00', '0.00', '0', '0', '0.00', '0', '0', '0', '2997', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1565229484', '1610615586', '0', '1', '1', '');
+INSERT INTO `ey_archives` VALUES ('103', '28', '', '2', '0', '联想智能音箱G1', '', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/13fba5d0f2454c4b8fee4ada1d3fb39b.jpg', '0', '0', '0', '0', '0', '1', '0', '0', '0', '', 'admin', '172', '0', '', '0', '', '', '怦然心动的多彩生活 | 贴心的智能体验', '3', '0', '0', '539.00', '0.00', '0', '0', '0.00', '0', '0', '0', '2997', '1', '0', '1', '', '1', '100', 'cn', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0', '0', '0', '1565229770', '1610615580', '0', '1', '1', '');
 
 -- -----------------------------
 -- Table structure for `ey_archives_flag`
@@ -273,13 +375,13 @@ CREATE TABLE `ey_archives_flag` (
 -- -----------------------------
 INSERT INTO `ey_archives_flag` VALUES ('1', '头条', 'h', 'is_head', '1', '1', 'cn', '1606272350', '1606272350');
 INSERT INTO `ey_archives_flag` VALUES ('2', '推荐', 'c', 'is_recom', '1', '2', 'cn', '1606272350', '1606272350');
-INSERT INTO `ey_archives_flag` VALUES ('3', '特荐', 'a', 'is_special', '1', '3', 'cn', '1606272350', '1606272350');
-INSERT INTO `ey_archives_flag` VALUES ('4', '加粗', 'b', 'is_b', '1', '4', 'cn', '1606272350', '1606272350');
-INSERT INTO `ey_archives_flag` VALUES ('5', '图片', 'p', 'is_litpic', '1', '5', 'cn', '1606272350', '1606272350');
-INSERT INTO `ey_archives_flag` VALUES ('6', '跳转', 'j', 'is_jump', '1', '6', 'cn', '1606272350', '1606272350');
-INSERT INTO `ey_archives_flag` VALUES ('7', '幻灯', 's', 'is_slide', '0', '7', 'cn', '1606272350', '1606272350');
+INSERT INTO `ey_archives_flag` VALUES ('3', '加推', 'a', 'is_special', '0', '3', 'cn', '1606272350', '1606272350');
+INSERT INTO `ey_archives_flag` VALUES ('4', '标粗', 'b', 'is_b', '0', '4', 'cn', '1606272350', '1606272350');
+INSERT INTO `ey_archives_flag` VALUES ('5', '有图', 'p', 'is_litpic', '1', '5', 'cn', '1606272350', '1606272350');
+INSERT INTO `ey_archives_flag` VALUES ('6', '外链', 'j', 'is_jump', '1', '6', 'cn', '1606272350', '1606272350');
+INSERT INTO `ey_archives_flag` VALUES ('7', '轮播', 's', 'is_slide', '0', '7', 'cn', '1606272350', '1606272350');
 INSERT INTO `ey_archives_flag` VALUES ('8', '滚动', 'r', 'is_roll', '0', '8', 'cn', '1606272350', '1606272350');
-INSERT INTO `ey_archives_flag` VALUES ('9', '最热', 'd', 'is_diyattr', '0', '9', 'cn', '1606272350', '1606272350');
+INSERT INTO `ey_archives_flag` VALUES ('9', '热文', 'd', 'is_diyattr', '0', '9', 'cn', '1606272350', '1606272350');
 
 -- -----------------------------
 -- Table structure for `ey_arcmulti`
@@ -301,66 +403,6 @@ CREATE TABLE `ey_arcmulti` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=58 DEFAULT CHARSET=utf8 COMMENT='多页标记存储数据表';
 
--- -----------------------------
--- Records of `ey_arcmulti`
--- -----------------------------
-INSERT INTO `ey_arcmulti` VALUES ('1', 'arclistf2a4757664ac7fcfdcf8be671b05a309', 'arclist', '', '3', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (3,20,24,25,21,26,22,27,28,29,3) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 3', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:1:\\\"3\\\";s:8:\\\"titlelen\\\";s:2:\\\"20\\\";s:7:\\\"infolen\\\";s:2:\\\"22\\\";s:6:\\\"typeid\\\";s:30:\\\"3,20,24,25,21,26,22,27,28,29,3\\\";}', '1563497171', '1563497261');
-INSERT INTO `ey_arcmulti` VALUES ('2', 'arcliste18e8e9ae2f28bbc276f84b4cfa1cc20', 'arclist', '', '3', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (20,24,25,20) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 3', 'a.sort_order asc, a.aid desc', '', '', 'a:5:{s:6:\\\"typeid\\\";s:13:\\\"$field.typeid\\\";s:3:\\\"row\\\";s:1:\\\"3\\\";s:8:\\\"titlelen\\\";s:2:\\\"20\\\";s:7:\\\"infolen\\\";s:2:\\\"22\\\";s:2:\\\"id\\\";s:6:\\\"field2\\\";}', '1563497171', '1563497261');
-INSERT INTO `ey_arcmulti` VALUES ('3', 'arclist6e38efb655ec8077ac057e8ede710cc2', 'arclist', '', '3', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (21,26,21) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 3', 'a.sort_order asc, a.aid desc', '', '', 'a:5:{s:6:\\\"typeid\\\";s:13:\\\"$field.typeid\\\";s:3:\\\"row\\\";s:1:\\\"3\\\";s:8:\\\"titlelen\\\";s:2:\\\"20\\\";s:7:\\\"infolen\\\";s:2:\\\"22\\\";s:2:\\\"id\\\";s:6:\\\"field2\\\";}', '1563497171', '1563497261');
-INSERT INTO `ey_arcmulti` VALUES ('4', 'arclist69886b691f3cb73ec088e82960c570d3', 'arclist', '', '3', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (22,27,28,29,22) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 3', 'a.sort_order asc, a.aid desc', '', '', 'a:5:{s:6:\\\"typeid\\\";s:13:\\\"$field.typeid\\\";s:3:\\\"row\\\";s:1:\\\"3\\\";s:8:\\\"titlelen\\\";s:2:\\\"20\\\";s:7:\\\"infolen\\\";s:2:\\\"22\\\";s:2:\\\"id\\\";s:6:\\\"field2\\\";}', '1563497171', '1563497261');
-INSERT INTO `ey_arcmulti` VALUES ('5', 'arclist1e0c928687c4ee0ef6f56bba67833123', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (11,11) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 4', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:1:\\\"4\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:7:\\\"infolen\\\";s:3:\\\"160\\\";s:6:\\\"typeid\\\";s:5:\\\"11,11\\\";}', '1563497171', '1563497261');
-INSERT INTO `ey_arcmulti` VALUES ('6', 'arclist24a73d0a30993ffa5758581ebd9dcdd3', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (12,12) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 4', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:1:\\\"4\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:7:\\\"infolen\\\";s:3:\\\"160\\\";s:6:\\\"typeid\\\";s:5:\\\"12,12\\\";}', '1563497171', '1563497261');
-INSERT INTO `ey_arcmulti` VALUES ('7', 'arclist5d5058c21066e560145b811503352441', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (3,20,24,25,21,26,22,27,28,29,3) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 4', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:1:\\\"4\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:7:\\\"infolen\\\";s:3:\\\"160\\\";s:6:\\\"typeid\\\";s:30:\\\"3,20,24,25,21,26,22,27,28,29,3\\\";}', '1563497171', '1563497261');
-INSERT INTO `ey_arcmulti` VALUES ('8', 'arclist2db1f317fabb3c9a6866ed9ee96f54a1', 'arclist', '', '8', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (3,20,24,25,21,26,22,27,28,29,3) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 8', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"8\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:30:\\\"3,20,24,25,21,26,22,27,28,29,3\\\";}', '1563500085', '1563500379');
-INSERT INTO `ey_arcmulti` VALUES ('9', 'arclist79d9069963de4b5e5d82be990b99e905', 'arclist', '', '8', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (20,24,25,20) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 8', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:6:\\\"typeid\\\";s:13:\\\"$field.typeid\\\";s:3:\\\"row\\\";s:1:\\\"8\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";}', '1563500446', '1566369132');
-INSERT INTO `ey_arcmulti` VALUES ('10', 'arclist4d066f52156e1a4efe0748654fa3b6ea', 'arclist', '', '8', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (21,26,21) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 8', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:6:\\\"typeid\\\";s:13:\\\"$field.typeid\\\";s:3:\\\"row\\\";s:1:\\\"8\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";}', '1563500446', '1566369132');
-INSERT INTO `ey_arcmulti` VALUES ('11', 'arclist8574c2aca2a5b22c50b15ef3bc7e1a33', 'arclist', '', '8', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (22,27,28,29,22) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 8', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:6:\\\"typeid\\\";s:13:\\\"$field.typeid\\\";s:3:\\\"row\\\";s:1:\\\"8\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";}', '1563500446', '1566369132');
-INSERT INTO `ey_arcmulti` VALUES ('12', 'arclist9fddb7407c081410e941aa19f0923b52', 'arclist', '', '8', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (2,10,11,12,2) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 8', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"8\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:12:\\\"2,10,11,12,2\\\";}', '1563501248', '1564556739');
-INSERT INTO `ey_arcmulti` VALUES ('13', 'arclistac104eb66a4eaa937221a93d44f94435', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (4,4) AND a.channel IN (3) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 4', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"4\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:3:\\\"4,4\\\";}', '1563502612', '1565081822');
-INSERT INTO `ey_arcmulti` VALUES ('14', 'arclistd207eb63dbc7b74cf6259da13d2e97b9', 'arclist', '', '10', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (13,13) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 10', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:2:\\\"10\\\";s:8:\\\"titlelen\\\";s:2:\\\"20\\\";s:6:\\\"typeid\\\";s:2:\\\"13\\\";}', '1563502998', '1565081822');
-INSERT INTO `ey_arcmulti` VALUES ('15', 'arclist47dc220d8dbfeb7c17b04fed59055adc', 'arclist', '', '3', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (24,24) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY rand() LIMIT 3', 'rand()', '', '', 'a:4:{s:3:\\\"row\\\";s:1:\\\"3\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:6:\\\"typeid\\\";s:5:\\\"24,24\\\";}', '1563517778', '1563517778');
-INSERT INTO `ey_arcmulti` VALUES ('16', 'arclist0febed8cab600f8b7593035770fff792', 'arclist', '', '3', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (27,27) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY rand() LIMIT 3', 'rand()', '', '', 'a:4:{s:3:\\\"row\\\";s:1:\\\"3\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:6:\\\"typeid\\\";s:5:\\\"27,27\\\";}', '1563518605', '1563518605');
-INSERT INTO `ey_arcmulti` VALUES ('17', 'arclist1f972a30c9f459309e43e87ca3cb6121', 'arclist', '', '5', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (12,12) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY rand() LIMIT 5', 'rand()', '', '', 'a:4:{s:5:\\\"limit\\\";s:3:\\\"0,5\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:6:\\\"typeid\\\";s:5:\\\"12,12\\\";}', '1563519320', '1563519320');
-INSERT INTO `ey_arcmulti` VALUES ('18', 'arclist99926dd7c30a868477fd17d16a81681d', 'arclist', '', '5', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.channel IN (1,2,3,4,9) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY rand() LIMIT 5', 'rand()', '', '', 'a:4:{s:5:\\\"limit\\\";s:3:\\\"0,5\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:6:\\\"typeid\\\";s:0:\\\"\\\";}', '1563520605', '1563762367');
-INSERT INTO `ey_arcmulti` VALUES ('19', 'arclistf8d0d499899593c6555a607bbb539040', 'arclist', '', '6', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (12,12) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.aid desc LIMIT 6', 'a.aid desc', '', '', 'a:4:{s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"6\\\";s:6:\\\"typeid\\\";s:5:\\\"12,12\\\";}', '1563520951', '1564561400');
-INSERT INTO `ey_arcmulti` VALUES ('20', 'arclistb5d6628401c13b0f1a9132863e811a4a', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (12,12) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.aid desc LIMIT 4', 'a.aid desc', '', '', 'a:4:{s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"4\\\";s:6:\\\"typeid\\\";s:5:\\\"12,12\\\";}', '1563520971', '1566369138');
-INSERT INTO `ey_arcmulti` VALUES ('21', 'arclist3c9fddda7d05cad277bdbd93402d9d22', 'arclist', '', '5', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (24,24) AND  (a.is_recom = 1)  AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.add_time desc LIMIT 5', 'a.add_time desc', '', '', 'a:5:{s:4:\\\"flag\\\";s:1:\\\"c\\\";s:7:\\\"orderby\\\";s:3:\\\"now\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"5\\\";s:6:\\\"typeid\\\";s:5:\\\"24,24\\\";}', '1563522655', '1563522655');
-INSERT INTO `ey_arcmulti` VALUES ('22', 'arclistea2c53d97a3dab716932b55304e9ee24', 'arclist', '', '5', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (3,20,24,25,21,26,22,27,28,29,3) AND  (a.is_recom = 1)  AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.add_time desc LIMIT 5', 'a.add_time desc', '', '', 'a:5:{s:4:\\\"flag\\\";s:1:\\\"c\\\";s:7:\\\"orderby\\\";s:3:\\\"now\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"5\\\";s:6:\\\"typeid\\\";s:1:\\\"3\\\";}', '1563522685', '1565756004');
-INSERT INTO `ey_arcmulti` VALUES ('23', 'arclistc734ae28fa130543e8506769264e84aa', 'arclist', '', '6', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (4,4) AND a.channel IN (3) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY rand() LIMIT 6', 'rand()', '', '', 'a:4:{s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"6\\\";s:6:\\\"typeid\\\";s:3:\\\"4,4\\\";}', '1563524659', '1563524997');
-INSERT INTO `ey_arcmulti` VALUES ('24', 'arclistbcfc777e0b75150b35450efa0e6550fc', 'arclist', '', '8', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (23,23) AND a.channel IN (9) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.aid desc LIMIT 8', 'a.aid desc', '', '', 'a:4:{s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"8\\\";s:6:\\\"typeid\\\";s:5:\\\"23,23\\\";}', '1563529284', '1564978558');
-INSERT INTO `ey_arcmulti` VALUES ('25', 'arclistd2ed60241171156d35617cfd6d145f51', 'arclist', '', '5', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (5,5) AND a.channel IN (4) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY rand() LIMIT 5', 'rand()', '', '', 'a:4:{s:6:\\\"typeid\\\";s:1:\\\"5\\\";s:5:\\\"limit\\\";s:3:\\\"0,5\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:7:\\\"orderby\\\";s:4:\\\"rand\\\";}', '1563534168', '1563758872');
-INSERT INTO `ey_arcmulti` VALUES ('26', 'arclist05d9a84635addf2046b9749be19a231a', 'arclist', '', '6', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (5,5) AND a.channel IN (4) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.aid desc LIMIT 6', 'a.aid desc', '', '', 'a:4:{s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"6\\\";s:6:\\\"typeid\\\";s:3:\\\"5,5\\\";}', '1563759870', '1565248541');
-INSERT INTO `ey_arcmulti` VALUES ('27', 'arclist4911e95ea34e622a2316fb5fd3a060d3', 'arclist', '', '6', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (11,11) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.aid desc LIMIT 6', 'a.aid desc', '', '', 'a:4:{s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"6\\\";s:6:\\\"typeid\\\";s:5:\\\"11,11\\\";}', '1563762324', '1564545300');
-INSERT INTO `ey_arcmulti` VALUES ('28', 'arclist8cdfe13915331df05c886ef2cec53b01', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (3,20,24,25,21,26,22,27,28,29,3) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 4', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"4\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:30:\\\"3,20,24,25,21,26,22,27,28,29,3\\\";}', '1563765202', '1565081609');
-INSERT INTO `ey_arcmulti` VALUES ('29', 'arclist620dab4fd1ea8e8a826d038fc8c76ab5', 'arclist', '', '5', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (2,10,11,12,2) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 5', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"5\\\";s:8:\\\"titlelen\\\";s:2:\\\"40\\\";s:6:\\\"typeid\\\";s:12:\\\"2,10,11,12,2\\\";}', '1563765202', '1564476617');
-INSERT INTO `ey_arcmulti` VALUES ('30', 'arclist3d6622ce1045a5890999a09ac5efe11a', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (23,23) AND a.channel IN (9) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 4', 'a.sort_order asc, a.aid desc', 'gzdd,xzdy', 'recruit_content', 'a:4:{s:3:\\\"row\\\";s:1:\\\"4\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:9:\\\"addfields\\\";s:9:\\\"gzdd,xzdy\\\";s:6:\\\"typeid\\\";s:5:\\\"23,23\\\";}', '1563765219', '1565081609');
-INSERT INTO `ey_arcmulti` VALUES ('31', 'arclistb45393652dbaf27dd422ecb18ba6556d', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (11,11) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.aid desc LIMIT 4', 'a.aid desc', '', '', 'a:4:{s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"4\\\";s:6:\\\"typeid\\\";s:5:\\\"11,11\\\";}', '1563778302', '1565148971');
-INSERT INTO `ey_arcmulti` VALUES ('32', 'arclist47e63d1daa34906533daa4604b9990f2', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (23,23) AND a.channel IN (9) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.aid desc LIMIT 4', 'a.aid desc', '', '', 'a:4:{s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"4\\\";s:6:\\\"typeid\\\";s:5:\\\"23,23\\\";}', '1563780846', '1565248066');
-INSERT INTO `ey_arcmulti` VALUES ('33', 'arclist5fd45fc06338850f9a81b0034f155d3f', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (5,5) AND a.channel IN (4) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.aid desc LIMIT 4', 'a.aid desc', '', '', 'a:4:{s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"4\\\";s:6:\\\"typeid\\\";s:3:\\\"5,5\\\";}', '1563784777', '1564624222');
-INSERT INTO `ey_arcmulti` VALUES ('34', 'arclist8fd20121b30e976f2cdc6adec826c6c3', 'arclist', '', '6', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (2,10,11,12,2) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 6', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"6\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:12:\\\"2,10,11,12,2\\\";}', '1564544784', '1566369132');
-INSERT INTO `ey_arcmulti` VALUES ('35', 'arclistac5acf1c77d2762da6f5cbceb003356f', 'arclist', '', '6', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (2,10,11,12,2) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 6', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"6\\\";s:8:\\\"titlelen\\\";s:2:\\\"40\\\";s:6:\\\"typeid\\\";s:12:\\\"2,10,11,12,2\\\";}', '1564545092', '1564545092');
-INSERT INTO `ey_arcmulti` VALUES ('36', 'arclistdd8b07e4c8175aba9a7cdfc75846934e', 'arclist', '', '6', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (2,10,56,11,12,2) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 6', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"6\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:15:\\\"2,10,56,11,12,2\\\";}', '1564625043', '1564632486');
-INSERT INTO `ey_arcmulti` VALUES ('37', 'arclistdef33cd20eedde16fff9fa4d0a7eb441', 'arclist', '', '6', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (2,10,56,11,58,12,2) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 6', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"6\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:18:\\\"2,10,56,11,58,12,2\\\";}', '1564632570', '1564632624');
-INSERT INTO `ey_arcmulti` VALUES ('38', 'arclistdf739fb67eaeec266be0dba6cc76dc04', 'arclist', '', '6', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (2,10,56,60,11,58,12,2) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 6', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"6\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:21:\\\"2,10,56,60,11,58,12,2\\\";}', '1564632681', '1564632681');
-INSERT INTO `ey_arcmulti` VALUES ('39', 'arclist600324cc7c844844852e875669ef7d42', 'arclist', '', '6', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (2,10,56,60,62,11,58,12,2) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 6', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"6\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:24:\\\"2,10,56,60,62,11,58,12,2\\\";}', '1564632721', '1565081822');
-INSERT INTO `ey_arcmulti` VALUES ('40', 'arclist60e65cb0a7c69bb4f505d32aa9e0bd6f', 'arclist', '', '6', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (23,23) AND a.channel IN (9) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.aid desc LIMIT 6', 'a.aid desc', '', '', 'a:4:{s:7:\\\"orderby\\\";s:4:\\\"rand\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"6\\\";s:6:\\\"typeid\\\";s:5:\\\"23,23\\\";}', '1564978722', '1565248473');
-INSERT INTO `ey_arcmulti` VALUES ('41', 'arclist031dac4c91d7ab3607722fdb1705316d', 'arclist', '', '5', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (2,10,56,60,62,11,58,12,2) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 5', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"5\\\";s:8:\\\"titlelen\\\";s:2:\\\"40\\\";s:6:\\\"typeid\\\";s:24:\\\"2,10,56,60,62,11,58,12,2\\\";}', '1565080638', '1565081609');
-INSERT INTO `ey_arcmulti` VALUES ('42', 'arclist46740127f31460ef6da55d0e79f9c2d7', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (4,64,66,4) AND a.channel IN (3) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 4', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:1:\\\"4\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:9:\\\"4,64,66,4\\\";}', '1565084028', '1566369132');
-INSERT INTO `ey_arcmulti` VALUES ('43', 'arclist985346079685352bfbe0e0633afbc119', 'arclist', '', '10', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (13) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 10', 'a.sort_order asc, a.aid desc', '', '', 'a:3:{s:3:\\\"row\\\";s:2:\\\"10\\\";s:8:\\\"titlelen\\\";s:2:\\\"20\\\";s:6:\\\"typeid\\\";s:2:\\\"13\\\";}', '1565084028', '1565084028');
-INSERT INTO `ey_arcmulti` VALUES ('44', 'arclist_5a76c5f011c2a588ce0e333c00b423e9', 'arclist', '', '8', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (20,24,25,20) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 8', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:6:\\\"typeid\\\";s:11:\\\"20,24,25,20\\\";s:3:\\\"row\\\";s:1:\\\"8\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:7:\\\"channel\\\";i:2;}', '1567578955', '1571040555');
-INSERT INTO `ey_arcmulti` VALUES ('45', 'arclist_063a53b5d2473d808e305da149f05c61', 'arclist', '', '8', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (21,26,21) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 8', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:6:\\\"typeid\\\";s:8:\\\"21,26,21\\\";s:3:\\\"row\\\";s:1:\\\"8\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:7:\\\"channel\\\";i:2;}', '1567578955', '1571040555');
-INSERT INTO `ey_arcmulti` VALUES ('46', 'arclist_f0baa6c505a2ed9d3e6216131c3065f6', 'arclist', '', '8', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (22,27,28,29,22) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 8', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:6:\\\"typeid\\\";s:14:\\\"22,27,28,29,22\\\";s:3:\\\"row\\\";s:1:\\\"8\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:7:\\\"channel\\\";i:2;}', '1567578955', '1571040555');
-INSERT INTO `ey_arcmulti` VALUES ('47', 'arclist_4a1e4b2a3c164a2513efaabc7695ff8c', 'arclist', '', '6', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (2,10,11,12,2) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 6', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:1:\\\"6\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:12:\\\"2,10,11,12,2\\\";s:7:\\\"channel\\\";i:1;}', '1567578955', '1571040555');
-INSERT INTO `ey_arcmulti` VALUES ('48', 'arclist_a60ee9dfcfd02e30cc0ff48a07f2abf0', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (4,64,66,4) AND a.channel IN (3) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 4', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:1:\\\"4\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:9:\\\"4,64,66,4\\\";s:7:\\\"channel\\\";i:3;}', '1567578955', '1571040555');
-INSERT INTO `ey_arcmulti` VALUES ('49', 'arclist_47b16318fb008e048bb81470255204cb', 'arclist', '', '5', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (3,20,24,25,21,26,22,27,28,29,3) AND  (a.is_recom = 1)  AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.add_time desc LIMIT 5', 'a.add_time desc', '', '', 'a:6:{s:4:\\\"flag\\\";s:1:\\\"c\\\";s:7:\\\"orderby\\\";s:3:\\\"now\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:3:\\\"row\\\";s:1:\\\"5\\\";s:6:\\\"typeid\\\";s:30:\\\"3,20,24,25,21,26,22,27,28,29,3\\\";s:7:\\\"channel\\\";i:2;}', '1571037681', '1571040561');
-INSERT INTO `ey_arcmulti` VALUES ('50', 'arclist_c8f764156fe6c94913aefc34656aa01b', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (3,20,24,25,21,26,22,27,28,29,3) AND a.channel IN (2) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 4', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:1:\\\"4\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:6:\\\"typeid\\\";s:30:\\\"3,20,24,25,21,26,22,27,28,29,3\\\";s:7:\\\"channel\\\";i:2;}', '1571038596', '1571038596');
-INSERT INTO `ey_arcmulti` VALUES ('51', 'arclist_ffec36b5ef0c45fc8bfcf7f0caa1248c', 'arclist', '', '5', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (2,10,11,12,2) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 5', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:1:\\\"5\\\";s:8:\\\"titlelen\\\";s:2:\\\"40\\\";s:6:\\\"typeid\\\";s:12:\\\"2,10,11,12,2\\\";s:7:\\\"channel\\\";i:1;}', '1571038596', '1571038596');
-INSERT INTO `ey_arcmulti` VALUES ('52', 'arclist_ea010e69008d127156c4c0e05800db3e', 'arclist', '', '4', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (23,23) AND a.channel IN (9) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 4', 'a.sort_order asc, a.aid desc', 'gzdd,xzdy', 'recruit_content', 'a:5:{s:3:\\\"row\\\";s:1:\\\"4\\\";s:8:\\\"titlelen\\\";s:2:\\\"30\\\";s:9:\\\"addfields\\\";s:9:\\\"gzdd,xzdy\\\";s:6:\\\"typeid\\\";s:5:\\\"23,23\\\";s:7:\\\"channel\\\";i:9;}', '1571038596', '1571038596');
-INSERT INTO `ey_arcmulti` VALUES ('53', 'block001_f51fde2f40161fb7ae3615f749985935', 'arclist', '', '10', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (2,10,11,12) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 10', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:2:\\\"10\\\";s:5:\\\"tagid\\\";s:8:\\\"block001\\\";s:7:\\\"infolen\\\";s:2:\\\"50\\\";s:6:\\\"typeid\\\";s:10:\\\"2,10,11,12\\\";}', '1609929404', '1623809725');
-INSERT INTO `ey_arcmulti` VALUES ('54', 'block001_625a78bf91ffacc7aa2786d7ce719aca', 'arclist', '', '10', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (10) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 10', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:2:\\\"10\\\";s:5:\\\"tagid\\\";s:8:\\\"block001\\\";s:7:\\\"infolen\\\";s:2:\\\"50\\\";s:6:\\\"typeid\\\";s:2:\\\"10\\\";}', '1609984295', '1623809724');
-INSERT INTO `ey_arcmulti` VALUES ('55', 'block001_908e507b6c696ce5684d3994c7719972', 'arclist', '', '10', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (11) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 10', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:2:\\\"10\\\";s:5:\\\"tagid\\\";s:8:\\\"block001\\\";s:7:\\\"infolen\\\";s:2:\\\"50\\\";s:6:\\\"typeid\\\";s:2:\\\"11\\\";}', '1609984299', '1623809724');
-INSERT INTO `ey_arcmulti` VALUES ('56', 'block001_29747ad7a75ac7c99e02e5346036e70f', 'arclist', '', '10', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (12) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 10', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:2:\\\"10\\\";s:5:\\\"tagid\\\";s:8:\\\"block001\\\";s:7:\\\"infolen\\\";s:2:\\\"50\\\";s:6:\\\"typeid\\\";s:2:\\\"12\\\";}', '1609984300', '1623809724');
-INSERT INTO `ey_arcmulti` VALUES ('57', 'block001_11d7603abb62aae993f1dc59d4fc239e', 'arclist', '', '1', 'SELECT `b`.*,`a`.* FROM `ey_archives` `a` LEFT JOIN `ey_arctype` `b` ON `b`.`id`=`a`.`typeid` WHERE  (  a.typeid IN (10) AND a.channel IN (1) AND a.arcrank > -1 AND a.status = 1 AND a.is_del = 0 )  AND `a`.`lang` = \'cn\' ORDER BY a.sort_order asc, a.aid desc LIMIT 1', 'a.sort_order asc, a.aid desc', '', '', 'a:4:{s:3:\\\"row\\\";s:1:\\\"1\\\";s:5:\\\"tagid\\\";s:8:\\\"block001\\\";s:7:\\\"infolen\\\";s:2:\\\"50\\\";s:6:\\\"typeid\\\";s:2:\\\"10\\\";}', '1610349340', '1610349340');
 
 -- -----------------------------
 -- Table structure for `ey_arcrank`
@@ -395,6 +437,9 @@ CREATE TABLE `ey_arctype` (
   `typename` varchar(200) DEFAULT '' COMMENT '栏目名称',
   `dirname` varchar(200) DEFAULT '' COMMENT '目录英文名',
   `dirpath` varchar(200) DEFAULT '' COMMENT '目录存放HTML路径',
+  `diy_dirpath` varchar(200) DEFAULT '' COMMENT '列表静态文件存放规则',
+  `rulelist` varchar(200) DEFAULT '' COMMENT '列表静态文件存放规则',
+  `ruleview` varchar(200) DEFAULT '' COMMENT '文档静态文件存放规则',
   `englist_name` varchar(200) DEFAULT '' COMMENT '栏目英文名',
   `grade` tinyint(1) DEFAULT '0' COMMENT '栏目等级',
   `typelink` varchar(200) DEFAULT '' COMMENT '栏目链接',
@@ -416,6 +461,11 @@ CREATE TABLE `ey_arctype` (
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  `target` tinyint(1) DEFAULT '0' COMMENT '新窗口打开',
+  `nofollow` tinyint(1) DEFAULT '0' COMMENT '防抓取',
+  `typearcrank` int(10) DEFAULT '0' COMMENT '阅读权限：0=开放浏览，-1=待审核稿件',
+  `empty_logic` tinyint(1) DEFAULT '0' COMMENT '空内容逻辑',
+  `page_limit` varchar(10) DEFAULT '0' COMMENT '限制页面 1-栏目页面 0-文档页面',
   PRIMARY KEY (`id`),
   UNIQUE KEY `dirname` (`dirname`,`lang`) USING BTREE,
   KEY `parent_id` (`channeltype`,`parent_id`) USING BTREE
@@ -424,30 +474,28 @@ CREATE TABLE `ey_arctype` (
 -- -----------------------------
 -- Records of `ey_arctype`
 -- -----------------------------
-INSERT INTO `ey_arctype` VALUES ('1', '6', '6', '0', '0', '关于我们', 'guanyuwomen', '/guanyuwomen', '', '0', '', '/uploads/allimg/20210106/1-2101061SJ5D4.jpg', 'lists_single.htm', '', '', '', '', '1', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539465', '1609929468');
-INSERT INTO `ey_arctype` VALUES ('2', '1', '1', '0', '0', '新闻动态', 'xinwendongtai', '/xinwendongtai', 'News &amp; Trends', '0', '', '/uploads/allimg/20210106/1-2101061SQ3C4.jpg', 'lists_article.htm', 'view_article.htm', '', '', '', '2', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526539487', '1609929495');
-INSERT INTO `ey_arctype` VALUES ('3', '2', '2', '0', '0', '产品展示', 'chanpinzhanshi', '/chanpinzhanshi', 'Product show', '0', '', '/uploads/allimg/20210106/1-2101061SR5120.jpg', 'lists_product.htm', 'view_product.htm', '', '', '未来，期待与用户携手缔造一个更好的易而优CMS', '3', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539505', '1609929507');
-INSERT INTO `ey_arctype` VALUES ('4', '3', '3', '0', '0', '解决方案', 'kehuanli', '/kehuanli', 'Case', '0', '', '/uploads/allimg/20210106/1-2101061ST0127.jpg', 'lists_images.htm', 'view_images.htm', '', '', '', '4', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539517', '1609929522');
-INSERT INTO `ey_arctype` VALUES ('5', '4', '4', '0', '0', '资料下载', 'ziliaoxiazai', '/ziliaoxiazai', 'Download', '0', '', '/uploads/allimg/20210106/1-2101061S911K5.jpg', 'lists_download.htm', 'view_download.htm', '', '', '', '5', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539530', '1609929553');
-INSERT INTO `ey_arctype` VALUES ('6', '1', '8', '23', '23', '在线应聘', 'zaixianyingpin', '/rencaizhaopin/zaixianyingpin', '', '1', '', '', 'lists_guestbook.htm', '', '', '', '', '100', '1', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539546', '1609929573');
-INSERT INTO `ey_arctype` VALUES ('8', '6', '6', '1', '1', '公司简介', 'gongsijianjie', '/guanyuwomen/gongsijianjie', 'About Us', '1', '', '', 'lists_single.htm', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526540452', '1609929701');
-INSERT INTO `ey_arctype` VALUES ('9', '6', '1', '1', '1', '公司荣誉', 'gsry', '/guanyuwomen/gsry', 'GLORIES Glories', '1', '', '', 'lists_article_img.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540478', '1609929468');
-INSERT INTO `ey_arctype` VALUES ('10', '1', '1', '2', '2', '公司动态', 'gongsidongtai', '/xinwendongtai/gongsidongtai', '', '1', '', '', 'lists_article.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540530', '1609929495');
-INSERT INTO `ey_arctype` VALUES ('11', '1', '1', '2', '2', '行业资讯', 'xingyezixun', '/xinwendongtai/xingyezixun', '', '1', '', '', 'lists_article.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540543', '1609929495');
-INSERT INTO `ey_arctype` VALUES ('12', '1', '1', '2', '2', '媒体报道', 'meitibaodao', '/xinwendongtai/meitibaodao', '', '1', '', '', 'lists_article.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540554', '1609929495');
-INSERT INTO `ey_arctype` VALUES ('20', '2', '2', '3', '3', '手机数码', 'shouji', '/chanpinzhanshi/shouji', '', '1', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612114', '1609929507');
-INSERT INTO `ey_arctype` VALUES ('21', '2', '2', '3', '3', '电脑产品', 'diannao', '/chanpinzhanshi/diannao', '', '1', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612188', '1609929507');
-INSERT INTO `ey_arctype` VALUES ('22', '2', '2', '3', '3', '周边配件', 'peijian', '/chanpinzhanshi/peijian', '', '1', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612218', '1609929507');
-INSERT INTO `ey_arctype` VALUES ('23', '1', '9', '0', '0', '人才招聘', 'rencaizhaopin', '/rencaizhaopin', 'Recruitment ', '0', '', '/uploads/allimg/20210106/1-2101061S931938.jpg', 'lists_recruit.htm', 'view_recruit.htm', '', '', '', '6', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612255', '1609929573');
-INSERT INTO `ey_arctype` VALUES ('24', '2', '2', '20', '3', '智能手机', 'zhinenshouji', '/chanpinzhanshi/shouji/zhinenshouji', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612571', '1610334638');
-INSERT INTO `ey_arctype` VALUES ('25', '2', '2', '20', '3', '畅玩手机', 'changwanshouji', '/chanpinzhanshi/shouji/changwanshouji', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612606', '1610334638');
-INSERT INTO `ey_arctype` VALUES ('26', '2', '2', '21', '3', '笔记本电脑', 'bijibendiannao', '/chanpinzhanshi/diannao/bijibendiannao', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612635', '1610334638');
-INSERT INTO `ey_arctype` VALUES ('27', '2', '2', '22', '3', '耳机', 'erji', '/chanpinzhanshi/peijian/erji', '', '2', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612661', '1610334638');
-INSERT INTO `ey_arctype` VALUES ('28', '2', '2', '22', '3', '音箱', 'yinxiang', '/chanpinzhanshi/peijian/yinxiang', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612678', '1610334638');
-INSERT INTO `ey_arctype` VALUES ('29', '2', '2', '22', '3', '充电宝', 'chongdianbao', '/chanpinzhanshi/peijian/chongdianbao', '', '2', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612691', '1610334638');
-INSERT INTO `ey_arctype` VALUES ('30', '6', '8', '0', '0', '联系我们', 'lianxiwomen986', '/lianxiwomen986', 'Online Message', '0', '', '/uploads/allimg/20210106/1-2101061T032D7.jpg', 'lists_guestbook.htm', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526634493', '1610347982');
-INSERT INTO `ey_arctype` VALUES ('64', '3', '3', '4', '4', '系统方案', 'xitong', '/kehuanli/xitong', '', '1', '', '', 'lists_images.htm', 'view_images.htm', '', '', '', '100', '0', '0', '1', '0', '0', '1', '0', '', 'cn', '1565083870', '1609929522');
-INSERT INTO `ey_arctype` VALUES ('66', '3', '3', '4', '4', '应用方案', 'yingyong', '/kehuanli/yingyong', '', '1', '', '', 'lists_images.htm', 'view_images.htm', '', '', '', '100', '0', '0', '1', '0', '0', '1', '0', '', 'cn', '1565083875', '1609929522');
+INSERT INTO `ey_arctype` VALUES ('1', '6', '6', '0', '0', '关于我们', 'guanyuwomen', '/guanyuwomen', '/guanyuwomen', '{栏目目录}/index.html', '{栏目目录}/{aid}.html', '', '0', '/index.php?m=home&amp;c=Lists&amp;a=index&amp;tid=8', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061SJ5D4.jpg', 'lists_single.htm', '', '', '', '', '1', '0', '1', '0', '0', '0', '1', '0', '', 'cn', '1526539465', '1690181692', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('2', '1', '1', '0', '0', '新闻动态', 'xinwendongtai', '/xinwendongtai', '/xinwendongtai', '', '', 'News &amp; Trends', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061SQ3C4.jpg', 'lists_article.htm', 'view_article.htm', '', '', '', '2', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526539487', '1609929495', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('3', '2', '2', '0', '0', '产品展示', 'chanpinzhanshi', '/chanpinzhanshi', '/chanpinzhanshi', '', '', 'Product show', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061SR5120.jpg', 'lists_product.htm', 'view_product.htm', '', '', '未来，期待与用户携手缔造一个更好的易而优CMS', '3', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539505', '1609929507', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('4', '3', '3', '0', '0', '解决方案', 'kehuanli', '/kehuanli', '/kehuanli', '', '', 'Case', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061ST0127.jpg', 'lists_images.htm', 'view_images.htm', '', '', '', '4', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539517', '1609929522', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('5', '4', '4', '0', '0', '资料下载', 'ziliaoxiazai', '/ziliaoxiazai', '/ziliaoxiazai', '', '', 'Download', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061S911K5.jpg', 'lists_download.htm', 'view_download.htm', '', '', '', '5', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539530', '1609929553', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('8', '6', '6', '1', '1', '公司简介', 'gongsijianjie', '/guanyuwomen/gongsijianjie', '/guanyuwomen/gongsijianjie', '', '', 'About Us', '1', '', '', 'lists_single.htm', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526540452', '1690181692', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('9', '6', '1', '1', '1', '公司荣誉', 'gsry', '/guanyuwomen/gsry', '/guanyuwomen/gsry', '', '', 'GLORIES Glories', '1', '', '', 'lists_article_img.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540478', '1690181692', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('10', '1', '1', '2', '2', '公司动态', 'gongsidongtai', '/xinwendongtai/gongsidongtai', '/xinwendongtai/gongsidongtai', '', '', '', '1', '', '', 'lists_article.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540530', '1609929495', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('11', '1', '1', '2', '2', '行业资讯', 'xingyezixun', '/xinwendongtai/xingyezixun', '/xinwendongtai/xingyezixun', '', '', '', '1', '', '', 'lists_article.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540543', '1609929495', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('12', '1', '1', '2', '2', '媒体报道', 'meitibaodao', '/xinwendongtai/meitibaodao', '/xinwendongtai/meitibaodao', '', '', '', '1', '', '', 'lists_article.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540554', '1609929495', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('20', '2', '2', '3', '3', '手机数码', 'shouji', '/chanpinzhanshi/shouji', '/chanpinzhanshi/shouji', '', '', '', '1', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612114', '1609929507', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('21', '2', '2', '3', '3', '电脑产品', 'diannao', '/chanpinzhanshi/diannao', '/chanpinzhanshi/diannao', '', '', '', '1', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612188', '1609929507', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('22', '2', '2', '3', '3', '周边配件', 'peijian', '/chanpinzhanshi/peijian', '/chanpinzhanshi/peijian', '', '', '', '1', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612218', '1609929507', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('24', '2', '2', '20', '3', '智能手机', 'zhinenshouji', '/chanpinzhanshi/shouji/zhinenshouji', '/chanpinzhanshi/shouji/zhinenshouji', '', '', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612571', '1610334638', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('25', '2', '2', '20', '3', '畅玩手机', 'changwanshouji', '/chanpinzhanshi/shouji/changwanshouji', '/chanpinzhanshi/shouji/changwanshouji', '', '', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612606', '1610334638', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('26', '2', '2', '21', '3', '笔记本电脑', 'bijibendiannao', '/chanpinzhanshi/diannao/bijibendiannao', '/chanpinzhanshi/diannao/bijibendiannao', '', '', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612635', '1610334638', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('27', '2', '2', '22', '3', '耳机', 'erji', '/chanpinzhanshi/peijian/erji', '/chanpinzhanshi/peijian/erji', '', '', '', '2', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612661', '1610334638', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('28', '2', '2', '22', '3', '音箱', 'yinxiang', '/chanpinzhanshi/peijian/yinxiang', '/chanpinzhanshi/peijian/yinxiang', '', '', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612678', '1610334638', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('29', '2', '2', '22', '3', '充电宝', 'chongdianbao', '/chanpinzhanshi/peijian/chongdianbao', '/chanpinzhanshi/peijian/chongdianbao', '', '', '', '2', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612691', '1610334638', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('30', '6', '6', '0', '0', '联系我们', 'lianxiwomen986', '/lianxiwomen986', '/lianxiwomen986', '{栏目目录}/index.html', '{栏目目录}/{aid}.html', 'Online Message', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061T032D7.jpg', 'lists_single_contact.htm', '', '', '', '', '7', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526634493', '1690166673', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('64', '3', '3', '4', '4', '系统方案', 'xitong', '/kehuanli/xitong', '/kehuanli/xitong', '', '', '', '1', '', '', 'lists_images.htm', 'view_images.htm', '', '', '', '100', '0', '0', '1', '0', '0', '1', '0', '', 'cn', '1565083870', '1609929522', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('66', '3', '3', '4', '4', '应用方案', 'yingyong', '/kehuanli/yingyong', '/kehuanli/yingyong', '', '', '', '1', '', '', 'lists_images.htm', 'view_images.htm', '', '', '', '100', '0', '0', '1', '0', '0', '1', '0', '', 'cn', '1565083875', '1609929522', '0', '0', '0', '0', '0');
 
 -- -----------------------------
 -- Table structure for `ey_article_content`
@@ -457,6 +505,7 @@ CREATE TABLE `ey_article_content` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `aid` int(10) DEFAULT '0' COMMENT '文档ID',
   `content` longtext COMMENT '内容详情',
+  `content_ey_m` longtext COMMENT '手机端内容详情',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`),
@@ -466,33 +515,33 @@ CREATE TABLE `ey_article_content` (
 -- -----------------------------
 -- Records of `ey_article_content`
 -- -----------------------------
-INSERT INTO `ey_article_content` VALUES ('1', '4', '&lt;p&gt;在了解seo是什么意思之后，才能学习seo。&lt;br/&gt;&lt;/p&gt;&lt;p&gt;什么是seo，从官方解释来看，seo=Search（搜索） Engine（引擎） Optimization（优化），即搜索引擎优化。&lt;/p&gt;&lt;p&gt;使用过百度或其他搜索引擎，在搜索框中输入某一个关键词，如铁艺大门，排名靠前带有广告字样，背景略不同的是竞价位置，为俗称的&lt;a href=&quot;http://www.xminseo.com/2376.html&quot; title=&quot;&quot;&gt;sem&lt;/a&gt;位置。&lt;/p&gt;&lt;p&gt;seo是基于搜索引擎营销的一种网络营销方式，通过seo技术，提升网站关键词排名，获得展现，继而获得曝光，继而获得用户点击，继而获得转化。&lt;/p&gt;&lt;p&gt;一：seo分类。&lt;/p&gt;&lt;p&gt;细化来看，所有有利于网站关键词排名提升的点，都可以归纳于seo，为便于理解，我们将seo分为站内seo和站外seo。&lt;/p&gt;&lt;p&gt;1：站内seo。&lt;/p&gt;&lt;p&gt;什么是站内seo？通俗来讲，就是指网站内部优化，即网站本身内部的优化，包括代码标签优化、内容优化、安全建设、用户体验等。&lt;/p&gt;&lt;p&gt;2：站外seo。&lt;/p&gt;&lt;p&gt;什么是站外seo？通俗来讲，就是网站的外部优化，包括外链建设，品牌建设，速度优化，引流等。&lt;/p&gt;&lt;p&gt;二：seo相关建议。&lt;/p&gt;&lt;p&gt;1：建议把seo定位于一种网络营销方式，在学习，使用seo的过程中，将他作为一种获取流量的渠道。&lt;/p&gt;&lt;p&gt;2：新手学习seo的理想平台是百度搜索资源平台而非其他；理论联系实际操作是更为有效的学习方式；有经验的seo高手教会更快的掌握好seo；多思考，多总结，才能领悟seo的精髓。&lt;/p&gt;&lt;p&gt;3：学习seo之前，熟悉掌握相关seo术语很有必要。&lt;/p&gt;&lt;p&gt;4：很多时候，seo的理论与现实是相违背的，也就是说seo的理论点不复杂，操作点却很难达到。&lt;/p&gt;&lt;p&gt;新手接触seo，感觉无所适从，请熟读seo术语，后面会越来越轻松。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615837', '1610615837');
-INSERT INTO `ey_article_content` VALUES ('5', '9', '&lt;p&gt;注：用户界面（UI，User Interface）设计是设计软件产品所涉及到的几个交叉学科之一。不论是用户体验（UX，User Experience）、交互设计（ID，Interaction Design），还是视觉/图形设计（Visual / Graphic Design），都能牵扯到用户界面设计。&lt;/p&gt;&lt;p&gt;一、什么是用户界面设计？&lt;/p&gt;&lt;p&gt;广泛来讲，用户界面是人与机器交流的媒介。用户向机器发出指令，机器随即开始一段进程，回复信息，并给出反馈。用户可以根据用户反馈进行下一步操作的决策。&lt;/p&gt;&lt;p&gt;人机交互（HCI，Human Computer Interaciton）所关注的主要是数字界面，即过去的打孔机、命令行，直至今天的图形界面（GUI，Graphic Design）。&lt;/p&gt;&lt;p&gt;用户界面设计对于数码产品来说主要关注的是布局、信息结构，以及界面元素在显示屏和各种终端平台上的展示。电子游戏和电视界面也包括其中。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615832', '1610615832');
-INSERT INTO `ey_article_content` VALUES ('15', '39', '&lt;p&gt;对于记忆来说，味道往往是最美的，儿时喝过的饮料，至今回想起来依然觉得津津有味。&lt;br/&gt;&lt;/p&gt;&lt;p&gt;今天是六一儿童节，青山资本梳理了中国40年来饮料发展的简史，权当节日的小消遣，顺便看看能否找到你记忆深处的那个味道？&lt;/p&gt;&lt;h2&gt;第一阶段：国人味蕾的开启时代&lt;/h2&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;百事可乐在华第一家工厂开业&lt;/p&gt;&lt;p&gt;1981年，可口可乐在中国第一条生产线正式投产，主要供应旅游饭店，卖给外国人收取外汇，百事可乐也在深圳建立了第一家罐装厂。&lt;/p&gt;&lt;p&gt;1982年，国家把饮料纳入“国家计划管理产品”，可口可乐开始在北京市场进行内销。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615741', '1610615741');
-INSERT INTO `ey_article_content` VALUES ('16', '40', '&lt;p&gt;约翰·奎尔奇说， 社交媒体有很多营销挑战，如何为粉丝来估值是一个大问题。从营销角度来思考，要关注强纽带和弱纽带。你可能以为，强纽带的密友产生最大的营销影响，研究发现不是这样的，产生更大的影响反而是跟你更疏远的人。&lt;/p&gt;&lt;p&gt;演讲者｜ 约翰·奎尔奇&lt;/p&gt;&lt;p&gt;（ 哈佛商学院教授， 曾任伦敦商学院院长、中欧国际工商学院副院长）&lt;/p&gt;&lt;p&gt;非常感谢大家在周日早上回来听我讲课。对于你们这些创业者，或者希望成为创业者的人，我今天准备了一个特别的讲座。&lt;/p&gt;&lt;p&gt;很多创业者没有把最终愿景很好界定，所以每天都忙于灭火，忙于生存。&lt;/p&gt;&lt;p&gt;创业营销，你必须做好规划&lt;/p&gt;&lt;p&gt;今天将从创业营销这个话题开始，包括你如何生存和成功。创业营销包括四个关键领域，你必须很好地去规划：&lt;/p&gt;&lt;ul style=&quot;list-style-type: inherit;&quot; class=&quot; list-paddingleft-2&quot;&gt;&lt;li&gt;&lt;p&gt;要有正确的目标客户和最终用户；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;要有正确的产品和服务&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;要有一个非常好的人才团队，使得商业创意能够实现；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;要有好的合作伙伴，不是分销商，而是会计、律师等服务伙伴。&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;那么，何为创业营销？ ？&lt;/p&gt;&lt;p&gt;第一，这是从愿景到行动的逆向工程设计&lt;/p&gt;&lt;p&gt;当星巴克只有 5 家店时，创始人就有一个愿景，让星巴克成为你生活中的第三空间。&lt;/p&gt;&lt;p&gt;对创业者要从愿景开始，向后进行逆向工程的设计：看一下需要有什么样的行动，才能实现愿景。 很多创业者没有把最终愿景很好界定，所以每天都忙于灭火，忙于生存。&lt;/p&gt;&lt;p&gt;第二，快速的周期，低成本进行试验，以提供证据&lt;/p&gt;&lt;p&gt;有了愿景要去思考，怎样做一些快速的低成本实验测试创意，向合作伙伴、客户等证明，这是一个非常好的愿景。换句话说， 你需要短期的成就作为证据。&lt;/p&gt;&lt;p&gt;第三，与高瞻远瞩的客户共同开发&lt;/p&gt;&lt;p&gt;大多数的客户是保守的，不想浪费时间在新公司上。 你必须要找到有远见的客户，他们愿意在你身上冒风险。 他们可能是小的新兴客户，不是你想要进入的那个市场的好根基客户。&lt;/p&gt;&lt;p&gt;第四：创建小步快跑的综合路线图&lt;/p&gt;&lt;p&gt;包括创建产品路线图、客户图、合作伙伴路线图、人才路线图。 创业者应该有一个长达一年甚至三年的路线图，看下你希望这个公司在这四个维度上应该怎么样取得进步。&lt;/p&gt;&lt;p&gt;举个例子&lt;/p&gt;&lt;p&gt;上世纪 90 年代末， John Osher 发明了 SpinBrush ，这是一个低成本的电动牙刷。因为 他洞察到市场上存在着一个很大的空白：普通手动牙刷每支两美元，电动牙刷要 50 美元。 但是这两者之间，没有任何中间产品。&lt;/p&gt;&lt;p&gt;他想开发一个牙刷，价格介于两者之间。他思考了下新牙刷成功的性能标准：&lt;/p&gt;&lt;ul style=&quot;list-style-type: inherit;&quot; class=&quot; list-paddingleft-2&quot;&gt;&lt;li&gt;&lt;p&gt;清洁上要优于手动牙刷，不然消费者不会付出更高的价格；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;自带电池能用三个月，如果每周都要换电池太崩溃；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;包装中有试用的特点，大家愿意看看牙刷启动后是怎么旋转的；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;零售价不到 6 美元。&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;他对新牙刷的定位是：是更好的手动牙刷，而不是一个更便宜的电动牙刷。&lt;/p&gt;&lt;p&gt;对于消费者，是从 2 美元增加到 6 美元，而不是从 50 美元降到 6 美元。因为如果是后者，零售商会觉得赔了：消费者只花了6美元，而以前是50美元。但是现在，消费者从花2块提高到了花6块。&lt;/p&gt;&lt;p&gt;所以创业者不仅要考虑最终用户，还要思考如何让分销商多赚钱，因为你必须通过他们，产品才能到最终客户那里。 界定竞争的时候，好的定位声明非常重要。 最后，他把公司卖给了 宝洁，一共赚了4.8亿美元。&lt;/p&gt;&lt;p&gt;大家看，其实非常简单，就是因为他有大量的消费者洞察，填补了没有任何人看见的市场空白。&lt;/p&gt;&lt;p&gt;再举个例子&lt;/p&gt;&lt;p&gt;这家公司叫 Intuit ，创始人在20年前就发现，好多人在应对自己税务处理的时候，每年要填一个纳税申报单再交给政府，很麻烦。&lt;/p&gt;&lt;p&gt;Intuit 是第一个开发个人理财软件的公司，尤其是做纳税管理方面的软件，不管是个人还是小企业都可以用。 但是这个好用的软件包，不知道卖向哪里，没人相信它能用。&lt;/p&gt;&lt;p&gt;有时候你最大的问题就是，你的新产品如何把分销商搞定。他们分销很多东西，根本没时间花五小时检查你这个不知名的产品能不能用。&lt;/p&gt;&lt;p&gt;最后他直接向消费者保证： 如果买了这个产品，六分钟内没学会怎么用，钱退给你，产品也送给你。&lt;/p&gt;&lt;p&gt;除了退钱，他们还做了什么与众不同的事情呢？&lt;/p&gt;&lt;ul style=&quot;list-style-type: inherit;&quot; class=&quot; list-paddingleft-2&quot;&gt;&lt;li&gt;&lt;p&gt;在买家允许下，跟着买家观察他的首次使用过程。&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;公司所有高管每个月必须花两小时做客户的技术支持，听客户遇到的问题；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;做客户服务的技术支持，是公司里晋升的必经路径；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;把客户的信当着所有高管的面大声朗读，不管是感谢还是指责。&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;这使得他们 50% 的销售是来自于口碑， 20% 的销售是来自于技术支持的推荐。&lt;/p&gt;&lt;p&gt;“ 客户真正想要的和技术真正能做好的交叉点 —— 在此处才能找到真正的伟大。 ”&lt;/p&gt;&lt;p&gt;“ 我们不管做什么，都是有客户存在的。 ”&lt;/p&gt;&lt;p&gt;——ScottCook（ Intuit创始人）&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615736', '1610615736');
-INSERT INTO `ey_article_content` VALUES ('17', '41', '&lt;p&gt;各种行销手段早已令人眼花缭乱，但究其本质都是在研究客户（消费者），研究客户的所想、所需，使产品或服务有的放矢。大数据时代又给它赋予了新名词：精准营销。大数据最先应用的领域多为面对客户的行业，最先应用的情景也多为精准营销。&lt;/p&gt;&lt;p&gt;“酒好也怕巷子深”，产品或服务的信息要送达客户才可能促成交易。一般认为，向客户传达产品或服务信息要靠广告。广告古已有之，“三碗不过岗”的酒幌子就是广告。没有互联网的时代，我们熟悉的是电视广告、广播广告、印刷品平面广告、户外广告牌等，当然，也包括吆喝叫卖。但过去的广告是千人一面、不区分受众的。后来商家对客户的信息有所采集就有了CRM，经过客户分类，可以更好地服务于不同的客户群体。互联网+大数据时代让CRM有了新的发展机遇，管理客户不再是简单的数字统计和没有个性的（或简单聚类的）直邮、定投。随着商家对客户知道更多、了解更深，便有机会为客户提供个性化的营销方案，进一步改善客户体验，成为了个性化营销或叫精准营销。大数据时代，让很多过去的不可能变为可能，营销活动也赢来了新的发展机遇。&lt;/p&gt;&lt;p&gt;时代不同，商业经营的形式会变化，但本质就是两件事：开源，节流。开源是开拓新客户，发现新商机；节流是减少内部运营成本，提高资源利用效率。要实现这一切都需要以数据为依据的决策。过去，人们也在长期的经营活动中，采集和运用了与经营活动相关的很多强相关数据，也形成了选择客户的标准。鉴于当时的技术瓶颈，做大样本的数据采集及数据分析成本都过高，无法在更大范围推广运用。大数据时代，人们有了廉价采集数据和存储数据的可能，廉价的计算资源让数据分析成为了可能。&lt;/p&gt;&lt;p&gt;大数据精准营销的背后，是用多维度的数据来观察客户，描述客户，就是说为客户画像。说“依托大数据，可以让营销人员比过去更了解客户，比客户自己更了解客户的需求”并不为过。营销人员无不想知道客户是谁、在哪里、消费习惯是什么、需要什么、什么时候需要、用什么方式向他们传递信息更为有效等等，通过数据采集和数据分析分析可以找到答案。精准营销不仅可以帮助商家开源---发现潜在客户，还可以帮助商家节流---发现潜在风险。当我们对客户了解更多，就会知道哪位客户可能在经营中存在风险。&lt;/p&gt;&lt;p&gt;若问每个经营者是否会运用从业经验来进行营销，多数答案是肯定的。但若问经营者是否会利用数据进行营销，恐怕答案就是五花八门。一般认为，应用数据进行营销是大公司的事情，与小公司无缘。其实，大到跨国公司，小到街边小贩，运用数据进行营销，都会收到意想不到的结果。不相信吗？街边小贩留意一下天气预报（刮风，下雨，还是暴晒）就知道明天有哪些生意的机会，进而知道该如何备货。建议中小公司的人不要拒绝精准营销的理念，不妨学学精准营销的思想方法。即便是经营者有丰富的经验，把经验数据化对经营也会很有帮助。&lt;/p&gt;&lt;p&gt;《颠覆营销》一书就是在教读者如何运用大数据来做营销。书中案例丰富、语言可读性强。值得关心大数据营销的各界朋友读一读。&lt;/p&gt;&lt;p&gt;我认同书中的不少观点：“大数据重新定义产业竞争规则，比的不是数据规模大小，不是统计技术，也不是强大的计算能力，而是核心数据的解读能力”。在很多人纠结于大数据定义的今天，我们确实更应该关注数据的核心价值理解与应用。书中提出的“问对问题”也很重要。经营者平时的问题一定不少，但追问究竟时，就可能出现偏差，导致“失之毫厘谬以千里”。问对问题能力的提高涉及思想方法，需要在锻炼中提高。验证问题是否问对了，恰恰就是数据分析师可以做贡献的地方。&lt;/p&gt;&lt;p&gt;本书还引起了二个值得更深入思考的问题：&lt;/p&gt;&lt;p&gt;仅仅发现不同客户群体的消费习惯，适时提醒客户去消费，还远远不够。比如：某消费者一个月的正常理性消费在两千元的水平，一般在A，B两家商店消费。A商店运用了精准营销的理念会让消费者把这两千元都花在A商店，随着B商店的后来居上，消费者又可能重新回到B商店消费这两千元。在供给过剩需求不足的今天，既有的消费额在不同商家中进行分配或迁移都不能带来社会消费总量的增加。大数据营销的更高水平应用是提前知晓客户尚未被满足、甚至尚未被发现的需求。大数据的价值挖掘有机会把商家（含厂家）和客户连在一起，让商家提供更多的满足客户个性化需求的产品或服务，让客户的消费意愿提高。这是数据价值挖掘工作者面临的新挑战。&lt;/p&gt;&lt;p&gt;数据真的越多越好吗？不少大数据公司热衷于用爬虫软件在网上“爬”各种数据。然而同一数据集在不同的应用场景价值密度是不一样的，针对特定应用场景也并非是数据维度越多就越好，一定要围绕应用目标来采集数据和使用数据。提升维度来采集更多数据一定是有助于更详尽地描述事物，但无疑也增加了处理数据的复杂性。每一次技术的进步，都给人类带来新的想象空间，难免欲望膨胀自信满满，对世界的认知也随之升维，甚至是无节制地升维。之后发现升维带来资源的占用，智慧跟不上，无节制地升维反而是解决方案复杂化，冷静下来会重新启动降维思考。也许人类的认知与智慧就是在升维、降维、再升维、再降维中交替前行的。本书的降维思考，必要时回归本元的思考给人们启示。&lt;/p&gt;&lt;p&gt;大数据时代工具手段固然重要，思想方法更为重要。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615730', '1610615730');
-INSERT INTO `ey_article_content` VALUES ('6', '10', '&lt;p&gt;Z Yuhan：用户界面（UI，User Interface）设计是设计软件产品所涉及到的几个交叉学科之一。不论是用户体验（UX，User Experience）、交互设计（ID，Interaction Design），还是视觉/图形设计（Visual / Graphic Design），都能牵扯到用户界面设计。&lt;/p&gt;&lt;h4&gt;一、什么是用户界面设计？&lt;/h4&gt;&lt;p&gt;广泛来讲，用户界面是人与机器交流的媒介。用户向机器发出指令，机器随即开始一段进程，回复信息，并给出反馈。用户可以根据用户反馈进行下一步操作的决策。&lt;/p&gt;&lt;p&gt;人机交互（HCI，Human Computer Interaciton）所关注的主要是数字界面，即过去的打孔机、命令行，直至今天的图形界面（GUI，Graphic Design）。&lt;/p&gt;&lt;p&gt;用户界面设计对于数码产品来说主要关注的是布局、信息结构，以及界面元素在显示屏和各种终端平台上的展示。电子游戏和电视界面也包括其中。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615827', '1610615827');
-INSERT INTO `ey_article_content` VALUES ('7', '12', '&lt;p&gt;北京时间 5 月 31 日凌晨，有“互联网女皇”之称的玛丽·米克尔发布了 2018 年的互联网趋势报告，这也是她第 23 年公布互联网报告。&lt;br/&gt;&lt;/p&gt;&lt;p&gt;每年的互联网女皇报告几乎都会成为每个互联网创业者的必读报告。那么，互联网女皇是谁?为什么她的报告会如此受关注呢?&lt;/p&gt;&lt;p&gt;互联网女皇： 90 年代华尔街的象征&lt;/p&gt;&lt;p&gt;1958 年 9 月，玛丽·米克尔(Mary Meeker)出生于美国印第安纳州。&lt;/p&gt;&lt;p&gt;1982 年，米克尔加入了当时最负盛名的券商美林公司，担任股票经纪人。&lt;/p&gt;&lt;p&gt;米克尔的明星分析师之路开始于 1991 年，这年她加入了知名投行摩根士丹利，开始了自己辉煌的科技分析师生涯。&lt;/p&gt;&lt;p&gt;自 1995 年以来，米克尔的工作随着网络潮流变化而变化，她逐重于研究雅虎、美国在线及亚马孙等知名公司将如何调整结构并相互竞争。&lt;/p&gt;&lt;p&gt;1996 年，玛丽·米克尔如愿地成为摩根·斯坦利技术股票分析部的负责人，还创造出了华尔街闪耀的新职业——互联网分析师。就像垃圾债券代表了 80 年代华尔街一样，玛丽·米克尔成了 90 年代华尔街的象征。&lt;/p&gt;&lt;p&gt;2010 年底，米克尔辞去摩根士丹利董事总经理的职位，离开华尔街，去到加州成为知名风投KPCB的合伙人。KPCB公司(Kleiner\r\n Perkins Caufield &amp;amp; Byers)成立于 1972 年，是美国最大的风险基金，其最得意的杰作是网景公司的创立。&lt;/p&gt;&lt;p&gt;互联网女皇报告：互联网领域的投资圣经、选股指南&lt;/p&gt;&lt;p&gt;1994 年，米克尔在《纽约时报》上偶然看到一篇讲述创业公司Mosaic研发网络浏览器的报道。米克尔立即意识到，这种网络浏览器可能会改变人们获取信息的方式。她随后就联系了Mosaic的两位创始人，并向华尔街投资者大力介绍这家公司。&lt;/p&gt;&lt;p&gt;Mosaic后来改名为网景，并在 1995 年在纽约上市。得益于米克尔与网景两位创始人的良好关系，摩根士丹利成为网景首次公开募股(IPO)的主承销商。&lt;/p&gt;&lt;p&gt;当年 8 月 9 日，网景上市首日收盘，股价从 14 美元的发行价暴增至 75 美元，创下了当时的上市公司首日涨幅记录。当年网景IPO也成为互联网时代到来的一大标志。&lt;/p&gt;&lt;p&gt;1995 年，除了负责网景的上市交易外，米克尔还与同事克里斯o德普开始发布《互联网报告》，并最早提出了“页面浏览量”等网络类股分析指标。这份报告被投资者视为互联网领域的投资圣经，并且成书公开发行，在整个科技行业引发了巨大反响。&lt;/p&gt;&lt;p&gt;1996- 1997 年，米克尔和摩根士丹利发布了《互联网广告报告》与《互联网零售业报告》，一举奠定了米克尔互联网领域第一分析师的地位。互联网女皇报告几乎成为当时每个互联网创业者的必读报告。&lt;/p&gt;&lt;p&gt;互联网女皇报告，无异于选股指南。她向投资者推荐的美国在线、戴尔、亚马逊、eBay等公司股票，都很快带来了超过十倍的投资回报。&lt;/p&gt;&lt;p&gt;互联网女皇报告中的“神预测”&lt;/p&gt;&lt;p&gt;业界如此看重互联网女皇报告的最主要原因，在于米克尔的那些神预测。以下，我们简单罗列了几点互联网女皇报告中的神预测例子。&lt;/p&gt;', '1610615823', '1610615823');
-INSERT INTO `ey_article_content` VALUES ('8', '13', '&lt;p&gt;网站建设的五大核心要素&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;/abc/uploads/ueditor/20190114/75c3c73acccc98cc5553d39eabf5fb38.jpg&quot; title=&quot;网站建设的五大核心要素(图1)&quot; alt=&quot;网站建设的五大核心要素(图1)&quot;/&gt;&lt;/p&gt;&lt;p&gt;　　企业要实行网络营销，首先需要进行网站制作。网站是由众多的Web页面组成的，而这些页面设计的好坏，直接影响到这个网站能否得到用户的欢迎。判断一个主页设计的好坏，要从多方面综合考虑，不能仅仅看它设计得是否生动漂亮，而应该看这个网站能否最大限度地替用户考虑。&lt;/p&gt;&lt;p&gt;&lt;img title=&quot;网站建设的五大核心要素(图2)&quot; alt=&quot;网站建设的五大核心要素(图2)&quot; class=&quot;limg&quot; src=&quot;http://www.eyoucms.com/uploads/allimg/180426/1510032P3-1.jpg&quot;/&gt;&lt;/p&gt;&lt;p&gt;　　3、以产品为核心原则&lt;/p&gt;&lt;p&gt;　　网站制作最重要的目的及功能就是为产品展示。顾客访问网站的主要目的是为了对产品和服务进行深入的了解，网站的价值也就在于灵活地向用户展示产品说明及图片甚至多媒体信息，即使一个功能简单的网站至少也相当于一本可以随时更新的产品宣传资料。过时的产品信息或者产品信息不完善不仅无法促进销售，同时也影响顾客的信心。顾客在访问网站时，关心的不是个人的信息，而是能够提供什么样的产品、产品的优势是什么。所以，以产品为核心是网站成功的一首要前提。&lt;/p&gt;&lt;p&gt;　　产品信息一般应该包括以下几方面内容：产品名称产品规格、产品用途、产品特性、产品认证情况及产品图片等。其次，产品规格、产品用途和产品特性等信息应尽可能详细地描述。&lt;/p&gt;&lt;p&gt;　　4、以网站的信息交互能力强为原则&lt;/p&gt;&lt;p&gt;　　如果一个网站只能提供浏览者浏览，而不能引导浏览者参与到网站内容的一部分建设中，那么它的吸引力是有限的。只有当浏览者能够很方便地和信息发布者交流信息时，该网站的魅力才能充分体现出来。虚拟论坛的设计在产品使用者之间、产品使用者与产品开发经理之间展开对产品的各种讨论。在线营销人员还可以借此收集市场信息，制定有效的营销计划。而网站消费者的反馈信息直接在网上公布，能够吸引消费者回访该网站，并由此可形成与顾客的固定关系。&lt;/p&gt;&lt;p&gt;　　当顾客在网上找到感兴趣的产品时，如何针对该产品及时进行询价和反馈?这不仅仅是通过电子函件方式就能够实现的。网站上应该提供相应的信息反馈模块，使顾客能够针对某个或多个产品方便快捷地进行询价或反馈。同时，企业的业务员应该能够及时查到顾客的反馈信息并及时回复：每个业务部门或业务员应该能够针对其发布的产品，方便地管理顾客的信息和反馈信息。通过网站可以为顾客提供各种在线服务和帮助信息，比如常见问题解答(FAQ)、详尽的联系信息、在线填写寻求帮助的表单、通过聊天实时回答顾客的咨询等。同时，利用网站还可以实现增进顾客关系的目的，比如通过发行各种免费邮件列表、提供有奖竞猜等方式吸引用户的参与。通过网站上的在线调查表，可以获得用户的反馈信息，用于产品调查、消费者行为调查、品牌形象调查等，是获得第一手市场资料有效的调查工具。&lt;/p&gt;&lt;p&gt;　　5、以完善的检索能力为原则&lt;/p&gt;&lt;p&gt;　　对于一个网站来说，如何合理地组织自己要发布的信息内容，以便让浏览者能够快速、准确地找到要找的信息，这是一个网站内容组织是否成功的关键。如果网站的结构设计不能使顾客方便、快捷地找到所需的信息，再好的设计也不能吸引长久的客户。即使将他吸引到了网站主页，将来也会中断访问。为了达到上述设计目标，一些网站在网页上设计了信息索引和目录索引。使用者能很快地找到感兴趣的那部分信息。&lt;/p&gt;&lt;p&gt;　　因此，为了网站内容的实用，有一定规模的网站一定要提供检索功能，以便于用户查找本网站的信息。为了给浏览者创造方便条件，网页设计者经常将网页内容设计成树形结构，方便纵向查询。访问者从主页开始就可以层层深入到所有“树权”和“树梢”的信息内容。另外，还可以设计一个搜索系统，让访问者很容易地就找到相关的内容。网址的搜索系统，设计应相当周全，允许访问者从任一页面进入。同时，在网站的任何一个页面都要设计有“返回主页”的链接，以方便访问者回到“树干”。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615818', '1610615818');
-INSERT INTO `ey_article_content` VALUES ('9', '14', '&lt;p&gt;网站建设，静态页面和动态页面如何选择&lt;/p&gt;&lt;p&gt;　　电商网站建设为什么要使用静态页面制作。我们都知道，网站制作有分为静态页面制作和动态网页制作，那么建设电商网站采用哪种网站设计技术更好呢?&lt;/p&gt;&lt;p&gt;　　我们建设网站最终目的是为了给用户浏览，所以从用户的角度出发进行思考才是最实际的，使用动态网页制作技术虽然网页美观度大大提升了，但是却不利于网站优化，今天小编重点和大家谈谈，网站建设为什么要使用静态页面制作。&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;/abc/uploads/ueditor/20190114/47caf8cc457ff50c8a66f4c4a23cfeb1.png&quot; title=&quot;网站建设，静态页面和动态页面如何选择(图1)&quot; alt=&quot;网站建设，静态页面和动态页面如何选择(图1)&quot;/&gt;&lt;/p&gt;&lt;p&gt;　　做静态网站建设所采用的技术原理是一对一的形式，也就是说这样的网站上面，一个内容对应的就是一个页面，无论网站访问者如何操作都只是让服务器把固有的数据传送给请求者，没有脚本计算和后台数据库读取过程，大大降低了部分安全隐患。静态网站设计除了拥有上述的速度快，安全性高这两个特点之外还具有跨平台，跨服务器功能。&lt;/p&gt;&lt;p&gt;　　现在熟悉搜索引擎原理工作原理的朋友应该都知道，它所提供给广大用户的信息是本身就存在于数据库当中的信息而不是实时的信息，固定的信息内容更容易接受和保存。我们可能常常会遇到这样的问题，当我们搜索自己所需要的信息时得出来的结果可能已经失效，这就是静态页面网站设计的不足之处，但又因为它的稳定，所以久久不会被删除。&lt;/p&gt;&lt;p&gt;　　与静态页面网站设计不同，生成的动态页面信息不但不易被搜索引擎所检索，而且打开速度慢，再者也不稳定，这就是为什么这么多专业网站建设公司都一再建议客户使用静态形式的网站设计的原因，有些网站建设公司会考虑把页面进行伪静态处理，但不知道大家有没有注意过，伪静态处理的URL通常是不规则的。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615811', '1610615811');
-INSERT INTO `ey_article_content` VALUES ('10', '19', '&lt;p&gt;从三方面完美的体验企业网站的核心价值&lt;/p&gt;&lt;p&gt;　　随着互联网的迅猛发展，一个企业的发展离不开互联网的发展，企业注重企业网站建设，那么必然会给其带来不错的效果。企业网站建设其核心价值直接体现在网站对于用户和商家而言，是否能够满足他们利益需求，能否提高企业发展，提高企业的发展渠道。&lt;/p&gt;&lt;p&gt;&lt;img title=&quot;从三方面完美的体验企业网站的核心价值(图1)&quot; alt=&quot;从三方面完美的体验企业网站的核心价值(图1)&quot; class=&quot;rimg&quot; src=&quot;http://www.eyoucms.com/uploads/allimg/180426/150RQ155-0.jpg&quot;/&gt;&lt;/p&gt;&lt;p&gt;　　一个好的导航系统就是一个好的导游，认为每一个网站设计方案都有权利与义务帮助客户及时准确的找到自己感兴趣的内容主体和需要的东西。&lt;/p&gt;&lt;p&gt;　　另一方面体现在网站对商家现金利益需求的满足，而此却建立在网站对用户需求满足的基础之上。因为，如果网站不能够满足用户利益的需求，用户就不会为网站创造价值，不能吸引更多的用户参与到网站中来，不能实现网站价值循环式的增长，用户规模将会无法得到较大发展，很难实现对商家现金利益需求的满足，商家在网站投放广告是基于网站促进发生交易可能性的大小，交易可能性越大，商家才可以获得更大的现金利益，否则，将会白白浪费广告费。&lt;/p&gt;&lt;p&gt;　　其次体现在对用户利益需求的满足，网站在发展初期更多的是要为用户提供他们需求的内容，积极的创造内容价值，满足用户各种基础性利益的需求，尤其是各类疑问的解答，相关兴趣或者专业资料的提供，各种资讯信息的发布。让用户能够基于某一种原因留下来，在基础性的工作做好的前提下，您可以着力于用户交易利益需求的满足，或者开始就将交易与用户的相关需求结合起来，打造一个个活跃度高的交易类版块，为用户提供此类交易最全面、最方便的资料和场所，积极促进用户活跃度的提高和迅速实现网站盈利。&lt;/p&gt;&lt;p&gt;　　我们认为让客户在首页即可看到与自己寻找的讯息高度相关的行业信息是非常明智的抉择，一个没有大量行业专业信息体现的网站设计称不上合格的网站设计，也无法真正的为客户从根本上解决问题。&lt;/p&gt;&lt;p&gt;　　我们只有尽量的在网站设计当中体现出如何才能在众多的行业竞争对手中脱颖而出，让客户可以信任我们呢?网站建设公司认为唯有尽量表现出自己的专业实力方可,当然除了这三点之外，网站设计仍旧有很多需要注意的地方，但不管怎么样，核心价值还是应该要重点体现，将重点放在核心内容上才是网站设计的真谛， 我们知道网站运营的核心理念是价值，站长们务必牢牢树立，一切从用户出发，积极满足用户需求，让用户发挥创造力，为网站创造价值，实现网站价值循环式增长，让站长运营变成用户运营是我们的终极目标，一劳永逸，盈利不断。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615806', '1610615806');
-INSERT INTO `ey_article_content` VALUES ('11', '20', '&lt;p&gt;随着网络应用的丰富和发展，很多网站往往不能迅速跟进大量信息衍生及业务模式变革的脚步，常常需要花费许多时间、人力和物力来处理信息更新和维护工作；遇到网站扩充的时候，整合内外网及分支网站的工作就变得更加复杂，甚至还需重新建设网站；如此下去，用户始终在一个高成本、低效率的循环中升级、整合…&lt;/p&gt;&lt;p&gt;于是，我们听到许多用户这样的反馈：&lt;/p&gt;&lt;p&gt;页面制作无序，网站风格不统一，大量信息堆积，发布显得异常沉重；&lt;/p&gt;&lt;p&gt;内容繁杂，手工管理效率低下，手工链接视音频信息经常无法实现；&lt;/p&gt;&lt;p&gt;应用难度较高，许多工作需要技术人员配合才能完成，角色分工不明确；&lt;/p&gt;&lt;p&gt;改版工作量大，系统扩展能力差，集成其它应用时更是降低了灵活性；&lt;/p&gt;&lt;p&gt;对于网站建设和信息发布人员来说，他们最关注的系统的易用性和的功能的完善性，因此，这对网站建设和信息发布工具提出了一个很高的要求。&lt;/p&gt;&lt;p&gt;首先，角色定位明确，以充分保证工作人员的工作效率；其次，功能完整，满足各门道&amp;quot;把关人&amp;quot;应用所需，使信息发布准确无误。比如，为编辑、美工、主编及运维人员设置权限和实时管理功能。&lt;/p&gt;&lt;p&gt;此外，保障网站架构的安全性也是用户关注的焦点。能有效管理网站访问者的登陆权限，使内网数据库不受攻击，从而时刻保证网站的安全稳定，免于用户的后顾之忧。&lt;/p&gt;&lt;p&gt;根据以上需求，一套专业的内容管理系统CMS应运而生，来有效解决用户网站建设与信息发布中常见的问题和需求。对网站内容管理是该软件的最大优势，它流程完善、功能丰富，可把稿件分门别类并授权给合法用户编辑管理，而不需要用户去理会那些难懂的SQL语法。&lt;/p&gt;', '1610615802', '1610615802');
-INSERT INTO `ey_article_content` VALUES ('12', '21', '&lt;p&gt;SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。&lt;/p&gt;&lt;p&gt;相反地，如果将关注的焦点放在搜索引擎优化以及如何取悦搜索引擎蜘蛛上，那么网站可能会排名很高，并且会获得大量的搜索引擎流量，但是如果设计很不尽人意，那就不一样了。为了在当今的数字环境中取得成功，必须将重点放在网站设计和搜索引擎优化上。&lt;/p&gt;&lt;p&gt;一、但是，SEO 不会扼杀掉网页设计师的创造力吗？&lt;/p&gt;&lt;p&gt;在过去的五年中，对“优化设计”的巨大需求已经被网页设计师所接受。在此之前，设计师们主要关注的是用户的体验，而不是“机器人”的体验。&lt;/p&gt;&lt;p&gt;如今，设计师不仅要让网站看起来有吸引力，而且要确保行为召唤必须符合网站页面“折叠”的要求，网站的加载速度必须很快，必须使用面包屑路径，清晰明了的导航选择，必须使用&amp;nbsp;CSS，JavaScript 文件必须保持在最低限度…这是一项艰巨的任务。&lt;/p&gt;&lt;p&gt;一些设计师可能想知道，所有这些新的 SEO 规则是否会损害创建网站的自由？&lt;/p&gt;&lt;p&gt;对于“干净”的网站设计而言，它可以帮助一个网站快速加载，容易被搜索引擎蜘蛛抓取。因此，在现实中，创造力和最优化需要能够同时在一起“蓬勃发展”。&lt;/p&gt;&lt;p&gt;二、把它们结合在一起&lt;/p&gt;&lt;p&gt;有一些核心元素支持每一个 SEO 策略和网站设计项目：&lt;/p&gt;&lt;p&gt;1.　关键词分析&lt;/p&gt;&lt;p&gt;在启动一个商业网站项目时，必须进行彻底的关键词分析。为了做到这一点，网页设计师必须紧密深入地了解客户的目标受众，并定义受众中的人口结构是如何融入到企业正试图达到的更大的目标市场。然后，应该对网站进行适当的关键词/长尾关键词优化。&lt;/p&gt;&lt;p&gt;2.　内容层次结构&lt;/p&gt;&lt;p&gt;对于一个企业来说，创建好的内容是不够的，他们还必须在战略上规划内容的位置。&lt;/p&gt;&lt;p&gt;有效的计划意味着将相关的内容放到虚拟的容器中，通过创造性的设计和内部链接让内容层级结构一目了然。并且，一个经过优化的网站是对用户和搜索引擎蜘蛛都很友好的网站。&lt;/p&gt;&lt;p&gt;3.　从用户的角度思考&lt;/p&gt;&lt;p&gt;通常情况下，你的网站有越多的页面或文章，目标用户找到你的机会就越多。当他们着陆这些特定的页面的时候，你需要确保你能帮助他们轻松的找到你。&lt;/p&gt;&lt;p&gt;所以你必须从用户的角度进行思考，要让用户立即清楚地知道他们在进行访问的页面的当前位置，并帮助用户在尽可能少的点击下从页面转换到另一页面。&lt;/p&gt;&lt;p&gt;三、为什么&amp;nbsp;SEO 策略如此重要？&lt;/p&gt;&lt;p&gt;拥有合适的网站结构和信息架构，最终将会帮助企业提供一种引人入胜的用户体验，同时减少对每一次新增长的需求。但是，除非你的品牌是众所周知的，否则通常是搜索引擎对网站所收到的大部分流量负责。SEO 策略有能力利用重要的客户数据，挖掘新的潜在收入流。&lt;/p&gt;&lt;p&gt;对于那些试图进行搜索引擎优化的网站所有者来说，有一些地方经常是麻烦的。现在，我将为网站所有者提供搜索引擎优化建议，以获得更高排名的页面。&lt;/p&gt;&lt;p&gt;1. &amp;nbsp;URL 结构&lt;/p&gt;&lt;p&gt;大多数网站创建的 URL 都包含很多随机字符，比如问号，没有关键词或任何有价值的内容。当搜索引擎的 URL 包含 SEO 的关键词或短语时，页面将会在搜索引擎中排名更高。因此，在 URL 中设置关键词非常重要。&lt;/p&gt;&lt;p&gt;2.　页面的标题&lt;/p&gt;&lt;p&gt;搜索引擎排名中最重要的因素之一是页面标题。不过，许多网站并没有改变他们的网页标题。在青柠建站平台中，你可以通过使用 SEO 标题标签插件，它很容易让你为你的文章和页面创建标题。&lt;/p&gt;&lt;p&gt;3.　重复的内容&lt;/p&gt;&lt;p&gt;没有一个搜索引擎喜欢看到重复的内容。重复内容是一些网站的主要问题，因为类别页面和日历/日期页面经常会导致搜索引擎在多个页面上找到相同的内容。&lt;/p&gt;&lt;p&gt;对于网站所有者来说，有几种方法可以克服重复的内容问题。其中一种方法是使用 robot.txt 文件，用来指导搜索引擎哪些页面应该被忽略，只留下要索引的主要页面。&lt;/p&gt;&lt;p&gt;4. &amp;nbsp;Meta 标签&lt;/p&gt;&lt;p&gt;在设计一个传统的静态网站时，你可以为每个页面输入元标签（描述）。尽管这些标签在搜索引擎排名上的影响力没有以前那么大，但在你的页面上有这些标签并不会带来什么坏处。&lt;/p&gt;&lt;p&gt;然而，大多数建站平台并没有给用户在写文章时添加元标签的选项。对于 青柠建站平台 用户来说，添加元标签插件将允许你为任何页面输入元标签。&lt;/p&gt;&lt;p&gt;四、网页设计师在 SEO 方面的职责是什么？&lt;/p&gt;&lt;p&gt;搜索引擎优化是一个持续的过程，它不能通过以特定的方式设计一个网站来实现。当然，网页设计师应该付出相当大的努力来帮助客户构建一个优化的站点，但是网页设计师在 SEO 方面的职责是什么，以及客户的职责是什么？&lt;/p&gt;&lt;p&gt;作为一个企业主，你的网站的优化对你来说比设计师更重要（这并不是说设计师不关心，但是设计师的注意力通常集中在网站的视觉和功能上）。你比设计师更了解你的客户 / 潜在客户，所以你应该对你的目标有更多的建设性意见。&lt;/p&gt;&lt;p&gt;也许有些客户对 SEO 和目标关键词可能不太了解，那么理想的情况是让客户和你在这个问题上协同工作。&lt;/p&gt;&lt;p&gt;根据我的经验，让客户参与其中的最简单方法之一就是简单地解释网站上使用的词语和短语（标题、文案等）会对网站排名有直接的影响。&lt;/p&gt;&lt;p&gt;我通常会要求客户给我一份他们认为潜在访问者可能会在搜索中使用的词语和短语列表。在我不太熟悉的行业中设计网站时，这一点尤其重要。&lt;/p&gt;&lt;p&gt;当然，可能需要做一些研究。客户应该承担起关键词研究的责任，还是应该由设计师来负责？&lt;/p&gt;&lt;p&gt;我的经验是，如果客户参与进来，这项研究通常会更有效，但这并不总是可能的。设计师应该有足够的知识来为客户提供建议，并且应该愿意提供帮助，但是最终最好还是让客户尽可能地参与进来。事实上，如果客户关心 SEO，参与过程会达到一个更加合理的期望。&lt;/p&gt;&lt;p&gt;设定现实的期望也可能是设计师的责任。&lt;/p&gt;&lt;p&gt;我有一些潜在的客户来找我说：“我被 SEO 专家告知，只要在网站页面上插入竞争热门的关键词就可以让我的网站排名第一或第二”。&lt;/p&gt;&lt;p&gt;在这种情况下，我会很明显地会指出，“搜索引擎优化需要持续的工作，而这种工作通常不能通过以某种方式创建网站来完成的。”&lt;/p&gt;&lt;p&gt;我经常建议客户在他们的网站上添加一个博客，以获得更多的内容，并提高排名的机会。&lt;/p&gt;&lt;p&gt;结语&lt;/p&gt;&lt;p&gt;虽然这只是一个简短的总结，但这些是网站所有者和设计师将面对的最重要的 SEO 话题。通过了解这些知识，你可以更好地创建出对用户和搜索引擎都友好的网站。&lt;/p&gt;&lt;p&gt;本文由易优小编设计 原创授权发布易优网站，未经授权，转载必究。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615796', '1610615796');
-INSERT INTO `ey_article_content` VALUES ('14', '38', '&lt;p&gt;SEO很多伙伴都了解，就是搜索引擎排名优化，通过对网站内部和外部进行优化当用户搜索相应关键词时网站能够排名在搜索引擎前面，具体可以百度搜索“网络营销课程”查看商梦网校操作的案例！&lt;/p&gt;&lt;p&gt;但单页SEO很多伙伴可能会有点陌生，单页SEO是将单页网站与内容内容结合为一体的SEO优化方案，主要是提升网站流量利用率让用户打开网站就能看到目标页面，转换更多订单，创造更多收益。单页SEO的操作理念也是由商梦网校提出，并一起推荐操作大家的模式。&lt;/p&gt;&lt;p&gt;那什么又是单页SEO站群呢，因为操作SEO成功率并不是100%，也就是意味着你做了并不会绝对有排名。因为在任何时候搜索引擎，特别是百度的索引数据库里，只有60%的网页数量。也就是说，大量的网页它是没有收录进来，它本身的能力所限无法做到中文的所有几百亿个网页都收录进来。所以，对于大部分网站，都有被删除网页，没有排名，或被K的经历，或没有排名。处理办法：坦然面对这一切。一个网站的成本才多少钱？如果因此对SEO失去信心，那就是最大的失去了。&lt;/p&gt;&lt;p&gt;不过我们也想到了一个更好的解决方案，这个方案在最早期我们开始操作，并且取得了非常不错的成绩就是“站群”，我们可以假设一个网站排名的机会为1，如果我们用 10 个网站来进行优化排名机会可以提升 10 倍， 10 个网站我们也不要求都获得排名只需要有1- 3 个网站获得排名这个操作就是成功的，因为对于我们做站群来说投入 10 个网站的成本也就 1000 块左右；这个投资也是非常划算的，这个思路其实有点像竞价，不像传统的SEO，因为传统的SEO我们投资一个网站成本一两百，就想获得排名，然后给我们几百上千倍的回报。结果就相当于我们把希望寄托在一颗树上，结果这颗树没有开花结果，我们就饿死了。&lt;/p&gt;&lt;p&gt;想给一个项目建立数十个网站也是需要掌握很多技术的，特别是批量建站方面，以及后期的维护。这次商梦网校升级加入的单页SEO站群操作方法，没有长篇大论直接给你演示怎么干，你只需要复制我们提供的方法就可以了。当然这里面也有很多核心的技术，比如域名注册和空间购买技巧虽然非常简单，但是直接会影响我们后期操作结果，我们给提供的技巧也会将你的成本降到低，如果投资建立 10 个网站域名与空间的成本不到 1000 元。相当于 1000 你就可以启动一个站群项目。核心的还是文章的采集，我们的原理是利用火车头采集原创文章然后实现挂机自动发布，只需要设置好每天几点运行软件就会自动更新网站文章，还会自动网站自动瞄文本，自动加入关键词。这些很多同学可能会问会不会太复杂，可以这样告诉你复杂的工作我们已经帮你搞定，到你使用的时候已经是打包好的解决方案。&lt;/p&gt;&lt;p&gt;网站前期整体搭建只要花时间就能搞定，但真正考验人的基实还是在于后期优化，对于网站后期优化特别是外链增加收录和权重这一块，我们还是没有长篇大论会直接给你演示实用、高效的方法让你的站群快速的获得收录，增加权重，获得排名，你需要做的就拷贝我们商梦网校的方法和模式；这些经验都是我们长期操作整理下来的，并非几天修炼的结果。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615746', '1610615746');
-INSERT INTO `ey_article_content` VALUES ('31', '72', '', '1563502397', '1563502397');
-INSERT INTO `ey_article_content` VALUES ('32', '73', '', '1563502433', '1563502433');
-INSERT INTO `ey_article_content` VALUES ('33', '74', '', '1563502458', '1563502458');
-INSERT INTO `ey_article_content` VALUES ('34', '75', '', '1563502473', '1563502473');
-INSERT INTO `ey_article_content` VALUES ('35', '76', '', '1563502499', '1563502499');
-INSERT INTO `ey_article_content` VALUES ('36', '77', '', '1563502542', '1563502542');
-INSERT INTO `ey_article_content` VALUES ('37', '78', '', '1563502559', '1563502559');
-INSERT INTO `ey_article_content` VALUES ('38', '79', '', '1563502578', '1563502578');
-INSERT INTO `ey_article_content` VALUES ('39', '80', '', '1563502596', '1563502596');
-INSERT INTO `ey_article_content` VALUES ('40', '81', '', '1563502609', '1563502609');
-INSERT INTO `ey_article_content` VALUES ('41', '84', '', '1610615703', '1610615703');
-INSERT INTO `ey_article_content` VALUES ('42', '85', '', '1610615688', '1610615688');
-INSERT INTO `ey_article_content` VALUES ('43', '86', '', '1610615683', '1610615683');
-INSERT INTO `ey_article_content` VALUES ('44', '87', '', '1610615678', '1610615678');
+INSERT INTO `ey_article_content` VALUES ('1', '4', '&lt;p&gt;在了解seo是什么意思之后，才能学习seo。&lt;br/&gt;&lt;/p&gt;&lt;p&gt;什么是seo，从官方解释来看，seo=Search（搜索） Engine（引擎） Optimization（优化），即搜索引擎优化。&lt;/p&gt;&lt;p&gt;使用过百度或其他搜索引擎，在搜索框中输入某一个关键词，如铁艺大门，排名靠前带有广告字样，背景略不同的是竞价位置，为俗称的&lt;a href=&quot;http://www.xminseo.com/2376.html&quot; title=&quot;&quot;&gt;sem&lt;/a&gt;位置。&lt;/p&gt;&lt;p&gt;seo是基于搜索引擎营销的一种网络营销方式，通过seo技术，提升网站关键词排名，获得展现，继而获得曝光，继而获得用户点击，继而获得转化。&lt;/p&gt;&lt;p&gt;一：seo分类。&lt;/p&gt;&lt;p&gt;细化来看，所有有利于网站关键词排名提升的点，都可以归纳于seo，为便于理解，我们将seo分为站内seo和站外seo。&lt;/p&gt;&lt;p&gt;1：站内seo。&lt;/p&gt;&lt;p&gt;什么是站内seo？通俗来讲，就是指网站内部优化，即网站本身内部的优化，包括代码标签优化、内容优化、安全建设、用户体验等。&lt;/p&gt;&lt;p&gt;2：站外seo。&lt;/p&gt;&lt;p&gt;什么是站外seo？通俗来讲，就是网站的外部优化，包括外链建设，品牌建设，速度优化，引流等。&lt;/p&gt;&lt;p&gt;二：seo相关建议。&lt;/p&gt;&lt;p&gt;1：建议把seo定位于一种网络营销方式，在学习，使用seo的过程中，将他作为一种获取流量的渠道。&lt;/p&gt;&lt;p&gt;2：新手学习seo的理想平台是百度搜索资源平台而非其他；理论联系实际操作是更为有效的学习方式；有经验的seo高手教会更快的掌握好seo；多思考，多总结，才能领悟seo的精髓。&lt;/p&gt;&lt;p&gt;3：学习seo之前，熟悉掌握相关seo术语很有必要。&lt;/p&gt;&lt;p&gt;4：很多时候，seo的理论与现实是相违背的，也就是说seo的理论点不复杂，操作点却很难达到。&lt;/p&gt;&lt;p&gt;新手接触seo，感觉无所适从，请熟读seo术语，后面会越来越轻松。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615837', '1610615837');
+INSERT INTO `ey_article_content` VALUES ('5', '9', '&lt;p&gt;注：用户界面（UI，User Interface）设计是设计软件产品所涉及到的几个交叉学科之一。不论是用户体验（UX，User Experience）、交互设计（ID，Interaction Design），还是视觉/图形设计（Visual / Graphic Design），都能牵扯到用户界面设计。&lt;/p&gt;&lt;p&gt;一、什么是用户界面设计？&lt;/p&gt;&lt;p&gt;广泛来讲，用户界面是人与机器交流的媒介。用户向机器发出指令，机器随即开始一段进程，回复信息，并给出反馈。用户可以根据用户反馈进行下一步操作的决策。&lt;/p&gt;&lt;p&gt;人机交互（HCI，Human Computer Interaciton）所关注的主要是数字界面，即过去的打孔机、命令行，直至今天的图形界面（GUI，Graphic Design）。&lt;/p&gt;&lt;p&gt;用户界面设计对于数码产品来说主要关注的是布局、信息结构，以及界面元素在显示屏和各种终端平台上的展示。电子游戏和电视界面也包括其中。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615832', '1610615832');
+INSERT INTO `ey_article_content` VALUES ('15', '39', '&lt;p&gt;对于记忆来说，味道往往是最美的，儿时喝过的饮料，至今回想起来依然觉得津津有味。&lt;br/&gt;&lt;/p&gt;&lt;p&gt;今天是六一儿童节，青山资本梳理了中国40年来饮料发展的简史，权当节日的小消遣，顺便看看能否找到你记忆深处的那个味道？&lt;/p&gt;&lt;h2&gt;第一阶段：国人味蕾的开启时代&lt;/h2&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;百事可乐在华第一家工厂开业&lt;/p&gt;&lt;p&gt;1981年，可口可乐在中国第一条生产线正式投产，主要供应旅游饭店，卖给外国人收取外汇，百事可乐也在深圳建立了第一家罐装厂。&lt;/p&gt;&lt;p&gt;1982年，国家把饮料纳入“国家计划管理产品”，可口可乐开始在北京市场进行内销。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615741', '1610615741');
+INSERT INTO `ey_article_content` VALUES ('16', '40', '&lt;p&gt;约翰·奎尔奇说， 社交媒体有很多营销挑战，如何为粉丝来估值是一个大问题。从营销角度来思考，要关注强纽带和弱纽带。你可能以为，强纽带的密友产生最大的营销影响，研究发现不是这样的，产生更大的影响反而是跟你更疏远的人。&lt;/p&gt;&lt;p&gt;演讲者｜ 约翰·奎尔奇&lt;/p&gt;&lt;p&gt;（ 哈佛商学院教授， 曾任伦敦商学院院长、中欧国际工商学院副院长）&lt;/p&gt;&lt;p&gt;非常感谢大家在周日早上回来听我讲课。对于你们这些创业者，或者希望成为创业者的人，我今天准备了一个特别的讲座。&lt;/p&gt;&lt;p&gt;很多创业者没有把最终愿景很好界定，所以每天都忙于灭火，忙于生存。&lt;/p&gt;&lt;p&gt;创业营销，你必须做好规划&lt;/p&gt;&lt;p&gt;今天将从创业营销这个话题开始，包括你如何生存和成功。创业营销包括四个关键领域，你必须很好地去规划：&lt;/p&gt;&lt;ul style=&quot;list-style-type: inherit;&quot; class=&quot; list-paddingleft-2&quot;&gt;&lt;li&gt;&lt;p&gt;要有正确的目标客户和最终用户；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;要有正确的产品和服务&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;要有一个非常好的人才团队，使得商业创意能够实现；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;要有好的合作伙伴，不是分销商，而是会计、律师等服务伙伴。&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;那么，何为创业营销？ ？&lt;/p&gt;&lt;p&gt;第一，这是从愿景到行动的逆向工程设计&lt;/p&gt;&lt;p&gt;当星巴克只有 5 家店时，创始人就有一个愿景，让星巴克成为你生活中的第三空间。&lt;/p&gt;&lt;p&gt;对创业者要从愿景开始，向后进行逆向工程的设计：看一下需要有什么样的行动，才能实现愿景。 很多创业者没有把最终愿景很好界定，所以每天都忙于灭火，忙于生存。&lt;/p&gt;&lt;p&gt;第二，快速的周期，低成本进行试验，以提供证据&lt;/p&gt;&lt;p&gt;有了愿景要去思考，怎样做一些快速的低成本实验测试创意，向合作伙伴、客户等证明，这是一个非常好的愿景。换句话说， 你需要短期的成就作为证据。&lt;/p&gt;&lt;p&gt;第三，与高瞻远瞩的客户共同开发&lt;/p&gt;&lt;p&gt;大多数的客户是保守的，不想浪费时间在新公司上。 你必须要找到有远见的客户，他们愿意在你身上冒风险。 他们可能是小的新兴客户，不是你想要进入的那个市场的好根基客户。&lt;/p&gt;&lt;p&gt;第四：创建小步快跑的综合路线图&lt;/p&gt;&lt;p&gt;包括创建产品路线图、客户图、合作伙伴路线图、人才路线图。 创业者应该有一个长达一年甚至三年的路线图，看下你希望这个公司在这四个维度上应该怎么样取得进步。&lt;/p&gt;&lt;p&gt;举个例子&lt;/p&gt;&lt;p&gt;上世纪 90 年代末， John Osher 发明了 SpinBrush ，这是一个低成本的电动牙刷。因为 他洞察到市场上存在着一个很大的空白：普通手动牙刷每支两美元，电动牙刷要 50 美元。 但是这两者之间，没有任何中间产品。&lt;/p&gt;&lt;p&gt;他想开发一个牙刷，价格介于两者之间。他思考了下新牙刷成功的性能标准：&lt;/p&gt;&lt;ul style=&quot;list-style-type: inherit;&quot; class=&quot; list-paddingleft-2&quot;&gt;&lt;li&gt;&lt;p&gt;清洁上要优于手动牙刷，不然消费者不会付出更高的价格；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;自带电池能用三个月，如果每周都要换电池太崩溃；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;包装中有试用的特点，大家愿意看看牙刷启动后是怎么旋转的；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;零售价不到 6 美元。&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;他对新牙刷的定位是：是更好的手动牙刷，而不是一个更便宜的电动牙刷。&lt;/p&gt;&lt;p&gt;对于消费者，是从 2 美元增加到 6 美元，而不是从 50 美元降到 6 美元。因为如果是后者，零售商会觉得赔了：消费者只花了6美元，而以前是50美元。但是现在，消费者从花2块提高到了花6块。&lt;/p&gt;&lt;p&gt;所以创业者不仅要考虑最终用户，还要思考如何让分销商多赚钱，因为你必须通过他们，产品才能到最终客户那里。 界定竞争的时候，好的定位声明非常重要。 最后，他把公司卖给了 宝洁，一共赚了4.8亿美元。&lt;/p&gt;&lt;p&gt;大家看，其实非常简单，就是因为他有大量的消费者洞察，填补了没有任何人看见的市场空白。&lt;/p&gt;&lt;p&gt;再举个例子&lt;/p&gt;&lt;p&gt;这家公司叫 Intuit ，创始人在20年前就发现，好多人在应对自己税务处理的时候，每年要填一个纳税申报单再交给政府，很麻烦。&lt;/p&gt;&lt;p&gt;Intuit 是第一个开发个人理财软件的公司，尤其是做纳税管理方面的软件，不管是个人还是小企业都可以用。 但是这个好用的软件包，不知道卖向哪里，没人相信它能用。&lt;/p&gt;&lt;p&gt;有时候你最大的问题就是，你的新产品如何把分销商搞定。他们分销很多东西，根本没时间花五小时检查你这个不知名的产品能不能用。&lt;/p&gt;&lt;p&gt;最后他直接向消费者保证： 如果买了这个产品，六分钟内没学会怎么用，钱退给你，产品也送给你。&lt;/p&gt;&lt;p&gt;除了退钱，他们还做了什么与众不同的事情呢？&lt;/p&gt;&lt;ul style=&quot;list-style-type: inherit;&quot; class=&quot; list-paddingleft-2&quot;&gt;&lt;li&gt;&lt;p&gt;在买家允许下，跟着买家观察他的首次使用过程。&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;公司所有高管每个月必须花两小时做客户的技术支持，听客户遇到的问题；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;做客户服务的技术支持，是公司里晋升的必经路径；&lt;/p&gt;&lt;/li&gt;&lt;li&gt;&lt;p&gt;把客户的信当着所有高管的面大声朗读，不管是感谢还是指责。&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;这使得他们 50% 的销售是来自于口碑， 20% 的销售是来自于技术支持的推荐。&lt;/p&gt;&lt;p&gt;“ 客户真正想要的和技术真正能做好的交叉点 —— 在此处才能找到真正的伟大。 ”&lt;/p&gt;&lt;p&gt;“ 我们不管做什么，都是有客户存在的。 ”&lt;/p&gt;&lt;p&gt;——ScottCook（ Intuit创始人）&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615736', '1610615736');
+INSERT INTO `ey_article_content` VALUES ('17', '41', '&lt;p&gt;各种行销手段早已令人眼花缭乱，但究其本质都是在研究客户（消费者），研究客户的所想、所需，使产品或服务有的放矢。大数据时代又给它赋予了新名词：精准营销。大数据最先应用的领域多为面对客户的行业，最先应用的情景也多为精准营销。&lt;/p&gt;&lt;p&gt;“酒好也怕巷子深”，产品或服务的信息要送达客户才可能促成交易。一般认为，向客户传达产品或服务信息要靠广告。广告古已有之，“三碗不过岗”的酒幌子就是广告。没有互联网的时代，我们熟悉的是电视广告、广播广告、印刷品平面广告、户外广告牌等，当然，也包括吆喝叫卖。但过去的广告是千人一面、不区分受众的。后来商家对客户的信息有所采集就有了CRM，经过客户分类，可以更好地服务于不同的客户群体。互联网+大数据时代让CRM有了新的发展机遇，管理客户不再是简单的数字统计和没有个性的（或简单聚类的）直邮、定投。随着商家对客户知道更多、了解更深，便有机会为客户提供个性化的营销方案，进一步改善客户体验，成为了个性化营销或叫精准营销。大数据时代，让很多过去的不可能变为可能，营销活动也赢来了新的发展机遇。&lt;/p&gt;&lt;p&gt;时代不同，商业经营的形式会变化，但本质就是两件事：开源，节流。开源是开拓新客户，发现新商机；节流是减少内部运营成本，提高资源利用效率。要实现这一切都需要以数据为依据的决策。过去，人们也在长期的经营活动中，采集和运用了与经营活动相关的很多强相关数据，也形成了选择客户的标准。鉴于当时的技术瓶颈，做大样本的数据采集及数据分析成本都过高，无法在更大范围推广运用。大数据时代，人们有了廉价采集数据和存储数据的可能，廉价的计算资源让数据分析成为了可能。&lt;/p&gt;&lt;p&gt;大数据精准营销的背后，是用多维度的数据来观察客户，描述客户，就是说为客户画像。说“依托大数据，可以让营销人员比过去更了解客户，比客户自己更了解客户的需求”并不为过。营销人员无不想知道客户是谁、在哪里、消费习惯是什么、需要什么、什么时候需要、用什么方式向他们传递信息更为有效等等，通过数据采集和数据分析分析可以找到答案。精准营销不仅可以帮助商家开源---发现潜在客户，还可以帮助商家节流---发现潜在风险。当我们对客户了解更多，就会知道哪位客户可能在经营中存在风险。&lt;/p&gt;&lt;p&gt;若问每个经营者是否会运用从业经验来进行营销，多数答案是肯定的。但若问经营者是否会利用数据进行营销，恐怕答案就是五花八门。一般认为，应用数据进行营销是大公司的事情，与小公司无缘。其实，大到跨国公司，小到街边小贩，运用数据进行营销，都会收到意想不到的结果。不相信吗？街边小贩留意一下天气预报（刮风，下雨，还是暴晒）就知道明天有哪些生意的机会，进而知道该如何备货。建议中小公司的人不要拒绝精准营销的理念，不妨学学精准营销的思想方法。即便是经营者有丰富的经验，把经验数据化对经营也会很有帮助。&lt;/p&gt;&lt;p&gt;《颠覆营销》一书就是在教读者如何运用大数据来做营销。书中案例丰富、语言可读性强。值得关心大数据营销的各界朋友读一读。&lt;/p&gt;&lt;p&gt;我认同书中的不少观点：“大数据重新定义产业竞争规则，比的不是数据规模大小，不是统计技术，也不是强大的计算能力，而是核心数据的解读能力”。在很多人纠结于大数据定义的今天，我们确实更应该关注数据的核心价值理解与应用。书中提出的“问对问题”也很重要。经营者平时的问题一定不少，但追问究竟时，就可能出现偏差，导致“失之毫厘谬以千里”。问对问题能力的提高涉及思想方法，需要在锻炼中提高。验证问题是否问对了，恰恰就是数据分析师可以做贡献的地方。&lt;/p&gt;&lt;p&gt;本书还引起了二个值得更深入思考的问题：&lt;/p&gt;&lt;p&gt;仅仅发现不同客户群体的消费习惯，适时提醒客户去消费，还远远不够。比如：某消费者一个月的正常理性消费在两千元的水平，一般在A，B两家商店消费。A商店运用了精准营销的理念会让消费者把这两千元都花在A商店，随着B商店的后来居上，消费者又可能重新回到B商店消费这两千元。在供给过剩需求不足的今天，既有的消费额在不同商家中进行分配或迁移都不能带来社会消费总量的增加。大数据营销的更高水平应用是提前知晓客户尚未被满足、甚至尚未被发现的需求。大数据的价值挖掘有机会把商家（含厂家）和客户连在一起，让商家提供更多的满足客户个性化需求的产品或服务，让客户的消费意愿提高。这是数据价值挖掘工作者面临的新挑战。&lt;/p&gt;&lt;p&gt;数据真的越多越好吗？不少大数据公司热衷于用爬虫软件在网上“爬”各种数据。然而同一数据集在不同的应用场景价值密度是不一样的，针对特定应用场景也并非是数据维度越多就越好，一定要围绕应用目标来采集数据和使用数据。提升维度来采集更多数据一定是有助于更详尽地描述事物，但无疑也增加了处理数据的复杂性。每一次技术的进步，都给人类带来新的想象空间，难免欲望膨胀自信满满，对世界的认知也随之升维，甚至是无节制地升维。之后发现升维带来资源的占用，智慧跟不上，无节制地升维反而是解决方案复杂化，冷静下来会重新启动降维思考。也许人类的认知与智慧就是在升维、降维、再升维、再降维中交替前行的。本书的降维思考，必要时回归本元的思考给人们启示。&lt;/p&gt;&lt;p&gt;大数据时代工具手段固然重要，思想方法更为重要。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615730', '1610615730');
+INSERT INTO `ey_article_content` VALUES ('6', '10', '&lt;p&gt;Z Yuhan：用户界面（UI，User Interface）设计是设计软件产品所涉及到的几个交叉学科之一。不论是用户体验（UX，User Experience）、交互设计（ID，Interaction Design），还是视觉/图形设计（Visual / Graphic Design），都能牵扯到用户界面设计。&lt;/p&gt;&lt;h4&gt;一、什么是用户界面设计？&lt;/h4&gt;&lt;p&gt;广泛来讲，用户界面是人与机器交流的媒介。用户向机器发出指令，机器随即开始一段进程，回复信息，并给出反馈。用户可以根据用户反馈进行下一步操作的决策。&lt;/p&gt;&lt;p&gt;人机交互（HCI，Human Computer Interaciton）所关注的主要是数字界面，即过去的打孔机、命令行，直至今天的图形界面（GUI，Graphic Design）。&lt;/p&gt;&lt;p&gt;用户界面设计对于数码产品来说主要关注的是布局、信息结构，以及界面元素在显示屏和各种终端平台上的展示。电子游戏和电视界面也包括其中。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615827', '1610615827');
+INSERT INTO `ey_article_content` VALUES ('7', '12', '&lt;p&gt;北京时间 5 月 31 日凌晨，有“互联网女皇”之称的玛丽·米克尔发布了 2018 年的互联网趋势报告，这也是她第 23 年公布互联网报告。&lt;br/&gt;&lt;/p&gt;&lt;p&gt;每年的互联网女皇报告几乎都会成为每个互联网创业者的必读报告。那么，互联网女皇是谁?为什么她的报告会如此受关注呢?&lt;/p&gt;&lt;p&gt;互联网女皇： 90 年代华尔街的象征&lt;/p&gt;&lt;p&gt;1958 年 9 月，玛丽·米克尔(Mary Meeker)出生于美国印第安纳州。&lt;/p&gt;&lt;p&gt;1982 年，米克尔加入了当时最负盛名的券商美林公司，担任股票经纪人。&lt;/p&gt;&lt;p&gt;米克尔的明星分析师之路开始于 1991 年，这年她加入了知名投行摩根士丹利，开始了自己辉煌的科技分析师生涯。&lt;/p&gt;&lt;p&gt;自 1995 年以来，米克尔的工作随着网络潮流变化而变化，她逐重于研究雅虎、美国在线及亚马孙等知名公司将如何调整结构并相互竞争。&lt;/p&gt;&lt;p&gt;1996 年，玛丽·米克尔如愿地成为摩根·斯坦利技术股票分析部的负责人，还创造出了华尔街闪耀的新职业——互联网分析师。就像垃圾债券代表了 80 年代华尔街一样，玛丽·米克尔成了 90 年代华尔街的象征。&lt;/p&gt;&lt;p&gt;2010 年底，米克尔辞去摩根士丹利董事总经理的职位，离开华尔街，去到加州成为知名风投KPCB的合伙人。KPCB公司(Kleiner\r\n Perkins Caufield &amp;amp; Byers)成立于 1972 年，是美国最大的风险基金，其最得意的杰作是网景公司的创立。&lt;/p&gt;&lt;p&gt;互联网女皇报告：互联网领域的投资圣经、选股指南&lt;/p&gt;&lt;p&gt;1994 年，米克尔在《纽约时报》上偶然看到一篇讲述创业公司Mosaic研发网络浏览器的报道。米克尔立即意识到，这种网络浏览器可能会改变人们获取信息的方式。她随后就联系了Mosaic的两位创始人，并向华尔街投资者大力介绍这家公司。&lt;/p&gt;&lt;p&gt;Mosaic后来改名为网景，并在 1995 年在纽约上市。得益于米克尔与网景两位创始人的良好关系，摩根士丹利成为网景首次公开募股(IPO)的主承销商。&lt;/p&gt;&lt;p&gt;当年 8 月 9 日，网景上市首日收盘，股价从 14 美元的发行价暴增至 75 美元，创下了当时的上市公司首日涨幅记录。当年网景IPO也成为互联网时代到来的一大标志。&lt;/p&gt;&lt;p&gt;1995 年，除了负责网景的上市交易外，米克尔还与同事克里斯o德普开始发布《互联网报告》，并最早提出了“页面浏览量”等网络类股分析指标。这份报告被投资者视为互联网领域的投资圣经，并且成书公开发行，在整个科技行业引发了巨大反响。&lt;/p&gt;&lt;p&gt;1996- 1997 年，米克尔和摩根士丹利发布了《互联网广告报告》与《互联网零售业报告》，一举奠定了米克尔互联网领域第一分析师的地位。互联网女皇报告几乎成为当时每个互联网创业者的必读报告。&lt;/p&gt;&lt;p&gt;互联网女皇报告，无异于选股指南。她向投资者推荐的美国在线、戴尔、亚马逊、eBay等公司股票，都很快带来了超过十倍的投资回报。&lt;/p&gt;&lt;p&gt;互联网女皇报告中的“神预测”&lt;/p&gt;&lt;p&gt;业界如此看重互联网女皇报告的最主要原因，在于米克尔的那些神预测。以下，我们简单罗列了几点互联网女皇报告中的神预测例子。&lt;/p&gt;', '', '1610615823', '1610615823');
+INSERT INTO `ey_article_content` VALUES ('8', '13', '&lt;p&gt;网站建设的五大核心要素&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20190114/75c3c73acccc98cc5553d39eabf5fb38.jpg&quot; title=&quot;网站建设的五大核心要素(图1)&quot; alt=&quot;网站建设的五大核心要素(图1)&quot;/&gt;&lt;/p&gt;&lt;p&gt;　　企业要实行网络营销，首先需要进行网站制作。网站是由众多的Web页面组成的，而这些页面设计的好坏，直接影响到这个网站能否得到用户的欢迎。判断一个主页设计的好坏，要从多方面综合考虑，不能仅仅看它设计得是否生动漂亮，而应该看这个网站能否最大限度地替用户考虑。&lt;/p&gt;&lt;p&gt;&lt;img title=&quot;网站建设的五大核心要素(图2)&quot; alt=&quot;网站建设的五大核心要素(图2)&quot; class=&quot;limg&quot; src=&quot;http://www.eyoucms.comhttps://update.eyoucms.com/demo/uploads/allimg/180426/1510032P3-1.jpg&quot;/&gt;&lt;/p&gt;&lt;p&gt;　　3、以产品为核心原则&lt;/p&gt;&lt;p&gt;　　网站制作最重要的目的及功能就是为产品展示。顾客访问网站的主要目的是为了对产品和服务进行深入的了解，网站的价值也就在于灵活地向用户展示产品说明及图片甚至多媒体信息，即使一个功能简单的网站至少也相当于一本可以随时更新的产品宣传资料。过时的产品信息或者产品信息不完善不仅无法促进销售，同时也影响顾客的信心。顾客在访问网站时，关心的不是个人的信息，而是能够提供什么样的产品、产品的优势是什么。所以，以产品为核心是网站成功的一首要前提。&lt;/p&gt;&lt;p&gt;　　产品信息一般应该包括以下几方面内容：产品名称产品规格、产品用途、产品特性、产品认证情况及产品图片等。其次，产品规格、产品用途和产品特性等信息应尽可能详细地描述。&lt;/p&gt;&lt;p&gt;　　4、以网站的信息交互能力强为原则&lt;/p&gt;&lt;p&gt;　　如果一个网站只能提供浏览者浏览，而不能引导浏览者参与到网站内容的一部分建设中，那么它的吸引力是有限的。只有当浏览者能够很方便地和信息发布者交流信息时，该网站的魅力才能充分体现出来。虚拟论坛的设计在产品使用者之间、产品使用者与产品开发经理之间展开对产品的各种讨论。在线营销人员还可以借此收集市场信息，制定有效的营销计划。而网站消费者的反馈信息直接在网上公布，能够吸引消费者回访该网站，并由此可形成与顾客的固定关系。&lt;/p&gt;&lt;p&gt;　　当顾客在网上找到感兴趣的产品时，如何针对该产品及时进行询价和反馈?这不仅仅是通过电子函件方式就能够实现的。网站上应该提供相应的信息反馈模块，使顾客能够针对某个或多个产品方便快捷地进行询价或反馈。同时，企业的业务员应该能够及时查到顾客的反馈信息并及时回复：每个业务部门或业务员应该能够针对其发布的产品，方便地管理顾客的信息和反馈信息。通过网站可以为顾客提供各种在线服务和帮助信息，比如常见问题解答(FAQ)、详尽的联系信息、在线填写寻求帮助的表单、通过聊天实时回答顾客的咨询等。同时，利用网站还可以实现增进顾客关系的目的，比如通过发行各种免费邮件列表、提供有奖竞猜等方式吸引用户的参与。通过网站上的在线调查表，可以获得用户的反馈信息，用于产品调查、消费者行为调查、品牌形象调查等，是获得第一手市场资料有效的调查工具。&lt;/p&gt;&lt;p&gt;　　5、以完善的检索能力为原则&lt;/p&gt;&lt;p&gt;　　对于一个网站来说，如何合理地组织自己要发布的信息内容，以便让浏览者能够快速、准确地找到要找的信息，这是一个网站内容组织是否成功的关键。如果网站的结构设计不能使顾客方便、快捷地找到所需的信息，再好的设计也不能吸引长久的客户。即使将他吸引到了网站主页，将来也会中断访问。为了达到上述设计目标，一些网站在网页上设计了信息索引和目录索引。使用者能很快地找到感兴趣的那部分信息。&lt;/p&gt;&lt;p&gt;　　因此，为了网站内容的实用，有一定规模的网站一定要提供检索功能，以便于用户查找本网站的信息。为了给浏览者创造方便条件，网页设计者经常将网页内容设计成树形结构，方便纵向查询。访问者从主页开始就可以层层深入到所有“树权”和“树梢”的信息内容。另外，还可以设计一个搜索系统，让访问者很容易地就找到相关的内容。网址的搜索系统，设计应相当周全，允许访问者从任一页面进入。同时，在网站的任何一个页面都要设计有“返回主页”的链接，以方便访问者回到“树干”。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615818', '1610615818');
+INSERT INTO `ey_article_content` VALUES ('9', '14', '&lt;p&gt;网站建设，静态页面和动态页面如何选择&lt;/p&gt;&lt;p&gt;　　电商网站建设为什么要使用静态页面制作。我们都知道，网站制作有分为静态页面制作和动态网页制作，那么建设电商网站采用哪种网站设计技术更好呢?&lt;/p&gt;&lt;p&gt;　　我们建设网站最终目的是为了给用户浏览，所以从用户的角度出发进行思考才是最实际的，使用动态网页制作技术虽然网页美观度大大提升了，但是却不利于网站优化，今天小编重点和大家谈谈，网站建设为什么要使用静态页面制作。&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20190114/47caf8cc457ff50c8a66f4c4a23cfeb1.png&quot; title=&quot;网站建设，静态页面和动态页面如何选择(图1)&quot; alt=&quot;网站建设，静态页面和动态页面如何选择(图1)&quot;/&gt;&lt;/p&gt;&lt;p&gt;　　做静态网站建设所采用的技术原理是一对一的形式，也就是说这样的网站上面，一个内容对应的就是一个页面，无论网站访问者如何操作都只是让服务器把固有的数据传送给请求者，没有脚本计算和后台数据库读取过程，大大降低了部分安全隐患。静态网站设计除了拥有上述的速度快，安全性高这两个特点之外还具有跨平台，跨服务器功能。&lt;/p&gt;&lt;p&gt;　　现在熟悉搜索引擎原理工作原理的朋友应该都知道，它所提供给广大用户的信息是本身就存在于数据库当中的信息而不是实时的信息，固定的信息内容更容易接受和保存。我们可能常常会遇到这样的问题，当我们搜索自己所需要的信息时得出来的结果可能已经失效，这就是静态页面网站设计的不足之处，但又因为它的稳定，所以久久不会被删除。&lt;/p&gt;&lt;p&gt;　　与静态页面网站设计不同，生成的动态页面信息不但不易被搜索引擎所检索，而且打开速度慢，再者也不稳定，这就是为什么这么多专业网站建设公司都一再建议客户使用静态形式的网站设计的原因，有些网站建设公司会考虑把页面进行伪静态处理，但不知道大家有没有注意过，伪静态处理的URL通常是不规则的。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615811', '1610615811');
+INSERT INTO `ey_article_content` VALUES ('10', '19', '&lt;p&gt;从三方面完美的体验企业网站的核心价值&lt;/p&gt;&lt;p&gt;　　随着互联网的迅猛发展，一个企业的发展离不开互联网的发展，企业注重企业网站建设，那么必然会给其带来不错的效果。企业网站建设其核心价值直接体现在网站对于用户和商家而言，是否能够满足他们利益需求，能否提高企业发展，提高企业的发展渠道。&lt;/p&gt;&lt;p&gt;&lt;img title=&quot;从三方面完美的体验企业网站的核心价值(图1)&quot; alt=&quot;从三方面完美的体验企业网站的核心价值(图1)&quot; class=&quot;rimg&quot; src=&quot;http://www.eyoucms.comhttps://update.eyoucms.com/demo/uploads/allimg/180426/150RQ155-0.jpg&quot;/&gt;&lt;/p&gt;&lt;p&gt;　　一个好的导航系统就是一个好的导游，认为每一个网站设计方案都有权利与义务帮助客户及时准确的找到自己感兴趣的内容主体和需要的东西。&lt;/p&gt;&lt;p&gt;　　另一方面体现在网站对商家现金利益需求的满足，而此却建立在网站对用户需求满足的基础之上。因为，如果网站不能够满足用户利益的需求，用户就不会为网站创造价值，不能吸引更多的用户参与到网站中来，不能实现网站价值循环式的增长，用户规模将会无法得到较大发展，很难实现对商家现金利益需求的满足，商家在网站投放广告是基于网站促进发生交易可能性的大小，交易可能性越大，商家才可以获得更大的现金利益，否则，将会白白浪费广告费。&lt;/p&gt;&lt;p&gt;　　其次体现在对用户利益需求的满足，网站在发展初期更多的是要为用户提供他们需求的内容，积极的创造内容价值，满足用户各种基础性利益的需求，尤其是各类疑问的解答，相关兴趣或者专业资料的提供，各种资讯信息的发布。让用户能够基于某一种原因留下来，在基础性的工作做好的前提下，您可以着力于用户交易利益需求的满足，或者开始就将交易与用户的相关需求结合起来，打造一个个活跃度高的交易类版块，为用户提供此类交易最全面、最方便的资料和场所，积极促进用户活跃度的提高和迅速实现网站盈利。&lt;/p&gt;&lt;p&gt;　　我们认为让客户在首页即可看到与自己寻找的讯息高度相关的行业信息是非常明智的抉择，一个没有大量行业专业信息体现的网站设计称不上合格的网站设计，也无法真正的为客户从根本上解决问题。&lt;/p&gt;&lt;p&gt;　　我们只有尽量的在网站设计当中体现出如何才能在众多的行业竞争对手中脱颖而出，让客户可以信任我们呢?网站建设公司认为唯有尽量表现出自己的专业实力方可,当然除了这三点之外，网站设计仍旧有很多需要注意的地方，但不管怎么样，核心价值还是应该要重点体现，将重点放在核心内容上才是网站设计的真谛， 我们知道网站运营的核心理念是价值，站长们务必牢牢树立，一切从用户出发，积极满足用户需求，让用户发挥创造力，为网站创造价值，实现网站价值循环式增长，让站长运营变成用户运营是我们的终极目标，一劳永逸，盈利不断。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615806', '1610615806');
+INSERT INTO `ey_article_content` VALUES ('11', '20', '&lt;p&gt;随着网络应用的丰富和发展，很多网站往往不能迅速跟进大量信息衍生及业务模式变革的脚步，常常需要花费许多时间、人力和物力来处理信息更新和维护工作；遇到网站扩充的时候，整合内外网及分支网站的工作就变得更加复杂，甚至还需重新建设网站；如此下去，用户始终在一个高成本、低效率的循环中升级、整合…&lt;/p&gt;&lt;p&gt;于是，我们听到许多用户这样的反馈：&lt;/p&gt;&lt;p&gt;页面制作无序，网站风格不统一，大量信息堆积，发布显得异常沉重；&lt;/p&gt;&lt;p&gt;内容繁杂，手工管理效率低下，手工链接视音频信息经常无法实现；&lt;/p&gt;&lt;p&gt;应用难度较高，许多工作需要技术人员配合才能完成，角色分工不明确；&lt;/p&gt;&lt;p&gt;改版工作量大，系统扩展能力差，集成其它应用时更是降低了灵活性；&lt;/p&gt;&lt;p&gt;对于网站建设和信息发布人员来说，他们最关注的系统的易用性和的功能的完善性，因此，这对网站建设和信息发布工具提出了一个很高的要求。&lt;/p&gt;&lt;p&gt;首先，角色定位明确，以充分保证工作人员的工作效率；其次，功能完整，满足各门道&amp;quot;把关人&amp;quot;应用所需，使信息发布准确无误。比如，为编辑、美工、主编及运维人员设置权限和实时管理功能。&lt;/p&gt;&lt;p&gt;此外，保障网站架构的安全性也是用户关注的焦点。能有效管理网站访问者的登陆权限，使内网数据库不受攻击，从而时刻保证网站的安全稳定，免于用户的后顾之忧。&lt;/p&gt;&lt;p&gt;根据以上需求，一套专业的内容管理系统CMS应运而生，来有效解决用户网站建设与信息发布中常见的问题和需求。对网站内容管理是该软件的最大优势，它流程完善、功能丰富，可把稿件分门别类并授权给合法用户编辑管理，而不需要用户去理会那些难懂的SQL语法。&lt;/p&gt;', '', '1610615802', '1610615802');
+INSERT INTO `ey_article_content` VALUES ('12', '21', '&lt;p&gt;SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。&lt;/p&gt;&lt;p&gt;相反地，如果将关注的焦点放在搜索引擎优化以及如何取悦搜索引擎蜘蛛上，那么网站可能会排名很高，并且会获得大量的搜索引擎流量，但是如果设计很不尽人意，那就不一样了。为了在当今的数字环境中取得成功，必须将重点放在网站设计和搜索引擎优化上。&lt;/p&gt;&lt;p&gt;一、但是，SEO 不会扼杀掉网页设计师的创造力吗？&lt;/p&gt;&lt;p&gt;在过去的五年中，对“优化设计”的巨大需求已经被网页设计师所接受。在此之前，设计师们主要关注的是用户的体验，而不是“机器人”的体验。&lt;/p&gt;&lt;p&gt;如今，设计师不仅要让网站看起来有吸引力，而且要确保行为召唤必须符合网站页面“折叠”的要求，网站的加载速度必须很快，必须使用面包屑路径，清晰明了的导航选择，必须使用&amp;nbsp;CSS，JavaScript 文件必须保持在最低限度…这是一项艰巨的任务。&lt;/p&gt;&lt;p&gt;一些设计师可能想知道，所有这些新的 SEO 规则是否会损害创建网站的自由？&lt;/p&gt;&lt;p&gt;对于“干净”的网站设计而言，它可以帮助一个网站快速加载，容易被搜索引擎蜘蛛抓取。因此，在现实中，创造力和最优化需要能够同时在一起“蓬勃发展”。&lt;/p&gt;&lt;p&gt;二、把它们结合在一起&lt;/p&gt;&lt;p&gt;有一些核心元素支持每一个 SEO 策略和网站设计项目：&lt;/p&gt;&lt;p&gt;1.　关键词分析&lt;/p&gt;&lt;p&gt;在启动一个商业网站项目时，必须进行彻底的关键词分析。为了做到这一点，网页设计师必须紧密深入地了解客户的目标受众，并定义受众中的人口结构是如何融入到企业正试图达到的更大的目标市场。然后，应该对网站进行适当的关键词/长尾关键词优化。&lt;/p&gt;&lt;p&gt;2.　内容层次结构&lt;/p&gt;&lt;p&gt;对于一个企业来说，创建好的内容是不够的，他们还必须在战略上规划内容的位置。&lt;/p&gt;&lt;p&gt;有效的计划意味着将相关的内容放到虚拟的容器中，通过创造性的设计和内部链接让内容层级结构一目了然。并且，一个经过优化的网站是对用户和搜索引擎蜘蛛都很友好的网站。&lt;/p&gt;&lt;p&gt;3.　从用户的角度思考&lt;/p&gt;&lt;p&gt;通常情况下，你的网站有越多的页面或文章，目标用户找到你的机会就越多。当他们着陆这些特定的页面的时候，你需要确保你能帮助他们轻松的找到你。&lt;/p&gt;&lt;p&gt;所以你必须从用户的角度进行思考，要让用户立即清楚地知道他们在进行访问的页面的当前位置，并帮助用户在尽可能少的点击下从页面转换到另一页面。&lt;/p&gt;&lt;p&gt;三、为什么&amp;nbsp;SEO 策略如此重要？&lt;/p&gt;&lt;p&gt;拥有合适的网站结构和信息架构，最终将会帮助企业提供一种引人入胜的用户体验，同时减少对每一次新增长的需求。但是，除非你的品牌是众所周知的，否则通常是搜索引擎对网站所收到的大部分流量负责。SEO 策略有能力利用重要的客户数据，挖掘新的潜在收入流。&lt;/p&gt;&lt;p&gt;对于那些试图进行搜索引擎优化的网站所有者来说，有一些地方经常是麻烦的。现在，我将为网站所有者提供搜索引擎优化建议，以获得更高排名的页面。&lt;/p&gt;&lt;p&gt;1. &amp;nbsp;URL 结构&lt;/p&gt;&lt;p&gt;大多数网站创建的 URL 都包含很多随机字符，比如问号，没有关键词或任何有价值的内容。当搜索引擎的 URL 包含 SEO 的关键词或短语时，页面将会在搜索引擎中排名更高。因此，在 URL 中设置关键词非常重要。&lt;/p&gt;&lt;p&gt;2.　页面的标题&lt;/p&gt;&lt;p&gt;搜索引擎排名中最重要的因素之一是页面标题。不过，许多网站并没有改变他们的网页标题。在青柠建站平台中，你可以通过使用 SEO 标题标签插件，它很容易让你为你的文章和页面创建标题。&lt;/p&gt;&lt;p&gt;3.　重复的内容&lt;/p&gt;&lt;p&gt;没有一个搜索引擎喜欢看到重复的内容。重复内容是一些网站的主要问题，因为类别页面和日历/日期页面经常会导致搜索引擎在多个页面上找到相同的内容。&lt;/p&gt;&lt;p&gt;对于网站所有者来说，有几种方法可以克服重复的内容问题。其中一种方法是使用 robot.txt 文件，用来指导搜索引擎哪些页面应该被忽略，只留下要索引的主要页面。&lt;/p&gt;&lt;p&gt;4. &amp;nbsp;Meta 标签&lt;/p&gt;&lt;p&gt;在设计一个传统的静态网站时，你可以为每个页面输入元标签（描述）。尽管这些标签在搜索引擎排名上的影响力没有以前那么大，但在你的页面上有这些标签并不会带来什么坏处。&lt;/p&gt;&lt;p&gt;然而，大多数建站平台并没有给用户在写文章时添加元标签的选项。对于 青柠建站平台 用户来说，添加元标签插件将允许你为任何页面输入元标签。&lt;/p&gt;&lt;p&gt;四、网页设计师在 SEO 方面的职责是什么？&lt;/p&gt;&lt;p&gt;搜索引擎优化是一个持续的过程，它不能通过以特定的方式设计一个网站来实现。当然，网页设计师应该付出相当大的努力来帮助客户构建一个优化的站点，但是网页设计师在 SEO 方面的职责是什么，以及客户的职责是什么？&lt;/p&gt;&lt;p&gt;作为一个企业主，你的网站的优化对你来说比设计师更重要（这并不是说设计师不关心，但是设计师的注意力通常集中在网站的视觉和功能上）。你比设计师更了解你的客户 / 潜在客户，所以你应该对你的目标有更多的建设性意见。&lt;/p&gt;&lt;p&gt;也许有些客户对 SEO 和目标关键词可能不太了解，那么理想的情况是让客户和你在这个问题上协同工作。&lt;/p&gt;&lt;p&gt;根据我的经验，让客户参与其中的最简单方法之一就是简单地解释网站上使用的词语和短语（标题、文案等）会对网站排名有直接的影响。&lt;/p&gt;&lt;p&gt;我通常会要求客户给我一份他们认为潜在访问者可能会在搜索中使用的词语和短语列表。在我不太熟悉的行业中设计网站时，这一点尤其重要。&lt;/p&gt;&lt;p&gt;当然，可能需要做一些研究。客户应该承担起关键词研究的责任，还是应该由设计师来负责？&lt;/p&gt;&lt;p&gt;我的经验是，如果客户参与进来，这项研究通常会更有效，但这并不总是可能的。设计师应该有足够的知识来为客户提供建议，并且应该愿意提供帮助，但是最终最好还是让客户尽可能地参与进来。事实上，如果客户关心 SEO，参与过程会达到一个更加合理的期望。&lt;/p&gt;&lt;p&gt;设定现实的期望也可能是设计师的责任。&lt;/p&gt;&lt;p&gt;我有一些潜在的客户来找我说：“我被 SEO 专家告知，只要在网站页面上插入竞争热门的关键词就可以让我的网站排名第一或第二”。&lt;/p&gt;&lt;p&gt;在这种情况下，我会很明显地会指出，“搜索引擎优化需要持续的工作，而这种工作通常不能通过以某种方式创建网站来完成的。”&lt;/p&gt;&lt;p&gt;我经常建议客户在他们的网站上添加一个博客，以获得更多的内容，并提高排名的机会。&lt;/p&gt;&lt;p&gt;结语&lt;/p&gt;&lt;p&gt;虽然这只是一个简短的总结，但这些是网站所有者和设计师将面对的最重要的 SEO 话题。通过了解这些知识，你可以更好地创建出对用户和搜索引擎都友好的网站。&lt;/p&gt;&lt;p&gt;本文由易优小编设计 原创授权发布易优网站，未经授权，转载必究。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615796', '1610615796');
+INSERT INTO `ey_article_content` VALUES ('14', '38', '&lt;p&gt;SEO很多伙伴都了解，就是搜索引擎排名优化，通过对网站内部和外部进行优化当用户搜索相应关键词时网站能够排名在搜索引擎前面，具体可以百度搜索“网络营销课程”查看商梦网校操作的案例！&lt;/p&gt;&lt;p&gt;但单页SEO很多伙伴可能会有点陌生，单页SEO是将单页网站与内容内容结合为一体的SEO优化方案，主要是提升网站流量利用率让用户打开网站就能看到目标页面，转换更多订单，创造更多收益。单页SEO的操作理念也是由商梦网校提出，并一起推荐操作大家的模式。&lt;/p&gt;&lt;p&gt;那什么又是单页SEO站群呢，因为操作SEO成功率并不是100%，也就是意味着你做了并不会绝对有排名。因为在任何时候搜索引擎，特别是百度的索引数据库里，只有60%的网页数量。也就是说，大量的网页它是没有收录进来，它本身的能力所限无法做到中文的所有几百亿个网页都收录进来。所以，对于大部分网站，都有被删除网页，没有排名，或被K的经历，或没有排名。处理办法：坦然面对这一切。一个网站的成本才多少钱？如果因此对SEO失去信心，那就是最大的失去了。&lt;/p&gt;&lt;p&gt;不过我们也想到了一个更好的解决方案，这个方案在最早期我们开始操作，并且取得了非常不错的成绩就是“站群”，我们可以假设一个网站排名的机会为1，如果我们用 10 个网站来进行优化排名机会可以提升 10 倍， 10 个网站我们也不要求都获得排名只需要有1- 3 个网站获得排名这个操作就是成功的，因为对于我们做站群来说投入 10 个网站的成本也就 1000 块左右；这个投资也是非常划算的，这个思路其实有点像竞价，不像传统的SEO，因为传统的SEO我们投资一个网站成本一两百，就想获得排名，然后给我们几百上千倍的回报。结果就相当于我们把希望寄托在一颗树上，结果这颗树没有开花结果，我们就饿死了。&lt;/p&gt;&lt;p&gt;想给一个项目建立数十个网站也是需要掌握很多技术的，特别是批量建站方面，以及后期的维护。这次商梦网校升级加入的单页SEO站群操作方法，没有长篇大论直接给你演示怎么干，你只需要复制我们提供的方法就可以了。当然这里面也有很多核心的技术，比如域名注册和空间购买技巧虽然非常简单，但是直接会影响我们后期操作结果，我们给提供的技巧也会将你的成本降到低，如果投资建立 10 个网站域名与空间的成本不到 1000 元。相当于 1000 你就可以启动一个站群项目。核心的还是文章的采集，我们的原理是利用火车头采集原创文章然后实现挂机自动发布，只需要设置好每天几点运行软件就会自动更新网站文章，还会自动网站自动瞄文本，自动加入关键词。这些很多同学可能会问会不会太复杂，可以这样告诉你复杂的工作我们已经帮你搞定，到你使用的时候已经是打包好的解决方案。&lt;/p&gt;&lt;p&gt;网站前期整体搭建只要花时间就能搞定，但真正考验人的基实还是在于后期优化，对于网站后期优化特别是外链增加收录和权重这一块，我们还是没有长篇大论会直接给你演示实用、高效的方法让你的站群快速的获得收录，增加权重，获得排名，你需要做的就拷贝我们商梦网校的方法和模式；这些经验都是我们长期操作整理下来的，并非几天修炼的结果。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615746', '1610615746');
+INSERT INTO `ey_article_content` VALUES ('31', '72', '', '', '1563502397', '1563502397');
+INSERT INTO `ey_article_content` VALUES ('32', '73', '', '', '1563502433', '1563502433');
+INSERT INTO `ey_article_content` VALUES ('33', '74', '', '', '1563502458', '1563502458');
+INSERT INTO `ey_article_content` VALUES ('34', '75', '', '', '1563502473', '1563502473');
+INSERT INTO `ey_article_content` VALUES ('35', '76', '', '', '1563502499', '1563502499');
+INSERT INTO `ey_article_content` VALUES ('36', '77', '', '', '1563502542', '1563502542');
+INSERT INTO `ey_article_content` VALUES ('37', '78', '', '', '1563502559', '1563502559');
+INSERT INTO `ey_article_content` VALUES ('38', '79', '', '', '1563502578', '1563502578');
+INSERT INTO `ey_article_content` VALUES ('39', '80', '', '', '1563502596', '1563502596');
+INSERT INTO `ey_article_content` VALUES ('40', '81', '', '', '1563502609', '1563502609');
+INSERT INTO `ey_article_content` VALUES ('41', '84', '', '', '1610615703', '1610615703');
+INSERT INTO `ey_article_content` VALUES ('42', '85', '', '', '1610615688', '1610615688');
+INSERT INTO `ey_article_content` VALUES ('43', '86', '', '', '1610615683', '1610615683');
+INSERT INTO `ey_article_content` VALUES ('44', '87', '', '', '1610615678', '1610615678');
 
 -- -----------------------------
 -- Table structure for `ey_article_order`
@@ -500,7 +549,7 @@ INSERT INTO `ey_article_content` VALUES ('44', '87', '', '1610615678', '16106156
 DROP TABLE IF EXISTS `ey_article_order`;
 CREATE TABLE `ey_article_order` (
   `order_id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '文章订单ID',
-  `order_code` varchar(20) NOT NULL DEFAULT '' COMMENT '媒体订单编号',
+  `order_code` varchar(50) NOT NULL DEFAULT '' COMMENT '媒体订单编号',
   `users_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员ID',
   `order_status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '订单状态：0未付款，1已付款',
   `order_amount` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '订单应付总金额',
@@ -528,7 +577,7 @@ CREATE TABLE `ey_article_pay` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `aid` int(11) DEFAULT '0',
   `part_free` tinyint(1) DEFAULT '0' COMMENT '是否试看 0-否 1-是',
-  `size` int(11) DEFAULT '1' COMMENT 'KB',
+  `size` float(10,2) DEFAULT '1.00' COMMENT 'KB',
   `free_content` longtext COMMENT '试看内容',
   `add_time` int(11) DEFAULT '0',
   `update_time` int(11) DEFAULT '0',
@@ -544,7 +593,7 @@ CREATE TABLE `ey_ask` (
   `ask_id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `type_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '问题栏目ID',
   `users_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '会员ID',
-  `ask_title` varchar(80) NOT NULL DEFAULT '' COMMENT '问题标题',
+  `ask_title` varchar(200) NOT NULL DEFAULT '' COMMENT '问题标题',
   `is_recom` tinyint(1) NOT NULL DEFAULT '0' COMMENT '问题是否推荐',
   `status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '问题状态：0未解决，1已解决，2已关闭',
   `click` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '浏览点击量',
@@ -667,10 +716,11 @@ CREATE TABLE `ey_auth_role` (
   `grade` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT '级别',
   `language` text COMMENT '多语言权限',
   `online_update` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '在线升级',
+  `switch_map` tinyint(1) DEFAULT '0' COMMENT '功能地图',
   `only_oneself` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '只看自己发布',
   `check_oneself` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '发布文档自动通过审核，1--是，0--否',
   `cud` varchar(255) DEFAULT '' COMMENT '增改删',
-  `permission` text COMMENT '已允许的权限',
+  `permission` longtext COMMENT '已允许的权限',
   `built_in` tinyint(1) DEFAULT '0' COMMENT '内置用户组，1表示内置',
   `sort_order` int(10) DEFAULT '0' COMMENT '排序号',
   `status` tinyint(1) DEFAULT '1' COMMENT '状态(1=正常，0=屏蔽)',
@@ -683,8 +733,8 @@ CREATE TABLE `ey_auth_role` (
 -- -----------------------------
 -- Records of `ey_auth_role`
 -- -----------------------------
-INSERT INTO `ey_auth_role` VALUES ('1', '优化推广员', '0', '', '0', 'a:1:{i:0;s:2:\"cn\";}', '0', '1', '1', 'a:3:{i:0;s:3:\"add\";i:1;s:4:\"edit\";i:2;s:3:\"del\";}', 'a:2:{s:5:\"rules\";a:8:{i:0;s:1:\"1\";i:1;s:1:\"3\";i:2;s:1:\"4\";i:3;s:1:\"8\";i:4;s:1:\"9\";i:5;s:2:\"10\";i:6;s:2:\"14\";i:7;i:2;}s:7:\"arctype\";a:77:{i:0;s:1:\"1\";i:1;s:1:\"2\";i:2;s:1:\"3\";i:3;s:1:\"4\";i:4;s:1:\"5\";i:5;s:1:\"6\";i:6;s:2:\"33\";i:7;s:2:\"34\";i:8;s:2:\"35\";i:9;s:2:\"36\";i:10;s:2:\"37\";i:11;s:2:\"38\";i:12;s:2:\"39\";i:13;s:2:\"40\";i:14;s:2:\"41\";i:15;s:2:\"42\";i:16;s:2:\"43\";i:17;s:2:\"44\";i:18;s:2:\"45\";i:19;s:2:\"46\";i:20;s:2:\"47\";i:21;s:2:\"48\";i:22;s:1:\"8\";i:23;s:2:\"32\";i:24;s:1:\"9\";i:25;s:2:\"30\";i:26;s:2:\"31\";i:27;s:2:\"11\";i:28;s:2:\"12\";i:29;s:2:\"13\";i:30;s:2:\"23\";i:31;s:2:\"20\";i:32;s:2:\"24\";i:33;s:2:\"25\";i:34;s:2:\"21\";i:35;s:2:\"26\";i:36;s:2:\"22\";i:37;s:2:\"27\";i:38;s:2:\"28\";i:39;s:2:\"29\";i:40;s:2:\"31\";i:41;s:2:\"32\";i:42;s:2:\"33\";i:43;s:2:\"34\";i:44;s:2:\"35\";i:45;s:2:\"36\";i:46;s:2:\"37\";i:47;s:2:\"38\";i:48;s:2:\"39\";i:49;s:2:\"40\";i:50;s:2:\"41\";i:51;s:2:\"42\";i:52;s:2:\"43\";i:53;s:2:\"44\";i:54;s:2:\"45\";i:55;s:2:\"46\";i:56;s:2:\"47\";i:57;s:2:\"48\";i:58;s:2:\"49\";i:59;s:2:\"50\";i:60;s:2:\"51\";i:61;s:2:\"52\";i:62;s:2:\"53\";i:63;s:2:\"54\";i:64;s:2:\"55\";i:65;s:2:\"56\";i:66;s:2:\"57\";i:67;s:2:\"58\";i:68;s:2:\"59\";i:69;s:2:\"60\";i:70;s:2:\"61\";i:71;s:2:\"62\";i:72;s:2:\"63\";i:73;s:2:\"64\";i:74;s:2:\"65\";i:75;s:2:\"66\";i:76;s:2:\"67\";}}', '1', '100', '1', '0', '1541207843', '0');
-INSERT INTO `ey_auth_role` VALUES ('2', '内容管理员', '0', '', '0', 'a:1:{i:0;s:2:\"cn\";}', '0', '1', '1', 'a:3:{i:0;s:3:\"add\";i:1;s:4:\"edit\";i:2;s:3:\"del\";}', 'a:2:{s:5:\"rules\";a:4:{i:0;s:1:\"1\";i:1;s:2:\"10\";i:2;s:2:\"14\";i:3;i:2;}s:7:\"arctype\";a:77:{i:0;s:1:\"1\";i:1;s:1:\"2\";i:2;s:1:\"3\";i:3;s:1:\"4\";i:4;s:1:\"5\";i:5;s:1:\"6\";i:6;s:2:\"33\";i:7;s:2:\"34\";i:8;s:2:\"35\";i:9;s:2:\"36\";i:10;s:2:\"37\";i:11;s:2:\"38\";i:12;s:2:\"39\";i:13;s:2:\"40\";i:14;s:2:\"41\";i:15;s:2:\"42\";i:16;s:2:\"43\";i:17;s:2:\"44\";i:18;s:2:\"45\";i:19;s:2:\"46\";i:20;s:2:\"47\";i:21;s:2:\"48\";i:22;s:1:\"8\";i:23;s:2:\"32\";i:24;s:1:\"9\";i:25;s:2:\"30\";i:26;s:2:\"31\";i:27;s:2:\"11\";i:28;s:2:\"12\";i:29;s:2:\"13\";i:30;s:2:\"23\";i:31;s:2:\"20\";i:32;s:2:\"24\";i:33;s:2:\"25\";i:34;s:2:\"21\";i:35;s:2:\"26\";i:36;s:2:\"22\";i:37;s:2:\"27\";i:38;s:2:\"28\";i:39;s:2:\"29\";i:40;s:2:\"31\";i:41;s:2:\"32\";i:42;s:2:\"33\";i:43;s:2:\"34\";i:44;s:2:\"35\";i:45;s:2:\"36\";i:46;s:2:\"37\";i:47;s:2:\"38\";i:48;s:2:\"39\";i:49;s:2:\"40\";i:50;s:2:\"41\";i:51;s:2:\"42\";i:52;s:2:\"43\";i:53;s:2:\"44\";i:54;s:2:\"45\";i:55;s:2:\"46\";i:56;s:2:\"47\";i:57;s:2:\"48\";i:58;s:2:\"49\";i:59;s:2:\"50\";i:60;s:2:\"51\";i:61;s:2:\"52\";i:62;s:2:\"53\";i:63;s:2:\"54\";i:64;s:2:\"55\";i:65;s:2:\"56\";i:66;s:2:\"57\";i:67;s:2:\"58\";i:68;s:2:\"59\";i:69;s:2:\"60\";i:70;s:2:\"61\";i:71;s:2:\"62\";i:72;s:2:\"63\";i:73;s:2:\"64\";i:74;s:2:\"65\";i:75;s:2:\"66\";i:76;s:2:\"67\";}}', '1', '100', '1', '0', '1541207846', '0');
+INSERT INTO `ey_auth_role` VALUES ('1', '优化推广员', '0', '', '0', 'a:1:{i:0;s:2:\"cn\";}', '0', '1', '1', '1', 'a:3:{i:0;s:3:\"add\";i:1;s:4:\"edit\";i:2;s:3:\"del\";}', 'a:2:{s:5:\"rules\";a:8:{i:0;s:1:\"1\";i:1;s:1:\"3\";i:2;s:1:\"4\";i:3;s:1:\"8\";i:4;s:1:\"9\";i:5;s:2:\"10\";i:6;s:2:\"14\";i:7;i:2;}s:7:\"arctype\";a:77:{i:0;s:1:\"1\";i:1;s:1:\"2\";i:2;s:1:\"3\";i:3;s:1:\"4\";i:4;s:1:\"5\";i:5;s:1:\"6\";i:6;s:2:\"33\";i:7;s:2:\"34\";i:8;s:2:\"35\";i:9;s:2:\"36\";i:10;s:2:\"37\";i:11;s:2:\"38\";i:12;s:2:\"39\";i:13;s:2:\"40\";i:14;s:2:\"41\";i:15;s:2:\"42\";i:16;s:2:\"43\";i:17;s:2:\"44\";i:18;s:2:\"45\";i:19;s:2:\"46\";i:20;s:2:\"47\";i:21;s:2:\"48\";i:22;s:1:\"8\";i:23;s:2:\"32\";i:24;s:1:\"9\";i:25;s:2:\"30\";i:26;s:2:\"31\";i:27;s:2:\"11\";i:28;s:2:\"12\";i:29;s:2:\"13\";i:30;s:2:\"23\";i:31;s:2:\"20\";i:32;s:2:\"24\";i:33;s:2:\"25\";i:34;s:2:\"21\";i:35;s:2:\"26\";i:36;s:2:\"22\";i:37;s:2:\"27\";i:38;s:2:\"28\";i:39;s:2:\"29\";i:40;s:2:\"31\";i:41;s:2:\"32\";i:42;s:2:\"33\";i:43;s:2:\"34\";i:44;s:2:\"35\";i:45;s:2:\"36\";i:46;s:2:\"37\";i:47;s:2:\"38\";i:48;s:2:\"39\";i:49;s:2:\"40\";i:50;s:2:\"41\";i:51;s:2:\"42\";i:52;s:2:\"43\";i:53;s:2:\"44\";i:54;s:2:\"45\";i:55;s:2:\"46\";i:56;s:2:\"47\";i:57;s:2:\"48\";i:58;s:2:\"49\";i:59;s:2:\"50\";i:60;s:2:\"51\";i:61;s:2:\"52\";i:62;s:2:\"53\";i:63;s:2:\"54\";i:64;s:2:\"55\";i:65;s:2:\"56\";i:66;s:2:\"57\";i:67;s:2:\"58\";i:68;s:2:\"59\";i:69;s:2:\"60\";i:70;s:2:\"61\";i:71;s:2:\"62\";i:72;s:2:\"63\";i:73;s:2:\"64\";i:74;s:2:\"65\";i:75;s:2:\"66\";i:76;s:2:\"67\";}}', '1', '100', '1', '0', '1541207843', '0');
+INSERT INTO `ey_auth_role` VALUES ('2', '内容管理员', '0', '', '0', 'a:1:{i:0;s:2:\"cn\";}', '0', '1', '1', '1', 'a:3:{i:0;s:3:\"add\";i:1;s:4:\"edit\";i:2;s:3:\"del\";}', 'a:2:{s:5:\"rules\";a:4:{i:0;s:1:\"1\";i:1;s:2:\"10\";i:2;s:2:\"14\";i:3;i:2;}s:7:\"arctype\";a:77:{i:0;s:1:\"1\";i:1;s:1:\"2\";i:2;s:1:\"3\";i:3;s:1:\"4\";i:4;s:1:\"5\";i:5;s:1:\"6\";i:6;s:2:\"33\";i:7;s:2:\"34\";i:8;s:2:\"35\";i:9;s:2:\"36\";i:10;s:2:\"37\";i:11;s:2:\"38\";i:12;s:2:\"39\";i:13;s:2:\"40\";i:14;s:2:\"41\";i:15;s:2:\"42\";i:16;s:2:\"43\";i:17;s:2:\"44\";i:18;s:2:\"45\";i:19;s:2:\"46\";i:20;s:2:\"47\";i:21;s:2:\"48\";i:22;s:1:\"8\";i:23;s:2:\"32\";i:24;s:1:\"9\";i:25;s:2:\"30\";i:26;s:2:\"31\";i:27;s:2:\"11\";i:28;s:2:\"12\";i:29;s:2:\"13\";i:30;s:2:\"23\";i:31;s:2:\"20\";i:32;s:2:\"24\";i:33;s:2:\"25\";i:34;s:2:\"21\";i:35;s:2:\"26\";i:36;s:2:\"22\";i:37;s:2:\"27\";i:38;s:2:\"28\";i:39;s:2:\"29\";i:40;s:2:\"31\";i:41;s:2:\"32\";i:42;s:2:\"33\";i:43;s:2:\"34\";i:44;s:2:\"35\";i:45;s:2:\"36\";i:46;s:2:\"37\";i:47;s:2:\"38\";i:48;s:2:\"39\";i:49;s:2:\"40\";i:50;s:2:\"41\";i:51;s:2:\"42\";i:52;s:2:\"43\";i:53;s:2:\"44\";i:54;s:2:\"45\";i:55;s:2:\"46\";i:56;s:2:\"47\";i:57;s:2:\"48\";i:58;s:2:\"49\";i:59;s:2:\"50\";i:60;s:2:\"51\";i:61;s:2:\"52\";i:62;s:2:\"53\";i:63;s:2:\"54\";i:64;s:2:\"55\";i:65;s:2:\"56\";i:66;s:2:\"57\";i:67;s:2:\"58\";i:68;s:2:\"59\";i:69;s:2:\"60\";i:70;s:2:\"61\";i:71;s:2:\"62\";i:72;s:2:\"63\";i:73;s:2:\"64\";i:74;s:2:\"65\";i:75;s:2:\"66\";i:76;s:2:\"67\";}}', '1', '100', '1', '0', '1541207846', '0');
 
 -- -----------------------------
 -- Table structure for `ey_channelfield`
@@ -712,415 +762,549 @@ CREATE TABLE `ey_channelfield` (
   `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态',
   `add_time` int(11) NOT NULL DEFAULT '0' COMMENT '创建时间',
   `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  `set_type` tinyint(3) DEFAULT '0' COMMENT '区域选择时使用是否为三级联动,1-是',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=408 DEFAULT CHARSET=utf8 COMMENT='自定义字段表';
+) ENGINE=MyISAM AUTO_INCREMENT=541 DEFAULT CHARSET=utf8 COMMENT='自定义字段表';
 
 -- -----------------------------
 -- Records of `ey_channelfield`
 -- -----------------------------
-INSERT INTO `ey_channelfield` VALUES ('1', 'add_time', '0', '新增时间', 'datetime', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533091575', '1533091575');
-INSERT INTO `ey_channelfield` VALUES ('2', 'update_time', '0', '更新时间', 'datetime', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533091601', '1533091601');
-INSERT INTO `ey_channelfield` VALUES ('3', 'aid', '0', '文档ID', 'int', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533091624', '1533091624');
-INSERT INTO `ey_channelfield` VALUES ('4', 'typeid', '0', '当前栏目ID', 'int', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533091930', '1533091930');
-INSERT INTO `ey_channelfield` VALUES ('5', 'channel', '0', '模型ID', 'int', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092214', '1533092214');
-INSERT INTO `ey_channelfield` VALUES ('6', 'is_b', '0', '是否加粗', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092246', '1533092246');
-INSERT INTO `ey_channelfield` VALUES ('7', 'title', '0', '文档标题', 'text', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092381', '1533092381');
-INSERT INTO `ey_channelfield` VALUES ('8', 'litpic', '0', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092398', '1533092398');
-INSERT INTO `ey_channelfield` VALUES ('9', 'is_head', '0', '是否头条', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092420', '1533092420');
-INSERT INTO `ey_channelfield` VALUES ('10', 'is_special', '0', '是否特荐', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092439', '1533092439');
-INSERT INTO `ey_channelfield` VALUES ('11', 'is_top', '0', '是否置顶', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092454', '1533092454');
-INSERT INTO `ey_channelfield` VALUES ('12', 'is_recom', '0', '是否推荐', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092468', '1533092468');
-INSERT INTO `ey_channelfield` VALUES ('13', 'is_jump', '0', '是否跳转', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092484', '1533092484');
-INSERT INTO `ey_channelfield` VALUES ('14', 'author', '0', '编辑者', 'text', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092498', '1533092498');
-INSERT INTO `ey_channelfield` VALUES ('15', 'click', '0', '浏览量', 'int', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092512', '1533092512');
-INSERT INTO `ey_channelfield` VALUES ('16', 'arcrank', '0', '阅读权限', 'select', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092534', '1533092534');
-INSERT INTO `ey_channelfield` VALUES ('17', 'jumplinks', '0', '跳转链接', 'text', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092553', '1533092553');
-INSERT INTO `ey_channelfield` VALUES ('18', 'ismake', '0', '是否静态页面', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092698', '1533092698');
-INSERT INTO `ey_channelfield` VALUES ('19', 'seo_title', '0', 'SEO标题', 'text', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092713', '1533092713');
-INSERT INTO `ey_channelfield` VALUES ('20', 'seo_keywords', '0', 'SEO关键词', 'text', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092725', '1533092725');
-INSERT INTO `ey_channelfield` VALUES ('21', 'seo_description', '0', 'SEO描述', 'text', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092739', '1533092739');
-INSERT INTO `ey_channelfield` VALUES ('22', 'status', '0', '状态', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092753', '1533092753');
-INSERT INTO `ey_channelfield` VALUES ('23', 'sort_order', '0', '排序号', 'int', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092766', '1533092766');
-INSERT INTO `ey_channelfield` VALUES ('24', 'content', '2', '内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533359739', '1533359739');
-INSERT INTO `ey_channelfield` VALUES ('25', 'content', '3', '内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533359588', '1533359588');
-INSERT INTO `ey_channelfield` VALUES ('26', 'content', '4', '内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533359752', '1533359752');
-INSERT INTO `ey_channelfield` VALUES ('27', 'content', '6', '内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533464715', '1533464715');
-INSERT INTO `ey_channelfield` VALUES ('29', 'content', '1', '内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533464713', '1533464713');
-INSERT INTO `ey_channelfield` VALUES ('30', 'update_time', '-99', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('31', 'add_time', '-99', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('32', 'status', '-99', '启用 (1=正常，0=屏蔽)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('33', 'is_part', '-99', '栏目属性：0=内容栏目，1=外部链接', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('34', 'is_hidden', '-99', '是否隐藏栏目：0=显示，1=隐藏', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('35', 'sort_order', '-99', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('36', 'seo_description', '-99', 'seo描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('37', 'seo_keywords', '-99', 'seo关键字', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('38', 'seo_title', '-99', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('39', 'tempview', '-99', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('40', 'templist', '-99', '列表模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('41', 'litpic', '-99', '栏目图片', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('42', 'typelink', '-99', '栏目链接', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('43', 'grade', '-99', '栏目等级', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('44', 'englist_name', '-99', '栏目英文名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('45', 'dirpath', '-99', '目录存放HTML路径', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('46', 'dirname', '-99', '目录英文名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('47', 'typename', '-99', '栏目名称', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('48', 'parent_id', '-99', '栏目上级ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('49', 'current_channel', '-99', '栏目当前模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('50', 'channeltype', '-99', '栏目顶级模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('51', 'id', '-99', '栏目ID', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780');
-INSERT INTO `ey_channelfield` VALUES ('52', 'del_method', '-99', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1547890773', '1547890773');
-INSERT INTO `ey_channelfield` VALUES ('53', 'is_del', '0', '是否伪删除', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1547890773', '1547890773');
-INSERT INTO `ey_channelfield` VALUES ('54', 'del_method', '0', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1547890773', '1547890773');
-INSERT INTO `ey_channelfield` VALUES ('55', 'prom_type', '0', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('56', 'users_price', '0', '价格', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '0', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('57', 'prom_type', '2', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('58', 'users_price', '2', '价格', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '0', '100', '1', '1557042574', '1563498415');
-INSERT INTO `ey_channelfield` VALUES ('59', 'update_time', '2', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('60', 'add_time', '2', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('61', 'del_method', '2', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('62', 'is_del', '2', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('63', 'admin_id', '2', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('64', 'lang', '2', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('65', 'sort_order', '2', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('66', 'status', '2', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('67', 'tempview', '2', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('68', 'seo_description', '2', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('69', 'seo_keywords', '2', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('70', 'seo_title', '2', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('71', 'ismake', '2', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('72', 'jumplinks', '2', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('73', 'arcrank', '2', '阅读权限：0=开放浏览，-1=待审核稿件', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('74', 'click', '2', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('75', 'author', '2', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('76', 'is_litpic', '2', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('77', 'is_jump', '2', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('78', 'is_recom', '2', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('79', 'is_top', '2', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('80', 'is_special', '2', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('81', 'is_head', '2', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('82', 'litpic', '2', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('83', 'title', '2', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('84', 'is_b', '2', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('85', 'channel', '2', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('86', 'typeid', '2', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('87', 'aid', '2', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642');
-INSERT INTO `ey_channelfield` VALUES ('88', 'fxrq', '2', '发行日期', 'radio', 'enum(\'2019年\',\'2018年\',\'2017年\')', '0', '2019年,2018年,2017年', '', '', '1', '0', '1', '0', '0', '0', '0', '100', '1', '1563518738', '1563518738');
-INSERT INTO `ey_channelfield` VALUES ('89', 'update_time', '9', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('90', 'add_time', '9', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('91', 'del_method', '9', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('92', 'is_del', '9', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('93', 'admin_id', '9', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('94', 'lang', '9', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('95', 'sort_order', '9', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('96', 'status', '9', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('97', 'tempview', '9', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('98', 'prom_type', '9', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('99', 'users_price', '9', '价格', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('100', 'seo_description', '9', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('101', 'seo_keywords', '9', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('102', 'seo_title', '9', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('103', 'ismake', '9', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('104', 'jumplinks', '9', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('105', 'arcrank', '9', '阅读权限：0=开放浏览，-1=待审核稿件', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('106', 'click', '9', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('107', 'author', '9', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '0', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('108', 'is_litpic', '9', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('109', 'is_jump', '9', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('110', 'is_recom', '9', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('111', 'is_top', '9', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('112', 'is_special', '9', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('113', 'is_head', '9', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('114', 'litpic', '9', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '0', '0', '1', '1', '0', '100', '1', '1563526560', '1563526567');
-INSERT INTO `ey_channelfield` VALUES ('115', 'title', '9', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('116', 'is_b', '9', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('117', 'channel', '9', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('118', 'typeid', '9', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('119', 'aid', '9', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560');
-INSERT INTO `ey_channelfield` VALUES ('120', 'gzdd', '9', '工作地点', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '0', '0', '0', '1', '1', '1563526665', '1563528016');
-INSERT INTO `ey_channelfield` VALUES ('121', 'xlyq', '9', '学历要求', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '0', '0', '0', '2', '1', '1563526681', '1563528016');
-INSERT INTO `ey_channelfield` VALUES ('122', 'xzdy', '9', '薪资待遇', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '0', '0', '0', '3', '1', '1563526694', '1563528018');
-INSERT INTO `ey_channelfield` VALUES ('123', 'gzxz', '9', '工作性质', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '0', '0', '0', '4', '1', '1563526705', '1563528018');
-INSERT INTO `ey_channelfield` VALUES ('124', 'gznx', '9', '工作年限', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '0', '0', '0', '5', '1', '1563526716', '1563528019');
-INSERT INTO `ey_channelfield` VALUES ('125', 'zprs', '9', '招聘人数', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '0', '0', '0', '6', '1', '1563526727', '1563528021');
-INSERT INTO `ey_channelfield` VALUES ('126', 'nnxq', '9', '内容详情', 'htmltext', 'longtext', '0', '', '', '', '0', '0', '1', '0', '0', '0', '0', '7', '1', '1563526769', '1563528023');
-INSERT INTO `ey_channelfield` VALUES ('127', 'users_id', '0', '会员ID', 'int', 'int(11)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('128', 'arc_level_id', '0', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('129', 'arc_level_id', '4', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('130', 'arc_level_id', '2', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1565662106', '1565662106');
-INSERT INTO `ey_channelfield` VALUES ('131', 'users_id', '2', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1565662106', '1565662106');
-INSERT INTO `ey_channelfield` VALUES ('132', 'jiawei', '2', '价位区段', 'radio', 'enum(\'0-1000\',\'1000-1699\',\'1700-2799\',\'2800-3500\',\'3500-10000\')', '0', '0-1000,1000-1699,1700-2799,2800-3500,3500-10000', '', '', '1', '0', '1', '0', '0', '0', '0', '100', '1', '1565662216', '1565663341');
-INSERT INTO `ey_channelfield` VALUES ('133', 'yanse', '2', '机身颜色', 'radio', 'enum(\'银色\',\'绿色\',\'黑色\',\'灰色\')', '0', '银色,绿色,黑色,灰色', '', '', '1', '0', '1', '0', '0', '0', '0', '100', '1', '1565662279', '1565662740');
-INSERT INTO `ey_channelfield` VALUES ('136', 'weapp_code', '-99', '插件栏目唯一标识', 'text', 'varchar(200)', '200', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('137', 'is_release', '-99', '栏目是否应用于会员投稿发布，1是，0否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('138', 'old_price', '0', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('139', 'stock_count', '0', '商品库存量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('140', 'stock_show', '0', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('141', 'joinaid', '0', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('142', 'downcount', '0', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('143', 'downcount', '4', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('144', 'update_time', '1', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('145', 'add_time', '1', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('146', 'downcount', '1', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('147', 'joinaid', '1', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('148', 'del_method', '1', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('149', 'is_del', '1', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('150', 'arc_level_id', '1', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('151', 'users_id', '1', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('152', 'admin_id', '1', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('153', 'lang', '1', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('154', 'sort_order', '1', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('155', 'status', '1', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('156', 'tempview', '1', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('157', 'prom_type', '1', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('158', 'stock_show', '1', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('159', 'stock_count', '1', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('160', 'old_price', '1', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('161', 'users_price', '1', '会员价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('162', 'seo_description', '1', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('163', 'seo_keywords', '1', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('164', 'seo_title', '1', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('165', 'ismake', '1', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('166', 'jumplinks', '1', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('167', 'arcrank', '1', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('168', 'click', '1', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('169', 'author', '1', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('170', 'is_litpic', '1', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('171', 'is_jump', '1', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('172', 'is_recom', '1', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('173', 'is_top', '1', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('174', 'is_special', '1', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('175', 'is_head', '1', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('176', 'litpic', '1', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('177', 'title', '1', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('178', 'is_b', '1', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('179', 'channel', '1', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('180', 'typeid', '1', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('181', 'aid', '1', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787');
-INSERT INTO `ey_channelfield` VALUES ('182', 'downcount', '2', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233793', '1574233793');
-INSERT INTO `ey_channelfield` VALUES ('183', 'joinaid', '2', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233793', '1574233793');
-INSERT INTO `ey_channelfield` VALUES ('184', 'stock_show', '2', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233793', '1574233793');
-INSERT INTO `ey_channelfield` VALUES ('185', 'stock_count', '2', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233793', '1574233793');
-INSERT INTO `ey_channelfield` VALUES ('186', 'old_price', '2', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233793', '1574233793');
-INSERT INTO `ey_channelfield` VALUES ('187', 'update_time', '3', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('188', 'add_time', '3', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('189', 'downcount', '3', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('190', 'joinaid', '3', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('191', 'del_method', '3', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('192', 'is_del', '3', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('193', 'arc_level_id', '3', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('194', 'users_id', '3', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('195', 'admin_id', '3', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('196', 'lang', '3', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('197', 'sort_order', '3', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('198', 'status', '3', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('199', 'tempview', '3', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('200', 'prom_type', '3', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('201', 'stock_show', '3', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('202', 'stock_count', '3', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('203', 'old_price', '3', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('204', 'users_price', '3', '会员价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('205', 'seo_description', '3', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('206', 'seo_keywords', '3', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('207', 'seo_title', '3', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('208', 'ismake', '3', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('209', 'jumplinks', '3', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('210', 'arcrank', '3', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('211', 'click', '3', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('212', 'author', '3', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('213', 'is_litpic', '3', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('214', 'is_jump', '3', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('215', 'is_recom', '3', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('216', 'is_top', '3', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('217', 'is_special', '3', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('218', 'is_head', '3', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('219', 'litpic', '3', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('220', 'title', '3', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('221', 'is_b', '3', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('222', 'channel', '3', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('223', 'typeid', '3', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('224', 'aid', '3', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796');
-INSERT INTO `ey_channelfield` VALUES ('225', 'update_time', '4', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('226', 'add_time', '4', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('227', 'joinaid', '4', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('228', 'del_method', '4', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('229', 'is_del', '4', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('230', 'users_id', '4', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('231', 'admin_id', '4', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('232', 'lang', '4', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('233', 'sort_order', '4', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('234', 'status', '4', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('235', 'tempview', '4', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('236', 'prom_type', '4', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('237', 'stock_show', '4', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('238', 'stock_count', '4', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('239', 'old_price', '4', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('240', 'users_price', '4', '会员价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('241', 'seo_description', '4', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('242', 'seo_keywords', '4', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('243', 'seo_title', '4', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('244', 'ismake', '4', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('245', 'jumplinks', '4', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('246', 'arcrank', '4', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('247', 'click', '4', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('248', 'author', '4', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('249', 'is_litpic', '4', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('250', 'is_jump', '4', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('251', 'is_recom', '4', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('252', 'is_top', '4', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('253', 'is_special', '4', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('254', 'is_head', '4', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('255', 'litpic', '4', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('256', 'title', '4', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('257', 'is_b', '4', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('258', 'channel', '4', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('259', 'typeid', '4', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('260', 'aid', '4', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799');
-INSERT INTO `ey_channelfield` VALUES ('261', 'update_time', '6', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('262', 'add_time', '6', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('263', 'downcount', '6', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('264', 'joinaid', '6', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('265', 'del_method', '6', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('266', 'is_del', '6', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('267', 'arc_level_id', '6', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('268', 'users_id', '6', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('269', 'admin_id', '6', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('270', 'lang', '6', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('271', 'sort_order', '6', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('272', 'status', '6', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('273', 'tempview', '6', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('274', 'prom_type', '6', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('275', 'stock_show', '6', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('276', 'stock_count', '6', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('277', 'old_price', '6', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('278', 'users_price', '6', '会员价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('279', 'seo_description', '6', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('280', 'seo_keywords', '6', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('281', 'seo_title', '6', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('282', 'ismake', '6', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('283', 'jumplinks', '6', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('284', 'arcrank', '6', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('285', 'click', '6', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('286', 'author', '6', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('287', 'is_litpic', '6', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('288', 'is_jump', '6', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('289', 'is_recom', '6', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('290', 'is_top', '6', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('291', 'is_special', '6', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('292', 'is_head', '6', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('293', 'litpic', '6', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('294', 'title', '6', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('295', 'is_b', '6', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('296', 'channel', '6', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('297', 'typeid', '6', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('298', 'aid', '6', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802');
-INSERT INTO `ey_channelfield` VALUES ('299', 'downcount', '9', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808');
-INSERT INTO `ey_channelfield` VALUES ('300', 'joinaid', '9', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808');
-INSERT INTO `ey_channelfield` VALUES ('301', 'arc_level_id', '9', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808');
-INSERT INTO `ey_channelfield` VALUES ('302', 'users_id', '9', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808');
-INSERT INTO `ey_channelfield` VALUES ('303', 'stock_show', '9', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808');
-INSERT INTO `ey_channelfield` VALUES ('304', 'stock_count', '9', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808');
-INSERT INTO `ey_channelfield` VALUES ('305', 'old_price', '9', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808');
-INSERT INTO `ey_channelfield` VALUES ('306', 'htmlfilename', '0', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('307', 'htmlfilename', '1', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('308', 'htmlfilename', '2', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('309', 'htmlfilename', '3', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('310', 'htmlfilename', '4', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('311', 'htmlfilename', '6', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('312', 'attrlist_id', '0', '参数列表ID', 'int', 'int(10) unsigned', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533091930', '1533091930');
-INSERT INTO `ey_channelfield` VALUES ('313', 'sales_num', '0', '销售量', 'int', 'int(10) unsigned', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533091930', '1533091930');
-INSERT INTO `ey_channelfield` VALUES ('314', 'update_time', '5', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('315', 'add_time', '5', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('316', 'htmlfilename', '5', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('317', 'downcount', '5', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('318', 'joinaid', '5', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('319', 'del_method', '5', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('320', 'is_del', '5', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('321', 'arc_level_id', '5', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('322', 'users_id', '5', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('323', 'admin_id', '5', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('324', 'lang', '5', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('325', 'sort_order', '5', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('326', 'status', '5', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('327', 'tempview', '5', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('328', 'prom_type', '5', '产品类型：0=普通产品，1=虚拟(默认手动发货)，2=虚拟(网盘', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('329', 'stock_show', '5', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('330', 'stock_count', '5', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('331', 'sales_num', '5', '销售量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('332', 'old_price', '5', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('333', 'users_price', '5', '会员价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('334', 'attrlist_id', '5', '参数列表ID', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('335', 'seo_description', '5', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('336', 'seo_keywords', '5', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('337', 'seo_title', '5', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('338', 'ismake', '5', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('339', 'jumplinks', '5', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('340', 'arcrank', '5', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('341', 'click', '5', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('342', 'author', '5', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('343', 'is_litpic', '5', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('344', 'is_jump', '5', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('345', 'is_recom', '5', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('346', 'is_top', '5', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('347', 'is_special', '5', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('348', 'is_head', '5', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('349', 'litpic', '5', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('350', 'title', '5', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('351', 'is_b', '5', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('352', 'channel', '5', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('353', 'typeid', '5', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('354', 'aid', '5', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('355', 'content', '5', '内容详情', 'htmltext', 'longtext', '0', '', '', '', '0', '0', '1', '0', '1', '0', '0', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('356', 'courseware', '5', '课件地址', 'text', 'varchar(200)', '200', '', '', '', '0', '1', '0', '0', '1', '0', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('357', 'courseware_free', '5', '课件收费', 'select', 'enum(\'免费\',\'收费\')', '0', '免费,收费', '', '', '0', '1', '0', '0', '1', '0', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('358', 'total_duration', '5', '视频总时长', 'int', 'int(10)', '10', '0', '', '', '0', '1', '0', '0', '1', '0', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('359', 'total_video', '5', '视频数', 'int', 'int(10)', '10', '0', '', '', '0', '1', '0', '0', '1', '0', '1', '100', '1', '1591957363', '1591957363');
-INSERT INTO `ey_channelfield` VALUES ('404', 'topid', '-99', '顶级栏目ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574');
-INSERT INTO `ey_channelfield` VALUES ('361', 'update_time', '7', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('362', 'add_time', '7', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('363', 'htmlfilename', '7', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('364', 'downcount', '7', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('365', 'joinaid', '7', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('366', 'del_method', '7', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('367', 'is_del', '7', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('368', 'arc_level_id', '7', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('369', 'users_id', '7', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('370', 'admin_id', '7', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('371', 'lang', '7', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('372', 'sort_order', '7', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('373', 'status', '7', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('374', 'tempview', '7', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('375', 'prom_type', '7', '产品类型：0=普通产品，1=虚拟(默认手动发货)，2=虚拟(网盘', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('376', 'stock_show', '7', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('377', 'stock_count', '7', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('378', 'sales_num', '7', '销售量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('379', 'old_price', '7', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('380', 'users_free', '7', '是否会员免费，默认0不免费，1为免费', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('381', 'users_price', '7', '会员价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('382', 'attrlist_id', '7', '参数列表ID', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('383', 'seo_description', '7', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('384', 'seo_keywords', '7', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('385', 'seo_title', '7', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('386', 'ismake', '7', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('387', 'jumplinks', '7', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('388', 'arcrank', '7', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('389', 'click', '7', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('390', 'author', '7', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('391', 'is_litpic', '7', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('392', 'is_jump', '7', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('393', 'is_recom', '7', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('394', 'is_top', '7', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('395', 'is_special', '7', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('396', 'is_head', '7', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('397', 'litpic', '7', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('398', 'title', '7', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('399', 'is_b', '7', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('400', 'channel', '7', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('401', 'typeid', '7', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('402', 'aid', '7', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('403', 'content', '7', '内容详情', 'htmltext', 'longtext', '0', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1602320145', '1602320145');
-INSERT INTO `ey_channelfield` VALUES ('405', 'is_slide', '0', '是否幻灯', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092420', '1533092420');
-INSERT INTO `ey_channelfield` VALUES ('406', 'is_roll', '0', '是否幻灯', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092420', '1533092420');
-INSERT INTO `ey_channelfield` VALUES ('407', 'is_diyattr', '0', '是否自定义', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092420', '1533092420');
+INSERT INTO `ey_channelfield` VALUES ('1', 'add_time', '0', '新增时间', 'datetime', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533091575', '1533091575', '0');
+INSERT INTO `ey_channelfield` VALUES ('2', 'update_time', '0', '更新时间', 'datetime', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533091601', '1533091601', '0');
+INSERT INTO `ey_channelfield` VALUES ('3', 'aid', '0', '文档ID', 'int', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533091624', '1533091624', '0');
+INSERT INTO `ey_channelfield` VALUES ('4', 'typeid', '0', '当前栏目ID', 'int', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533091930', '1533091930', '0');
+INSERT INTO `ey_channelfield` VALUES ('5', 'channel', '0', '模型ID', 'int', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092214', '1533092214', '0');
+INSERT INTO `ey_channelfield` VALUES ('6', 'is_b', '0', '是否加粗', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092246', '1533092246', '0');
+INSERT INTO `ey_channelfield` VALUES ('7', 'title', '0', '文档标题', 'text', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092381', '1533092381', '0');
+INSERT INTO `ey_channelfield` VALUES ('8', 'litpic', '0', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092398', '1533092398', '0');
+INSERT INTO `ey_channelfield` VALUES ('9', 'is_head', '0', '是否头条', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092420', '1533092420', '0');
+INSERT INTO `ey_channelfield` VALUES ('10', 'is_special', '0', '是否特荐', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092439', '1533092439', '0');
+INSERT INTO `ey_channelfield` VALUES ('11', 'is_top', '0', '是否置顶', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092454', '1533092454', '0');
+INSERT INTO `ey_channelfield` VALUES ('12', 'is_recom', '0', '是否推荐', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092468', '1533092468', '0');
+INSERT INTO `ey_channelfield` VALUES ('13', 'is_jump', '0', '是否跳转', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092484', '1533092484', '0');
+INSERT INTO `ey_channelfield` VALUES ('14', 'author', '0', '编辑者', 'text', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092498', '1533092498', '0');
+INSERT INTO `ey_channelfield` VALUES ('15', 'click', '0', '浏览量', 'int', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092512', '1533092512', '0');
+INSERT INTO `ey_channelfield` VALUES ('16', 'arcrank', '0', '阅读权限', 'select', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092534', '1533092534', '0');
+INSERT INTO `ey_channelfield` VALUES ('17', 'jumplinks', '0', '跳转链接', 'text', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092553', '1533092553', '0');
+INSERT INTO `ey_channelfield` VALUES ('18', 'ismake', '0', '是否静态页面', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092698', '1533092698', '0');
+INSERT INTO `ey_channelfield` VALUES ('19', 'seo_title', '0', 'SEO标题', 'text', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092713', '1533092713', '0');
+INSERT INTO `ey_channelfield` VALUES ('20', 'seo_keywords', '0', 'SEO关键词', 'text', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092725', '1533092725', '0');
+INSERT INTO `ey_channelfield` VALUES ('21', 'seo_description', '0', 'SEO描述', 'text', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092739', '1533092739', '0');
+INSERT INTO `ey_channelfield` VALUES ('22', 'status', '0', '状态', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092753', '1533092753', '0');
+INSERT INTO `ey_channelfield` VALUES ('23', 'sort_order', '0', '排序号', 'int', 'int(11)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092766', '1533092766', '0');
+INSERT INTO `ey_channelfield` VALUES ('24', 'content', '2', '内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533359739', '1533359739', '0');
+INSERT INTO `ey_channelfield` VALUES ('25', 'content', '3', '内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533359588', '1533359588', '0');
+INSERT INTO `ey_channelfield` VALUES ('26', 'content', '4', '内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533359752', '1533359752', '0');
+INSERT INTO `ey_channelfield` VALUES ('27', 'content', '6', '内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533464715', '1533464715', '0');
+INSERT INTO `ey_channelfield` VALUES ('29', 'content', '1', '内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533464713', '1533464713', '0');
+INSERT INTO `ey_channelfield` VALUES ('30', 'update_time', '-99', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('31', 'add_time', '-99', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('32', 'status', '-99', '启用 (1=正常，0=屏蔽)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('33', 'is_part', '-99', '栏目属性：0=内容栏目，1=外部链接', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('34', 'is_hidden', '-99', '是否隐藏栏目：0=显示，1=隐藏', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('35', 'sort_order', '-99', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('36', 'seo_description', '-99', 'seo描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('37', 'seo_keywords', '-99', 'seo关键字', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('38', 'seo_title', '-99', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('39', 'tempview', '-99', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('40', 'templist', '-99', '列表模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('41', 'litpic', '-99', '栏目图片', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('42', 'typelink', '-99', '栏目链接', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('43', 'grade', '-99', '栏目等级', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('44', 'englist_name', '-99', '栏目英文名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('45', 'dirpath', '-99', '目录存放HTML路径', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('46', 'dirname', '-99', '目录英文名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('47', 'typename', '-99', '栏目名称', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('48', 'parent_id', '-99', '栏目上级ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('49', 'current_channel', '-99', '栏目当前模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('50', 'channeltype', '-99', '栏目顶级模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('51', 'id', '-99', '栏目ID', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('52', 'del_method', '-99', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1547890773', '1547890773', '0');
+INSERT INTO `ey_channelfield` VALUES ('53', 'is_del', '0', '是否伪删除', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1547890773', '1547890773', '0');
+INSERT INTO `ey_channelfield` VALUES ('54', 'del_method', '0', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1547890773', '1547890773', '0');
+INSERT INTO `ey_channelfield` VALUES ('55', 'prom_type', '0', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('56', 'users_price', '0', '价格', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '0', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('57', 'prom_type', '2', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('58', 'users_price', '2', '价格', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '0', '100', '1', '1557042574', '1563498415', '0');
+INSERT INTO `ey_channelfield` VALUES ('59', 'update_time', '2', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('60', 'add_time', '2', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('61', 'del_method', '2', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('62', 'is_del', '2', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('63', 'admin_id', '2', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('64', 'lang', '2', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('65', 'sort_order', '2', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('66', 'status', '2', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('67', 'tempview', '2', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('68', 'seo_description', '2', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('69', 'seo_keywords', '2', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('70', 'seo_title', '2', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('71', 'ismake', '2', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('72', 'jumplinks', '2', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('73', 'arcrank', '2', '阅读权限：0=开放浏览，-1=待审核稿件', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('74', 'click', '2', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('75', 'author', '2', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('76', 'is_litpic', '2', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('77', 'is_jump', '2', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('78', 'is_recom', '2', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('79', 'is_top', '2', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('80', 'is_special', '2', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('81', 'is_head', '2', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('82', 'litpic', '2', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('83', 'title', '2', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('84', 'is_b', '2', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('85', 'channel', '2', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('86', 'typeid', '2', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('87', 'aid', '2', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563518642', '1563518642', '0');
+INSERT INTO `ey_channelfield` VALUES ('88', 'fxrq', '2', '发行日期', 'radio', 'enum(\'2019年\',\'2018年\',\'2017年\')', '0', '2019年,2018年,2017年', '', '', '1', '0', '1', '0', '0', '0', '0', '100', '1', '1563518738', '1563518738', '0');
+INSERT INTO `ey_channelfield` VALUES ('89', 'update_time', '9', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('90', 'add_time', '9', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('91', 'del_method', '9', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('92', 'is_del', '9', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('93', 'admin_id', '9', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('94', 'lang', '9', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('95', 'sort_order', '9', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('96', 'status', '9', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('97', 'tempview', '9', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('98', 'prom_type', '9', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('99', 'users_price', '9', '价格', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('100', 'seo_description', '9', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('101', 'seo_keywords', '9', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('102', 'seo_title', '9', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('103', 'ismake', '9', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('104', 'jumplinks', '9', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('105', 'arcrank', '9', '阅读权限：0=开放浏览，-1=待审核稿件', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('106', 'click', '9', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('107', 'author', '9', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '0', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('108', 'is_litpic', '9', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('109', 'is_jump', '9', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('110', 'is_recom', '9', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('111', 'is_top', '9', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('112', 'is_special', '9', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('113', 'is_head', '9', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('114', 'litpic', '9', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '0', '0', '1', '1', '0', '100', '1', '1563526560', '1563526567', '0');
+INSERT INTO `ey_channelfield` VALUES ('115', 'title', '9', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('116', 'is_b', '9', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('117', 'channel', '9', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('118', 'typeid', '9', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('119', 'aid', '9', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1563526560', '1563526560', '0');
+INSERT INTO `ey_channelfield` VALUES ('120', 'gzdd', '9', '工作地点', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '0', '0', '0', '1', '1', '1563526665', '1563528016', '0');
+INSERT INTO `ey_channelfield` VALUES ('121', 'xlyq', '9', '学历要求', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '0', '0', '0', '2', '1', '1563526681', '1563528016', '0');
+INSERT INTO `ey_channelfield` VALUES ('122', 'xzdy', '9', '薪资待遇', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '0', '0', '0', '3', '1', '1563526694', '1563528018', '0');
+INSERT INTO `ey_channelfield` VALUES ('123', 'gzxz', '9', '工作性质', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '0', '0', '0', '4', '1', '1563526705', '1563528018', '0');
+INSERT INTO `ey_channelfield` VALUES ('124', 'gznx', '9', '工作年限', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '0', '0', '0', '5', '1', '1563526716', '1563528019', '0');
+INSERT INTO `ey_channelfield` VALUES ('125', 'zprs', '9', '招聘人数', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '0', '0', '0', '6', '1', '1563526727', '1563528021', '0');
+INSERT INTO `ey_channelfield` VALUES ('126', 'nnxq', '9', '内容详情', 'htmltext', 'longtext', '0', '', '', '', '0', '0', '1', '0', '0', '0', '0', '7', '1', '1563526769', '1563528023', '0');
+INSERT INTO `ey_channelfield` VALUES ('127', 'users_id', '0', '会员ID', 'int', 'int(11)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('128', 'arc_level_id', '0', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('129', 'arc_level_id', '4', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('130', 'arc_level_id', '2', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1565662106', '1565662106', '0');
+INSERT INTO `ey_channelfield` VALUES ('131', 'users_id', '2', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1565662106', '1565662106', '0');
+INSERT INTO `ey_channelfield` VALUES ('132', 'jiawei', '2', '价位区段', 'radio', 'enum(\'0-1000\',\'1000-1699\',\'1700-2799\',\'2800-3500\',\'3500-10000\')', '0', '0-1000,1000-1699,1700-2799,2800-3500,3500-10000', '', '', '1', '0', '1', '0', '0', '0', '0', '100', '1', '1565662216', '1565663341', '0');
+INSERT INTO `ey_channelfield` VALUES ('133', 'yanse', '2', '机身颜色', 'radio', 'enum(\'银色\',\'绿色\',\'黑色\',\'灰色\')', '0', '银色,绿色,黑色,灰色', '', '', '1', '0', '1', '0', '0', '0', '0', '100', '1', '1565662279', '1565662740', '0');
+INSERT INTO `ey_channelfield` VALUES ('136', 'weapp_code', '-99', '插件栏目唯一标识', 'text', 'varchar(200)', '200', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('137', 'is_release', '-99', '栏目是否应用于会员投稿发布，1是，0否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('138', 'old_price', '0', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('139', 'stock_count', '0', '商品库存量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('140', 'stock_show', '0', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('141', 'joinaid', '0', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('142', 'downcount', '0', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('143', 'downcount', '4', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('144', 'update_time', '1', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('145', 'add_time', '1', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('146', 'downcount', '1', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('147', 'joinaid', '1', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('148', 'del_method', '1', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('149', 'is_del', '1', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('150', 'arc_level_id', '1', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('151', 'users_id', '1', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('152', 'admin_id', '1', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('153', 'lang', '1', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('154', 'sort_order', '1', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('155', 'status', '1', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('156', 'tempview', '1', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('157', 'prom_type', '1', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('158', 'stock_show', '1', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('159', 'stock_count', '1', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('160', 'old_price', '1', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('161', 'users_price', '1', '会员价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('162', 'seo_description', '1', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('163', 'seo_keywords', '1', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('164', 'seo_title', '1', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('165', 'ismake', '1', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('166', 'jumplinks', '1', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('167', 'arcrank', '1', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('168', 'click', '1', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('169', 'author', '1', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('170', 'is_litpic', '1', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('171', 'is_jump', '1', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('172', 'is_recom', '1', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('173', 'is_top', '1', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('174', 'is_special', '1', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('175', 'is_head', '1', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('176', 'litpic', '1', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('177', 'title', '1', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('178', 'is_b', '1', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('179', 'channel', '1', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('180', 'typeid', '1', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('181', 'aid', '1', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233787', '1574233787', '0');
+INSERT INTO `ey_channelfield` VALUES ('182', 'downcount', '2', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233793', '1574233793', '0');
+INSERT INTO `ey_channelfield` VALUES ('183', 'joinaid', '2', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233793', '1574233793', '0');
+INSERT INTO `ey_channelfield` VALUES ('184', 'stock_show', '2', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233793', '1574233793', '0');
+INSERT INTO `ey_channelfield` VALUES ('185', 'stock_count', '2', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233793', '1574233793', '0');
+INSERT INTO `ey_channelfield` VALUES ('186', 'old_price', '2', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233793', '1574233793', '0');
+INSERT INTO `ey_channelfield` VALUES ('187', 'update_time', '3', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('188', 'add_time', '3', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('189', 'downcount', '3', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('190', 'joinaid', '3', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('191', 'del_method', '3', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('192', 'is_del', '3', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('193', 'arc_level_id', '3', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('194', 'users_id', '3', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('195', 'admin_id', '3', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('196', 'lang', '3', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('197', 'sort_order', '3', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('198', 'status', '3', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('199', 'tempview', '3', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('200', 'prom_type', '3', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('201', 'stock_show', '3', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('202', 'stock_count', '3', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('203', 'old_price', '3', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('204', 'users_price', '3', '会员价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('205', 'seo_description', '3', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('206', 'seo_keywords', '3', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('207', 'seo_title', '3', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('208', 'ismake', '3', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('209', 'jumplinks', '3', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('210', 'arcrank', '3', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('211', 'click', '3', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('212', 'author', '3', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('213', 'is_litpic', '3', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('214', 'is_jump', '3', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('215', 'is_recom', '3', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('216', 'is_top', '3', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('217', 'is_special', '3', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('218', 'is_head', '3', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('219', 'litpic', '3', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('220', 'title', '3', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('221', 'is_b', '3', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('222', 'channel', '3', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('223', 'typeid', '3', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('224', 'aid', '3', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233796', '1574233796', '0');
+INSERT INTO `ey_channelfield` VALUES ('225', 'update_time', '4', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('226', 'add_time', '4', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('227', 'joinaid', '4', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('228', 'del_method', '4', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('229', 'is_del', '4', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('230', 'users_id', '4', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('231', 'admin_id', '4', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('232', 'lang', '4', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('233', 'sort_order', '4', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('234', 'status', '4', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('235', 'tempview', '4', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('236', 'prom_type', '4', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('237', 'stock_show', '4', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('238', 'stock_count', '4', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('239', 'old_price', '4', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('240', 'users_price', '4', '会员价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('241', 'seo_description', '4', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('242', 'seo_keywords', '4', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('243', 'seo_title', '4', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('244', 'ismake', '4', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('245', 'jumplinks', '4', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('246', 'arcrank', '4', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('247', 'click', '4', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('248', 'author', '4', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('249', 'is_litpic', '4', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('250', 'is_jump', '4', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('251', 'is_recom', '4', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('252', 'is_top', '4', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('253', 'is_special', '4', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('254', 'is_head', '4', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('255', 'litpic', '4', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('256', 'title', '4', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('257', 'is_b', '4', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('258', 'channel', '4', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('259', 'typeid', '4', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('260', 'aid', '4', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233799', '1574233799', '0');
+INSERT INTO `ey_channelfield` VALUES ('261', 'update_time', '6', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('262', 'add_time', '6', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('263', 'downcount', '6', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('264', 'joinaid', '6', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('265', 'del_method', '6', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('266', 'is_del', '6', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('267', 'arc_level_id', '6', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('268', 'users_id', '6', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('269', 'admin_id', '6', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('270', 'lang', '6', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('271', 'sort_order', '6', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('272', 'status', '6', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('273', 'tempview', '6', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('274', 'prom_type', '6', '产品类型：0普通产品，1虚拟产品', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('275', 'stock_show', '6', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('276', 'stock_count', '6', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('277', 'old_price', '6', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('278', 'users_price', '6', '会员价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('279', 'seo_description', '6', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('280', 'seo_keywords', '6', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('281', 'seo_title', '6', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('282', 'ismake', '6', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('283', 'jumplinks', '6', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('284', 'arcrank', '6', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('285', 'click', '6', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('286', 'author', '6', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('287', 'is_litpic', '6', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('288', 'is_jump', '6', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('289', 'is_recom', '6', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('290', 'is_top', '6', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('291', 'is_special', '6', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('292', 'is_head', '6', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('293', 'litpic', '6', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('294', 'title', '6', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('295', 'is_b', '6', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('296', 'channel', '6', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('297', 'typeid', '6', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('298', 'aid', '6', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233802', '1574233802', '0');
+INSERT INTO `ey_channelfield` VALUES ('299', 'downcount', '9', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808', '0');
+INSERT INTO `ey_channelfield` VALUES ('300', 'joinaid', '9', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808', '0');
+INSERT INTO `ey_channelfield` VALUES ('301', 'arc_level_id', '9', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808', '0');
+INSERT INTO `ey_channelfield` VALUES ('302', 'users_id', '9', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808', '0');
+INSERT INTO `ey_channelfield` VALUES ('303', 'stock_show', '9', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808', '0');
+INSERT INTO `ey_channelfield` VALUES ('304', 'stock_count', '9', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808', '0');
+INSERT INTO `ey_channelfield` VALUES ('305', 'old_price', '9', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1574233808', '1574233808', '0');
+INSERT INTO `ey_channelfield` VALUES ('306', 'htmlfilename', '0', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('307', 'htmlfilename', '1', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('308', 'htmlfilename', '2', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('309', 'htmlfilename', '3', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('310', 'htmlfilename', '4', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('311', 'htmlfilename', '6', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('312', 'attrlist_id', '0', '参数列表ID', 'int', 'int(10) unsigned', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533091930', '1533091930', '0');
+INSERT INTO `ey_channelfield` VALUES ('313', 'sales_num', '0', '销售量', 'int', 'int(10) unsigned', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533091930', '1533091930', '0');
+INSERT INTO `ey_channelfield` VALUES ('314', 'update_time', '5', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('315', 'add_time', '5', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('316', 'htmlfilename', '5', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('317', 'downcount', '5', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('318', 'joinaid', '5', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('319', 'del_method', '5', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('320', 'is_del', '5', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('321', 'arc_level_id', '5', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('322', 'users_id', '5', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('323', 'admin_id', '5', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('324', 'lang', '5', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('325', 'sort_order', '5', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('326', 'status', '5', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('327', 'tempview', '5', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('328', 'prom_type', '5', '产品类型：0=普通产品，1=虚拟(默认手动发货)，2=虚拟(网盘', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('329', 'stock_show', '5', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('330', 'stock_count', '5', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('331', 'sales_num', '5', '销售量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('332', 'old_price', '5', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('333', 'users_price', '5', '会员价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('334', 'attrlist_id', '5', '参数列表ID', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('335', 'seo_description', '5', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('336', 'seo_keywords', '5', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('337', 'seo_title', '5', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('338', 'ismake', '5', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('339', 'jumplinks', '5', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('340', 'arcrank', '5', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('341', 'click', '5', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('342', 'author', '5', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('343', 'is_litpic', '5', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('344', 'is_jump', '5', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('345', 'is_recom', '5', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('346', 'is_top', '5', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('347', 'is_special', '5', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('348', 'is_head', '5', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('349', 'litpic', '5', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('350', 'title', '5', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('351', 'is_b', '5', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('352', 'channel', '5', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('353', 'typeid', '5', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('354', 'aid', '5', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('355', 'content', '5', '内容详情', 'htmltext', 'longtext', '0', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('356', 'courseware', '5', '课件地址', 'text', 'varchar(200)', '200', '', '', '', '0', '1', '0', '0', '1', '0', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('357', 'courseware_free', '5', '课件收费', 'select', 'enum(\'免费\',\'收费\')', '0', '免费,收费', '', '', '0', '1', '0', '0', '1', '0', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('358', 'total_duration', '5', '视频总时长', 'int', 'int(10)', '10', '0', '', '', '0', '1', '0', '0', '1', '0', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('359', 'total_video', '5', '视频数', 'int', 'int(10)', '10', '0', '', '', '0', '1', '0', '0', '1', '0', '1', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('404', 'topid', '-99', '顶级栏目ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1557042574', '1557042574', '0');
+INSERT INTO `ey_channelfield` VALUES ('361', 'update_time', '7', '更新时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('362', 'add_time', '7', '新增时间', 'datetime', 'int(11)', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('363', 'htmlfilename', '7', '自定义文件名', 'text', 'varchar(50)', '50', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('364', 'downcount', '7', '下载次数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('365', 'joinaid', '7', '关联文档ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('366', 'del_method', '7', '伪删除状态，1为主动删除，2为跟随上级栏目被动删除', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('367', 'is_del', '7', '伪删除，1=是，0=否', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('368', 'arc_level_id', '7', '文档会员权限ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('369', 'users_id', '7', '会员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('370', 'admin_id', '7', '管理员ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('371', 'lang', '7', '语言标识', 'text', 'varchar(50)', '50', 'cn', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('372', 'sort_order', '7', '排序号', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('373', 'status', '7', '状态(0=屏蔽，1=正常)', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('374', 'tempview', '7', '文档模板文件名', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('375', 'prom_type', '7', '产品类型：0=普通产品，1=虚拟(默认手动发货)，2=虚拟(网盘', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('376', 'stock_show', '7', '商品库存在产品详情页是否显示，1为显示，0为不显示', 'switch', 'tinyint(1) unsigned', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('377', 'stock_count', '7', '商品库存量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('378', 'sales_num', '7', '销售量', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('379', 'old_price', '7', '产品旧价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('380', 'users_free', '7', '是否会员免费，默认0不免费，1为免费', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('381', 'users_price', '7', '会员价', 'decimal', 'decimal(10,2)', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('382', 'attrlist_id', '7', '参数列表ID', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('383', 'seo_description', '7', 'SEO描述', 'multitext', 'text', '0', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('384', 'seo_keywords', '7', 'SEO关键词', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('385', 'seo_title', '7', 'SEO标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('386', 'ismake', '7', '是否静态页面（0=动态，1=静态）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('387', 'jumplinks', '7', '外链跳转', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('388', 'arcrank', '7', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('389', 'click', '7', '浏览量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('390', 'author', '7', '作者', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('391', 'is_litpic', '7', '图片（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('392', 'is_jump', '7', '跳转链接（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('393', 'is_recom', '7', '推荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('394', 'is_top', '7', '置顶（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('395', 'is_special', '7', '特荐（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('396', 'is_head', '7', '头条（0=否，1=是）', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('397', 'litpic', '7', '缩略图', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('398', 'title', '7', '标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('399', 'is_b', '7', '加粗', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('400', 'channel', '7', '模型ID', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('401', 'typeid', '7', '当前栏目', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('402', 'aid', '7', 'aid', 'int', 'int(10)', '10', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('403', 'content', '7', '内容详情', 'htmltext', 'longtext', '0', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('405', 'is_slide', '0', '是否幻灯', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092420', '1533092420', '0');
+INSERT INTO `ey_channelfield` VALUES ('406', 'is_roll', '0', '是否幻灯', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092420', '1533092420', '0');
+INSERT INTO `ey_channelfield` VALUES ('407', 'is_diyattr', '0', '是否自定义', 'switch', 'tinyint(1)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533092420', '1533092420', '0');
+INSERT INTO `ey_channelfield` VALUES ('408', 'restric_type', '0', '限制模式，0=免费，1=付费，2=会员专享，3=会员付费', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1616293251', '1616293251', '0');
+INSERT INTO `ey_channelfield` VALUES ('409', 'diy_dirpath', '-99', '自定义HTML保存路径', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('410', 'rulelist', '-99', '列表静态文件存放规则', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('411', 'ruleview', '-99', '文档静态文件存放规则', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('412', 'subtitle', '0', '副标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1636338535', '1636338535', '0');
+INSERT INTO `ey_channelfield` VALUES ('413', 'origin', '0', '来源', 'text', 'varchar(30)', '30', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1636338535', '1636338535', '0');
+INSERT INTO `ey_channelfield` VALUES ('414', 'stypeid', '0', '副栏目', 'text', 'varchar(90)', '90', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1636338535', '1636338535', '0');
+INSERT INTO `ey_channelfield` VALUES ('415', 'area_id', '1', '所在区域', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('416', 'city_id', '1', '所在城市', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('417', 'province_id', '1', '省份', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('418', 'collection', '1', '收藏数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('419', 'appraise', '1', '评价数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('420', 'restric_type', '1', '限制模式，0=免费，1=付费，2=会员专享，3=会员付费', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('421', 'sales_num', '1', '销售量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('422', 'users_free', '1', '是否会员免费，默认0不免费，1为免费', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('423', 'attrlist_id', '1', '参数列表ID', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('424', 'origin', '1', '来源', 'text', 'varchar(30)', '30', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('425', 'is_diyattr', '1', '自定义（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('426', 'is_slide', '1', '幻灯（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('427', 'is_roll', '1', '滚动（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('428', 'subtitle', '1', '副标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('429', 'stypeid', '1', '副栏目ID集合', 'text', 'varchar(90)', '90', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949813', '1641949813', '0');
+INSERT INTO `ey_channelfield` VALUES ('430', 'area_id', '2', '所在区域', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('431', 'city_id', '2', '所在城市', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('432', 'province_id', '2', '省份', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('433', 'collection', '2', '收藏数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('434', 'appraise', '2', '评价数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('435', 'restric_type', '2', '限制模式，0=免费，1=付费，2=会员专享，3=会员付费', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('436', 'sales_num', '2', '销售量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('437', 'users_free', '2', '是否会员免费，默认0不免费，1为免费', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('438', 'attrlist_id', '2', '参数列表ID', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('439', 'origin', '2', '来源', 'text', 'varchar(30)', '30', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('440', 'is_diyattr', '2', '自定义（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('441', 'is_slide', '2', '幻灯（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('442', 'is_roll', '2', '滚动（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('443', 'subtitle', '2', '副标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('444', 'stypeid', '2', '副栏目ID集合', 'text', 'varchar(90)', '90', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949815', '1641949815', '0');
+INSERT INTO `ey_channelfield` VALUES ('445', 'area_id', '3', '所在区域', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('446', 'city_id', '3', '所在城市', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('447', 'province_id', '3', '省份', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('448', 'collection', '3', '收藏数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('449', 'appraise', '3', '评价数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('450', 'restric_type', '3', '限制模式，0=免费，1=付费，2=会员专享，3=会员付费', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('451', 'sales_num', '3', '销售量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('452', 'users_free', '3', '是否会员免费，默认0不免费，1为免费', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('453', 'attrlist_id', '3', '参数列表ID', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('454', 'origin', '3', '来源', 'text', 'varchar(30)', '30', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('455', 'is_diyattr', '3', '自定义（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('456', 'is_slide', '3', '幻灯（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('457', 'is_roll', '3', '滚动（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('458', 'subtitle', '3', '副标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('459', 'stypeid', '3', '副栏目ID集合', 'text', 'varchar(90)', '90', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949817', '1641949817', '0');
+INSERT INTO `ey_channelfield` VALUES ('460', 'area_id', '4', '所在区域', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('461', 'city_id', '4', '所在城市', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('462', 'province_id', '4', '省份', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('463', 'collection', '4', '收藏数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('464', 'appraise', '4', '评价数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('465', 'restric_type', '4', '限制模式，0=免费，1=付费，2=会员专享，3=会员付费', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('466', 'sales_num', '4', '销售量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('467', 'users_free', '4', '是否会员免费，默认0不免费，1为免费', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('468', 'attrlist_id', '4', '参数列表ID', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('469', 'origin', '4', '来源', 'text', 'varchar(30)', '30', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('470', 'is_diyattr', '4', '自定义（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('471', 'is_slide', '4', '幻灯（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('472', 'is_roll', '4', '滚动（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('473', 'subtitle', '4', '副标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('474', 'stypeid', '4', '副栏目ID集合', 'text', 'varchar(90)', '90', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949819', '1641949819', '0');
+INSERT INTO `ey_channelfield` VALUES ('475', 'area_id', '6', '所在区域', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('476', 'city_id', '6', '所在城市', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('477', 'province_id', '6', '省份', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('478', 'collection', '6', '收藏数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('479', 'appraise', '6', '评价数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('480', 'restric_type', '6', '限制模式，0=免费，1=付费，2=会员专享，3=会员付费', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('481', 'sales_num', '6', '销售量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('482', 'users_free', '6', '是否会员免费，默认0不免费，1为免费', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('483', 'attrlist_id', '6', '参数列表ID', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('484', 'origin', '6', '来源', 'text', 'varchar(30)', '30', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('485', 'is_diyattr', '6', '自定义（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('486', 'is_slide', '6', '幻灯（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('487', 'is_roll', '6', '滚动（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('488', 'subtitle', '6', '副标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('489', 'stypeid', '6', '副栏目ID集合', 'text', 'varchar(90)', '90', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949820', '1641949820', '0');
+INSERT INTO `ey_channelfield` VALUES ('490', 'area_id', '7', '所在区域', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949822', '1641949822', '0');
+INSERT INTO `ey_channelfield` VALUES ('491', 'city_id', '7', '所在城市', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949822', '1641949822', '0');
+INSERT INTO `ey_channelfield` VALUES ('492', 'province_id', '7', '省份', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949822', '1641949822', '0');
+INSERT INTO `ey_channelfield` VALUES ('493', 'collection', '7', '收藏数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949822', '1641949822', '0');
+INSERT INTO `ey_channelfield` VALUES ('494', 'appraise', '7', '评价数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949822', '1641949822', '0');
+INSERT INTO `ey_channelfield` VALUES ('495', 'restric_type', '7', '限制模式，0=免费，1=付费，2=会员专享，3=会员付费', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949822', '1641949822', '0');
+INSERT INTO `ey_channelfield` VALUES ('496', 'origin', '7', '来源', 'text', 'varchar(30)', '30', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949822', '1641949822', '0');
+INSERT INTO `ey_channelfield` VALUES ('497', 'is_diyattr', '7', '自定义（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949822', '1641949822', '0');
+INSERT INTO `ey_channelfield` VALUES ('498', 'is_slide', '7', '幻灯（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949822', '1641949822', '0');
+INSERT INTO `ey_channelfield` VALUES ('499', 'is_roll', '7', '滚动（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949822', '1641949822', '0');
+INSERT INTO `ey_channelfield` VALUES ('500', 'subtitle', '7', '副标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949822', '1641949822', '0');
+INSERT INTO `ey_channelfield` VALUES ('501', 'stypeid', '7', '副栏目ID集合', 'text', 'varchar(90)', '90', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949822', '1641949822', '0');
+INSERT INTO `ey_channelfield` VALUES ('502', 'area_id', '9', '所在区域', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('503', 'city_id', '9', '所在城市', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('504', 'province_id', '9', '省份', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('505', 'htmlfilename', '9', '自定义文件名', 'img', 'varchar(250)', '250', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('506', 'collection', '9', '收藏数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('507', 'appraise', '9', '评价数', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('508', 'restric_type', '9', '限制模式，0=免费，1=付费，2=会员专享，3=会员付费', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('509', 'sales_num', '9', '销售量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('510', 'users_free', '9', '是否会员免费，默认0不免费，1为免费', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('511', 'attrlist_id', '9', '参数列表ID', 'int', 'int(10) unsigned', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('512', 'origin', '9', '来源', 'text', 'varchar(30)', '30', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('513', 'is_diyattr', '9', '自定义（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('514', 'is_slide', '9', '幻灯（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('515', 'is_roll', '9', '滚动（0=否，1=是）', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('516', 'subtitle', '9', '副标题', 'text', 'varchar(200)', '200', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('517', 'stypeid', '9', '副栏目ID集合', 'text', 'varchar(90)', '90', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1641949825', '1641949825', '0');
+INSERT INTO `ey_channelfield` VALUES ('518', 'target', '-99', '新窗口打开', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1547890773', '1547890773', '0');
+INSERT INTO `ey_channelfield` VALUES ('519', 'nofollow', '-99', '防抓取', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1547890773', '1547890773', '0');
+INSERT INTO `ey_channelfield` VALUES ('520', 'content_ey_m', '1', '手机端内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533464713', '1623047123', '0');
+INSERT INTO `ey_channelfield` VALUES ('521', 'content_ey_m', '2', '手机端内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1645086030', '1645086039', '0');
+INSERT INTO `ey_channelfield` VALUES ('522', 'content_ey_m', '3', '手机端内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533359588', '1533359588', '0');
+INSERT INTO `ey_channelfield` VALUES ('523', 'content_ey_m', '4', '手机端内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533359752', '1533359752', '0');
+INSERT INTO `ey_channelfield` VALUES ('524', 'content_ey_m', '5', '手机端内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1591957363', '1591957363', '0');
+INSERT INTO `ey_channelfield` VALUES ('525', 'content_ey_m', '6', '手机端内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1533464715', '1533464715', '0');
+INSERT INTO `ey_channelfield` VALUES ('526', 'content_ey_m', '7', '手机端内容详情', 'htmltext', 'longtext', '250', '', '', '', '0', '1', '1', '0', '1', '0', '0', '100', '1', '1602320145', '1602320145', '0');
+INSERT INTO `ey_channelfield` VALUES ('527', 'typearcrank', '-99', '阅读权限：0=开放浏览，-1=待审核稿件', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1547890773', '1547890773', '0');
+INSERT INTO `ey_channelfield` VALUES ('528', 'empty_logic', '-99', '空内容逻辑', 'switch', 'tinyint(1)', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1533524780', '1533524780', '0');
+INSERT INTO `ey_channelfield` VALUES ('529', 'users_discount_type', '0', '产品会员折扣类型(0:系统默认折扣; 1:指定会员级别; 2:不参与折扣;)', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1683873488', '1683873488', '0');
+INSERT INTO `ey_channelfield` VALUES ('530', 'logistics_type', '0', '商品物流支持类型(1: 物流配送; 2: 到店核销)', 'text', 'varchar(100)', '100', '', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1690364521', '1690364521', '0');
+INSERT INTO `ey_channelfield` VALUES ('531', 'editor_img_clear_link', '3', '清除非本站链接', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
+INSERT INTO `ey_channelfield` VALUES ('532', 'editor_remote_img_local', '3', '远程图片本地化', 'switch', 'tinyint(1)', '1', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
+INSERT INTO `ey_channelfield` VALUES ('533', 'no_vip_pay', '3', 'restric_type = 2 时,会员专享,非会员可付费使用,0-关闭,1-开启', 'switch', 'tinyint(3)', '3', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
+INSERT INTO `ey_channelfield` VALUES ('534', 'logistics_type', '3', '商品物流支持类型(1: 物流配送; 2: 到店核销)', 'text', 'varchar(100)', '100', '1', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
+INSERT INTO `ey_channelfield` VALUES ('535', 'sales_all', '3', '虚拟总销量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
+INSERT INTO `ey_channelfield` VALUES ('536', 'virtual_sales', '3', '商品虚拟销售量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
+INSERT INTO `ey_channelfield` VALUES ('537', 'users_discount_type', '3', '产品会员折扣类型(0:系统默认折扣; 1:指定会员级别; 2:不参与折扣;)', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
+INSERT INTO `ey_channelfield` VALUES ('538', 'crossed_price', '3', '商品划线价', 'decimal', 'decimal(10,2) unsigned', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
+INSERT INTO `ey_channelfield` VALUES ('539', 'free_shipping', '3', '商品是否包邮(1包邮(免运费)  0跟随系统)', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
+INSERT INTO `ey_channelfield` VALUES ('540', 'merchant_id', '3', '多商家ID', 'datetime', 'int(11) unsigned', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
 
 -- -----------------------------
 -- Table structure for `ey_channelfield_bind`
@@ -1264,13 +1448,44 @@ CREATE TABLE `ey_channeltype` (
 INSERT INTO `ey_channeltype` VALUES ('1', 'article', '文章模型', '文章', 'article', 'Article', '1', '1', '1', '1', '1', '', '0', '1', '0', '1564532747');
 INSERT INTO `ey_channeltype` VALUES ('4', 'download', '下载模型', '下载', 'download', 'Download', '1', '1', '1', '1', '1', '', '0', '4', '0', '1564532747');
 INSERT INTO `ey_channeltype` VALUES ('2', 'product', '产品模型', '产品', 'product', 'Product', '1', '1', '1', '1', '1', '', '0', '2', '0', '1564532747');
-INSERT INTO `ey_channeltype` VALUES ('8', 'guestbook', '留言模型', '留言', 'guestbook', 'Guestbook', '1', '1', '1', '1', '1', '', '0', '8', '1509197711', '1564532747');
+INSERT INTO `ey_channeltype` VALUES ('8', 'guestbook', '留言模型', '留言', 'guestbook', 'Guestbook', '1', '1', '1', '1', '1', '', '0', '8', '1509197711', '1690181604');
 INSERT INTO `ey_channeltype` VALUES ('6', 'single', '单页模型', '单页', 'single', 'Single', '1', '1', '1', '1', '1', '', '0', '6', '1523091961', '1564532747');
 INSERT INTO `ey_channeltype` VALUES ('3', 'images', '图集模型', '图集', 'images', 'Images', '1', '1', '1', '1', '1', '', '0', '3', '1523929121', '1564532747');
 INSERT INTO `ey_channeltype` VALUES ('9', 'recruit', '招聘模型', '人才招聘', 'recruit', 'Recruit', '1', '0', '1', '1', '1', '', '0', '50', '1563526560', '1564532747');
 INSERT INTO `ey_channeltype` VALUES ('5', 'media', '视频模型', '视频', 'media', 'Media', '0', '1', '1', '1', '1', '', '0', '5', '1509197711', '1564532747');
 INSERT INTO `ey_channeltype` VALUES ('7', 'special', '专题模型', '专题', 'special', 'Special', '0', '1', '1', '1', '1', '', '0', '7', '1509197711', '1564532747');
-INSERT INTO `ey_channeltype` VALUES ('51', 'ask', '问答模型', '问答', 'ask', 'Ask', '0', '1', '1', '1', '1', '', '0', '9', '1509197711', '1564532747');
+INSERT INTO `ey_channeltype` VALUES ('51', 'ask', '问答模型', '问答', 'ask', 'Ask', '0', '1', '1', '1', '1', '', '1', '9', '1509197711', '1692668301');
+
+-- -----------------------------
+-- Table structure for `ey_citysite`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_citysite`;
+CREATE TABLE `ey_citysite` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '表id',
+  `name` varchar(32) DEFAULT '' COMMENT '地区名称',
+  `level` tinyint(4) DEFAULT '0' COMMENT '地区等级 分省市县区',
+  `parent_id` int(10) DEFAULT '0' COMMENT '父id',
+  `topid` int(10) DEFAULT '0' COMMENT '顶级ID',
+  `initial` varchar(5) DEFAULT '' COMMENT '首字母',
+  `status` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '状态（1：开启，0：隐藏）',
+  `is_hot` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否热门',
+  `domain` varchar(50) NOT NULL DEFAULT '' COMMENT '二级域名',
+  `is_open` tinyint(1) DEFAULT '0' COMMENT '二级域名开启状态，0=否，1=是',
+  `seoset` tinyint(1) DEFAULT '0' COMMENT 'SEO设置，0=使用主站，1=自定义',
+  `seo_title` varchar(200) DEFAULT '' COMMENT 'SEO标题',
+  `seo_keywords` varchar(200) DEFAULT '' COMMENT 'SEO关键词',
+  `seo_description` text COMMENT 'SEO描述',
+  `sort_order` int(6) unsigned NOT NULL DEFAULT '100' COMMENT '排序',
+  `add_time` int(11) NOT NULL DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  `showall` tinyint(3) DEFAULT '1' COMMENT '是否显示主站信息',
+  PRIMARY KEY (`id`),
+  KEY `domain` (`domain`) USING BTREE,
+  KEY `level` (`level`,`status`) USING BTREE,
+  KEY `initial` (`initial`,`sort_order`,`id`) USING BTREE,
+  KEY `parent_id` (`parent_id`,`status`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='城市分站表';
+
 
 -- -----------------------------
 -- Table structure for `ey_common_pic`
@@ -1288,19 +1503,19 @@ CREATE TABLE `ey_common_pic` (
 -- -----------------------------
 -- Records of `ey_common_pic`
 -- -----------------------------
-INSERT INTO `ey_common_pic` VALUES ('1', '/uploads/allimg/20190724/d6a98b35168da05665fd3eb635e7f2fe.gif', 'cn', '1564475514', '1564475514');
-INSERT INTO `ey_common_pic` VALUES ('2', '/uploads/ueditor/20181220/5c1af35580c9a.png', 'cn', '1564483787', '1564483787');
-INSERT INTO `ey_common_pic` VALUES ('3', '/uploads/allimg/20190731/9d5ca6bb09d1d728f18ccbaa5cfce8a3.jpg', 'cn', '1564539808', '1564539808');
-INSERT INTO `ey_common_pic` VALUES ('4', '/uploads/allimg/20190719/822c2b26ca76dc393b36ae4f8addc108.jpg', 'cn', '1565225121', '1565225121');
-INSERT INTO `ey_common_pic` VALUES ('5', '/uploads/allimg/20190808/7dd05a89099c482a51be7faf1bb38ad4.jpg', 'cn', '1565228612', '1565228612');
-INSERT INTO `ey_common_pic` VALUES ('6', '/uploads/allimg/20190808/821fcaa266d291b4f504fb9a1d412c1c.jpg', 'cn', '1565229013', '1565229013');
-INSERT INTO `ey_common_pic` VALUES ('7', '/uploads/allimg/20190808/a4b1ab346ae389e638f4a424b7396ee2.jpg', 'cn', '1565229242', '1565229242');
-INSERT INTO `ey_common_pic` VALUES ('8', '/uploads/allimg/20190808/3ade68e134d3f8fbbd3401c545541106.jpg', 'cn', '1565229431', '1565229431');
-INSERT INTO `ey_common_pic` VALUES ('9', '/uploads/allimg/20190808/989d19deb2377e199ec63d5ef9244be8.jpg', 'cn', '1565229559', '1565229559');
-INSERT INTO `ey_common_pic` VALUES ('10', '/uploads/allimg/20190808/13fba5d0f2454c4b8fee4ada1d3fb39b.jpg', 'cn', '1565229807', '1565229807');
-INSERT INTO `ey_common_pic` VALUES ('11', '/uploads/allimg/20190808/45b6f3f95d30a97cfa4a83d315b5c4f1.jpg', 'cn', '1565233144', '1565233144');
-INSERT INTO `ey_common_pic` VALUES ('12', '/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', 'cn', '1565233662', '1565233662');
-INSERT INTO `ey_common_pic` VALUES ('13', '/uploads/allimg/20190808/17268e40477444ecbf11bcb643f321c2.jpg', 'cn', '1565234123', '1565234123');
+INSERT INTO `ey_common_pic` VALUES ('1', 'https://update.eyoucms.com/demo/uploads/allimg/20190724/d6a98b35168da05665fd3eb635e7f2fe.gif', 'cn', '1564475514', '1564475514');
+INSERT INTO `ey_common_pic` VALUES ('2', 'https://update.eyoucms.com/demo/uploads/ueditor/20181220/5c1af35580c9a.png', 'cn', '1564483787', '1564483787');
+INSERT INTO `ey_common_pic` VALUES ('3', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/9d5ca6bb09d1d728f18ccbaa5cfce8a3.jpg', 'cn', '1564539808', '1564539808');
+INSERT INTO `ey_common_pic` VALUES ('4', 'https://update.eyoucms.com/demo/uploads/allimg/20190719/822c2b26ca76dc393b36ae4f8addc108.jpg', 'cn', '1565225121', '1565225121');
+INSERT INTO `ey_common_pic` VALUES ('5', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/7dd05a89099c482a51be7faf1bb38ad4.jpg', 'cn', '1565228612', '1565228612');
+INSERT INTO `ey_common_pic` VALUES ('6', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/821fcaa266d291b4f504fb9a1d412c1c.jpg', 'cn', '1565229013', '1565229013');
+INSERT INTO `ey_common_pic` VALUES ('7', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/a4b1ab346ae389e638f4a424b7396ee2.jpg', 'cn', '1565229242', '1565229242');
+INSERT INTO `ey_common_pic` VALUES ('8', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/3ade68e134d3f8fbbd3401c545541106.jpg', 'cn', '1565229431', '1565229431');
+INSERT INTO `ey_common_pic` VALUES ('9', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/989d19deb2377e199ec63d5ef9244be8.jpg', 'cn', '1565229559', '1565229559');
+INSERT INTO `ey_common_pic` VALUES ('10', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/13fba5d0f2454c4b8fee4ada1d3fb39b.jpg', 'cn', '1565229807', '1565229807');
+INSERT INTO `ey_common_pic` VALUES ('11', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/45b6f3f95d30a97cfa4a83d315b5c4f1.jpg', 'cn', '1565233144', '1565233144');
+INSERT INTO `ey_common_pic` VALUES ('12', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', 'cn', '1565233662', '1565233662');
+INSERT INTO `ey_common_pic` VALUES ('13', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/17268e40477444ecbf11bcb643f321c2.jpg', 'cn', '1565234123', '1565234123');
 
 -- -----------------------------
 -- Table structure for `ey_config`
@@ -1316,14 +1531,14 @@ CREATE TABLE `ey_config` (
   `is_del` tinyint(1) DEFAULT '0' COMMENT '是否已删除，0=否，1=是',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=331 DEFAULT CHARSET=utf8 COMMENT='系统配置表';
+) ENGINE=MyISAM AUTO_INCREMENT=374 DEFAULT CHARSET=utf8 COMMENT='系统配置表';
 
 -- -----------------------------
 -- Records of `ey_config`
 -- -----------------------------
 INSERT INTO `ey_config` VALUES ('1', 'is_mark', '0', 'water', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('2', 'mark_txt', '易优Cms', 'water', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('3', 'mark_img', '/uploads/allimg/20190114/f0d5e5830502125f5077212a90ef3a33.png', 'water', '', 'cn', '0', '1547463466');
+INSERT INTO `ey_config` VALUES ('3', 'mark_img', 'https://update.eyoucms.com/demo/uploads/allimg/20190114/f0d5e5830502125f5077212a90ef3a33.png', 'water', '', 'cn', '0', '1547463466');
 INSERT INTO `ey_config` VALUES ('4', 'mark_width', '200', 'water', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('5', 'mark_height', '50', 'water', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('6', 'mark_degree', '54', 'water', '', 'cn', '0', '0');
@@ -1332,23 +1547,23 @@ INSERT INTO `ey_config` VALUES ('8', 'mark_sel', '9', 'water', '', 'cn', '0', '0
 INSERT INTO `ey_config` VALUES ('9', 'sms_time_out', '120', 'sms', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('10', 'theme_style', '1', 'basic', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('11', 'file_size', '2', 'basic', '', 'cn', '0', '1580983826');
-INSERT INTO `ey_config` VALUES ('12', 'image_type', 'jpg|gif|png|bmp|jpeg|ico', 'basic', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('13', 'file_type', 'zip|gz|rar|iso|doc|xls|ppt|wps', 'basic', '', 'cn', '0', '1591262356');
+INSERT INTO `ey_config` VALUES ('12', 'image_type', 'jpg|gif|png|bmp|jpeg|ico|webp', 'basic', '', 'cn', '0', '1675389691');
+INSERT INTO `ey_config` VALUES ('13', 'file_type', 'zip|gz|rar|iso|doc|xls|ppt|wps|docx|xlsx|pptx', 'basic', '', 'cn', '0', '1675389691');
 INSERT INTO `ey_config` VALUES ('14', 'media_type', 'swf|mpg|mp3|rm|rmvb|wmv|wma|wav|mid|mov|mp4', 'basic', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('15', 'web_keywords', '', 'web', '', 'cn', '0', '0');
+INSERT INTO `ey_config` VALUES ('15', 'web_keywords', '网站建设,网站设计,网站开发', 'web', '', 'cn', '0', '1699840830');
 INSERT INTO `ey_config` VALUES ('17', 'sms_platform', '1', 'sms', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('18', 'seo_viewtitle_format', '2', 'seo', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('24', 'mark_type', 'img', 'water', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('25', 'mark_txt_size', '30', 'water', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('26', 'mark_txt_color', '#000000', 'water', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('27', 'oss_switch', '0', 'oss', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('28', 'web_name', '某某网络科技有限公司', 'web', '', 'cn', '0', '1565096132');
-INSERT INTO `ey_config` VALUES ('29', 'web_logo', '/abf/uploads/allimg/20210114/1-2101140933194M.png', 'web', '', 'cn', '0', '1610696352');
+INSERT INTO `ey_config` VALUES ('28', 'web_name', '伟创网络科技', 'web', '', 'cn', '0', '1690162017');
+INSERT INTO `ey_config` VALUES ('29', 'web_logo', 'https://update.eyoucms.com/demo/uploads/allimg/20210114/1-2101140933194M.png', 'web', '', 'cn', '0', '1610696352');
 INSERT INTO `ey_config` VALUES ('30', 'web_ico', '/favicon.ico', 'web', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('31', 'web_basehost', 'http://127.0.0.5', 'web', '', 'cn', '0', '1591263789');
-INSERT INTO `ey_config` VALUES ('32', 'web_description', '', 'web', '', 'cn', '0', '0');
+INSERT INTO `ey_config` VALUES ('31', 'web_basehost', 'http://dev165.eyou.hk', 'web', '', 'cn', '0', '1701048286');
+INSERT INTO `ey_config` VALUES ('32', 'web_description', '我们是一家专业的网站建设公司，致力于为客户提供高质量的网站设计和开发服务。我们拥有一支经验丰富、技术娴熟的团队，能够根据客户的需求和要求，设计出具有创意和吸引力的网站。', 'web', '', 'cn', '0', '1699840830');
 INSERT INTO `ey_config` VALUES ('79', 'web_recordnum', '琼ICP备xxxxxxxx号', 'web', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('33', 'web_copyright', 'Copyright © 2012-2021 EYOUCMS. 易优CMS 版权所有', 'web', '', 'cn', '0', '1610589933');
+INSERT INTO `ey_config` VALUES ('33', 'web_copyright', 'Copyright © 2012-2022 某某公司 版权所有', 'web', '', 'cn', '0', '1667183867');
 INSERT INTO `ey_config` VALUES ('34', 'web_thirdcode_pc', '', 'web', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('35', 'web_thirdcode_wap', '', 'web', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('39', 'seo_arcdir', '/html', 'seo', '', 'cn', '0', '0');
@@ -1361,12 +1576,12 @@ INSERT INTO `ey_config` VALUES ('45', 'sitemap_xml', '1', 'sitemap', '', 'cn', '
 INSERT INTO `ey_config` VALUES ('46', 'sitemap_txt', '0', 'sitemap', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('47', 'sitemap_zzbaidutoken', '', 'sitemap', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('48', 'seo_expires_in', '7200', 'seo', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('55', 'web_title', '易优Demo站点 -  Powered by Eyoucms.com', 'web', '', 'cn', '0', '1565096132');
-INSERT INTO `ey_config` VALUES ('57', 'web_authortoken', '', 'web', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('60', 'web_attr_1', '400-123-4567', 'web', '', 'cn', '0', '1563503492');
+INSERT INTO `ey_config` VALUES ('55', 'web_title', '伟创网络科技有限公司', 'web', '', 'cn', '0', '1690162017');
+INSERT INTO `ey_config` VALUES ('57', 'web_authortoken', '', 'web', '', 'cn', '0', '1701048286');
+INSERT INTO `ey_config` VALUES ('60', 'web_attr_1', '400-12345-67890', 'web', '', 'cn', '0', '1667183895');
 INSERT INTO `ey_config` VALUES ('62', 'seo_inlet', '1', 'seo', '', 'cn', '0', '1553566003');
 INSERT INTO `ey_config` VALUES ('63', 'web_cmspath', '', 'web', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('64', 'web_sqldatapath', '/data/sqldata', 'web', '', 'cn', '0', '0');
+INSERT INTO `ey_config` VALUES ('64', 'web_sqldatapath', '/data/sqldata_sy8eEbsHzK4KorT8B1Dj', 'web', '', 'cn', '0', '1710744349');
 INSERT INTO `ey_config` VALUES ('65', 'web_cmsurl', '', 'web', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('66', 'web_templets_dir', '/template', 'web', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('67', 'web_templeturl', '/template', 'web', '', 'cn', '0', '0');
@@ -1376,41 +1591,44 @@ INSERT INTO `ey_config` VALUES ('70', 'web_eyoucms', 'http://www.eyoucms.com', '
 INSERT INTO `ey_config` VALUES ('78', '_cmscopyright', 'cbQ1AmriPQ7LHyth9xeHH6Lj', 'php', '', 'cn', '0', '1571040555');
 INSERT INTO `ey_config` VALUES ('76', 'seo_liststitle_format', '2', 'seo', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('77', 'web_status', '0', 'web', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('80', 'web_is_authortoken', '-1', 'web', '', 'cn', '0', '1624416375');
+INSERT INTO `ey_config` VALUES ('80', 'web_is_authortoken', '0', 'web', '', 'cn', '0', '1703142156');
 INSERT INTO `ey_config` VALUES ('81', 'web_adminbasefile', '/login.php', 'web', '', 'cn', '0', '1614152866');
 INSERT INTO `ey_config` VALUES ('82', 'seo_rewrite_format', '1', 'seo', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('83', 'web_cmsmode', '2', 'web', '', 'cn', '0', '1610588047');
+INSERT INTO `ey_config` VALUES ('83', 'web_cmsmode', '2', 'web', '', 'cn', '0', '1701048841');
 INSERT INTO `ey_config` VALUES ('84', 'web_htmlcache_expires_in', '0', 'web', '', 'cn', '0', '1546477337');
-INSERT INTO `ey_config` VALUES ('85', 'web_show_popup_upgrade', '-1', 'web', '', 'cn', '0', '0');
+INSERT INTO `ey_config` VALUES ('85', 'web_show_popup_upgrade', '1', 'web', '', 'cn', '0', '1653359674');
 INSERT INTO `ey_config` VALUES ('86', 'web_weapp_switch', '1', 'web', '', 'cn', '0', '1563498417');
 INSERT INTO `ey_config` VALUES ('88', 'seo_dynamic_format', '1', 'seo', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('89', 'system_sql_mode', 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION', 'system', '', 'cn', '0', '1623322071');
+INSERT INTO `ey_config` VALUES ('89', 'system_sql_mode', 'NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION', 'system', '', 'cn', '0', '1710744343');
 INSERT INTO `ey_config` VALUES ('90', 'system_home_default_lang', 'cn', 'system', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('91', 'system_langnum', '1', 'system', '', 'cn', '0', '1610357910');
 INSERT INTO `ey_config` VALUES ('170', 'web_exception', '0', 'web', '', 'cn', '0', '1546477337');
-INSERT INTO `ey_config` VALUES ('171', 'web_language_switch', '0', 'web', '', 'cn', '0', '1610357915');
+INSERT INTO `ey_config` VALUES ('171', 'web_language_switch', '0', 'web', '', 'cn', '0', '1703142357');
 INSERT INTO `ey_config` VALUES ('174', 'web_is_https', '0', 'web', '', 'cn', '0', '1552968816');
 INSERT INTO `ey_config` VALUES ('176', 'smtp_syn_weapp', '1', 'smtp', '', 'cn', '0', '1553566547');
 INSERT INTO `ey_config` VALUES ('178', 'php_eyou_blacklist', '', 'php', '', 'cn', '0', '1553654429');
-INSERT INTO `ey_config` VALUES ('190', 'system_auth_code', 'JwAhf0gPmHIJIZbiPlca', 'system', '', 'cn', '0', '1557733856');
-INSERT INTO `ey_config` VALUES ('192', 'system_upgrade_filelist', 'YXBwbGljYXRpb24vY29tbW9uL2JlaGF2aW9yL0FwcEluaXRCZWhhdmlvci5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL2JlaGF2aW9yL0luaXRIb29rQmVoYXZpb3IucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9sb2dpYy9Pc3NMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL2xvZ2ljL1Ntc0xvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbG9naWMvQXJjdHlwZUxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvQXJjdHlwZS5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL1NxbENhY2hlVGFibGUucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9tb2RlbC9DaGFubmVsdHlwZS5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL0V5b3VVc2Vycy5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL1RhZ2xpc3QucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9tb2RlbC9MYW5ndWFnZS5waHA8YnI+YXBwbGljYXRpb24vcm91dGUucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9QYXlBcGkucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9QYXkucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9NZWRpYS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL0FydGljbGUucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9Vc2Vyc1JlbGVhc2UucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9CYXNlLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL2NvbnRyb2xsZXIvRG93bmxvYWQucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9Vc2Vyc05vdGljZS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL1VzZXJzLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL2NvbnRyb2xsZXIvVXBsb2FkaWZ5LnBocDxicj5hcHBsaWNhdGlvbi91c2VyL2xvZ2ljL1BheUxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL2xvZ2ljL1BheUFwaUxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL21vZGVsL0Rvd25sb2FkRmlsZS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9tb2RlbC9Vc2Vyc1JlbGVhc2UucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvbW9kZWwvUHJvZHVjdFNwZWNWYWx1ZS5waHA8YnI+YXBwbGljYXRpb24vdXNlci90ZW1wbGF0ZS91cGxvYWRpZnkvdXBsb2FkLmh0bTxicj5hcHBsaWNhdGlvbi9jb21tb24ucGhwPGJyPmFwcGxpY2F0aW9uL2Z1bmN0aW9uLnBocDxicj5hcHBsaWNhdGlvbi9hcGkvY29udHJvbGxlci9VaXNldC5waHA8YnI+YXBwbGljYXRpb24vYXBpL2NvbnRyb2xsZXIvdjEvQXBpLnBocDxicj5hcHBsaWNhdGlvbi9hcGkvY29udHJvbGxlci92MS9CYXNlLnBocDxicj5hcHBsaWNhdGlvbi9hcGkvY29udHJvbGxlci92MS9Vc2Vycy5waHA8YnI+YXBwbGljYXRpb24vYXBpL2NvbnRyb2xsZXIvQWpheC5waHA8YnI+YXBwbGljYXRpb24vYXBpL2xvZ2ljL3YxL0FwaUxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hcGkvbW9kZWwvdjEvQXBpLnBocDxicj5hcHBsaWNhdGlvbi9hcGkvbW9kZWwvdjEvVXNlci5waHA8YnI+YXBwbGljYXRpb24vYXBpL21vZGVsL3YxL0Jhc2UucGhwPGJyPmFwcGxpY2F0aW9uL2FwaS9tb2RlbC92MS9DYXRlZ29yeS5waHA8YnI+YXBwbGljYXRpb24vYXBpL21vZGVsL3YxL1VzZXJCYXNlLnBocDxicj5hcHBsaWNhdGlvbi9hcGkvbW9kZWwvdjEvU2hvcC5waHA8YnI+YXBwbGljYXRpb24vYXBpL3RlbXBsYXRlL3Vpc2V0L2FyY2xpc3RfbS5odG08YnI+YXBwbGljYXRpb24vYXBpL3RlbXBsYXRlL3Vpc2V0L2NvZGUuaHRtPGJyPmFwcGxpY2F0aW9uL2FwaS90ZW1wbGF0ZS91aXNldC9jb2RlX20uaHRtPGJyPmFwcGxpY2F0aW9uL2FwaS90ZW1wbGF0ZS91aXNldC9iYWNrZ3JvdW5kX20uaHRtPGJyPmFwcGxpY2F0aW9uL2FwaS90ZW1wbGF0ZS91aXNldC9tYXAuaHRtPGJyPmFwcGxpY2F0aW9uL2FwaS90ZW1wbGF0ZS91aXNldC9hcmNsaXN0Lmh0bTxicj5hcHBsaWNhdGlvbi9hcGkvdGVtcGxhdGUvdWlzZXQvbW9iaWxlX3RwbC5odG08YnI+YXBwbGljYXRpb24vYXBpL3RlbXBsYXRlL3Vpc2V0L2h0bWxfbS5odG08YnI+YXBwbGljYXRpb24vYXBpL3RlbXBsYXRlL3Vpc2V0L3VwbG9hZC5odG08YnI+YXBwbGljYXRpb24vYXBpL3RlbXBsYXRlL3Vpc2V0L3VwbG9hZF9tLmh0bTxicj5hcHBsaWNhdGlvbi9hcGkvdGVtcGxhdGUvdWlzZXQvdHlwZV9tLmh0bTxicj5hcHBsaWNhdGlvbi9hcGkvdGVtcGxhdGUvdWlzZXQvdGV4dF9tLmh0bTxicj5hcHBsaWNhdGlvbi9hcGkvdGVtcGxhdGUvdWlzZXQvY2hhbm5lbC5odG08YnI+YXBwbGljYXRpb24vYXBpL3RlbXBsYXRlL3Vpc2V0L2JhY2tncm91bmQuaHRtPGJyPmFwcGxpY2F0aW9uL2FwaS90ZW1wbGF0ZS91aXNldC9odG1sLmh0bTxicj5hcHBsaWNhdGlvbi9hcGkvdGVtcGxhdGUvdWlzZXQvbWFwX20uaHRtPGJyPmFwcGxpY2F0aW9uL2FwaS90ZW1wbGF0ZS91aXNldC90eXBlLmh0bTxicj5hcHBsaWNhdGlvbi9hcGkvdGVtcGxhdGUvdWlzZXQvY2hhbm5lbF9tLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb21tb24ucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2JlaGF2aW9yL01vZHVsZUluaXRCZWhhdmlvci5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vYmVoYXZpb3IvQWN0aW9uQmVnaW5CZWhhdmlvci5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9GaWVsZC5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9JbWFnZXMucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvRmlsZW1hbmFnZXIucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvV2VhcHAucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvVWlzZXQucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvU3RhdGlzdGljcy5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9BZG1pbi5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9BcmN0eXBlLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb250cm9sbGVyL01lZGlhLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb250cm9sbGVyL0FyY2hpdmVzLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb250cm9sbGVyL0FydGljbGUucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvT3RoZXIucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvVWVkaXRvci5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9Vc2Vyc1JlbGVhc2UucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvU2hhcnAucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvTGV2ZWwucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvVGFncy5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9Qcm9kdWN0LnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb250cm9sbGVyL0Jhc2UucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvRW5jb2Rlcy5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9TcGVjaWFsLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb250cm9sbGVyL0d1ZXN0Ym9vay5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9BcmNoaXZlc0ZsYWcucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvVXBncmFkZS5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9Eb3dubG9hZC5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9TZW8ucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvQWRQb3NpdGlvbi5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9JbmRleC5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9BdXRoUm9sZS5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9SZWN5Y2xlQmluLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb250cm9sbGVyL0NoYW5uZWx0eXBlLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb250cm9sbGVyL01lbWJlci5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9TeXN0ZW0ucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvU2hvcFByb2R1Y3QucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvQ3VzdG9tLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb250cm9sbGVyL1Nob3AucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvQXNrLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb250cm9sbGVyL1VzZXJzTm90aWNlLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb250cm9sbGVyL1VwbG9hZGlmeS5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9BamF4LnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb250cm9sbGVyL0xpbmtzLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb250cm9sbGVyL0xpbmtzR3JvdXAucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbnRyb2xsZXIvVXNlcnNTY29yZS5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29udHJvbGxlci9MYW5ndWFnZS5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbG9naWMvV2VhcHBMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbG9naWMvQWpheExvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9sb2dpYy9GaWxlbWFuYWdlckxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9sb2dpYy9VcGdyYWRlTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2xvZ2ljL0Fza0xvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9sb2dpYy9TaG9wTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2xvZ2ljL0FyY2hpdmVzTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2xvZ2ljL0ZpZWxkTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2xvZ2ljL01lbWJlckxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9sb2dpYy9Qcm9kdWN0TG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2NvbmYvbWVudS5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29uZi9hdXRoX3J1bGUucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL21vZGVsL0ZpZWxkLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9tb2RlbC9JbWFnZXMucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL21vZGVsL1dlYXBwLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9tb2RlbC9NZWRpYS5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbW9kZWwvRG93bmxvYWRGaWxlLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9tb2RlbC9BcmNoaXZlcy5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbW9kZWwvQXJ0aWNsZS5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbW9kZWwvU2luZ2xlLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9tb2RlbC9Qcm9kdWN0LnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9tb2RlbC9Qcm9kdWN0SW1nLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9tb2RlbC9TcGVjaWFsLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9tb2RlbC9Vc2Vyc1BhcmFtZXRlci5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbW9kZWwvR3Vlc3Rib29rLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9tb2RlbC9Eb3dubG9hZC5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbW9kZWwvQXV0aFJvbGUucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL21vZGVsL01lbWJlci5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbW9kZWwvUHJvZHVjdFNwZWNWYWx1ZS5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbW9kZWwvTWVkaWFGaWxlLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9tb2RlbC9DdXN0b20ucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL21vZGVsL0ltYWdlc1VwbG9hZC5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vY29uZmlnLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zaG9wX2NvbW1lbnQvY29tbWVudF9pbmRleC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvYXNrL2NvbmYuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2FyY3R5cGUvZWRpdC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvYXJjdHlwZS9hZGQuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2FyY3R5cGUvaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2FyY3R5cGUvc2luZ2xlX2VkaXQuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2FyY3R5cGUvYmF0Y2hfYWRkLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9maWVsZC9hdHRyaWJ1dGVfaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2ZpZWxkL2NoYW5uZWxfYWRkLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9maWVsZC9hZGRvbml0ZW0uaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2ZpZWxkL2NoYW5uZWxfZWRpdC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvZmllbGQvbW9kZWxmaWVsZC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvZmllbGQvYWRkb25leHRpdGVtLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9maWVsZC9jaGFubmVsX2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9hdXRoX3JvbGUvZWRpdC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvYXV0aF9yb2xlL2FkZC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvaW5kZXgvaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2luZGV4L3N3aXRjaF9tYXAuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2luZGV4L3dlbGNvbWUuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3NwZWNpYWwvZWRpdC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc3BlY2lhbC9hZGQuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3NwZWNpYWwvaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3Vpc2V0L3VpX2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9ndWVzdGJvb2svYXR0cmlidXRlX2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9ndWVzdGJvb2svaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL21lZGlhL2VkaXQuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL21lZGlhL2FkZC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvbWVkaWEvaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2xpbmtzL2VkaXQuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2xpbmtzL2FkZC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvbGlua3MvaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL290aGVyL3VpX2FkZC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvb3RoZXIvZWRpdC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvb3RoZXIvYWRkLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9vdGhlci9pbmRleC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvb3RoZXIvdWlfZWRpdC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc2hvcC9sZWZ0Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zaG9wL2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zaG9wL3Nob3BfYmFyLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zaG9wL2NvbmYuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3Rvb2xzL2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS90b29scy9yZXN0b3JlLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9sYW5ndWFnZS9jdXN0b212YXJfYXJjdHlwZS5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvbGFuZ3VhZ2Uvb2ZmaWNpYWxfcGFja19pbmRleC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvbGFuZ3VhZ2UvaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2xhbmd1YWdlL3BhY2tfaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3JlY3ljbGVfYmluL2FyY2hpdmVzX2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9yZWN5Y2xlX2Jpbi9jdXN0b212YXJfaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3JlY3ljbGVfYmluL2dib29rYXR0cl9pbmRleC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvcmVjeWNsZV9iaW4vYXJjdHlwZV9pbmRleC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvcmVjeWNsZV9iaW4vcHJvYXR0cl9pbmRleC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc2hhcnAvZWRpdC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc2hhcnAvYWN0aXZlX3RpbWVfaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3NoYXJwL2FkZC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc2hhcnAvaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3NoYXJwL2dvb2RzX2xpc3QuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3NoYXJwL2FjdGl2ZV9pbmRleC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc2VvL3NpdGUuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3Nlby9hcnRpY2xlLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zZW8vc2VvLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zZW8vY2hhbm5lbC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvdGFncy9lZGl0Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS90YWdzL2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS90YWdzL3JlbGF0aW9uX2FyY2hpdmVzLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS90YWdzL2VkaXRfaW5kZXhfc2VvLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zaG9wX3Byb2R1Y3QvYXR0cmlidXRlX2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zaG9wX3Byb2R1Y3QvZWRpdC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc2hvcF9wcm9kdWN0L2FkZC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc2hvcF9wcm9kdWN0L2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zaG9wX3Byb2R1Y3QvdGFnc19idG4uaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3Nob3BfcHJvZHVjdC9hdHRybGlzdF9pbmRleC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvYWRfcG9zaXRpb24vZWRpdC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvYWRfcG9zaXRpb24vYWRkLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9hZF9wb3NpdGlvbi9pbmRleC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvY3VzdG9tL2VkaXQuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2N1c3RvbS9hZGQuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2N1c3RvbS9pbmRleC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvdXNlcnNfc2NvcmUvaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2FkbWluL2xvZ2luX3p5Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9hZG1pbi9sb2dpbi5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc3lzdGVtL2Jhc2ljLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zeXN0ZW0vY3VzdG9tdmFyX2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zeXN0ZW0vbm90aWZ5Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zeXN0ZW0vd2F0ZXIuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3N5c3RlbS9zbXRwLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zeXN0ZW0vd2ViMi5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc3lzdGVtL2FwaV9jb25mLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zeXN0ZW0vbWljcm9zaXRlLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zeXN0ZW0vd2ViLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9hcnRpY2xlL2VkaXQuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2FydGljbGUvYWRkLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9hcnRpY2xlL2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9hcnRpY2xlL2ZyZWVfY29udGVudC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvbGV2ZWwvdXBncmFkZV9pbmRleC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvYXJjaGl2ZXMvaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2FyY2hpdmVzL2luZGV4X2RyYWZ0Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9hcmNoaXZlcy9pbmRleF9hcmNoaXZlcy5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvYXJjaGl2ZXMvZmxhZ19idG4uaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2FyY2hpdmVzL2dldF9maWVsZF9hZGRvbmV4dGl0ZW0uaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3Byb2R1Y3QvYXR0cmlidXRlX2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9wcm9kdWN0L2VkaXQuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL3Byb2R1Y3QvYWRkLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9wcm9kdWN0L2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9jaGFubmVsdHlwZS9lZGl0Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zdGF0aXN0aWNzL2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9lbmNvZGVzL3RoZW1lX2NvbmYuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL21lbWJlci9tZWRpYV9pbmRleC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvbWVtYmVyL3VzZXJzX2ZpZWxkLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9tZW1iZXIvYXJ0aWNsZV9vcmRlcl9kZXRhaWxzLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9tZW1iZXIvdXNlcnNfaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL21lbWJlci9hcnRpY2xlX2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9tZW1iZXIvbW9uZXlfaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL21lbWJlci91c2Vyc19lZGl0Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9tZW1iZXIvb3JkZXJfYmFyLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9kb3dubG9hZC9lZGl0Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9kb3dubG9hZC9hZGQuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2Rvd25sb2FkL2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS91c2Vyc19ub3RpY2UvYWRtaW5fbm90aWNlX2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS91c2Vyc19ub3RpY2UvZWRpdC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvdXNlcnNfbm90aWNlL2FkZC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvdXNlcnNfbm90aWNlL2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9wdWJsaWMvbGVmdC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvcHVibGljL3RoZW1lX2Nzcy5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc2hvcF9zZXJ2aWNlL2FmdGVyX3NlcnZpY2UuaHRtPGJyPmFwcGxpY2F0aW9uL2FkbWluL3RlbXBsYXRlL2ltYWdlcy9lZGl0Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9pbWFnZXMvYWRkLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9pbWFnZXMvaW5kZXguaHRtPGJyPmFwcGxpY2F0aW9uL2V4dHJhL2Vycm9yX2NvZGUucGhwPGJyPmFwcGxpY2F0aW9uL2V4dHJhL2dsb2JhbC5waHA8YnI+YXBwbGljYXRpb24vaG9tZS9jb21tb24ucGhwPGJyPmFwcGxpY2F0aW9uL2hvbWUvYmVoYXZpb3IvVmlld0ZpbHRlckJlaGF2aW9yLnBocDxicj5hcHBsaWNhdGlvbi9ob21lL2NvbnRyb2xsZXIvTGlzdHMucGhwPGJyPmFwcGxpY2F0aW9uL2hvbWUvY29udHJvbGxlci9WaWV3LnBocDxicj5hcHBsaWNhdGlvbi9ob21lL2NvbnRyb2xsZXIvVGFncy5waHA8YnI+YXBwbGljYXRpb24vaG9tZS9jb250cm9sbGVyL0Jhc2UucGhwPGJyPmFwcGxpY2F0aW9uL2hvbWUvY29udHJvbGxlci9TZWFyY2gucGhwPGJyPmFwcGxpY2F0aW9uL2hvbWUvY29udHJvbGxlci9Bc2sucGhwPGJyPmFwcGxpY2F0aW9uL2hvbWUvY29udHJvbGxlci9CdWlsZGh0bWwucGhwPGJyPmFwcGxpY2F0aW9uL2hvbWUvbG9naWMvQXNrTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2hvbWUvbG9naWMvRmllbGRMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vaG9tZS9tb2RlbC9BcnRpY2xlLnBocDxicj5hcHBsaWNhdGlvbi9ob21lL21vZGVsL1Byb2R1Y3RBdHRyLnBocDxicj5hcHBsaWNhdGlvbi9ob21lL21vZGVsL0Fzay5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL1JlcXVlc3QucGhwPGJyPmNvcmUvbGlicmFyeS90aGluay9kYi9kcml2ZXIvRHJpdmVyLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvcHJvY2Vzcy9iaHZjb3JlL0JodmFkbWluQUJlZ2luLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvcHJvY2Vzcy9iaHZjb3JlL0JodnVzZXJBQmVnaW4ucGhwPGJyPmNvcmUvbGlicmFyeS90aGluay9UZW1wbGF0ZS5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3ZpZXcvZHJpdmVyL1RoaW5rLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2V5b3UvVGFnVWl0eXBlLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2V5b3UvVGFnVWkucGhwPGJyPmNvcmUvbGlicmFyeS90aGluay90ZW1wbGF0ZS90YWdsaWIvZXlvdS9UYWdUYWdhcmNsaXN0LnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2V5b3UvVGFnU3BjYXJ0LnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2V5b3UvVGFnU3BzdWJtaXRvcmRlci5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ1VpdGV4dC5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ1VpY29kZS5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ1VpY2hhbm5lbC5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ1VpdXBsb2FkLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2V5b3UvQmFzZS5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ0xpc3QucGhwPGJyPmNvcmUvbGlicmFyeS90aGluay90ZW1wbGF0ZS90YWdsaWIvZXlvdS9UYWdTcG9yZGVybGlzdC5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ1VpYXJjbGlzdC5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ0NoYW5uZWwucGhwPGJyPmNvcmUvbGlicmFyeS90aGluay90ZW1wbGF0ZS90YWdsaWIvZXlvdS9UYWdGbGluay5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ1VpaHRtbC5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ0RpeXVybC5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ1ZpZGVvbGlzdC5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ0FyY2xpc3QucGhwPGJyPmNvcmUvbGlicmFyeS90aGluay90ZW1wbGF0ZS90YWdsaWIvZXlvdS9UYWdTcHBheWFwaWxpc3QucGhwPGJyPmNvcmUvbGlicmFyeS90aGluay90ZW1wbGF0ZS90YWdsaWIvZXlvdS9UYWdDaGFubmVsYXJ0bGlzdC5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ1NwZWNub2RlLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2V5b3UvVGFnVWliYWNrZ3JvdW5kLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2V5b3UvVGFnQXJ0aWNsZXBheS5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ1ZpZGVvcGxheS5waHA8YnI+Y29yZS9saWJyYXJ5L3RoaW5rL3RlbXBsYXRlL3RhZ2xpYi9leW91L1RhZ1VpbWFwLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2V5b3UvVGFnU3RhdGljLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2FwaS9UYWdQcmVuZXh0LnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2FwaS9UYWdBcmN2aWV3LnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2FwaS9UYWdBZHYucGhwPGJyPmNvcmUvbGlicmFyeS90aGluay90ZW1wbGF0ZS90YWdsaWIvYXBpL1RhZ0FkLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2FwaS9UYWdDb2xsZWN0LnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2FwaS9CYXNlLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2FwaS9UYWdHbG9iYWwucGhwPGJyPmNvcmUvbGlicmFyeS90aGluay90ZW1wbGF0ZS90YWdsaWIvYXBpL1RhZ0xpc3QucGhwPGJyPmNvcmUvbGlicmFyeS90aGluay90ZW1wbGF0ZS90YWdsaWIvYXBpL1RhZ0NoYW5uZWwucGhwPGJyPmNvcmUvbGlicmFyeS90aGluay90ZW1wbGF0ZS90YWdsaWIvYXBpL1RhZ0ZsaW5rLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2FwaS9UYWdBcmNsaXN0LnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2FwaS9UYWdHdWVzdGJvb2tmb3JtLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL2FwaS9UYWdUeXBlLnBocDxicj5jb3JlL2xpYnJhcnkvdGhpbmsvdGVtcGxhdGUvdGFnbGliL0V5b3UucGhwPGJyPmRhdGEvc2NoZW1hL2V5X21lZGlhX29yZGVyLnBocDxicj5kYXRhL3NjaGVtYS9leV9hcnRpY2xlX3BheS5waHA8YnI+ZGF0YS9zY2hlbWEvZXlfYXJjaGl2ZXMucGhwPGJyPmRhdGEvc2NoZW1hL2V5X3Nob3Bfb3JkZXIucGhwPGJyPmRhdGEvc2NoZW1hL2V5X3NoYXJwX2dvb2RzLnBocDxicj5kYXRhL3NjaGVtYS9leV9saW5rcy5waHA8YnI+ZGF0YS9zY2hlbWEvZXlfYXJ0aWNsZV9vcmRlci5waHA8YnI+ZGF0YS9zY2hlbWEvZXlfdGFnaW5kZXgucGhwPGJyPmRhdGEvc2NoZW1hL2V5X3NxbF9jYWNoZV90YWJsZS5waHA8YnI+ZGF0YS9zY2hlbWEvZXlfY2hhbm5lbGZpZWxkLnBocDxicj5kYXRhL3NjaGVtYS9leV93eF91c2Vycy5waHA8YnI+ZGF0YS9zY2hlbWEvZXlfdXNlcnMucGhwPGJyPmRhdGEvc2NoZW1hL2V5X3VpX2NvbmZpZy5waHA8YnI+ZGF0YS9zY2hlbWEvZXlfYXNrX2Fuc3dlcl9saWtlLnBocDxicj5kYXRhL2NvbmYvdmVyc2lvbi50eHQ8YnI+ZGF0YS9jb25mL3RhZ2FpZHNfMTYxOTE0MTU3NC50eHQ8YnI+ZGF0YS93ZWFwcC9TYW1wbGUvYXBwbGljYXRpb24vcGx1Z2lucy9jb250cm9sbGVyL1NhbXBsZS5waHA8YnI+ZGF0YS93ZWFwcC9TYW1wbGUvYXBwbGljYXRpb24vcGx1Z2lucy9sb2dpYy9TYW1wbGVMb2dpYy5waHA8YnI+ZGF0YS93ZWFwcC9TYW1wbGUvd2VhcHAvU2FtcGxlL3RlbXBsYXRlL2hlYWRlci5odG08YnI+ZGF0YS93ZWFwcC9TYW1wbGUvd2VhcHAvU2FtcGxlL3RlbXBsYXRlL2VkaXQuaHRtPGJyPmRhdGEvd2VhcHAvU2FtcGxlL3dlYXBwL1NhbXBsZS90ZW1wbGF0ZS9hZGQuaHRtPGJyPmRhdGEvd2VhcHAvU2FtcGxlL3dlYXBwL1NhbXBsZS90ZW1wbGF0ZS9pbmRleC5odG08YnI+ZGF0YS93ZWFwcC9TYW1wbGUvd2VhcHAvU2FtcGxlL3RlbXBsYXRlL3NraW4vY3NzL3BhZ2UuY3NzPGJyPmRhdGEvd2VhcHAvU2FtcGxlL3dlYXBwL1NhbXBsZS90ZW1wbGF0ZS9za2luL2Nzcy9tYWluLmNzczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9ja2VkaXRvcl9iYXNpYy5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2NsaXBib2FyZC9kaWFsb2dzL3Bhc3RlLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMveG1sL3BsdWdpbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NtaWxleS9kaWFsb2dzL3NtaWxleS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NtaWxleS9pbWFnZXMvdG91bmdlX3NtaWxlLmdpZjxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NtaWxleS9pbWFnZXMvZW52ZWxvcGUuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc21pbGV5L2ltYWdlcy90aHVtYnNfZG93bi5naWY8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zbWlsZXkvaW1hZ2VzL3doYXRjaHV0YWxraW5nYWJvdXRfc21pbGUuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc21pbGV5L2ltYWdlcy9zYWRfc21pbGUuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc21pbGV5L2ltYWdlcy93aW5rX3NtaWxlLmdpZjxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NtaWxleS9pbWFnZXMvZGV2aWxfc21pbGUuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc21pbGV5L2ltYWdlcy90aHVtYnNfdXAuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc21pbGV5L2ltYWdlcy9jcnlfc21pbGUuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc21pbGV5L2ltYWdlcy9icm9rZW5faGVhcnQuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc21pbGV5L2ltYWdlcy9jb25mdXNlZF9zbWlsZS5naWY8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zbWlsZXkvaW1hZ2VzL2xpZ2h0YnVsYi5naWY8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zbWlsZXkvaW1hZ2VzL3JlZ3VsYXJfc21pbGUuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc21pbGV5L2ltYWdlcy9vbWdfc21pbGUuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc21pbGV5L2ltYWdlcy9oZWFydC5naWY8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zbWlsZXkvaW1hZ2VzL3RlZXRoX3NtaWxlLmdpZjxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NtaWxleS9pbWFnZXMva2lzcy5naWY8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zbWlsZXkvaW1hZ2VzL2FuZ2VsX3NtaWxlLmdpZjxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NtaWxleS9pbWFnZXMvZW1iYXJlc3NlZF9zbWlsZS5naWY8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zbWlsZXkvaW1hZ2VzL2FuZ3J5X3NtaWxlLmdpZjxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NtaWxleS9pbWFnZXMvc2hhZGVzX3NtaWxlLmdpZjxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2ZpbmQvZGlhbG9ncy9maW5kLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYWRvYmVhaXIvcGx1Z2luLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZG9jcHJvcHMvZGlhbG9ncy9kb2Nwcm9wcy5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2RvY3Byb3BzL3BsdWdpbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3ByZXZpZXcvcHJldmlldy5odG1sPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvcGFnZWJyZWFrL2ltYWdlcy9wYWdlYnJlYWsuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvaWZyYW1lZGlhbG9nL3BsdWdpbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2ltYWdlL2RpYWxvZ3MvaW1hZ2UuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9mb3Jtcy9kaWFsb2dzL3RleHRhcmVhLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZm9ybXMvZGlhbG9ncy9yYWRpby5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2Zvcm1zL2RpYWxvZ3MvYnV0dG9uLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZm9ybXMvZGlhbG9ncy9zZWxlY3QuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9mb3Jtcy9kaWFsb2dzL2NoZWNrYm94LmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZm9ybXMvZGlhbG9ncy9mb3JtLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZm9ybXMvZGlhbG9ncy9oaWRkZW5maWVsZC5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2Zvcm1zL2RpYWxvZ3MvdGV4dGZpZWxkLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZm9ybXMvaW1hZ2VzL2hpZGRlbmZpZWxkLmdpZjxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NwZWNpYWxjaGFyL2RpYWxvZ3Mvc3BlY2lhbGNoYXIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zcGVjaWFsY2hhci9sYW5nL3VnLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc3BlY2lhbGNoYXIvbGFuZy9lbC5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NwZWNpYWxjaGFyL2xhbmcvX3RyYW5zbGF0aW9uc3RhdHVzLnR4dDxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NwZWNpYWxjaGFyL2xhbmcvbHYuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zcGVjaWFsY2hhci9sYW5nL2l0LmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc3BlY2lhbGNoYXIvbGFuZy9oZS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NwZWNpYWxjaGFyL2xhbmcvdHIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zcGVjaWFsY2hhci9sYW5nL25iLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc3BlY2lhbGNoYXIvbGFuZy96aC1jbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NwZWNpYWxjaGFyL2xhbmcvZnIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zcGVjaWFsY2hhci9sYW5nL25sLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc3BlY2lhbGNoYXIvbGFuZy9rdS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NwZWNpYWxjaGFyL2xhbmcvZW8uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zcGVjaWFsY2hhci9sYW5nL2RlLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc3BlY2lhbGNoYXIvbGFuZy9jcy5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NwZWNpYWxjaGFyL2xhbmcvY3kuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zcGVjaWFsY2hhci9sYW5nL25vLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc3BlY2lhbGNoYXIvbGFuZy9mYS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NwZWNpYWxjaGFyL2xhbmcvZXQuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zcGVjaWFsY2hhci9sYW5nL3B0LWJyLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc3BlY2lhbGNoYXIvbGFuZy9lbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3NwZWNpYWxjaGFyL2xhbmcvZmkuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zcGVjaWFsY2hhci9sYW5nL2hyLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc3BlY2lhbGNoYXIvbGFuZy9zay5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2NvbG9yZGlhbG9nL2RpYWxvZ3MvY29sb3JkaWFsb2cuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9hZGRvbi9kaWFsb2dzL2FkZG9uLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYWRkb24vcGx1Z2luLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYWRkb24vaW1hZ2VzL2FkZG9uLmdpZjxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2RpYWxvZy9kaWFsb2dEZWZpbml0aW9uLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYTExeWhlbHAvZGlhbG9ncy9hMTF5aGVscC5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2ExMXloZWxwL2xhbmcvdWcuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9hMTF5aGVscC9sYW5nL2VsLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYTExeWhlbHAvbGFuZy9fdHJhbnNsYXRpb25zdGF0dXMudHh0PGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYTExeWhlbHAvbGFuZy9sdi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2ExMXloZWxwL2xhbmcvaXQuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9hMTF5aGVscC9sYW5nL2hlLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYTExeWhlbHAvbGFuZy9yby5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2ExMXloZWxwL2xhbmcvdHIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9hMTF5aGVscC9sYW5nL25iLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYTExeWhlbHAvbGFuZy96aC1jbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2ExMXloZWxwL2xhbmcvZnIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9hMTF5aGVscC9sYW5nL25sLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYTExeWhlbHAvbGFuZy9rdS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2ExMXloZWxwL2xhbmcvZW8uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9hMTF5aGVscC9sYW5nL2RlLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYTExeWhlbHAvbGFuZy9tay5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2ExMXloZWxwL2xhbmcvY3MuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9hMTF5aGVscC9sYW5nL2N5LmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYTExeWhlbHAvbGFuZy9ndS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2ExMXloZWxwL2xhbmcvbm8uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9hMTF5aGVscC9sYW5nL3ZpLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYTExeWhlbHAvbGFuZy9mYS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2ExMXloZWxwL2xhbmcvcHQtYnIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9hMTF5aGVscC9sYW5nL2VuLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYTExeWhlbHAvbGFuZy9kYS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2ExMXloZWxwL2xhbmcvZmkuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9hMTF5aGVscC9sYW5nL3NrLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZGV2dG9vbHMvbGFuZy91Zy5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2RldnRvb2xzL2xhbmcvZWwuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9kZXZ0b29scy9sYW5nL190cmFuc2xhdGlvbnN0YXR1cy50eHQ8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9kZXZ0b29scy9sYW5nL2x2LmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZGV2dG9vbHMvbGFuZy9pdC5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2RldnRvb2xzL2xhbmcvYmcuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9kZXZ0b29scy9sYW5nL2hlLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZGV2dG9vbHMvbGFuZy90ci5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2RldnRvb2xzL2xhbmcvbmIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9kZXZ0b29scy9sYW5nL3poLWNuLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZGV2dG9vbHMvbGFuZy9mci5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2RldnRvb2xzL2xhbmcvbmwuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9kZXZ0b29scy9sYW5nL3VrLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZGV2dG9vbHMvbGFuZy9rdS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2RldnRvb2xzL2xhbmcvcGwuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9kZXZ0b29scy9sYW5nL2VvLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZGV2dG9vbHMvbGFuZy9kZS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2RldnRvb2xzL2xhbmcvY3MuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9kZXZ0b29scy9sYW5nL2N5LmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZGV2dG9vbHMvbGFuZy9ndS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2RldnRvb2xzL2xhbmcvbm8uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9kZXZ0b29scy9sYW5nL3ZpLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZGV2dG9vbHMvbGFuZy9mYS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2RldnRvb2xzL2xhbmcvZXQuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9kZXZ0b29scy9sYW5nL3B0LWJyLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZGV2dG9vbHMvbGFuZy9lbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2RldnRvb2xzL2xhbmcvZGEuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9kZXZ0b29scy9sYW5nL2ZpLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvZGV2dG9vbHMvbGFuZy9oci5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2RldnRvb2xzL2xhbmcvc2suanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9kZXZ0b29scy9wbHVnaW4uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9saXN0c3R5bGUvZGlhbG9ncy9saXN0c3R5bGUuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9wYXN0ZXRleHQvZGlhbG9ncy9wYXN0ZXRleHQuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zY2F5dC9kaWFsb2dzL3Rvb2xiYXIuY3NzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc2NheXQvZGlhbG9ncy9vcHRpb25zLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvaWZyYW1lL2RpYWxvZ3MvaWZyYW1lLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvaWZyYW1lL2ltYWdlcy9wbGFjZWhvbGRlci5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9wYXN0ZWZyb213b3JkL2ZpbHRlci9kZWZhdWx0LmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYXV0b2dyb3cvcGx1Z2luLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvdGFibGVyZXNpemUvcGx1Z2luLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvdGFibGV0b29scy9kaWFsb2dzL3RhYmxlQ2VsbC5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3VpY29sb3IvZGlhbG9ncy91aWNvbG9yLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvdWljb2xvci9sYW5nL3VnLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvdWljb2xvci9sYW5nL2VsLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvdWljb2xvci9sYW5nL190cmFuc2xhdGlvbnN0YXR1cy50eHQ8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvbHYuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvaXQuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvYmcuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvaGUuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvdHIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvbmIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvemgtY24uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvZnIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvbmwuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvdWsuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcva3UuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvcGwuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvZW8uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvZGUuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvbWsuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvY3MuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvY3kuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvbm8uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvdmkuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvZmEuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvZXQuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvcHQtYnIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvZW4uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvZGEuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvZmkuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvaHIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL2xhbmcvc2suanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL3BsdWdpbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3VpY29sb3IvdWljb2xvci5naWY8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL3l1aS9hc3NldHMvcGlja2VyX21hc2sucG5nPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvdWljb2xvci95dWkvYXNzZXRzL2h1ZV90aHVtYi5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL3l1aS9hc3NldHMveXVpLmNzczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3VpY29sb3IveXVpL2Fzc2V0cy9waWNrZXJfdGh1bWIucG5nPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvdWljb2xvci95dWkvYXNzZXRzL2h1ZV9iZy5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy91aWNvbG9yL3l1aS95dWkuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9kaXYvZGlhbG9ncy9kaXYuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9hYm91dC9kaWFsb2dzL2xvZ29fY2tlZGl0b3IucG5nPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYWJvdXQvZGlhbG9ncy9hYm91dC5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2ZsYXNoL2RpYWxvZ3MvZmxhc2guanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9mbGFzaC9pbWFnZXMvcGxhY2Vob2xkZXIucG5nPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYWpheC9wbHVnaW4uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy90ZW1wbGF0ZXMvZGlhbG9ncy90ZW1wbGF0ZXMuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy90ZW1wbGF0ZXMvdGVtcGxhdGVzL2RlZmF1bHQuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy90ZW1wbGF0ZXMvdGVtcGxhdGVzL2ltYWdlcy90ZW1wbGF0ZTIuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvdGVtcGxhdGVzL3RlbXBsYXRlcy9pbWFnZXMvdGVtcGxhdGUzLmdpZjxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3RlbXBsYXRlcy90ZW1wbGF0ZXMvaW1hZ2VzL3RlbXBsYXRlMS5naWY8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy90YWJsZS9kaWFsb2dzL3RhYmxlLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc2hvd2Jsb2Nrcy9pbWFnZXMvYmxvY2tfaDEucG5nPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc2hvd2Jsb2Nrcy9pbWFnZXMvYmxvY2tfYmxvY2txdW90ZS5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zaG93YmxvY2tzL2ltYWdlcy9ibG9ja19oMy5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zaG93YmxvY2tzL2ltYWdlcy9ibG9ja19oMi5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zaG93YmxvY2tzL2ltYWdlcy9ibG9ja19oNi5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zaG93YmxvY2tzL2ltYWdlcy9ibG9ja19wcmUucG5nPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvc2hvd2Jsb2Nrcy9pbWFnZXMvYmxvY2tfYWRkcmVzcy5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zaG93YmxvY2tzL2ltYWdlcy9ibG9ja19wLnBuZzxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3Nob3dibG9ja3MvaW1hZ2VzL2Jsb2NrX2Rpdi5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zaG93YmxvY2tzL2ltYWdlcy9ibG9ja19oNC5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zaG93YmxvY2tzL2ltYWdlcy9ibG9ja19oNS5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy93c2MvZGlhbG9ncy93c2MuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy93c2MvZGlhbG9ncy90bXBGcmFtZXNldC5odG1sPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvd3NjL2RpYWxvZ3Mvd3NjLmNzczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3dzYy9kaWFsb2dzL2NpZnJhbWUuaHRtbDxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2xpbmsvZGlhbG9ncy9saW5rLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvbGluay9kaWFsb2dzL2FuY2hvci5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL2xpbmsvaW1hZ2VzL2FuY2hvci5naWY8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9zdHlsZXNoZWV0cGFyc2VyL3BsdWdpbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3BsYWNlaG9sZGVyL2RpYWxvZ3MvcGxhY2Vob2xkZXIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9wbGFjZWhvbGRlci9sYW5nL3VnLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvcGxhY2Vob2xkZXIvbGFuZy9lbC5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3BsYWNlaG9sZGVyL2xhbmcvX3RyYW5zbGF0aW9uc3RhdHVzLnR4dDxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3BsYWNlaG9sZGVyL2xhbmcvbHYuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9wbGFjZWhvbGRlci9sYW5nL2l0LmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvcGxhY2Vob2xkZXIvbGFuZy9iZy5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3BsYWNlaG9sZGVyL2xhbmcvaGUuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9wbGFjZWhvbGRlci9sYW5nL3RyLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvcGxhY2Vob2xkZXIvbGFuZy9uYi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3BsYWNlaG9sZGVyL2xhbmcvemgtY24uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9wbGFjZWhvbGRlci9sYW5nL2ZyLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvcGxhY2Vob2xkZXIvbGFuZy9ubC5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3BsYWNlaG9sZGVyL2xhbmcvdWsuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9wbGFjZWhvbGRlci9sYW5nL2t1LmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvcGxhY2Vob2xkZXIvbGFuZy9wbC5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3BsYWNlaG9sZGVyL2xhbmcvZW8uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9wbGFjZWhvbGRlci9sYW5nL2RlLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvcGxhY2Vob2xkZXIvbGFuZy9jcy5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3BsYWNlaG9sZGVyL2xhbmcvY3kuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9wbGFjZWhvbGRlci9sYW5nL25vLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvcGxhY2Vob2xkZXIvbGFuZy92aS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3BsYWNlaG9sZGVyL2xhbmcvZmEuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9wbGFjZWhvbGRlci9sYW5nL2V0LmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvcGxhY2Vob2xkZXIvbGFuZy9wdC1ici5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3BsYWNlaG9sZGVyL2xhbmcvZW4uanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9wbGFjZWhvbGRlci9sYW5nL2RhLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvcGxhY2Vob2xkZXIvbGFuZy9maS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3BsYWNlaG9sZGVyL2xhbmcvaHIuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvcGx1Z2lucy9wbGFjZWhvbGRlci9sYW5nL3NrLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvcGxhY2Vob2xkZXIvcGx1Z2luLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvcGxhY2Vob2xkZXIvcGxhY2Vob2xkZXIuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3BsdWdpbnMvYmJjb2RlL3BsdWdpbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9wbHVnaW5zL3N0eWxlcy9zdHlsZXMvZGVmYXVsdC5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9MSUNFTlNFLmh0bWw8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvY29uZmlnLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL2NrZWRpdG9yLnBocDxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9sYW5nL19sYW5ndWFnZXMuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvbGFuZy96aC1jbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9sYW5nL3poLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL2xhbmcvZW4tYXUuanM8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvbGFuZy9lbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9jb250ZW50cy5jc3M8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3IvY2tlZGl0b3JfYmFzaWNfc291cmNlLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL2NrZWRpdG9yX3BocDUucGhwPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL2NrZWRpdG9yLmpzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL2FkYXB0ZXJzL2pxdWVyeS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci90aGVtZXMvZGVmYXVsdC90aGVtZS5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9ja2VkaXRvcl9waHA0LnBocDxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9pbWFnZXMvc3BhY2VyLmdpZjxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9za2lucy9rYW1hL2RpYWxvZy5jc3M8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3Ivc2tpbnMva2FtYS90ZW1wbGF0ZXMuY3NzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3NraW5zL2thbWEvc2tpbi5qczxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9za2lucy9rYW1hL2ljb25zX3J0bC5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3Ivc2tpbnMva2FtYS9lZGl0b3IuY3NzPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3NraW5zL2thbWEvaWNvbnMucG5nPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3NraW5zL2thbWEvaW1hZ2VzL25vaW1hZ2UucG5nPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3NraW5zL2thbWEvaW1hZ2VzL2RpYWxvZ19zaWRlc19ydGwucG5nPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3NraW5zL2thbWEvaW1hZ2VzL21pbmkuZ2lmPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3NraW5zL2thbWEvaW1hZ2VzL3Nwcml0ZXNfaWU2LnBuZzxicj5wdWJsaWMvcGx1Z2lucy9ja2VkaXRvci9za2lucy9rYW1hL2ltYWdlcy9kaWFsb2dfc2lkZXMucG5nPGJyPnB1YmxpYy9wbHVnaW5zL2NrZWRpdG9yL3NraW5zL2thbWEvaW1hZ2VzL2RpYWxvZ19zaWRlcy5naWY8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3Ivc2tpbnMva2FtYS9pbWFnZXMvc3ByaXRlcy5wbmc8YnI+cHVibGljL3BsdWdpbnMvY2tlZGl0b3Ivc2tpbnMva2FtYS9pbWFnZXMvdG9vbGJhcl9zdGFydC5naWY8YnI+cHVibGljL3BsdWdpbnMvenRyZWUvY3NzL2lmcmFtZS5jc3M8YnI+cHVibGljL3BsdWdpbnMvbGF5ZXItdjMuMS4wL3RoZW1lL2RlZmF1bHQvbGF5ZXIuY3NzPGJyPnB1YmxpYy9wbHVnaW5zL1VlZGl0b3IvdWVkaXRvci5hbGwubWluLmpzPGJyPnB1YmxpYy9wbHVnaW5zL1VlZGl0b3IvdGhlbWVzL2lmcmFtZS5jc3M8YnI+cHVibGljL3BsdWdpbnMvVWVkaXRvci90aGVtZXMvZGVmYXVsdC9jc3MvdWVkaXRvci5jc3M8YnI+cHVibGljL3BsdWdpbnMvVWVkaXRvci91ZWRpdG9yLmFsbC5taW5fb2xkLmpzPGJyPnB1YmxpYy9wbHVnaW5zL1VlZGl0b3IvdWVkaXRvci5hbGwuanM8YnI+cHVibGljL3N0YXRpYy9jb21tb24vY3NzL2V5b3UuY3NzPGJyPnB1YmxpYy9zdGF0aWMvY29tbW9uL2Nzcy9leW91X20uY3NzPGJyPnB1YmxpYy9zdGF0aWMvY29tbW9uL2pzL2V5b3VfbW9iaWxlX3RwbC5qczxicj5wdWJsaWMvc3RhdGljL2NvbW1vbi9qcy9leW91X20uanM8YnI+cHVibGljL3N0YXRpYy9jb21tb24vanMvdGFnX2FydGljbGVwYXkuanM8YnI+cHVibGljL3N0YXRpYy9jb21tb24vanMvdmlld19hcmNyYW5rLmpzPGJyPnB1YmxpYy9zdGF0aWMvY29tbW9uL2pzL3RhZ192aWRlb2xpc3QuanM8YnI+cHVibGljL3N0YXRpYy9jb21tb24vanMvZXlvdS5qczxicj5wdWJsaWMvc3RhdGljL2NvbW1vbi9qcy90YWdfc3BwYXlhcGlsaXN0LmpzPGJyPnB1YmxpYy9zdGF0aWMvY29tbW9uL2pzL3RhZ19zcHB1cmNoYXNlLmpzPGJyPnB1YmxpYy9zdGF0aWMvY29tbW9uL2pzL3RhZ19nbG9iYWwuanM8YnI+cHVibGljL3N0YXRpYy9jb21tb24vanMvdGFnX3NwcGF5YXBpbGlzdF92Mi5qczxicj5wdWJsaWMvc3RhdGljL2NvbW1vbi9pbWFnZXMvcGhvbmVfYmcucG5nPGJyPnB1YmxpYy9zdGF0aWMvY29tbW9uL2ltYWdlcy91aXNldF9iYWNrLWJ0bi5wbmc8YnI+cHVibGljL3N0YXRpYy9jb21tb24vaW1hZ2VzL2RlZmF1bHRfbGl0cGljXzEucG5nPGJyPnB1YmxpYy9zdGF0aWMvY29tbW9uL2Rpc3BhdGNoX2p1bXAuaHRtPGJyPnB1YmxpYy9zdGF0aWMvYWRtaW4vY3NzL21haW4uY3NzPGJyPnB1YmxpYy9zdGF0aWMvYWRtaW4vbG9naW4vbG9naW4tbG9nb196eS5wbmc8YnI+cHVibGljL3N0YXRpYy9hZG1pbi9sb2dpbmJnL2xvZ2luLWJnLTMucG5nPGJyPnB1YmxpYy9zdGF0aWMvYWRtaW4vZm9udC9jc3MvaWNvbmZvbnQuY3NzPGJyPnB1YmxpYy9zdGF0aWMvYWRtaW4vZm9udC9mb250cy9pY29uZm9udC53b2ZmMjxicj5wdWJsaWMvc3RhdGljL2FkbWluL2ZvbnQvZm9udHMvaWNvbmZvbnQudHRmPGJyPnB1YmxpYy9zdGF0aWMvYWRtaW4vZm9udC9mb250cy9pY29uZm9udC53b2ZmPGJyPnB1YmxpYy9zdGF0aWMvYWRtaW4vanMvZ2xvYmFsLmpzPGJyPnB1YmxpYy9zdGF0aWMvYWRtaW4vanMvbXlBamF4Mi5qczxicj5wdWJsaWMvc3RhdGljL2FkbWluL2ltYWdlcy9tYXBfaWNvbl9zaHVpeWluLnBuZzxicj5wdWJsaWMvc3RhdGljL2FkbWluL2ltYWdlcy9tYXBfaWNvbl93ZW5kYW5nLnBuZzxicj5wdWJsaWMvc3RhdGljL2FkbWluL2ltYWdlcy9tYXBfaWNvbl9odWlzaG91emhhbi5wbmc8YnI+cHVibGljL3N0YXRpYy9hZG1pbi9pbWFnZXMvbWFwX2ljb25fcGluZGFvLnBuZzxicj5wdWJsaWMvc3RhdGljL2FkbWluL2ltYWdlcy9tYXBfaWNvbl9tb2Jhbi5wbmc8YnI+cHVibGljL3N0YXRpYy9hZG1pbi9pbWFnZXMvbG9naW4tbG9nb196eS5wbmc8YnI+cHVibGljL3N0YXRpYy9hZG1pbi9pbWFnZXMvbWFwX2ljb25fbGFubXV6aWR1YW4ucG5nPGJyPnB1YmxpYy9zdGF0aWMvYWRtaW4vaW1hZ2VzL2xvZ2luLWJnMi5qcGc8YnI+cHVibGljL3N0YXRpYy9hZG1pbi9pbWFnZXMvbWFwX2ljb25fdGFnLnBuZzxicj5wdWJsaWMvc3RhdGljL2FkbWluL2ltYWdlcy9tYXBfaWNvbl9ndWFubGl5dWFuLnBuZzxicj5wdWJsaWMvc3RhdGljL2FkbWluL2ltYWdlcy9tYXBfaWNvbl9zdW9sdWV0dS5wbmc8YnI+cHVibGljL3N0YXRpYy9hZG1pbi9pbWFnZXMvbWFwX2ljb25fYmVpZmVuaHVhbnl1YW4ucG5nPGJyPnB1YmxpYy9zdGF0aWMvdGVtcGxhdGUvdXNlcnNfdjIvdXNlcnNfcmVsZWFzZV9maWVsZC5odG08YnI+cHVibGljL3N0YXRpYy90ZW1wbGF0ZS91c2Vyc192Mi91c2Vyc19yZWxlYXNlX2ZpZWxkX20uaHRt', 'system', '', 'cn', '0', '1623322076');
+INSERT INTO `ey_config` VALUES ('190', 'system_auth_code', '$2y$11$eda83328080b2a7395257f3', 'system', '', 'cn', '0', '1557733856');
+INSERT INTO `ey_config` VALUES ('192', 'system_upgrade_filelist', 'dmVuZG9yL2FsaXBheS9hb3AvQW9wQ2xpZW50LnBocDxicj52ZW5kb3IvYWxpcGF5L2xvZy50eHQ8YnI+YXBwbGljYXRpb24vY29uZmlnLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbG9naWMvTmF2aWdhdGlvbkxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbG9naWMvU2hvcENvbW1vbkxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbG9naWMvU21zTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9sb2dpYy9BcmN0eXBlTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9sb2dpYy9DaXR5c2l0ZUxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbG9naWMvQnVpbGRodG1sTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9jb250cm9sbGVyL0NvbW1vbi5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL1Rpa1Rvay5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL0ZvcmVpZ25QYWNrLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvT3JkZXJQcmVIYW5kbGUucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9tb2RlbC9Vc2Vyc1JlY2hhcmdlUGFjay5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL0xhbmd1YWdlLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvTGFuZ3VhZ2VBdHRyLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvRXlvdVVzZXJzLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvQXJjdHlwZS5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL1VzZXJzTGV2ZWwucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9tb2RlbC9TaG9wUHVibGljSGFuZGxlLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24ucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvaHRtbC5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb21tb24ucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvbG9naWMvU210cG1haWxMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vdXNlci9sb2dpYy9QYXlBcGlMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vdXNlci9sb2dpYy9QYXlMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vdXNlci9iZWhhdmlvci9Nb2R1bGVJbml0QmVoYXZpb3IucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9VcGxvYWRpZnkucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9NZWRpYS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL1Nob3AucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9Eb3dubG9hZC5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL0Jhc2UucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9Vc2Vycy5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL1BheS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL01lbWdpZnQucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9QYXlBcGkucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9BcnRpY2xlLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL2NvbnRyb2xsZXIvVXNlcnNOb3RpY2UucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9Vc2Vyc1JlbGVhc2UucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9TaG9wQ29tbWVudC5waHA8YnI+YXBwbGljYXRpb24vdXNlci9tb2RlbC9TaG9wLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL21vZGVsL1VzZXJzLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL21vZGVsL1BheUFwaS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9tb2RlbC9Vc2Vyc1JlbGVhc2UucGhwPGJyPmFwcGxpY2F0aW9uL2V4dHJhL2Vycm9yX2NvZGUucGhwPGJyPmFwcGxpY2F0aW9uL2V4dHJhL2V4dHJhX2NhY2hlX2tleS5waHA8YnI+YXBwbGljYXRpb24vZXh0cmEvZ2xvYmFsLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9odG1sLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb21tb24ucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2xvZ2ljL0FqYXhMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbG9naWMvVXBncmFkZUxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9sb2dpYy9Gb3JlaWduTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2xvZ2ljL01lbWJlckxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9sb2dpYy9BcmNoaXZlc0xvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9sb2dpYy9Bc2tMb2dpYy5waHA=', 'system', '', 'cn', '0', '1701045552');
+INSERT INTO `ey_config` VALUES ('366', 'web_recycle_switch', '1', 'web', '', 'cn', '0', '1701045570');
+INSERT INTO `ey_config` VALUES ('354', 'php_websensitive', '5aix5LmQfOWNmuW9qXzkuJbnlYzmna985aSc5bqXfOi1jOWNmnzmnqrmlK986aOO5pq0fGJvYnzmirzms6h8OyZhbXA7I3xh54mHfOWkp+eJh3zmrKfnvo58KOS4reWbvSl877yI5Lit5Zu977yJfOWNiuWym8K35L2T6IKy', 'php', '', 'cn', '0', '1690161726');
+INSERT INTO `ey_config` VALUES ('331', 'other_pcwapjs', '0', 'other', '', 'cn', '0', '1636442096');
 INSERT INTO `ey_config` VALUES ('247', 'syn_admin_logic_video_addfields', '5', 'syn', '', 'cn', '0', '1614152870');
 INSERT INTO `ey_config` VALUES ('248', 'syn_admin_logic_add_tag', '1', 'syn', '', 'cn', '0', '1591957363');
 INSERT INTO `ey_config` VALUES ('249', 'syn_admin_logic_users_parameter', '1', 'syn', '', 'cn', '0', '1591957363');
-INSERT INTO `ey_config` VALUES ('227', 'seo_html_arcdir', '', 'seo', '', 'cn', '0', '1623813160');
+INSERT INTO `ey_config` VALUES ('227', 'seo_html_arcdir', 'html', 'seo', '', 'cn', '0', '1658916485');
 INSERT INTO `ey_config` VALUES ('228', 'seo_html_listname', '2', 'seo', '', 'cn', '0', '1567578996');
 INSERT INTO `ey_config` VALUES ('229', 'seo_html_pagename', '2', 'seo', '', 'cn', '0', '1567578996');
 INSERT INTO `ey_config` VALUES ('230', 'seo_force_inlet', '1', 'seo', '', 'cn', '0', '1567578996');
-INSERT INTO `ey_config` VALUES ('193', 'system_version', 'v1.5.4', 'system', '', 'cn', '0', '1623322095');
+INSERT INTO `ey_config` VALUES ('193', 'system_version', 'v1.6.5', 'system', '', 'cn', '0', '1701045567');
 INSERT INTO `ey_config` VALUES ('195', 'web_users_switch', '1', 'web', '', 'cn', '0', '1563498413');
 INSERT INTO `ey_config` VALUES ('199', 'system_correctarctypedirpath', '1', 'system', '', 'cn', '0', '1563503940');
-INSERT INTO `ey_config` VALUES ('203', 'web_attr_13', '/abf/uploads/allimg/20210115/1-210115153Z9511.png', 'web', '', 'cn', '0', '1610696352');
+INSERT INTO `ey_config` VALUES ('203', 'web_attr_13', 'https://update.eyoucms.com/demo/uploads/allimg/20210115/1-210115153Z9511.png', 'web', '', 'cn', '0', '1610696352');
 INSERT INTO `ey_config` VALUES ('225', 'system_synleveldata', '1', 'system', '', 'cn', '0', '1564532901');
 INSERT INTO `ey_config` VALUES ('235', 'system_robots_edit', '1', 'system', '', 'cn', '0', '1571038279');
 INSERT INTO `ey_config` VALUES ('237', 'syn_gb_attribute_showlist', '1', 'syn', '', 'cn', '0', '1576764161');
 INSERT INTO `ey_config` VALUES ('238', 'system_smtp_tpl_5', '1', 'system', '', 'cn', '0', '1587364685');
 INSERT INTO `ey_config` VALUES ('240', 'syn_admin_logic_sms_template', '1', 'syn', '', 'cn', '0', '1591262356');
-INSERT INTO `ey_config` VALUES ('241', 'php_weapp_plugin_open', '1', 'php', '', 'cn', '0', '1624416375');
+INSERT INTO `ey_config` VALUES ('241', 'php_weapp_plugin_open', '1', 'php', '', 'cn', '0', '1703142166');
 INSERT INTO `ey_config` VALUES ('243', 'syn_admin_logic_unlink', '1', 'syn', '', 'cn', '0', '1591262356');
 INSERT INTO `ey_config` VALUES ('244', 'syn_admin_logic_update_basic', '1', 'syn', '', 'cn', '0', '1591262356');
 INSERT INTO `ey_config` VALUES ('245', 'syn_admin_logic_update_tag', '1', 'syn', '', 'cn', '0', '1591262356');
@@ -1420,9 +1638,9 @@ INSERT INTO `ey_config` VALUES ('251', 'syn_admin_logic_special_addfields', '5',
 INSERT INTO `ey_config` VALUES ('252', 'syn_admin_logic_session_conf', '1', 'syn', '', 'cn', '0', '1602320145');
 INSERT INTO `ey_config` VALUES ('253', 'syn_admin_logic_arctype_topid', '2', 'syn', '', 'cn', '0', '1610334638');
 INSERT INTO `ey_config` VALUES ('254', 'syn_admin_logic_arctype_topid2', '1', 'syn', '', 'cn', '0', '1609929250');
-INSERT INTO `ey_config` VALUES ('255', 'web_attr_15', 'demo@eyoucms.com', 'web', '', 'cn', '0', '1609930161');
+INSERT INTO `ey_config` VALUES ('255', 'web_attr_15', 'demo@admin.com', 'web', '', 'cn', '0', '1667183901');
 INSERT INTO `ey_config` VALUES ('256', 'web_attr_16', '广东省广州市天河区某某科技园', 'web', '', 'cn', '0', '1609930161');
-INSERT INTO `ey_config` VALUES ('257', 'web_attr_17', '/abf/uploads/allimg/20210106/1-2101061T919343.jpg', 'web', '', 'cn', '0', '1610696352');
+INSERT INTO `ey_config` VALUES ('257', 'web_attr_17', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061T919343.jpg', 'web', '', 'cn', '0', '1610696352');
 INSERT INTO `ey_config` VALUES ('261', 'web_recordnum_mode', '0', 'web', '', 'cn', '0', '1609930161');
 INSERT INTO `ey_config` VALUES ('262', 'thumb_open', '0', 'thumb', '', 'cn', '0', '1609985492');
 INSERT INTO `ey_config` VALUES ('263', 'thumb_mode', '2', 'thumb', '', 'cn', '0', '1609985492');
@@ -1438,9 +1656,11 @@ INSERT INTO `ey_config` VALUES ('302', 'web_loginlogo', '/public/static/admin/im
 INSERT INTO `ey_config` VALUES ('303', 'web_loginbgimg', '/public/static/admin/images/login-bg.jpg', 'web', '', 'cn', '0', '1610352403');
 INSERT INTO `ey_config` VALUES ('304', 'syn_admin_logic_1608884981', '1', 'syn', '', 'cn', '0', '1610352406');
 INSERT INTO `ey_config` VALUES ('305', 'web_users_tpl_theme', '', 'web', '', 'cn', '0', '1610352449');
-INSERT INTO `ey_config` VALUES ('272', 'php_serviceinfo', 'ebd3VgcGUlMDVQcABgRZUwAJBgReAAcFBVIEBwVDG1oOU1BEDRRATxESUlFGEmcVX01XXFY9WkBWCxQPBhQbWBRDXQlFUAsPVghEVxRYGjlGAFJTDz5ABQFWBmlCDVsAWWtAUVEDUz9GUVIAVD5NXVUPVGlNVlABADlDAVIJWGUUAAdSD2oXVQBdD2xDVA9RAGRFAw1aAmxGUVNTAWRMXwcHBEQbFAMWRw1YQlsRX1QRAhJpTVpXVQY5QwAFAV9lFA8FAFNqF1dWBgJsQ1sOUANkRQANVgNsRlFTBFZkTA9SDw06QgBVVwA5QgUBBl45Rg0EBVw+QFZVVQcXGxpYTBVfWhRaRQVREV8VbENaWgAGZEUACltTbEZdBlNTZEwNBFQAOkIPVFYDOUIEU1MLOUYMVQRZPkAHAVEOaUIOCgFZa0BQAAJRP0ZQAFRQPk1QBwhUaU0EUwACRxoXVk1NUQ5FWBVQB0xWEV8VbENaWgAGZEUACltTbEZdBlNTZEwNBFQAOkIPVFYDOUIEU1MLOUYMVQRZPkAHAVEOaUIOCgFZa0BQAAJRP0ZQAFRQPk1QBwhUaU0EUwACR0s', 'php', '', 'cn', '0', '1624416375');
-INSERT INTO `ey_config` VALUES ('273', 'php_servicemeal', '0', 'php', '', 'cn', '0', '1616460897');
-INSERT INTO `ey_config` VALUES ('274', 'php_servicecode', '', 'php', '', 'cn', '0', '1610614819');
+INSERT INTO `ey_config` VALUES ('272', 'php_serviceinfo', '3249AwcFB1MJAAIEAFYBAVsAAlNeUwAFDQtQAANJRkZdARFWWUZeF1BGVxYKEARQURwFLQs1AHpufVlENQsVaUIIF3lVW1s6Q11cVQkKBFBrBwUDFzwAelACXn41fAlfQg4MQkVYWygACARVf30EQUlUViYsEj9bQ15dQxhfFwdQWy1KbV1VO3gHewdIWgQFVSxWLjEPFh5ceVwCGF8Wel4NFFwCDXwsagRAUWdQR2JUXAdWHy1TeVBHAWsXC1MGQSkEfGB7XhZuSV8MewEEfQowBigtHUQZG1JBRQpdFldRDwdeRFIVWRtsRwxSVAZtTVECUlY4EwBbCgxtFwUCBAk/FwdSBVU/TAhUA1RuRAVdVQM9E1ADBFhvQQZQBlxtTVVRCw9pQlUOBAFoRQQECQ84RVUDAlBpTFVSAVMQSBNZFhZbWEdaEF4BEA4SbkQJWgEFPRNRVAxfb0EJUlQAbU1XB1ACaUJaDwUCaEUHBAUOOEVVA1UHaUwFBwlabhEHD1dRb0IAAAdfbEcBBAJVbU0CVlFXRkoXWEZAWQ1ACUJfUUAJFWlCW1tVB2hFBwMIXjhFWVYCAmlMB1FSV24RCA5WUm9CAVJSCmxHAFUDUG1NUwJVXjgTAwoLDG0XBFMFCz8XBgBRUT9MBQYEVG5EV15UAUNKRgdATVtbQw9BAwAWVkAJFWlCW1tVB2hFBwMIXjhFWVYCAmlMB1FSV24RCA5WUm9CAVJSCmxHAFUDUG1NUwJVXjgTAwoLDG0XBFMFCz8XBgBRUT9MBQYEVG5EV15UAUNKRgdBSEZRQxtAAUBNBhFHFQ8VBkB5RX1aQgZ4VTIEAiEIH29vCgRQNQMIeFIMGn5dXgUufXFFUmNFWHxrLQYEHy4KUHFxRFIPZAJVfw8WaWR8ASx9aQJ5dHNGV2sTWSw1UFd8U0MDeA9kUFJ/DxtpYQwHAm4BXn1aXQV/UjVHLCImX3l6ek14CEJTeFU1VlBwWU45bwkCVWcDXXhSCwQvDDUReH1xDVczD1kTFEELVxUPAU8bVF1ZUVtfEwJGVRgJEUhdUhEYEwFdAFQaWUACVQEGBV9VAlUCC1QBDgcGUwAHUQwKBgJXVlNRCVoBBxEbF1IbSVlAUUNtWF8aXgBNRBAUTFZGQG4WWwlUGllSHxVWWwxKVW1DVVATCwhIEhYDBRZFZkNYRAVbCm5XEwddFQ8GTxtAW1ASCAMdGg1DPgkIAhcDAxgTEUYFRU0QQAkGGRUTUUBtVVxeXkZnF1UTEA0FUGZcRxNYEAFIcgkAAWVZfglWSH53ekZSA1sNfwgsBwJhYAdtSyBRAGViCCx0fVZTN2xJf05yUVVlYVVpCyQHAmFaSnp1ClEAZWFQL156XHsgc0RRBlNKeFtXDWgpM1UoYWgBbHk3ASplcVc6e2IGegloBGp8ZQB/S3IOaCkzVihhc15seTcAKUt5Gzp7YgR5GXAEanxlAWtmcgloKTNWKFhgA2x5NwAqZnEUK10HCBUe', 'php', '', 'cn', '0', '1710744353');
+INSERT INTO `ey_config` VALUES ('352', 'web_status_mode', '0', 'web', '', 'cn', '0', '1667183867');
+INSERT INTO `ey_config` VALUES ('353', 'web_status_text', '网站暂时关闭，维护中……', 'web', '', 'cn', '0', '1667183867');
+INSERT INTO `ey_config` VALUES ('273', 'php_servicemeal', '2', 'php', '', 'cn', '0', '1703142156');
+INSERT INTO `ey_config` VALUES ('274', 'php_servicecode', '1b41ffe0a29e06c62fc79356f4a58bbe', 'php', '', 'cn', '0', '1710744344');
 INSERT INTO `ey_config` VALUES ('278', 'syn_admin_logic_check_oneself', '1', 'syn', '', 'cn', '0', '1610334638');
 INSERT INTO `ey_config` VALUES ('279', 'syn_admin_logic_links_group', '1', 'syn', '', 'cn', '0', '1610334638');
 INSERT INTO `ey_config` VALUES ('280', 'sms_type', '1', 'sms', '', 'cn', '0', '1610334638');
@@ -1477,6 +1697,44 @@ INSERT INTO `ey_config` VALUES ('327', 'system_use_language', '0', 'system', '',
 INSERT INTO `ey_config` VALUES ('328', 'admin_logic_1623133485', '1', 'syn', '', 'cn', '0', '1623322108');
 INSERT INTO `ey_config` VALUES ('329', 'recycle_switch', '1', 'web', '', 'cn', '0', '1623809302');
 INSERT INTO `ey_config` VALUES ('330', 'seo_rewrite_view_format', '1', 'seo', '', 'cn', '0', '1623809665');
+INSERT INTO `ey_config` VALUES ('332', 'seo_uphtml_after_home', '0', 'seo', '', 'cn', '0', '1641949807');
+INSERT INTO `ey_config` VALUES ('333', 'seo_uphtml_after_channel', '1', 'seo', '', 'cn', '0', '1641949807');
+INSERT INTO `ey_config` VALUES ('334', 'seo_uphtml_after_pernext', '1', 'seo', '', 'cn', '0', '1641949807');
+INSERT INTO `ey_config` VALUES ('335', 'seo_html_templet', 'index.htm', 'seo', '', 'cn', '0', '1641949807');
+INSERT INTO `ey_config` VALUES ('336', 'seo_html_position', '../index.html', 'seo', '', 'cn', '0', '1641949807');
+INSERT INTO `ey_config` VALUES ('337', 'seo_showmod', '1', 'seo', '', 'cn', '0', '1641949807');
+INSERT INTO `ey_config` VALUES ('338', 'seo_maxpagesize', '50', 'seo', '', 'cn', '0', '1641949807');
+INSERT INTO `ey_config` VALUES ('339', 'seo_upnext', '1', 'seo', '', 'cn', '0', '1641949807');
+INSERT INTO `ey_config` VALUES ('340', 'seo_pagesize', '20', 'seo', '', 'cn', '0', '1641949807');
+INSERT INTO `ey_config` VALUES ('341', 'basic_img_auto_wh', '0', 'basic', '', 'cn', '0', '1641949807');
+INSERT INTO `ey_config` VALUES ('342', 'basic_img_alt', '0', 'basic', '', 'cn', '0', '1641949807');
+INSERT INTO `ey_config` VALUES ('343', 'basic_img_title', '0', 'basic', '', 'cn', '0', '1641949807');
+INSERT INTO `ey_config` VALUES ('344', 'system_crypt_auth_code', '$2y$11$eda83328080b2a7395257f3', 'system', '', 'cn', '0', '1650263716');
+INSERT INTO `ey_config` VALUES ('345', 'web_citysite_open', '0', 'web', '', 'cn', '0', '1703142363');
+INSERT INTO `ey_config` VALUES ('346', 'admin_logic_1_1648775669', '1', 'syn', '', 'cn', '0', '1650263716');
+INSERT INTO `ey_config` VALUES ('347', 'web_stypeid_open', '0', 'web', '', 'cn', '0', '1653359674');
+INSERT INTO `ey_config` VALUES ('348', 'web_status_url', '', 'web', '', 'cn', '0', '1653359786');
+INSERT INTO `ey_config` VALUES ('349', 'web_status_tpl', 'http://e24.meiz20.hk/public/close.html', 'web', '', 'cn', '0', '1692667955');
+INSERT INTO `ey_config` VALUES ('350', 'web_garecordnum', '', 'web', '', 'cn', '0', '1653359786');
+INSERT INTO `ey_config` VALUES ('351', 'web_garecordnum_mode', '0', 'web', '', 'cn', '0', '1653359786');
+INSERT INTO `ey_config` VALUES ('355', 'editor_select', '1', 'basic', '', 'cn', '0', '1675389691');
+INSERT INTO `ey_config` VALUES ('356', 'editor_remote_img_local', '1', 'basic', '', 'cn', '0', '1675389691');
+INSERT INTO `ey_config` VALUES ('357', 'editor_img_clear_link', '1', 'basic', '', 'cn', '0', '1675389691');
+INSERT INTO `ey_config` VALUES ('358', 'php_allow_service_os', 'eyJjb2RlIjoxLCJtc2ciOiJcdTY4YzBcdTZkNGJcdTUyMzBcdTY1YjBcdTcyNDhcdTY3MmMiLCJtc2cxIjoiXHU1NTQ2XHU3NTI4XHU3MjQ4XHU2NzJjXHU2NTJmXHU2MzAxXHU1NzI4XHU3ZWJmXHU2NmY0XHU2NWIwIn0=', 'php', '', 'cn', '0', '1703142156');
+INSERT INTO `ey_config` VALUES ('367', 'absolute_path_open', '0', 'web', '', 'cn', '0', '1701048818');
+INSERT INTO `ey_config` VALUES ('364', 'php_upgradelist', '', 'php', '', 'cn', '0', '1690161726');
+INSERT INTO `ey_config` VALUES ('359', 'php_atqueryrequest', 'eyIwIjp7ImV4cGlyZV90aW1lIjoxMjk2MDAwfSwiMSI6eyJleHBpcmVfdGltZSI6ODY0MDAwfSwiMS41Ijp7ImV4cGlyZV90aW1lIjo4NjQwMDB9LCIyIjp7ImV4cGlyZV90aW1lIjo4NjQwMDB9fQ==', 'php', '', 'cn', '0', '1686877580');
+INSERT INTO `ey_config` VALUES ('360', 'php_atqueryrequest_time', '0', 'php', '', 'cn', '0', '1710744401');
+INSERT INTO `ey_config` VALUES ('361', 'search_tabu_words', '<\r\n>\r\n\"\r\n;\r\n,\r\n@\r\n&\r\n#\r\n\\\r\n*', 'search', '', 'cn', '0', '1686877656');
+INSERT INTO `ey_config` VALUES ('362', 'web_anti_brushing', '0', 'web', '', 'cn', '0', '1686877656');
+INSERT INTO `ey_config` VALUES ('363', 'php_atqueryrequest_time2', '0', 'php', '', 'cn', '0', '1710744401');
+INSERT INTO `ey_config` VALUES ('365', 'web_theme_styleid', '100', 'web', '', 'cn', '0', '1692667955');
+INSERT INTO `ey_config` VALUES ('368', 'seo_uphtml_after_home13', '1', 'seo', '', 'cn', '0', '1703142160');
+INSERT INTO `ey_config` VALUES ('369', 'seo_uphtml_after_channel13', '1', 'seo', '', 'cn', '0', '1703142160');
+INSERT INTO `ey_config` VALUES ('370', 'seo_uphtml_after_pernext13', '1', 'seo', '', 'cn', '0', '1703142160');
+INSERT INTO `ey_config` VALUES ('371', 'seo_uphtml_editafter_home', '0', 'seo', '', 'cn', '0', '1706510953');
+INSERT INTO `ey_config` VALUES ('372', 'seo_uphtml_editafter_channel', '0', 'seo', '', 'cn', '0', '1706510953');
+INSERT INTO `ey_config` VALUES ('373', 'seo_uphtml_editafter_pernext', '1', 'seo', '', 'cn', '0', '1706510953');
 
 -- -----------------------------
 -- Table structure for `ey_config_attribute`
@@ -1485,6 +1743,7 @@ DROP TABLE IF EXISTS `ey_config_attribute`;
 CREATE TABLE `ey_config_attribute` (
   `attr_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '表单id',
   `inc_type` varchar(20) DEFAULT '' COMMENT '变量分组',
+  `type_id` int(11) unsigned DEFAULT '1',
   `attr_name` varchar(60) DEFAULT '' COMMENT '变量标题',
   `attr_var_name` varchar(50) DEFAULT '' COMMENT '变量名',
   `attr_input_type` tinyint(1) unsigned DEFAULT '0' COMMENT ' 0=文本框，1=下拉框，2=多行文本框，3=上传图片',
@@ -1497,11 +1756,111 @@ CREATE TABLE `ey_config_attribute` (
 -- -----------------------------
 -- Records of `ey_config_attribute`
 -- -----------------------------
-INSERT INTO `ey_config_attribute` VALUES ('1', 'web', '客服电话', 'web_attr_1', '0', 'cn', '1525962574', '1609930141');
-INSERT INTO `ey_config_attribute` VALUES ('13', 'web', '手机端LOGO', 'web_attr_13', '3', 'cn', '1563793690', '1609930141');
-INSERT INTO `ey_config_attribute` VALUES ('15', 'web', '邮箱地址', 'web_attr_15', '0', 'cn', '1609930141', '1609930141');
-INSERT INTO `ey_config_attribute` VALUES ('16', 'web', '公司地址', 'web_attr_16', '0', 'cn', '1609930141', '1609930141');
-INSERT INTO `ey_config_attribute` VALUES ('17', 'web', '公众号二维码', 'web_attr_17', '3', 'cn', '1609930141', '1609930141');
+INSERT INTO `ey_config_attribute` VALUES ('1', 'web', '1', '客服电话', 'web_attr_1', '0', 'cn', '1525962574', '1667183895');
+INSERT INTO `ey_config_attribute` VALUES ('13', 'web', '1', '手机端LOGO', 'web_attr_13', '3', 'cn', '1563793690', '1609930141');
+INSERT INTO `ey_config_attribute` VALUES ('15', 'web', '1', '邮箱地址', 'web_attr_15', '0', 'cn', '1609930141', '1667183901');
+INSERT INTO `ey_config_attribute` VALUES ('16', 'web', '1', '公司地址', 'web_attr_16', '0', 'cn', '1609930141', '1609930141');
+INSERT INTO `ey_config_attribute` VALUES ('17', 'web', '1', '公众号二维码', 'web_attr_17', '3', 'cn', '1609930141', '1609930141');
+
+-- -----------------------------
+-- Table structure for `ey_config_type`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_config_type`;
+CREATE TABLE `ey_config_type` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `type_name` varchar(255) DEFAULT '' COMMENT '分组名称',
+  `status` tinyint(1) DEFAULT '1',
+  `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
+  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  `sort_order` int(11) DEFAULT '100' COMMENT '排序',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='自定义变量分组表';
+
+-- -----------------------------
+-- Records of `ey_config_type`
+-- -----------------------------
+INSERT INTO `ey_config_type` VALUES ('1', '默认分组', '1', 'cn', '1650271499', '1650271499', '100');
+
+-- -----------------------------
+-- Table structure for `ey_ddos_log`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_ddos_log`;
+CREATE TABLE `ey_ddos_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `md5key` varchar(50) DEFAULT '' COMMENT 'md5值',
+  `file_name` varchar(500) DEFAULT '' COMMENT '文件名',
+  `file_num` int(10) DEFAULT '0' COMMENT '已扫描数',
+  `file_total` int(10) DEFAULT '0' COMMENT '总文件数',
+  `file_num_ky` int(10) DEFAULT '0' COMMENT '可疑恶意文件数',
+  `is_suspicious` tinyint(1) DEFAULT '0' COMMENT '是否可疑',
+  `html` text,
+  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='ddos查杀进度记录表';
+
+
+-- -----------------------------
+-- Table structure for `ey_discount_active`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_discount_active`;
+CREATE TABLE `ey_discount_active` (
+  `active_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '活动会场ID',
+  `active_name` varchar(255) DEFAULT '' COMMENT '活动名称',
+  `start_date` int(11) unsigned DEFAULT '0' COMMENT '活动开始时间',
+  `end_date` int(11) DEFAULT '0' COMMENT '活动结束时间',
+  `limit_type` tinyint(3) unsigned DEFAULT '1' COMMENT '限购类型 1-不限购,2-活动期内每人最多购买n件,3-活动期内每人每天最多购买n件',
+  `limit` int(11) unsigned DEFAULT '0' COMMENT '限购数量',
+  `preheat` tinyint(3) DEFAULT '0' COMMENT '是否开启预热 0-关闭 1-开启',
+  `preheat_time` int(11) DEFAULT '0' COMMENT '预热时间,不能大于开启时间',
+  `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '活动状态(0禁用 1启用)',
+  `is_del` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '是否删除',
+  `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '创建时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`active_id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='限时折扣-活动会场表';
+
+
+-- -----------------------------
+-- Table structure for `ey_discount_active_goods`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_discount_active_goods`;
+CREATE TABLE `ey_discount_active_goods` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `active_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '活动ID',
+  `aid` int(11) NOT NULL DEFAULT '0' COMMENT '文档id',
+  `discount_goods_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '秒杀商品ID',
+  `sales_actual` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '实际销量',
+  `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '创建时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='限时折扣-活动会场与商品关联表';
+
+
+-- -----------------------------
+-- Table structure for `ey_discount_goods`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_discount_goods`;
+CREATE TABLE `ey_discount_goods` (
+  `discount_gid` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '限时折扣商品ID',
+  `aid` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '商品ID->aid',
+  `discount_stock` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '限时折扣商品库存总量',
+  `discount_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '限时折扣价格',
+  `sales` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '累积销量',
+  `virtual_sales` int(11) NOT NULL DEFAULT '0' COMMENT '虚拟销量',
+  `sort_order` int(11) unsigned NOT NULL DEFAULT '100' COMMENT '商品排序(数字越小越靠前)',
+  `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '商品状态(0下架 1上架)',
+  `is_del` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '是否删除',
+  `is_sku` tinyint(1) NOT NULL DEFAULT '0' COMMENT '1-多规格商品',
+  `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '创建时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`discount_gid`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='限时折扣-商品表';
+
 
 -- -----------------------------
 -- Table structure for `ey_diyminipro`
@@ -1594,6 +1953,7 @@ CREATE TABLE `ey_download_content` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `aid` int(10) DEFAULT '0' COMMENT '文档ID',
   `content` longtext COMMENT '内容详情',
+  `content_ey_m` longtext COMMENT '手机端内容详情',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`),
@@ -1603,10 +1963,10 @@ CREATE TABLE `ey_download_content` (
 -- -----------------------------
 -- Records of `ey_download_content`
 -- -----------------------------
-INSERT INTO `ey_download_content` VALUES ('1', '30', '&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;模板名称：&lt;br style=&quot;margin: 0px auto;&quot;/&gt;响应式工程机械挖掘机类网站织梦模板（自适应手机端）+利于SEO优化&lt;br style=&quot;margin: 0px auto;&quot;/&gt;模板介绍：&lt;br style=&quot;margin: 0px auto;&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;织梦新内核开发的模板，该模板属于企业通用、HTML5响应式、工程机械、挖掘机、推土机类企业使用，一款适用性很强的模板，基本可以适合各行业的企业网站！响应式自适应各种移动设备，同一个后台，数据即时同步，简单适用！原创设计、手工书写DIV+CSS，兼容IE7+、Firefox、Chrome、360浏览器等；主流浏览器；页面简洁简单，容易管理，DEDE内核都可以使用；附带测试数据！&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;模板特点：&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;1：织梦自适应产品模板，代码简洁，风格大气高端，页面干净。&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;2：首页带新闻展示，服务介绍，案例展示等。&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;5：采用现在流行的HTML5框架，兼容主流的浏览器，响应式，自适应，支持移动设备&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;6：整站界面设计大气，展现出你的实力。&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;7：后台直接修改联系方式、地址、版权信息，网站内容等，修改更加方便。&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;&amp;nbsp;使用程序：织梦DEDECMS版本都可以使用。&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://www.eyoucms.com/moban/16/668.html&quot; target=&quot;_self&quot;&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;img title=&quot;工程机械推土挖掘机类网站模板(图1)&quot; alt=&quot;工程机械推土挖掘机类网站模板(图1)&quot; style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;/abc/uploads/allimg/20190114/4873105f54a14f3785047bd8ecc8b5ac.jpg&quot;/&gt;&lt;/p&gt;', '1610615767', '1610615767');
-INSERT INTO `ey_download_content` VALUES ('2', '31', '&lt;p style=&quot;line-height: 1.75em;&quot;&gt;&lt;span style=&quot;color: rgb(51, 51, 51); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, FontAwesome, sans-serif; background-color: rgb(255, 255, 255);&quot;&gt;&lt;/span&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;DOM编程－window对象 回顾 请简述一下脚本执行的原理。 在JavaScript中有哪些控制语句及其含义？ 如何创建一个有参函数以及如何调用它？ 预习检查 解释名词“根节点”、“子节点”和“相邻节点“。 window对象常用的属性有哪些？ 请解释setTimeout( )方法的功能。 本章任务 本章目标 会运用DOM模型查找某个HTML元素 会使用window对象的open( )方法制作各种样式的广告窗口 会使用window对象的setTimeout( )方法和Date对象制作日期显示效果 HTML文档的树状结构 什么是DOM DOM－Document Object Model ,它是W3C国际组织的一套Web标准，它定义了访问HTML文档对象的一套属性、方法和事件 。 DOM对象模型-1 DOM对象模型-2 Window对象常用的属性 window对象常用的方法和事件 如何使用window对象-1 如何使用window对象-2-1 如何使用window对象-2-2 如何使用window对象-3 如何使用window对象-4 如何使用window对象-5 小结1 Date对象做时钟显示-1 Date对象做时钟显示-2 Date 对象存储的日期为自 1970 年 1 月 1 日 00:00:00 以来的毫秒数 Date对象做时钟显示-3 Date 方法的分组 Date对象做时钟显示-4 Date对象做时钟显示-5-1 Date对象做时钟显示-5-2 setTimeout的用法： setTimeout（“调用的函数”,”定时的时间”） 例：var myTime＝setTimeout( “disptime( )”, 1000 ) ; Date对象做时钟显示-6 小结2 history 和location对象-1 history 对象 方法 history 和location对象-2 Location 对象 属性 方法 history 和location对象-3 常见错误 总结 请简述HTML文档的树状结构？ window对象有哪些常用的方法及其含义？ 请列举Date对象有哪些方法？ 请解释setTimeout方法适用场合？&lt;/span&gt;&lt;a href=&quot;http://www.eyoucms.com/moban/10/673.html&quot; target=&quot;_self&quot; style=&quot;box-sizing: border-box; text-decoration-line: none; color: rgb(0, 102, 204); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, FontAwesome, sans-serif; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;&lt;/a&gt;&lt;/p&gt;', '1610615761', '1610615761');
-INSERT INTO `ey_download_content` VALUES ('6', '91', '&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;/abc/uploads/ueditor/20190731/30ed041f3206e83d2435216560ee3db1.jpg&quot; title=&quot;计算机软件系统故障及维护(图1)&quot; alt=&quot;计算机软件系统故障及维护(图1)&quot;/&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 1.75em;&quot;&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;WindowsXP操作系统原理使用系统维护工具系统启动故障的修复病毒防治的一般方法循辱魂币禾赫促陛醛放忆蛔睡钱佯回改波坏敏寄锈掳长提每臣传遥抄个似计算机软件系统故障及维护计算机软件系统故障及维护13.1.1WindowsXP的架构特点WindowsXP已不再完整支持16位DOS应用程序,仅有的CMD命令窗口(“开始”→“运行”→“输入CMD”)也只能执行一些基本DOS命令,对大多数直接控制硬件的16位应用程序是不支持的。从图13.1可以看出,WindowsXP还引入了用户模式和内核模式,以提高内核稳定性,在与硬件交互时增加了硬件抽象层(HAL)以提供抽象的硬件访问接口,避免了直接操作硬件,这些都是WindowsXP稳定性的主要保障。图13.1WindowsXP体系结构多芥批酒墙诚宰囱苍怜钧镊蝴父得似饲碾忻蔫姬烷岗富哉侈靡贝渡轮瞳憾计算机软件系统故障及维护计算机软件系统故障及维护(1)内核模式(KernelMode)。当CPU运行于内核模式时,一切程序都可运行。(2)用户模式(UserMode)。在这个模式中,硬件防止特权指令的执行,并对内存和I/O空间的访问操作进行检查。允许WindowsXP限制程序对各种I/O操作的访问,并捕捉违反系统完整性的任何行为。Windows系统文件夹下文件数量很多,并且随着安装软件的增加而递增。WindowsXP架构中的核心系统文件如表13.1所示。柔邢部酸边呀规踢矽阶护园烤膳曾按邢堆秀肛移软隋智天须吾肿屋存司汐计算机软件系统故障及维护计算机软件系统故障及维护1.预引导阶段在按下计算机电源到操作系统开始加载第一个文件前这段时间,称为预引导(Pre-Boot)阶段。此时,计算机首先运行PowerOnSelfTest(POST),POST检测系统的处理器、内存等硬件设备的状况。所有硬件设备都被自动识别和配置后,BIOS将会定位引导设备(如硬盘或光驱),然后MBR(MasterBootRecord)被加载并运行。在预引导阶段的最后将加载WindowsXP的NTLDR文件。2.引导阶段WindowsXP引导阶段包含4个步骤。&lt;/span&gt;&lt;/p&gt;', '1610615652', '1610615652');
-INSERT INTO `ey_download_content` VALUES ('7', '92', '&lt;p style=&quot;margin-top: 5px; line-height: 1.75em;&quot;&gt;&lt;span style=&quot;color: rgb(51, 51, 51); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, FontAwesome, sans-serif; background-color: rgb(255, 255, 255); font-size: 14px;&quot;&gt;WindowsXP引导阶段包含4个步骤。Step1.引导载入程序的初始化NTLDR程序会将处理器由实模式(RealMode)切换为32位平面内存模式(32-bitFlatMemoryMode)。在实模式下,内存中的前640KB是为MS-DOS保留的,而剩余内存则被当作扩展内存使用,这样WindowsXP将无法使用全部的物理内存。而32位平面内存模式让WindowsXP能使用计算机上安装的所有内存(由于设计使然,32位Windows操作系统只能使用2&amp;amp;nbsp;GB,64位可使用4&amp;amp;nbsp;GB)。接下来,NTLDR启动内建的微型文件系统驱动(mini-filesystemdrivers),通过这个步骤,使NTLDR可以识别每一个用NTFS或FAT文件系统格式化的分区,以便发现和加载WindowsXP。绍面浅谣嚏腆莲罗蕉湿炊连抛伪俏哉认鼎苟幸砧常吱遁端克舌灼该发拎露计算机软件系统故障及维护计算机软件系统故障及维护Step2.选择操作系统这一步在单操作系统的计算机上不是必须的。如果计算机安装了不止一个操作系统(也就是多操作系统),而且正确设置了boot.ini,计算机会显示一个操作系统选项,这是NTLDR读取boot.ini的结果,操作系统选项的设置操作步骤是“系统属性”→“高级”→“启动和故障恢复”,如图13.2所示。图13.2操作系统选项设备询壶涨阔喇读灯短阔爱乘赠面因表澈拣讽械髓被蚕妮混告强司的咕链圃池计算机软件系统故障及维护计算机软件系统故障及维护例如,安装了WindowsXP和Windows2000的计算机系统分区根目录下&lt;/span&gt;&lt;/p&gt;', '1610615642', '1610615642');
+INSERT INTO `ey_download_content` VALUES ('1', '30', '&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;模板名称：&lt;br style=&quot;margin: 0px auto;&quot;/&gt;响应式工程机械挖掘机类网站易优模板（自适应手机端）+利于SEO优化&lt;br style=&quot;margin: 0px auto;&quot;/&gt;模板介绍：&lt;br style=&quot;margin: 0px auto;&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;易优新内核开发的模板，该模板属于企业通用、HTML5响应式、工程机械、挖掘机、推土机类企业使用，一款适用性很强的模板，基本可以适合各行业的企业网站！响应式自适应各种移动设备，同一个后台，数据即时同步，简单适用！原创设计、手工书写DIV+CSS，兼容IE7+、Firefox、Chrome、360浏览器等；主流浏览器；页面简洁简单，容易管理，易优内核都可以使用；附带测试数据！&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;模板特点：&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;1：易优自适应产品模板，代码简洁，风格大气高端，页面干净。&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;2：首页带新闻展示，服务介绍，案例展示等。&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;5：采用现在流行的HTML5框架，兼容主流的浏览器，响应式，自适应，支持移动设备&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;6：整站界面设计大气，展现出你的实力。&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;7：后台直接修改联系方式、地址、版权信息，网站内容等，修改更加方便。&lt;/p&gt;&lt;p style=&quot;margin-top: 0px; margin-bottom: 0px; padding: 0px; -webkit-tap-highlight-color: transparent; color: rgb(51, 51, 51); font-family: 微软雅黑, &amp;quot;microsoft yahei&amp;quot;, ����, Arial, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;&amp;nbsp;使用程序：易优CMS版本都可以使用。&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://www.eyoucms.com/moban/16/668.html&quot; target=&quot;_self&quot;&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;img title=&quot;工程机械推土挖掘机类网站模板(图1)&quot; alt=&quot;工程机械推土挖掘机类网站模板(图1)&quot; style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;https://update.eyoucms.com/demo/uploads/allimg/20190114/4873105f54a14f3785047bd8ecc8b5ac.jpg&quot;/&gt;&lt;/p&gt;', '', '1610615767', '1610615767');
+INSERT INTO `ey_download_content` VALUES ('2', '31', '&lt;p style=&quot;line-height: 1.75em;&quot;&gt;&lt;span style=&quot;color: rgb(51, 51, 51); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, FontAwesome, sans-serif; background-color: rgb(255, 255, 255);&quot;&gt;&lt;/span&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;DOM编程－window对象 回顾 请简述一下脚本执行的原理。 在JavaScript中有哪些控制语句及其含义？ 如何创建一个有参函数以及如何调用它？ 预习检查 解释名词“根节点”、“子节点”和“相邻节点“。 window对象常用的属性有哪些？ 请解释setTimeout( )方法的功能。 本章任务 本章目标 会运用DOM模型查找某个HTML元素 会使用window对象的open( )方法制作各种样式的广告窗口 会使用window对象的setTimeout( )方法和Date对象制作日期显示效果 HTML文档的树状结构 什么是DOM DOM－Document Object Model ,它是W3C国际组织的一套Web标准，它定义了访问HTML文档对象的一套属性、方法和事件 。 DOM对象模型-1 DOM对象模型-2 Window对象常用的属性 window对象常用的方法和事件 如何使用window对象-1 如何使用window对象-2-1 如何使用window对象-2-2 如何使用window对象-3 如何使用window对象-4 如何使用window对象-5 小结1 Date对象做时钟显示-1 Date对象做时钟显示-2 Date 对象存储的日期为自 1970 年 1 月 1 日 00:00:00 以来的毫秒数 Date对象做时钟显示-3 Date 方法的分组 Date对象做时钟显示-4 Date对象做时钟显示-5-1 Date对象做时钟显示-5-2 setTimeout的用法： setTimeout（“调用的函数”,”定时的时间”） 例：var myTime＝setTimeout( “disptime( )”, 1000 ) ; Date对象做时钟显示-6 小结2 history 和location对象-1 history 对象 方法 history 和location对象-2 Location 对象 属性 方法 history 和location对象-3 常见错误 总结 请简述HTML文档的树状结构？ window对象有哪些常用的方法及其含义？ 请列举Date对象有哪些方法？ 请解释setTimeout方法适用场合？&lt;/span&gt;&lt;a href=&quot;http://www.eyoucms.com/moban/10/673.html&quot; target=&quot;_self&quot; style=&quot;box-sizing: border-box; text-decoration-line: none; color: rgb(0, 102, 204); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, FontAwesome, sans-serif; white-space: normal; background-color: rgb(255, 255, 255);&quot;&gt;&lt;/a&gt;&lt;/p&gt;', '', '1610615761', '1610615761');
+INSERT INTO `ey_download_content` VALUES ('6', '91', '&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20190731/30ed041f3206e83d2435216560ee3db1.jpg&quot; title=&quot;计算机软件系统故障及维护(图1)&quot; alt=&quot;计算机软件系统故障及维护(图1)&quot;/&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 1.75em;&quot;&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;WindowsXP操作系统原理使用系统维护工具系统启动故障的修复病毒防治的一般方法循辱魂币禾赫促陛醛放忆蛔睡钱佯回改波坏敏寄锈掳长提每臣传遥抄个似计算机软件系统故障及维护计算机软件系统故障及维护13.1.1WindowsXP的架构特点WindowsXP已不再完整支持16位DOS应用程序,仅有的CMD命令窗口(“开始”→“运行”→“输入CMD”)也只能执行一些基本DOS命令,对大多数直接控制硬件的16位应用程序是不支持的。从图13.1可以看出,WindowsXP还引入了用户模式和内核模式,以提高内核稳定性,在与硬件交互时增加了硬件抽象层(HAL)以提供抽象的硬件访问接口,避免了直接操作硬件,这些都是WindowsXP稳定性的主要保障。图13.1WindowsXP体系结构多芥批酒墙诚宰囱苍怜钧镊蝴父得似饲碾忻蔫姬烷岗富哉侈靡贝渡轮瞳憾计算机软件系统故障及维护计算机软件系统故障及维护(1)内核模式(KernelMode)。当CPU运行于内核模式时,一切程序都可运行。(2)用户模式(UserMode)。在这个模式中,硬件防止特权指令的执行,并对内存和I/O空间的访问操作进行检查。允许WindowsXP限制程序对各种I/O操作的访问,并捕捉违反系统完整性的任何行为。Windows系统文件夹下文件数量很多,并且随着安装软件的增加而递增。WindowsXP架构中的核心系统文件如表13.1所示。柔邢部酸边呀规踢矽阶护园烤膳曾按邢堆秀肛移软隋智天须吾肿屋存司汐计算机软件系统故障及维护计算机软件系统故障及维护1.预引导阶段在按下计算机电源到操作系统开始加载第一个文件前这段时间,称为预引导(Pre-Boot)阶段。此时,计算机首先运行PowerOnSelfTest(POST),POST检测系统的处理器、内存等硬件设备的状况。所有硬件设备都被自动识别和配置后,BIOS将会定位引导设备(如硬盘或光驱),然后MBR(MasterBootRecord)被加载并运行。在预引导阶段的最后将加载WindowsXP的NTLDR文件。2.引导阶段WindowsXP引导阶段包含4个步骤。&lt;/span&gt;&lt;/p&gt;', '', '1610615652', '1610615652');
+INSERT INTO `ey_download_content` VALUES ('7', '92', '&lt;p style=&quot;margin-top: 5px; line-height: 1.75em;&quot;&gt;&lt;span style=&quot;color: rgb(51, 51, 51); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, FontAwesome, sans-serif; background-color: rgb(255, 255, 255); font-size: 14px;&quot;&gt;WindowsXP引导阶段包含4个步骤。Step1.引导载入程序的初始化NTLDR程序会将处理器由实模式(RealMode)切换为32位平面内存模式(32-bitFlatMemoryMode)。在实模式下,内存中的前640KB是为MS-DOS保留的,而剩余内存则被当作扩展内存使用,这样WindowsXP将无法使用全部的物理内存。而32位平面内存模式让WindowsXP能使用计算机上安装的所有内存(由于设计使然,32位Windows操作系统只能使用2&amp;amp;nbsp;GB,64位可使用4&amp;amp;nbsp;GB)。接下来,NTLDR启动内建的微型文件系统驱动(mini-filesystemdrivers),通过这个步骤,使NTLDR可以识别每一个用NTFS或FAT文件系统格式化的分区,以便发现和加载WindowsXP。绍面浅谣嚏腆莲罗蕉湿炊连抛伪俏哉认鼎苟幸砧常吱遁端克舌灼该发拎露计算机软件系统故障及维护计算机软件系统故障及维护Step2.选择操作系统这一步在单操作系统的计算机上不是必须的。如果计算机安装了不止一个操作系统(也就是多操作系统),而且正确设置了boot.ini,计算机会显示一个操作系统选项,这是NTLDR读取boot.ini的结果,操作系统选项的设置操作步骤是“系统属性”→“高级”→“启动和故障恢复”,如图13.2所示。图13.2操作系统选项设备询壶涨阔喇读灯短阔爱乘赠面因表澈拣讽械髓被蚕妮混告强司的咕链圃池计算机软件系统故障及维护计算机软件系统故障及维护例如,安装了WindowsXP和Windows2000的计算机系统分区根目录下&lt;/span&gt;&lt;/p&gt;', '', '1610615642', '1610615642');
 
 -- -----------------------------
 -- Table structure for `ey_download_file`
@@ -1637,15 +1997,15 @@ CREATE TABLE `ey_download_file` (
 -- -----------------------------
 -- Records of `ey_download_file`
 -- -----------------------------
-INSERT INTO `ey_download_file` VALUES ('77', '30', '工程机械推土挖掘机类网站模板', '/abc/uploads/soft/20190114/4b0f01441b5a246badf158fa99c140ac.zip', '', '9268', 'zip', '4b0f01441b5a246badf158fa99c140ac.zip', '', 'application/x-zip-compressed', '1837c4067aa99f7005e62b20bdb1a67f', '1837c4067aa99f7005e62b20bdb1a67f', '0', '0', '1', '1610615767', '0');
-INSERT INTO `ey_download_file` VALUES ('76', '31', ' dom编程-window对象', '/abc/uploads/soft/20190114/44bbd259222c81bd3c41112a73c904a0.zip', '', '9268', 'zip', '44bbd259222c81bd3c41112a73c904a0.zip', '', 'application/x-zip-compressed', '1837c4067aa99f7005e62b20bdb1a67f', '1837c4067aa99f7005e62b20bdb1a67f', '0', '0', '2', '1610615761', '0');
-INSERT INTO `ey_download_file` VALUES ('75', '31', ' dom编程-window对象', '/abc/uploads/soft/20190114/3b3f753af0f13e6e0237b9577e0bcd17.zip', '', '9268', 'zip', '3b3f753af0f13e6e0237b9577e0bcd17.zip', '', 'application/x-zip-compressed', '1837c4067aa99f7005e62b20bdb1a67f', '1837c4067aa99f7005e62b20bdb1a67f', '0', '0', '1', '1610615761', '0');
-INSERT INTO `ey_download_file` VALUES ('74', '91', '计算机软件系统故障及维护', '/abc/uploads/soft/20190731/下载资料测试3.txt', '', '8', '.txt', '下载资料测试3.txt', '', 'text/plain', '24f90e7da3fdc4ed35ca6699b89ba59d', '24f90e7da3fdc4ed35ca6699b89ba59d', '0', '0', '3', '1610615652', '0');
-INSERT INTO `ey_download_file` VALUES ('73', '91', '计算机软件系统故障及维护', '/abc/uploads/soft/20190731/下载资料测试 2.txt', '', '8', '.txt', '下载资料测试 2.txt', '', 'text/plain', '24f90e7da3fdc4ed35ca6699b89ba59d', '24f90e7da3fdc4ed35ca6699b89ba59d', '0', '0', '2', '1610615652', '0');
-INSERT INTO `ey_download_file` VALUES ('72', '91', '计算机软件系统故障及维护', '/abc/uploads/soft/20190731/下载资料测试.txt', '', '8', '.txt', '下载资料测试.txt', '', 'text/plain', '24f90e7da3fdc4ed35ca6699b89ba59d', '24f90e7da3fdc4ed35ca6699b89ba59d', '0', '0', '1', '1610615652', '0');
-INSERT INTO `ey_download_file` VALUES ('71', '92', '计算机软件系统故障及维护2', '/abc/uploads/soft/20190731/下载资料测试3.txt', '', '8', '.txt', '下载资料测试3.txt', '', 'text/plain', '24f90e7da3fdc4ed35ca6699b89ba59d', '24f90e7da3fdc4ed35ca6699b89ba59d', '0', '0', '3', '1610615642', '0');
-INSERT INTO `ey_download_file` VALUES ('70', '92', '计算机软件系统故障及维护2', '/abc/uploads/soft/20190731/下载资料测试.txt', '', '8', '.txt', '下载资料测试.txt', '', 'text/plain', '24f90e7da3fdc4ed35ca6699b89ba59d', '24f90e7da3fdc4ed35ca6699b89ba59d', '0', '0', '2', '1610615642', '0');
-INSERT INTO `ey_download_file` VALUES ('69', '92', '计算机软件系统故障及维护2', '/abc/uploads/soft/20190731/下载资料测试 2.txt', '', '8', '.txt', '下载资料测试 2.txt', '', 'text/plain', '24f90e7da3fdc4ed35ca6699b89ba59d', '24f90e7da3fdc4ed35ca6699b89ba59d', '0', '0', '1', '1610615642', '0');
+INSERT INTO `ey_download_file` VALUES ('77', '30', '工程机械推土挖掘机类网站模板', 'https://update.eyoucms.com/demo/uploads/soft/20190114/4b0f01441b5a246badf158fa99c140ac.zip', '', '9268', 'zip', '4b0f01441b5a246badf158fa99c140ac.zip', '', 'application/x-zip-compressed', '1837c4067aa99f7005e62b20bdb1a67f', '1837c4067aa99f7005e62b20bdb1a67f', '0', '0', '1', '1610615767', '0');
+INSERT INTO `ey_download_file` VALUES ('76', '31', ' dom编程-window对象', 'https://update.eyoucms.com/demo/uploads/soft/20190114/44bbd259222c81bd3c41112a73c904a0.zip', '', '9268', 'zip', '44bbd259222c81bd3c41112a73c904a0.zip', '', 'application/x-zip-compressed', '1837c4067aa99f7005e62b20bdb1a67f', '1837c4067aa99f7005e62b20bdb1a67f', '0', '0', '2', '1610615761', '0');
+INSERT INTO `ey_download_file` VALUES ('75', '31', ' dom编程-window对象', 'https://update.eyoucms.com/demo/uploads/soft/20190114/3b3f753af0f13e6e0237b9577e0bcd17.zip', '', '9268', 'zip', '3b3f753af0f13e6e0237b9577e0bcd17.zip', '', 'application/x-zip-compressed', '1837c4067aa99f7005e62b20bdb1a67f', '1837c4067aa99f7005e62b20bdb1a67f', '0', '0', '1', '1610615761', '0');
+INSERT INTO `ey_download_file` VALUES ('74', '91', '计算机软件系统故障及维护', 'https://update.eyoucms.com/demo/uploads/soft/20190731/下载资料测试3.txt', '', '8', '.txt', '下载资料测试3.txt', '', 'text/plain', '24f90e7da3fdc4ed35ca6699b89ba59d', '24f90e7da3fdc4ed35ca6699b89ba59d', '0', '0', '3', '1610615652', '0');
+INSERT INTO `ey_download_file` VALUES ('73', '91', '计算机软件系统故障及维护', 'https://update.eyoucms.com/demo/uploads/soft/20190731/下载资料测试 2.txt', '', '8', '.txt', '下载资料测试 2.txt', '', 'text/plain', '24f90e7da3fdc4ed35ca6699b89ba59d', '24f90e7da3fdc4ed35ca6699b89ba59d', '0', '0', '2', '1610615652', '0');
+INSERT INTO `ey_download_file` VALUES ('72', '91', '计算机软件系统故障及维护', 'https://update.eyoucms.com/demo/uploads/soft/20190731/下载资料测试.txt', '', '8', '.txt', '下载资料测试.txt', '', 'text/plain', '24f90e7da3fdc4ed35ca6699b89ba59d', '24f90e7da3fdc4ed35ca6699b89ba59d', '0', '0', '1', '1610615652', '0');
+INSERT INTO `ey_download_file` VALUES ('71', '92', '计算机软件系统故障及维护2', 'https://update.eyoucms.com/demo/uploads/soft/20190731/下载资料测试3.txt', '', '8', '.txt', '下载资料测试3.txt', '', 'text/plain', '24f90e7da3fdc4ed35ca6699b89ba59d', '24f90e7da3fdc4ed35ca6699b89ba59d', '0', '0', '3', '1610615642', '0');
+INSERT INTO `ey_download_file` VALUES ('70', '92', '计算机软件系统故障及维护2', 'https://update.eyoucms.com/demo/uploads/soft/20190731/下载资料测试.txt', '', '8', '.txt', '下载资料测试.txt', '', 'text/plain', '24f90e7da3fdc4ed35ca6699b89ba59d', '24f90e7da3fdc4ed35ca6699b89ba59d', '0', '0', '2', '1610615642', '0');
+INSERT INTO `ey_download_file` VALUES ('69', '92', '计算机软件系统故障及维护2', 'https://update.eyoucms.com/demo/uploads/soft/20190731/下载资料测试 2.txt', '', '8', '.txt', '下载资料测试 2.txt', '', 'text/plain', '24f90e7da3fdc4ed35ca6699b89ba59d', '24f90e7da3fdc4ed35ca6699b89ba59d', '0', '0', '1', '1610615642', '0');
 
 -- -----------------------------
 -- Table structure for `ey_download_log`
@@ -1663,6 +2023,32 @@ CREATE TABLE `ey_download_log` (
   KEY `file_id` (`file_id`,`aid`,`users_id`) USING BTREE,
   KEY `aid` (`aid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='下载记录表';
+
+
+-- -----------------------------
+-- Table structure for `ey_download_order`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_download_order`;
+CREATE TABLE `ey_download_order` (
+  `order_id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '文章订单ID',
+  `order_code` varchar(50) NOT NULL DEFAULT '' COMMENT '媒体订单编号',
+  `users_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员ID',
+  `order_status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '订单状态：0未付款，1已付款',
+  `order_amount` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '订单应付总金额',
+  `pay_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '支付时间',
+  `pay_name` varchar(20) NOT NULL DEFAULT '' COMMENT '支付方式名称',
+  `wechat_pay_type` varchar(20) NOT NULL DEFAULT '' COMMENT '微信支付时，标记使用的支付类型（扫码支付，微信内部，微信H5页面）',
+  `pay_details` text COMMENT '支付时返回的数据，以serialize序列化后存入，用于后续查询。',
+  `product_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '视频文档ID',
+  `product_name` varchar(100) DEFAULT '' COMMENT '视频文档名称',
+  `product_litpic` varchar(500) DEFAULT '' COMMENT '视频文档封面图片',
+  `lang` varchar(30) DEFAULT 'cn' COMMENT '语言标识',
+  `add_time` int(11) unsigned DEFAULT '0' COMMENT '下单时间',
+  `update_time` int(11) unsigned DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`order_id`),
+  UNIQUE KEY `order_code` (`order_code`) USING BTREE,
+  KEY `users_id` (`users_id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
 
 -- -----------------------------
@@ -1701,27 +2087,121 @@ INSERT INTO `ey_field_type` VALUES ('file', '附件类型', '0', '11', '15324857
 INSERT INTO `ey_field_type` VALUES ('media', '多媒体类型', '0', '11', '1532485708', '1532485708');
 
 -- -----------------------------
+-- Table structure for `ey_foreign_pack`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_foreign_pack`;
+CREATE TABLE `ey_foreign_pack` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `type` int(4) DEFAULT '0' COMMENT '分类：1=列表，2=留言',
+  `name` varchar(50) NOT NULL DEFAULT '' COMMENT '变量名',
+  `value` text NOT NULL COMMENT '变量值',
+  `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
+  `sort_order` int(10) DEFAULT '0' COMMENT '排序号',
+  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=55 DEFAULT CHARSET=utf8 COMMENT='外贸助手语言包变量';
+
+-- -----------------------------
+-- Records of `ey_foreign_pack`
+-- -----------------------------
+INSERT INTO `ey_foreign_pack` VALUES ('1', '1', 'page1', '首页', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('2', '1', 'page2', '上一页', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('3', '1', 'page3', '下一页', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('4', '1', 'page4', '末页', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('5', '1', 'page5', '共<strong>%s</strong>页 <strong>%s</strong>条', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('6', '1', 'page1', 'Home', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('7', '1', 'page2', 'Pre', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('8', '1', 'page3', 'Next', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('9', '1', 'page4', 'Last', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('10', '1', 'page5', 'Road <strong>%s</strong> page <strong>%s</strong> strip', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('11', '2', 'gbook1', '操作成功', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('12', '2', 'gbook1', 'success', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('14', '2', 'gbook2', 'The same IP cannot be submitted repeatedly within %s seconds!', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('13', '2', 'gbook2', '同一个IP在%s秒之内不能重复提交！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('15', '2', 'gbook3', '%s不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('16', '2', 'gbook3', '%s Cannot be empty!', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('17', '2', 'gbook4', '%s格式不正确！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('18', '2', 'gbook4', '%s Incorrect format!', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('19', '2', 'gbook5', '图片验证码不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('20', '2', 'gbook5', 'Picture verification code cannot be empty!', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('21', '2', 'gbook6', '图片验证码不正确！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('22', '2', 'gbook6', 'The picture verification code is incorrect!', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('23', '2', 'gbook7', '请输入手机号码！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('24', '2', 'gbook7', 'Please enter your mobile number!', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('25', '2', 'gbook8', '手机号码和手机验证码不一致，请重新输入！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('26', '2', 'gbook8', 'Mobile phone number and mobile phone verification code are inconsistent, please re-enter!', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('27', '2', 'gbook9', '手机验证码已被使用或超时，请重新发送！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('28', '2', 'gbook9', 'The mobile phone verification code has been used or timed out. Please resend it!', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('29', '2', 'gbook10', '请输入手机验证码！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('30', '2', 'gbook10', 'Please enter the mobile phone verification code!', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('31', '2', 'gbook11', '表单缺少标签属性{$field.hidden}', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('32', '2', 'gbook11', 'The form is missing label attribute {$field.hidden}', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('33', '2', 'gbook12', '页面自动 %s跳转%s 等待时间：', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('34', '2', 'gbook12', 'Page automatic %sjump%s waiting time：', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('35', '2', 'gbook13', '%s至少选择一项！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('36', '2', 'gbook13', 'Select at least one item to %s', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('37', '2', 'gbook14', '请选择%s', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('38', '2', 'gbook14', 'Please select %s', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('39', '2', 'gbook15', '请输入正确的手机号码！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('40', '2', 'gbook15', 'Please enter the correct mobile number！', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('41', '2', 'gbook16', '图片验证码', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('42', '2', 'gbook16', 'Picture verification code', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('43', '2', 'gbook17', '手机验证码', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('44', '2', 'gbook17', 'Mobile verification code', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('45', '2', 'gbook18', '获取验证码', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('46', '2', 'gbook18', 'Get verification code', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('47', '2', 'gbook19', '看不清？点击更换验证码', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('48', '2', 'gbook19', 'Can\'t see clearly? Click to change the verification code', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('49', '2', 'gbook20', '看不清？%s点击更换%s', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('50', '2', 'gbook20', 'Can\'t see clearly? %sClick to replace%s', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('51', '1', 'page6', '第%s页', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('52', '1', 'page6', '%s', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('53', '3', 'system1', '图', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('54', '3', 'system1', 'pic', 'en', '100', '1543890216', '1543890216');
+
+-- -----------------------------
+-- Table structure for `ey_form`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_form`;
+CREATE TABLE `ey_form` (
+  `form_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增表单ID',
+  `form_name` varchar(255) NOT NULL DEFAULT '' COMMENT '表单名称',
+  `intro` text NOT NULL COMMENT '表单描述，预留',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '表单状态，0关闭，1开启',
+  `attr_auto` tinyint(1) DEFAULT '0' COMMENT '自动标签：0=否，1=是',
+  `lang` varchar(10) NOT NULL DEFAULT 'cn' COMMENT '语言标识',
+  `add_time` int(11) NOT NULL DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`form_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='表单管理表';
+
+-- -----------------------------
+-- Records of `ey_form`
+-- -----------------------------
+INSERT INTO `ey_form` VALUES ('1', '联系我们', '', '1', '0', 'cn', '1690166712', '1690166716');
+
+-- -----------------------------
 -- Table structure for `ey_guestbook`
 -- -----------------------------
 DROP TABLE IF EXISTS `ey_guestbook`;
 CREATE TABLE `ey_guestbook` (
   `aid` int(11) NOT NULL AUTO_INCREMENT,
-  `typeid` int(11) DEFAULT '0' COMMENT '栏目ID',
+  `form_type` tinyint(1) DEFAULT '0' COMMENT '数据分类：0=留言模型，1=自由表单',
+  `typeid` int(11) DEFAULT '0' COMMENT '栏目ID/表单ID',
   `channel` smallint(5) DEFAULT '0' COMMENT '模型ID',
+  `users_id` int(11) DEFAULT '0' COMMENT '用户id',
   `md5data` varchar(50) DEFAULT '' COMMENT '数据序列化之后的MD5加密，提交内容的唯一性',
   `ip` varchar(255) DEFAULT '' COMMENT 'ip地址',
   `is_read` tinyint(1) DEFAULT '0' COMMENT '0=未读，1=已读',
+  `is_star` tinyint(1) DEFAULT '0' COMMENT '标记星号',
+  `source` tinyint(1) DEFAULT '0' COMMENT '提交来源：1=电脑端，2=手机端',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`aid`)
 ) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=utf8 COMMENT='留言主表';
 
--- -----------------------------
--- Records of `ey_guestbook`
--- -----------------------------
-INSERT INTO `ey_guestbook` VALUES ('10', '30', '8', '847bebad4a52e53b4114355f07410c9e', '36.101.193.241', '0', 'cn', '1610349820', '1610349820');
-INSERT INTO `ey_guestbook` VALUES ('9', '6', '8', 'dfb8ea4389a9d9a7442c7efa2968f6bf', '36.101.193.241', '0', 'cn', '1610347671', '1610347671');
 
 -- -----------------------------
 -- Table structure for `ey_guestbook_attr`
@@ -1730,6 +2210,7 @@ DROP TABLE IF EXISTS `ey_guestbook_attr`;
 CREATE TABLE `ey_guestbook_attr` (
   `guest_attr_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '留言表单id自增',
   `aid` mediumint(8) unsigned NOT NULL DEFAULT '0' COMMENT '留言id',
+  `form_type` tinyint(1) DEFAULT '0' COMMENT '数据分类：0=留言模型，1=自由表单',
   `attr_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '表单id',
   `attr_value` text COMMENT '表单值',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
@@ -1740,18 +2221,6 @@ CREATE TABLE `ey_guestbook_attr` (
   KEY `guest_id` (`aid`) USING BTREE
 ) ENGINE=MyISAM AUTO_INCREMENT=53 DEFAULT CHARSET=utf8 COMMENT='留言表单属性值';
 
--- -----------------------------
--- Records of `ey_guestbook_attr`
--- -----------------------------
-INSERT INTO `ey_guestbook_attr` VALUES ('52', '10', '24', '测试', 'cn', '1610349820', '1610349820');
-INSERT INTO `ey_guestbook_attr` VALUES ('51', '10', '3', '功能建议', 'cn', '1610349820', '1610349820');
-INSERT INTO `ey_guestbook_attr` VALUES ('50', '10', '2', '13800000000', 'cn', '1610349820', '1610349820');
-INSERT INTO `ey_guestbook_attr` VALUES ('49', '10', '1', '张生', 'cn', '1610349820', '1610349820');
-INSERT INTO `ey_guestbook_attr` VALUES ('44', '9', '4', '网络安全专员', 'cn', '1610347671', '1610347671');
-INSERT INTO `ey_guestbook_attr` VALUES ('45', '9', '5', 'zhan', 'cn', '1610347671', '1610347671');
-INSERT INTO `ey_guestbook_attr` VALUES ('46', '9', '6', '男', 'cn', '1610347671', '1610347671');
-INSERT INTO `ey_guestbook_attr` VALUES ('47', '9', '16', '13800000000', 'cn', '1610347671', '1610347671');
-INSERT INTO `ey_guestbook_attr` VALUES ('48', '9', '20', '测试', 'cn', '1610347671', '1610347671');
 
 -- -----------------------------
 -- Table structure for `ey_guestbook_attribute`
@@ -1760,12 +2229,14 @@ DROP TABLE IF EXISTS `ey_guestbook_attribute`;
 CREATE TABLE `ey_guestbook_attribute` (
   `attr_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '表单id',
   `attr_name` varchar(60) DEFAULT '' COMMENT '表单名称',
-  `typeid` int(11) unsigned DEFAULT '0' COMMENT '栏目ID',
+  `typeid` int(11) unsigned DEFAULT '0' COMMENT '栏目ID/表单ID',
+  `form_type` tinyint(1) DEFAULT '0' COMMENT '数据分类：0=留言模型，1=自由表单',
   `attr_input_type` tinyint(1) unsigned DEFAULT '0' COMMENT ' 0=文本框，1=下拉框，2=多行文本框',
   `attr_values` text COMMENT '可选值列表',
   `is_showlist` tinyint(1) DEFAULT '0' COMMENT '在列表显示 0=隐藏，1=显示',
   `required` tinyint(1) DEFAULT '0' COMMENT '必填 0=否，1=是',
   `validate_type` smallint(5) DEFAULT '0' COMMENT '验证格式，0=不验证，1=手机，2=Email',
+  `real_validate` tinyint(1) unsigned DEFAULT '0' COMMENT '是否进行真实验证，0=不验证，1=真实验证',
   `sort_order` int(11) unsigned DEFAULT '0' COMMENT '表单排序',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `is_del` tinyint(1) DEFAULT '0' COMMENT '是否已删除，0=否，1=是',
@@ -1773,20 +2244,15 @@ CREATE TABLE `ey_guestbook_attribute` (
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`attr_id`),
   KEY `guest_id` (`typeid`) USING BTREE
-) ENGINE=MyISAM AUTO_INCREMENT=26 DEFAULT CHARSET=utf8 COMMENT='留言表单属性';
+) ENGINE=MyISAM AUTO_INCREMENT=30 DEFAULT CHARSET=utf8 COMMENT='留言表单属性';
 
 -- -----------------------------
 -- Records of `ey_guestbook_attribute`
 -- -----------------------------
-INSERT INTO `ey_guestbook_attribute` VALUES ('1', '姓名', '30', '0', '', '1', '1', '0', '100', 'cn', '0', '1526616441', '1580985056');
-INSERT INTO `ey_guestbook_attribute` VALUES ('2', '手机号码', '30', '6', '', '1', '1', '6', '100', 'cn', '0', '1526616453', '1580985048');
-INSERT INTO `ey_guestbook_attribute` VALUES ('3', '需求选择', '30', '1', '意见反馈\r\n功能建议', '1', '0', '0', '100', 'cn', '0', '1526616497', '1580985296');
-INSERT INTO `ey_guestbook_attribute` VALUES ('4', '申请职位', '6', '0', '', '1', '1', '0', '100', 'cn', '0', '1526634369', '1580985319');
-INSERT INTO `ey_guestbook_attribute` VALUES ('5', '姓名', '6', '0', '', '1', '1', '0', '100', 'cn', '0', '1526634383', '1580985015');
-INSERT INTO `ey_guestbook_attribute` VALUES ('6', '性别', '6', '1', '男\r\n女', '1', '0', '0', '100', 'cn', '0', '1526634393', '1576764161');
-INSERT INTO `ey_guestbook_attribute` VALUES ('16', '手机', '6', '6', '', '1', '1', '6', '100', 'cn', '0', '1563533188', '1580985030');
-INSERT INTO `ey_guestbook_attribute` VALUES ('20', '工作经验', '6', '2', '', '0', '0', '0', '100', 'cn', '0', '1563533261', '1563533261');
-INSERT INTO `ey_guestbook_attribute` VALUES ('24', '留言内容', '30', '2', '', '0', '0', '0', '100', 'cn', '0', '1609930411', '1609930411');
+INSERT INTO `ey_guestbook_attribute` VALUES ('29', '内容', '1', '1', '2', '', '0', '0', '0', '0', '100', 'cn', '0', '1690166772', '1690169741');
+INSERT INTO `ey_guestbook_attribute` VALUES ('27', '手机', '1', '1', '6', '', '0', '1', '6', '0', '100', 'cn', '0', '1690166742', '1690169730');
+INSERT INTO `ey_guestbook_attribute` VALUES ('28', '分类', '1', '1', '1', '意见反馈\r\n功能建议', '0', '0', '0', '0', '100', 'cn', '0', '1690166763', '1690169735');
+INSERT INTO `ey_guestbook_attribute` VALUES ('26', '称呼', '1', '1', '0', '', '0', '0', '0', '0', '100', 'cn', '0', '1690166730', '1690169726');
 
 -- -----------------------------
 -- Table structure for `ey_hooks`
@@ -1813,6 +2279,7 @@ CREATE TABLE `ey_images_content` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `aid` int(10) DEFAULT '0' COMMENT '文档ID',
   `content` longtext COMMENT '内容详情',
+  `content_ey_m` longtext COMMENT '手机端内容详情',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`),
@@ -1822,12 +2289,12 @@ CREATE TABLE `ey_images_content` (
 -- -----------------------------
 -- Records of `ey_images_content`
 -- -----------------------------
-INSERT INTO `ey_images_content` VALUES ('7', '42', '&lt;p&gt;我们将用高端的平面设计与网络技术，为您打造真正属于您的网站。我们用专业的团队解决您网站内容更新，设计更新的难题，您只要提供原始素材，我们将为您整体包装在网站呈现。同时，通过媒介资源整合，打造国际化语言宣传通道，向世界进行全方位的品牌形象报道传播，实现传播价值的最大化。&lt;/p&gt;', '1565234124', '1565234124');
-INSERT INTO `ey_images_content` VALUES ('15', '93', '&lt;p&gt;软件开发是根据用户要求建造出软件系统或者系统中的软件部分的过程。软件开发是一项包括需求捕捉，需求分析，设计，实现和测试的系统工程。软件一般是用某种程序设计语言来实现的。通常采用软件开发工具可以进行开发。软件分为系统软件和应用软件。&lt;/p&gt;&lt;p&gt;&amp;nbsp;软件并不只是包括可以在计算机上运行的程序，与这些程序相关的文件一般也被认为是软件的一部分。 软件设计思路和方法的一般过程，包括设计软件的功能和实现的算法和方法、软件的总体结构设计和模块设计、编程和调试、程序联调和测试以及编写、提交程序。&lt;/p&gt;', '1565232857', '1565232857');
-INSERT INTO `ey_images_content` VALUES ('8', '43', '&lt;p&gt;&lt;span style=&quot;color: rgb(42, 51, 60); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; background-color: rgb(255, 255, 255);&quot;&gt;软件开发是根据用户要求建造出软件系统或者系统中的软件部分的过程。软件开发是一项包括需求捕捉，需求分析，设计，实现和测试的系统工程。软件一般是用某种程序设计语言来实现的。通常采用软件开发工具可以进行开发。软件分为系统软件和应用软件。&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(42, 51, 60); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; background-color: rgb(255, 255, 255);&quot;&gt;软件并不只是包括可以在计算机上运行的程序，与这些程序相关的文件一般也被认为是软件的一部分。 软件设计思路和方法的一般过程，包括设计软件的功能和实现的算法和方法、软件的总体结构设计和模块设计、编程和调试、程序联调和测试以及编写、提交程序。&lt;/span&gt;&lt;/p&gt;', '1610615719', '1610615719');
-INSERT INTO `ey_images_content` VALUES ('9', '44', '&lt;p&gt;SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。&lt;/p&gt;&lt;p&gt;相反地，如果将关注的焦点放在搜索引擎优化以及如何取悦搜索引擎蜘蛛上，那么网站可能会排名很高，并且会获得大量的搜索引擎流量，但是如果设计很不尽人意，那就不一样了。为了在当今的数字环境中取得成功，必须将重点放在网站设计和搜索引擎优化上。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615714', '1610615714');
-INSERT INTO `ey_images_content` VALUES ('16', '104', '&lt;p&gt;我们将用高端的平面设计与网络技术，为您打造真正属于您的网站。我们用专业的团队解决您网站内容更新，设计更新的难题，您只要提供原始素材，我们将为您整体包装在网站呈现。同时，通过媒介资源整合，打造国际化语言宣传通道，向世界进行全方位的品牌形象报道传播，实现传播价值的最大化。&lt;/p&gt;', '1610615576', '1610615576');
-INSERT INTO `ey_images_content` VALUES ('17', '105', '&lt;p&gt;&lt;span style=&quot;color: rgb(42, 51, 60); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; background-color: rgb(255, 255, 255);&quot;&gt;软件开发是根据用户要求建造出软件系统或者系统中的软件部分的过程。软件开发是一项包括需求捕捉，需求分析，设计，实现和测试的系统工程。软件一般是用某种程序设计语言来实现的。通常采用软件开发工具可以进行开发。软件分为系统软件和应用软件。&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(42, 51, 60); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; background-color: rgb(255, 255, 255);&quot;&gt;软件并不只是包括可以在计算机上运行的程序，与这些程序相关的文件一般也被认为是软件的一部分。 软件设计思路和方法的一般过程，包括设计软件的功能和实现的算法和方法、软件的总体结构设计和模块设计、编程和调试、程序联调和测试以及编写、提交程序。&lt;/span&gt;&lt;/p&gt;', '1610615570', '1610615570');
+INSERT INTO `ey_images_content` VALUES ('7', '42', '&lt;p&gt;我们将用高端的平面设计与网络技术，为您打造真正属于您的网站。我们用专业的团队解决您网站内容更新，设计更新的难题，您只要提供原始素材，我们将为您整体包装在网站呈现。同时，通过媒介资源整合，打造国际化语言宣传通道，向世界进行全方位的品牌形象报道传播，实现传播价值的最大化。&lt;/p&gt;', '', '1565234124', '1565234124');
+INSERT INTO `ey_images_content` VALUES ('15', '93', '&lt;p&gt;软件开发是根据用户要求建造出软件系统或者系统中的软件部分的过程。软件开发是一项包括需求捕捉，需求分析，设计，实现和测试的系统工程。软件一般是用某种程序设计语言来实现的。通常采用软件开发工具可以进行开发。软件分为系统软件和应用软件。&lt;/p&gt;&lt;p&gt;&amp;nbsp;软件并不只是包括可以在计算机上运行的程序，与这些程序相关的文件一般也被认为是软件的一部分。 软件设计思路和方法的一般过程，包括设计软件的功能和实现的算法和方法、软件的总体结构设计和模块设计、编程和调试、程序联调和测试以及编写、提交程序。&lt;/p&gt;', '', '1565232857', '1565232857');
+INSERT INTO `ey_images_content` VALUES ('8', '43', '&lt;p&gt;&lt;span style=&quot;color: rgb(42, 51, 60); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; background-color: rgb(255, 255, 255);&quot;&gt;软件开发是根据用户要求建造出软件系统或者系统中的软件部分的过程。软件开发是一项包括需求捕捉，需求分析，设计，实现和测试的系统工程。软件一般是用某种程序设计语言来实现的。通常采用软件开发工具可以进行开发。软件分为系统软件和应用软件。&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(42, 51, 60); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; background-color: rgb(255, 255, 255);&quot;&gt;软件并不只是包括可以在计算机上运行的程序，与这些程序相关的文件一般也被认为是软件的一部分。 软件设计思路和方法的一般过程，包括设计软件的功能和实现的算法和方法、软件的总体结构设计和模块设计、编程和调试、程序联调和测试以及编写、提交程序。&lt;/span&gt;&lt;/p&gt;', '', '1610615719', '1610615719');
+INSERT INTO `ey_images_content` VALUES ('9', '44', '&lt;p&gt;SEO（搜索引擎优化）和有效的网站设计是齐头并进的。好的网站设计是关于创建一个吸引目标受众的网站，并让他们采取某种行动。但是，如果该网站不遵循目前的 SEO 最佳做法，它的排名将会受到影响，从而会导致真正参与该网站的访问者的数量的较少。&lt;/p&gt;&lt;p&gt;相反地，如果将关注的焦点放在搜索引擎优化以及如何取悦搜索引擎蜘蛛上，那么网站可能会排名很高，并且会获得大量的搜索引擎流量，但是如果设计很不尽人意，那就不一样了。为了在当今的数字环境中取得成功，必须将重点放在网站设计和搜索引擎优化上。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615714', '1610615714');
+INSERT INTO `ey_images_content` VALUES ('16', '104', '&lt;p&gt;我们将用高端的平面设计与网络技术，为您打造真正属于您的网站。我们用专业的团队解决您网站内容更新，设计更新的难题，您只要提供原始素材，我们将为您整体包装在网站呈现。同时，通过媒介资源整合，打造国际化语言宣传通道，向世界进行全方位的品牌形象报道传播，实现传播价值的最大化。&lt;/p&gt;', '', '1610615576', '1610615576');
+INSERT INTO `ey_images_content` VALUES ('17', '105', '&lt;p&gt;&lt;span style=&quot;color: rgb(42, 51, 60); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; background-color: rgb(255, 255, 255);&quot;&gt;软件开发是根据用户要求建造出软件系统或者系统中的软件部分的过程。软件开发是一项包括需求捕捉，需求分析，设计，实现和测试的系统工程。软件一般是用某种程序设计语言来实现的。通常采用软件开发工具可以进行开发。软件分为系统软件和应用软件。&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(42, 51, 60); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; background-color: rgb(255, 255, 255);&quot;&gt;软件并不只是包括可以在计算机上运行的程序，与这些程序相关的文件一般也被认为是软件的一部分。 软件设计思路和方法的一般过程，包括设计软件的功能和实现的算法和方法、软件的总体结构设计和模块设计、编程和调试、程序联调和测试以及编写、提交程序。&lt;/span&gt;&lt;/p&gt;', '', '1610615570', '1610615570');
 
 -- -----------------------------
 -- Table structure for `ey_images_upload`
@@ -1853,20 +2320,20 @@ CREATE TABLE `ey_images_upload` (
 -- -----------------------------
 -- Records of `ey_images_upload`
 -- -----------------------------
-INSERT INTO `ey_images_upload` VALUES ('88', '43', '3C数码蓝牙耳机产品渲染', '/abc/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', '', '0', '0', '0', '', '2', '1610615719', '0');
-INSERT INTO `ey_images_upload` VALUES ('86', '44', '喷油耳机 建模渲染', '/abc/uploads/allimg/20190808/45b6f3f95d30a97cfa4a83d315b5c4f1.jpg', '', '0', '0', '0', '', '2', '1610615714', '0');
-INSERT INTO `ey_images_upload` VALUES ('85', '44', '喷油耳机 建模渲染', '/abc/uploads/allimg/20190808/8e87c585976aa71baf5348e28611196b.jpg', '', '0', '0', '0', '', '1', '1610615714', '0');
-INSERT INTO `ey_images_upload` VALUES ('87', '43', '3C数码蓝牙耳机产品渲染', '/abc/uploads/allimg/20190808/f6b182e9952b2afab33faa0d07ef373a.jpg', '', '0', '0', '0', '', '1', '1610615719', '0');
-INSERT INTO `ey_images_upload` VALUES ('68', '42', 'VIVO X27 手机摄影', '/uploads/allimg/20190808/6e2ed9b79d6d8beb998a4838ec3dde0c.jpg', '', '680', '520', '31841', 'image/jpeg', '2', '1565234124', '0');
-INSERT INTO `ey_images_upload` VALUES ('67', '42', 'VIVO X27 手机摄影', '/uploads/allimg/20190808/17268e40477444ecbf11bcb643f321c2.jpg', '', '680', '520', '81344', 'image/jpeg', '1', '1565234124', '0');
-INSERT INTO `ey_images_upload` VALUES ('59', '93', '鼠标封面设计', '/uploads/allimg/20190808/0951948f9135e85b78f51d69611c6ac4.jpg', '', '680', '520', '44630', 'image/jpeg', '3', '1565232857', '0');
-INSERT INTO `ey_images_upload` VALUES ('58', '93', '鼠标封面设计', '/uploads/allimg/20190808/abd694dbe8683fce0fa639b80f7726bf.jpg', '', '680', '520', '23269', 'image/jpeg', '2', '1565232857', '0');
-INSERT INTO `ey_images_upload` VALUES ('57', '93', '鼠标封面设计', '/uploads/allimg/20190808/ecc9bb4583dc47abef98663c7a4cad8d.jpg', '', '680', '520', '37442', 'image/jpeg', '1', '1565232857', '0');
-INSERT INTO `ey_images_upload` VALUES ('60', '93', '鼠标封面设计', '/uploads/allimg/20190808/8edd1cd82df2afd55836b1a095e4395d.jpg', '', '680', '520', '39116', 'image/jpeg', '4', '1565232857', '0');
-INSERT INTO `ey_images_upload` VALUES ('84', '104', '手机摄影', '/abc/uploads/allimg/20190808/6e2ed9b79d6d8beb998a4838ec3dde0c.jpg', '', '0', '0', '0', '', '2', '1610615576', '0');
-INSERT INTO `ey_images_upload` VALUES ('83', '104', '手机摄影', '/abc/uploads/allimg/20190808/17268e40477444ecbf11bcb643f321c2.jpg', '', '0', '0', '0', '', '1', '1610615576', '0');
-INSERT INTO `ey_images_upload` VALUES ('82', '105', '数码蓝牙耳机产品渲染', '/abc/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', '', '0', '0', '0', '', '2', '1610615570', '0');
-INSERT INTO `ey_images_upload` VALUES ('81', '105', '数码蓝牙耳机产品渲染', '/abc/uploads/allimg/20190808/f6b182e9952b2afab33faa0d07ef373a.jpg', '', '0', '0', '0', '', '1', '1610615570', '0');
+INSERT INTO `ey_images_upload` VALUES ('88', '43', '3C数码蓝牙耳机产品渲染', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', '', '0', '0', '0', '', '2', '1610615719', '0');
+INSERT INTO `ey_images_upload` VALUES ('86', '44', '喷油耳机 建模渲染', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/45b6f3f95d30a97cfa4a83d315b5c4f1.jpg', '', '0', '0', '0', '', '2', '1610615714', '0');
+INSERT INTO `ey_images_upload` VALUES ('85', '44', '喷油耳机 建模渲染', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/8e87c585976aa71baf5348e28611196b.jpg', '', '0', '0', '0', '', '1', '1610615714', '0');
+INSERT INTO `ey_images_upload` VALUES ('87', '43', '3C数码蓝牙耳机产品渲染', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/f6b182e9952b2afab33faa0d07ef373a.jpg', '', '0', '0', '0', '', '1', '1610615719', '0');
+INSERT INTO `ey_images_upload` VALUES ('68', '42', 'VIVO X27 手机摄影', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/6e2ed9b79d6d8beb998a4838ec3dde0c.jpg', '', '680', '520', '31841', 'image/jpeg', '2', '1565234124', '0');
+INSERT INTO `ey_images_upload` VALUES ('67', '42', 'VIVO X27 手机摄影', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/17268e40477444ecbf11bcb643f321c2.jpg', '', '680', '520', '81344', 'image/jpeg', '1', '1565234124', '0');
+INSERT INTO `ey_images_upload` VALUES ('59', '93', '鼠标封面设计', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/0951948f9135e85b78f51d69611c6ac4.jpg', '', '680', '520', '44630', 'image/jpeg', '3', '1565232857', '0');
+INSERT INTO `ey_images_upload` VALUES ('58', '93', '鼠标封面设计', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/abd694dbe8683fce0fa639b80f7726bf.jpg', '', '680', '520', '23269', 'image/jpeg', '2', '1565232857', '0');
+INSERT INTO `ey_images_upload` VALUES ('57', '93', '鼠标封面设计', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/ecc9bb4583dc47abef98663c7a4cad8d.jpg', '', '680', '520', '37442', 'image/jpeg', '1', '1565232857', '0');
+INSERT INTO `ey_images_upload` VALUES ('60', '93', '鼠标封面设计', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/8edd1cd82df2afd55836b1a095e4395d.jpg', '', '680', '520', '39116', 'image/jpeg', '4', '1565232857', '0');
+INSERT INTO `ey_images_upload` VALUES ('84', '104', '手机摄影', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/6e2ed9b79d6d8beb998a4838ec3dde0c.jpg', '', '0', '0', '0', '', '2', '1610615576', '0');
+INSERT INTO `ey_images_upload` VALUES ('83', '104', '手机摄影', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/17268e40477444ecbf11bcb643f321c2.jpg', '', '0', '0', '0', '', '1', '1610615576', '0');
+INSERT INTO `ey_images_upload` VALUES ('82', '105', '数码蓝牙耳机产品渲染', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', '', '0', '0', '0', '', '2', '1610615570', '0');
+INSERT INTO `ey_images_upload` VALUES ('81', '105', '数码蓝牙耳机产品渲染', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/f6b182e9952b2afab33faa0d07ef373a.jpg', '', '0', '0', '0', '', '1', '1610615570', '0');
 
 -- -----------------------------
 -- Table structure for `ey_language`
@@ -1907,7 +2374,7 @@ CREATE TABLE `ey_language_attr` (
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `attr_value` (`attr_name`,`lang`)
-) ENGINE=MyISAM AUTO_INCREMENT=131 DEFAULT CHARSET=utf8 COMMENT='多语言模板变量关联绑定表';
+) ENGINE=MyISAM AUTO_INCREMENT=137 DEFAULT CHARSET=utf8 COMMENT='多语言模板变量关联绑定表';
 
 -- -----------------------------
 -- Records of `ey_language_attr`
@@ -1951,7 +2418,6 @@ INSERT INTO `ey_language_attr` VALUES ('36', 'attr_6', '6', 'product_attribute',
 INSERT INTO `ey_language_attr` VALUES ('37', 'attr_7', '7', 'product_attribute', 'cn', '1545267518', '1545267518');
 INSERT INTO `ey_language_attr` VALUES ('38', 'attr_8', '8', 'product_attribute', 'cn', '1545267518', '1545267518');
 INSERT INTO `ey_language_attr` VALUES ('39', 'ad1', '1', 'ad', 'cn', '1545267518', '1545267518');
-INSERT INTO `ey_language_attr` VALUES ('40', 'ad2', '2', 'ad', 'cn', '1545267518', '1545267518');
 INSERT INTO `ey_language_attr` VALUES ('41', 'adp1', '1', 'ad_position', 'cn', '1545267518', '1545267518');
 INSERT INTO `ey_language_attr` VALUES ('83', 'ad5', '5', 'ad', 'cn', '1553046945', '1553046945');
 INSERT INTO `ey_language_attr` VALUES ('85', 'attr_16', '16', 'guestbook_attribute', 'cn', '1563533188', '1563533188');
@@ -1962,7 +2428,6 @@ INSERT INTO `ey_language_attr` VALUES ('93', 'tid54', '54', 'arctype', 'cn', '15
 INSERT INTO `ey_language_attr` VALUES ('95', 'adp3', '3', 'ad_position', 'cn', '1563764323', '1563764323');
 INSERT INTO `ey_language_attr` VALUES ('97', 'ad7', '7', 'ad', 'cn', '1563764323', '1563764323');
 INSERT INTO `ey_language_attr` VALUES ('99', 'ad9', '9', 'ad', 'cn', '1563764323', '1563764323');
-INSERT INTO `ey_language_attr` VALUES ('101', 'ad11', '11', 'ad', 'cn', '1563764411', '1563764411');
 INSERT INTO `ey_language_attr` VALUES ('103', 'attr_19', '19', 'product_attribute', 'cn', '1564539436', '1564539436');
 INSERT INTO `ey_language_attr` VALUES ('105', 'attr_21', '21', 'product_attribute', 'cn', '1564539503', '1564539503');
 INSERT INTO `ey_language_attr` VALUES ('107', 'attr_23', '23', 'product_attribute', 'cn', '1564539517', '1564539517');
@@ -1976,6 +2441,12 @@ INSERT INTO `ey_language_attr` VALUES ('121', 'tid64', '64', 'arctype', 'cn', '1
 INSERT INTO `ey_language_attr` VALUES ('123', 'tid66', '66', 'arctype', 'cn', '1565083875', '1565083875');
 INSERT INTO `ey_language_attr` VALUES ('127', 'ad13', '13', 'ad', 'cn', '1565225126', '1565225126');
 INSERT INTO `ey_language_attr` VALUES ('129', 'attr_24', '24', 'guestbook_attribute', 'cn', '1609930411', '1609930411');
+INSERT INTO `ey_language_attr` VALUES ('131', 'linksgroup1', '1', 'links_group', 'cn', '1701045570', '1701045570');
+INSERT INTO `ey_language_attr` VALUES ('132', 'form1', '1', 'form', 'cn', '1703142214', '1703142214');
+INSERT INTO `ey_language_attr` VALUES ('133', 'attr_26', '26', 'form_attribute', 'cn', '1703142214', '1703142214');
+INSERT INTO `ey_language_attr` VALUES ('134', 'attr_27', '27', 'form_attribute', 'cn', '1703142214', '1703142214');
+INSERT INTO `ey_language_attr` VALUES ('135', 'attr_28', '28', 'form_attribute', 'cn', '1703142214', '1703142214');
+INSERT INTO `ey_language_attr` VALUES ('136', 'attr_29', '29', 'form_attribute', 'cn', '1703142214', '1703142214');
 
 -- -----------------------------
 -- Table structure for `ey_language_attribute`
@@ -1990,7 +2461,7 @@ CREATE TABLE `ey_language_attribute` (
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`attr_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=66 DEFAULT CHARSET=utf8 COMMENT='多语言模板变量表';
+) ENGINE=MyISAM AUTO_INCREMENT=72 DEFAULT CHARSET=utf8 COMMENT='多语言模板变量表';
 
 -- -----------------------------
 -- Records of `ey_language_attribute`
@@ -2000,7 +2471,7 @@ INSERT INTO `ey_language_attribute` VALUES ('2', '新闻动态', 'tid2', 'arctyp
 INSERT INTO `ey_language_attribute` VALUES ('3', '产品展示', 'tid3', 'arctype', '0', '1545267517', '1545267517');
 INSERT INTO `ey_language_attribute` VALUES ('4', '解决方案', 'tid4', 'arctype', '0', '1545267517', '1574233888');
 INSERT INTO `ey_language_attribute` VALUES ('5', '资料下载', 'tid5', 'arctype', '0', '1545267517', '1545267517');
-INSERT INTO `ey_language_attribute` VALUES ('6', '在线应聘', 'tid6', 'arctype', '0', '1545267517', '1574233888');
+INSERT INTO `ey_language_attribute` VALUES ('6', '在线应聘', 'tid6', 'arctype', '1', '1545267517', '1690162042');
 INSERT INTO `ey_language_attribute` VALUES ('7', '公司简介', 'tid8', 'arctype', '0', '1545267517', '1545267517');
 INSERT INTO `ey_language_attribute` VALUES ('8', '公司荣誉', 'tid9', 'arctype', '0', '1545267517', '1545267517');
 INSERT INTO `ey_language_attribute` VALUES ('9', '公司动态', 'tid10', 'arctype', '0', '1545267517', '1574233888');
@@ -2010,7 +2481,7 @@ INSERT INTO `ey_language_attribute` VALUES ('12', '单页面', 'tid13', 'arctype
 INSERT INTO `ey_language_attribute` VALUES ('13', '手机数码', 'tid20', 'arctype', '0', '1545267517', '1574233888');
 INSERT INTO `ey_language_attribute` VALUES ('14', '电脑产品', 'tid21', 'arctype', '0', '1545267517', '1574233888');
 INSERT INTO `ey_language_attribute` VALUES ('15', '周边配件', 'tid22', 'arctype', '0', '1545267517', '1574233888');
-INSERT INTO `ey_language_attribute` VALUES ('16', '人才招聘', 'tid23', 'arctype', '0', '1545267517', '1574233888');
+INSERT INTO `ey_language_attribute` VALUES ('16', '人才招聘', 'tid23', 'arctype', '1', '1545267517', '1690162055');
 INSERT INTO `ey_language_attribute` VALUES ('17', '智能手机', 'tid24', 'arctype', '0', '1545267517', '1545267517');
 INSERT INTO `ey_language_attribute` VALUES ('18', '畅玩手机', 'tid25', 'arctype', '0', '1545267517', '1545267517');
 INSERT INTO `ey_language_attribute` VALUES ('19', '笔记本电脑', 'tid26', 'arctype', '0', '1545267517', '1545267517');
@@ -2034,7 +2505,6 @@ INSERT INTO `ey_language_attribute` VALUES ('36', '整机净重', 'attr_6', 'pro
 INSERT INTO `ey_language_attribute` VALUES ('37', '产品型号', 'attr_7', 'product_attribute', '0', '1545267518', '1574233888');
 INSERT INTO `ey_language_attribute` VALUES ('38', '支持蓝牙', 'attr_8', 'product_attribute', '0', '1545267518', '1545267518');
 INSERT INTO `ey_language_attribute` VALUES ('39', '共展蓝图', 'ad1', 'ad', '0', '1545267518', '1545267518');
-INSERT INTO `ey_language_attribute` VALUES ('40', '易优模板库', 'ad2', 'ad', '0', '1545267518', '1545267518');
 INSERT INTO `ey_language_attribute` VALUES ('41', '首页-大幻灯片', 'adp1', 'ad_position', '0', '1545267518', '1545267518');
 INSERT INTO `ey_language_attribute` VALUES ('42', '第三组广告', 'ad5', 'ad', '0', '1553046945', '1553046945');
 INSERT INTO `ey_language_attribute` VALUES ('43', '手机', 'attr_16', 'guestbook_attribute', '0', '1563533188', '1563533188');
@@ -2045,7 +2515,6 @@ INSERT INTO `ey_language_attribute` VALUES ('47', '联系我们', 'tid54', 'arct
 INSERT INTO `ey_language_attribute` VALUES ('48', '手机端首页头部幻灯', 'adp3', 'ad_position', '0', '1563764323', '1563764323');
 INSERT INTO `ey_language_attribute` VALUES ('49', '', 'ad7', 'ad', '0', '1563764323', '1563764323');
 INSERT INTO `ey_language_attribute` VALUES ('50', '', 'ad9', 'ad', '0', '1563764323', '1563764323');
-INSERT INTO `ey_language_attribute` VALUES ('51', '', 'ad11', 'ad', '0', '1563764411', '1563764411');
 INSERT INTO `ey_language_attribute` VALUES ('52', '商品名称', 'attr_19', 'product_attribute', '0', '1564539436', '1574233888');
 INSERT INTO `ey_language_attribute` VALUES ('53', '商品毛重', 'attr_21', 'product_attribute', '0', '1564539503', '1574233888');
 INSERT INTO `ey_language_attribute` VALUES ('54', '商品产地', 'attr_23', 'product_attribute', '0', '1564539517', '1574233888');
@@ -2059,6 +2528,12 @@ INSERT INTO `ey_language_attribute` VALUES ('61', '系统方案', 'tid64', 'arct
 INSERT INTO `ey_language_attribute` VALUES ('62', '应用方案', 'tid66', 'arctype', '0', '1565083875', '1574233888');
 INSERT INTO `ey_language_attribute` VALUES ('64', '', 'ad13', 'ad', '0', '1565225126', '1565225126');
 INSERT INTO `ey_language_attribute` VALUES ('65', '留言内容', 'attr_24', 'guestbook_attribute', '0', '1609930411', '1609930411');
+INSERT INTO `ey_language_attribute` VALUES ('66', '默认分组', 'linksgroup1', 'links_group', '0', '1701045570', '1701045570');
+INSERT INTO `ey_language_attribute` VALUES ('67', '联系我们', 'form1', 'form', '0', '1703142214', '1703142214');
+INSERT INTO `ey_language_attribute` VALUES ('68', '称呼', 'attr_26', 'form_attribute', '0', '1703142214', '1703142214');
+INSERT INTO `ey_language_attribute` VALUES ('69', '手机', 'attr_27', 'form_attribute', '0', '1703142214', '1703142214');
+INSERT INTO `ey_language_attribute` VALUES ('70', '分类', 'attr_28', 'form_attribute', '0', '1703142214', '1703142214');
+INSERT INTO `ey_language_attribute` VALUES ('71', '内容', 'attr_29', 'form_attribute', '0', '1703142214', '1703142214');
 
 -- -----------------------------
 -- Table structure for `ey_language_mark`
@@ -2074,7 +2549,7 @@ CREATE TABLE `ey_language_mark` (
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=57 DEFAULT CHARSET=utf8 COMMENT='国家语言表';
+) ENGINE=MyISAM AUTO_INCREMENT=58 DEFAULT CHARSET=utf8 COMMENT='国家语言表';
 
 -- -----------------------------
 -- Records of `ey_language_mark`
@@ -2135,6 +2610,7 @@ INSERT INTO `ey_language_mark` VALUES ('53', 'Polish', '波兰语', 'pl', 'bolan
 INSERT INTO `ey_language_mark` VALUES ('54', 'Persian', '波斯语', 'fa', 'bosiyu', '100', '0', '1541583096');
 INSERT INTO `ey_language_mark` VALUES ('55', 'Arabic', '阿拉伯语', 'ar', 'alaboyu', '100', '0', '1541583096');
 INSERT INTO `ey_language_mark` VALUES ('56', 'Albanian', '阿尔巴尼亚语', 'sq', 'aerbaniyayu', '100', '0', '1541583096');
+INSERT INTO `ey_language_mark` VALUES ('57', 'Uyghur', '维吾尔族语', 'ug', 'weiwuerzuyu', '100', '0', '1541583096');
 
 -- -----------------------------
 -- Table structure for `ey_language_pack`
@@ -2164,7 +2640,7 @@ INSERT INTO `ey_language_pack` VALUES ('6', 'sys6', '全部', '1', 'cn', '100', 
 INSERT INTO `ey_language_pack` VALUES ('7', 'sys7', '搜索', '1', 'cn', '100', '1543890216', '1543890216');
 INSERT INTO `ey_language_pack` VALUES ('8', 'sys8', '查看详情', '1', 'cn', '100', '1543890216', '1543890216');
 INSERT INTO `ey_language_pack` VALUES ('9', 'sys9', '网站首页', '1', 'cn', '100', '1543890216', '1543890216');
-INSERT INTO `ey_language_pack` VALUES ('10', 'sys10', '暂无', '1', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_language_pack` VALUES ('10', 'sys10', '没有了', '1', 'cn', '100', '1543890216', '1703142234');
 INSERT INTO `ey_language_pack` VALUES ('11', 'sys11', '上一篇', '1', 'cn', '100', '1543890216', '1543890216');
 INSERT INTO `ey_language_pack` VALUES ('12', 'sys12', '下一篇', '1', 'cn', '100', '1543890216', '1543890216');
 INSERT INTO `ey_language_pack` VALUES ('25', 'yybl1', '网站首页', '0', 'cn', '100', '1545272835', '1545272835');
@@ -2188,7 +2664,7 @@ DROP TABLE IF EXISTS `ey_links`;
 CREATE TABLE `ey_links` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `typeid` tinyint(1) DEFAULT '1' COMMENT '类型：1=文字链接，2=图片链接',
-  `groupid` tinyint(2) unsigned NOT NULL DEFAULT '1' COMMENT '分组id， 默认分组值为1',
+  `groupid` int(11) unsigned NOT NULL DEFAULT '1' COMMENT '分组id， 默认分组值为1',
   `title` varchar(50) DEFAULT '' COMMENT '网站标题',
   `url` varchar(100) DEFAULT '' COMMENT '网站地址',
   `logo` varchar(255) DEFAULT '' COMMENT '网站LOGO',
@@ -2198,6 +2674,9 @@ CREATE TABLE `ey_links` (
   `email` varchar(50) DEFAULT NULL,
   `intro` text COMMENT '网站简况',
   `status` tinyint(1) DEFAULT '1' COMMENT '状态(1=显示，0=屏蔽)',
+  `province_id` int(10) DEFAULT '0' COMMENT '省份',
+  `city_id` int(10) DEFAULT '0' COMMENT '所在城市',
+  `area_id` int(10) DEFAULT '0' COMMENT '所在区域',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `delete_time` int(11) DEFAULT '0' COMMENT '软删除时间',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
@@ -2208,15 +2687,11 @@ CREATE TABLE `ey_links` (
 -- -----------------------------
 -- Records of `ey_links`
 -- -----------------------------
-INSERT INTO `ey_links` VALUES ('1', '1', '1', '百度', 'http://www.baidu.com', '/abf/uploads/allimg/20210111/1-210111145019107.gif', '1', '1', '0', '', '', '1', 'cn', '0', '1524975826', '1610702995');
-INSERT INTO `ey_links` VALUES ('2', '1', '1', '腾讯', 'http://www.qq.com', '/abf/uploads/allimg/20210111/1-2101111450594J.gif', '3', '1', '0', '', '', '1', 'cn', '0', '1524976095', '1610702997');
-INSERT INTO `ey_links` VALUES ('3', '1', '1', '新浪', 'http://www.sina.com.cn', '', '5', '1', '0', '', '', '1', 'cn', '0', '1532414285', '1610702999');
-INSERT INTO `ey_links` VALUES ('4', '1', '1', '淘宝', 'http://www.taobao.com', '', '7', '1', '0', '', '', '1', 'cn', '0', '1532414529', '1610703002');
-INSERT INTO `ey_links` VALUES ('5', '1', '1', '微博', 'http://www.weibo.com', '', '100', '1', '0', '', '', '1', 'cn', '0', '1532414726', '1610334638');
-INSERT INTO `ey_links` VALUES ('11', '1', '1', 'eyoucms', 'https://www.eyoucms.com', '', '2', '1', '0', '', '', '1', 'cn', '0', '1610702923', '1610702996');
-INSERT INTO `ey_links` VALUES ('12', '1', '1', '广州网站制作', 'https://www.tbadc.com', '', '4', '1', '0', '', '', '1', 'cn', '0', '1610702946', '1610702998');
-INSERT INTO `ey_links` VALUES ('13', '1', '1', '快推云', 'https://www.5fa.cn', '', '6', '1', '0', '', '', '1', 'cn', '0', '1610702968', '1610703000');
-INSERT INTO `ey_links` VALUES ('14', '1', '1', '房产网站制作', 'https://www.ejucms.com', '', '8', '1', '0', '', '', '1', 'cn', '0', '1610702985', '1610703003');
+INSERT INTO `ey_links` VALUES ('1', '1', '1', '百度', 'http://www.baidu.com', 'https://update.eyoucms.com/demo/uploads/allimg/20210111/1-210111145019107.gif', '1', '1', '0', '', '', '1', '0', '0', '0', 'cn', '0', '1524975826', '1610702995');
+INSERT INTO `ey_links` VALUES ('2', '1', '1', '腾讯', 'http://www.qq.com', 'https://update.eyoucms.com/demo/uploads/allimg/20210111/1-2101111450594J.gif', '3', '1', '0', '', '', '1', '0', '0', '0', 'cn', '0', '1524976095', '1610702997');
+INSERT INTO `ey_links` VALUES ('3', '1', '1', '新浪', 'http://www.sina.com.cn', '', '5', '1', '0', '', '', '1', '0', '0', '0', 'cn', '0', '1532414285', '1610702999');
+INSERT INTO `ey_links` VALUES ('4', '1', '1', '淘宝', 'http://www.taobao.com', '', '7', '1', '0', '', '', '1', '0', '0', '0', 'cn', '0', '1532414529', '1610703002');
+INSERT INTO `ey_links` VALUES ('5', '1', '1', '微博', 'http://www.weibo.com', '', '100', '1', '0', '', '', '1', '0', '0', '0', 'cn', '0', '1532414726', '1610334638');
 
 -- -----------------------------
 -- Table structure for `ey_links_group`
@@ -2246,6 +2721,7 @@ CREATE TABLE `ey_media_content` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `aid` int(10) NOT NULL DEFAULT '0' COMMENT '文档ID',
   `content` longtext COMMENT '内容详情',
+  `content_ey_m` longtext COMMENT '手机端内容详情',
   `courseware` varchar(200) NOT NULL DEFAULT '' COMMENT '课件地址',
   `courseware_free` enum('免费','收费') NOT NULL DEFAULT '免费' COMMENT '课件收费',
   `total_duration` int(10) NOT NULL DEFAULT '0' COMMENT '视频总时长',
@@ -2309,7 +2785,7 @@ CREATE TABLE `ey_media_log` (
 DROP TABLE IF EXISTS `ey_media_order`;
 CREATE TABLE `ey_media_order` (
   `order_id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '媒体订单ID',
-  `order_code` varchar(30) NOT NULL DEFAULT '' COMMENT '媒体订单编号',
+  `order_code` varchar(50) NOT NULL DEFAULT '' COMMENT '媒体订单编号',
   `users_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员ID',
   `mobile` varchar(20) DEFAULT '' COMMENT '手机',
   `order_status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '订单状态：0未付款，1已付款',
@@ -2347,6 +2823,103 @@ CREATE TABLE `ey_media_play_record` (
 
 
 -- -----------------------------
+-- Table structure for `ey_memgift`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_memgift`;
+CREATE TABLE `ey_memgift` (
+  `gift_id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '礼品列表',
+  `type` tinyint(3) NOT NULL DEFAULT '1' COMMENT '-1-实物,2-会员产品',
+  `type_id` int(10) DEFAULT '0' COMMENT '类型为会员产品时的会员产品类型(users_type_manage)type_id',
+  `score` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '所需积分',
+  `litpic` varchar(250) NOT NULL DEFAULT '',
+  `giftname` varchar(60) NOT NULL DEFAULT '',
+  `num` mediumint(8) unsigned NOT NULL DEFAULT '0' COMMENT '兑换次数',
+  `content` longtext COMMENT '礼品详情',
+  `stock` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '库存总数',
+  `is_del` tinyint(3) NOT NULL DEFAULT '0' COMMENT '0-正常,1-删除',
+  `status` tinyint(2) NOT NULL DEFAULT '1' COMMENT '礼品状态：1=显示，0=隐藏',
+  `add_time` int(10) DEFAULT '0',
+  `update_time` int(10) DEFAULT '0',
+  `sort_order` int(10) DEFAULT '100' COMMENT '排序',
+  PRIMARY KEY (`gift_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='礼品兑换表';
+
+
+-- -----------------------------
+-- Table structure for `ey_memgiftget`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_memgiftget`;
+CREATE TABLE `ey_memgiftget` (
+  `gid` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `giftname` char(60) NOT NULL DEFAULT '',
+  `gift_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '礼品ID',
+  `score` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '积分',
+  `users_id` mediumint(8) unsigned NOT NULL DEFAULT '0',
+  `status` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '状态,0-待发货,1-已发货,2-退回,3-重发',
+  `name` varchar(255) NOT NULL DEFAULT '' COMMENT '姓名',
+  `mobile` varchar(55) NOT NULL DEFAULT '' COMMENT '手机',
+  `address` varchar(255) NOT NULL DEFAULT '' COMMENT '地址',
+  `add_time` int(10) DEFAULT '0',
+  `update_time` int(10) DEFAULT '0',
+  `type_id` int(11) DEFAULT '0' COMMENT '兑换会员产品时,会员产品套餐(表::users_type_manage)type_id',
+  PRIMARY KEY (`gid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='礼品兑换记录表';
+
+
+-- -----------------------------
+-- Table structure for `ey_nav_list`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_nav_list`;
+CREATE TABLE `ey_nav_list` (
+  `nav_id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '导航ID',
+  `nav_name` varchar(200) NOT NULL DEFAULT '' COMMENT '导航名称',
+  `parent_id` int(10) NOT NULL DEFAULT '0' COMMENT '上级菜单id',
+  `topid` int(10) NOT NULL DEFAULT '0' COMMENT '顶级菜单id',
+  `en_name` varchar(200) NOT NULL DEFAULT '' COMMENT '英文名称',
+  `nav_url` varchar(200) NOT NULL DEFAULT '' COMMENT '导航链接',
+  `position_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '导航位置',
+  `arctype_sync` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否与栏目同步',
+  `type_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '同步栏目的ID',
+  `nav_pic` varchar(255) NOT NULL DEFAULT '' COMMENT '导航图片',
+  `is_remote` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否远程图片',
+  `target` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否打开新窗口，1=是，0=否',
+  `nofollow` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否使用nofollow，1=是，0=否',
+  `status` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '启用 (1=正常，0=停用)',
+  `is_del` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '伪删除，1=是，0=否',
+  `sort_order` int(10) unsigned NOT NULL DEFAULT '100' COMMENT '排序号',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`nav_id`) USING BTREE,
+  KEY `position_id` (`position_id`) USING BTREE,
+  KEY `type_id` (`type_id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='导航列表';
+
+
+-- -----------------------------
+-- Table structure for `ey_nav_position`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_nav_position`;
+CREATE TABLE `ey_nav_position` (
+  `position_id` int(10) NOT NULL AUTO_INCREMENT COMMENT '导航列表ID',
+  `position_name` varchar(200) DEFAULT '' COMMENT '导航列表名称',
+  `sort_order` int(10) DEFAULT '0' COMMENT '排序号',
+  `is_del` tinyint(1) DEFAULT '0' COMMENT '伪删除，1=是，0=否',
+  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`position_id`) USING BTREE
+) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='导航位置表';
+
+-- -----------------------------
+-- Records of `ey_nav_position`
+-- -----------------------------
+INSERT INTO `ey_nav_position` VALUES ('1', 'PC端主导航', '100', '0', '0', '1624861478');
+INSERT INTO `ey_nav_position` VALUES ('2', 'PC端顶部导航', '100', '0', '0', '1624861478');
+INSERT INTO `ey_nav_position` VALUES ('3', 'PC端中部导航', '100', '0', '0', '1624861478');
+INSERT INTO `ey_nav_position` VALUES ('4', 'PC端底部导航', '100', '0', '0', '1624861478');
+INSERT INTO `ey_nav_position` VALUES ('5', '移动端中部导航', '100', '0', '0', '1624861478');
+INSERT INTO `ey_nav_position` VALUES ('6', '移动端底部导航', '100', '0', '0', '1624861478');
+
+-- -----------------------------
 -- Table structure for `ey_pay_api_config`
 -- -----------------------------
 DROP TABLE IF EXISTS `ey_pay_api_config`;
@@ -2368,7 +2941,7 @@ CREATE TABLE `ey_pay_api_config` (
 -- Records of `ey_pay_api_config`
 -- -----------------------------
 INSERT INTO `ey_pay_api_config` VALUES ('1', '微信支付', 'wechat', 'a:4:{s:14:\"is_open_wechat\";s:1:\"1\";s:5:\"appid\";s:0:\"\";s:5:\"mchid\";s:0:\"\";s:3:\"key\";s:0:\"\";}', 'a:3:{i:0;s:1:\"1\";i:1;s:1:\"2\";i:2;s:1:\"3\";}', '1', '1', 'cn', '1590111253', '1616490076');
-INSERT INTO `ey_pay_api_config` VALUES ('2', '支付宝支付', 'alipay', 'a:8:{s:14:\"is_open_alipay\";s:1:\"1\";s:7:\"version\";s:1:\"0\";s:6:\"app_id\";s:0:\"\";s:20:\"merchant_private_key\";s:0:\"\";s:17:\"alipay_public_key\";s:0:\"\";s:7:\"account\";s:0:\"\";s:4:\"code\";s:0:\"\";s:2:\"id\";s:0:\"\";}', 'a:2:{i:0;s:1:\"1\";i:1;s:1:\"2\";}', '1', '1', 'cn', '1590111253', '1616490080');
+INSERT INTO `ey_pay_api_config` VALUES ('2', '支付宝支付', 'alipay', 'a:8:{s:14:\"is_open_alipay\";s:1:\"1\";s:7:\"version\";s:1:\"0\";s:6:\"app_id\";s:0:\"\";s:20:\"merchant_private_key\";s:0:\"\";s:17:\"alipay_public_key\";s:0:\"\";s:7:\"account\";s:0:\"\";s:4:\"code\";s:0:\"\";s:2:\"id\";s:0:\"\";}', 'a:4:{s:8:\"computer\";i:0;s:6:\"c_mark\";i:0;s:6:\"mobile\";i:0;s:6:\"m_mark\";i:0;}', '1', '1', 'cn', '1590111253', '1636441870');
 
 -- -----------------------------
 -- Table structure for `ey_product_attr`
@@ -2417,6 +2990,7 @@ CREATE TABLE `ey_product_content` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `aid` int(10) DEFAULT '0' COMMENT '文档ID',
   `content` longtext COMMENT '内容详情',
+  `content_ey_m` longtext COMMENT '手机端内容详情',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   `fxrq` enum('2019年','2018年','2017年') DEFAULT '2019年' COMMENT '发行日期',
@@ -2429,18 +3003,35 @@ CREATE TABLE `ey_product_content` (
 -- -----------------------------
 -- Records of `ey_product_content`
 -- -----------------------------
-INSERT INTO `ey_product_content` VALUES ('2', '27', '&lt;p style=&quot;text-align:center&quot;&gt;&lt;img src=&quot;/abc/uploads/ueditor/20210111/1-210111144620C3.jpg&quot; title=&quot;华为HUAWEI NOTE 8(图1)&quot; alt=&quot;华为HUAWEI NOTE 8(图1)&quot;/&gt;&lt;/p&gt;', '1610615791', '1610615791', '2018年', '1700-2799', '银色');
-INSERT INTO `ey_product_content` VALUES ('3', '28', '&lt;p&gt;轻薄全金属机身 / 256GB SSD / 第八代 Intel 酷睿i5 处理器 / FHD 全贴合屏幕 / 指纹解锁 / office激活不支持7天无理由退货&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;/abc/uploads/ueditor/20190114/aa0555d4f00163878c1d39ab046bb742.jpg&quot; title=&quot;小米笔记本Air 13.3(图1)&quot; alt=&quot;小米笔记本Air 13.3(图1)&quot;/&gt;&lt;/p&gt;', '1610615782', '1610615782', '2019年', '3500-10000', '黑色');
-INSERT INTO `ey_product_content` VALUES ('4', '29', '&lt;p style=&quot;text-align: center;&quot;&gt;特性	M3平板定制AKG品牌高保真耳机，配合M3平板享受HiFi音质&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img src=&quot;/abc/uploads/ueditor/20210111/1-210111144012118.jpg&quot; title=&quot; 小米蓝牙项圈耳机(图1)&quot; alt=&quot; 小米蓝牙项圈耳机(图1)&quot;/&gt;&lt;img src=&quot;/abc/uploads/ueditor/20210111/1-21011114414R57.jpg&quot; title=&quot; 小米蓝牙项圈耳机(图2)&quot; alt=&quot; 小米蓝牙项圈耳机(图2)&quot;/&gt;&lt;/p&gt;', '1610615773', '1610615773', '2017年', '0-1000', '银色');
-INSERT INTO `ey_product_content` VALUES ('5', '37', '&lt;p&gt;全身都是科技亮点！7nm麒麟芯片，问鼎性能巅峰，4000万超广角徕卡三摄，随手捕捉大场面，支持25mm微距拍摄，解锁大波新题材，充电也有无线、反向玩法，快充之快刷新世界观。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;/abc/uploads/ueditor/20190319/e44a5110abdd18ef314e34769272bb44.jpg&quot; title=&quot;华为无线快充手机(图1)&quot; alt=&quot;华为无线快充手机(图1)&quot;/&gt;&lt;br/&gt;&lt;/p&gt;', '1610615751', '1610615751', '2019年', '2800-3500', '绿色');
-INSERT INTO `ey_product_content` VALUES ('10', '89', '&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img src=&quot;/abc/uploads/ueditor/20210111/1-210111143T0R0.png&quot; title=&quot;Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机(图1)&quot; alt=&quot;Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机(图1)&quot;/&gt;&lt;/p&gt;', '1610615667', '1610615667', '2017年', '1000-1699', '黑色');
-INSERT INTO `ey_product_content` VALUES ('11', '90', '&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img src=&quot;/abc/uploads/ueditor/20210111/1-21011114234VL.jpg&quot; title=&quot;小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机(图1)&quot; alt=&quot;小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机(图1)&quot;/&gt; &amp;nbsp; &amp;nbsp;&lt;img src=&quot;/abc/uploads/ueditor/20210111/1-2101111424243S.jpg&quot; title=&quot;小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机(图2)&quot; alt=&quot;小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机(图2)&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1610615660', '1610615660', '2018年', '1700-2799', '黑色');
-INSERT INTO `ey_product_content` VALUES ('12', '98', '&lt;p&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;/abc/uploads/ueditor/20190808/dea649468185da6603ff8ceb4dc0bd02.jpg&quot; title=&quot;MIIX520 二合一笔记本12.2英寸 i7(图1)&quot; alt=&quot;MIIX520 二合一笔记本12.2英寸 i7(图1)&quot;/&gt;&lt;/p&gt;', '1610615629', '1610615629', '2019年', '3500-10000', '黑色');
-INSERT INTO `ey_product_content` VALUES ('13', '99', '&lt;p&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;/abc/uploads/ueditor/20190808/a008be68bc7b5743b93199d321bac0d6.jpg&quot; title=&quot;MIIX 520 酷睿i5笔记本(图1)&quot; alt=&quot;MIIX 520 酷睿i5笔记本(图1)&quot;/&gt;&lt;/p&gt;', '1610615619', '1610615619', '2018年', '3500-10000', '黑色');
-INSERT INTO `ey_product_content` VALUES ('14', '100', '&lt;p&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;/abc/uploads/ueditor/20190808/847b3f2651ecfcf10a8efb17dbb8b27f.jpg&quot; title=&quot;小新 Air 超轻薄笔记本(图1)&quot; alt=&quot;小新 Air 超轻薄笔记本(图1)&quot;/&gt;&lt;/p&gt;', '1610615609', '1610615609', '2017年', '3500-10000', '银色');
-INSERT INTO `ey_product_content` VALUES ('15', '101', '&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;/abc/uploads/ueditor/20190808/cd0d121db4625c6b9ace794c921ac645.jpg&quot; title=&quot;联想 X1无线运动蓝牙耳机(图1)&quot; alt=&quot;联想 X1无线运动蓝牙耳机(图1)&quot;/&gt;&lt;/p&gt;', '1610615602', '1610615602', '2019年', '0-1000', '黑色');
-INSERT INTO `ey_product_content` VALUES ('16', '102', '&lt;p style=&quot;text-align:center&quot;&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;/abc/uploads/ueditor/20190808/a7bc6e179f0ae1ff8499c3bb34a1a233.jpg&quot; title=&quot;联想智能音箱MINI(图1)&quot; alt=&quot;联想智能音箱MINI(图1)&quot;/&gt;&lt;/p&gt;', '1610615586', '1610615586', '2018年', '0-1000', '绿色');
-INSERT INTO `ey_product_content` VALUES ('17', '103', '&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;/abc/uploads/ueditor/20190808/aedbc2e4cd0257c38a1677f5825a3662.jpg&quot; title=&quot;联想智能音箱G1(图1)&quot; alt=&quot;联想智能音箱G1(图1)&quot;/&gt;&lt;/p&gt;', '1610615580', '1610615580', '2019年', '0-1000', '灰色');
+INSERT INTO `ey_product_content` VALUES ('2', '27', '&lt;p style=&quot;text-align:center&quot;&gt;&lt;img src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20210111/1-210111144620C3.jpg&quot; title=&quot;华为HUAWEI NOTE 8(图1)&quot; alt=&quot;华为HUAWEI NOTE 8(图1)&quot;/&gt;&lt;/p&gt;', '', '1610615791', '1610615791', '2018年', '1700-2799', '银色');
+INSERT INTO `ey_product_content` VALUES ('3', '28', '&lt;p&gt;轻薄全金属机身 / 256GB SSD / 第八代 Intel 酷睿i5 处理器 / FHD 全贴合屏幕 / 指纹解锁 / office激活不支持7天无理由退货&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20190114/aa0555d4f00163878c1d39ab046bb742.jpg&quot; title=&quot;小米笔记本Air 13.3(图1)&quot; alt=&quot;小米笔记本Air 13.3(图1)&quot;/&gt;&lt;/p&gt;', '', '1610615782', '1610615782', '2019年', '3500-10000', '黑色');
+INSERT INTO `ey_product_content` VALUES ('4', '29', '&lt;p style=&quot;text-align: center;&quot;&gt;特性	M3平板定制AKG品牌高保真耳机，配合M3平板享受HiFi音质&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20210111/1-210111144012118.jpg&quot; title=&quot; 小米蓝牙项圈耳机(图1)&quot; alt=&quot; 小米蓝牙项圈耳机(图1)&quot;/&gt;&lt;img src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20210111/1-21011114414R57.jpg&quot; title=&quot; 小米蓝牙项圈耳机(图2)&quot; alt=&quot; 小米蓝牙项圈耳机(图2)&quot;/&gt;&lt;/p&gt;', '', '1610615773', '1610615773', '2017年', '0-1000', '银色');
+INSERT INTO `ey_product_content` VALUES ('5', '37', '&lt;p&gt;全身都是科技亮点！7nm麒麟芯片，问鼎性能巅峰，4000万超广角徕卡三摄，随手捕捉大场面，支持25mm微距拍摄，解锁大波新题材，充电也有无线、反向玩法，快充之快刷新世界观。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20190319/e44a5110abdd18ef314e34769272bb44.jpg&quot; title=&quot;华为无线快充手机(图1)&quot; alt=&quot;华为无线快充手机(图1)&quot;/&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615751', '1610615751', '2019年', '2800-3500', '绿色');
+INSERT INTO `ey_product_content` VALUES ('10', '89', '&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20210111/1-210111143T0R0.png&quot; title=&quot;Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机(图1)&quot; alt=&quot;Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机(图1)&quot;/&gt;&lt;/p&gt;', '', '1610615667', '1610615667', '2017年', '1000-1699', '黑色');
+INSERT INTO `ey_product_content` VALUES ('11', '90', '&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20210111/1-21011114234VL.jpg&quot; title=&quot;小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机(图1)&quot; alt=&quot;小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机(图1)&quot;/&gt; &amp;nbsp; &amp;nbsp;&lt;img src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20210111/1-2101111424243S.jpg&quot; title=&quot;小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机(图2)&quot; alt=&quot;小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机(图2)&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1610615660', '1610615660', '2018年', '1700-2799', '黑色');
+INSERT INTO `ey_product_content` VALUES ('12', '98', '&lt;p&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20190808/dea649468185da6603ff8ceb4dc0bd02.jpg&quot; title=&quot;MIIX520 二合一笔记本12.2英寸 i7(图1)&quot; alt=&quot;MIIX520 二合一笔记本12.2英寸 i7(图1)&quot;/&gt;&lt;/p&gt;', '', '1610615629', '1610615629', '2019年', '3500-10000', '黑色');
+INSERT INTO `ey_product_content` VALUES ('13', '99', '&lt;p&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20190808/a008be68bc7b5743b93199d321bac0d6.jpg&quot; title=&quot;MIIX 520 酷睿i5笔记本(图1)&quot; alt=&quot;MIIX 520 酷睿i5笔记本(图1)&quot;/&gt;&lt;/p&gt;', '', '1610615619', '1610615619', '2018年', '3500-10000', '黑色');
+INSERT INTO `ey_product_content` VALUES ('14', '100', '&lt;p&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20190808/847b3f2651ecfcf10a8efb17dbb8b27f.jpg&quot; title=&quot;小新 Air 超轻薄笔记本(图1)&quot; alt=&quot;小新 Air 超轻薄笔记本(图1)&quot;/&gt;&lt;/p&gt;', '', '1610615609', '1610615609', '2017年', '3500-10000', '银色');
+INSERT INTO `ey_product_content` VALUES ('15', '101', '&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20190808/cd0d121db4625c6b9ace794c921ac645.jpg&quot; title=&quot;联想 X1无线运动蓝牙耳机(图1)&quot; alt=&quot;联想 X1无线运动蓝牙耳机(图1)&quot;/&gt;&lt;/p&gt;', '', '1610615602', '1610615602', '2019年', '0-1000', '黑色');
+INSERT INTO `ey_product_content` VALUES ('16', '102', '&lt;p style=&quot;text-align:center&quot;&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20190808/a7bc6e179f0ae1ff8499c3bb34a1a233.jpg&quot; title=&quot;联想智能音箱MINI(图1)&quot; alt=&quot;联想智能音箱MINI(图1)&quot;/&gt;&lt;/p&gt;', '', '1610615586', '1610615586', '2018年', '0-1000', '绿色');
+INSERT INTO `ey_product_content` VALUES ('17', '103', '&lt;p style=&quot;text-align: center;&quot;&gt;&lt;img style=&quot;max-width:100%!important;height:auto;&quot; src=&quot;https://update.eyoucms.com/demo/uploads/ueditor/20190808/aedbc2e4cd0257c38a1677f5825a3662.jpg&quot; title=&quot;联想智能音箱G1(图1)&quot; alt=&quot;联想智能音箱G1(图1)&quot;/&gt;&lt;/p&gt;', '', '1610615580', '1610615580', '2019年', '0-1000', '灰色');
+
+-- -----------------------------
+-- Table structure for `ey_product_custom_param`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_product_custom_param`;
+CREATE TABLE `ey_product_custom_param` (
+  `param_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '参数ID',
+  `aid` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '参数ID',
+  `param_name` varchar(60) NOT NULL DEFAULT '' COMMENT '参数名称',
+  `param_value` varchar(200) NOT NULL DEFAULT '' COMMENT '参数值',
+  `sort_order` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '属性排序',
+  `add_time` int(11) NOT NULL DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`param_id`),
+  KEY `aid` (`aid`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='产品自定义参数表';
+
 
 -- -----------------------------
 -- Table structure for `ey_product_img`
@@ -2466,27 +3057,27 @@ CREATE TABLE `ey_product_img` (
 -- -----------------------------
 -- Records of `ey_product_img`
 -- -----------------------------
-INSERT INTO `ey_product_img` VALUES ('238', '27', '华为HUAWEI NOTE 8', '/abc/uploads/allimg/20190319/644f02053cba0e7925a12afc4d97f473.jpg', '', '0', '0', '0', '', '2', '1610615791', '0');
-INSERT INTO `ey_product_img` VALUES ('236', '28', '小米笔记本Air 13.3', '/abc/uploads/allimg/20190114/ab5d06499e319c69ea0f07e7443846f0.jpg', '', '0', '0', '0', '', '2', '1610615782', '0');
-INSERT INTO `ey_product_img` VALUES ('235', '28', '小米笔记本Air 13.3', '/abc/uploads/allimg/20190114/44bfc4ca62d0c69d750716616410ff96.jpg', '', '0', '0', '0', '', '1', '1610615782', '0');
-INSERT INTO `ey_product_img` VALUES ('234', '29', ' 小米蓝牙项圈耳机', '/abc/uploads/allimg/20190114/e4c13f6756671c2352699564e72090cd.jpg', '', '0', '0', '0', '', '2', '1610615773', '0');
-INSERT INTO `ey_product_img` VALUES ('233', '29', ' 小米蓝牙项圈耳机', '/abc/uploads/allimg/20190114/252a53e6fbc8f441b2570f755d2bbeb8.jpg', '', '0', '0', '0', '', '1', '1610615773', '0');
-INSERT INTO `ey_product_img` VALUES ('237', '27', '华为HUAWEI NOTE 8', '/abc/uploads/allimg/20190319/26ae26bc48454c5504f5e73ab40c2ef7.jpg', '', '0', '0', '0', '', '1', '1610615791', '0');
-INSERT INTO `ey_product_img` VALUES ('232', '37', '华为无线快充手机', '/abc/uploads/allimg/20190319/7d9262ce87a9596a20c82fd04828c322.jpg', '', '0', '0', '0', '', '3', '1610615751', '0');
-INSERT INTO `ey_product_img` VALUES ('231', '37', '华为无线快充手机', '/abc/uploads/allimg/20190319/d86971fb735a22e0a29ba039c5a4179b.jpg', '', '0', '0', '0', '', '2', '1610615751', '0');
-INSERT INTO `ey_product_img` VALUES ('230', '37', '华为无线快充手机', '/abc/uploads/allimg/20190319/db90933b59102a0f3fa0d2588bd8e2fb.jpg', '', '0', '0', '0', '', '1', '1610615751', '0');
-INSERT INTO `ey_product_img` VALUES ('229', '89', 'Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机', '/abc/uploads/allimg/20190731/9d5ca6bb09d1d728f18ccbaa5cfce8a3.jpg', '', '0', '0', '0', '', '3', '1610615667', '0');
-INSERT INTO `ey_product_img` VALUES ('228', '89', 'Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机', '/abc/uploads/allimg/20190731/788152105227529ea8ce3e222ee166e6.jpg', '', '0', '0', '0', '', '2', '1610615667', '0');
-INSERT INTO `ey_product_img` VALUES ('227', '89', 'Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机', '/abc/uploads/allimg/20190731/b0a46af69ac9c4148b345eb71104c811.jpg', '', '0', '0', '0', '', '1', '1610615667', '0');
-INSERT INTO `ey_product_img` VALUES ('226', '90', '小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机', '/abc/uploads/allimg/20190731/2a8aa14ac6f3823617e9aa20ddcb2a05.jpg', '', '0', '0', '0', '', '3', '1610615660', '0');
-INSERT INTO `ey_product_img` VALUES ('225', '90', '小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机', '/abc/uploads/allimg/20190731/de250eebee6f348b1e3d4c3416d6a541.jpg', '', '0', '0', '0', '', '2', '1610615660', '0');
-INSERT INTO `ey_product_img` VALUES ('224', '90', '小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机', '/abc/uploads/allimg/20190731/b3cc010ae2ff9784be8f19758fe56b6b.jpg', '', '0', '0', '0', '', '1', '1610615660', '0');
-INSERT INTO `ey_product_img` VALUES ('223', '98', 'MIIX520 二合一笔记本12.2英寸 i7', '/abc/uploads/allimg/20190808/7dd05a89099c482a51be7faf1bb38ad4.jpg', '', '0', '0', '0', '', '1', '1610615629', '0');
-INSERT INTO `ey_product_img` VALUES ('222', '99', 'MIIX 520 酷睿i5笔记本', '/abc/uploads/allimg/20190808/821fcaa266d291b4f504fb9a1d412c1c.jpg', '', '0', '0', '0', '', '1', '1610615619', '0');
-INSERT INTO `ey_product_img` VALUES ('221', '100', '小新 Air 超轻薄笔记本', '/abc/uploads/allimg/20190808/a4b1ab346ae389e638f4a424b7396ee2.jpg', '', '0', '0', '0', '', '1', '1610615609', '0');
-INSERT INTO `ey_product_img` VALUES ('220', '101', '联想 X1无线运动蓝牙耳机', '/abc/uploads/allimg/20190808/3ade68e134d3f8fbbd3401c545541106.jpg', '', '0', '0', '0', '', '1', '1610615602', '0');
-INSERT INTO `ey_product_img` VALUES ('219', '102', '联想智能音箱MINI', '/abc/uploads/allimg/20190808/989d19deb2377e199ec63d5ef9244be8.jpg', '', '0', '0', '0', '', '1', '1610615586', '0');
-INSERT INTO `ey_product_img` VALUES ('218', '103', '联想智能音箱G1', '/abc/uploads/allimg/20190808/13fba5d0f2454c4b8fee4ada1d3fb39b.jpg', '', '0', '0', '0', '', '1', '1610615580', '0');
+INSERT INTO `ey_product_img` VALUES ('238', '27', '华为HUAWEI NOTE 8', 'https://update.eyoucms.com/demo/uploads/allimg/20190319/644f02053cba0e7925a12afc4d97f473.jpg', '', '0', '0', '0', '', '2', '1610615791', '0');
+INSERT INTO `ey_product_img` VALUES ('236', '28', '小米笔记本Air 13.3', 'https://update.eyoucms.com/demo/uploads/allimg/20190114/ab5d06499e319c69ea0f07e7443846f0.jpg', '', '0', '0', '0', '', '2', '1610615782', '0');
+INSERT INTO `ey_product_img` VALUES ('235', '28', '小米笔记本Air 13.3', 'https://update.eyoucms.com/demo/uploads/allimg/20190114/44bfc4ca62d0c69d750716616410ff96.jpg', '', '0', '0', '0', '', '1', '1610615782', '0');
+INSERT INTO `ey_product_img` VALUES ('234', '29', ' 小米蓝牙项圈耳机', 'https://update.eyoucms.com/demo/uploads/allimg/20190114/e4c13f6756671c2352699564e72090cd.jpg', '', '0', '0', '0', '', '2', '1610615773', '0');
+INSERT INTO `ey_product_img` VALUES ('233', '29', ' 小米蓝牙项圈耳机', 'https://update.eyoucms.com/demo/uploads/allimg/20190114/252a53e6fbc8f441b2570f755d2bbeb8.jpg', '', '0', '0', '0', '', '1', '1610615773', '0');
+INSERT INTO `ey_product_img` VALUES ('237', '27', '华为HUAWEI NOTE 8', 'https://update.eyoucms.com/demo/uploads/allimg/20190319/26ae26bc48454c5504f5e73ab40c2ef7.jpg', '', '0', '0', '0', '', '1', '1610615791', '0');
+INSERT INTO `ey_product_img` VALUES ('232', '37', '华为无线快充手机', 'https://update.eyoucms.com/demo/uploads/allimg/20190319/7d9262ce87a9596a20c82fd04828c322.jpg', '', '0', '0', '0', '', '3', '1610615751', '0');
+INSERT INTO `ey_product_img` VALUES ('231', '37', '华为无线快充手机', 'https://update.eyoucms.com/demo/uploads/allimg/20190319/d86971fb735a22e0a29ba039c5a4179b.jpg', '', '0', '0', '0', '', '2', '1610615751', '0');
+INSERT INTO `ey_product_img` VALUES ('230', '37', '华为无线快充手机', 'https://update.eyoucms.com/demo/uploads/allimg/20190319/db90933b59102a0f3fa0d2588bd8e2fb.jpg', '', '0', '0', '0', '', '1', '1610615751', '0');
+INSERT INTO `ey_product_img` VALUES ('229', '89', 'Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/9d5ca6bb09d1d728f18ccbaa5cfce8a3.jpg', '', '0', '0', '0', '', '3', '1610615667', '0');
+INSERT INTO `ey_product_img` VALUES ('228', '89', 'Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/788152105227529ea8ce3e222ee166e6.jpg', '', '0', '0', '0', '', '2', '1610615667', '0');
+INSERT INTO `ey_product_img` VALUES ('227', '89', 'Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/b0a46af69ac9c4148b345eb71104c811.jpg', '', '0', '0', '0', '', '1', '1610615667', '0');
+INSERT INTO `ey_product_img` VALUES ('226', '90', '小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/2a8aa14ac6f3823617e9aa20ddcb2a05.jpg', '', '0', '0', '0', '', '3', '1610615660', '0');
+INSERT INTO `ey_product_img` VALUES ('225', '90', '小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/de250eebee6f348b1e3d4c3416d6a541.jpg', '', '0', '0', '0', '', '2', '1610615660', '0');
+INSERT INTO `ey_product_img` VALUES ('224', '90', '小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/b3cc010ae2ff9784be8f19758fe56b6b.jpg', '', '0', '0', '0', '', '1', '1610615660', '0');
+INSERT INTO `ey_product_img` VALUES ('223', '98', 'MIIX520 二合一笔记本12.2英寸 i7', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/7dd05a89099c482a51be7faf1bb38ad4.jpg', '', '0', '0', '0', '', '1', '1610615629', '0');
+INSERT INTO `ey_product_img` VALUES ('222', '99', 'MIIX 520 酷睿i5笔记本', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/821fcaa266d291b4f504fb9a1d412c1c.jpg', '', '0', '0', '0', '', '1', '1610615619', '0');
+INSERT INTO `ey_product_img` VALUES ('221', '100', '小新 Air 超轻薄笔记本', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/a4b1ab346ae389e638f4a424b7396ee2.jpg', '', '0', '0', '0', '', '1', '1610615609', '0');
+INSERT INTO `ey_product_img` VALUES ('220', '101', '联想 X1无线运动蓝牙耳机', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/3ade68e134d3f8fbbd3401c545541106.jpg', '', '0', '0', '0', '', '1', '1610615602', '0');
+INSERT INTO `ey_product_img` VALUES ('219', '102', '联想智能音箱MINI', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/989d19deb2377e199ec63d5ef9244be8.jpg', '', '0', '0', '0', '', '1', '1610615586', '0');
+INSERT INTO `ey_product_img` VALUES ('218', '103', '联想智能音箱G1', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/13fba5d0f2454c4b8fee4ada1d3fb39b.jpg', '', '0', '0', '0', '', '1', '1610615580', '0');
 
 -- -----------------------------
 -- Table structure for `ey_product_netdisk`
@@ -2519,6 +3110,8 @@ CREATE TABLE `ey_product_spec_data` (
   `spec_value_id` int(10) DEFAULT '0' COMMENT '规格值ID',
   `spec_value` varchar(100) DEFAULT '' COMMENT '规格值',
   `spec_is_select` tinyint(1) DEFAULT '0' COMMENT '是否选中（0=否，1=是）',
+  `open_image` tinyint(1) unsigned DEFAULT '0' COMMENT '规格是否开启图片',
+  `spec_image` varchar(255) DEFAULT '' COMMENT '规格图片',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
@@ -2528,39 +3121,59 @@ CREATE TABLE `ey_product_spec_data` (
 -- -----------------------------
 -- Records of `ey_product_spec_data`
 -- -----------------------------
-INSERT INTO `ey_product_spec_data` VALUES ('1', '27', '1', '产品颜色', '1', '红', '1', 'cn', '1571037785', '1571037789');
-INSERT INTO `ey_product_spec_data` VALUES ('2', '27', '1', '产品颜色', '2', '蓝', '1', 'cn', '1571037785', '1571037790');
-INSERT INTO `ey_product_spec_data` VALUES ('3', '27', '1', '产品颜色', '3', '黄', '1', 'cn', '1571037785', '1571037792');
-INSERT INTO `ey_product_spec_data` VALUES ('4', '37', '1', '产品颜色', '1', '红', '1', 'cn', '1571037916', '1571037918');
-INSERT INTO `ey_product_spec_data` VALUES ('5', '37', '1', '产品颜色', '2', '蓝', '1', 'cn', '1571037916', '1571037919');
-INSERT INTO `ey_product_spec_data` VALUES ('6', '37', '1', '产品颜色', '3', '黄', '1', 'cn', '1571037916', '1571037920');
-INSERT INTO `ey_product_spec_data` VALUES ('7', '90', '1', '产品颜色', '1', '红', '1', 'cn', '1571038017', '1571038018');
-INSERT INTO `ey_product_spec_data` VALUES ('8', '90', '1', '产品颜色', '2', '蓝', '1', 'cn', '1571038017', '1571038019');
-INSERT INTO `ey_product_spec_data` VALUES ('9', '90', '1', '产品颜色', '3', '黄', '1', 'cn', '1571038017', '1571038020');
-INSERT INTO `ey_product_spec_data` VALUES ('10', '102', '1', '产品颜色', '1', '红', '1', 'cn', '1571038068', '1571038070');
-INSERT INTO `ey_product_spec_data` VALUES ('11', '102', '1', '产品颜色', '2', '蓝', '1', 'cn', '1571038068', '1571038071');
-INSERT INTO `ey_product_spec_data` VALUES ('12', '102', '1', '产品颜色', '3', '黄', '1', 'cn', '1571038068', '1571038072');
-INSERT INTO `ey_product_spec_data` VALUES ('13', '103', '1', '产品颜色', '1', '红', '1', 'cn', '1571038093', '1571038095');
-INSERT INTO `ey_product_spec_data` VALUES ('14', '103', '1', '产品颜色', '2', '蓝', '1', 'cn', '1571038093', '1571038097');
-INSERT INTO `ey_product_spec_data` VALUES ('15', '103', '1', '产品颜色', '3', '黄', '1', 'cn', '1571038093', '1571038098');
-INSERT INTO `ey_product_spec_data` VALUES ('16', '101', '1', '产品颜色', '1', '红', '1', 'cn', '1571038124', '1571038126');
-INSERT INTO `ey_product_spec_data` VALUES ('17', '101', '1', '产品颜色', '2', '蓝', '1', 'cn', '1571038124', '1571038127');
-INSERT INTO `ey_product_spec_data` VALUES ('18', '101', '1', '产品颜色', '3', '黄', '1', 'cn', '1571038124', '1571038129');
-INSERT INTO `ey_product_spec_data` VALUES ('19', '29', '1', '产品颜色', '1', '红', '1', 'cn', '1571038143', '1571038146');
-INSERT INTO `ey_product_spec_data` VALUES ('20', '29', '1', '产品颜色', '2', '蓝', '1', 'cn', '1571038143', '1571038147');
-INSERT INTO `ey_product_spec_data` VALUES ('21', '29', '1', '产品颜色', '3', '黄', '1', 'cn', '1571038143', '1571038148');
-INSERT INTO `ey_product_spec_data` VALUES ('22', '28', '1', '产品颜色', '1', '红', '1', 'cn', '1571038168', '1571038170');
-INSERT INTO `ey_product_spec_data` VALUES ('23', '28', '1', '产品颜色', '2', '蓝', '1', 'cn', '1571038168', '1571038171');
-INSERT INTO `ey_product_spec_data` VALUES ('24', '28', '1', '产品颜色', '3', '黄', '1', 'cn', '1571038168', '1571038172');
-INSERT INTO `ey_product_spec_data` VALUES ('25', '98', '1', '产品颜色', '1', '红', '1', 'cn', '1571038214', '1571038215');
-INSERT INTO `ey_product_spec_data` VALUES ('26', '98', '1', '产品颜色', '2', '蓝', '1', 'cn', '1571038214', '1571038216');
-INSERT INTO `ey_product_spec_data` VALUES ('27', '98', '1', '产品颜色', '3', '黄', '1', 'cn', '1571038214', '1571038217');
-INSERT INTO `ey_product_spec_data` VALUES ('28', '99', '1', '产品颜色', '1', '红', '1', 'cn', '1571038241', '1571038242');
-INSERT INTO `ey_product_spec_data` VALUES ('29', '99', '1', '产品颜色', '2', '蓝', '1', 'cn', '1571038241', '1571038244');
-INSERT INTO `ey_product_spec_data` VALUES ('30', '99', '1', '产品颜色', '3', '黄', '1', 'cn', '1571038241', '1571038243');
-INSERT INTO `ey_product_spec_data` VALUES ('31', '100', '1', '产品颜色', '1', '红', '1', 'cn', '1571038261', '1571038263');
-INSERT INTO `ey_product_spec_data` VALUES ('32', '100', '1', '产品颜色', '2', '蓝', '1', 'cn', '1571038261', '1571038264');
-INSERT INTO `ey_product_spec_data` VALUES ('33', '100', '1', '产品颜色', '3', '黄', '1', 'cn', '1571038261', '1571038264');
+INSERT INTO `ey_product_spec_data` VALUES ('1', '27', '1', '产品颜色', '1', '红', '1', '0', '', 'cn', '1571037785', '1571037789');
+INSERT INTO `ey_product_spec_data` VALUES ('2', '27', '1', '产品颜色', '2', '蓝', '1', '0', '', 'cn', '1571037785', '1571037790');
+INSERT INTO `ey_product_spec_data` VALUES ('3', '27', '1', '产品颜色', '3', '黄', '1', '0', '', 'cn', '1571037785', '1571037792');
+INSERT INTO `ey_product_spec_data` VALUES ('4', '37', '1', '产品颜色', '1', '红', '1', '0', '', 'cn', '1571037916', '1571037918');
+INSERT INTO `ey_product_spec_data` VALUES ('5', '37', '1', '产品颜色', '2', '蓝', '1', '0', '', 'cn', '1571037916', '1571037919');
+INSERT INTO `ey_product_spec_data` VALUES ('6', '37', '1', '产品颜色', '3', '黄', '1', '0', '', 'cn', '1571037916', '1571037920');
+INSERT INTO `ey_product_spec_data` VALUES ('7', '90', '1', '产品颜色', '1', '红', '1', '0', '', 'cn', '1571038017', '1571038018');
+INSERT INTO `ey_product_spec_data` VALUES ('8', '90', '1', '产品颜色', '2', '蓝', '1', '0', '', 'cn', '1571038017', '1571038019');
+INSERT INTO `ey_product_spec_data` VALUES ('9', '90', '1', '产品颜色', '3', '黄', '1', '0', '', 'cn', '1571038017', '1571038020');
+INSERT INTO `ey_product_spec_data` VALUES ('10', '102', '1', '产品颜色', '1', '红', '1', '0', '', 'cn', '1571038068', '1571038070');
+INSERT INTO `ey_product_spec_data` VALUES ('11', '102', '1', '产品颜色', '2', '蓝', '1', '0', '', 'cn', '1571038068', '1571038071');
+INSERT INTO `ey_product_spec_data` VALUES ('12', '102', '1', '产品颜色', '3', '黄', '1', '0', '', 'cn', '1571038068', '1571038072');
+INSERT INTO `ey_product_spec_data` VALUES ('13', '103', '1', '产品颜色', '1', '红', '1', '0', '', 'cn', '1571038093', '1571038095');
+INSERT INTO `ey_product_spec_data` VALUES ('14', '103', '1', '产品颜色', '2', '蓝', '1', '0', '', 'cn', '1571038093', '1571038097');
+INSERT INTO `ey_product_spec_data` VALUES ('15', '103', '1', '产品颜色', '3', '黄', '1', '0', '', 'cn', '1571038093', '1571038098');
+INSERT INTO `ey_product_spec_data` VALUES ('16', '101', '1', '产品颜色', '1', '红', '1', '0', '', 'cn', '1571038124', '1571038126');
+INSERT INTO `ey_product_spec_data` VALUES ('17', '101', '1', '产品颜色', '2', '蓝', '1', '0', '', 'cn', '1571038124', '1571038127');
+INSERT INTO `ey_product_spec_data` VALUES ('18', '101', '1', '产品颜色', '3', '黄', '1', '0', '', 'cn', '1571038124', '1571038129');
+INSERT INTO `ey_product_spec_data` VALUES ('19', '29', '1', '产品颜色', '1', '红', '1', '0', '', 'cn', '1571038143', '1571038146');
+INSERT INTO `ey_product_spec_data` VALUES ('20', '29', '1', '产品颜色', '2', '蓝', '1', '0', '', 'cn', '1571038143', '1571038147');
+INSERT INTO `ey_product_spec_data` VALUES ('21', '29', '1', '产品颜色', '3', '黄', '1', '0', '', 'cn', '1571038143', '1571038148');
+INSERT INTO `ey_product_spec_data` VALUES ('22', '28', '1', '产品颜色', '1', '红', '1', '0', '', 'cn', '1571038168', '1571038170');
+INSERT INTO `ey_product_spec_data` VALUES ('23', '28', '1', '产品颜色', '2', '蓝', '1', '0', '', 'cn', '1571038168', '1571038171');
+INSERT INTO `ey_product_spec_data` VALUES ('24', '28', '1', '产品颜色', '3', '黄', '1', '0', '', 'cn', '1571038168', '1571038172');
+INSERT INTO `ey_product_spec_data` VALUES ('25', '98', '1', '产品颜色', '1', '红', '1', '0', '', 'cn', '1571038214', '1571038215');
+INSERT INTO `ey_product_spec_data` VALUES ('26', '98', '1', '产品颜色', '2', '蓝', '1', '0', '', 'cn', '1571038214', '1571038216');
+INSERT INTO `ey_product_spec_data` VALUES ('27', '98', '1', '产品颜色', '3', '黄', '1', '0', '', 'cn', '1571038214', '1571038217');
+INSERT INTO `ey_product_spec_data` VALUES ('28', '99', '1', '产品颜色', '1', '红', '1', '0', '', 'cn', '1571038241', '1571038242');
+INSERT INTO `ey_product_spec_data` VALUES ('29', '99', '1', '产品颜色', '2', '蓝', '1', '0', '', 'cn', '1571038241', '1571038244');
+INSERT INTO `ey_product_spec_data` VALUES ('30', '99', '1', '产品颜色', '3', '黄', '1', '0', '', 'cn', '1571038241', '1571038243');
+INSERT INTO `ey_product_spec_data` VALUES ('31', '100', '1', '产品颜色', '1', '红', '1', '0', '', 'cn', '1571038261', '1571038263');
+INSERT INTO `ey_product_spec_data` VALUES ('32', '100', '1', '产品颜色', '2', '蓝', '1', '0', '', 'cn', '1571038261', '1571038264');
+INSERT INTO `ey_product_spec_data` VALUES ('33', '100', '1', '产品颜色', '3', '黄', '1', '0', '', 'cn', '1571038261', '1571038264');
+
+-- -----------------------------
+-- Table structure for `ey_product_spec_data_handle`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_product_spec_data_handle`;
+CREATE TABLE `ey_product_spec_data_handle` (
+  `spec_id` int(10) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
+  `aid` int(10) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
+  `spec_mark_id` int(10) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
+  `spec_name` varchar(100) DEFAULT '' COMMENT '对应 product_spec_data 数据表',
+  `spec_value_id` int(10) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
+  `spec_value` varchar(100) DEFAULT '' COMMENT '对应 product_spec_data 数据表',
+  `spec_is_select` tinyint(1) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
+  `open_image` tinyint(1) unsigned DEFAULT '0' COMMENT '规格是否开启图片',
+  `spec_image` varchar(255) DEFAULT '' COMMENT '规格图片',
+  `lang` varchar(50) DEFAULT 'cn' COMMENT '对应 product_spec_data 数据表',
+  `add_time` int(11) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
+  `update_time` int(11) DEFAULT '0' COMMENT '对应 product_spec_data 数据表'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='商品规格表(product_spec_data)预处理规格数据表';
+
 
 -- -----------------------------
 -- Table structure for `ey_product_spec_preset`
@@ -2573,6 +3186,8 @@ CREATE TABLE `ey_product_spec_preset` (
   `preset_value` varchar(100) DEFAULT '' COMMENT '规格值',
   `spec_sync` tinyint(1) unsigned DEFAULT '0' COMMENT '是否同步到已发布的商品规格：0否，1是。',
   `sort_order` int(10) DEFAULT '100' COMMENT '排序号',
+  `merchant_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '多商家ID',
+  `product_add` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否在商品添加或编辑页添加的规格信息，0否，1是，默认0',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
@@ -2582,9 +3197,9 @@ CREATE TABLE `ey_product_spec_preset` (
 -- -----------------------------
 -- Records of `ey_product_spec_preset`
 -- -----------------------------
-INSERT INTO `ey_product_spec_preset` VALUES ('1', '1', '产品颜色', '红', '0', '100', 'cn', '1565752372', '1565752623');
-INSERT INTO `ey_product_spec_preset` VALUES ('2', '1', '产品颜色', '蓝', '0', '100', 'cn', '1565752372', '1565752623');
-INSERT INTO `ey_product_spec_preset` VALUES ('3', '1', '产品颜色', '黄', '0', '100', 'cn', '1565752372', '1565752623');
+INSERT INTO `ey_product_spec_preset` VALUES ('1', '1', '产品颜色', '红', '0', '100', '0', '0', 'cn', '1565752372', '1565752623');
+INSERT INTO `ey_product_spec_preset` VALUES ('2', '1', '产品颜色', '蓝', '0', '100', '0', '0', 'cn', '1565752372', '1565752623');
+INSERT INTO `ey_product_spec_preset` VALUES ('3', '1', '产品颜色', '黄', '0', '100', '0', '0', 'cn', '1565752372', '1565752623');
 
 -- -----------------------------
 -- Table structure for `ey_product_spec_value`
@@ -2595,54 +3210,103 @@ CREATE TABLE `ey_product_spec_value` (
   `aid` int(10) NOT NULL DEFAULT '0' COMMENT '产品ID',
   `spec_value_id` varchar(100) NOT NULL DEFAULT '' COMMENT '规格值ID',
   `spec_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '规格价格',
+  `spec_crossed_price` decimal(10,2) unsigned NOT NULL DEFAULT '0.00' COMMENT '商品规格划线价',
   `spec_stock` int(10) NOT NULL DEFAULT '0' COMMENT '规格库存',
   `spec_sales_num` int(10) NOT NULL DEFAULT '0' COMMENT '销售量',
   `seckill_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '秒杀价格',
-  `seckill_stock` int(10) NOT NULL DEFAULT '0' COMMENT '秒杀库存(独立库存，与spec_stock库存不同步)',
+  `seckill_stock` int(10) NOT NULL DEFAULT '0' COMMENT '秒杀库存(独立库存，与spec_stock/限时折扣库存不同步)',
   `seckill_sales_num` int(10) NOT NULL DEFAULT '0' COMMENT '秒杀销售量',
   `is_seckill` tinyint(1) NOT NULL DEFAULT '0' COMMENT '0-普通 1-秒杀',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  `discount_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '限时折扣价格',
+  `discount_stock` int(10) NOT NULL DEFAULT '0' COMMENT '限时折扣库存(独立库存，与spec_stock/秒杀库存不同步)',
+  `discount_sales_num` int(10) NOT NULL DEFAULT '0' COMMENT '限时折扣销售量',
+  `is_discount` tinyint(1) NOT NULL DEFAULT '0' COMMENT '0-普通 1-限时折扣',
   PRIMARY KEY (`value_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=121 DEFAULT CHARSET=utf8 COMMENT='产品多规格组装表';
 
 -- -----------------------------
 -- Records of `ey_product_spec_value`
 -- -----------------------------
-INSERT INTO `ey_product_spec_value` VALUES ('120', '27', '3', '1999.00', '996', '3', '0.00', '0', '0', '0', 'cn', '1610615791', '1610615791');
-INSERT INTO `ey_product_spec_value` VALUES ('119', '27', '2', '1959.00', '997', '2', '0.00', '0', '0', '0', 'cn', '1610615791', '1610615791');
-INSERT INTO `ey_product_spec_value` VALUES ('118', '27', '1', '1909.00', '998', '1', '0.00', '0', '0', '0', 'cn', '1610615791', '1610615791');
-INSERT INTO `ey_product_spec_value` VALUES ('111', '37', '3', '3200.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615751', '1610615751');
-INSERT INTO `ey_product_spec_value` VALUES ('110', '37', '2', '3169.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615751', '1610615751');
-INSERT INTO `ey_product_spec_value` VALUES ('109', '37', '1', '3109.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615751', '1610615751');
-INSERT INTO `ey_product_spec_value` VALUES ('108', '90', '3', '1799.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615660', '1610615660');
-INSERT INTO `ey_product_spec_value` VALUES ('107', '90', '2', '1759.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615660', '1610615660');
-INSERT INTO `ey_product_spec_value` VALUES ('106', '90', '1', '1709.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615660', '1610615660');
-INSERT INTO `ey_product_spec_value` VALUES ('93', '102', '3', '339.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615586', '1610615586');
-INSERT INTO `ey_product_spec_value` VALUES ('92', '102', '2', '329.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615586', '1610615586');
-INSERT INTO `ey_product_spec_value` VALUES ('91', '102', '1', '319.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615586', '1610615586');
-INSERT INTO `ey_product_spec_value` VALUES ('90', '103', '3', '599.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615580', '1610615580');
-INSERT INTO `ey_product_spec_value` VALUES ('89', '103', '2', '569.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615580', '1610615580');
-INSERT INTO `ey_product_spec_value` VALUES ('88', '103', '1', '539.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615580', '1610615580');
-INSERT INTO `ey_product_spec_value` VALUES ('96', '101', '3', '99.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615602', '1610615602');
-INSERT INTO `ey_product_spec_value` VALUES ('95', '101', '2', '99.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615602', '1610615602');
-INSERT INTO `ey_product_spec_value` VALUES ('94', '101', '1', '99.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615602', '1610615602');
-INSERT INTO `ey_product_spec_value` VALUES ('114', '29', '3', '198.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615773', '1610615773');
-INSERT INTO `ey_product_spec_value` VALUES ('113', '29', '2', '198.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615773', '1610615773');
-INSERT INTO `ey_product_spec_value` VALUES ('112', '29', '1', '198.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615773', '1610615773');
-INSERT INTO `ey_product_spec_value` VALUES ('117', '28', '3', '4600.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615782', '1610615782');
-INSERT INTO `ey_product_spec_value` VALUES ('116', '28', '2', '4560.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615782', '1610615782');
-INSERT INTO `ey_product_spec_value` VALUES ('115', '28', '1', '4530.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615782', '1610615782');
-INSERT INTO `ey_product_spec_value` VALUES ('105', '98', '3', '6999.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615629', '1610615629');
-INSERT INTO `ey_product_spec_value` VALUES ('104', '98', '2', '6969.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615629', '1610615629');
-INSERT INTO `ey_product_spec_value` VALUES ('103', '98', '1', '6939.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615629', '1610615629');
-INSERT INTO `ey_product_spec_value` VALUES ('102', '99', '3', '5269.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615619', '1610615619');
-INSERT INTO `ey_product_spec_value` VALUES ('101', '99', '2', '5299.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615619', '1610615619');
-INSERT INTO `ey_product_spec_value` VALUES ('100', '99', '1', '5239.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615619', '1610615619');
-INSERT INTO `ey_product_spec_value` VALUES ('99', '100', '3', '5499.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615609', '1610615609');
-INSERT INTO `ey_product_spec_value` VALUES ('98', '100', '2', '5499.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615609', '1610615609');
-INSERT INTO `ey_product_spec_value` VALUES ('97', '100', '1', '5499.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615609', '1610615609');
+INSERT INTO `ey_product_spec_value` VALUES ('120', '27', '3', '1999.00', '0.00', '996', '3', '0.00', '0', '0', '0', 'cn', '1610615791', '1610615791', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('119', '27', '2', '1959.00', '0.00', '997', '2', '0.00', '0', '0', '0', 'cn', '1610615791', '1610615791', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('118', '27', '1', '1909.00', '0.00', '998', '1', '0.00', '0', '0', '0', 'cn', '1610615791', '1610615791', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('111', '37', '3', '3200.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615751', '1610615751', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('110', '37', '2', '3169.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615751', '1610615751', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('109', '37', '1', '3109.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615751', '1610615751', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('108', '90', '3', '1799.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615660', '1610615660', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('107', '90', '2', '1759.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615660', '1610615660', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('106', '90', '1', '1709.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615660', '1610615660', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('93', '102', '3', '339.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615586', '1610615586', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('92', '102', '2', '329.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615586', '1610615586', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('91', '102', '1', '319.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615586', '1610615586', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('90', '103', '3', '599.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615580', '1610615580', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('89', '103', '2', '569.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615580', '1610615580', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('88', '103', '1', '539.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615580', '1610615580', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('96', '101', '3', '99.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615602', '1610615602', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('95', '101', '2', '99.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615602', '1610615602', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('94', '101', '1', '99.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615602', '1610615602', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('114', '29', '3', '198.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615773', '1610615773', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('113', '29', '2', '198.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615773', '1610615773', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('112', '29', '1', '198.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615773', '1610615773', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('117', '28', '3', '4600.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615782', '1610615782', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('116', '28', '2', '4560.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615782', '1610615782', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('115', '28', '1', '4530.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615782', '1610615782', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('105', '98', '3', '6999.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615629', '1610615629', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('104', '98', '2', '6969.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615629', '1610615629', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('103', '98', '1', '6939.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615629', '1610615629', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('102', '99', '3', '5269.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615619', '1610615619', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('101', '99', '2', '5299.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615619', '1610615619', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('100', '99', '1', '5239.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615619', '1610615619', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('99', '100', '3', '5499.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615609', '1610615609', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('98', '100', '2', '5499.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615609', '1610615609', '0.00', '0', '0', '0');
+INSERT INTO `ey_product_spec_value` VALUES ('97', '100', '1', '5499.00', '0.00', '999', '0', '0.00', '0', '0', '0', 'cn', '1610615609', '1610615609', '0.00', '0', '0', '0');
+
+-- -----------------------------
+-- Table structure for `ey_product_spec_value_handle`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_product_spec_value_handle`;
+CREATE TABLE `ey_product_spec_value_handle` (
+  `value_id` int(20) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
+  `aid` int(10) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
+  `spec_value_id` varchar(100) NOT NULL DEFAULT '' COMMENT '对应 product_spec_value 数据表',
+  `spec_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '对应 product_spec_value 数据表',
+  `spec_crossed_price` decimal(10,2) unsigned NOT NULL DEFAULT '0.00' COMMENT '商品规格划线价',
+  `spec_stock` int(10) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
+  `spec_sales_num` int(10) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
+  `lang` varchar(50) DEFAULT 'cn' COMMENT '对应 product_spec_value 数据表',
+  `add_time` int(11) DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
+  `update_time` int(11) DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
+  `seckill_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '对应 product_spec_value 数据表',
+  `seckill_stock` int(10) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
+  `seckill_sales_num` int(10) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
+  `is_seckill` tinyint(1) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
+  `discount_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '对应 product_spec_value 数据表',
+  `discount_stock` int(10) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
+  `discount_sales_num` int(10) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
+  `is_discount` tinyint(1) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
+  PRIMARY KEY (`value_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='商品规格价格表(product_spec_value)预处理规格价格表';
+
+
+-- -----------------------------
+-- Table structure for `ey_product_users_discount`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_product_users_discount`;
+CREATE TABLE `ey_product_users_discount` (
+  `users_discount_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `aid` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '产品ID',
+  `level_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员等级ID',
+  `users_discount_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '会员等级价格',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '下单时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`users_discount_id`),
+  KEY `aid` (`aid`) USING BTREE,
+  KEY `level_id` (`level_id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='产品指定会员等级折扣列表';
+
 
 -- -----------------------------
 -- Table structure for `ey_quickentry`
@@ -2653,60 +3317,89 @@ CREATE TABLE `ey_quickentry` (
   `title` varchar(20) DEFAULT '' COMMENT '名称',
   `laytext` varchar(50) DEFAULT '' COMMENT '完整标题',
   `type` smallint(5) DEFAULT '0' COMMENT '归类，1=快捷入口，2=内容统计',
-  `controller` varchar(20) DEFAULT '' COMMENT '控制器名',
+  `controller` varchar(50) DEFAULT '' COMMENT '控制器名',
   `action` varchar(20) DEFAULT '' COMMENT '操作名',
   `vars` varchar(100) DEFAULT '' COMMENT 'URL参数字符串',
   `groups` smallint(5) DEFAULT '0' COMMENT '分组，1=模型',
   `checked` tinyint(4) DEFAULT '0' COMMENT '选中，0=否，1=是',
+  `litpic` varchar(100) DEFAULT '',
+  `statistics_type` int(5) DEFAULT '0' COMMENT 'statistics_data表对应的type值',
   `status` tinyint(1) DEFAULT '1' COMMENT '状态，1=有效，0=无效',
   `sort_order` int(10) DEFAULT '0' COMMENT '排序',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `type` (`type`,`status`) USING BTREE
-) ENGINE=MyISAM AUTO_INCREMENT=42 DEFAULT CHARSET=utf8 COMMENT='快捷入口表';
+) ENGINE=MyISAM AUTO_INCREMENT=69 DEFAULT CHARSET=utf8 COMMENT='快捷入口表';
 
 -- -----------------------------
 -- Records of `ey_quickentry`
 -- -----------------------------
-INSERT INTO `ey_quickentry` VALUES ('1', '产品', '产品列表', '1', 'Product', 'index', 'channel=2', '1', '0', '1', '3', '1569232484', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('2', '下载', '下载列表', '1', 'Download', 'index', 'channel=4', '1', '0', '1', '4', '1569232484', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('3', '文章', '文章列表', '1', 'Article', 'index', 'channel=1', '1', '0', '1', '6', '1569232484', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('4', '图集', '图集列表', '1', 'Images', 'index', 'channel=3', '1', '0', '1', '7', '1569232484', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('5', '内容管理', '内容列表', '1', 'Archives', 'index', '', '0', '0', '1', '13', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('7', '回收站', '回收站', '1', 'RecycleBin', 'archives_index', '', '0', '1', '1', '4', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('8', '栏目管理', '栏目管理', '1', 'Arctype', 'index', '', '0', '0', '1', '5', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('9', '留言', '留言列表', '1', 'Guestbook', 'index', 'channel=8', '1', '0', '1', '6', '1569232484', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('10', '网站信息', '网站信息', '1', 'System', 'web', '', '0', '0', '1', '7', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('11', '水印配置', '水印配置', '1', 'System', 'water', '', '0', '1', '1', '8', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('12', '缩略图配置', '缩略图配置', '1', 'System', 'thumb', '', '0', '1', '1', '9', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('13', '数据备份', '数据备份', '1', 'Tools', 'index', '', '0', '0', '1', '11', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('14', 'URL配置', 'URL配置', '1', 'Seo', 'seo', '', '0', '1', '1', '1', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('15', '模板管理', '模板管理', '1', 'Filemanager', 'index', '', '0', '1', '1', '6', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('16', 'SiteMap', 'SiteMap', '1', 'Sitemap', 'index', '', '0', '1', '1', '12', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('17', '频道模型', '频道模型', '1', 'Channeltype', 'index', '', '0', '1', '1', '2', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('18', '广告管理', '广告管理', '1', 'AdPosition', 'index', '', '0', '0', '1', '3', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('19', '友情链接', '友情链接', '1', 'Links', 'index', '', '0', '0', '1', '10', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('20', 'Tags管理', 'Tags管理', '1', 'Tags', 'index', '', '0', '1', '1', '14', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('21', '管理员管理', '管理员管理', '1', 'Admin', 'index', '', '0', '0', '1', '15', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('22', '接口配置', '接口配置', '1', 'System', 'api_conf', '', '0', '1', '1', '16', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('23', '文章', '文章列表', '2', 'Article', 'index', 'channel=1', '1', '1', '1', '1', '1569310798', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('24', '产品', '产品列表', '2', 'Product', 'index', 'channel=2', '1', '0', '1', '2', '1569310798', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('25', '下载', '下载列表', '2', 'Download', 'index', 'channel=4', '1', '0', '1', '4', '1569310798', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('26', '图集', '图集列表', '2', 'Images', 'index', 'channel=3', '1', '0', '1', '3', '1569310798', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('27', '留言', '留言列表', '2', 'Guestbook', 'index', 'channel=8', '1', '0', '1', '5', '1569310798', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('28', '广告', '广告管理', '2', 'AdPosition', 'index', '', '0', '1', '1', '8', '1569232484', '1571898872');
-INSERT INTO `ey_quickentry` VALUES ('29', '友情链接', '友情链接', '2', 'Links', 'index', '', '0', '1', '1', '9', '1569232484', '1571898872');
-INSERT INTO `ey_quickentry` VALUES ('30', 'Tags标签', 'Tags管理', '2', 'Tags', 'index', '', '0', '1', '1', '10', '1569232484', '1571898872');
-INSERT INTO `ey_quickentry` VALUES ('31', '会员', '会员管理', '2', 'Member', 'users_index', '', '0', '0', '1', '7', '1569232484', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('32', '插件应用', '插件应用', '1', 'Weapp', 'index', '', '0', '0', '1', '17', '1569232484', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('33', '会员中心', '会员中心', '1', 'Member', 'users_index', '', '0', '0', '1', '18', '1569232484', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('34', '商城中心', '商城中心', '1', 'Shop', 'index', '', '0', '0', '0', '19', '1569232484', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('35', '订单', '订单管理', '2', 'Shop', 'index', '', '0', '0', '0', '6', '1569232484', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('36', '人才招聘', '人才招聘列表', '1', 'Custom', 'index', 'channel=9', '1', '0', '1', '100', '1574233851', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('37', '人才招聘', '人才招聘列表', '2', 'Custom', 'index', 'channel=9', '1', '0', '1', '100', '1574233853', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('39', '专题', '专题列表', '2', 'Special', 'index', 'channel=7', '1', '0', '0', '7', '1600078966', '1624416370');
-INSERT INTO `ey_quickentry` VALUES ('41', '视频', '视频列表', '2', 'Media', 'index', 'channel=5', '1', '0', '0', '4', '1569310798', '1624416370');
+INSERT INTO `ey_quickentry` VALUES ('1', '产品', '产品列表', '1', 'Product', 'index', 'channel=2', '1', '0', '', '0', '1', '3', '1569232484', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('2', '下载', '下载列表', '1', 'Download', 'index', 'channel=4', '1', '0', '', '0', '1', '4', '1569232484', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('3', '文章', '文章列表', '1', 'Article', 'index', 'channel=1', '1', '0', '', '0', '1', '6', '1569232484', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('4', '图集', '图集列表', '1', 'Images', 'index', 'channel=3', '1', '0', '', '0', '1', '7', '1569232484', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('5', '内容管理', '内容列表', '1', 'Archives', 'index', '', '0', '0', '', '0', '1', '13', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('7', '回收站', '回收站', '1', 'RecycleBin', 'archives_index', '', '0', '1', '', '0', '1', '4', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('8', '栏目管理', '栏目管理', '1', 'Arctype', 'index', '', '0', '0', '', '0', '1', '5', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('9', '留言', '留言管理', '1', 'Form', 'index', '', '1', '0', '', '0', '1', '6', '1569232484', '1680508811');
+INSERT INTO `ey_quickentry` VALUES ('10', '网站信息', '网站信息', '1', 'System', 'web', '', '0', '0', '', '0', '1', '7', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('11', '水印配置', '水印配置', '1', 'System', 'water', '', '0', '1', '', '0', '1', '8', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('12', '缩略图配置', '缩略图配置', '1', 'System', 'thumb', '', '0', '1', '', '0', '1', '9', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('13', '数据备份', '数据备份', '1', 'Tools', 'index', '', '0', '0', '', '0', '1', '11', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('14', 'URL配置', 'URL配置', '1', 'Seo', 'seo', '', '0', '1', '', '0', '1', '1', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('15', '模板管理', '模板管理', '1', 'Filemanager', 'index', '', '0', '1', '', '0', '1', '6', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('16', 'SiteMap', 'SiteMap', '1', 'Sitemap', 'index', '', '0', '1', '', '0', '1', '12', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('17', '频道模型', '频道模型', '1', 'Channeltype', 'index', '', '0', '1', '', '0', '1', '2', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('18', '广告管理', '广告管理', '1', 'AdPosition', 'index', '', '0', '0', '', '0', '1', '3', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('19', '友情链接', '友情链接', '1', 'Links', 'index', '', '0', '0', '', '0', '1', '10', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('20', 'Tags管理', 'Tags管理', '1', 'Tags', 'index', '', '0', '1', '', '0', '1', '14', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('21', '管理员管理', '管理员管理', '1', 'Admin', 'index', '', '0', '0', '', '0', '1', '15', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('22', '接口配置', '接口配置', '1', 'System', 'api_conf', '', '0', '1', '', '0', '1', '16', '1569232484', '1571893529');
+INSERT INTO `ey_quickentry` VALUES ('23', '文章', '文章列表', '2', 'Article', 'index', 'channel=1', '1', '1', '', '0', '1', '1', '1569310798', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('24', '产品', '产品列表', '2', 'Product', 'index', 'channel=2', '1', '0', '', '0', '1', '2', '1569310798', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('25', '下载', '下载列表', '2', 'Download', 'index', 'channel=4', '1', '0', '', '0', '1', '4', '1569310798', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('26', '图集', '图集列表', '2', 'Images', 'index', 'channel=3', '1', '0', '', '0', '1', '3', '1569310798', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('27', '留言', '留言管理', '2', 'Form', 'index', '', '1', '0', '', '0', '1', '5', '1569310798', '1680508811');
+INSERT INTO `ey_quickentry` VALUES ('28', '广告', '广告管理', '2', 'AdPosition', 'index', '', '0', '1', '', '0', '1', '8', '1569232484', '1571898872');
+INSERT INTO `ey_quickentry` VALUES ('29', '友情链接', '友情链接', '2', 'Links', 'index', '', '0', '1', '', '0', '1', '9', '1569232484', '1571898872');
+INSERT INTO `ey_quickentry` VALUES ('30', 'Tags标签', 'Tags管理', '2', 'Tags', 'index', '', '0', '1', '', '0', '1', '10', '1569232484', '1571898872');
+INSERT INTO `ey_quickentry` VALUES ('31', '会员', '会员管理', '2', 'Member', 'users_index', '', '0', '0', '', '0', '1', '7', '1569232484', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('32', '插件应用', '插件应用', '1', 'Weapp', 'index', '', '0', '0', '', '0', '1', '17', '1569232484', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('33', '会员中心', '会员中心', '1', 'Member', 'users_index', '', '0', '0', '', '0', '1', '18', '1569232484', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('34', '商城中心', '商城中心', '1', 'Shop', 'index', '', '0', '0', '', '0', '0', '19', '1569232484', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('35', '订单', '订单管理', '2', 'Shop', 'index', '', '0', '0', '', '0', '0', '6', '1569232484', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('36', '人才招聘', '人才招聘列表', '1', 'Custom', 'index', 'channel=9', '1', '0', '', '0', '1', '100', '1574233851', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('37', '人才招聘', '人才招聘列表', '2', 'Custom', 'index', 'channel=9', '1', '0', '', '0', '1', '100', '1574233853', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('39', '专题', '专题列表', '2', 'Special', 'index', 'channel=7', '1', '0', '', '0', '0', '7', '1600078966', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('41', '视频', '视频列表', '2', 'Media', 'index', 'channel=5', '1', '0', '', '0', '0', '4', '1569310798', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('42', '商品数', '商品总数', '21', 'ShopProduct', 'index', '', '1', '1', '', '6', '1', '1', '1569232484', '1681436771');
+INSERT INTO `ey_quickentry` VALUES ('43', '充值金额', '充值总额', '21', 'Member', 'money_index', 'status=2', '1', '0', '', '5', '1', '5', '1569232484', '1681436771');
+INSERT INTO `ey_quickentry` VALUES ('44', '会员数', '会员总数', '21', 'Member', 'users_index', '', '1', '0', '', '4', '1', '6', '1569232484', '1681436771');
+INSERT INTO `ey_quickentry` VALUES ('45', '销售额', '销售总额', '21', 'Statistics', 'index', 'conceal=1', '1', '1', '', '3', '1', '3', '1569232484', '1681436771');
+INSERT INTO `ey_quickentry` VALUES ('46', '订单数', '订单总数', '21', 'Order', 'index', '', '1', '1', '', '2', '1', '2', '1569232484', '1681436771');
+INSERT INTO `ey_quickentry` VALUES ('47', '浏览量', '总浏览量', '21', '', '', '', '1', '1', '', '1', '1', '4', '1569232484', '1681436771');
+INSERT INTO `ey_quickentry` VALUES ('48', '浏览量', '总浏览量', '31', '', '', '', '1', '1', '', '1', '1', '5', '1569232484', '1681461467');
+INSERT INTO `ey_quickentry` VALUES ('49', '订单数', '订单总数', '31', 'Order', 'index', '', '1', '1', '', '2', '1', '3', '1569232484', '1681461467');
+INSERT INTO `ey_quickentry` VALUES ('50', '销售额', '销售总额', '31', 'Statistics', 'index', 'conceal=1', '1', '1', '', '3', '1', '4', '1569232484', '1681461467');
+INSERT INTO `ey_quickentry` VALUES ('51', '会员数', '会员总数', '31', 'Member', 'users_index', '', '1', '1', '', '4', '1', '1', '1569232484', '1681461467');
+INSERT INTO `ey_quickentry` VALUES ('52', '充值金额', '充值总额', '31', 'Member', 'money_index', 'status=2', '1', '1', '', '5', '1', '6', '1569232484', '1681461467');
+INSERT INTO `ey_quickentry` VALUES ('53', '商品数', '商品总数', '31', 'ShopProduct', 'index', '', '1', '1', '', '6', '1', '2', '1569232484', '1681461467');
+INSERT INTO `ey_quickentry` VALUES ('54', '文章数', '文章总数', '31', 'Article', 'index', '', '1', '1', '', '7', '1', '7', '1569232484', '1681461467');
+INSERT INTO `ey_quickentry` VALUES ('55', 'TAG标签数', 'TAG标签总数', '31', 'Tags', 'index', '', '1', '1', '', '8', '1', '8', '1569232484', '1681461467');
+INSERT INTO `ey_quickentry` VALUES ('56', '待审文档', '待审总数', '31', 'Archives', 'index_draft', 'menu=1', '1', '1', '', '9', '1', '9', '1569232484', '1681461467');
+INSERT INTO `ey_quickentry` VALUES ('57', '充值订单', '充值订单', '11', 'Member', 'money_index', 'status=2', '0', '1', '/public/static/admin/images/theme/survey_chongzhi.png', '0', '1', '7', '1569232484', '1681436759');
+INSERT INTO `ey_quickentry` VALUES ('58', '订单查询', '订单查询', '11', 'Order', 'index', '', '0', '1', '/public/static/admin/images/theme/survey_dingdan.png', '0', '1', '2', '1569232484', '1681436759');
+INSERT INTO `ey_quickentry` VALUES ('59', '发布商品', '发布商品', '11', 'ShopProduct', 'add', 'firstrun=1', '0', '1', '/public/static/admin/images/theme/survey_fabu.png', '0', '1', '1', '1569232484', '1681436759');
+INSERT INTO `ey_quickentry` VALUES ('60', '前往发货', '前往发货', '11', 'Shop', 'index', 'order_status=1', '0', '1', '/public/static/admin/images/theme/survey_fahuo.png', '0', '1', '2', '1569232484', '1669604332');
+INSERT INTO `ey_quickentry` VALUES ('61', '会员管理', '会员管理', '11', 'Member', 'users_index', '', '0', '1', '/public/static/admin/images/theme/survey_huiyuan.png', '0', '1', '5', '1569232484', '1681436759');
+INSERT INTO `ey_quickentry` VALUES ('62', '主题风格', '主题风格', '11', 'Index', 'theme_index', '', '0', '0', '/public/static/admin/images/theme/survey_pifu.png', '0', '1', '10', '1569232484', '1681436759');
+INSERT INTO `ey_quickentry` VALUES ('63', '评价管理', '评价管理', '11', 'ShopComment', 'comment_index', '', '0', '1', '/public/static/admin/images/theme/survey_pingjia.png', '0', '1', '4', '1569232484', '1681436759');
+INSERT INTO `ey_quickentry` VALUES ('64', '售后维权', '售后维权', '11', 'ShopService', 'after_service', '', '0', '1', '/public/static/admin/images/theme/survey_weiquan.png', '0', '1', '3', '1569232484', '1681436759');
+INSERT INTO `ey_quickentry` VALUES ('65', '优惠券', '优惠券', '11', 'Coupon', 'index', '', '0', '1', '/public/static/admin/images/theme/survey_youhuiquan.png', '0', '1', '9', '1569232484', '1681436759');
+INSERT INTO `ey_quickentry` VALUES ('66', '运费模板', '运费模板', '11', 'Shop', 'shipping_template', '', '0', '1', '/public/static/admin/images/theme/survey_yunfei.png', '0', '1', '8', '1569232484', '1681436759');
+INSERT INTO `ey_quickentry` VALUES ('67', '支付设置', '支付设置', '11', 'System', 'api_conf', '', '0', '1', '/public/static/admin/images/theme/survey_zhifu.png', '0', '1', '6', '1569232484', '1681436759');
+INSERT INTO `ey_quickentry` VALUES ('68', '提货设置', '提货设置', '11', 'OrderVerify', 'drive_list', '', '0', '0', '/public/static/admin/images/theme/survey_ziti.png', '0', '1', '11', '1569232484', '1681436759');
 
 -- -----------------------------
 -- Table structure for `ey_recruit_content`
@@ -2728,15 +3421,6 @@ CREATE TABLE `ey_recruit_content` (
   KEY `aid` (`aid`) USING BTREE
 ) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='附加表';
 
--- -----------------------------
--- Records of `ey_recruit_content`
--- -----------------------------
-INSERT INTO `ey_recruit_content` VALUES ('1', '82', '1563528211', '1563528211', '广州市', '中专以上学历', '5000-10000元', '全职', '1年以上', '若干', '&lt;p&gt;工作内容：&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;1、负责公司手机游戏产品的在线推广；&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;2、做好每天的推广统计，定制有效的投放策略并执行；&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;3、完成每天的业绩要求，只要你努力，月入过万不是梦&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;职位要求：&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;1学历不限，欢迎优秀应届生（优秀者可放宽）；男女不限，19~24岁&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;2.亲和力强、沟通流畅、重点突出；&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;3.个性开朗、反应敏捷，有较强的服务意识和责任心；&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;4.能熟练运用QQ及微信聊天软件，懂得电脑的基本操作，打字速度不限&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;我们期待怀揣梦想的你加入我们！&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;5、有经验者优先考虑！！！！！&lt;/p&gt;');
-INSERT INTO `ey_recruit_content` VALUES ('2', '83', '1563528292', '1563528292', '广州市', '中专以上学历', '5000-8000元', '全职', '2年以上', '2位', '&lt;p&gt;&lt;span style=&quot;color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;岗位职责：&lt;/span&gt;&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;&lt;span style=&quot;color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;1、负责网站相关栏目、信息的搜集、编辑、发布等工作。&lt;/span&gt;&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;&lt;span style=&quot;color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;2、完成信息内容的策划和日常信息的更新与维护。&lt;/span&gt;&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;&lt;span style=&quot;color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;3、编写网站宣传资料及相关产品信息。&lt;/span&gt;&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;&lt;span style=&quot;color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;4、配合部门编辑策划推广活动。&lt;/span&gt;&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;&lt;span style=&quot;color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;5、部门总监下发的其他任务。&lt;/span&gt;&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;&lt;span style=&quot;color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;任职资格：&lt;/span&gt;&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;&lt;span style=&quot;color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;1、编辑、新闻、中文等相关专业优先，大专及以上学历。&lt;/span&gt;&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;&lt;span style=&quot;color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;2、有编辑或从事相关工作经验优先。&lt;/span&gt;&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;&lt;span style=&quot;color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;3、熟练使用网页制作软件和网络搜索工具，了解网站运行、维护相关知识。&lt;/span&gt;&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;&lt;span style=&quot;color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;4、良好的文字功底，信息采编能力。&lt;/span&gt;&lt;br style=&quot;outline: 0px; text-size-adjust: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05); color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; white-space: normal; background-color: rgb(255, 255, 255);&quot;/&gt;&lt;span style=&quot;color: rgb(46, 52, 59); font-family: &amp;quot;Microsoft YaHei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, 微软雅黑, arial, Tahoma, SimSun, sans-serif; font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;5、欢迎应届毕业生来应聘。&lt;/span&gt;&lt;/p&gt;');
-INSERT INTO `ey_recruit_content` VALUES ('3', '94', '1565225547', '1565225547', '广州市', '专科以上学历', '5000-8000元', '全职', '2年以上', '若干', '&lt;p&gt;1、负责客户开发、提供客户服务、公司服务的推广、建立与维护客户关系；&lt;/p&gt;&lt;p&gt;2、根据市场营销计划和个人销售目标，完成各阶段销售目标；&lt;/p&gt;&lt;p&gt;3、进行市场调研，确定目标市场，收集分析竞争对象信息，制订、执行销售对策；&lt;/p&gt;&lt;p&gt;4、与内部相关部门建立并维持良好的协作关系，以客户和市场为导向，协调各方面关系，确保合同的顺利执行。&lt;/p&gt;&lt;p&gt;【岗位要求】&lt;/p&gt;&lt;p&gt;1、专科学历，有一定客户服务工作经验或销售经验，有一定的客户服务知识和能力。&lt;/p&gt;&lt;p&gt;2、计算机操作熟练，office办公软件使用熟练，有一定的网络基础知识，熟练使用Photoshop等制图工具着优先考虑。&lt;/p&gt;&lt;p&gt;3、要求一定要有“客户优先”的服务精神，一切从帮助客户、满足客户角度出发。&lt;/p&gt;&lt;p&gt;4、性格要求沉稳、隐忍，善于倾听，有同理心，乐观、积极。普通话标准、流利，反应灵敏。&lt;/p&gt;&lt;p&gt;5、热爱工作，敬业、勤恳、乐于思考，具有自我发展的主观的主题愿望和自我学习能力。可适当加班者优先。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;');
-INSERT INTO `ey_recruit_content` VALUES ('4', '95', '1565225608', '1565225608', '广州市', '专科以上学历', '5000-10000元', '全职', '2年以上', '若干', '&lt;p&gt;岗位职责：1、利用网络进行公司产品的销售及推广2、了解网络销售，有信心和良好的学习能力3、完成团队目标4、通过网络进行渠道开发和业务拓展5、熟悉互联网络，熟练使用网络交流工具和各种办公软件6、有较强的沟通能力&lt;/p&gt;&lt;p&gt;任职要求：1、年龄18～25之间，有空杯心态者优先2、性格开朗，喜欢与人沟通，表达流畅，普通话标准3、具备一定的客户服务精神，准确把握客户需求4、认真细致，能接受挑战性任务5、有无销售经验均可，欢迎应届毕业生应聘&lt;/p&gt;&lt;p&gt;薪资待遇：底薪+高抽成+奖金+年底双薪+生日聚餐，不定期的聚会和旅游等&lt;/p&gt;&lt;p&gt;晋升空间：业务基础—精英业务员—销售组长—销售主管—核心主管&lt;/p&gt;&lt;p&gt;销售激励：礼品奖励、现金奖金、出单奖励、周业绩奖励、月销售前三奖励。依法享受法定节假日（带薪旅游、带薪年假、婚假。、产假、员工生日庆祝）&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;');
-INSERT INTO `ey_recruit_content` VALUES ('5', '96', '1565225638', '1565225638', '广州市', '专科以上学历', '5000-10000元', '全职', '2年以上', '若干', '&lt;p&gt;任职要求： 1、年龄25-35岁，本科及以上学历，网络安全相关专业，持网络安全证书，2年以上同岗位工作经验； 2、熟知防火墙、入侵检测、网络流量识别控制等信息安全产品相关技术；熟悉网络协议、网络编程及相关网络产品开发技术； 3、具备良好的安全意识能力、语言表达能力、逻辑思维能力、执行力、责任心、团队协作能力。 岗位职责： 1、安全设备的日常监控与维护，及时进行安全设备策略的变更与调整；安全运维的结果文档、技术资料、设备日志，配置信息等相关资料的管理及维护； 2、定期关注安全设备系统的升级补丁，合适准确性后及时更新补丁，完成安全设备系统升级； 3、安全设备的健康检查、健康检查表、基线统计、流量统计、特殊事件报告、日报、周报等日常工作； 4、参与信息安全事件的分析工作和应急处理工作；定期安全评估、扫描和加固，协助进行安全加固； 5、协助制定网络安全规范与方案，优化现有网络安全架构，定期评估网络安全风险，负责针对运行故障、安全事件开展分析和总结，定期开展运行维护、故障处理及安全事件分析； 6、完成上级领导交办的其他任务，并做好与其他部门的协调配合工作。&lt;/p&gt;');
-INSERT INTO `ey_recruit_content` VALUES ('6', '97', '1565225697', '1565225697', '广州市', '专科以上学历', '5000-8000元', '全职', '1年以上', '2位', '&lt;p&gt;岗位职责1、组织参与重要项目的创意构思、文案及客户提案, 给予前期提案、设计创意说明及后期结案报告等服务；2、执行并监督所负责项目的创意构思和文案；3、稿件思路清晰，能够完成稿件写作思路规划；4、协助领导进行创意提案，保证工作的顺利推进；5、独立撰写各类稿件（新闻稿、综述稿、评论稿、专访稿等）、策划方案、报告等任职资格1、大专及以上学历；2、一年以上市场策划及文案工作经验；3、能够准确捕捉产品亮点，具备恰如其分的文字表现能力；4、熟悉专业创意方法，思维敏捷，洞察力强，文字功底扎实，语言表达能力强；福利待遇：1.公司为员工提供以市场标杆，以能力、绩效为标准，具有市场竞争力的薪资待遇；2.为员工缴纳社会保险和办理住房公积金、带薪年假、法定节假日、小暑假；3.员工享有专业持续的提升培训机制、不定期的拓展福利、稳健的晋升机制；4.生日福利、传统节日福利、年终奖、年终分红等多种特色福利；试用期工资3500职能类别：网站&lt;/p&gt;');
 
 -- -----------------------------
 -- Table structure for `ey_region`
@@ -2752,7 +3436,7 @@ CREATE TABLE `ey_region` (
   KEY `parent_id` (`parent_id`) USING BTREE,
   KEY `level` (`level`) USING BTREE,
   KEY `initial` (`initial`)
-) ENGINE=MyISAM AUTO_INCREMENT=47964 DEFAULT CHARSET=utf8 COMMENT='区域表';
+) ENGINE=MyISAM AUTO_INCREMENT=47989 DEFAULT CHARSET=utf8 COMMENT='区域表';
 
 -- -----------------------------
 -- Records of `ey_region`
@@ -2992,7 +3676,7 @@ INSERT INTO `ey_region` VALUES ('3043', '景县', '3', '2968', 'J');
 INSERT INTO `ey_region` VALUES ('3060', '阜城县', '3', '2968', 'F');
 INSERT INTO `ey_region` VALUES ('3071', '冀州市', '3', '2968', 'J');
 INSERT INTO `ey_region` VALUES ('3083', '深州市', '3', '2968', 'S');
-INSERT INTO `ey_region` VALUES ('3102', '山西', '1', '0', 'S');
+INSERT INTO `ey_region` VALUES ('3102', '山西省', '1', '0', 'S');
 INSERT INTO `ey_region` VALUES ('3103', '太原市', '2', '3102', 'T');
 INSERT INTO `ey_region` VALUES ('3104', '市辖区', '3', '3103', 'S');
 INSERT INTO `ey_region` VALUES ('3105', '小店区(人口含高新经济区)', '3', '3103', 'X');
@@ -3134,7 +3818,7 @@ INSERT INTO `ey_region` VALUES ('4622', '中阳县', '3', '4494', 'Z');
 INSERT INTO `ey_region` VALUES ('4630', '交口县', '3', '4494', 'J');
 INSERT INTO `ey_region` VALUES ('4638', '孝义市', '3', '4494', 'X');
 INSERT INTO `ey_region` VALUES ('4655', '汾阳市', '3', '4494', 'F');
-INSERT INTO `ey_region` VALUES ('4670', '内蒙古', '1', '0', 'N');
+INSERT INTO `ey_region` VALUES ('4670', '内蒙古自治区', '1', '0', 'N');
 INSERT INTO `ey_region` VALUES ('4671', '呼和浩特市', '2', '4670', 'H');
 INSERT INTO `ey_region` VALUES ('4672', '市辖区', '3', '4671', 'S');
 INSERT INTO `ey_region` VALUES ('4673', '新城区', '3', '4671', 'X');
@@ -3659,10 +4343,8 @@ INSERT INTO `ey_region` VALUES ('10916', '六合区', '3', '10809', 'L');
 INSERT INTO `ey_region` VALUES ('10937', '溧水县', '3', '10809', 'L');
 INSERT INTO `ey_region` VALUES ('10947', '高淳县', '3', '10809', 'G');
 INSERT INTO `ey_region` VALUES ('10960', '无锡市', '2', '10808', 'W');
-INSERT INTO `ey_region` VALUES ('10961', '市辖区', '3', '10960', 'S');
-INSERT INTO `ey_region` VALUES ('10962', '崇安区', '3', '10960', 'C');
-INSERT INTO `ey_region` VALUES ('10969', '南长区', '3', '10960', 'N');
-INSERT INTO `ey_region` VALUES ('10976', '北塘区', '3', '10960', 'B');
+INSERT INTO `ey_region` VALUES ('10961', '新吴区', '3', '10960', 'X');
+INSERT INTO `ey_region` VALUES ('10962', '梁溪区', '3', '10960', 'L');
 INSERT INTO `ey_region` VALUES ('10981', '锡山区', '3', '10960', 'X');
 INSERT INTO `ey_region` VALUES ('10990', '惠山区', '3', '10960', 'H');
 INSERT INTO `ey_region` VALUES ('10999', '滨湖区', '3', '10960', 'B');
@@ -5063,7 +5745,7 @@ INSERT INTO `ey_region` VALUES ('30096', '新兴县', '3', '30086', 'X');
 INSERT INTO `ey_region` VALUES ('30112', '郁南县', '3', '30086', 'Y');
 INSERT INTO `ey_region` VALUES ('30132', '云安县', '3', '30086', 'Y');
 INSERT INTO `ey_region` VALUES ('30141', '罗定市', '3', '30086', 'L');
-INSERT INTO `ey_region` VALUES ('30164', '广西', '1', '0', 'G');
+INSERT INTO `ey_region` VALUES ('30164', '广西壮族自治区', '1', '0', 'G');
 INSERT INTO `ey_region` VALUES ('30165', '南宁市', '2', '30164', 'N');
 INSERT INTO `ey_region` VALUES ('30166', '市辖区', '3', '30165', 'S');
 INSERT INTO `ey_region` VALUES ('30167', '兴宁区', '3', '30165', 'X');
@@ -5209,7 +5891,7 @@ INSERT INTO `ey_region` VALUES ('31575', '龙华区', '3', '31564', 'L');
 INSERT INTO `ey_region` VALUES ('31587', '琼山区', '3', '31564', 'Q');
 INSERT INTO `ey_region` VALUES ('31601', '美兰区', '3', '31564', 'M');
 INSERT INTO `ey_region` VALUES ('31618', '三亚市', '2', '31563', 'S');
-INSERT INTO `ey_region` VALUES ('31619', '市辖区', '3', '31618', 'S');
+INSERT INTO `ey_region` VALUES ('47967', '海棠区', '3', '31618', 'H');
 INSERT INTO `ey_region` VALUES ('31634', '五指山市', '2', '31563', 'W');
 INSERT INTO `ey_region` VALUES ('31635', '冲山镇', '3', '31634', 'C');
 INSERT INTO `ey_region` VALUES ('31636', '南圣镇', '3', '31634', 'N');
@@ -6024,7 +6706,7 @@ INSERT INTO `ey_region` VALUES ('41070', '迪庆州', '2', '39556', 'D');
 INSERT INTO `ey_region` VALUES ('41071', '香格里拉县', '3', '41070', 'X');
 INSERT INTO `ey_region` VALUES ('41083', '德钦县', '3', '41070', 'D');
 INSERT INTO `ey_region` VALUES ('41092', '维西县', '3', '41070', 'W');
-INSERT INTO `ey_region` VALUES ('41103', '西藏', '1', '0', 'X');
+INSERT INTO `ey_region` VALUES ('41103', '西藏自治区', '1', '0', 'X');
 INSERT INTO `ey_region` VALUES ('41104', '拉萨市', '2', '41103', 'L');
 INSERT INTO `ey_region` VALUES ('41105', '市辖区', '3', '41104', 'S');
 INSERT INTO `ey_region` VALUES ('41106', '城关区', '3', '41104', 'C');
@@ -6400,7 +7082,7 @@ INSERT INTO `ey_region` VALUES ('45714', '德令哈市', '3', '45701', 'D');
 INSERT INTO `ey_region` VALUES ('45727', '乌兰县', '3', '45701', 'W');
 INSERT INTO `ey_region` VALUES ('45733', '都兰县', '3', '45701', 'D');
 INSERT INTO `ey_region` VALUES ('45742', '天峻县', '3', '45701', 'T');
-INSERT INTO `ey_region` VALUES ('45753', '宁夏', '1', '0', 'N');
+INSERT INTO `ey_region` VALUES ('45753', '宁夏回族自治区', '1', '0', 'N');
 INSERT INTO `ey_region` VALUES ('45754', '银川市', '2', '45753', 'Y');
 INSERT INTO `ey_region` VALUES ('45755', '市辖区', '3', '45754', 'S');
 INSERT INTO `ey_region` VALUES ('45756', '兴庆区', '3', '45754', 'X');
@@ -6432,7 +7114,7 @@ INSERT INTO `ey_region` VALUES ('46000', '市辖区', '3', '45999', 'S');
 INSERT INTO `ey_region` VALUES ('46012', '沙坡头区', '3', '45999', 'S');
 INSERT INTO `ey_region` VALUES ('46013', '中宁县', '3', '45999', 'Z');
 INSERT INTO `ey_region` VALUES ('46026', '海原县', '3', '45999', 'H');
-INSERT INTO `ey_region` VALUES ('46047', '新疆', '1', '0', 'X');
+INSERT INTO `ey_region` VALUES ('46047', '新疆维吾尔自治区', '1', '0', 'X');
 INSERT INTO `ey_region` VALUES ('46048', '乌鲁木齐市', '2', '46047', 'W');
 INSERT INTO `ey_region` VALUES ('46049', '市辖区', '3', '46048', 'S');
 INSERT INTO `ey_region` VALUES ('46050', '天山区', '3', '46048', 'T');
@@ -6549,9 +7231,9 @@ INSERT INTO `ey_region` VALUES ('47451', '石河子市', '3', '47450', 'S');
 INSERT INTO `ey_region` VALUES ('47460', '阿拉尔市', '3', '47450', 'A');
 INSERT INTO `ey_region` VALUES ('47477', '图木舒克市', '3', '47450', 'T');
 INSERT INTO `ey_region` VALUES ('47486', '五家渠市', '3', '47450', 'W');
-INSERT INTO `ey_region` VALUES ('47493', '台湾', '1', '0', 'T');
-INSERT INTO `ey_region` VALUES ('47494', '香港', '1', '0', 'X');
-INSERT INTO `ey_region` VALUES ('47495', '澳门', '1', '0', 'A');
+INSERT INTO `ey_region` VALUES ('47493', '台湾省', '1', '0', 'T');
+INSERT INTO `ey_region` VALUES ('47494', '香港特别行政区', '1', '0', 'X');
+INSERT INTO `ey_region` VALUES ('47495', '澳门特别行政区', '1', '0', 'A');
 INSERT INTO `ey_region` VALUES ('47496', '龙华新区', '3', '28558', 'L');
 INSERT INTO `ey_region` VALUES ('47497', '光明新区', '3', '28558', 'G');
 INSERT INTO `ey_region` VALUES ('47500', '新界', '2', '47494', 'X');
@@ -7018,6 +7700,45 @@ INSERT INTO `ey_region` VALUES ('47960', '谢岗镇', '3', '29855', 'X');
 INSERT INTO `ey_region` VALUES ('47961', '长安镇', '3', '29855', 'Z');
 INSERT INTO `ey_region` VALUES ('47962', '樟木头镇', '3', '29855', 'Z');
 INSERT INTO `ey_region` VALUES ('47963', '中堂镇', '3', '29855', 'Z');
+INSERT INTO `ey_region` VALUES ('47964', '海外', '1', '0', 'H');
+INSERT INTO `ey_region` VALUES ('47965', '海外', '2', '47964', 'H');
+INSERT INTO `ey_region` VALUES ('47966', '海外', '3', '47965', 'H');
+INSERT INTO `ey_region` VALUES ('47968', '吉阳区', '3', '31618', 'J');
+INSERT INTO `ey_region` VALUES ('47969', '天涯区', '3', '31618', 'T');
+INSERT INTO `ey_region` VALUES ('47970', '崖州区', '3', '31618', 'Y');
+INSERT INTO `ey_region` VALUES ('47971', '济源市', '2', '21387', 'J');
+INSERT INTO `ey_region` VALUES ('47972', '沁园街道', '3', '47971', 'Q');
+INSERT INTO `ey_region` VALUES ('47973', '济水街道', '3', '47971', 'J');
+INSERT INTO `ey_region` VALUES ('47974', '北海街道', '3', '47971', 'B');
+INSERT INTO `ey_region` VALUES ('47975', '天坛街道', '3', '47971', 'T');
+INSERT INTO `ey_region` VALUES ('47976', '玉泉街道', '3', '47971', 'Y');
+INSERT INTO `ey_region` VALUES ('47977', '克井镇', '3', '47971', 'K');
+INSERT INTO `ey_region` VALUES ('47978', '五龙口镇', '3', '47971', 'W');
+INSERT INTO `ey_region` VALUES ('47979', '轵城镇', '3', '47971', 'Z');
+INSERT INTO `ey_region` VALUES ('47980', '承留镇', '3', '47971', 'C');
+INSERT INTO `ey_region` VALUES ('47981', '邵原镇', '3', '47971', 'S');
+INSERT INTO `ey_region` VALUES ('47982', '坡头镇', '3', '47971', 'P');
+INSERT INTO `ey_region` VALUES ('47983', '梨林镇', '3', '47971', 'L');
+INSERT INTO `ey_region` VALUES ('47984', '大峪镇', '3', '47971', 'D');
+INSERT INTO `ey_region` VALUES ('47985', '思礼镇', '3', '47971', 'S');
+INSERT INTO `ey_region` VALUES ('47986', '王屋镇', '3', '47971', 'W');
+INSERT INTO `ey_region` VALUES ('47987', '下冶镇', '3', '47971', 'X');
+INSERT INTO `ey_region` VALUES ('47988', '龙港市', '3', '12974', 'L');
+
+-- -----------------------------
+-- Table structure for `ey_search_locking`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_search_locking`;
+CREATE TABLE `ey_search_locking` (
+  `id` int(10) NOT NULL AUTO_INCREMENT,
+  `users_id` int(10) DEFAULT '0' COMMENT '用户ID',
+  `ip` varchar(20) DEFAULT '' COMMENT 'ip',
+  `locking_time` int(11) DEFAULT '0' COMMENT '锁定时间',
+  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='搜索记录锁定表';
+
 
 -- -----------------------------
 -- Table structure for `ey_search_word`
@@ -7025,9 +7746,13 @@ INSERT INTO `ey_region` VALUES ('47963', '中堂镇', '3', '29855', 'Z');
 DROP TABLE IF EXISTS `ey_search_word`;
 CREATE TABLE `ey_search_word` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
-  `word` varchar(50) DEFAULT '' COMMENT '关键词',
+  `word` varchar(255) DEFAULT '' COMMENT '关键词',
   `searchNum` int(10) DEFAULT '1' COMMENT '搜索次数',
+  `resultNum` int(10) DEFAULT '0' COMMENT '搜索结果数量',
   `sort_order` int(10) DEFAULT '0' COMMENT '排序号',
+  `users_id` int(11) DEFAULT '0' COMMENT '用户id',
+  `ip` varchar(20) DEFAULT '' COMMENT 'ip',
+  `is_hot` tinyint(1) DEFAULT '0' COMMENT '是否热搜',
   `lang` varchar(30) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
@@ -7038,9 +7763,9 @@ CREATE TABLE `ey_search_word` (
 -- -----------------------------
 -- Records of `ey_search_word`
 -- -----------------------------
-INSERT INTO `ey_search_word` VALUES ('1', '名称', '2', '100', 'cn', '1563521156', '1563762185');
-INSERT INTO `ey_search_word` VALUES ('2', '媒体', '8', '100', 'cn', '1563762250', '1610348638');
-INSERT INTO `ey_search_word` VALUES ('3', '融资', '1', '100', 'cn', '1563788844', '1563788844');
+INSERT INTO `ey_search_word` VALUES ('1', '名称', '2', '0', '100', '0', '', '0', 'cn', '1563521156', '1563762185');
+INSERT INTO `ey_search_word` VALUES ('2', '媒体', '8', '0', '100', '0', '', '0', 'cn', '1563762250', '1610348638');
+INSERT INTO `ey_search_word` VALUES ('3', '融资', '1', '0', '100', '0', '', '0', 'cn', '1563788844', '1563788844');
 
 -- -----------------------------
 -- Table structure for `ey_setting`
@@ -7055,7 +7780,7 @@ CREATE TABLE `ey_setting` (
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `inc_type` (`inc_type`,`lang`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COMMENT='系统非全局配置表';
+) ENGINE=MyISAM AUTO_INCREMENT=82 DEFAULT CHARSET=utf8 COMMENT='系统非全局配置表';
 
 -- -----------------------------
 -- Records of `ey_setting`
@@ -7064,6 +7789,83 @@ INSERT INTO `ey_setting` VALUES ('1', 'ask_ques_steps', '1、写问题标题，�
 INSERT INTO `ey_setting` VALUES ('2', 'recycle_switch', '1', 'recycle', 'cn', '1623809302');
 INSERT INTO `ey_setting` VALUES ('3', 'system_old_product_attr', '0', 'system', 'cn', '1623813369');
 INSERT INTO `ey_setting` VALUES ('4', 'syn_admin_logic_1623377269', '1', 'syn', 'cn', '1623813369');
+INSERT INTO `ey_setting` VALUES ('5', 'syn_admin_logic_1625725290', '1', 'syn', 'cn', '1636441870');
+INSERT INTO `ey_setting` VALUES ('6', 'syn_admin_logic_1629252424', '1', 'syn', 'cn', '1636441870');
+INSERT INTO `ey_setting` VALUES ('7', 'admin_logic_1634204189', '1', 'syn', 'cn', '1636442096');
+INSERT INTO `ey_setting` VALUES ('8', 'admin_logic_1634280892', '1', 'syn', 'cn', '1636442096');
+INSERT INTO `ey_setting` VALUES ('9', 'admin_logic_1635326854', '1', 'syn', 'cn', '1636442096');
+INSERT INTO `ey_setting` VALUES ('10', 'admin_logic_1635389623', '1', 'syn', 'cn', '1636442096');
+INSERT INTO `ey_setting` VALUES ('11', 'admin_logic_1636875693', '1', 'syn', 'cn', '1641949807');
+INSERT INTO `ey_setting` VALUES ('12', 'admin_logic_1637033990', '1', 'syn', 'cn', '1641949807');
+INSERT INTO `ey_setting` VALUES ('13', 'admin_logic_1640918327', '1', 'syn', 'cn', '1641949807');
+INSERT INTO `ey_setting` VALUES ('14', 'admin_logic_1638857408', '1', 'syn', 'cn', '1641949807');
+INSERT INTO `ey_setting` VALUES ('15', 'admin_logic_1643352860', '2', 'syn', 'cn', '1650263640');
+INSERT INTO `ey_setting` VALUES ('16', 'admin_logic_1643352862', '1', 'syn', 'cn', '1650263640');
+INSERT INTO `ey_setting` VALUES ('17', 'admin_logic_1649299958', '1', 'syn', 'cn', '1650263716');
+INSERT INTO `ey_setting` VALUES ('18', 'admin_logic_1643352863', '1', 'syn', 'cn', '1650263717');
+INSERT INTO `ey_setting` VALUES ('19', 'security_askanswer_list', '[\"\\u60a8\\u5e38\\u7528\\u7684\\u624b\\u673a\\u53f7\\u7801\\u662f\\uff1f\",\"\\u60a8\\u5e38\\u7528\\u7684\\u7535\\u5b50\\u90ae\\u7bb1\\u662f\\uff1f\",\"\\u60a8\\u771f\\u5b9e\\u7684\\u59d3\\u540d\\u662f\\uff1f\",\"\\u60a8\\u521d\\u4e2d\\u5b66\\u6821\\u540d\\u662f\\uff1f\",\"\\u60a8\\u7684\\u51fa\\u751f\\u5730\\u540d\\u662f\\uff1f\",\"\\u60a8\\u914d\\u5076\\u7684\\u59d3\\u540d\\u662f\\uff1f\",\"\\u60a8\\u7684\\u8eab\\u4efd\\u8bc1\\u53f7\\u540e\\u516b\\u4f4d\\u662f\\uff1f\",\"\\u60a8\\u9ad8\\u4e2d\\u73ed\\u4e3b\\u4efb\\u7684\\u540d\\u5b57\\u662f\\uff1f\",\"\\u60a8\\u521d\\u4e2d\\u73ed\\u4e3b\\u4efb\\u7684\\u540d\\u5b57\\u662f\\uff1f\",\"\\u60a8\\u6700\\u559c\\u6b22\\u7684\\u660e\\u661f\\u540d\\u5b57\\u662f\\uff1f\",\"\\u5bf9\\u60a8\\u5f71\\u54cd\\u6700\\u5927\\u7684\\u4eba\\u540d\\u5b57\\u662f\\uff1f\"]', 'security', 'cn', '1650263717');
+INSERT INTO `ey_setting` VALUES ('20', 'admin_logic_1643352864', '1', 'syn', 'cn', '1650263717');
+INSERT INTO `ey_setting` VALUES ('21', 'admin_logic_1647918733', '1', 'syn', 'cn', '1650263717');
+INSERT INTO `ey_setting` VALUES ('22', 'system_originlist', '[\"\\u7f51\\u7edc\"]', 'system', 'cn', '1650263717');
+INSERT INTO `ey_setting` VALUES ('23', 'admin_logic_1648435161', '1', 'syn', 'cn', '1650263717');
+INSERT INTO `ey_setting` VALUES ('24', 'admin_logic_1648882158', '1', 'syn', 'cn', '1650263717');
+INSERT INTO `ey_setting` VALUES ('25', 'admin_logic_1649399344', '1', 'syn', 'cn', '1650263717');
+INSERT INTO `ey_setting` VALUES ('26', 'adminlogin_427d1aac31a93d744edd637f1fbbf00c', '0', 'adminlogin', 'cn', '1653359668');
+INSERT INTO `ey_setting` VALUES ('27', 'adminlogin_a62896d354440964bb1db242596917b1', '0', 'adminlogin', 'cn', '1653359668');
+INSERT INTO `ey_setting` VALUES ('28', 'adminlogin_99ae1cc546e0ed202a83693c75f1afe0', '0', 'adminlogin', 'cn', '1653359668');
+INSERT INTO `ey_setting` VALUES ('29', 'syn_admin_logic_1616123194', '1', 'syn', 'cn', '1653359669');
+INSERT INTO `ey_setting` VALUES ('30', 'admin_logic_1655453263', '1', 'syn', 'cn', '1658916485');
+INSERT INTO `ey_setting` VALUES ('31', 'admin_logic_1652254594', '1', 'syn', 'cn', '1658916485');
+INSERT INTO `ey_setting` VALUES ('32', 'designated_column_1657069673', '1', 'syn', 'cn', '1658916485');
+INSERT INTO `ey_setting` VALUES ('33', 'admin_logic_1652771782', '1', 'syn', 'cn', '1658916485');
+INSERT INTO `ey_setting` VALUES ('34', 'syn_admin_logic_1616123195', '1', 'syn', 'cn', '1658916485');
+INSERT INTO `ey_setting` VALUES ('35', 'admin_logic_1651114275', '1', 'syn', 'cn', '1658916485');
+INSERT INTO `ey_setting` VALUES ('36', 'syn_admin_logic_1658220528', '1', 'syn', 'cn', '1667183769');
+INSERT INTO `ey_setting` VALUES ('37', 'syn_admin_logic_1658799138', '1', 'syn', 'cn', '1667183769');
+INSERT INTO `ey_setting` VALUES ('38', 'syn_admin_logic_1661323010', '1', 'syn', 'cn', '1667183769');
+INSERT INTO `ey_setting` VALUES ('39', 'syn_admin_logic_1661483783', '1', 'syn', 'cn', '1667183769');
+INSERT INTO `ey_setting` VALUES ('40', 'admin_logic_1662518904', '1', 'syn', 'cn', '1667183769');
+INSERT INTO `ey_setting` VALUES ('41', 'syn_admin_logic_1660557712', '1', 'syn', 'cn', '1667183769');
+INSERT INTO `ey_setting` VALUES ('42', 'admin_logic_1663290997', '1', 'syn', 'cn', '1667184483');
+INSERT INTO `ey_setting` VALUES ('43', 'admin_logic_1667210674', '1', 'syn', 'cn', '1667356308');
+INSERT INTO `ey_setting` VALUES ('44', 'admin_logic_1667357946', '1', 'syn', 'cn', '1673945387');
+INSERT INTO `ey_setting` VALUES ('45', 'editor_select', '1', 'editor', 'cn', '1675389691');
+INSERT INTO `ey_setting` VALUES ('46', 'editor_remote_img_local', '1', 'editor', 'cn', '1675389691');
+INSERT INTO `ey_setting` VALUES ('47', 'editor_img_clear_link', '1', 'editor', 'cn', '1675389691');
+INSERT INTO `ey_setting` VALUES ('48', 'admin_logic_1673941712', '1', 'syn', 'cn', '1680508400');
+INSERT INTO `ey_setting` VALUES ('49', 'admin_logic_1676854942', '1', 'syn', 'cn', '1680508882');
+INSERT INTO `ey_setting` VALUES ('50', 'admin_logic_1675243579', '1', 'syn', 'cn', '1680508882');
+INSERT INTO `ey_setting` VALUES ('51', 'admin_logic_1677555001', '1', 'syn', 'cn', '1680508882');
+INSERT INTO `ey_setting` VALUES ('52', 'admin_logic_1678762367', '1', 'syn', 'cn', '1680508882');
+INSERT INTO `ey_setting` VALUES ('53', 'admin_logic_1685584104', '1', 'syn', 'cn', '1686877656');
+INSERT INTO `ey_setting` VALUES ('54', 'admin_logic_1682580429', '1', 'syn', 'cn', '1686877656');
+INSERT INTO `ey_setting` VALUES ('55', 'admin_logic_1680749290', '1', 'syn', 'cn', '1686877656');
+INSERT INTO `ey_setting` VALUES ('56', 'adminlogin_3a169e70d45ac7410c2856acfb38d69e', '0', 'adminlogin', 'cn', '1692667932');
+INSERT INTO `ey_setting` VALUES ('57', 'adminlogin_2fa97c794f3502ec8e36e8fe319968d8', '0', 'adminlogin', 'cn', '1692667932');
+INSERT INTO `ey_setting` VALUES ('58', 'adminlogin_bb7e531fe20f8dcc4485ceada88140d5', '0', 'adminlogin', 'cn', '1692667932');
+INSERT INTO `ey_setting` VALUES ('59', 'admin_logic_1687767523', '1', 'syn', 'cn', '1692667932');
+INSERT INTO `ey_setting` VALUES ('60', 'admin_logic_1689071584', '1', 'syn', 'cn', '1692667932');
+INSERT INTO `ey_setting` VALUES ('61', 'admin_logic_1681199467', '1', 'syn', 'cn', '1692667955');
+INSERT INTO `ey_setting` VALUES ('62', 'admin_logic_1687676445', '1', 'syn', 'cn', '1692667955');
+INSERT INTO `ey_setting` VALUES ('63', 'admin_logic_1685094852', '1', 'syn', 'cn', '1692667955');
+INSERT INTO `ey_setting` VALUES ('64', 'admin_logic_1687687709', '1', 'syn', 'cn', '1692667955');
+INSERT INTO `ey_setting` VALUES ('65', 'admin_logic_1692067658', '1', 'syn', 'cn', '1692667957');
+INSERT INTO `ey_setting` VALUES ('66', 'admin_logic_1697156935', 'v1.6.5', 'syn', 'cn', '1701045570');
+INSERT INTO `ey_setting` VALUES ('67', 'admin_logic_1698388181', '1', 'syn', 'cn', '1699840479');
+INSERT INTO `ey_setting` VALUES ('68', 'admin_logic_1698716726', '1', 'syn', 'cn', '1699840479');
+INSERT INTO `ey_setting` VALUES ('69', 'admin_logic_1700638990', '1', 'syn', 'cn', '1701045570');
+INSERT INTO `ey_setting` VALUES ('70', 'admin_logic_1700789211', '1', 'syn', 'cn', '1701045570');
+INSERT INTO `ey_setting` VALUES ('71', 'admin_logic_1700645198', '1', 'syn', 'cn', '1701045570');
+INSERT INTO `ey_setting` VALUES ('72', 'admin_logic_1698733259', '1', 'syn', 'cn', '1701045570');
+INSERT INTO `ey_setting` VALUES ('73', 'admin_logic_1698799687', '1', 'syn', 'cn', '1701045570');
+INSERT INTO `ey_setting` VALUES ('74', 'syn_admin_logic_1700016487', '1', 'syn', 'cn', '1701045570');
+INSERT INTO `ey_setting` VALUES ('75', 'syn_admin_logic_1700016488', '1', 'syn', 'cn', '1701045570');
+INSERT INTO `ey_setting` VALUES ('76', 'syn_admin_logic_1700016489', '1', 'syn', 'cn', '1701045570');
+INSERT INTO `ey_setting` VALUES ('77', 'syn_admin_logic_1700106425', '1', 'syn', 'cn', '1701045570');
+INSERT INTO `ey_setting` VALUES ('78', 'admin_logic_1700621159', '1', 'syn', 'cn', '1701045570');
+INSERT INTO `ey_setting` VALUES ('79', 'admin_logic_1701050542', '1', 'syn', 'cn', '1703142160');
+INSERT INTO `ey_setting` VALUES ('80', 'admin_logic_1693909371', '1', 'syn', 'cn', '1703142193');
+INSERT INTO `ey_setting` VALUES ('81', 'admin_logic_1701855768', '1', 'syn', 'cn', '1706510953');
 
 -- -----------------------------
 -- Table structure for `ey_sharp_active`
@@ -7126,7 +7928,7 @@ CREATE TABLE `ey_sharp_goods` (
   `seckill_stock` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '秒杀商品库存总量',
   `seckill_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '秒杀价格',
   `sales` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '累积销量',
-  `virtual_sales` tinyint(3) NOT NULL DEFAULT '0' COMMENT '虚拟销量',
+  `virtual_sales` int(11) NOT NULL DEFAULT '0' COMMENT '虚拟销量',
   `sort_order` int(11) unsigned NOT NULL DEFAULT '100' COMMENT '商品排序(数字越小越靠前)',
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '商品状态(0下架 1上架)',
   `is_del` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '是否删除',
@@ -7189,6 +7991,7 @@ CREATE TABLE `ey_shop_cart` (
   `lang` varchar(30) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '加入购物车的时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  `discount_active_id` int(11) DEFAULT '0' COMMENT '限时折扣ID,用来区分购物车的商品哪些是限时折扣活动的',
   PRIMARY KEY (`cart_id`),
   KEY `users_id` (`users_id`,`product_id`) USING BTREE
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='购物车表';
@@ -7207,8 +8010,8 @@ CREATE TABLE `ey_shop_coupon` (
   `coupon_type` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '可使用商品(1全站通用，2指定商品，3指定商品分类)',
   `product_id` varchar(255) NOT NULL DEFAULT '' COMMENT '指定商品ID，在coupon_type=2时使用',
   `arctype_id` varchar(255) NOT NULL DEFAULT '' COMMENT '指定商品分类ID，在coupon_type=3时使用',
-  `coupon_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '优惠券金额，例如10',
-  `conditions_use` varchar(10) NOT NULL DEFAULT '' COMMENT '优惠券使用条件，例如300',
+  `coupon_price` decimal(10,0) NOT NULL DEFAULT '0' COMMENT '优惠券金额，例如10',
+  `conditions_use` decimal(10,0) NOT NULL DEFAULT '0' COMMENT '优惠券使用条件，例如300',
   `coupon_stock` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '优惠券库存，例如100',
   `redeem_points` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '兑换优惠券所需积分，为0则表示免费兑换',
   `redeem_authority` varchar(10) NOT NULL DEFAULT '' COMMENT '兑换权限，存入多个会员等级组ID',
@@ -7263,611 +8066,614 @@ CREATE TABLE `ey_shop_express` (
   `express_id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `express_code` varchar(32) NOT NULL DEFAULT '' COMMENT '物流code',
   `express_name` varchar(32) NOT NULL DEFAULT '' COMMENT '物流名称',
-  `express_lnitials` varchar(5) DEFAULT '' COMMENT '首字母',
-  `sort_order` int(10) DEFAULT '0' COMMENT '排序号',
-  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
-  `update_time` int(11) unsigned DEFAULT '0' COMMENT '更新时间',
+  `express_lnitials` varchar(5) NOT NULL DEFAULT '' COMMENT '首字母',
+  `is_choose` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '快递公司是否选中(0=否，1=是)',
+  `sort_order` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '排序号',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`express_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=596 DEFAULT CHARSET=utf8 COMMENT='快递公司表';
+) ENGINE=MyISAM AUTO_INCREMENT=598 DEFAULT CHARSET=utf8 COMMENT='快递公司表';
 
 -- -----------------------------
 -- Records of `ey_shop_express`
 -- -----------------------------
-INSERT INTO `ey_shop_express` VALUES ('1', 'yuantong', '圆通快递', 'Y', '97', '1553911076', '1554974797');
-INSERT INTO `ey_shop_express` VALUES ('2', 'shentong', '申通快递', 'S', '98', '1553911076', '1554974707');
-INSERT INTO `ey_shop_express` VALUES ('3', 'shunfeng', '顺丰快递', 'S', '98', '1553911076', '1554974710');
-INSERT INTO `ey_shop_express` VALUES ('4', 'yunda', '韵达快递', 'Y', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('5', 'debangwuliu', '德邦快递', 'D', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('6', 'zhongtong', '中通快递', 'Z', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('7', 'huitongkuaidi', '百世快递', 'B', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('8', 'youzhengguonei', '邮政包裹', 'Y', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('9', 'ems', 'EMS', 'E', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('10', 'youzhengguoji', '邮政国际', 'Y', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('11', 'aolau', 'AOL澳通速递', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('12', 'a2u', 'A2U速递', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('13', 'aae', 'AAE快递', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('14', 'annengwuliu', '安能物流', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('15', 'anxl', '安迅物流', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('16', 'auexpress', '澳邮中国快运', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('17', 'exfresh', '安鲜达', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('18', 'anjie88', '安捷物流', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('19', 'adodoxm', '澳多多国际速递', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('20', 'ariesfar', '艾瑞斯远', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('21', 'qdants', 'ANTS EXPRESS', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('22', 'astexpress', '安世通快递', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('23', 'gda', '安的快递', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('24', 'ausexpress', '澳世速递', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('25', 'ibuy8', '爱拜物流', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('26', 'aplusex', 'Aplus物流', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('27', 'adapost', '安达速递', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('28', 'adiexpress', '安达易国际速递', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('29', 'maxeedexpress', '澳洲迈速快递', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('30', 'onway', '昂威物流', 'A', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('31', 'bcwelt', 'BCWELT', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('32', 'balunzhi', '巴伦支快递', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('33', 'xiaohongmao', '北青小红帽', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('34', 'bfdf', '百福东方物流', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('35', 'bangsongwuliu', '邦送物流', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('36', 'lbbk', '宝凯物流', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('37', 'bqcwl', '百千诚物流', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('38', 'idada', '百成大达物流', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('39', 'baishiwuliu', '百世快运', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('40', 'baitengwuliu', '百腾物流', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('41', 'birdex', '笨鸟海淘', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('42', 'bsht', '百事亨通', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('43', 'benteng', '奔腾物流', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('44', 'cuckooexpess', '布谷鸟速递', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('45', 'bgky100', '邦工快运', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('46', 'bosind', '堡昕德速递', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('47', 'banma', '斑马物联网', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('48', 'polarisexpress', '北极星快运', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('49', 'beijingfengyue', '北京丰越供应链', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('50', 'europe8', '败欧洲', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('51', 'bmlchina', '标杆物流', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('52', 'comexpress', '邦通国际', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('53', 'baotongkd', '宝通快递', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('54', 'beckygo', '佰麒快递', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('55', 'boyol', '贝业物流', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('56', 'bdatong', '八达通快递', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('57', 'bangbangpost', '帮帮发', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('58', 'baoxianda', '报通快递', 'B', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('59', 'coe', '中国东方(COE)', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('60', 'cloudexpress', 'CE易欧通国际速递', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('61', 'city100', '城市100', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('62', 'chuanxiwuliu', '传喜物流', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('63', 'chengjisudi', '城际速递', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('64', 'lijisong', '立即送', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('65', 'chukou1', '出口易', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('66', 'nanjingshengbang', '晟邦物流', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('67', 'flyway', '程光快递', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('68', 'cbo56', '钏博物流', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('69', 'cex', '城铁速递', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('70', 'cnup', 'CNUP 中联邮', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('71', 'clsp', 'CL日中速运', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('72', 'cnair', 'CNAIR', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('73', 'cangspeed', '仓鼠快递', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('74', 'spring56', '春风物流', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('75', 'cunto', '村通快递', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('76', 'longvast', '长风物流', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('77', 'changjiang', '长江国际速递', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('78', 'cncexp', 'C&C国际速递', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('79', 'parcelchina', '诚一物流', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('80', 'chengtong', '城通物流', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('81', 'otpexpress', '承诺达', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('82', 'sfpost', '曹操到', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('83', 'changwooair', '昌宇国际', 'C', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('84', 'dhl', 'DHL快递（中国件）', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('85', 'dhlen', 'DHL（国际件）', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('86', 'dhlde', 'DHL（德国件）', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('87', 'dtwl', '大田物流', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('88', 'disifang', '递四方', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('89', 'dayangwuliu', '大洋物流', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('90', 'dechuangwuliu', '德创物流', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('91', 'dskd', 'D速物流', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('92', 'donghanwl', '东瀚物流', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('93', 'dfpost', '达方物流', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('94', 'dongjun', '东骏快捷物流', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('95', 'dindon', '叮咚澳洲转运', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('96', 'dazhong', '大众佐川急便', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('97', 'ahdf', '德方物流', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('98', 'dehaoyi', '德豪驿', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('99', 'dhlpaket', 'DHL Paket', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('100', 'ubuy', '德国优拜物流', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('101', 'adlerlogi', '德国雄鹰速递', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('102', 'yunexpress', '德国云快递', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('103', 'di5pll', '递五方云仓', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('104', 'deguo8elog', '德国八易转运', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('105', 'camekong', '到了港', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('106', 'dbstation', 'db-station', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('107', 'dadaoex', '大道物流', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('108', 'dekuncn', '德坤物流', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('109', 'twkd56', '缔惠盛合', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('110', 'gslexpress', '德尚国际速递', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('111', 'eucpost', '德国 EUC POST', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('112', 'est365', '东方汇', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('113', 'ecotransite', '东西E全运', 'D', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('114', 'euexpress', 'EU-EXPRESS', 'E', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('115', 'emsguoji', 'EMS国际快递查询', 'E', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('116', 'eshunda', '俄顺达', 'E', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('117', 'ewe', 'EWE全球快递', 'E', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('118', 'easyexpress', 'EASYEXPRESS国际速递', 'E', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('119', 'edtexpress', 'e直运', 'E', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('120', 'ecallturn', 'E跨通', 'E', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('121', 'fedex', 'FedEx快递查询', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('122', 'fedexus', 'FedEx（美国）', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('123', 'fox', 'FOX国际速递', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('124', 'rufengda', '如风达快递', 'R', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('125', 'fkd', '飞康达物流', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('126', 'feibaokuaidi', '飞豹快递', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('127', 'fandaguoji', '颿达国际', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('128', 'feiyuanvipshop', '飞远配送', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('129', 'hnfy', '飞鹰物流', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('130', 'fengxingtianxia', '风行天下', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('131', 'flysman', '飞力士物流', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('132', 'fbkd', '飞邦快递', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('133', 'sccod', '丰程物流', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('134', 'crazyexpress', '疯狂快递', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('135', 'ftlexpress', '法翔速运', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('136', 'ftd', '富腾达快递', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('137', 'arkexpress', '方舟国际速递', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('138', 'fedroad', 'FedRoad 联邦转运', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('139', 'freakyquick', 'FQ狂派速递', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('140', 'fecobv', '丰客物流', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('141', 'fyex', '飞云快递系统', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('142', 'beebird', '锋鸟物流', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('143', 'shipgce', '飞洋快递', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('144', 'koali', '番薯国际货运', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('145', 'epanex', '泛捷国际速递', 'F', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('146', 'gaticn', 'GATI快递', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('147', 'gts', 'GTS快递', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('148', 'guotongkuaidi', '国通快递', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('149', 'ndkd', '能达速递', 'N', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('150', 'gongsuda', '共速达', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('151', 'gtongsudi', '广通速递（山东）', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('152', 'suteng', '速腾物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('153', 'gdkd', '港快速递', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('154', 'hre', '高铁速递', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('155', 'gscq365', '哥士传奇速递', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('156', 'gjwl', '冠捷物流', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('157', 'xdshipping', '国晶物流', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('158', 'ge2d', 'GE2D跨境物流', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('159', 'gaotieex', '高铁快运', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('160', 'gansuandi', '甘肃安的快递', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('161', 'gdct56', '广东诚通物流', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('162', 'ghtexpress', 'GHT物流', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('163', 'goldjet', '高捷快运', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('164', 'gtgogo', 'GT国际快运', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('165', 'gxwl', '光线速递', 'G', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('166', 'tdhy', '华宇物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('167', 'hl', '恒路物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('168', 'hlyex', '好来运快递', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('169', 'hebeijianhua', '河北建华', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('170', 'huaqikuaiyun', '华企快运', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('171', 'haosheng', '昊盛物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('172', 'hutongwuliu', '户通物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('173', 'hzpl', '华航快递', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('174', 'huangmajia', '黄马甲快递', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('175', 'ucs', '合众速递（UCS）', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('176', 'pfcexpress', '皇家物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('177', 'huoban', '伙伴物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('178', 'nedahm', '红马速递', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('179', 'huiwen', '汇文配送', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('180', 'nmhuahe', '华赫物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('181', 'hjs', '猴急送', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('182', 'hangyu', '航宇快递', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('183', 'huilian', '辉联物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('184', 'huanqiu', '环球速运', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('185', 'htwd', '华通务达物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('186', 'hipito', '海派通', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('187', 'hqtd', '环球通达', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('188', 'airgtc', '航空快递', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('189', 'haoyoukuai', '好又快物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('190', 'ccd', '河南次晨达', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('191', 'hfwuxi', '和丰同城', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('192', 'higo', '黑狗物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('193', 'hyytes', '恒宇运通', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('194', 'hengrui56', '恒瑞物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('195', 'hangrui', '上海航瑞货运', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('196', 'ghl', '环创物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('197', 'hnqst', '河南全速通', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('198', 'hitaoe', 'Hi淘易快递', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('199', 'hhair56', '华瀚快递', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('200', 'haimibuy', '海米派物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('201', 'ht22', '海淘物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('202', 'hivewms', '海沧无忧', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('203', 'hnht56', '鸿泰物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('204', 'hsgtsd', '海硕高铁速递', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('205', 'hltop', '海联快递', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('206', 'hlkytj', '互联快运', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('207', 'haidaibao', '海带宝转运', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('208', 'flowerkd', '花瓣转运', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('209', 'heimao56', '黑猫速运', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('210', 'logistics', '華信物流WTO', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('211', 'hgy56', '环国运物流', 'H', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('212', 'iparcel', 'i-parcel', 'I', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('213', 'jjwl', '佳吉物流', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('214', 'jywl', '佳怡物流', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('215', 'jymwl', '加运美快递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('216', 'jxd', '急先达物流', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('217', 'jgsd', '京广速递快件', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('218', 'jykd', '晋越快递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('219', 'jd', '京东物流', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('220', 'jietekuaidi', '捷特快递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('221', 'jiuyicn', '久易快递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('222', 'jiuyescm', '九曳供应链', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('223', 'junfengguoji', '骏丰国际速递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('224', 'jiajiatong56', '佳家通', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('225', 'jrypex', '吉日优派', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('226', 'jinchengwuliu', '锦程国际物流', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('227', 'jgwl', '景光物流', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('228', 'pzhjst', '急顺通', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('229', 'ruexp', '捷网俄全通', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('230', 'jialidatong', '嘉里大通', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('231', 'jmjss', '金马甲', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('232', 'jiacheng', '佳成快递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('233', 'jsexpress', '骏绅物流', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('234', 'hrex', '锦程快递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('235', 'jieanda', '捷安达国际速递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('236', 'newsway', '家家通快递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('237', 'mapleexpress', '今枫国际快运', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('238', 'jixiangyouau', '吉祥邮（澳洲）', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('239', 'jjx888', '佳捷翔物流', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('240', 'polarexpress', '极地快递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('241', 'jiazhoumao', '加州猫速递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('242', 'juzhongda', '聚中大', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('243', 'jieborne', '捷邦物流', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('244', 'jxfex', '集先锋速递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('245', 'jiugong', '九宫物流', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('246', 'jiujiuwl', '久久物流', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('247', 'jintongkd', '劲通快递', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('248', 'jcsuda', '嘉诚速达', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('249', 'jingshun', '景顺物流', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('250', 'fastontime', '加拿大联通快运', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('251', 'khzto', '柬埔寨中通', 'J', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('252', 'kjkd', '快捷快递', 'K', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('253', 'kangliwuliu', '康力物流', 'K', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('254', 'kuayue', '跨越速运', 'K', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('255', 'kuaiyouda', '快优达速递', 'K', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('256', 'happylink', '开心快递', 'K', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('257', 'ksudi', '快速递', 'K', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('258', 'kyue', '跨跃国际', 'K', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('259', 'kfwnet', '快服务', 'K', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('260', 'kuai8', '快8速运', 'K', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('261', 'kuaidawuliu', '快达物流', 'K', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('262', 'lianb', '联邦快递（国内）', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('263', 'lhtwl', '联昊通物流', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('264', 'lb', '龙邦速递', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('265', 'lejiedi', '乐捷递', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('266', 'lanhukuaidi', '蓝弧快递', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('267', 'ltexp', '乐天速递', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('268', 'lutong', '鲁通快运', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('269', 'ledii', '乐递供应链', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('270', 'lundao', '论道国际物流', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('271', 'lasy56', '林安物流', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('272', 'lsexpress', '6LS EXPRESS', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('273', 'szuem', '联运通物流', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('274', 'blueskyexpress', '蓝天国际航空快递', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('275', 'lfexpress', '龙枫国际速递', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('276', 'gslhkd', '联合快递', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('277', 'longfx', '龙飞祥快递', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('278', 'luben', '陆本速递 LUBEN EXPRESS', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('279', 'unitedex', '联合速运', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('280', 'lbex', '龙邦物流', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('281', 'ltparcel', '联通快递', 'L', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('282', 'macroexpressco', 'ME物流', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('283', 'mh', '民航快递', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('284', 'meiguokuaidi', '美国快递', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('285', 'menduimen', '门对门', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('286', 'mingliangwuliu', '明亮物流', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('287', 'minbangsudi', '民邦速递', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('288', 'minshengkuaidi', '闽盛快递', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('289', 'yundaexus', '美国韵达', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('290', 'mchy', '木春货运', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('291', 'meiquick', '美快国际物流', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('292', 'valueway', '美通快递', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('293', 'cnmcpl', '马珂博逻', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('294', 'mailongdy', '迈隆递运', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('295', 'zsmhwl', '明辉物流', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('296', 'mosuda', '魔速达', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('297', 'meibang', '美邦国际快递', 'M', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('298', 'nuoyaao', '偌亚奥国际', 'N', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('299', 'nuoer', '诺尔国际物流', 'N', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('300', 'nell', '尼尔快递', 'N', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('301', 'ndwl', '南方传媒物流', 'N', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('302', 'canhold', '能装能送', 'N', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('303', 'wanjiatong', '宁夏万家通', 'N', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('304', 'nlebv', '欧亚专线', 'O', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('305', 'oborexpress', 'OBOR Express', 'O', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('306', 'pcaexpress', 'PCA Express', 'P', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('307', 'pingandatengfei', '平安达腾飞', 'P', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('308', 'peixingwuliu', '陪行物流', 'P', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('309', 'pengyuanexpress', '鹏远国际速递', 'P', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('310', 'postelbe', 'PostElbe', 'P', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('311', 'papascm', '啪啪供应链', 'P', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('312', 'bazirim', '皮牙子快递', 'P', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('313', 'qfkd', '全峰快递', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('314', 'qy', '全一快递', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('315', 'qrt', '全日通快递', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('316', 'qckd', '全晨快递', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('317', 'sevendays', '7天连锁物流', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('318', 'qbexpress', '秦邦快运', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('319', 'quanxintong', '全信通快递', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('320', 'quansutong', '全速通国际快递', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('321', 'qinyuan', '秦远物流', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('322', 'qichen', '启辰国际物流', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('323', 'quansu', '全速快运', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('324', 'qzx56', '全之鑫物流', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('325', 'qskdyxgs', '千顺快递', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('326', 'zqlwl', '青旅物流', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('327', 'quanchuan56', '全川物流', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('328', 'quantwl', '全通快运', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('329', 'yatexpress', '乾坤物流', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('330', 'guexp', '全联速运', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('331', 'bjqywl', '青云物流', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('332', 'signedexpress', '签收快递', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('333', 'express7th', '7号速递', 'Q', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('334', 'riyuwuliu', '日昱物流', 'R', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('335', 'rfsd', '瑞丰速递', 'R', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('336', 'rrs', '日日顺物流', 'R', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('337', 'rytsd', '日益通速递', 'R', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('338', 'rrskx', '日日顺快线', 'R', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('339', 'gdrz58', '容智快运', 'R', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('340', 'rrthk', '日日通国际', 'R', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('341', 'homecourier', '如家国际快递', 'R', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('342', 'sewl', '速尔快递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('343', 'haihongwangsong', '山东海红', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('344', 'sh', '盛辉物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('345', 'sfwl', '盛丰物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('346', 'shiyunkuaidi', '世运快递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('347', 'shangda', '上大物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('348', 'stsd', '三态速递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('349', 'saiaodi', '赛澳递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('350', 'ewl', '申通E物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('351', 'shenganwuliu', '圣安物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('352', 'sxhongmajia', '山西红马甲', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('353', 'suijiawuliu', '穗佳物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('354', 'syjiahuier', '沈阳佳惠尔', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('355', 'shlindao', '上海林道货运', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('356', 'sfift', '十方通物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('357', 'shunjiefengda', '顺捷丰达', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('358', 'subida', '速必达物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('359', 'stcd', '速通成达物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('360', 'stkd', '顺通快递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('361', 'sendtochina', '速递中国', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('362', 'sihaiet', '四海快递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('363', 'staky', '首通快运', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('364', 'hnssd56', '顺时达物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('365', 'superb', 'Superb Grace', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('366', 'sfjhd', '圣飞捷快递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('367', 'sofast56', '嗖一下同城快递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('368', 's2c', 'S2C', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('369', 'chinasqk', 'SQK国际速递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('370', 'shunshid', '顺士达速运', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('371', 'synship', 'SYNSHIP快递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('372', 'shandiantu', '闪电兔', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('373', 'sdsy888', '首达速运', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('374', 'sczpds', '速呈宅配', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('375', 'sureline', 'Sureline冠泰', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('376', 'stosolution', '申通国际', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('377', 'sycawl', '狮爱高铁物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('378', 'sxexpress', '三象速递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('379', 'shangqiao56', '商桥物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('380', 'shd56', '商海德物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('381', 'shenma', '神马快递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('382', 'sihiexpress', '四海捷运', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('383', 'superoz', '速配鸥翼', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('384', 'fastgoexpress', '速派快递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('385', 'zjstky', '苏通快运', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('386', 'suning', '苏宁物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('387', 'shaoke', '捎客物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('388', 'sdto', '速达通跨境物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('389', 'sut56', '速通物流', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('390', 'sundarexpress', '顺达快递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('391', 'sxjdfreight', '顺心捷达', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('392', 'shengtongscm', '盛通快递', 'S', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('393', 'tnt', 'TNT快递', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('394', 'tt', '天天快递', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('395', 'tianzong', '天纵物流', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('396', 'chinatzx', '同舟行物流', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('397', 'nntengda', '腾达速递', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('398', 'sd138', '泰国138', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('399', 'tongdaxing', '通达兴物流', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('400', 'tlky', '天联快运', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('401', 'ibenben', '途鲜物流', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('402', 'krtao', '淘韩国际快递', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('403', 'lntjs', '特急送', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('404', 'tny', 'TNY物流', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('405', 'djy56', '天翔东捷运', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('406', 'guoeryue', '天天快物流', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('407', 'tianma', '天马迅达', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('408', 'surpassgo', '天越物流', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('409', 'tianxiang', '天翔快递', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('410', 'tywl99', '天翼物流', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('411', 'shpost', '同城快寄', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('412', 'humpline', '驼峰国际', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('413', 'transrush', 'TransRush', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('414', 'tstexp', 'TST速运通', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('415', 'ctoexp', '泰国中通CTO', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('416', 'thaizto', '泰国中通ZTO', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('417', 'tswlcloud', '天使物流云', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('418', 'tzky', '铁中快运', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('419', 'tcxbthai', 'TCXB国际物流', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('420', 'taimek', '天美快递', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('421', 'taoplus', '淘布斯国际物流', 'T', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('422', 'ups', 'UPS快递查询', 'U', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('423', 'yskd', '优速快递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('424', 'usps', 'USPS美国邮政', 'U', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('425', 'ueq', 'UEQ快递', 'U', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('426', 'uex', 'UEX国际物流', 'U', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('427', 'utaoscm', 'UTAO 优到', 'U', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('428', 'wxwl', '万象物流', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('429', 'weitepai', '微特派', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('430', 'wjwl', '万家物流', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('431', 'wanboex', '万博快递', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('432', 'wtdchina', '威时沛运', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('433', 'wzhaunyun', '微转运', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('434', 'gswtkd', '万通快递', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('435', 'wandougongzhu', '豌豆物流', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('436', 'wjkwl', '万家康物流', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('437', 'vps', '维普恩物流', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('438', 'wykjt', '51跨境通', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('439', 'wherexpess', '威盛快递', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('440', 'weilaimingtian', '未来明天快递', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('441', 'wdm', '万达美', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('442', 'wto56kj', '温通物流', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('443', '56kuaiyun', '五六快运', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('444', 'wowvip', '沃埃家', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('445', 'grivertek', '潍鸿', 'W', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('446', 'xbwl', '新邦物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('447', 'xfwl', '信丰物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('448', 'newegg', '新蛋物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('449', 'xianglongyuntong', '祥龙运通物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('450', 'xianchengliansudi', '西安城联速递', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('451', 'xilaikd', '喜来快递', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('452', 'xsrd', '鑫世锐达', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('453', 'xtb', '鑫通宝物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('454', 'xintianjie', '信天捷快递', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('455', 'xaetc', '西安胜峰', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('456', 'xianfeng', '先锋快递', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('457', 'sunspeedy', '新速航', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('458', 'xipost', '西邮寄', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('459', 'sinatone', '信联通', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('460', 'sunjex', '新杰物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('461', 'alog', '心怡物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('462', 'csxss', '新时速物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('463', 'xiangteng', '翔腾物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('464', 'westwing', '西翼物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('465', 'littlebearbear', '小熊物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('466', 'huanqiuabc', '中国香港环球快运', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('467', 'xinning', '新宁物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('468', 'wlwex', '星空国际', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('469', 'yyexp', '西安运逸快递', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('470', 'xiyoug', '西游寄', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('471', 'xlobo', 'xLobo', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('472', 'xunsuexpress', '迅速快递', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('473', 'whgjkd', '香港伟豪国际物流', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('474', 'xyd666', '鑫远东速运', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('475', 'xdexpress', '迅达速递', 'X', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('476', 'ytkd', '运通快递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('477', 'ycwl', '远成物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('478', 'yfsd', '亚风速递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('479', 'yishunhang', '亿顺航', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('480', 'yfwl', '越丰物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('481', 'yad', '源安达快递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('482', 'yfh', '原飞航物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('483', 'yinjiesudi', '银捷速递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('484', 'yitongfeihong', '一统飞鸿', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('485', 'yuxinwuliu', '宇鑫物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('486', 'yitongda', '易通达', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('487', 'youbijia', '邮必佳', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('488', 'yiqiguojiwuliu', '一柒物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('489', 'yinsu', '音素快运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('490', 'yilingsuyun', '亿领速运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('491', 'yujiawuliu', '煜嘉物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('492', 'gml', '英脉物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('493', 'leopard', '云豹国际货运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('494', 'czwlyn', '云南中诚', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('495', 'sdyoupei', '优配速运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('496', 'yongchang', '永昌物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('497', 'yufeng', '御风速运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('498', 'yousutongda', '优速通达', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('499', 'yongwangda', '永旺达快递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('500', 'yingchao', '英超物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('501', 'edlogistics', '益递物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('502', 'yjxlm', '宜家行', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('503', 'onehcang', '一号仓', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('504', 'ycgky', '远成快运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('505', 'yunfeng56', '韵丰物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('506', 'iyoungspeed', '驿扬国际速运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('507', 'zgyzt', '一站通快递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('508', 'eupackage', '易优包裹', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('509', 'ydglobe', '云达通', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('510', 'el56', 'YLTD', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('511', 'yundx', '运东西', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('512', 'yangbaoguo', '洋包裹', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('513', 'uluckex', '优联吉运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('514', 'ecmscn', '易客满', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('515', 'ubonex', '优邦速运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('516', 'yue777', '玥玛速运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('517', 'ywexpress', '远为快递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('518', 'ezhuanyuan', '易转运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('519', 'yiqisong', '一起送', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('520', 'yongbangwuliu', '永邦国际物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('521', 'yyox', '邮客全球速递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('522', 'yihangmall', '易航物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('523', 'yiouzhou', '易欧洲国际物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('524', 'ykouan', '洋口岸', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('525', 'youyou', '优优速递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('526', 'ytky168', '运通快运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('527', 'sixroad', '易普递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('528', 'yourscm', '雅澳物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('529', 'euguoji', '易邮国际', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('530', 'uscbexpress', '易境达国际物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('531', 'yfsuyun', '驭丰速运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('532', 'yimidida', '壹米滴答', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('533', 'ugoexpress', '邮鸽速运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('534', 'youban', '邮邦国际', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('535', 'hkems', '云邮跨境快递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('536', 'youlai', '邮来速递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('537', 'eta100', '易达国际速递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('538', 'yatfai', '一辉物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('539', 'yzswuliu', '亚洲顺物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('540', 'yifankd', '艺凡快递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('541', 'mantoo', '优能物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('542', 'vctrans', '越中国际物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('543', 'yhtlogistics', '宇航通物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('544', 'ycgglobal', 'YCG物流', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('545', 'yidihui', '驿递汇速递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('546', 'yuanhhk', '远航国际快运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('547', 'yiyou', '易邮速运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('548', 'eusacn', '优莎速运', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('549', 'uhi', '优海国际速递', 'Y', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('550', 'zjs', '宅急送', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('551', 'ztky', '中铁快运', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('552', 'ztwl', '中铁物流', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('553', 'zywl', '中邮物流', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('554', 'zhimakaimen', '芝麻开门', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('555', 'zhengzhoujianhua', '郑州建华', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('556', 'zhongsukuaidi', '中速快件', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('557', 'zhongtianwanyun', '中天万运', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('558', 'zhongruisudi', '中睿速递', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('559', 'zhongwaiyun', '中外运速递', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('560', 'zengyisudi', '增益速递', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('561', 'sujievip', '郑州速捷', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('562', 'ztong', '智通物流', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('563', 'zhichengtongda', '至诚通达快递', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('564', 'zhdwl', '众辉达物流', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('565', 'kuachangwuliu', '直邮易', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('566', 'topspeedex', '中运全速', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('567', 'otobv', '中欧快运', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('568', 'zsky123', '准实快运', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('569', 'cnws', '中国翼', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('570', 'zytdscm', '中宇天地', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('571', 'zhuanyunsifang', '转运四方', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('572', 'hrbzykd', '卓烨快递', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('573', 'zhuoshikuaiyun', '卓实快运', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('574', 'chinaicip', '卓志速运', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('575', 'ynztsy', '纵通速运', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('576', 'zdepost', '直德邮', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('577', 'chinapostcb', '中邮电商', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('578', 'chunghwa56', '中骅物流', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('579', 'cosco', '中远e环球', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('580', 'zf365', '珠峰速运', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('581', 'zhongtongkuaiyun', '中通快运', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('582', 'eucnrail', '中欧国际物流', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('583', 'chnexp', '中翼国际物流', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('584', 'cccc58', '中集冷云', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('585', 'auvanda', '中联速递', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('586', 'zyzoom', '增速跨境', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('587', 'zhpex', '众派速递', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('588', 'byht', '展勤快递', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('589', 'zhongchuan', '众川国际', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('590', 'zhonghuanus', '中环转运', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('591', 'zhonghuan', '中环快递', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('592', 'uszcn', '转运中国', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('593', 'zhitengwuliu', '志腾物流', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('594', 'zsda56', '转瞬达集运', 'Z', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('595', 'zjgj56', '振捷国际货运', 'Z', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('1', 'yuantong', '圆通快递', 'Y', '1', '97', '1553911076', '1554974797');
+INSERT INTO `ey_shop_express` VALUES ('2', 'shentong', '申通快递', 'S', '1', '98', '1553911076', '1554974707');
+INSERT INTO `ey_shop_express` VALUES ('3', 'shunfeng', '顺丰快递', 'S', '1', '98', '1553911076', '1554974710');
+INSERT INTO `ey_shop_express` VALUES ('4', 'yunda', '韵达快递', 'Y', '1', '99', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('5', 'debangwuliu', '德邦快递', 'D', '1', '99', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('6', 'zhongtong', '中通快递', 'Z', '1', '99', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('7', 'huitongkuaidi', '百世快递', 'B', '1', '99', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('8', 'youzhengguonei', '邮政包裹', 'Y', '1', '99', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('9', 'ems', 'EMS', 'E', '1', '99', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('10', 'youzhengguoji', '邮政国际', 'Y', '1', '99', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('11', 'aolau', 'AOL澳通速递', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('12', 'a2u', 'A2U速递', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('13', 'aae', 'AAE快递', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('14', 'annengwuliu', '安能物流', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('15', 'anxl', '安迅物流', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('16', 'auexpress', '澳邮中国快运', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('17', 'exfresh', '安鲜达', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('18', 'anjie88', '安捷物流', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('19', 'adodoxm', '澳多多国际速递', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('20', 'ariesfar', '艾瑞斯远', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('21', 'qdants', 'ANTS EXPRESS', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('22', 'astexpress', '安世通快递', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('23', 'gda', '安的快递', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('24', 'ausexpress', '澳世速递', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('25', 'ibuy8', '爱拜物流', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('26', 'aplusex', 'Aplus物流', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('27', 'adapost', '安达速递', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('28', 'adiexpress', '安达易国际速递', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('29', 'maxeedexpress', '澳洲迈速快递', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('30', 'onway', '昂威物流', 'A', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('31', 'bcwelt', 'BCWELT', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('32', 'balunzhi', '巴伦支快递', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('33', 'xiaohongmao', '北青小红帽', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('34', 'bfdf', '百福东方物流', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('35', 'bangsongwuliu', '邦送物流', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('36', 'lbbk', '宝凯物流', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('37', 'bqcwl', '百千诚物流', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('38', 'idada', '百成大达物流', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('39', 'baishiwuliu', '百世快运', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('40', 'baitengwuliu', '百腾物流', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('41', 'birdex', '笨鸟海淘', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('42', 'bsht', '百事亨通', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('43', 'benteng', '奔腾物流', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('44', 'cuckooexpess', '布谷鸟速递', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('45', 'bgky100', '邦工快运', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('46', 'bosind', '堡昕德速递', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('47', 'banma', '斑马物联网', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('48', 'polarisexpress', '北极星快运', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('49', 'beijingfengyue', '北京丰越供应链', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('50', 'europe8', '败欧洲', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('51', 'bmlchina', '标杆物流', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('52', 'comexpress', '邦通国际', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('53', 'baotongkd', '宝通快递', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('54', 'beckygo', '佰麒快递', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('55', 'boyol', '贝业物流', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('56', 'bdatong', '八达通快递', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('57', 'bangbangpost', '帮帮发', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('58', 'baoxianda', '报通快递', 'B', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('59', 'coe', '中国东方(COE)', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('60', 'cloudexpress', 'CE易欧通国际速递', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('61', 'city100', '城市100', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('62', 'chuanxiwuliu', '传喜物流', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('63', 'chengjisudi', '城际速递', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('64', 'lijisong', '立即送', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('65', 'chukou1', '出口易', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('66', 'nanjingshengbang', '晟邦物流', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('67', 'flyway', '程光快递', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('68', 'cbo56', '钏博物流', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('69', 'cex', '城铁速递', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('70', 'cnup', 'CNUP 中联邮', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('71', 'clsp', 'CL日中速运', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('72', 'cnair', 'CNAIR', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('73', 'cangspeed', '仓鼠快递', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('74', 'spring56', '春风物流', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('75', 'cunto', '村通快递', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('76', 'longvast', '长风物流', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('77', 'changjiang', '长江国际速递', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('78', 'cncexp', 'C&C国际速递', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('79', 'parcelchina', '诚一物流', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('80', 'chengtong', '城通物流', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('81', 'otpexpress', '承诺达', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('82', 'sfpost', '曹操到', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('83', 'changwooair', '昌宇国际', 'C', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('84', 'dhl', 'DHL快递（中国件）', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('85', 'dhlen', 'DHL（国际件）', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('86', 'dhlde', 'DHL（德国件）', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('87', 'dtwl', '大田物流', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('88', 'disifang', '递四方', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('89', 'dayangwuliu', '大洋物流', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('90', 'dechuangwuliu', '德创物流', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('91', 'dskd', 'D速物流', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('92', 'donghanwl', '东瀚物流', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('93', 'dfpost', '达方物流', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('94', 'dongjun', '东骏快捷物流', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('95', 'dindon', '叮咚澳洲转运', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('96', 'dazhong', '大众佐川急便', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('97', 'ahdf', '德方物流', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('98', 'dehaoyi', '德豪驿', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('99', 'dhlpaket', 'DHL Paket', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('100', 'ubuy', '德国优拜物流', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('101', 'adlerlogi', '德国雄鹰速递', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('102', 'yunexpress', '德国云快递', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('103', 'di5pll', '递五方云仓', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('104', 'deguo8elog', '德国八易转运', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('105', 'camekong', '到了港', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('106', 'dbstation', 'db-station', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('107', 'dadaoex', '大道物流', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('108', 'dekuncn', '德坤物流', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('109', 'twkd56', '缔惠盛合', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('110', 'gslexpress', '德尚国际速递', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('111', 'eucpost', '德国 EUC POST', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('112', 'est365', '东方汇', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('113', 'ecotransite', '东西E全运', 'D', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('114', 'euexpress', 'EU-EXPRESS', 'E', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('115', 'emsguoji', 'EMS国际快递查询', 'E', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('116', 'eshunda', '俄顺达', 'E', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('117', 'ewe', 'EWE全球快递', 'E', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('118', 'easyexpress', 'EASYEXPRESS国际速递', 'E', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('119', 'edtexpress', 'e直运', 'E', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('120', 'ecallturn', 'E跨通', 'E', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('121', 'fedex', 'FedEx快递查询', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('122', 'fedexus', 'FedEx（美国）', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('123', 'fox', 'FOX国际速递', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('124', 'rufengda', '如风达快递', 'R', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('125', 'fkd', '飞康达物流', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('126', 'feibaokuaidi', '飞豹快递', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('127', 'fandaguoji', '颿达国际', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('128', 'feiyuanvipshop', '飞远配送', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('129', 'hnfy', '飞鹰物流', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('130', 'fengxingtianxia', '风行天下', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('131', 'flysman', '飞力士物流', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('132', 'fbkd', '飞邦快递', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('133', 'sccod', '丰程物流', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('134', 'crazyexpress', '疯狂快递', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('135', 'ftlexpress', '法翔速运', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('136', 'ftd', '富腾达快递', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('137', 'arkexpress', '方舟国际速递', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('138', 'fedroad', 'FedRoad 联邦转运', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('139', 'freakyquick', 'FQ狂派速递', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('140', 'fecobv', '丰客物流', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('141', 'fyex', '飞云快递系统', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('142', 'beebird', '锋鸟物流', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('143', 'shipgce', '飞洋快递', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('144', 'koali', '番薯国际货运', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('145', 'epanex', '泛捷国际速递', 'F', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('146', 'gaticn', 'GATI快递', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('147', 'gts', 'GTS快递', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('148', 'guotongkuaidi', '国通快递', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('149', 'ndkd', '能达速递', 'N', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('150', 'gongsuda', '共速达', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('151', 'gtongsudi', '广通速递（山东）', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('152', 'suteng', '速腾物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('153', 'gdkd', '港快速递', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('154', 'hre', '高铁速递', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('155', 'gscq365', '哥士传奇速递', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('156', 'gjwl', '冠捷物流', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('157', 'xdshipping', '国晶物流', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('158', 'ge2d', 'GE2D跨境物流', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('159', 'gaotieex', '高铁快运', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('160', 'gansuandi', '甘肃安的快递', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('161', 'gdct56', '广东诚通物流', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('162', 'ghtexpress', 'GHT物流', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('163', 'goldjet', '高捷快运', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('164', 'gtgogo', 'GT国际快运', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('165', 'gxwl', '光线速递', 'G', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('166', 'tdhy', '华宇物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('167', 'hl', '恒路物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('168', 'hlyex', '好来运快递', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('169', 'hebeijianhua', '河北建华', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('170', 'huaqikuaiyun', '华企快运', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('171', 'haosheng', '昊盛物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('172', 'hutongwuliu', '户通物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('173', 'hzpl', '华航快递', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('174', 'huangmajia', '黄马甲快递', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('175', 'ucs', '合众速递（UCS）', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('176', 'pfcexpress', '皇家物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('177', 'huoban', '伙伴物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('178', 'nedahm', '红马速递', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('179', 'huiwen', '汇文配送', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('180', 'nmhuahe', '华赫物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('181', 'hjs', '猴急送', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('182', 'hangyu', '航宇快递', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('183', 'huilian', '辉联物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('184', 'huanqiu', '环球速运', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('185', 'htwd', '华通务达物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('186', 'hipito', '海派通', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('187', 'hqtd', '环球通达', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('188', 'airgtc', '航空快递', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('189', 'haoyoukuai', '好又快物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('190', 'ccd', '河南次晨达', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('191', 'hfwuxi', '和丰同城', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('192', 'higo', '黑狗物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('193', 'hyytes', '恒宇运通', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('194', 'hengrui56', '恒瑞物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('195', 'hangrui', '上海航瑞货运', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('196', 'ghl', '环创物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('197', 'hnqst', '河南全速通', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('198', 'hitaoe', 'Hi淘易快递', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('199', 'hhair56', '华瀚快递', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('200', 'haimibuy', '海米派物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('201', 'ht22', '海淘物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('202', 'hivewms', '海沧无忧', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('203', 'hnht56', '鸿泰物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('204', 'hsgtsd', '海硕高铁速递', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('205', 'hltop', '海联快递', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('206', 'hlkytj', '互联快运', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('207', 'haidaibao', '海带宝转运', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('208', 'flowerkd', '花瓣转运', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('209', 'heimao56', '黑猫速运', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('210', 'logistics', '華信物流WTO', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('211', 'hgy56', '环国运物流', 'H', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('212', 'iparcel', 'i-parcel', 'I', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('213', 'jjwl', '佳吉物流', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('214', 'jywl', '佳怡物流', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('215', 'jymwl', '加运美快递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('216', 'jxd', '急先达物流', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('217', 'jgsd', '京广速递快件', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('218', 'jykd', '晋越快递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('219', 'jd', '京东物流', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('220', 'jietekuaidi', '捷特快递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('221', 'jiuyicn', '久易快递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('222', 'jiuyescm', '九曳供应链', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('223', 'junfengguoji', '骏丰国际速递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('224', 'jiajiatong56', '佳家通', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('225', 'jrypex', '吉日优派', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('226', 'jinchengwuliu', '锦程国际物流', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('227', 'jgwl', '景光物流', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('228', 'pzhjst', '急顺通', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('229', 'ruexp', '捷网俄全通', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('230', 'jialidatong', '嘉里大通', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('231', 'jmjss', '金马甲', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('232', 'jiacheng', '佳成快递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('233', 'jsexpress', '骏绅物流', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('234', 'hrex', '锦程快递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('235', 'jieanda', '捷安达国际速递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('236', 'newsway', '家家通快递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('237', 'mapleexpress', '今枫国际快运', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('238', 'jixiangyouau', '吉祥邮（澳洲）', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('239', 'jjx888', '佳捷翔物流', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('240', 'polarexpress', '极地快递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('241', 'jiazhoumao', '加州猫速递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('242', 'juzhongda', '聚中大', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('243', 'jieborne', '捷邦物流', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('244', 'jxfex', '集先锋速递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('245', 'jiugong', '九宫物流', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('246', 'jiujiuwl', '久久物流', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('247', 'jintongkd', '劲通快递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('248', 'jcsuda', '嘉诚速达', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('249', 'jingshun', '景顺物流', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('250', 'fastontime', '加拿大联通快运', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('251', 'khzto', '柬埔寨中通', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('252', 'kjkd', '快捷快递', 'K', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('253', 'kangliwuliu', '康力物流', 'K', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('254', 'kuayue', '跨越速运', 'K', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('255', 'kuaiyouda', '快优达速递', 'K', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('256', 'happylink', '开心快递', 'K', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('257', 'ksudi', '快速递', 'K', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('258', 'kyue', '跨跃国际', 'K', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('259', 'kfwnet', '快服务', 'K', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('260', 'kuai8', '快8速运', 'K', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('261', 'kuaidawuliu', '快达物流', 'K', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('262', 'lianb', '联邦快递（国内）', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('263', 'lhtwl', '联昊通物流', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('264', 'lb', '龙邦速递', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('265', 'lejiedi', '乐捷递', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('266', 'lanhukuaidi', '蓝弧快递', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('267', 'ltexp', '乐天速递', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('268', 'lutong', '鲁通快运', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('269', 'ledii', '乐递供应链', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('270', 'lundao', '论道国际物流', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('271', 'lasy56', '林安物流', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('272', 'lsexpress', '6LS EXPRESS', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('273', 'szuem', '联运通物流', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('274', 'blueskyexpress', '蓝天国际航空快递', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('275', 'lfexpress', '龙枫国际速递', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('276', 'gslhkd', '联合快递', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('277', 'longfx', '龙飞祥快递', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('278', 'luben', '陆本速递 LUBEN EXPRESS', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('279', 'unitedex', '联合速运', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('280', 'lbex', '龙邦物流', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('281', 'ltparcel', '联通快递', 'L', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('282', 'macroexpressco', 'ME物流', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('283', 'mh', '民航快递', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('284', 'meiguokuaidi', '美国快递', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('285', 'menduimen', '门对门', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('286', 'mingliangwuliu', '明亮物流', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('287', 'minbangsudi', '民邦速递', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('288', 'minshengkuaidi', '闽盛快递', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('289', 'yundaexus', '美国韵达', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('290', 'mchy', '木春货运', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('291', 'meiquick', '美快国际物流', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('292', 'valueway', '美通快递', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('293', 'cnmcpl', '马珂博逻', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('294', 'mailongdy', '迈隆递运', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('295', 'zsmhwl', '明辉物流', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('296', 'mosuda', '魔速达', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('297', 'meibang', '美邦国际快递', 'M', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('298', 'nuoyaao', '偌亚奥国际', 'N', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('299', 'nuoer', '诺尔国际物流', 'N', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('300', 'nell', '尼尔快递', 'N', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('301', 'ndwl', '南方传媒物流', 'N', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('302', 'canhold', '能装能送', 'N', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('303', 'wanjiatong', '宁夏万家通', 'N', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('304', 'nlebv', '欧亚专线', 'O', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('305', 'oborexpress', 'OBOR Express', 'O', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('306', 'pcaexpress', 'PCA Express', 'P', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('307', 'pingandatengfei', '平安达腾飞', 'P', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('308', 'peixingwuliu', '陪行物流', 'P', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('309', 'pengyuanexpress', '鹏远国际速递', 'P', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('310', 'postelbe', 'PostElbe', 'P', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('311', 'papascm', '啪啪供应链', 'P', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('312', 'bazirim', '皮牙子快递', 'P', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('313', 'qfkd', '全峰快递', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('314', 'qy', '全一快递', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('315', 'qrt', '全日通快递', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('316', 'qckd', '全晨快递', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('317', 'sevendays', '7天连锁物流', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('318', 'qbexpress', '秦邦快运', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('319', 'quanxintong', '全信通快递', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('320', 'quansutong', '全速通国际快递', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('321', 'qinyuan', '秦远物流', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('322', 'qichen', '启辰国际物流', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('323', 'quansu', '全速快运', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('324', 'qzx56', '全之鑫物流', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('325', 'qskdyxgs', '千顺快递', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('326', 'zqlwl', '青旅物流', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('327', 'quanchuan56', '全川物流', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('328', 'quantwl', '全通快运', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('329', 'yatexpress', '乾坤物流', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('330', 'guexp', '全联速运', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('331', 'bjqywl', '青云物流', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('332', 'signedexpress', '签收快递', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('333', 'express7th', '7号速递', 'Q', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('334', 'riyuwuliu', '日昱物流', 'R', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('335', 'rfsd', '瑞丰速递', 'R', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('336', 'rrs', '日日顺物流', 'R', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('337', 'rytsd', '日益通速递', 'R', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('338', 'rrskx', '日日顺快线', 'R', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('339', 'gdrz58', '容智快运', 'R', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('340', 'rrthk', '日日通国际', 'R', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('341', 'homecourier', '如家国际快递', 'R', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('342', 'sewl', '速尔快递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('343', 'haihongwangsong', '山东海红', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('344', 'sh', '盛辉物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('345', 'sfwl', '盛丰物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('346', 'shiyunkuaidi', '世运快递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('347', 'shangda', '上大物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('348', 'stsd', '三态速递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('349', 'saiaodi', '赛澳递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('350', 'ewl', '申通E物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('351', 'shenganwuliu', '圣安物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('352', 'sxhongmajia', '山西红马甲', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('353', 'suijiawuliu', '穗佳物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('354', 'syjiahuier', '沈阳佳惠尔', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('355', 'shlindao', '上海林道货运', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('356', 'sfift', '十方通物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('357', 'shunjiefengda', '顺捷丰达', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('358', 'subida', '速必达物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('359', 'stcd', '速通成达物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('360', 'stkd', '顺通快递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('361', 'sendtochina', '速递中国', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('362', 'sihaiet', '四海快递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('363', 'staky', '首通快运', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('364', 'hnssd56', '顺时达物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('365', 'superb', 'Superb Grace', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('366', 'sfjhd', '圣飞捷快递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('367', 'sofast56', '嗖一下同城快递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('368', 's2c', 'S2C', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('369', 'chinasqk', 'SQK国际速递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('370', 'shunshid', '顺士达速运', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('371', 'synship', 'SYNSHIP快递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('372', 'shandiantu', '闪电兔', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('373', 'sdsy888', '首达速运', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('374', 'sczpds', '速呈宅配', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('375', 'sureline', 'Sureline冠泰', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('376', 'stosolution', '申通国际', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('377', 'sycawl', '狮爱高铁物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('378', 'sxexpress', '三象速递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('379', 'shangqiao56', '商桥物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('380', 'shd56', '商海德物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('381', 'shenma', '神马快递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('382', 'sihiexpress', '四海捷运', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('383', 'superoz', '速配鸥翼', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('384', 'fastgoexpress', '速派快递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('385', 'zjstky', '苏通快运', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('386', 'suning', '苏宁物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('387', 'shaoke', '捎客物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('388', 'sdto', '速达通跨境物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('389', 'sut56', '速通物流', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('390', 'sundarexpress', '顺达快递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('391', 'sxjdfreight', '顺心捷达', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('392', 'shengtongscm', '盛通快递', 'S', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('393', 'tnt', 'TNT快递', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('394', 'tt', '天天快递', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('395', 'tianzong', '天纵物流', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('396', 'chinatzx', '同舟行物流', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('397', 'nntengda', '腾达速递', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('398', 'sd138', '泰国138', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('399', 'tongdaxing', '通达兴物流', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('400', 'tlky', '天联快运', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('401', 'ibenben', '途鲜物流', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('402', 'krtao', '淘韩国际快递', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('403', 'lntjs', '特急送', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('404', 'tny', 'TNY物流', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('405', 'djy56', '天翔东捷运', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('406', 'guoeryue', '天天快物流', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('407', 'tianma', '天马迅达', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('408', 'surpassgo', '天越物流', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('409', 'tianxiang', '天翔快递', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('410', 'tywl99', '天翼物流', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('411', 'shpost', '同城快寄', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('412', 'humpline', '驼峰国际', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('413', 'transrush', 'TransRush', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('414', 'tstexp', 'TST速运通', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('415', 'ctoexp', '泰国中通CTO', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('416', 'thaizto', '泰国中通ZTO', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('417', 'tswlcloud', '天使物流云', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('418', 'tzky', '铁中快运', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('419', 'tcxbthai', 'TCXB国际物流', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('420', 'taimek', '天美快递', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('421', 'taoplus', '淘布斯国际物流', 'T', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('422', 'ups', 'UPS快递查询', 'U', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('423', 'yskd', '优速快递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('424', 'usps', 'USPS美国邮政', 'U', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('425', 'ueq', 'UEQ快递', 'U', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('426', 'uex', 'UEX国际物流', 'U', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('427', 'utaoscm', 'UTAO 优到', 'U', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('428', 'wxwl', '万象物流', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('429', 'weitepai', '微特派', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('430', 'wjwl', '万家物流', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('431', 'wanboex', '万博快递', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('432', 'wtdchina', '威时沛运', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('433', 'wzhaunyun', '微转运', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('434', 'gswtkd', '万通快递', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('435', 'wandougongzhu', '豌豆物流', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('436', 'wjkwl', '万家康物流', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('437', 'vps', '维普恩物流', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('438', 'wykjt', '51跨境通', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('439', 'wherexpess', '威盛快递', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('440', 'weilaimingtian', '未来明天快递', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('441', 'wdm', '万达美', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('442', 'wto56kj', '温通物流', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('443', '56kuaiyun', '五六快运', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('444', 'wowvip', '沃埃家', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('445', 'grivertek', '潍鸿', 'W', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('446', 'xbwl', '新邦物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('447', 'xfwl', '信丰物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('448', 'newegg', '新蛋物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('449', 'xianglongyuntong', '祥龙运通物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('450', 'xianchengliansudi', '西安城联速递', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('451', 'xilaikd', '喜来快递', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('452', 'xsrd', '鑫世锐达', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('453', 'xtb', '鑫通宝物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('454', 'xintianjie', '信天捷快递', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('455', 'xaetc', '西安胜峰', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('456', 'xianfeng', '先锋快递', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('457', 'sunspeedy', '新速航', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('458', 'xipost', '西邮寄', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('459', 'sinatone', '信联通', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('460', 'sunjex', '新杰物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('461', 'alog', '心怡物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('462', 'csxss', '新时速物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('463', 'xiangteng', '翔腾物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('464', 'westwing', '西翼物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('465', 'littlebearbear', '小熊物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('466', 'huanqiuabc', '中国香港环球快运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('467', 'xinning', '新宁物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('468', 'wlwex', '星空国际', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('469', 'yyexp', '西安运逸快递', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('470', 'xiyoug', '西游寄', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('471', 'xlobo', 'xLobo', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('472', 'xunsuexpress', '迅速快递', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('473', 'whgjkd', '香港伟豪国际物流', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('474', 'xyd666', '鑫远东速运', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('475', 'xdexpress', '迅达速递', 'X', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('476', 'ytkd', '运通快递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('477', 'ycwl', '远成物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('478', 'yfsd', '亚风速递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('479', 'yishunhang', '亿顺航', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('480', 'yfwl', '越丰物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('481', 'yad', '源安达快递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('482', 'yfh', '原飞航物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('483', 'yinjiesudi', '银捷速递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('484', 'yitongfeihong', '一统飞鸿', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('485', 'yuxinwuliu', '宇鑫物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('486', 'yitongda', '易通达', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('487', 'youbijia', '邮必佳', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('488', 'yiqiguojiwuliu', '一柒物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('489', 'yinsu', '音素快运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('490', 'yilingsuyun', '亿领速运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('491', 'yujiawuliu', '煜嘉物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('492', 'gml', '英脉物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('493', 'leopard', '云豹国际货运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('494', 'czwlyn', '云南中诚', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('495', 'sdyoupei', '优配速运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('496', 'yongchang', '永昌物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('497', 'yufeng', '御风速运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('498', 'yousutongda', '优速通达', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('499', 'yongwangda', '永旺达快递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('500', 'yingchao', '英超物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('501', 'edlogistics', '益递物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('502', 'yjxlm', '宜家行', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('503', 'onehcang', '一号仓', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('504', 'ycgky', '远成快运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('505', 'yunfeng56', '韵丰物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('506', 'iyoungspeed', '驿扬国际速运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('507', 'zgyzt', '一站通快递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('508', 'eupackage', '易优包裹', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('509', 'ydglobe', '云达通', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('510', 'el56', 'YLTD', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('511', 'yundx', '运东西', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('512', 'yangbaoguo', '洋包裹', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('513', 'uluckex', '优联吉运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('514', 'ecmscn', '易客满', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('515', 'ubonex', '优邦速运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('516', 'yue777', '玥玛速运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('517', 'ywexpress', '远为快递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('518', 'ezhuanyuan', '易转运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('519', 'yiqisong', '一起送', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('520', 'yongbangwuliu', '永邦国际物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('521', 'yyox', '邮客全球速递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('522', 'yihangmall', '易航物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('523', 'yiouzhou', '易欧洲国际物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('524', 'ykouan', '洋口岸', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('525', 'youyou', '优优速递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('526', 'ytky168', '运通快运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('527', 'sixroad', '易普递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('528', 'yourscm', '雅澳物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('529', 'euguoji', '易邮国际', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('530', 'uscbexpress', '易境达国际物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('531', 'yfsuyun', '驭丰速运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('532', 'yimidida', '壹米滴答', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('533', 'ugoexpress', '邮鸽速运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('534', 'youban', '邮邦国际', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('535', 'hkems', '云邮跨境快递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('536', 'youlai', '邮来速递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('537', 'eta100', '易达国际速递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('538', 'yatfai', '一辉物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('539', 'yzswuliu', '亚洲顺物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('540', 'yifankd', '艺凡快递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('541', 'mantoo', '优能物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('542', 'vctrans', '越中国际物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('543', 'yhtlogistics', '宇航通物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('544', 'ycgglobal', 'YCG物流', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('545', 'yidihui', '驿递汇速递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('546', 'yuanhhk', '远航国际快运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('547', 'yiyou', '易邮速运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('548', 'eusacn', '优莎速运', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('549', 'uhi', '优海国际速递', 'Y', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('550', 'zjs', '宅急送', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('551', 'ztky', '中铁快运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('552', 'ztwl', '中铁物流', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('553', 'zywl', '中邮物流', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('554', 'zhimakaimen', '芝麻开门', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('555', 'zhengzhoujianhua', '郑州建华', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('556', 'zhongsukuaidi', '中速快件', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('557', 'zhongtianwanyun', '中天万运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('558', 'zhongruisudi', '中睿速递', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('559', 'zhongwaiyun', '中外运速递', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('560', 'zengyisudi', '增益速递', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('561', 'sujievip', '郑州速捷', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('562', 'ztong', '智通物流', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('563', 'zhichengtongda', '至诚通达快递', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('564', 'zhdwl', '众辉达物流', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('565', 'kuachangwuliu', '直邮易', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('566', 'topspeedex', '中运全速', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('567', 'otobv', '中欧快运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('568', 'zsky123', '准实快运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('569', 'cnws', '中国翼', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('570', 'zytdscm', '中宇天地', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('571', 'zhuanyunsifang', '转运四方', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('572', 'hrbzykd', '卓烨快递', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('573', 'zhuoshikuaiyun', '卓实快运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('574', 'chinaicip', '卓志速运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('575', 'ynztsy', '纵通速运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('576', 'zdepost', '直德邮', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('577', 'chinapostcb', '中邮电商', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('578', 'chunghwa56', '中骅物流', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('579', 'cosco', '中远e环球', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('580', 'zf365', '珠峰速运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('581', 'zhongtongkuaiyun', '中通快运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('582', 'eucnrail', '中欧国际物流', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('583', 'chnexp', '中翼国际物流', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('584', 'cccc58', '中集冷云', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('585', 'auvanda', '中联速递', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('586', 'zyzoom', '增速跨境', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('587', 'zhpex', '众派速递', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('588', 'byht', '展勤快递', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('589', 'zhongchuan', '众川国际', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('590', 'zhonghuanus', '中环转运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('591', 'zhonghuan', '中环快递', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('592', 'uszcn', '转运中国', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('593', 'zhitengwuliu', '志腾物流', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('594', 'zsda56', '转瞬达集运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('595', 'zjgj56', '振捷国际货运', 'Z', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('596', 'jtexpress', '极兔速递', 'J', '1', '100', '1553911076', '1553911076');
+INSERT INTO `ey_shop_express` VALUES ('597', 'fengwang', '丰网速运', 'F', '1', '100', '1553911076', '1647484768');
 
 -- -----------------------------
 -- Table structure for `ey_shop_order`
@@ -7875,13 +8681,18 @@ INSERT INTO `ey_shop_express` VALUES ('595', 'zjgj56', '振捷国际货运', 'Z'
 DROP TABLE IF EXISTS `ey_shop_order`;
 CREATE TABLE `ey_shop_order` (
   `order_id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '订单id',
-  `order_code` varchar(30) NOT NULL DEFAULT '' COMMENT '订单编号',
+  `order_code` varchar(50) NOT NULL DEFAULT '' COMMENT '订单编号',
   `users_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员id',
+  `merchant_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '多商家ID',
   `order_status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '订单状态：0未付款(已下单)，1已付款(待发货)，2已发货(待收货)，3已完成(确认收货)，-1订单取消(已关闭)，4订单过期',
   `payment_method` tinyint(1) DEFAULT '0' COMMENT '订单支付方式，0为在线支付，1为货到付款，默认0',
   `pay_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '支付时间',
   `pay_name` varchar(20) NOT NULL DEFAULT '' COMMENT '支付方式名称',
   `wechat_pay_type` varchar(20) NOT NULL DEFAULT '' COMMENT '微信支付时，标记使用的支付类型（扫码支付，微信内部，微信H5页面）',
+  `order_terminal` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '订单终端(1=电脑端、2=手机端、3微信小程序)',
+  `contains_virtual` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '订单是否包含虚拟商品(1=不包含、2=包含)',
+  `manual_refund` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '订单是否被手动关闭并退款',
+  `refund_note` varchar(500) NOT NULL DEFAULT '' COMMENT '订单手动退款原因',
   `pay_details` text COMMENT '支付时返回的数据，以serialize序列化后存入，用于后续查询。',
   `express_order` varchar(50) DEFAULT '' COMMENT '发货物流单号',
   `express_name` varchar(32) DEFAULT '' COMMENT '发货物流名称',
@@ -7889,6 +8700,9 @@ CREATE TABLE `ey_shop_order` (
   `express_time` int(11) DEFAULT '0' COMMENT '发货时间',
   `consignee` varchar(30) NOT NULL DEFAULT '' COMMENT '收货人',
   `confirm_time` int(11) DEFAULT '0' COMMENT '收货确认时间',
+  `allow_service` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '订单是否允许申请售后维权，0=允许申请维权，1=不允许申请维权',
+  `obtain_scores` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '消费获得积分数',
+  `is_obtain_scores` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '该订单是否已赠送积分，0=未赠送，1=已赠送',
   `shipping_fee` decimal(10,2) DEFAULT '0.00' COMMENT '订单运费',
   `order_total_amount` decimal(10,2) DEFAULT '0.00' COMMENT '订单总价',
   `order_amount` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '应付款金额',
@@ -7899,7 +8713,7 @@ CREATE TABLE `ey_shop_order` (
   `district` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '县区',
   `address` varchar(500) NOT NULL DEFAULT '' COMMENT '收货地址',
   `mobile` varchar(20) DEFAULT '' COMMENT '手机',
-  `prom_type` tinyint(1) unsigned DEFAULT '0' COMMENT '订单类型：0普通订单，1虚拟订单',
+  `prom_type` tinyint(1) unsigned DEFAULT '0' COMMENT '订单类型：0普通订单，1虚拟订单,2-核销订单(单次)',
   `virtual_delivery` text COMMENT '虚拟订单时，卖家发货给买家的回复',
   `admin_note` text COMMENT '管理员操作备注',
   `is_comment` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否已评论，0为否，1为是，默认0',
@@ -7914,6 +8728,8 @@ CREATE TABLE `ey_shop_order` (
   `coupon_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '优惠券数据表ID',
   `use_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员的优惠券数据表ID',
   `coupon_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '使用的优惠券金额',
+  `verify_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '核销记录表ID(weapp_verify表)',
+  `logistics_type` int(11) unsigned NOT NULL DEFAULT '1' COMMENT '订单物流类型(1:快递发货; 2:到店核销;)',
   PRIMARY KEY (`order_id`),
   UNIQUE KEY `order_code` (`order_code`),
   KEY `users_id` (`users_id`)
@@ -7932,12 +8748,13 @@ CREATE TABLE `ey_shop_order_comment` (
   `details_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '订单明细表ID',
   `product_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '商品ID',
   `total_score` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '总评分，1：好评，2中评，3差评',
-  `content` varchar(1000) NOT NULL DEFAULT '' COMMENT '评论内容',
+  `content` text NOT NULL COMMENT '评论内容',
   `upload_img` varchar(3000) NOT NULL DEFAULT '' COMMENT '晒单图片',
   `admin_reply` varchar(1000) NOT NULL DEFAULT '' COMMENT '管理员回复',
   `ip_address` varchar(15) NOT NULL DEFAULT '' COMMENT 'IP地址',
   `is_show` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '是否显示：0否，1是',
   `is_anonymous` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否匿名评价：0否，1是',
+  `is_new_comment` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否新版评价：0否，1是',
   `lang` varchar(30) NOT NULL DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '添加时间',
   `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
@@ -8004,8 +8821,9 @@ CREATE TABLE `ey_shop_order_service` (
   `service_id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `service_type` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '类型：1换货，2退货，3维修',
   `users_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '会员id',
+  `merchant_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '多商家ID',
   `order_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '订单ID',
-  `order_code` varchar(20) NOT NULL DEFAULT '' COMMENT '订单编号',
+  `order_code` varchar(50) NOT NULL DEFAULT '' COMMENT '订单编号',
   `details_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '订单明细表ID',
   `product_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '产品ID',
   `product_name` varchar(200) NOT NULL DEFAULT '' COMMENT '产品名称',
@@ -8017,10 +8835,15 @@ CREATE TABLE `ey_shop_order_service` (
   `address` varchar(500) NOT NULL DEFAULT '' COMMENT '退货的收货地址',
   `consignee` varchar(30) NOT NULL DEFAULT '' COMMENT '收货人',
   `mobile` varchar(20) NOT NULL DEFAULT '' COMMENT '手机',
+  `manual_refund` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '服务单是否被手动关闭并退款',
+  `manual_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '服务单手动退款时间',
+  `refund_note` varchar(500) NOT NULL DEFAULT '' COMMENT '服务单手动退款原因',
   `refund_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '退还金额',
   `refund_balance` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '退还余额',
   `refund_code` varchar(40) NOT NULL DEFAULT '' COMMENT '退款单号',
   `status` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '状态：1审核中 2审核通过 3审核不通过 4已发货 5已收货 6换货完成 7退款完成 8服务取消',
+  `audit_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '审核时间',
+  `refund_remark` varchar(500) NOT NULL DEFAULT '' COMMENT '退款备注',
   `users_delivery` varchar(500) NOT NULL DEFAULT '' COMMENT '会员发货信息',
   `admin_delivery` varchar(500) NOT NULL DEFAULT '' COMMENT '管理员发货信息',
   `admin_note` varchar(1000) NOT NULL DEFAULT '' COMMENT '管理员操作备注',
@@ -8059,6 +8882,27 @@ CREATE TABLE `ey_shop_order_service_log` (
 
 
 -- -----------------------------
+-- Table structure for `ey_shop_order_unified_pay`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_shop_order_unified_pay`;
+CREATE TABLE `ey_shop_order_unified_pay` (
+  `unified_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '统一支付订单ID',
+  `unified_number` varchar(30) NOT NULL DEFAULT '' COMMENT '统一支付订单编号',
+  `unified_amount` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '统一支付订单应付款金额',
+  `users_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员ID',
+  `order_ids` text NOT NULL COMMENT '合并支付的订单ID，serialize序列化存储',
+  `pay_status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '统一支付订单状态：0未付款，1已付款',
+  `pay_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '统一支付订单时间',
+  `pay_name` varchar(20) NOT NULL DEFAULT '' COMMENT '统一支付订单方式名称',
+  `wechat_pay_type` varchar(20) NOT NULL DEFAULT '' COMMENT '微信支付时，标记使用的支付类型（扫码支付，微信内部，微信H5页面）',
+  `add_time` int(11) unsigned DEFAULT '0' COMMENT '下单时间',
+  `update_time` int(11) unsigned DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`unified_id`),
+  KEY `users_id` (`users_id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='订单统一支付表';
+
+
+-- -----------------------------
 -- Table structure for `ey_shop_product_attr`
 -- -----------------------------
 DROP TABLE IF EXISTS `ey_shop_product_attr`;
@@ -8068,6 +8912,8 @@ CREATE TABLE `ey_shop_product_attr` (
   `attr_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '属性id',
   `attr_value` text NOT NULL COMMENT '属性值',
   `attr_price` varchar(255) DEFAULT '' COMMENT '属性价格',
+  `is_custom` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否自定义参数(0否 1是)',
+  `sort_order` int(11) unsigned NOT NULL DEFAULT '100' COMMENT '属性排序',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`product_attr_id`),
@@ -8078,42 +8924,42 @@ CREATE TABLE `ey_shop_product_attr` (
 -- -----------------------------
 -- Records of `ey_shop_product_attr`
 -- -----------------------------
-INSERT INTO `ey_shop_product_attr` VALUES ('1', '27', '1', 'EMUI 4.1 + Android 6.0', '', '1591262821', '1591262821');
-INSERT INTO `ey_shop_product_attr` VALUES ('2', '27', '2', 'EMUI 4.1', '', '1591262821', '1591262821');
-INSERT INTO `ey_shop_product_attr` VALUES ('3', '27', '3', '虚拟键盘', '', '1591262821', '1591262821');
-INSERT INTO `ey_shop_product_attr` VALUES ('4', '27', '4', 'EDI-AL10', '', '1591262821', '1591262821');
-INSERT INTO `ey_shop_product_attr` VALUES ('5', '27', '9', '64GB', '', '1591262821', '1591262821');
-INSERT INTO `ey_shop_product_attr` VALUES ('6', '28', '5', '13.3', '', '1591262850', '1591262850');
-INSERT INTO `ey_shop_product_attr` VALUES ('7', '28', '6', '3KG', '', '1591262850', '1591262850');
-INSERT INTO `ey_shop_product_attr` VALUES ('8', '29', '7', 'AKG&amp;HUAWEI', '', '1591262874', '1591262874');
-INSERT INTO `ey_shop_product_attr` VALUES ('9', '29', '8', '支持', '', '1591262874', '1591262874');
-INSERT INTO `ey_shop_product_attr` VALUES ('19', '89', '2', 'Apple', '', '1591263033', '1591263033');
-INSERT INTO `ey_shop_product_attr` VALUES ('12', '37', '3', '触摸', '', '1591262910', '1591262910');
-INSERT INTO `ey_shop_product_attr` VALUES ('18', '89', '1', 'AppleiPhone 8 Plus', '', '1591263033', '1591263033');
-INSERT INTO `ey_shop_product_attr` VALUES ('14', '37', '9', '256GB', '', '1591262910', '1591262910');
-INSERT INTO `ey_shop_product_attr` VALUES ('15', '37', '1', 'EMUI 9.1 + Android 9.0', '', '1591262982', '1591262982');
-INSERT INTO `ey_shop_product_attr` VALUES ('16', '37', '2', 'EMUI 9.1', '', '1591262982', '1591262982');
-INSERT INTO `ey_shop_product_attr` VALUES ('17', '37', '4', 'EDI-AL12', '', '1591262982', '1591262982');
-INSERT INTO `ey_shop_product_attr` VALUES ('20', '89', '3', '触摸', '', '1591263033', '1591263033');
-INSERT INTO `ey_shop_product_attr` VALUES ('21', '89', '4', 'iPhone 8 Plus', '', '1591263033', '1591263033');
-INSERT INTO `ey_shop_product_attr` VALUES ('22', '89', '9', '128GB', '', '1591263033', '1591263033');
-INSERT INTO `ey_shop_product_attr` VALUES ('23', '90', '1', 'Android', '', '1591263065', '1591263065');
-INSERT INTO `ey_shop_product_attr` VALUES ('24', '90', '2', '小米UI', '', '1591263065', '1591263065');
-INSERT INTO `ey_shop_product_attr` VALUES ('25', '90', '3', '触摸', '', '1591263065', '1591263065');
-INSERT INTO `ey_shop_product_attr` VALUES ('26', '90', '4', '小米8屏幕指纹版', '', '1591263065', '1591263065');
-INSERT INTO `ey_shop_product_attr` VALUES ('27', '90', '9', '64GB', '', '1591263065', '1591263065');
-INSERT INTO `ey_shop_product_attr` VALUES ('28', '98', '5', '12.2英寸', '', '1591263088', '1591263088');
-INSERT INTO `ey_shop_product_attr` VALUES ('29', '98', '6', '1250g', '', '1591263088', '1591263088');
-INSERT INTO `ey_shop_product_attr` VALUES ('30', '99', '5', '12.2英寸', '', '1591263111', '1591263111');
-INSERT INTO `ey_shop_product_attr` VALUES ('31', '99', '6', '1250g', '', '1591263111', '1591263111');
-INSERT INTO `ey_shop_product_attr` VALUES ('32', '100', '5', '14英寸', '', '1591263132', '1591263132');
-INSERT INTO `ey_shop_product_attr` VALUES ('33', '100', '6', '1.5kg', '', '1591263132', '1591263132');
-INSERT INTO `ey_shop_product_attr` VALUES ('34', '101', '7', 'X1', '', '1591263152', '1591263152');
-INSERT INTO `ey_shop_product_attr` VALUES ('35', '101', '8', '支持', '', '1591263152', '1591263152');
-INSERT INTO `ey_shop_product_attr` VALUES ('36', '103', '7', 'G1', '', '1610352876', '1610352876');
-INSERT INTO `ey_shop_product_attr` VALUES ('37', '103', '8', '支持', '', '1610352876', '1610352876');
-INSERT INTO `ey_shop_product_attr` VALUES ('38', '102', '7', 'MINI', '', '1610352910', '1610352910');
-INSERT INTO `ey_shop_product_attr` VALUES ('39', '102', '8', '支持', '', '1610352910', '1610352910');
+INSERT INTO `ey_shop_product_attr` VALUES ('1', '27', '1', 'EMUI 4.1 + Android 6.0', '', '0', '100', '1591262821', '1591262821');
+INSERT INTO `ey_shop_product_attr` VALUES ('2', '27', '2', 'EMUI 4.1', '', '0', '100', '1591262821', '1591262821');
+INSERT INTO `ey_shop_product_attr` VALUES ('3', '27', '3', '虚拟键盘', '', '0', '100', '1591262821', '1591262821');
+INSERT INTO `ey_shop_product_attr` VALUES ('4', '27', '4', 'EDI-AL10', '', '0', '100', '1591262821', '1591262821');
+INSERT INTO `ey_shop_product_attr` VALUES ('5', '27', '9', '64GB', '', '0', '100', '1591262821', '1591262821');
+INSERT INTO `ey_shop_product_attr` VALUES ('6', '28', '5', '13.3', '', '0', '100', '1591262850', '1591262850');
+INSERT INTO `ey_shop_product_attr` VALUES ('7', '28', '6', '3KG', '', '0', '100', '1591262850', '1591262850');
+INSERT INTO `ey_shop_product_attr` VALUES ('8', '29', '7', 'AKG&amp;HUAWEI', '', '0', '100', '1591262874', '1591262874');
+INSERT INTO `ey_shop_product_attr` VALUES ('9', '29', '8', '支持', '', '0', '100', '1591262874', '1591262874');
+INSERT INTO `ey_shop_product_attr` VALUES ('19', '89', '2', 'Apple', '', '0', '100', '1591263033', '1591263033');
+INSERT INTO `ey_shop_product_attr` VALUES ('12', '37', '3', '触摸', '', '0', '100', '1591262910', '1591262910');
+INSERT INTO `ey_shop_product_attr` VALUES ('18', '89', '1', 'AppleiPhone 8 Plus', '', '0', '100', '1591263033', '1591263033');
+INSERT INTO `ey_shop_product_attr` VALUES ('14', '37', '9', '256GB', '', '0', '100', '1591262910', '1591262910');
+INSERT INTO `ey_shop_product_attr` VALUES ('15', '37', '1', 'EMUI 9.1 + Android 9.0', '', '0', '100', '1591262982', '1591262982');
+INSERT INTO `ey_shop_product_attr` VALUES ('16', '37', '2', 'EMUI 9.1', '', '0', '100', '1591262982', '1591262982');
+INSERT INTO `ey_shop_product_attr` VALUES ('17', '37', '4', 'EDI-AL12', '', '0', '100', '1591262982', '1591262982');
+INSERT INTO `ey_shop_product_attr` VALUES ('20', '89', '3', '触摸', '', '0', '100', '1591263033', '1591263033');
+INSERT INTO `ey_shop_product_attr` VALUES ('21', '89', '4', 'iPhone 8 Plus', '', '0', '100', '1591263033', '1591263033');
+INSERT INTO `ey_shop_product_attr` VALUES ('22', '89', '9', '128GB', '', '0', '100', '1591263033', '1591263033');
+INSERT INTO `ey_shop_product_attr` VALUES ('23', '90', '1', 'Android', '', '0', '100', '1591263065', '1591263065');
+INSERT INTO `ey_shop_product_attr` VALUES ('24', '90', '2', '小米UI', '', '0', '100', '1591263065', '1591263065');
+INSERT INTO `ey_shop_product_attr` VALUES ('25', '90', '3', '触摸', '', '0', '100', '1591263065', '1591263065');
+INSERT INTO `ey_shop_product_attr` VALUES ('26', '90', '4', '小米8屏幕指纹版', '', '0', '100', '1591263065', '1591263065');
+INSERT INTO `ey_shop_product_attr` VALUES ('27', '90', '9', '64GB', '', '0', '100', '1591263065', '1591263065');
+INSERT INTO `ey_shop_product_attr` VALUES ('28', '98', '5', '12.2英寸', '', '0', '100', '1591263088', '1591263088');
+INSERT INTO `ey_shop_product_attr` VALUES ('29', '98', '6', '1250g', '', '0', '100', '1591263088', '1591263088');
+INSERT INTO `ey_shop_product_attr` VALUES ('30', '99', '5', '12.2英寸', '', '0', '100', '1591263111', '1591263111');
+INSERT INTO `ey_shop_product_attr` VALUES ('31', '99', '6', '1250g', '', '0', '100', '1591263111', '1591263111');
+INSERT INTO `ey_shop_product_attr` VALUES ('32', '100', '5', '14英寸', '', '0', '100', '1591263132', '1591263132');
+INSERT INTO `ey_shop_product_attr` VALUES ('33', '100', '6', '1.5kg', '', '0', '100', '1591263132', '1591263132');
+INSERT INTO `ey_shop_product_attr` VALUES ('34', '101', '7', 'X1', '', '0', '100', '1591263152', '1591263152');
+INSERT INTO `ey_shop_product_attr` VALUES ('35', '101', '8', '支持', '', '0', '100', '1591263152', '1591263152');
+INSERT INTO `ey_shop_product_attr` VALUES ('36', '103', '7', 'G1', '', '0', '100', '1610352876', '1610352876');
+INSERT INTO `ey_shop_product_attr` VALUES ('37', '103', '8', '支持', '', '0', '100', '1610352876', '1610352876');
+INSERT INTO `ey_shop_product_attr` VALUES ('38', '102', '7', 'MINI', '', '0', '100', '1610352910', '1610352910');
+INSERT INTO `ey_shop_product_attr` VALUES ('39', '102', '8', '支持', '', '0', '100', '1610352910', '1610352910');
 
 -- -----------------------------
 -- Table structure for `ey_shop_product_attribute`
@@ -8130,6 +8976,7 @@ CREATE TABLE `ey_shop_product_attribute` (
   `sort_order` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '属性排序',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `is_del` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否已删除，0=否，1=是',
+  `is_custom` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否自定义参数(0否 1是)',
   `add_time` int(11) NOT NULL DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`attr_id`),
@@ -8139,15 +8986,15 @@ CREATE TABLE `ey_shop_product_attribute` (
 -- -----------------------------
 -- Records of `ey_shop_product_attribute`
 -- -----------------------------
-INSERT INTO `ey_shop_product_attribute` VALUES ('1', '操作系统', '1', '0', '0', '', '1', '100', 'cn', '0', '1591262495', '1623813369');
-INSERT INTO `ey_shop_product_attribute` VALUES ('2', '用户界面', '1', '0', '0', '', '1', '100', 'cn', '0', '1591262503', '1623813369');
-INSERT INTO `ey_shop_product_attribute` VALUES ('3', '键盘类型', '1', '0', '0', '', '1', '100', 'cn', '0', '1591262510', '1623813369');
-INSERT INTO `ey_shop_product_attribute` VALUES ('4', '产品型号', '1', '0', '0', '', '1', '100', 'cn', '0', '1591262517', '1623813369');
-INSERT INTO `ey_shop_product_attribute` VALUES ('5', '屏幕大小', '2', '0', '0', '', '1', '100', 'cn', '0', '1591262613', '1623813369');
-INSERT INTO `ey_shop_product_attribute` VALUES ('6', '整机净重', '2', '0', '0', '', '1', '100', 'cn', '0', '1591262620', '1623813369');
-INSERT INTO `ey_shop_product_attribute` VALUES ('7', '产品型号', '3', '0', '0', '', '1', '100', 'cn', '0', '1591262712', '1623813369');
-INSERT INTO `ey_shop_product_attribute` VALUES ('8', '支持蓝牙', '3', '0', '0', '', '1', '100', 'cn', '0', '1591262723', '1623813369');
-INSERT INTO `ey_shop_product_attribute` VALUES ('9', '机身内存', '1', '0', '1', '64GB\r\n128GB\r\n256GB', '1', '100', 'cn', '0', '1591262771', '1623813369');
+INSERT INTO `ey_shop_product_attribute` VALUES ('1', '操作系统', '1', '0', '0', '', '1', '100', 'cn', '0', '0', '1591262495', '1623813369');
+INSERT INTO `ey_shop_product_attribute` VALUES ('2', '用户界面', '1', '0', '0', '', '1', '100', 'cn', '0', '0', '1591262503', '1623813369');
+INSERT INTO `ey_shop_product_attribute` VALUES ('3', '键盘类型', '1', '0', '0', '', '1', '100', 'cn', '0', '0', '1591262510', '1623813369');
+INSERT INTO `ey_shop_product_attribute` VALUES ('4', '产品型号', '1', '0', '0', '', '1', '100', 'cn', '0', '0', '1591262517', '1623813369');
+INSERT INTO `ey_shop_product_attribute` VALUES ('5', '屏幕大小', '2', '0', '0', '', '1', '100', 'cn', '0', '0', '1591262613', '1623813369');
+INSERT INTO `ey_shop_product_attribute` VALUES ('6', '整机净重', '2', '0', '0', '', '1', '100', 'cn', '0', '0', '1591262620', '1623813369');
+INSERT INTO `ey_shop_product_attribute` VALUES ('7', '产品型号', '3', '0', '0', '', '1', '100', 'cn', '0', '0', '1591262712', '1623813369');
+INSERT INTO `ey_shop_product_attribute` VALUES ('8', '支持蓝牙', '3', '0', '0', '', '1', '100', 'cn', '0', '0', '1591262723', '1623813369');
+INSERT INTO `ey_shop_product_attribute` VALUES ('9', '机身内存', '1', '0', '1', '64GB\r\n128GB\r\n256GB', '1', '100', 'cn', '0', '0', '1591262771', '1623813369');
 
 -- -----------------------------
 -- Table structure for `ey_shop_product_attrlist`
@@ -8186,7 +9033,7 @@ CREATE TABLE `ey_shop_shipping_template` (
   `lang` varchar(30) DEFAULT 'cn' COMMENT '语言标识',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`template_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=36 DEFAULT CHARSET=utf8 COMMENT='运费模板表';
+) ENGINE=MyISAM AUTO_INCREMENT=37 DEFAULT CHARSET=utf8 COMMENT='运费模板表';
 
 -- -----------------------------
 -- Records of `ey_shop_shipping_template`
@@ -8226,6 +9073,7 @@ INSERT INTO `ey_shop_shipping_template` VALUES ('32', '台湾省', '0.00', '4749
 INSERT INTO `ey_shop_shipping_template` VALUES ('33', '香港特别行政区', '0.00', '47494', 'cn', '1554775610');
 INSERT INTO `ey_shop_shipping_template` VALUES ('34', '澳门特别行政区', '0.00', '47495', 'cn', '1554775610');
 INSERT INTO `ey_shop_shipping_template` VALUES ('35', '统一配送价格', '0.00', '100000', 'cn', '1556618311');
+INSERT INTO `ey_shop_shipping_template` VALUES ('36', '海外', '0.00', '47964', 'cn', '1692667955');
 
 -- -----------------------------
 -- Table structure for `ey_single_content`
@@ -8236,20 +9084,22 @@ CREATE TABLE `ey_single_content` (
   `aid` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '文档ID',
   `typeid` int(10) DEFAULT '0' COMMENT '栏目ID',
   `content` longtext COMMENT '内容详情',
+  `content_ey_m` longtext COMMENT '手机端内容详情',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `aid` (`aid`) USING BTREE
-) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COMMENT='单页附加表';
+) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 COMMENT='单页附加表';
 
 -- -----------------------------
 -- Records of `ey_single_content`
 -- -----------------------------
-INSERT INTO `ey_single_content` VALUES ('1', '1', '1', '&lt;p&gt;易优内容管理系统以模板多、易优化、开源而闻名，是国内新锐的PHP开源网站管理系统，也是受用户好评的PHP类CMS系统，在经历多年的发展，目前的版本无论在功能，还是在后台易用性方面，都有了长足的发展和进步，eyoucms免费版的主要目标用户锁定在有企业建站需求的群体，当然也不乏有个人用户和学校等在使用该系统。&lt;/p&gt;&lt;p&gt;企业网站，无论大型还是中小型企业，利用网络传递信息在一定程度上提高了办事的效率，提高企业的竞争力。&lt;a href=&quot;http://www.eyoucms.com/&quot; target=&quot;_blank&quot;&gt;EyouCms&lt;/a&gt;网站建设系统适合做各类型网站，&lt;a href=&quot;http://www.eyoucms.com/&quot; target=&quot;_blank&quot;&gt;EyouCms&lt;/a&gt;是什么，&lt;a href=&quot;http://www.eyoucms.com/&quot; target=&quot;_blank&quot;&gt;EyouCms&lt;/a&gt;是一个自由和开放源码的内容管理系统，它是一个可以独立使用的内容发布系统（CMS）。在中国，&lt;a href=&quot;http://www.eyoucms.com/&quot; target=&quot;_blank&quot;&gt;EyouCms&lt;/a&gt;属于人们喜爱的CMS系统。&lt;/p&gt;&lt;p&gt;政府机关，通过建立政府门户，有利于各种信息和资源的整合，为政府和社会公众之间加强联系和沟通，从而使政府可以更快、更便捷、更有效开展工作。&lt;/p&gt;&lt;p&gt;教育机构，通过网络信息的引入，使得教育机构之间及教育机构内部和教育者之间进行信息传递，全面提升教育类网站的层面。&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;我们的愿景：成为模板建站行业的领跑者&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;企业的使命：让天下没有难做的网站&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;企业价值观：拥抱变化，创造价值！&lt;/p&gt;', '1610614937', '1610614937');
-INSERT INTO `ey_single_content` VALUES ('2', '2', '8', '&lt;p&gt;易优内容管理系统以模板多、易优化、开源而闻名，是国内新锐的PHP开源网站管理系统，也是受用户好评的PHP类CMS系统，在经历多年的发展，目前的版本无论在功能，还是在后台易用性方面，都有了长足的发展和进步，eyoucms免费版的主要目标用户锁定在有企业建站需求的群体，当然也不乏有个人用户和学校等在使用该系统。&lt;/p&gt;&lt;p&gt;企业网站，无论大型还是中小型企业，利用网络传递信息在一定程度上提高了办事的效率，提高企业的竞争力。&lt;a href=&quot;http://www.eyoucms.com/&quot; target=&quot;_blank&quot;&gt;EyouCms&lt;/a&gt;网站建设系统适合做各类型网站，&lt;a href=&quot;http://www.eyoucms.com/&quot; target=&quot;_blank&quot;&gt;EyouCms&lt;/a&gt;是什么，&lt;a href=&quot;http://www.eyoucms.com/&quot; target=&quot;_blank&quot;&gt;EyouCms&lt;/a&gt;是一个自由和开放源码的内容管理系统，它是一个可以独立使用的内容发布系统（CMS）。在中国，&lt;a href=&quot;http://www.eyoucms.com/&quot; target=&quot;_blank&quot;&gt;EyouCms&lt;/a&gt;属于人们喜爱的CMS系统。&lt;/p&gt;&lt;p&gt;政府机关，通过建立政府门户，有利于各种信息和资源的整合，为政府和社会公众之间加强联系和沟通，从而使政府可以更快、更便捷、更有效开展工作。&lt;/p&gt;&lt;p&gt;教育机构，通过网络信息的引入，使得教育机构之间及教育机构内部和教育者之间进行信息传递，全面提升教育类网站的层面。&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;我们的愿景：成为模板建站行业的领跑者&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;企业的使命：让天下没有难做的网站&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;企业价值观：拥抱变化，创造价值！&lt;/p&gt;', '1610615445', '1610615445');
-INSERT INTO `ey_single_content` VALUES ('3', '3', '13', '&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;针对不同服务器、虚拟空间，运行PHP的环境也有所不同，目前主要分为：Nginx、apache、IIS以及其他服务器。下面分享如何去掉URL上的index.php字符，&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;记得最后要重启服务器，在管理后台清除缓存哦！&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;nbsp;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;【IIS服务器】&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;在网站根目录下有个 web.config 文件，这个文件的作用是重写URL，让URL变得简短，易于SEO优化，以及用户的记忆。打开 web.config 文件，在原有的基础上加以下代码片段即可。&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;rewrite&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;rules&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;rule name=&amp;quot;Imported Rule 1&amp;quot; enabled=&amp;quot;true&amp;quot; stopProcessing=&amp;quot;true&amp;quot;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;match url=&amp;quot;^(.*)$&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;conditions logicalGrouping=&amp;quot;MatchAll&amp;quot;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;add input=&amp;quot;{HTTP_HOST}&amp;quot; pattern=&amp;quot;^(.*)$&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType=&amp;quot;IsFile&amp;quot; negate=&amp;quot;true&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType=&amp;quot;IsDirectory&amp;quot; negate=&amp;quot;true&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/conditions&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;action type=&amp;quot;Rewrite&amp;quot; url=&amp;quot;index.php/{R:1}&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/rule&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/rules&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/rewrite&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;nbsp;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;以下是某个香港虚拟空间的效果：&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot;?&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;configuration&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;system.webServer&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;handlers&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;remove name=&amp;quot;PHP-7.0-7i24.com&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;remove name=&amp;quot;PHP-5.6-7i24.com&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;remove name=&amp;quot;PHP-5.5-7i24.com&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;remove name=&amp;quot;PHP-5.4-7i24.com&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;remove name=&amp;quot;PHP-5.3-7i24.com&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;remove name=&amp;quot;PHP-5.2-7i24.com&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;add name=&amp;quot;PHP-5.4-7i24.com&amp;quot; path=&amp;quot;*.php&amp;quot; verb=&amp;quot;*&amp;quot; modules=&amp;quot;FastCgiModule&amp;quot; scriptProcessor=&amp;quot;c:php.4php-cgi.exe&amp;quot; resourceType=&amp;quot;Either&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;/handlers&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;rewrite&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;rules&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;rule name=&amp;quot;Imported Rule 1&amp;quot; enabled=&amp;quot;true&amp;quot; stopProcessing=&amp;quot;true&amp;quot;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;match url=&amp;quot;^(.*)$&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;conditions logicalGrouping=&amp;quot;MatchAll&amp;quot;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;add input=&amp;quot;{HTTP_HOST}&amp;quot; pattern=&amp;quot;^(.*)$&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType=&amp;quot;IsFile&amp;quot; negate=&amp;quot;true&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType=&amp;quot;IsDirectory&amp;quot; negate=&amp;quot;true&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/conditions&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;action type=&amp;quot;Rewrite&amp;quot; url=&amp;quot;index.php/{R:1}&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/rule&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/rules&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/rewrite&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;/system.webServer&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;/configuration&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;nbsp;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;【Nginx服务器】&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;在原有的nginx重写文件里新增以下代码片段：&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;location / {&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;if (!-e $request_filename) {&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;rewrite ^(.*)$ /index.php?s=/$1 last;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;break;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;}&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;}&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;nbsp;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;【apache服务器】&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;易优CMS在apache服务器环境默认自动隐藏index.php入口。&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;如果发现没隐藏，可以检查根目录.htaccess是否含有以下代码段：&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;IfModule mod_rewrite.c&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;div style=&quot;box-sizing: border-box;&quot;&gt;Options +FollowSymlinks -Multiviews&lt;/div&gt;&lt;div style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;RewriteEngine on&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;RewriteCond %{REQUEST_FILENAME} !-d&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;RewriteCond %{REQUEST_FILENAME} !-f&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;RewriteRule ^(.*)$ index.php/$1 [QSA,PT,L]&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;/IfModule&amp;gt;&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;如果存在，继续查看apache是否开启了URL重写模块 rewrite_module ， 然后重启服务就行了。&lt;/div&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '0', '1531710225');
-INSERT INTO `ey_single_content` VALUES ('6', '47', '39', '&lt;p&gt;For different servers and virtual spaces, the environment for running PHP is also different, currently mainly divided into: Nginx, apache, IIS and other servers. Here&amp;#39;s how to remove the index. PHP character from the URL. Remember to restart the server and clear the cache in the management background.&lt;/p&gt;&lt;p&gt;[IIS Server]&lt;/p&gt;&lt;p&gt;There is a web. config file in the root directory of the website. The function of this file is to rewrite the URL, make the URL short, easy to optimize by SEO, and the user&amp;#39;s memory. Open the web. config file and add the following code fragments on the original basis.&lt;/p&gt;&lt;p&gt;&amp;lt;rewrite&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;rules&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;rule name= &amp;quot;Imported Rule 1&amp;quot; enabled= &amp;quot;true&amp;quot; stopProcessing= &amp;quot;true&amp;quot;&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;match url=&amp;quot;^(. *)$&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;conditions logicalGrouping=&amp;quot;MatchAll&amp;quot;&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;add input=&amp;quot;{HTTP_HOST}&amp;quot; pattern=&amp;quot;^(. *)$&amp;quot;/&amp;gt;&amp;quot;&lt;/p&gt;&lt;p&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType= &amp;quot;IsFile&amp;quot; negate= &amp;quot;true&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType= &amp;quot;IsDirectory&amp;quot; negate= &amp;quot;true&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/conditions&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;action type=&amp;quot;Rewrite&amp;quot; url=&amp;quot;index.php/{R:1}&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/rule&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/rules&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/rewrite&amp;gt;&lt;/p&gt;&lt;p&gt;The following is the effect of a Hong Kong virtual space:&lt;/p&gt;&lt;p&gt;&amp;lt;? XML version = &amp;quot;1.0&amp;quot; encoding = &amp;quot;UTF-8&amp;quot;?&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;configuration&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;system.webServer&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;handlers&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;remove name=&amp;quot;PHP-7.0-7i24.com&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;remove name=&amp;quot;PHP-5.6-7i24.com&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;remove name=&amp;quot;PHP-5.5-7i24.com&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;remove name=&amp;quot;PHP-5.4-7i24.com&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;remove name=&amp;quot;PHP-5.3-7i24.com&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;remove name=&amp;quot;PHP-5.2-7i24.com&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;add name=&amp;quot;PHP-5.4-7i24.com&amp;quot; path=&amp;quot;*.php&amp;quot; verb=&amp;quot;*&amp;quot; modules=&amp;quot;FastCgiModule&amp;quot; scriptProcessor=&amp;quot;c:php.4php-cgi.exe&amp;quot; resourceType=&amp;quot;Either&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/handlers&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;rewrite&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;rules&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;rule name= &amp;quot;Imported Rule 1&amp;quot; enabled= &amp;quot;true&amp;quot; stopProcessing= &amp;quot;true&amp;quot;&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;match url=&amp;quot;^(. *)$&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;conditions logicalGrouping=&amp;quot;MatchAll&amp;quot;&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;add input=&amp;quot;{HTTP_HOST}&amp;quot; pattern=&amp;quot;^(. *)$&amp;quot;/&amp;gt;&amp;quot;&lt;/p&gt;&lt;p&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType= &amp;quot;IsFile&amp;quot; negate= &amp;quot;true&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType= &amp;quot;IsDirectory&amp;quot; negate= &amp;quot;true&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/conditions&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;action type=&amp;quot;Rewrite&amp;quot; url=&amp;quot;index.php/{R:1}&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/rule&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/rules&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/rewrite&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/system.webServer&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/configuration&amp;gt;&lt;/p&gt;&lt;p&gt;[Nginx Server]&lt;/p&gt;&lt;p&gt;Add the following code fragments to the original nginx rewrite file:&lt;/p&gt;&lt;p&gt;Location / {&lt;/p&gt;&lt;p&gt;If (!-e $request_filename) {&lt;/p&gt;&lt;p&gt;Rewrite ^(. *)$/ index. php? S=/$1 last;&lt;/p&gt;&lt;p&gt;Break;&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;p&gt;[apache server]&lt;/p&gt;&lt;p&gt;Yiyou CMS automatically hides index. PHP entries by default in Apache server environment.&lt;/p&gt;&lt;p&gt;If no hiding is found, you can check whether the root directory. htaccess contains the following code snippets:&lt;/p&gt;&lt;p&gt;&amp;lt;IfModule mod_rewrite.c&amp;gt;&lt;/p&gt;&lt;p&gt;Options + FollowSymlinks - Multiviews&lt;/p&gt;&lt;p&gt;RewriteEngine on&lt;/p&gt;&lt;p&gt;RewriteCond%{REQUEST_FILENAME}!-d&lt;/p&gt;&lt;p&gt;RewriteCond%{REQUEST_FILENAME}!-f&lt;/p&gt;&lt;p&gt;RewriteRule ^(*)$index.php/$1 [QSA, PT, L]&lt;/p&gt;&lt;p&gt;&amp;lt;/IfModule&amp;gt;&lt;/p&gt;&lt;p&gt;If it exists, go ahead and see if Apache has opened the URL rewrite_module and restart the service.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '1545270877', '1545270877');
-INSERT INTO `ey_single_content` VALUES ('7', '88', '54', '&lt;p style=&quot;text-align: center;&quot;&gt;电话: 400-123-4567&lt;br style=&quot;outline: none; box-sizing: border-box; color: rgb(47, 47, 47); font-family: Arial, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; font-size: 14px; text-align: center; white-space: normal;&quot;/&gt;传真: + 86-123-4567&lt;br style=&quot;outline: none; box-sizing: border-box; color: rgb(47, 47, 47); font-family: Arial, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; font-size: 14px; text-align: center; white-space: normal;&quot;/&gt;QQ:1234567890&lt;br style=&quot;outline: none; box-sizing: border-box; color: rgb(47, 47, 47); font-family: Arial, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; font-size: 14px; text-align: center; white-space: normal;&quot;/&gt;邮箱: admin@youweb.com&lt;br style=&quot;outline: none; box-sizing: border-box; color: rgb(47, 47, 47); font-family: Arial, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; font-size: 14px; text-align: center; white-space: normal;&quot;/&gt;地址: 广东省广州市天河区某某工业区88号&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;iframe class=&quot;ueditor_baidumap&quot; src=&quot;/public/plugins/Ueditor/dialogs/map/show.html#center=116.404,39.915&amp;zoom=10&amp;width=530&amp;height=340&amp;markers=116.404,39.915&amp;markerStyles=l,A&quot; frameborder=&quot;0&quot; width=&quot;534&quot; height=&quot;344&quot;&gt;&lt;/iframe&gt;&lt;/p&gt;', '1564645627', '1564645627');
+INSERT INTO `ey_single_content` VALUES ('1', '1', '1', '', '', '1690181692', '1690181692');
+INSERT INTO `ey_single_content` VALUES ('2', '2', '8', '&lt;h2 style=&quot;white-space: normal;&quot;&gt;伟创网络科技公司&lt;/h2&gt;&lt;p&gt;我们是一家领先的网络科技公司，致力于提供创新的解决方案，帮助客户在数字时代取得成功。通过结合最新的技术和行业趋势，我们致力于开发高效、可靠且安全的解决方案，以满足客户的需求。&lt;/p&gt;&lt;p&gt;我们的使命是帮助客户在不断变化的数字环境中保持竞争优势。我们相信技术的力量可以改变商业模式、提高效率并创造新的机会。因此，我们与客户合作，共同探索创新的可能性，并为他们提供量身定制的解决方案，使他们能够在数字化转型中取得成功。&lt;/p&gt;&lt;p&gt;为了实现我们的使命，我们拥有一支优秀的团队，他们是我们最宝贵的资产。我们的团队由热情、有才华且具有丰富经验的专业人士组成，他们在广泛的领域和技术方向上拥有深厚的知识和专业技能。我们鼓励创新、追求卓越，并提供一个积极、有创造力且鼓励团队合作的工作环境，以激发团队成员的潜力和创造力。&lt;/p&gt;&lt;p&gt;我们的服务范围涵盖了以下关键领域：&lt;/p&gt;&lt;p&gt;1. 网站开发和设计：我们提供全方位的网站开发和设计服务，帮助客户建立专业、易于使用且具有吸引力的在线平台。&lt;/p&gt;&lt;p&gt;2. 应用程序开发：我们专注于开发创新的应用程序，适应不同的平台和设备，为客户提供个性化的解决方案。&lt;/p&gt;&lt;p&gt;3. 数据分析和人工智能：我们利用先进的数据分析技术和机器学习算法，帮助客户从海量数据中提取洞察力，并做出明智的决策。&lt;/p&gt;&lt;p&gt;4. 云计算和网络安全：我们提供可靠的云计算解决方案和强大的网络安全措施，确保客户的数据得到充分的保护和安全。&lt;/p&gt;&lt;p&gt;我们以客户满意度和业务成功为导向，与客户建立长期合作伙伴关系。通过我们的行业专业知识和卓越的技术能力，我们助力客户在竞争激烈的市场中脱颖而出，并实现可持续增长。&lt;/p&gt;&lt;p&gt;如果您对我们的公司和服务有任何疑问或想要了解更多信息，请随时与我们联系。我们期待与您合作，共同开创美好的数字未来！&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1690161800', '1690161800');
+INSERT INTO `ey_single_content` VALUES ('3', '3', '13', '&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;针对不同服务器、虚拟空间，运行PHP的环境也有所不同，目前主要分为：Nginx、apache、IIS以及其他服务器。下面分享如何去掉URL上的index.php字符，&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;记得最后要重启服务器，在管理后台清除缓存哦！&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;nbsp;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;【IIS服务器】&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;在网站根目录下有个 web.config 文件，这个文件的作用是重写URL，让URL变得简短，易于SEO优化，以及用户的记忆。打开 web.config 文件，在原有的基础上加以下代码片段即可。&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;rewrite&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;rules&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;rule name=&amp;quot;Imported Rule 1&amp;quot; enabled=&amp;quot;true&amp;quot; stopProcessing=&amp;quot;true&amp;quot;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;match url=&amp;quot;^(.*)$&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;conditions logicalGrouping=&amp;quot;MatchAll&amp;quot;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;add input=&amp;quot;{HTTP_HOST}&amp;quot; pattern=&amp;quot;^(.*)$&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType=&amp;quot;IsFile&amp;quot; negate=&amp;quot;true&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType=&amp;quot;IsDirectory&amp;quot; negate=&amp;quot;true&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/conditions&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;action type=&amp;quot;Rewrite&amp;quot; url=&amp;quot;index.php/{R:1}&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/rule&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/rules&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/rewrite&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;nbsp;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;以下是某个香港虚拟空间的效果：&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot;?&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;configuration&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;system.webServer&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;handlers&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;remove name=&amp;quot;PHP-7.0-7i24.com&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;remove name=&amp;quot;PHP-5.6-7i24.com&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;remove name=&amp;quot;PHP-5.5-7i24.com&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;remove name=&amp;quot;PHP-5.4-7i24.com&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;remove name=&amp;quot;PHP-5.3-7i24.com&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;remove name=&amp;quot;PHP-5.2-7i24.com&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;add name=&amp;quot;PHP-5.4-7i24.com&amp;quot; path=&amp;quot;*.php&amp;quot; verb=&amp;quot;*&amp;quot; modules=&amp;quot;FastCgiModule&amp;quot; scriptProcessor=&amp;quot;c:php.4php-cgi.exe&amp;quot; resourceType=&amp;quot;Either&amp;quot; /&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;/handlers&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;rewrite&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;rules&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;rule name=&amp;quot;Imported Rule 1&amp;quot; enabled=&amp;quot;true&amp;quot; stopProcessing=&amp;quot;true&amp;quot;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;match url=&amp;quot;^(.*)$&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;conditions logicalGrouping=&amp;quot;MatchAll&amp;quot;&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;add input=&amp;quot;{HTTP_HOST}&amp;quot; pattern=&amp;quot;^(.*)$&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType=&amp;quot;IsFile&amp;quot; negate=&amp;quot;true&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType=&amp;quot;IsDirectory&amp;quot; negate=&amp;quot;true&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/conditions&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;action type=&amp;quot;Rewrite&amp;quot; url=&amp;quot;index.php/{R:1}&amp;quot; /&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/rule&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/rules&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;&amp;lt;/rewrite&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;/system.webServer&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;/configuration&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;nbsp;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;【Nginx服务器】&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;在原有的nginx重写文件里新增以下代码片段：&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;location / {&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;if (!-e $request_filename) {&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;rewrite ^(.*)$ /index.php?s=/$1 last;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;break;&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;}&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;}&lt;/span&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;nbsp;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;【apache服务器】&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;易优CMS在apache服务器环境默认自动隐藏index.php入口。&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;如果发现没隐藏，可以检查根目录.htaccess是否含有以下代码段：&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;IfModule mod_rewrite.c&amp;gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&lt;div style=&quot;box-sizing: border-box;&quot;&gt;Options +FollowSymlinks -Multiviews&lt;/div&gt;&lt;div style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;RewriteEngine on&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;RewriteCond %{REQUEST_FILENAME} !-d&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;RewriteCond %{REQUEST_FILENAME} !-f&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;box-sizing: border-box; color: rgb(255, 0, 0);&quot;&gt;RewriteRule ^(.*)$ index.php/$1 [QSA,PT,L]&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;div yne-bulb-block=&quot;paragraph&quot; style=&quot;box-sizing: border-box; color: rgb(34, 34, 34); font-family: &amp;quot;Segoe UI&amp;quot;, &amp;quot;Lucida Grande&amp;quot;, Helvetica, Arial, &amp;quot;Microsoft YaHei&amp;quot;, FreeSans, Arimo, &amp;quot;Droid Sans&amp;quot;, &amp;quot;wenquanyi micro hei&amp;quot;, &amp;quot;Hiragino Sans GB&amp;quot;, &amp;quot;Hiragino Sans GB W3&amp;quot;, Roboto, Arial, sans-serif; font-size: 18px; white-space: normal;&quot;&gt;&amp;lt;/IfModule&amp;gt;&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;&lt;br style=&quot;box-sizing: border-box;&quot;/&gt;如果存在，继续查看apache是否开启了URL重写模块 rewrite_module ， 然后重启服务就行了。&lt;/div&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '0', '1531710225');
+INSERT INTO `ey_single_content` VALUES ('6', '47', '39', '&lt;p&gt;For different servers and virtual spaces, the environment for running PHP is also different, currently mainly divided into: Nginx, apache, IIS and other servers. Here&amp;#39;s how to remove the index. PHP character from the URL. Remember to restart the server and clear the cache in the management background.&lt;/p&gt;&lt;p&gt;[IIS Server]&lt;/p&gt;&lt;p&gt;There is a web. config file in the root directory of the website. The function of this file is to rewrite the URL, make the URL short, easy to optimize by SEO, and the user&amp;#39;s memory. Open the web. config file and add the following code fragments on the original basis.&lt;/p&gt;&lt;p&gt;&amp;lt;rewrite&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;rules&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;rule name= &amp;quot;Imported Rule 1&amp;quot; enabled= &amp;quot;true&amp;quot; stopProcessing= &amp;quot;true&amp;quot;&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;match url=&amp;quot;^(. *)$&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;conditions logicalGrouping=&amp;quot;MatchAll&amp;quot;&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;add input=&amp;quot;{HTTP_HOST}&amp;quot; pattern=&amp;quot;^(. *)$&amp;quot;/&amp;gt;&amp;quot;&lt;/p&gt;&lt;p&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType= &amp;quot;IsFile&amp;quot; negate= &amp;quot;true&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType= &amp;quot;IsDirectory&amp;quot; negate= &amp;quot;true&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/conditions&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;action type=&amp;quot;Rewrite&amp;quot; url=&amp;quot;index.php/{R:1}&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/rule&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/rules&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/rewrite&amp;gt;&lt;/p&gt;&lt;p&gt;The following is the effect of a Hong Kong virtual space:&lt;/p&gt;&lt;p&gt;&amp;lt;? XML version = &amp;quot;1.0&amp;quot; encoding = &amp;quot;UTF-8&amp;quot;?&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;configuration&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;system.webServer&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;handlers&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;remove name=&amp;quot;PHP-7.0-7i24.com&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;remove name=&amp;quot;PHP-5.6-7i24.com&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;remove name=&amp;quot;PHP-5.5-7i24.com&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;remove name=&amp;quot;PHP-5.4-7i24.com&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;remove name=&amp;quot;PHP-5.3-7i24.com&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;remove name=&amp;quot;PHP-5.2-7i24.com&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;add name=&amp;quot;PHP-5.4-7i24.com&amp;quot; path=&amp;quot;*.php&amp;quot; verb=&amp;quot;*&amp;quot; modules=&amp;quot;FastCgiModule&amp;quot; scriptProcessor=&amp;quot;c:php.4php-cgi.exe&amp;quot; resourceType=&amp;quot;Either&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/handlers&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;rewrite&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;rules&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;rule name= &amp;quot;Imported Rule 1&amp;quot; enabled= &amp;quot;true&amp;quot; stopProcessing= &amp;quot;true&amp;quot;&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;match url=&amp;quot;^(. *)$&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;conditions logicalGrouping=&amp;quot;MatchAll&amp;quot;&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;add input=&amp;quot;{HTTP_HOST}&amp;quot; pattern=&amp;quot;^(. *)$&amp;quot;/&amp;gt;&amp;quot;&lt;/p&gt;&lt;p&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType= &amp;quot;IsFile&amp;quot; negate= &amp;quot;true&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;add input=&amp;quot;{REQUEST_FILENAME}&amp;quot; matchType= &amp;quot;IsDirectory&amp;quot; negate= &amp;quot;true&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/conditions&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;action type=&amp;quot;Rewrite&amp;quot; url=&amp;quot;index.php/{R:1}&amp;quot;/&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/rule&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/rules&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/rewrite&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/system.webServer&amp;gt;&lt;/p&gt;&lt;p&gt;&amp;lt;/configuration&amp;gt;&lt;/p&gt;&lt;p&gt;[Nginx Server]&lt;/p&gt;&lt;p&gt;Add the following code fragments to the original nginx rewrite file:&lt;/p&gt;&lt;p&gt;Location / {&lt;/p&gt;&lt;p&gt;If (!-e $request_filename) {&lt;/p&gt;&lt;p&gt;Rewrite ^(. *)$/ index. php? S=/$1 last;&lt;/p&gt;&lt;p&gt;Break;&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;p&gt;[apache server]&lt;/p&gt;&lt;p&gt;Yiyou CMS automatically hides index. PHP entries by default in Apache server environment.&lt;/p&gt;&lt;p&gt;If no hiding is found, you can check whether the root directory. htaccess contains the following code snippets:&lt;/p&gt;&lt;p&gt;&amp;lt;IfModule mod_rewrite.c&amp;gt;&lt;/p&gt;&lt;p&gt;Options + FollowSymlinks - Multiviews&lt;/p&gt;&lt;p&gt;RewriteEngine on&lt;/p&gt;&lt;p&gt;RewriteCond%{REQUEST_FILENAME}!-d&lt;/p&gt;&lt;p&gt;RewriteCond%{REQUEST_FILENAME}!-f&lt;/p&gt;&lt;p&gt;RewriteRule ^(*)$index.php/$1 [QSA, PT, L]&lt;/p&gt;&lt;p&gt;&amp;lt;/IfModule&amp;gt;&lt;/p&gt;&lt;p&gt;If it exists, go ahead and see if Apache has opened the URL rewrite_module and restart the service.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;', '', '1545270877', '1545270877');
+INSERT INTO `ey_single_content` VALUES ('7', '88', '54', '&lt;p style=&quot;text-align: center;&quot;&gt;电话: 400-123-4567&lt;br style=&quot;outline: none; box-sizing: border-box; color: rgb(47, 47, 47); font-family: Arial, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; font-size: 14px; text-align: center; white-space: normal;&quot;/&gt;传真: + 86-123-4567&lt;br style=&quot;outline: none; box-sizing: border-box; color: rgb(47, 47, 47); font-family: Arial, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; font-size: 14px; text-align: center; white-space: normal;&quot;/&gt;QQ:1234567890&lt;br style=&quot;outline: none; box-sizing: border-box; color: rgb(47, 47, 47); font-family: Arial, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; font-size: 14px; text-align: center; white-space: normal;&quot;/&gt;邮箱: admin@youweb.com&lt;br style=&quot;outline: none; box-sizing: border-box; color: rgb(47, 47, 47); font-family: Arial, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; font-size: 14px; text-align: center; white-space: normal;&quot;/&gt;地址: 广东省广州市天河区某某工业区88号&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;iframe class=&quot;ueditor_baidumap&quot; src=&quot;/public/plugins/Ueditor/dialogs/map/show.html#center=116.404,39.915&amp;zoom=10&amp;width=530&amp;height=340&amp;markers=116.404,39.915&amp;markerStyles=l,A&quot; frameborder=&quot;0&quot; width=&quot;534&quot; height=&quot;344&quot;&gt;&lt;/iframe&gt;&lt;/p&gt;', '', '1564645627', '1564645627');
+INSERT INTO `ey_single_content` VALUES ('8', '106', '30', '', '', '1690166673', '1690166673');
 
 -- -----------------------------
 -- Table structure for `ey_sms_log`
@@ -8265,6 +9115,7 @@ CREATE TABLE `ey_sms_log` (
   `status` int(1) unsigned NOT NULL DEFAULT '0' COMMENT '发送状态,1:成功,0:失败',
   `is_use` int(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否使用，1:是，0:否',
   `msg` varchar(255) NOT NULL DEFAULT '' COMMENT '短信内容',
+  `ip` varchar(20) DEFAULT 'IP地址',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `error_msg` text NOT NULL COMMENT '发送短信异常内容',
   `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
@@ -8289,7 +9140,7 @@ CREATE TABLE `ey_sms_template` (
   `add_time` int(11) NOT NULL COMMENT '添加时间',
   `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`tpl_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=21 DEFAULT CHARSET=utf8 COMMENT='手机短信发送模板';
+) ENGINE=MyISAM AUTO_INCREMENT=41 DEFAULT CHARSET=utf8 COMMENT='手机短信发送模板';
 
 -- -----------------------------
 -- Records of `ey_sms_template`
@@ -8314,6 +9165,22 @@ INSERT INTO `ey_sms_template` VALUES ('17', '1', '订单发货', '', '', '您有
 INSERT INTO `ey_sms_template` VALUES ('18', '1', '订单发货', '', '', '您有新的消息：您有新的${content}订单，请注意查收！', '6', '1', 'en', '1591262356', '1616460912');
 INSERT INTO `ey_sms_template` VALUES ('19', '2', '订单发货', '', '', '您有新的消息：您有新的{1}订单，请注意查收！', '6', '1', 'cn', '1610334638', '1616460912');
 INSERT INTO `ey_sms_template` VALUES ('20', '2', '订单发货', '', '', '您有新的消息：您有新的{1}订单，请注意查收！', '6', '1', 'en', '1610334638', '1616460912');
+INSERT INTO `ey_sms_template` VALUES ('27', '1', '账号登录', '', '', '验证码为 ${content} ，请在30分钟内输入验证。', '2', '1', 'en', '1591262356', '1591262356');
+INSERT INTO `ey_sms_template` VALUES ('26', '1', '留言验证', '', '', '验证码为 ${content} ，请在30分钟内输入验证。', '7', '1', 'cn', '1591262356', '1591262356');
+INSERT INTO `ey_sms_template` VALUES ('25', '1', '账号登录', '', '', '验证码为 ${content} ，请在30分钟内输入验证。', '2', '1', 'cn', '1591262356', '1591262356');
+INSERT INTO `ey_sms_template` VALUES ('28', '1', '留言验证', '', '', '验证码为 ${content} ，请在30分钟内输入验证。', '7', '1', 'en', '1591262356', '1591262356');
+INSERT INTO `ey_sms_template` VALUES ('29', '2', '账号登录', '', '', '验证码为 {1} ，请在30分钟内输入验证。', '2', '1', 'cn', '1610334638', '1610334638');
+INSERT INTO `ey_sms_template` VALUES ('30', '2', '留言验证', '', '', '验证码为 {1} ，请在30分钟内输入验证。', '7', '1', 'cn', '1610334638', '1610334638');
+INSERT INTO `ey_sms_template` VALUES ('31', '2', '账号登录', '', '', '验证码为 {1} ，请在30分钟内输入验证。', '2', '1', 'en', '1610334638', '1610334638');
+INSERT INTO `ey_sms_template` VALUES ('32', '2', '留言验证', '', '', '验证码为 {1} ，请在30分钟内输入验证。', '7', '1', 'en', '1610334638', '1610334638');
+INSERT INTO `ey_sms_template` VALUES ('33', '1', '留言表单', '', '', '您有新的留言消息，请查收！', '11', '1', 'cn', '1591262356', '1591262356');
+INSERT INTO `ey_sms_template` VALUES ('34', '1', '留言表单', '', '', '您有新的留言消息，请查收！', '11', '1', 'en', '1591262356', '1591262356');
+INSERT INTO `ey_sms_template` VALUES ('35', '2', '留言表单', '', '', '您有新的留言消息，请查收！', '11', '1', 'cn', '1610334638', '1610334638');
+INSERT INTO `ey_sms_template` VALUES ('36', '2', '留言表单', '', '', '您有新的留言消息，请查收！', '11', '1', 'en', '1610334638', '1610334638');
+INSERT INTO `ey_sms_template` VALUES ('37', '1', '投稿提醒', '', '', '您有新的会员投稿，请查看！', '20', '0', 'cn', '1591262356', '1591262356');
+INSERT INTO `ey_sms_template` VALUES ('38', '1', '投稿提醒', '', '', '您有新的会员投稿，请查看！', '20', '0', 'en', '1591262356', '1591262356');
+INSERT INTO `ey_sms_template` VALUES ('39', '2', '投稿提醒', '', '', '您有新的会员投稿，请查看！', '20', '0', 'cn', '1610334638', '1610334638');
+INSERT INTO `ey_sms_template` VALUES ('40', '2', '投稿提醒', '', '', '您有新的会员投稿，请查看！', '20', '0', 'en', '1610334638', '1610334638');
 
 -- -----------------------------
 -- Table structure for `ey_smtp_record`
@@ -8348,7 +9215,7 @@ CREATE TABLE `ey_smtp_tpl` (
   `add_time` int(11) DEFAULT '0' COMMENT '添加时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`tpl_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=12 DEFAULT CHARSET=utf8 COMMENT='邮件模板表';
+) ENGINE=MyISAM AUTO_INCREMENT=13 DEFAULT CHARSET=utf8 COMMENT='邮件模板表';
 
 -- -----------------------------
 -- Records of `ey_smtp_tpl`
@@ -8359,6 +9226,7 @@ INSERT INTO `ey_smtp_tpl` VALUES ('3', '绑定邮箱', '验证码已发送至您
 INSERT INTO `ey_smtp_tpl` VALUES ('4', '找回密码', '验证码已发送至您的邮箱，请登录邮箱查看验证码！', '${content}', '4', '1', 'cn', '1544763495', '1552663577');
 INSERT INTO `ey_smtp_tpl` VALUES ('9', '订单付款', '您有新的待发货订单消息，请到商城订单查看！', '${content}', '5', '1', 'cn', '1587364685', '1616460912');
 INSERT INTO `ey_smtp_tpl` VALUES ('11', '订单发货', '您有新的待收货订单消息，请到会员订单查看！', '${content}', '6', '1', 'cn', '1616460912', '1616460912');
+INSERT INTO `ey_smtp_tpl` VALUES ('12', '投稿提醒', '您有新的投稿文档，请及时查看！', '${content}', '20', '0', 'cn', '1544763495', '1552667056');
 
 -- -----------------------------
 -- Table structure for `ey_special_content`
@@ -8368,6 +9236,7 @@ CREATE TABLE `ey_special_content` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `aid` int(10) DEFAULT '0' COMMENT '文档ID',
   `content` longtext COMMENT '内容详情',
+  `content_ey_m` longtext COMMENT '手机端内容详情',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`),
@@ -8412,18 +9281,33 @@ CREATE TABLE `ey_sql_cache_table` (
   `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`cache_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COMMENT='mysql缓存表';
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='mysql缓存表';
 
 -- -----------------------------
 -- Records of `ey_sql_cache_table`
 -- -----------------------------
-INSERT INTO `ey_sql_cache_table` VALUES ('1', 'ArchivesMaxID', '105', '494a17e43cff13eeb4b9c9837c29026c', 'SELECT MAX(aid) AS tp_max FROM `ey_archives` LIMIT 1', '1623322108', '1623322108');
-INSERT INTO `ey_sql_cache_table` VALUES ('2', '|model|all|count|', '{\"1\":{\"channel\":1,\"total\":17},\"2\":{\"channel\":2,\"total\":12},\"3\":{\"channel\":3,\"total\":6},\"4\":{\"channel\":4,\"total\":4},\"6\":{\"channel\":6,\"total\":2},\"9\":{\"channel\":9,\"total\":6}}', 'd5ac17fe5649c6d04f4b174c42f2d535', 'SELECT channel, count(aid) as total FROM `ey_archives` WHERE  `lang` = \'cn\'  AND `status` = 1  AND `is_del` = 0  AND (  (users_id = 0 OR (users_id > 0 AND arcrank >= 0)) ) GROUP BY `channel`', '1623322108', '1623322108');
-INSERT INTO `ey_sql_cache_table` VALUES ('3', '|archives|!=8,6,5,7,51|', '45', '79384ebcdb28f5eed29a07a310ff31ee', 'SELECT COUNT(aid) AS tp_count FROM `ey_archives` `a` WHERE  `a`.`channel` NOT IN (8,6,5,7,51)  AND `a`.`lang` = \'cn\'  AND `a`.`is_del` = 0  AND (  (a.users_id = 0 OR (a.users_id > 0 AND a.arcrank >= 0)) ) LIMIT 1', '1623322151', '1623322151');
-INSERT INTO `ey_sql_cache_table` VALUES ('4', '|product|2|20|', '4', 'effbf8a7f3aa3d388c0e1d1634f1949a', 'SELECT COUNT(aid) AS tp_count FROM `ey_archives` `a` WHERE  `a`.`typeid` IN (20,24,25)  AND `a`.`channel` = 2  AND `a`.`lang` = \'cn\'  AND `a`.`is_del` = 0  AND (  (a.users_id = 0 OR (a.users_id > 0 AND a.arcrank >= 0)) ) LIMIT 1', '1623322291', '1623322291');
-INSERT INTO `ey_sql_cache_table` VALUES ('5', '|product|2|24|', '3', '33f19a9c28dbf39ea88e7f92bdfdadcf', 'SELECT COUNT(aid) AS tp_count FROM `ey_archives` `a` WHERE  `a`.`typeid` IN (24)  AND `a`.`channel` = 2  AND `a`.`lang` = \'cn\'  AND `a`.`is_del` = 0  AND (  (a.users_id = 0 OR (a.users_id > 0 AND a.arcrank >= 0)) ) LIMIT 1', '1623322297', '1623322297');
-INSERT INTO `ey_sql_cache_table` VALUES ('6', '|arctype|all|count|', '{\"5\":{\"typeid\":5,\"num\":4},\"9\":{\"typeid\":9,\"num\":4},\"10\":{\"typeid\":10,\"num\":4},\"11\":{\"typeid\":11,\"num\":4},\"12\":{\"typeid\":12,\"num\":5},\"20\":{\"typeid\":20,\"num\":1},\"23\":{\"typeid\":23,\"num\":6},\"24\":{\"typeid\":24,\"num\":3},\"26\":{\"typeid\":26,\"num\":4},\"27\":{\"typeid\":27,\"num\":2},\"28\":{\"typeid\":28,\"num\":2},\"64\":{\"typeid\":64,\"num\":4},\"66\":{\"typeid\":66,\"num\":2}}', '8d7e2c28c692cbb5b32cf82431eba9bd', 'SELECT typeid, count(typeid) as num FROM `ey_archives` WHERE  `channel` IN (1,2,3,4,5,7,9,51)  AND `lang` = \'cn\'  AND `is_del` = 0  AND (  (users_id = 0 OR (users_id > 0 AND arcrank >= 0)) ) GROUP BY `typeid`', '1623322348', '1623322348');
-INSERT INTO `ey_sql_cache_table` VALUES ('7', '|archives|draft|', '0', 'a8513cd6433a6ec3d9c80d3bb0eadf6c', 'SELECT COUNT(aid) AS tp_count FROM `ey_archives` `a` WHERE  `a`.`channel` NOT IN (8,6,5,7,51)  AND `a`.`users_id` > 0  AND `a`.`arcrank` < 0  AND `a`.`lang` = \'cn\'  AND `a`.`is_del` = 0 LIMIT 1', '1623809286', '1623809286');
+INSERT INTO `ey_sql_cache_table` VALUES ('1', 'ArchivesMaxID', '106', '494a17e43cff13eeb4b9c9837c29026c', 'SELECT MAX(aid) AS tp_max FROM `ey_archives` LIMIT 1', '1710744387', '1710744387');
+INSERT INTO `ey_sql_cache_table` VALUES ('2', '|model|all|count|', '{\"1\":{\"channel\":1,\"total\":17},\"2\":{\"channel\":2,\"total\":12},\"3\":{\"channel\":3,\"total\":6},\"4\":{\"channel\":4,\"total\":4},\"6\":{\"channel\":6,\"total\":3}}', 'd5ac17fe5649c6d04f4b174c42f2d535', 'SELECT channel, count(aid) as total FROM `ey_archives` WHERE  `lang` = \'cn\'  AND `status` = 1  AND `is_del` = 0  AND (  (users_id = 0 OR (users_id > 0 AND arcrank >= 0)) ) GROUP BY `channel`', '1710744388', '1710744388');
+
+-- -----------------------------
+-- Table structure for `ey_statistics_data`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_statistics_data`;
+CREATE TABLE `ey_statistics_data` (
+  `id` int(10) NOT NULL AUTO_INCREMENT,
+  `date` int(10) DEFAULT '0',
+  `num` int(10) DEFAULT '0',
+  `type` mediumint(8) DEFAULT '1' COMMENT '1-浏览量 2-订单 3-销售额 4-新增会员 5-充值金额 6-商品数 7-文章数 8-tag数 9-待审数',
+  `total` decimal(8,2) DEFAULT '0.00' COMMENT 'type=3/5用',
+  `lang` varchar(10) DEFAULT 'cn',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='商城欢迎页主题的统计表';
+
+-- -----------------------------
+-- Records of `ey_statistics_data`
+-- -----------------------------
+INSERT INTO `ey_statistics_data` VALUES ('1', '1701014400', '4', '1', '0.00', 'cn');
+INSERT INTO `ey_statistics_data` VALUES ('2', '1703088000', '4', '1', '0.00', 'cn');
 
 -- -----------------------------
 -- Table structure for `ey_tagindex`
@@ -8432,7 +9316,7 @@ DROP TABLE IF EXISTS `ey_tagindex`;
 CREATE TABLE `ey_tagindex` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'tagid',
   `tag` varchar(50) NOT NULL DEFAULT '' COMMENT 'tag内容',
-  `typeid` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT '栏目ID',
+  `typeid` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '栏目ID',
   `litpic` varchar(250) DEFAULT '' COMMENT '封面图',
   `seo_title` varchar(200) DEFAULT '' COMMENT 'SEO标题',
   `seo_keywords` varchar(200) DEFAULT '' COMMENT 'SEO关键词',
@@ -8444,6 +9328,7 @@ CREATE TABLE `ey_tagindex` (
   `weekup` int(10) unsigned DEFAULT '0' COMMENT '每周更新',
   `monthup` int(10) unsigned DEFAULT '0' COMMENT '每月更新',
   `is_common` tinyint(1) DEFAULT '0' COMMENT '是否常用标签，0=否，1=是',
+  `sort_order` int(10) DEFAULT '100' COMMENT '排序号',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(10) unsigned DEFAULT '0' COMMENT '添加时间',
   `update_time` int(10) DEFAULT '0' COMMENT '更新时间',
@@ -8457,27 +9342,27 @@ CREATE TABLE `ey_tagindex` (
 -- -----------------------------
 -- Records of `ey_tagindex`
 -- -----------------------------
-INSERT INTO `ey_tagindex` VALUES ('28', '网站', '12', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1547462640', '0');
-INSERT INTO `ey_tagindex` VALUES ('29', '建设', '12', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1547462640', '0');
-INSERT INTO `ey_tagindex` VALUES ('30', '五大核心', '12', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1547462640', '0');
-INSERT INTO `ey_tagindex` VALUES ('31', '要素', '12', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1547462640', '0');
-INSERT INTO `ey_tagindex` VALUES ('32', '华为', '24', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1571038749', '0');
-INSERT INTO `ey_tagindex` VALUES ('33', 'HUAWEI', '24', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1571038749', '0');
-INSERT INTO `ey_tagindex` VALUES ('34', 'NOTE 8', '24', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1571038749', '0');
-INSERT INTO `ey_tagindex` VALUES ('37', '一号', '5', '', '', '', '', '3', '1', '2', '2', '1563785452', '1563785452', '0', 'cn', '1526614158', '0');
-INSERT INTO `ey_tagindex` VALUES ('38', '社交', '12', '', '', '', '', '10', '1', '2', '2', '1616490155', '1610348155', '0', 'cn', '1563520600', '0');
-INSERT INTO `ey_tagindex` VALUES ('39', '媒体', '12', '', '', '', '', '9', '1', '7', '7', '1616490155', '1610348163', '0', 'cn', '1563520600', '0');
-INSERT INTO `ey_tagindex` VALUES ('40', '营销', '12', '', '', '', '', '1', '1', '0', '0', '1616490155', '1609990101', '0', 'cn', '1564545045', '0');
-INSERT INTO `ey_tagindex` VALUES ('41', '商业', '12', '', '', '', '', '3', '1', '0', '0', '1616490155', '1610348720', '0', 'cn', '1564545045', '0');
-INSERT INTO `ey_tagindex` VALUES ('42', '工程', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1564565463', '0');
-INSERT INTO `ey_tagindex` VALUES ('43', '机械', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1564565463', '0');
-INSERT INTO `ey_tagindex` VALUES ('44', '推土', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1564565463', '0');
-INSERT INTO `ey_tagindex` VALUES ('45', '挖掘', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1564565463', '0');
-INSERT INTO `ey_tagindex` VALUES ('46', '网站模板', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1564565463', '0');
-INSERT INTO `ey_tagindex` VALUES ('47', 'WindowsXP', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1564623458', '0');
-INSERT INTO `ey_tagindex` VALUES ('48', '操作系统', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1564623458', '0');
-INSERT INTO `ey_tagindex` VALUES ('49', '网络优化', '64', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1565234125', '0');
-INSERT INTO `ey_tagindex` VALUES ('50', '推广服务', '64', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', 'cn', '1565234125', '0');
+INSERT INTO `ey_tagindex` VALUES ('28', '网站', '12', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1547462640', '0');
+INSERT INTO `ey_tagindex` VALUES ('29', '建设', '12', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1547462640', '0');
+INSERT INTO `ey_tagindex` VALUES ('30', '五大核心', '12', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1547462640', '0');
+INSERT INTO `ey_tagindex` VALUES ('31', '要素', '12', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1547462640', '0');
+INSERT INTO `ey_tagindex` VALUES ('32', '华为', '24', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1571038749', '0');
+INSERT INTO `ey_tagindex` VALUES ('33', 'HUAWEI', '24', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1571038749', '0');
+INSERT INTO `ey_tagindex` VALUES ('34', 'NOTE 8', '24', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1571038749', '0');
+INSERT INTO `ey_tagindex` VALUES ('37', '一号', '5', '', '', '', '', '3', '1', '2', '2', '1563785452', '1563785452', '0', '100', 'cn', '1526614158', '0');
+INSERT INTO `ey_tagindex` VALUES ('38', '社交', '12', '', '', '', '', '10', '1', '2', '2', '1616490155', '1610348155', '0', '100', 'cn', '1563520600', '0');
+INSERT INTO `ey_tagindex` VALUES ('39', '媒体', '12', '', '', '', '', '9', '1', '7', '7', '1616490155', '1610348163', '0', '100', 'cn', '1563520600', '0');
+INSERT INTO `ey_tagindex` VALUES ('40', '营销', '12', '', '', '', '', '1', '1', '0', '0', '1616490155', '1609990101', '0', '100', 'cn', '1564545045', '0');
+INSERT INTO `ey_tagindex` VALUES ('41', '商业', '12', '', '', '', '', '4', '1', '0', '0', '1686876674', '1686876674', '0', '100', 'cn', '1564545045', '0');
+INSERT INTO `ey_tagindex` VALUES ('42', '工程', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1564565463', '0');
+INSERT INTO `ey_tagindex` VALUES ('43', '机械', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1564565463', '0');
+INSERT INTO `ey_tagindex` VALUES ('44', '推土', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1564565463', '0');
+INSERT INTO `ey_tagindex` VALUES ('45', '挖掘', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1564565463', '0');
+INSERT INTO `ey_tagindex` VALUES ('46', '网站模板', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1564565463', '0');
+INSERT INTO `ey_tagindex` VALUES ('47', 'WindowsXP', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1564623458', '0');
+INSERT INTO `ey_tagindex` VALUES ('48', '操作系统', '5', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1564623458', '0');
+INSERT INTO `ey_tagindex` VALUES ('49', '网络优化', '64', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1565234125', '0');
+INSERT INTO `ey_tagindex` VALUES ('50', '推广服务', '64', '', '', '', '', '0', '1', '0', '0', '1616490155', '0', '0', '100', 'cn', '1565234125', '0');
 
 -- -----------------------------
 -- Table structure for `ey_taglist`
@@ -8486,7 +9371,7 @@ DROP TABLE IF EXISTS `ey_taglist`;
 CREATE TABLE `ey_taglist` (
   `tid` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'tagid',
   `aid` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '文档ID',
-  `typeid` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT '栏目ID',
+  `typeid` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '栏目ID',
   `tag` varchar(50) DEFAULT '' COMMENT 'tag内容',
   `arcrank` tinyint(1) DEFAULT '0' COMMENT '阅读权限',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
@@ -8542,19 +9427,59 @@ CREATE TABLE `ey_ui_config` (
 
 
 -- -----------------------------
+-- Table structure for `ey_uploads`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_uploads`;
+CREATE TABLE `ey_uploads` (
+  `img_id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `type_id` int(10) NOT NULL DEFAULT '0' COMMENT '分组ID',
+  `aid` mediumint(8) unsigned NOT NULL DEFAULT '0' COMMENT '文档ID',
+  `title` varchar(500) DEFAULT '' COMMENT '文档标题',
+  `image_url` varchar(255) DEFAULT '' COMMENT '文件存储路径',
+  `intro` varchar(500) DEFAULT '' COMMENT '图集描述',
+  `width` int(11) DEFAULT '0' COMMENT '图片宽度',
+  `height` int(11) DEFAULT '0' COMMENT '图片高度',
+  `filesize` int(11) unsigned DEFAULT '0' COMMENT '文件大小',
+  `mime` varchar(50) DEFAULT '' COMMENT '图片类型',
+  `users_id` int(11) DEFAULT '0' COMMENT '用户ID',
+  `sort_order` smallint(5) DEFAULT '100' COMMENT '排序',
+  `is_del` tinyint(1) DEFAULT '0' COMMENT '1已删除 0未删除',
+  `add_time` int(10) unsigned DEFAULT '0' COMMENT '上传时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`img_id`),
+  KEY `aid` (`aid`) USING BTREE,
+  KEY `add_time` (`add_time`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='上传记录表';
+
+
+-- -----------------------------
+-- Table structure for `ey_uploads_type`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_uploads_type`;
+CREATE TABLE `ey_uploads_type` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `upload_type` varchar(50) NOT NULL DEFAULT '' COMMENT '名称',
+  `add_time` int(10) NOT NULL DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(10) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='上传分组表';
+
+
+-- -----------------------------
 -- Table structure for `ey_users`
 -- -----------------------------
 DROP TABLE IF EXISTS `ey_users`;
 CREATE TABLE `ey_users` (
   `users_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '表id',
   `username` varchar(30) NOT NULL DEFAULT '' COMMENT '用户名',
-  `password` varchar(32) NOT NULL DEFAULT '' COMMENT '登录密码',
+  `password` varchar(255) NOT NULL DEFAULT '' COMMENT '登录密码',
   `nickname` varchar(50) NOT NULL DEFAULT '' COMMENT '昵称',
   `is_mobile` tinyint(1) DEFAULT '0' COMMENT '绑定手机号，0为不绑定，1为绑定',
   `mobile` varchar(20) NOT NULL DEFAULT '' COMMENT '手机号码（仅用于登录）',
   `is_email` tinyint(1) DEFAULT '0' COMMENT '绑定邮箱，0为不绑定，1为绑定',
   `email` varchar(60) NOT NULL DEFAULT '' COMMENT '电子邮件（仅用于登录）',
-  `paypwd` varchar(50) DEFAULT '' COMMENT '支付密码，暂时未用到，可保留。',
+  `paypwd` varchar(255) DEFAULT '' COMMENT '支付密码，暂时未用到，可保留。',
   `users_money` decimal(10,2) DEFAULT '0.00' COMMENT '用户金额',
   `frozen_money` decimal(10,2) DEFAULT '0.00' COMMENT '冻结金额',
   `scores` int(10) DEFAULT '0' COMMENT '积分',
@@ -8575,21 +9500,24 @@ CREATE TABLE `ey_users` (
   `is_activation` tinyint(1) DEFAULT '1' COMMENT '是否激活，0否，1是。\r\n后台注册默认为1激活。\r\n前台注册时，当会员功能设置选择后台审核，需后台激活才可以登陆。',
   `register_place` tinyint(1) DEFAULT '2' COMMENT '注册位置。后台注册不受注册验证影响，1为后台注册，2为前台注册。默认为2。',
   `open_id` varchar(50) NOT NULL DEFAULT '' COMMENT '第三方唯一标识openid',
-  `thirdparty` tinyint(1) DEFAULT '0' COMMENT '第三方注册类型：0=普通，1=微信，2=QQ',
+  `thirdparty` tinyint(1) DEFAULT '0' COMMENT '第三方注册类型 0=普通, 1=微信, 2=QQ, 3=手机号, 4=微信小程序， 5=微站点, 6-微信公众号, 7-百度小程序, 8-抖音小程序',
   `is_lock` tinyint(1) DEFAULT '0' COMMENT '是否被锁定冻结',
   `admin_id` int(10) DEFAULT '0' COMMENT '关联管理员ID',
   `lang` varchar(20) DEFAULT 'cn' COMMENT '语言标识',
   `is_del` tinyint(1) DEFAULT '0' COMMENT '伪删除，1=是，0=否',
   `unread_notice_num` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '未读消息数量',
   `update_time` int(11) unsigned DEFAULT '0' COMMENT '更新时间',
+  `sex` varchar(10) DEFAULT '保密' COMMENT '性别- 男,女,保密',
   `coin` int(11) unsigned DEFAULT '0' COMMENT '金币',
-  PRIMARY KEY (`users_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='会员信息表';
+  `union_id` varchar(50) NOT NULL DEFAULT '' COMMENT '微信用户的unionId',
+  `source` tinyint(3) DEFAULT '1' COMMENT '来源\r\n1-PC端\r\n2-H5\r\n3-微信公众号\r\n4-微信小程序\r\n5-百度小程序\r\n6-抖音小程序\r\n',
+  PRIMARY KEY (`users_id`),
+  KEY `union_id` (`union_id`) USING BTREE,
+  KEY `username` (`username`) USING BTREE,
+  KEY `mobile` (`mobile`) USING BTREE,
+  KEY `open_id` (`open_id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='会员信息表';
 
--- -----------------------------
--- Records of `ey_users`
--- -----------------------------
-INSERT INTO `ey_users` VALUES ('1', 'admin', '18e6a423f5a873ab50c1c55c59c69517', 'admin', '0', '13644444444', '0', '123@11.com', '', '0.00', '0.00', '3', '0', '1564475243', '1624416358', '127.0.0.1', '4', '', '0', '0', '0', '1', '0', '', '1.00', '0.00', '1', '2', '', '0', '0', '1', 'cn', '0', '0', '1624416358', '0');
 
 -- -----------------------------
 -- Table structure for `ey_users_bottom_menu`
@@ -8627,11 +9555,11 @@ INSERT INTO `ey_users_bottom_menu` VALUES ('8', '我的', 'user/Users/centre', '
 DROP TABLE IF EXISTS `ey_users_collection`;
 CREATE TABLE `ey_users_collection` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `users_id` int(10) DEFAULT NULL,
+  `users_id` int(10) DEFAULT '0',
   `aid` int(10) DEFAULT '0' COMMENT '文档id',
   `channel` int(10) DEFAULT '0' COMMENT '模型',
   `typeid` int(10) DEFAULT '0' COMMENT '栏目',
-  `title` varchar(50) DEFAULT '' COMMENT '网站标题',
+  `title` varchar(200) DEFAULT '' COMMENT '网站标题',
   `litpic` varchar(255) DEFAULT '' COMMENT '缩略图',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
@@ -8642,7 +9570,7 @@ CREATE TABLE `ey_users_collection` (
 -- -----------------------------
 -- Records of `ey_users_collection`
 -- -----------------------------
-INSERT INTO `ey_users_collection` VALUES ('1', '1', '92', '4', '5', '计算机软件系统故障及维护2', '/uploads/allimg/20190808/682be7153d02d14890144bef217149d1.jpg', 'cn', '1610347624', '1610347624');
+INSERT INTO `ey_users_collection` VALUES ('1', '1', '92', '4', '5', '计算机软件系统故障及维护2', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/682be7153d02d14890144bef217149d1.jpg', 'cn', '1610347624', '1610347624');
 
 -- -----------------------------
 -- Table structure for `ey_users_config`
@@ -8657,7 +9585,7 @@ CREATE TABLE `ey_users_config` (
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8 COMMENT='会员功能配置表';
+) ENGINE=MyISAM AUTO_INCREMENT=21 DEFAULT CHARSET=utf8 COMMENT='会员功能配置表';
 
 -- -----------------------------
 -- Records of `ey_users_config`
@@ -8677,6 +9605,11 @@ INSERT INTO `ey_users_config` VALUES ('12', 'users_open_reg', '0', '', 'users', 
 INSERT INTO `ey_users_config` VALUES ('13', 'users_verification', '0', '', 'users', 'cn', '1610352452');
 INSERT INTO `ey_users_config` VALUES ('14', 'theme_color', '#ff9600', '', 'theme', 'cn', '1610616432');
 INSERT INTO `ey_users_config` VALUES ('15', 'pay_balance_open', '1', '', 'pay', 'cn', '1616460912');
+INSERT INTO `ey_users_config` VALUES ('16', 'users_login_expiretime', '3600', '', 'users', 'cn', '1641949807');
+INSERT INTO `ey_users_config` VALUES ('17', 'score_name', '积分', '', 'score', 'cn', '1667356308');
+INSERT INTO `ey_users_config` VALUES ('18', 'score_intro', 'a) 积分不可兑现、不可转让,仅可在本平台使用;\r\nb) 您在本平台参加特定活动也可使用积分,详细使用规则以具体活动时的规则为准;\r\nc) 积分的数值精确到个位(小数点后全部舍弃,不进行四舍五入)\r\nd) 买家在完成该笔交易(订单状态为“已签收”)后才能得到此笔交易的相应积分,如购买商品参加店铺其他优惠,则优惠的金额部分不享受积分获取;', '', 'score', 'cn', '1667356308');
+INSERT INTO `ey_users_config` VALUES ('19', 'memgift_open', '0', '', 'memgift', 'cn', '1673945387');
+INSERT INTO `ey_users_config` VALUES ('20', 'order_right_protect_time', '7', '', 'order', 'cn', '1680508882');
 
 -- -----------------------------
 -- Table structure for `ey_users_footprint`
@@ -8700,26 +9633,45 @@ CREATE TABLE `ey_users_footprint` (
 -- -----------------------------
 -- Records of `ey_users_footprint`
 -- -----------------------------
-INSERT INTO `ey_users_footprint` VALUES ('21', '3', '64', '93', '鼠标封面设计', '/uploads/allimg/20190808/b1f94bd8a0feba4062fa19d795099af4.jpg', '1', 'cn', '1610588278', '1610588349');
-INSERT INTO `ey_users_footprint` VALUES ('2', '2', '28', '103', '联想智能音箱G1', '/uploads/allimg/20190808/13fba5d0f2454c4b8fee4ada1d3fb39b.jpg', '1', 'cn', '1610335752', '1610351881');
-INSERT INTO `ey_users_footprint` VALUES ('3', '3', '64', '43', '3C数码蓝牙耳机产品渲染', '/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', '1', 'cn', '1610336370', '1610349548');
-INSERT INTO `ey_users_footprint` VALUES ('4', '2', '24', '90', '小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机', '/uploads/allimg/20190731/c4539460b957fea39a9db19e61eb0afe.jpg', '1', 'cn', '1610346287', '1610349050');
-INSERT INTO `ey_users_footprint` VALUES ('5', '2', '28', '102', '联想智能音箱MINI', '/uploads/allimg/20190808/989d19deb2377e199ec63d5ef9244be8.jpg', '1', 'cn', '1610346779', '1610352887');
-INSERT INTO `ey_users_footprint` VALUES ('22', '1', '11', '21', '网站设计与SEO的关系，高手是从这4个维度分析的！', '/uploads/allimg/20210107/1-21010G012205c.jpg', '1', 'cn', '1610588467', '1610588467');
-INSERT INTO `ey_users_footprint` VALUES ('23', '1', '11', '38', '商梦网校：单页SEO站群技术，用10个网站优化排名！', '/uploads/allimg/20210107/1-21010G012425K.jpg', '1', 'cn', '1610589835', '1610589892');
-INSERT INTO `ey_users_footprint` VALUES ('8', '2', '26', '99', 'MIIX 520 酷睿i5笔记本', '/uploads/allimg/20190808/821fcaa266d291b4f504fb9a1d412c1c.jpg', '1', 'cn', '1610346787', '1610348967');
-INSERT INTO `ey_users_footprint` VALUES ('9', '2', '26', '98', 'MIIX520 二合一笔记本12.2英寸 i7', '/uploads/allimg/20190808/7dd05a89099c482a51be7faf1bb38ad4.jpg', '1', 'cn', '1610346789', '1610346789');
-INSERT INTO `ey_users_footprint` VALUES ('10', '2', '20', '89', 'Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机', '/uploads/allimg/20190731/582042862ba0d06c9408a9a1e669a067.jpg', '1', 'cn', '1610346807', '1619595550');
-INSERT INTO `ey_users_footprint` VALUES ('11', '2', '24', '37', '华为无线快充手机', '/uploads/allimg/20190319/8a405e72e2acf9c5a29da7341a0eff89.jpg', '1', 'cn', '1610347140', '1610347140');
-INSERT INTO `ey_users_footprint` VALUES ('12', '2', '27', '29', ' 小米蓝牙项圈耳机', '/uploads/allimg/20190114/252a53e6fbc8f441b2570f755d2bbeb8.jpg', '1', 'cn', '1610347154', '1610347368');
-INSERT INTO `ey_users_footprint` VALUES ('13', '2', '26', '28', '小米笔记本Air 13.3', '/uploads/allimg/20190114/66109e989148356eadb4ff1eee285826.jpg', '1', 'cn', '1610347405', '1610347405');
-INSERT INTO `ey_users_footprint` VALUES ('14', '4', '5', '92', '计算机软件系统故障及维护2', '/uploads/allimg/20190808/682be7153d02d14890144bef217149d1.jpg', '1', 'cn', '1610347622', '1610588252');
+INSERT INTO `ey_users_footprint` VALUES ('21', '3', '64', '93', '鼠标封面设计', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/b1f94bd8a0feba4062fa19d795099af4.jpg', '1', 'cn', '1610588278', '1610588349');
+INSERT INTO `ey_users_footprint` VALUES ('2', '2', '28', '103', '联想智能音箱G1', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/13fba5d0f2454c4b8fee4ada1d3fb39b.jpg', '1', 'cn', '1610335752', '1610351881');
+INSERT INTO `ey_users_footprint` VALUES ('3', '3', '64', '43', '3C数码蓝牙耳机产品渲染', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', '1', 'cn', '1610336370', '1610349548');
+INSERT INTO `ey_users_footprint` VALUES ('4', '2', '24', '90', '小米8屏幕指纹版 6GB+128GB 黑色 全网通4G 双卡双待 全面屏拍照智能游戏手机', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/c4539460b957fea39a9db19e61eb0afe.jpg', '1', 'cn', '1610346287', '1610349050');
+INSERT INTO `ey_users_footprint` VALUES ('5', '2', '28', '102', '联想智能音箱MINI', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/989d19deb2377e199ec63d5ef9244be8.jpg', '1', 'cn', '1610346779', '1610352887');
+INSERT INTO `ey_users_footprint` VALUES ('22', '1', '11', '21', '网站设计与SEO的关系，高手是从这4个维度分析的！', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G012205c.jpg', '1', 'cn', '1610588467', '1610588467');
+INSERT INTO `ey_users_footprint` VALUES ('23', '1', '11', '38', '商梦网校：单页SEO站群技术，用10个网站优化排名！', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G012425K.jpg', '1', 'cn', '1610589835', '1610589892');
+INSERT INTO `ey_users_footprint` VALUES ('8', '2', '26', '99', 'MIIX 520 酷睿i5笔记本', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/821fcaa266d291b4f504fb9a1d412c1c.jpg', '1', 'cn', '1610346787', '1610348967');
+INSERT INTO `ey_users_footprint` VALUES ('9', '2', '26', '98', 'MIIX520 二合一笔记本12.2英寸 i7', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/7dd05a89099c482a51be7faf1bb38ad4.jpg', '1', 'cn', '1610346789', '1610346789');
+INSERT INTO `ey_users_footprint` VALUES ('10', '2', '20', '89', 'Apple iPhone 8 Plus (A1899) 64GB 深空灰色 移动联通4G手机', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/582042862ba0d06c9408a9a1e669a067.jpg', '1', 'cn', '1610346807', '1619595550');
+INSERT INTO `ey_users_footprint` VALUES ('11', '2', '24', '37', '华为无线快充手机', 'https://update.eyoucms.com/demo/uploads/allimg/20190319/8a405e72e2acf9c5a29da7341a0eff89.jpg', '1', 'cn', '1610347140', '1610347140');
+INSERT INTO `ey_users_footprint` VALUES ('12', '2', '27', '29', ' 小米蓝牙项圈耳机', 'https://update.eyoucms.com/demo/uploads/allimg/20190114/252a53e6fbc8f441b2570f755d2bbeb8.jpg', '1', 'cn', '1610347154', '1610347368');
+INSERT INTO `ey_users_footprint` VALUES ('13', '2', '26', '28', '小米笔记本Air 13.3', 'https://update.eyoucms.com/demo/uploads/allimg/20190114/66109e989148356eadb4ff1eee285826.jpg', '1', 'cn', '1610347405', '1610347405');
+INSERT INTO `ey_users_footprint` VALUES ('14', '4', '5', '92', '计算机软件系统故障及维护2', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/682be7153d02d14890144bef217149d1.jpg', '1', 'cn', '1610347622', '1610588252');
 INSERT INTO `ey_users_footprint` VALUES ('15', '9', '23', '96', '网络安全专员', '', '1', 'cn', '1610347652', '1610347652');
-INSERT INTO `ey_users_footprint` VALUES ('16', '1', '12', '40', '社交媒体时代，如何对粉丝估值？', '/uploads/allimg/20210107/1-21010G01311136.jpg', '1', 'cn', '1610348146', '1610349151');
-INSERT INTO `ey_users_footprint` VALUES ('17', '1', '12', '41', '《颠覆营销:大数据时代的商业革命》：大数据“多即少，少即多”各种行销手段早已令人眼花缭乱', '/uploads/allimg/20210107/1-21010G0132R20.jpg', '1', 'cn', '1610348718', '1610588083');
-INSERT INTO `ey_users_footprint` VALUES ('18', '4', '5', '91', '计算机软件系统故障及维护', '/uploads/allimg/20190731/0c8845e11a94b0f765ab24259c5b06b9.gif', '1', 'cn', '1610349228', '1610349228');
-INSERT INTO `ey_users_footprint` VALUES ('19', '3', '66', '105', '数码蓝牙耳机产品渲染', '/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', '1', 'cn', '1610349768', '1610589902');
+INSERT INTO `ey_users_footprint` VALUES ('16', '1', '12', '40', '社交媒体时代，如何对粉丝估值？', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G01311136.jpg', '1', 'cn', '1610348146', '1610349151');
+INSERT INTO `ey_users_footprint` VALUES ('17', '1', '12', '41', '《颠覆营销:大数据时代的商业革命》：大数据“多即少，少即多”各种行销手段早已令人眼花缭乱', 'https://update.eyoucms.com/demo/uploads/allimg/20210107/1-21010G0132R20.jpg', '1', 'cn', '1610348718', '1610588083');
+INSERT INTO `ey_users_footprint` VALUES ('18', '4', '5', '91', '计算机软件系统故障及维护', 'https://update.eyoucms.com/demo/uploads/allimg/20190731/0c8845e11a94b0f765ab24259c5b06b9.gif', '1', 'cn', '1610349228', '1610349228');
+INSERT INTO `ey_users_footprint` VALUES ('19', '3', '66', '105', '数码蓝牙耳机产品渲染', 'https://update.eyoucms.com/demo/uploads/allimg/20190808/1c3dabff0cbf24fb6667899396a866aa.jpg', '1', 'cn', '1610349768', '1610589902');
 INSERT INTO `ey_users_footprint` VALUES ('20', '9', '23', '97', '网络运营专员', '', '1', 'cn', '1610588096', '1610588096');
+
+-- -----------------------------
+-- Table structure for `ey_users_forward`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_users_forward`;
+CREATE TABLE `ey_users_forward` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `users_id` int(10) DEFAULT '0',
+  `aid` int(10) DEFAULT '0' COMMENT '文档id',
+  `channel` int(10) DEFAULT '0' COMMENT '模型',
+  `typeid` int(10) DEFAULT '0' COMMENT '栏目',
+  `title` varchar(200) DEFAULT '' COMMENT '网站标题',
+  `litpic` varchar(255) DEFAULT '' COMMENT '缩略图',
+  `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
+  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='转发记录';
+
 
 -- -----------------------------
 -- Table structure for `ey_users_level`
@@ -8750,6 +9702,25 @@ INSERT INTO `ey_users_level` VALUES ('2', '中级会员', '50', '0', '0.00', '10
 INSERT INTO `ey_users_level` VALUES ('3', '高级会员', '100', '0', '0.00', '100', '100', '20', '1', '0', 'cn', '1564532901', '1564532901');
 
 -- -----------------------------
+-- Table structure for `ey_users_like`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_users_like`;
+CREATE TABLE `ey_users_like` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `users_id` int(10) DEFAULT '0',
+  `aid` int(10) DEFAULT '0' COMMENT '文档id',
+  `channel` int(10) DEFAULT '0' COMMENT '模型',
+  `typeid` int(10) DEFAULT '0' COMMENT '栏目',
+  `title` varchar(200) DEFAULT '' COMMENT '网站标题',
+  `litpic` varchar(255) DEFAULT '' COMMENT '缩略图',
+  `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
+  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='我喜欢的';
+
+
+-- -----------------------------
 -- Table structure for `ey_users_list`
 -- -----------------------------
 DROP TABLE IF EXISTS `ey_users_list`;
@@ -8761,7 +9732,8 @@ CREATE TABLE `ey_users_list` (
   `lang` varchar(50) NOT NULL DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) NOT NULL DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
-  PRIMARY KEY (`list_id`)
+  PRIMARY KEY (`list_id`),
+  KEY `users_id` (`users_id`) USING BTREE
 ) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COMMENT='会员属性表(信息）';
 
 -- -----------------------------
@@ -8769,6 +9741,42 @@ CREATE TABLE `ey_users_list` (
 -- -----------------------------
 INSERT INTO `ey_users_list` VALUES ('1', '1', '1', '13644444444', 'cn', '1564475243', '0');
 INSERT INTO `ey_users_list` VALUES ('2', '1', '2', '123@11.com', 'cn', '1564475243', '0');
+
+-- -----------------------------
+-- Table structure for `ey_users_log_off`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_users_log_off`;
+CREATE TABLE `ey_users_log_off` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `users_id` int(11) DEFAULT '0',
+  `username` varchar(25) DEFAULT NULL,
+  `nickname` varchar(30) DEFAULT NULL,
+  `mobile` varchar(25) DEFAULT NULL,
+  `status` tinyint(1) DEFAULT '0' COMMENT '0-审核中 1-通过 2-拒绝',
+  `handle_time` int(11) DEFAULT '0' COMMENT '操作时间',
+  `admin_id` int(11) DEFAULT '0' COMMENT '操作人',
+  `refuse_reason` varchar(255) DEFAULT NULL COMMENT '拒绝原因',
+  `add_time` int(11) DEFAULT '0' COMMENT '申请时间',
+  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='会员注销日志表';
+
+
+-- -----------------------------
+-- Table structure for `ey_users_login_log`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_users_login_log`;
+CREATE TABLE `ey_users_login_log` (
+  `log_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '会员日志自增ID',
+  `users_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员ID',
+  `log_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '日志时间，年月日(例:20230406)',
+  `log_count` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '日志次数',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '创建时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`log_id`),
+  UNIQUE KEY `users_id` (`users_id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='会员登录日志 - 用于登录赠送积分';
+
 
 -- -----------------------------
 -- Table structure for `ey_users_menu`
@@ -8787,7 +9795,7 @@ CREATE TABLE `ey_users_menu` (
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8 COMMENT='会员菜单表';
+) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8 COMMENT='会员菜单表';
 
 -- -----------------------------
 -- Records of `ey_users_menu`
@@ -8804,6 +9812,7 @@ INSERT INTO `ey_users_menu` VALUES ('10', '财务明细', 'v1', 'user/Pay/pay_co
 INSERT INTO `ey_users_menu` VALUES ('12', '我的信息', 'v2', 'user/Users/info', 'user/Users/info', '0', '100', '1', 'cn', '1608709100', '1609385363');
 INSERT INTO `ey_users_menu` VALUES ('13', '我的收藏', 'v2', 'user/Users/collection_index', 'user/Users/collection_index', '0', '100', '1', 'cn', '1608708100', '1609385363');
 INSERT INTO `ey_users_menu` VALUES ('14', '财务明细', 'v2', 'user/Pay/pay_consumer_details', 'user/Pay/pay_consumer_details|user/Users/score_index', '0', '100', '1', 'cn', '1608709000', '1609387813');
+INSERT INTO `ey_users_menu` VALUES ('15', '我的收藏', 'v1', 'user/Users/collection_index', '', '0', '100', '1', 'cn', '1590484667', '1614651537');
 
 -- -----------------------------
 -- Table structure for `ey_users_money`
@@ -8815,15 +9824,17 @@ CREATE TABLE `ey_users_money` (
   `money` decimal(10,2) DEFAULT '0.00' COMMENT '金额',
   `users_money` decimal(10,2) DEFAULT '0.00' COMMENT '此条记录的账户金额',
   `cause` text COMMENT '事由，暂时在升级消费中使用到，以serialize序列化后存入，用于后续查询。',
-  `cause_type` tinyint(1) DEFAULT '0' COMMENT '数据类型，0为消费，1为充值。其余后续添加。',
+  `cause_type` tinyint(1) DEFAULT '0' COMMENT '数据类型,0-消费,1-充值,2-退款,3-订单支付,4-管理员添加,5-管理员减少',
   `status` tinyint(1) DEFAULT '1' COMMENT '是否成功，默认1，0失败，1未付款，2已付款，3已完成，4订单取消。',
-  `pay_method` varchar(50) DEFAULT '' COMMENT '支付方式，wechat为微信支付，alipay为支付宝支付',
+  `pay_method` varchar(50) DEFAULT '' COMMENT '支付方式，wechat为微信支付，alipay为支付宝支付，balance为余额支付',
   `wechat_pay_type` varchar(20) NOT NULL DEFAULT '' COMMENT '微信支付时，标记使用的支付类型（扫码支付，微信内部，微信H5页面）',
   `pay_details` text COMMENT '支付时返回的数据，以serialize序列化后存入，用于后续查询。',
   `order_number` varchar(30) DEFAULT '' COMMENT '订单号',
+  `level_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员升级时所升级的会员级别ID，默认0',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  `admin_id` int(10) DEFAULT '0' COMMENT '管理员表ID',
   PRIMARY KEY (`moneyid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='金额明细表';
 
@@ -8877,7 +9888,7 @@ CREATE TABLE `ey_users_notice_tpl` (
   `add_time` int(11) DEFAULT '0' COMMENT '添加时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`tpl_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='站内信模板表';
+) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COMMENT='站内信模板表';
 
 -- -----------------------------
 -- Records of `ey_users_notice_tpl`
@@ -8885,6 +9896,7 @@ CREATE TABLE `ey_users_notice_tpl` (
 INSERT INTO `ey_users_notice_tpl` VALUES ('1', '留言表单', '您有新的留言消息，请到内容管理中查看！', '${content}', '1', '1', 'cn', '1616460912', '1616460912');
 INSERT INTO `ey_users_notice_tpl` VALUES ('5', '订单付款', '您有新的待发货订单消息，请到商城订单查看！', '${content}', '5', '1', 'cn', '1616460912', '1616460912');
 INSERT INTO `ey_users_notice_tpl` VALUES ('6', '订单发货', '您有新的待收货订单消息，请到会员订单查看！', '${content}', '6', '1', 'cn', '1616460912', '1616460912');
+INSERT INTO `ey_users_notice_tpl` VALUES ('7', '投稿提醒', '您有新的投稿文档，请及时查看！', '${content}', '20', '0', 'cn', '1616460912', '1616460912');
 
 -- -----------------------------
 -- Table structure for `ey_users_notice_tpl_content`
@@ -8921,6 +9933,7 @@ CREATE TABLE `ey_users_parameter` (
   `is_hidden` tinyint(1) DEFAULT '0' COMMENT '是否禁用属性，1为是，0为否',
   `is_required` tinyint(1) DEFAULT '0' COMMENT '是否为必填属性，1为是，0为否，默认0。',
   `is_reg` tinyint(1) DEFAULT '1' COMMENT '是否为注册表单，1为是，0为否',
+  `placeholder` varchar(255) DEFAULT '' COMMENT '提示文字',
   `sort_order` smallint(5) NOT NULL DEFAULT '0' COMMENT '排序',
   `lang` varchar(50) NOT NULL DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) NOT NULL DEFAULT '0' COMMENT '新增时间',
@@ -8931,8 +9944,53 @@ CREATE TABLE `ey_users_parameter` (
 -- -----------------------------
 -- Records of `ey_users_parameter`
 -- -----------------------------
-INSERT INTO `ey_users_parameter` VALUES ('1', '手机号码', 'mobile_1', 'mobile', '', '1', '0', '0', '1', '1', 'cn', '0', '1591957363');
-INSERT INTO `ey_users_parameter` VALUES ('2', '邮箱地址', 'email_2', 'email', '', '1', '0', '1', '1', '1', 'cn', '0', '1591957363');
+INSERT INTO `ey_users_parameter` VALUES ('1', '手机号码', 'mobile_1', 'mobile', '', '1', '0', '0', '1', '', '1', 'cn', '0', '1591957363');
+INSERT INTO `ey_users_parameter` VALUES ('2', '邮箱地址', 'email_2', 'email', '', '1', '0', '1', '1', '', '1', 'cn', '0', '1591957363');
+
+-- -----------------------------
+-- Table structure for `ey_users_recharge_pack`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_users_recharge_pack`;
+CREATE TABLE `ey_users_recharge_pack` (
+  `pack_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '会员充值套餐ID',
+  `pack_names` varchar(100) NOT NULL DEFAULT '' COMMENT '会员充值套餐名称',
+  `pack_face_value` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '会员充值套餐充值面值',
+  `pack_pay_prices` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '会员充值套餐购买价格',
+  `pack_sales_num` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员充值套餐销售数量',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '会员充值套餐状态(1:开启; 2:关闭;)',
+  `sort_order` int(11) unsigned NOT NULL DEFAULT '100' COMMENT '排序号',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '添加时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`pack_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='会员充值套餐列表';
+
+
+-- -----------------------------
+-- Table structure for `ey_users_recharge_pack_order`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_users_recharge_pack_order`;
+CREATE TABLE `ey_users_recharge_pack_order` (
+  `order_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '会员充值套餐订单ID',
+  `pack_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员充值套餐ID',
+  `users_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员ID',
+  `order_code` varchar(50) NOT NULL DEFAULT '' COMMENT '订单编号',
+  `order_status` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '订单状态(1:未支付; 2:已支付(未执行充值); 3:已充值(已执行充值); 4:已过期;)',
+  `order_pack_names` varchar(100) NOT NULL DEFAULT '' COMMENT '会员充值套餐名称',
+  `order_face_value` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '订单充值面值',
+  `order_pay_prices` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '订单支付价格',
+  `order_pay_code` varchar(50) NOT NULL DEFAULT '' COMMENT '订单支付编号(待用)',
+  `order_pay_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '支付时间',
+  `order_pay_name` varchar(20) NOT NULL DEFAULT '' COMMENT '支付方式名称',
+  `order_pay_terminal` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '订单终端(1:电脑端; 2:手机端; 3:微信小程序; 4:抖音小程序)',
+  `order_pay_details` text COMMENT '支付成功返回的数据，serialize序列化存入',
+  `lang` varchar(30) NOT NULL DEFAULT 'cn' COMMENT '语言标识',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '添加时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`order_id`),
+  KEY `pack_id` (`pack_id`),
+  KEY `users_id` (`users_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='会员充值套餐订单';
+
 
 -- -----------------------------
 -- Table structure for `ey_users_score`
@@ -8940,24 +9998,28 @@ INSERT INTO `ey_users_parameter` VALUES ('2', '邮箱地址', 'email_2', 'email'
 DROP TABLE IF EXISTS `ey_users_score`;
 CREATE TABLE `ey_users_score` (
   `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '积分明细表',
-  `type` tinyint(1) DEFAULT '1' COMMENT '类型:1-提问,2-回答,3-最佳答案4-悬赏退回,5-每日签到',
+  `type` tinyint(2) DEFAULT '1' COMMENT '类型:1-提问,2-回答,3-最佳答案4-悬赏退回,5-每日签到,6-管理员编辑,7-问题悬赏/获得悬赏,8-消费赠送积分,9-积分兑换/退回,10-登录赠送积分',
   `users_id` int(10) DEFAULT '0' COMMENT '用户id',
   `ask_id` int(10) DEFAULT '0' COMMENT '问题id',
   `reply_id` int(10) DEFAULT '0' COMMENT '回答id',
-  `score` int(10) DEFAULT '0' COMMENT '积分',
+  `score` varchar(20) NOT NULL DEFAULT '' COMMENT '积分',
   `devote` int(10) DEFAULT '0' COMMENT '贡献值,同score',
   `money` decimal(8,2) NOT NULL DEFAULT '0.00' COMMENT '余额',
   `info` varchar(255) DEFAULT '' COMMENT '说明',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(10) DEFAULT '0' COMMENT '创建时间',
   `update_time` int(10) DEFAULT '0' COMMENT '更新时间',
+  `current_score` int(10) DEFAULT '0' COMMENT '当前积分',
+  `current_devote` int(10) DEFAULT '0' COMMENT '当前贡献值',
+  `admin_id` int(10) DEFAULT '0' COMMENT '管理员表ID',
+  `remark` varchar(255) DEFAULT '' COMMENT '备注',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='积分详情表';
 
 -- -----------------------------
 -- Records of `ey_users_score`
 -- -----------------------------
-INSERT INTO `ey_users_score` VALUES ('1', '5', '1', '0', '0', '3', '3', '0.00', '每日签到', 'cn', '1610350037', '1610350037');
+INSERT INTO `ey_users_score` VALUES ('1', '5', '1', '0', '0', '3', '3', '0.00', '每日签到', 'cn', '1610350037', '1610350037', '0', '0', '0', '');
 
 -- -----------------------------
 -- Table structure for `ey_users_signin`
@@ -9010,7 +10072,7 @@ CREATE TABLE `ey_weapp` (
   `code` varchar(50) DEFAULT '' COMMENT '插件标识',
   `name` varchar(55) DEFAULT '' COMMENT '中文名字',
   `config` text COMMENT '配置信息',
-  `data` text COMMENT '额外序列化存储数据，简单插件可以不创建表，存储这里即可',
+  `data` longtext COMMENT '额外序列化存储数据，简单插件可以不创建表，存储这里即可',
   `status` tinyint(1) DEFAULT '0' COMMENT '状态：0=未安装，1=启用，-1=禁用',
   `tag_weapp` tinyint(1) DEFAULT '1' COMMENT '1=自动绑定，2=手工调用。关联模板标签weapp，自动调用内置的show钩子方法',
   `thorough` tinyint(1) DEFAULT '0' COMMENT '彻底卸载：0=是，1=否',
@@ -9020,14 +10082,34 @@ CREATE TABLE `ey_weapp` (
   `sort_order` int(10) DEFAULT '100' COMMENT '排序号',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  `quick_sort` int(10) DEFAULT '100' COMMENT '首页快捷菜单专用排序号',
+  `checked` tinyint(4) DEFAULT '0' COMMENT '选中，0=否，1=是(首页快捷菜单用)',
   PRIMARY KEY (`id`),
   KEY `code` (`code`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COMMENT='插件应用表';
+) ENGINE=MyISAM AUTO_INCREMENT=20 DEFAULT CHARSET=utf8 COMMENT='插件应用表';
 
 -- -----------------------------
 -- Records of `ey_weapp`
 -- -----------------------------
-INSERT INTO `ey_weapp` VALUES ('4', 'Systemdoctor', '易优系统助手', '{\"code\":\"Systemdoctor\",\"name\":\"\\u6613\\u4f18\\u7cfb\\u7edf\\u52a9\\u624b\",\"version\":\"v1.1.0\",\"min_version\":\"1.0.0\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/200904\\/5-200Z40U91c09.jpg\",\"description\":\"\\u3010\\u63d2\\u4ef6\\u8bf4\\u660e\\u3011 \\u6613\\u4f18\\u7cfb\\u7edf\\u533b\\u751f \\u63d2\\u4ef6\\u4e3b\\u8981\\u65b9\\u4fbf\\u7528\\u6237 \\u8bca\\u65ad\\u7cfb\\u7edf\\uff0c\\u81ea\\u884c\\u4fee\\u590d\\u7591\\u96be\\u6742\\u75c7\\uff0c\\u53ca\\u4e00\\u4e9bsql\\u64cd\\u4f5c\\u529f\\u80fd\\uff0c\\u540e\\u7eed\\u6301\\u7eed\\u66f4\\u65b0\\u589e\\u52a0\\u5b89\\u5168\\u3001\\u7ef4\\u62a4\\u65b9\\u9762\\u529f\\u80fd\\uff0c\\u65b9\\u4fbf\\u7528\\u6237\\u9632\\u62a4\\u597d\\u81ea\\u5df1\\u7684\\u7f51\\u7ad9\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '2', '1', '100', '1610351528', '1610351528');
+INSERT INTO `ey_weapp` VALUES ('1', 'Invoice', '发票管理', '{\"code\":\"Invoice\",\"name\":\"\\u53d1\\u7968\\u7ba1\\u7406\",\"version\":\"v1.0.0\",\"min_version\":\"1.6.5\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/user\\/9406\\/allimg\\/20231206\\/9406-23120611020C23.png\",\"description\":\"\\u53d1\\u7968\\u7ba1\\u7406\\u63d2\\u4ef6\\u7528\\u4e8e\\u7ba1\\u7406\\u6613\\u4f18\\u8ba2\\u5355\\u5f00\\u7968\\uff0c\\u65b9\\u4fbf\\u7528\\u6237\\u4f1a\\u5458\\u4e2d\\u5fc3\\u81ea\\u52a9\\u5f00\\u53d6\\u53d1\\u7968\\uff0c\\u8282\\u7701\\u5ba2\\u670d\\u6210\\u672c\\u3002\\u63d2\\u4ef6\\u652f\\u6301\\u540e\\u53f0\\u4e0a\\u4f20\\u5f00\\u7968\\u4e8c\\u7ef4\\u7801\\uff0c\\u7528\\u6237\\u626b\\u7801\\u81ea\\u52a9\\u7533\\u8bf7\\u5f00\\u7968\\u524d\\u63d0\\u6761\\u4ef6\\uff1a1.\\u76ee\\u524d\\u652f\\u6301PC\\u7aef\\uff0c\\u624b\\u673a\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('2', 'Transfer', '会员之间转账', '{\"code\":\"Transfer\",\"name\":\"\\u4f1a\\u5458\\u4e4b\\u95f4\\u8f6c\\u8d26\",\"version\":\"\",\"min_version\":\"1.4.7\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/userup\\/5095\\/159E05Y0-Y43.png\",\"description\":\"\\u3010\\u63d2\\u4ef6\\u4f7f\\u7528\\u65b9\\u6cd5\\u3011 \\u4e00\\u6b3e\\u4f1a\\u5458\\u4e4b\\u95f4\\u76f8\\u4e92\\u8f6c\\u8d26\\u7684\\u4e92\\u52a8\\u63d2\\u4ef6\\uff01 \\u5b89\\u88c5\\u63d2\\u4ef6\\u540e\\u4f1a\\u5458\\u4e2d\\u5fc3\\u5de6\\u4fa7\\u5bfc\\u822a\\u81ea\\u52a8\\u6dfb\\u52a0\\u680f\\u76ee\\uff01\\u680f\\u76ee\\u540d\\u79f0\\u4fee\\u6539\\u65b9\\u5f0f\\uff1a \\u70b9\\u51fb\\u3010\\u4f1a\\u5458\\u4e2d\\u5fc3\\u3011-\\u3010\\u529f\\u80fd\\u914d\\u7f6e\\u3011-\\u3010\\u5de6\\u4fa7\\u83dc\\u5355\\u3011-\\u3010\\u7ba1\\u7406\\u3011-\\u3010\\u4f1a\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('3', 'Publisher', '文档导入定时发布器', '{\"code\":\"Publisher\",\"name\":\"\\u6587\\u6863\\u5bfc\\u5165\\u5b9a\\u65f6\\u53d1\\u5e03\\u5668\",\"version\":\"v1.0.0\",\"min_version\":\"1.6.1\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/user\\/9406\\/allimg\\/20230214\\/9406-23021416293HN.png\",\"description\":\"\\u4f7f\\u7528\\u6761\\u4ef6\\uff1a    PHP\\u7248\\u672c\\u662f7.0.0\\u6216\\u4ee5\\u4e0a\\u66f4\\u9ad8\\u7248\\u672c\\u529f\\u80fd\\u5982\\u4e0b\\uff1a\\u4e0a\\u4f20txt\\u538b\\u7f29\\u5305\\u6587\\u4ef6\\uff0c\\u6279\\u91cf\\u5bfc\\u5165\\u6587\\u6863\\u3002\\u5c06\\u5df2\\u5b58\\u5728\\u5f85\\u5ba1\\u7a3f\\u4ef6\\u7684\\u6587\\u6863\\uff0c\\u901a\\u8fc7\\u5b9d\\u5854\\u7b49\\u5de5\\u5177\\u5b9a\\u65f6\\u81ea\\u52a8\\u53d1\\u5e03\\u6587\\u6863\\uff0c\\u6a21\\u62df\\u4eba\\u5de5\\u53d1\\u5e03\\u884c\\u4e3a\\u3002\\u53ea\\u652f\\u6301\\u6587\\u6863\\u6807\\u9898\\u548c\\u5185\\u5bb9\\u538b\\u7f29\\u5305\\u91cc\\u6709\\u591a\\u4e2atxt\\u6587\\u4ef6\\uff0c\\u6bcf\\u4e2a\\u6587\\u4ef6\\u7684\\u6587\\u4ef6\\u540d\\u662f\\u6587\\u6863\\u6807\\u9898\\uff0c\\u6587\\u4ef6\\u5185\\u5bb9\\u662f\\u6587\\u6863\\u5185\\u5bb9\\u3002\\u5bfc\\u5165\\u529f\\u80fd\\u53d1\\u5e03\\u914d\\u7f6e\\u5b9d\\u5854\\u6dfb\\u52a0\\u5b9a\\u65f6\\u8ba1\\u5212\\u4efb\\u52a1\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('4', 'MakemHtml', '手机端生成静态HTML页面', '{\"code\":\"MakemHtml\",\"name\":\"\\u624b\\u673a\\u7aef\\u751f\\u6210\\u9759\\u6001HTML\\u9875\\u9762\",\"version\":\"v1.0.1\",\"min_version\":\"1.4.6\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/userup\\/34388\\/1634E0361-54G.png\",\"description\":\"\\u751f\\u6210\\u9759\\u6001\\u9875\\u9762\\uff0c\\u652f\\u6301\\u6307\\u5b9a\\u751f\\u6210\\u76ee\\u5f55\\u6ce8\\u610f\\uff1a\\u5df2\\u652f\\u6301\\u4e8c\\u7ea7\\u57df\\u540d\\u8bbf\\u95ee\\uff08\\u6ce8\\uff1a\\u4e2a\\u522b\\u670d\\u52a1\\u5668\\u4e0d\\u652f\\u6301\\uff09\\u4f8b\\u5982\\uff1a\\u63d2\\u4ef6\\u751f\\u6210\\u76ee\\u5f55\\/m,\\u652f\\u6301\\u8bbf\\u95ee:xxxx.com\\/m\\u652f\\u6301\\u8bbf\\u95ee:m.xxxx.co\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('5', 'Pushall', '聚合推送（升级自动版）百度、神马、搜狗、头条', '{\"code\":\"Pushall\",\"name\":\"\\u805a\\u5408\\u63a8\\u9001\\uff08\\u5347\\u7ea7\\u81ea\\u52a8\\u7248\\uff09\\u767e\\u5ea6\\u3001\\u795e\\u9a6c\\u3001\\u641c\\u72d7\\u3001\\u5934\\u6761\",\"version\":\"v1.0.8\",\"min_version\":\"1.4.6\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/userup\\/21990\\/160004OK-1644.png\",\"description\":\"\\u805a\\u5408\\u63a8\\u9001\\uff1a \\u5df2\\u805a\\u5408 \\u767e\\u5ea6\\u3001\\u795e\\u9a6c\\u3001\\u641c\\u72d7\\u3001\\u5934\\u6761\\u4e3b\\u52a8\\u63a8\\u9001 \\u805a\\u5408\\u767e\\u5ea6\\u3001\\u795e\\u9a6c\\u3001\\u641c\\u72d7\\u3001\\u5934\\u6761Url\\u4e3b\\u52a8\\u63a8\\u9001\\u529f\\u80fd\\uff0c \\u5b9e\\u65f6\\u5168\\u7ad9\\u52a8\\u6001SiteMap\\u5730\\u56fe\\u529f\\u80fd+ \\u805a\\u5408\\u5173\\u952e\\u8bcd\\uff08\\u4e0a\\u6743\\u795e\\u5668\\uff09 Sitemap\\u5730\\u56fe\\u529f\\u80fd \\u5730\\u56fe\\u683c\\u5f0f\\u5316\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('6', 'EyouGzhLogin', '后台扫码登录', '{\"code\":\"EyouGzhLogin\",\"name\":\"\\u540e\\u53f0\\u626b\\u7801\\u767b\\u5f55\",\"version\":\"v1.0.0\",\"min_version\":\"1.5.8\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/user\\/5\\/allimg\\/20220402\\/5-220402141144217.png\",\"description\":\"\\u626b\\u7801\\u6a21\\u5f0f\\uff1a\\u8981\\u81ea\\u5df1\\u7533\\u8bf7\\u5fae\\u4fe1\\u5e94\\u7528\\uff0c\\u624d\\u80fd\\u5b9e\\u73b0\\u4f60\\u7684\\u5fae\\u4fe1\\u4e0e\\u4f60\\u7684\\u7f51\\u7ad9\\u7ed1\\u5b9a\\u5728\\u4e00\\u8d77\\uff0c\\u624d\\u80fd\\u5b9e\\u73b0\\u626b\\u7801\\u767b\\u5f55\\uff0c\\u4f46\\u6bcf\\u5e74\\u90fd\\u4f1a\\u7ed9\\u817e\\u8baf\\u7f34\\u8d39300\\u5143\\u8ba4\\u8bc1\\u3002\\u767b\\u5f55\\u6548\\u679c\\u4e00\\uff1a\\u5173\\u95ed\\u5f3a\\u5236\\u626b\\u7801\\u767b\\u5f55\\uff0c\\u53ef\\u4ee5\\u5728\\u666e\\u901a\\/\\u626b\\u7801\\u4e4b\\u95f4\\u5207\\u6362\\u767b\\u5f55\\u6548\\u679c\\u4e8c\\uff1a\\u5f00\\u542f\\u5f3a\\u5236\\u626b\\u7801\\u767b\\u5f55\\uff0c\\u4ec5\\u652f\\u6301\\u626b\\u7801\\u767b\\u5f55\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('7', 'QqLogin', 'QQ一键登录', '{\"code\":\"QqLogin\",\"name\":\"QQ\\u4e00\\u952e\\u767b\\u5f55\",\"version\":\"v1.3.1\",\"min_version\":\"1.4.3\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/allimg\\/191220\\/1-191220161U50-L.jpg\",\"description\":\"\\u6613\\u4f18QQ\\u4e00\\u952e\\u767b\\u5f55\\u63d2\\u4ef6\\u662f\\u65b9\\u4fbf\\u4f1a\\u5458\\u8fdb\\u884c\\u6ce8\\u518c\\u767b\\u5f55\\u64cd\\u4f5c\\uff0c\\u4e3a\\u7ad9\\u957f\\u5e26\\u6765\\u66f4\\u591a\\u6d3b\\u8dc3\\u4f1a\\u5458 \\u4f7f\\u7528\\u6b64\\u63d2\\u4ef6\\u8981\\u6ce8\\u610f\\u4e00\\u4e0b\\u51e0\\u70b9\\uff1a 1\\u3001\\u6b64\\u63d2\\u4ef6\\u4f7f\\u7528\\u524d\\u8bf7\\u5230 http:\\/\\/connect.opensns.qq.com\\u7533\\u8bf7appid, appkey, \\u5e76\\u6ce8\\u518ccallback\\u5730\\u5740\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('8', 'WxLogin', '微信扫码登录', '{\"code\":\"WxLogin\",\"name\":\"\\u5fae\\u4fe1\\u626b\\u7801\\u767b\\u5f55\",\"version\":\"v1.1.0\",\"min_version\":\"1.4.3\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/200616\\/5-2006161G91a95.jpg\",\"description\":\"\\u6613\\u4f18\\u5fae\\u4fe1\\u626b\\u7801\\u767b\\u5f55\\u63d2\\u4ef6\\uff0c \\u662f\\u4e00\\u6b3e\\u7531\\u6613\\u4f18\\u56e2\\u961f\\u5f00\\u53d1\\u7684eyoucms \\u5fae\\u4fe1\\u767b\\u5f55\\u63d2\\u4ef6\\uff0c\\u5fae\\u4fe1\\u626b\\u63cf\\u767b\\u5f55\\uff0c\\u81ea\\u52a8\\u83b7\\u53d6\\u7528\\u6237\\u6635\\u79f0\\u4e0e\\u5934\\u50cf\\u3002 \\u964d\\u4f4e\\u4e86\\u6ce8\\u518c\\u95e8\\u69db\\uff0c\\u5feb\\u6377\\u65b9\\u4fbf\\uff01 \\u5b89\\u88c5\\u5b8c\\u6210\\u540e\\uff0c\\u81ea\\u52a8\\u70b9\\u4eae\\u4f1a\\u5458\\u4e2d\\u5fc3\\u767b\\u5f55\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('9', 'Qiniuyun', '七牛云图片加速', '{\"code\":\"Qiniuyun\",\"name\":\"\\u4e03\\u725b\\u4e91\\u56fe\\u7247\\u52a0\\u901f\",\"version\":\"v1.0.4\",\"min_version\":\"1.3.6\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/allimg\\/191022\\/5-1910221912130-L.png\",\"description\":\"\\u63d2\\u4ef6\\u63cf\\u8ff0 \\u4e03\\u725b\\u4e91\\u56fe\\u7247\\u52a0\\u901f\\u63d2\\u4ef6\\u662f\\u6613\\u4f18\\u56e2\\u961f\\u54cd\\u5e94\\u7528\\u6237\\u7684\\u9700\\u6c42\\u5f00\\u53d1\\u4e00\\u4e2a\\u53ef\\u4ee5\\u901a\\u8fc7\\u540e\\u53f0\\u53d1\\u5e03\\u65b0\\u56fe\\u7247\\u65f6\\u901a\\u8fc7\\u63a5\\u53e3\\u65b9\\u5f0f\\u4fdd\\u5b58\\u5230\\u4e03\\u725b\\u4e91\\u5b58\\u50a8\\u7a7a\\u95f4\\uff0c\\u4ee5\\u8fbe\\u5230\\u63d0\\u9ad8\\u7f51\\u7ad9\\u8bbf\\u95ee\\u901f\\u5ea6\\u548c\\u964d\\u4f4e\\u56fe\\u7247\\u52a0\\u8f7d\\u65f6\\u95f4\\u7684\\u63d2\\u4ef6\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('10', 'AliyunOss', '对象存储OSS', '{\"code\":\"AliyunOss\",\"name\":\"\\u5bf9\\u8c61\\u5b58\\u50a8OSS\",\"version\":\"v1.0.0\",\"min_version\":\"1.4.6\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/200616\\/5-200616161K3295.jpg\",\"description\":\"\\u63d2\\u4ef6\\u63cf\\u8ff0\\u5bf9\\u8c61\\u5b58\\u50a8OSS\\u63d2\\u4ef6\\u662f\\u6613\\u4f18\\u56e2\\u961f\\u54cd\\u5e94\\u7528\\u6237\\u7684\\u9700\\u6c42\\u5f00\\u53d1\\u4e00\\u4e2a\\u53ef\\u4ee5\\u901a\\u8fc7\\u540e\\u53f0\\u53d1\\u5e03\\u65b0\\u56fe\\u7247\\u65f6\\u901a\\u8fc7\\u63a5\\u53e3\\u65b9\\u5f0f\\u4fdd\\u5b58\\u5230\\u963f\\u91cc\\u4e91OSS\\u5b58\\u50a8\\u7a7a\\u95f4\\uff0c\\u4ee5\\u8fbe\\u5230\\u63d0\\u9ad8\\u7f51\\u7ad9\\u8bbf\\u95ee\\u901f\\u5ea6\\u548c\\u964d\\u4f4e\\u56fe\\u7247\\u52a0\\u8f7d\\u65f6\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('11', 'PictureCleaning', '多余图片清理', '{\"code\":\"PictureCleaning\",\"name\":\"\\u591a\\u4f59\\u56fe\\u7247\\u6e05\\u7406\",\"version\":\"v1.0.5\",\"min_version\":\"1.3.3\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/allimg\\/191022\\/5-1910221910540-L.png\",\"description\":\"\\u6709\\u65f6\\u5019\\u5220\\u9664\\u4e86\\u6587\\u6863\\u6216\\u8005\\u662f\\u6f14\\u793a\\u6570\\u636e\\uff0c\\u6587\\u6863\\u91cc\\u9762\\u7684\\u56fe\\u7247\\u6ca1\\u6709\\u8ddf\\u7740\\u6e05\\u9664\\uff0c\\u8fd9\\u7c7b\\u7684\\u56fe\\u7247\\u591a\\u4e86\\u4f1a\\u5360\\u7528\\u7f51\\u7ad9\\u7a7a\\u95f4\\uff0c\\u7279\\u522b\\u662f\\u865a\\u62df\\u4e3b\\u673a\\u7528\\u6237\\u3002\\u4e3a\\u4e86\\u65b9\\u4fbf\\u7ad9\\u957f\\u5feb\\u901f\\u67e5\\u627e\\u5e76\\u6e05\\u9664\\u591a\\u4f59\\u56fe\\u7247\\uff0c\\u6613\\u4f18\\u56e2\\u961f\\u63a8\\u51fa\\u8fd9\\u6b3e\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('12', 'Likearticle', '相关文档标签', '{\"code\":\"Likearticle\",\"name\":\"\\u76f8\\u5173\\u6587\\u6863\\u6807\\u7b7e\",\"version\":\"v1.0.0\",\"min_version\":\"1.5.5\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/191224\\/1-19122411151V54.gif\",\"description\":\"\\u63d2\\u4ef6\\u63cf\\u8ff0 \\u6613\\u4f18\\u76f8\\u5173\\u6587\\u6863\\u63d2\\u4ef6 \\uff0c \\u901a\\u8fc7\\u6587\\u6863tag\\u6807\\u7b7e\\u53ca\\u5173\\u952e\\u8bcd\\u81ea\\u52a8\\u5173\\u8054\\u6587\\u6863\\uff0c\\u5728\\u524d\\u7aef\\u7528likearticle\\u6807\\u7b7e\\u8c03\\u7528\\u76f8\\u5173\\u6587\\u6863\\u3002 \\u3002 likearticle\\u6807\\u7b7e\\u8c03\\u7528\\u6559\\u7a0b\\u8bf7\\u70b9\\u51fb\\u67e5\\u770b\\u5e2e\\u52a9\\u6307\\u5357\\uff08\\uff09\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('13', 'Systemdoctor', '易优系统助手（持续更新）', '{\"code\":\"Systemdoctor\",\"name\":\"\\u6613\\u4f18\\u7cfb\\u7edf\\u52a9\\u624b\\uff08\\u6301\\u7eed\\u66f4\\u65b0\\uff09\",\"version\":\"v1.1.0\",\"min_version\":\"1.0.0\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/200904\\/5-200Z40U91c09.jpg\",\"description\":\"\\u6613\\u4f18\\u7cfb\\u7edf\\u52a9\\u624b\\u63d2\\u4ef6\\u4e3b\\u8981\\u65b9\\u4fbf\\u7528\\u6237\\u8bca\\u65ad\\u7cfb\\u7edf\\uff0c\\u81ea\\u884c\\u4fee\\u590d\\u7591\\u96be\\u6742\\u75c7\\uff0c\\u53ca\\u4e00\\u4e9bsql\\u64cd\\u4f5c\\u529f\\u80fd\\uff0c\\u540e\\u7eed\\u6301\\u7eed\\u66f4\\u65b0\\u589e\\u52a0\\u5b89\\u5168\\u3001\\u7ef4\\u62a4\\u65b9\\u9762\\u529f\\u80fd\\uff0c\\u65b9\\u4fbf\\u7528\\u6237\\u9632\\u62a4\\u597d\\u81ea\\u5df1\\u7684\\u7f51\\u7ad9\\u3002\\u63d2\\u4ef6\\u5185\\u7f6e\\u591a\\u79cd\\u529f\\u80fd\\uff0c\\u5305\\u542b\\u529f\\u80fd\\u6709\\uff1a1.\\u6267\\u884c\\u6570\\u636e\\u5e932.\\u68c0\\u6d4b\\u6570\\u636e\\u5e933.\\u68c0\\u6d4b\\u76ee\\u5f55\\u6743\\u96504.SQL\\u547d\\u4ee4\\u884c5.\\u75c5\\u6bd2\\u626b\\u63cf6.\\u68c0\\u6d4b\\u91cd\\u590d\\u6587\\u68637.\\u91cd\\u7f6e\\u6570\\u636e\\u8868ID8.\\u540e\\u53f0\\u64cd\\u4f5c\\u65e5\\u5fd79.\\u6570\\u636e\\u5e93\\u5185\\u5bb9\\u66ff\\u636210.\\u9a8c\\u8bc1\\u7801\\u7ba1\\u740611.\\u5728\\u7ebf\\u6a21\\u677f\\u7f16\\u8f9112.\\u6587\\u6863\\u94fe\\u63a5\\u63d0\\u53d6\\u6700\\u65b0\\u52a0\\u5165\\u6587\\u4ef6\\u7ba1\\u7406\\u5668\\uff08\\u652f\\u6301\\u7ad9\\u70b9\\u6587\\u4ef6\\u4e0a\\u4f20\\u3001\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('14', 'Downloads', '会员下载次数限制', '{\"code\":\"Downloads\",\"name\":\"\\u4f1a\\u5458\\u4e0b\\u8f7d\\u6b21\\u6570\\u9650\\u5236\",\"version\":\"v1.0.0\",\"min_version\":\"1.4.8\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/200731\\/1-200I114423V02.jpg\",\"description\":\"\\u3010\\u63d2\\u4ef6\\u4ecb\\u7ecd\\u3011\\u6613\\u4f18\\u4f1a\\u5458\\u4e0b\\u8f7d\\u6b21\\u6570\\u9650\\u5236\\u63d2\\u4ef6\\u662f\\u9488\\u5bf9\\u7528\\u6237\\u9700\\u6c42\\u5b9a\\u5236\\u7684\\u4e00\\u4e2a\\u5c0f\\u529f\\u80fd\\uff0c\\u5f00\\u542f\\u4e0b\\u8f7d\\u6a21\\u578b\\u60c5\\u51b5\\u4e0b\\uff0c\\u53ef\\u4ee5\\u65b9\\u4fbf\\u9650\\u5236\\u5404\\u4e2a\\u4f1a\\u5458\\u7ea7\\u7ea7\\u7ec4\\u5f53\\u65e5\\u7684\\u4e0b\\u8f7d\\u91cf\\uff0c\\u5df2\\u8fc7\\u6ee4\\u91cd\\u590d\\u4e0b\\u8f7d\\u6b21\\u6570\\uff0c\\u5229\\u4e8e\\u7ad9\\u957f\\u63a7\\u5236\\u7ba1\\u7406\\u53ca\\u4f1a\\u5458\\u6743\\u9650\\u5347\\u7ea7\\u8f6c\\u5316\\u3002\\u5b89\\u88c5\\u5b8c\\u6210\\u540e\\uff0c\\u5728\\u4f1a\\u5458\\u7ea7\\u522b\\u5373\\u53ef\\u770b\\u5230\\u53ef\\u63a7\\u5236\\u7684\\u9009\\u9879\\u3002\\uff08\\u540e\\u53f0\\u6548\\u679c\\u5982\\u4e0b\\u56fe\\uff09\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('15', 'Cos', '腾讯云COS对象存储', '{\"code\":\"Cos\",\"name\":\"\\u817e\\u8baf\\u4e91COS\\u5bf9\\u8c61\\u5b58\\u50a8\",\"version\":\"v1.0.0\",\"min_version\":\"1.5.2\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/allimg\\/210322\\/1-2103221123130-L.png\",\"description\":\"\\u8be5\\u63d2\\u4ef6\\u6700\\u4f4e\\u652f\\u6301php5.6\\u6216\\u4ee5\\u4e0a\\u66f4\\u9ad8\\u7248\\u672c\\uff01\\u63d2\\u4ef6\\u63cf\\u8ff0\\u817e\\u8baf\\u4e91COS\\u5bf9\\u8c61\\u5b58\\u50a8\\u63d2\\u4ef6\\u662f\\u6613\\u4f18\\u56e2\\u961f\\u54cd\\u5e94\\u7528\\u6237\\u7684\\u9700\\u6c42\\u5f00\\u53d1\\u4e00\\u4e2a\\u53ef\\u4ee5\\u901a\\u8fc7\\u540e\\u53f0\\u53d1\\u5e03\\u65b0\\u56fe\\u7247\\u65f6\\u901a\\u8fc7\\u63a5\\u53e3\\u65b9\\u5f0f\\u4fdd\\u5b58\\u5230\\u817e\\u8baf\\u4e91COS\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('16', 'ExportOrder', '订单导出', '{\"code\":\"ExportOrder\",\"name\":\"\\u8ba2\\u5355\\u5bfc\\u51fa\",\"version\":\"v1.0.0\",\"min_version\":\"1.5.4\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/userup\\/9406\\/162321b02-4418.jpg\",\"description\":\"\\u798f\\u5229\\uff1a\\u4e13\\u4e1a\\u7248\\u6388\\u6743\\u7684\\u7528\\u6237\\uff0c\\u53ef\\u4ee5\\u5728\\u4e91\\u63d2\\u4ef6\\u5e93\\u514d\\u8d39\\u5728\\u7ebf\\u5b89\\u88c5\\u4f7f\\u7528\\u529f\\u80fd\\uff1a    \\u4f1a\\u5458\\u4e2d\\u5fc3\\u7684\\u8ba2\\u5355\\u5bfc\\u51fa    \\u5546\\u57ce\\u4e2d\\u5fc3\\u7684\\u8ba2\\u5355\\u5bfc\\u51fa    \\u6709\\u65b0\\u8ba2\\u5355\\u5217\\u8868\\u4f1a\\u6301\\u7eed\\u52a0\\u5165\\u5bfc\\u51fa\\u529f\\u80fd\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('17', 'Users', '会员个人主页展示', '{\"code\":\"Users\",\"name\":\"\\u4f1a\\u5458\\u4e2a\\u4eba\\u4e3b\\u9875\\u5c55\\u793a\",\"version\":\"v1.0.1\",\"min_version\":\"1.5.2\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/userup\\/5095\\/15b433108-4Q9.png\",\"description\":\"\\u529f\\u80fd\\u4e00\\uff1a\\u6dfb\\u52a0\\u4e86\\u4f1a\\u5458\\u4e4b\\u95f4\\u7684\\u5173\\u6ce8\\u529f\\u80fd \\u529f\\u80fd\\u4e8c\\uff1a\\u6dfb\\u52a0\\u4e86\\u6295\\u7a3f\\u6570\\u91cf\\u3001\\u88ab\\u5173\\u6ce8\\u7684\\u6570\\u91cf\\u548c\\u5173\\u6ce8\\u7684\\u6570\\u91cf \\u529f\\u80fd\\u4e09\\uff1a\\u5728\\u4e2a\\u4eba\\u4e2d\\u5fc3\\u53ef\\u4ee5\\u663e\\u793a\\u51fa\\u4f1a\\u5458\\u7684\\u4e2a\\u4eba\\u8d44\\u6599 \\u529f\\u80fd\\u56db\\uff1a\\u5728\\u4e2a\\u4eba\\u4f1a\\u5458\\u4e2d\\u5fc3\\u53ef\\u4ee5\\u67e5\\u770b\\u8be5\\u7528\\u6237\\u7684\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('18', 'Ask', '易优问答', '{\"code\":\"Ask\",\"name\":\"\\u6613\\u4f18\\u95ee\\u7b54\",\"version\":\"v1.3.3\",\"min_version\":\"1.5.8\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/200616\\/5-2006161F43V92.jpg\",\"description\":\"   \\u63d2\\u4ef6\\u63cf\\u8ff0   \\u6613\\u4f18\\u95ee\\u7b54\\u63d2\\u4ef6V1.0.1\\u662f\\u6613\\u4f18\\u56e2\\u961f\\u54cd\\u5e94\\u7528\\u6237\\u7684\\u9700\\u6c42\\u5f00\\u53d1\\u4e00\\u4e2a\\u4f1a\\u5458\\u53ef\\u4ee5\\u5728\\u7ebf\\u53d1\\u8d77\\u63d0\\u95ee\\u53ca\\u76f8\\u4e92\\u56de\\u7b54\\uff0c\\u5bf9\\u56de\\u7b54\\u70b9\\u8d5e\\u7684\\u63d2\\u4ef6\\u3002    \\u6700\\u65b0\\u66f4\\u65b0\\u7684v1.0.1\\u5df2\\u652f\\u6301\\u95ee\\u7b54\\u72ec\\u7acb\\u8bbe\\u7f6e\\u4f2a\\u9759\\u6001url\\u89c4\\u5219\\uff0c\\u5df2\\u5b89\\u88c5\\u7684\\u7528\\u6237\\u53ef\\u4ee5\\u5728\\u540e\\u53f0\\u66f4\\u65b0\\u8bbe\\u7f6e\\u5373\\u53ef\\uff082019.11.28\\uff09    \\u65b0\\u589e\\u95ee\\u7b54\\u60ac\\u8d4f\\u529f\\u80fd\\uff082022.06.20\\uff09    \\u5982\\u9700\\u67e5\\u770b\\u6f14\\u793a\\u53ef\\u6d4f\\u89c8\\u6613\\u4f18\\u5b98\\u65b9\\u95ee\\u7b54\\uff08\\u6f14\\u793a\\uff09    \\u6ce8\\u610f\\u4e8b\\u9879    1\\u3001\\u7cfb\\u7edf\\u7248\\u672c\\u9700\\u8981\\u5347\\u7ea7\\u52301.5.8\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+INSERT INTO `ey_weapp` VALUES ('19', 'Verify', '商品核销', '{\"code\":\"Verify\",\"name\":\"\\u5546\\u54c1\\u6838\\u9500\",\"version\":\"v1.0.0\",\"min_version\":\"1.6.4\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/user\\/9406\\/allimg\\/20230905\\/9406-230Z51H223K0.png\",\"description\":\"\\u5546\\u54c1\\u6838\\u9500\\uff0c\\u662f\\u5c06\\u7ebf\\u4e0a\\u8ba2\\u5355\\u5f15\\u5bfc\\u5230\\u7ebf\\u4e0b\\u6d88\\u8d39\\uff0c\\u5e76\\u5b8c\\u6210\\u8ba2\\u5355\\u6838\\u9500\\u7684\\u8fc7\\u7a0b\\uff0c\\u5b9e\\u73b0\\u7ebf\\u4e0a\\u548c\\u7ebf\\u4e0b\\u6d88\\u8d39\\u573a\\u666f\\u7684\\u6253\\u901a\\uff0c\\u8f7b\\u677e\\u4e3a\\u7ebf\\u4e0b\\u5e97\\u94fa\\u5f15\\u6d41\\u30021\\u3001\\u652f\\u6301\\u6838\\u9500\\u72b6\\u6001\\u67e5\\u770b2\\u3001\\u652f\\u6301\\u95e8\\u5e97\\u81ea\\u63d0\\u6838\\u95003\\u3001\\u652f\\u6301\\u6838\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
 
 -- -----------------------------
 -- Table structure for `ey_wx_users`
@@ -9037,10 +10119,12 @@ CREATE TABLE `ey_wx_users` (
   `wxuser_id` int(11) NOT NULL AUTO_INCREMENT,
   `users_id` int(11) NOT NULL DEFAULT '0' COMMENT '用户id',
   `openid` varchar(100) NOT NULL DEFAULT '' COMMENT 'openid',
+  `unionid` varchar(100) DEFAULT '' COMMENT 'unionid',
   `nickname` varchar(100) NOT NULL DEFAULT '' COMMENT '微信昵称',
   `headimgurl` varchar(200) NOT NULL DEFAULT '' COMMENT '头像',
   `add_time` int(11) NOT NULL DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  `provider` varchar(25) DEFAULT '' COMMENT '来源',
   PRIMARY KEY (`wxuser_id`),
   KEY `openid` (`openid`) USING BTREE
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='微信小程序用户表';

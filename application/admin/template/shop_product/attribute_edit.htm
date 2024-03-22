@@ -1,8 +1,9 @@
 {include file="public/layout" /}
-<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4; padding: 20px; ">
+<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page">
+<div id="geduan_div" class="h10"></div>
+<div id="page_div" class="page min-hg-c mb-20" style="min-width:auto;box-shadow:none;">
     <form class="form-horizontal" id="post_form" action="{:U('ShopProduct/attribute_edit')}" method="post">
         <input type="hidden" name="list_id" value="{$list.list_id}">
         <div class="ncap-form-default">
@@ -127,14 +128,24 @@
             success : function(data){
                 layer.closeAll();
                 if(data.code == 1){
-                    layer.msg(data.msg, {icon: 1, time:1000}, function(){
+                    layer.msg(data.msg, {icon: 1, shade:layer_shade, time:1000}, function(){
                         parent.window.location.reload();
                     });
                 }else{
-                    layer.alert(data.msg, {icon: 2, title:false});
+                    layer.alert(data.msg, {icon: 2, shade:layer_shade, title:false});
                 }
             }
         });
     }
 </script>
 {include file="public/footer" /}
+<script>
+    try{
+        var mt20_1649209614 = sessionStorage.getItem("mt20_1649209614");
+        if (mt20_1649209614 == 1){
+            $("#geduan_div").removeClass("h10");
+        }else{
+            $("#geduan_div").addClass("h10");
+        }
+    }catch(e){}
+</script>

@@ -2,162 +2,180 @@
 <body class="bodystyle">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page atta">
+<div class="page atta min-hg-c-10">
     {include file="seo/bar" /}
     <form method="post" id="handlepost" action="{:U('Sitemap/index')}" enctype="multipart/form-data" name="form1">
         <div class="ncap-form-default">
             <dl class="row">
-                <dt class="tit">自动生成</dt>
-                <dd class="opt">
-                    <div class="onoff">
-                        <label for="sitemap_auto1" class="cb-enable {if condition='isset($config.sitemap_auto) && $config.sitemap_auto eq 1'}selected{/if}" >开启</label>
-                        <label for="sitemap_auto0" class="cb-disable {if condition='!isset($config.sitemap_auto) || $config.sitemap_auto eq 0'}selected{/if}" >关闭</label>
-                        <input id="sitemap_auto1" name="sitemap_auto" value="1" {if condition="isset($config.sitemap_auto) && $config.sitemap_auto eq 1"}checked{/if} type="radio">
-                        <input id="sitemap_auto0" name="sitemap_auto" value="0" {if condition="!isset($config.sitemap_auto) || $config.sitemap_auto eq 0"}checked{/if} type="radio">
-                    </div>
-                    <p class="notic">更新内容时候自动更新网站地图</p>
-                </dd>
-            </dl>
-            <dl class="row">
                 <dt class="tit">
-                    <label>过滤栏目及内容</label>
+                    <label>地图类型</label>
                 </dt>
-                <dd class="opt">          
-                    <label><input type="checkbox" name="sitemap_not1" value="1" {if condition="isset($config.sitemap_not1) && $config.sitemap_not1 eq 1"}checked="checked"{/if}>过滤隐藏栏目</label>&nbsp;
-                    <label><input type="checkbox" name="sitemap_not2" value="1" {if condition="isset($config.sitemap_not2) && $config.sitemap_not2 eq 1"}checked="checked"{/if}>过滤外部模块</label>&nbsp;
+                <dd class="opt">
+                    <label class="curpoin"><input type="checkbox" name="sitemap_xml" value="1" onclick="sitemap_type(this);" {if condition="isset($config.sitemap_xml) && $config.sitemap_xml eq 1"}checked="checked"{/if}>xml地图</label>&nbsp;&nbsp;
+                    <span class="notic2 {if condition="!isset($config.sitemap_xml) || $config.sitemap_xml != 1"}none{/if}" id="sg_sitemap_xml">
+                        {notempty name="$global.web_mobile_domain_open"}
+                         <a href="{$web_basehost}__ROOT_DIR__/sitemap.xml" target="_blank">PC端</a> &nbsp;&nbsp;
+                        <a href="{$mobile_domain}__ROOT_DIR__/sitemap_{$global.web_mobile_domain}.xml" target="_blank">移动端</a> &nbsp;&nbsp;
+                        {else /}
+                        <a href="{$web_basehost}__ROOT_DIR__/sitemap.xml" target="_blank">{$web_basehost}__ROOT_DIR__/sitemap.xml</a> &nbsp;&nbsp;
+                        {/notempty}
+                         <a href="javascript:void(0);" onclick="update_sitemap_xml();">手工更新</a>
+                    </span>
+                    <br/>
+                    <label class="curpoin"><input type="checkbox" name="sitemap_txt" value="1" onclick="sitemap_type(this);" {if condition="isset($config.sitemap_txt) && $config.sitemap_txt eq 1"}checked="checked"{/if}>txt地图</label>&nbsp;&nbsp;
+                    <span class="notic2 {if condition="!isset($config.sitemap_txt) || $config.sitemap_txt != 1"}none{/if}" id="sg_sitemap_txt">
+                        {notempty name="$global.web_mobile_domain_open"}
+                         <a href="{$web_basehost}__ROOT_DIR__/sitemap.txt" target="_blank">PC端</a> &nbsp;&nbsp;
+                         <a href="{$mobile_domain}__ROOT_DIR__/sitemap_{$global.web_mobile_domain}.txt" target="_blank">移动端</a> &nbsp;&nbsp;
+                         {else /}
+                         <a href="{$web_basehost}__ROOT_DIR__/sitemap.txt" target="_blank">{$web_basehost}__ROOT_DIR__/sitemap.txt</a> &nbsp;&nbsp;
+                        {/notempty}
+                        <a href="javascript:void(0);" onclick="update_sitemap_txt();">手工更新</a>
+                    </span>
+                    <br/>
+                    <label class="curpoin"><input type="checkbox" name="sitemap_html" value="1" onclick="sitemap_type(this);" {if condition="isset($config.sitemap_html) && $config.sitemap_html eq 1"}checked="checked"{/if}>html地图</label>&nbsp;&nbsp;
+                    <span class="notic2 {if condition="!isset($config.sitemap_html) || $config.sitemap_html != 1"}none{/if}" id="sg_sitemap_html">
+                         <a href="{$web_basehost}__ROOT_DIR__/sitemap.html" target="_blank">{$web_basehost}__ROOT_DIR__/sitemap.html</a> &nbsp;&nbsp;<a href="javascript:void(0);" onclick="update_sitemap_html();">手工更新</a>
+                        （<a href="javascript:void(0);" onclick="sitemap_exp('sitemap_1_1');">查看模板</a><span id="sitemap_1_1" class="none">：__ROOT_DIR__/public/html/sitemap.htm</span>）
+                    </span>
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
             </dl>
             <dl class="row">
+                <dt class="tit">自动更新</dt>
+                <dd class="opt">
+                    <label class="curpoin"><input id="sitemap_auto1" name="sitemap_auto" value="1" {if condition="isset($config.sitemap_auto) && $config.sitemap_auto eq 1"}checked{/if} type="radio">开启</label>
+                    &nbsp;
+                    <label class="curpoin"><input id="sitemap_auto0" name="sitemap_auto" value="0" {if condition="!isset($config.sitemap_auto) || $config.sitemap_auto eq 0"}checked{/if} type="radio">关闭</label>
+                    <p class="notic">地图跟随文档一起更新</p>
+                </dd>
+            </dl>
+            <dl class="row">
                 <dt class="tit">
-                    <label>Sitemap类型</label>
+                    <label>过滤规则</label>
                 </dt>
                 <dd class="opt">          
-                    <label><input type="checkbox" name="sitemap_xml" value="1" {if condition="isset($config.sitemap_xml) && $config.sitemap_xml eq 1"}checked="checked"{/if}>Xml网站地图</label>&nbsp;
-                    <br/><p class="notic2">适合谷歌和百度，地图网址 <a href="__SITE_URL____ROOT_DIR__/sitemap.xml" target="_blank">__SITE_URL____ROOT_DIR__/sitemap.xml</a> &nbsp;&nbsp;<a href="javascript:void(0);" onclick="update_sitemap();" class="ncap-btn ncap-btn-green">更新地图</a></p>
+                    <label class="curpoin"><input type="checkbox" name="sitemap_not1" value="1" {if condition="isset($config.sitemap_not1) && $config.sitemap_not1 eq 1"}checked="checked"{/if}>过滤隐藏栏目</label>&nbsp;&nbsp;
+                    <label class="curpoin"><input type="checkbox" name="sitemap_not2" value="1" {if condition="isset($config.sitemap_not2) && $config.sitemap_not2 eq 1"}checked="checked"{/if}>过滤外部链接</label>&nbsp;&nbsp;
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
             </dl>
+            <div id="div_sitemap_xml" class="{if condition="empty($config.sitemap_xml)"}none{/if}">
+                <dl class="row">
+                    <dt class="tit">
+                        <label>更新频率</label>
+                    </dt>
+                    <dd class="opt">
+                        首页
+                        <select name="sitemap_changefreq_index">
+                            <option value="always" {if condition="empty($config.sitemap_changefreq_index) || $config.sitemap_changefreq_index eq 'always'"}selected="true"{/if}>经常</option>
+                            <option value="hourly" {if condition="!empty($config.sitemap_changefreq_index) && $config.sitemap_changefreq_index eq 'hourly'"}selected="true"{/if}>每小时</option>
+                            <option value="daily" {if condition="!empty($config.sitemap_changefreq_index) && $config.sitemap_changefreq_index eq 'daily'"}selected="true"{/if}>每天</option>
+                            <option value="weekly" {if condition="!empty($config.sitemap_changefreq_index) && $config.sitemap_changefreq_index eq 'weekly'"}selected="true"{/if}>每周</option>
+                            <option value="monthly" {if condition="!empty($config.sitemap_changefreq_index) && $config.sitemap_changefreq_index eq 'monthly'"}selected="true"{/if}>每月</option>
+                            <option value="yearly" {if condition="!empty($config.sitemap_changefreq_index) && $config.sitemap_changefreq_index eq 'yearly'"}selected="true"{/if}>每年</option>
+                            <option value="never" {if condition="!empty($config.sitemap_changefreq_index) && $config.sitemap_changefreq_index eq 'never'"}selected="true"{/if}>从不</option>
+                        </select>
+                        &nbsp;&nbsp;
+                        列表页
+                        <select name="sitemap_changefreq_list">
+                            <option value="always" {if condition="!empty($config.sitemap_changefreq_list) && $config.sitemap_changefreq_list eq 'always'"}selected="true"{/if}>经常</option>
+                            <option value="hourly" {if condition="empty($config.sitemap_changefreq_list) || $config.sitemap_changefreq_list eq 'hourly'"}selected="true"{/if}>每小时</option>
+                            <option value="daily" {if condition="!empty($config.sitemap_changefreq_list) && $config.sitemap_changefreq_list eq 'daily'"}selected="true"{/if}>每天</option>
+                            <option value="weekly" {if condition="!empty($config.sitemap_changefreq_list) && $config.sitemap_changefreq_list eq 'weekly'"}selected="true"{/if}>每周</option>
+                            <option value="monthly" {if condition="!empty($config.sitemap_changefreq_list) && $config.sitemap_changefreq_list eq 'monthly'"}selected="true"{/if}>每月</option>
+                            <option value="yearly" {if condition="!empty($config.sitemap_changefreq_list) && $config.sitemap_changefreq_list eq 'yearly'"}selected="true"{/if}>每年</option>
+                            <option value="never" {if condition="!empty($config.sitemap_changefreq_list) && $config.sitemap_changefreq_list eq 'never'"}selected="true"{/if}>从不</option>
+                        </select>
+                        &nbsp;&nbsp;
+                        内容页
+                        <select name="sitemap_changefreq_view">
+                            <option value="always" {if condition="!empty($config.sitemap_changefreq_view) && $config.sitemap_changefreq_view eq 'always'"}selected="true"{/if}>经常</option>
+                            <option value="hourly" {if condition="!empty($config.sitemap_changefreq_view) && $config.sitemap_changefreq_view eq 'hourly'"}selected="true"{/if}>每小时</option>
+                            <option value="daily" {if condition="empty($config.sitemap_changefreq_view) || $config.sitemap_changefreq_view eq 'daily'"}selected="true"{/if}>每天</option>
+                            <option value="weekly" {if condition="!empty($config.sitemap_changefreq_view) && $config.sitemap_changefreq_view eq 'weekly'"}selected="true"{/if}>每周</option>
+                            <option value="monthly" {if condition="!empty($config.sitemap_changefreq_view) && $config.sitemap_changefreq_view eq 'monthly'"}selected="true"{/if}>每月</option>
+                            <option value="yearly" {if condition="!empty($config.sitemap_changefreq_view) && $config.sitemap_changefreq_view eq 'yearly'"}selected="true"{/if}>每年</option>
+                            <option value="never" {if condition="!empty($config.sitemap_changefreq_view) && $config.sitemap_changefreq_view eq 'never'"}selected="true"{/if}>从不</option>
+                        </select>
+                        <span class="err"></span>
+                        <p class="notic">xml地图文件使用，你输入的网站的网页内容更新的频率。</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>优先级别</label>
+                    </dt>
+                    <dd class="opt">
+                        首页
+                        <select name="sitemap_priority_index">
+                            <option value="0.1" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.1'"}selected="true"{/if}>0.1</option>
+                            <option value="0.2" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.2'"}selected="true"{/if}>0.2</option>
+                            <option value="0.3" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.3'"}selected="true"{/if}>0.3</option>
+                            <option value="0.4" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.4'"}selected="true"{/if}>0.4</option>
+                            <option value="0.5" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.5'"}selected="true"{/if}>0.5</option>
+                            <option value="0.6" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.6'"}selected="true"{/if}>0.6</option>
+                            <option value="0.7" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.7'"}selected="true"{/if}>0.7</option>
+                            <option value="0.8" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.8'"}selected="true"{/if}>0.8</option>
+                            <option value="0.9" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.9'"}selected="true"{/if}>0.9</option>
+                            <option value="1.0" {if condition="empty($config.sitemap_priority_index) || $config.sitemap_priority_index eq '1.0'"}selected="true"{/if}>1.0</option>
+                        </select>
+                        &nbsp;&nbsp;
+                        列表页
+                        <select name="sitemap_priority_list">
+                            <option value="0.1" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.1'"}selected="true"{/if}>0.1</option>
+                            <option value="0.2" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.2'"}selected="true"{/if}>0.2</option>
+                            <option value="0.3" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.3'"}selected="true"{/if}>0.3</option>
+                            <option value="0.4" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.4'"}selected="true"{/if}>0.4</option>
+                            <option value="0.5" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.5'"}selected="true"{/if}>0.5</option>
+                            <option value="0.6" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.6'"}selected="true"{/if}>0.6</option>
+                            <option value="0.7" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.7'"}selected="true"{/if}>0.7</option>
+                            <option value="0.8" {if condition="empty($config.sitemap_priority_list) || $config.sitemap_priority_list eq '0.8'"}selected="true"{/if}>0.8</option>
+                            <option value="0.9" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.9'"}selected="true"{/if}>0.9</option>
+                            <option value="1.0" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '1.0'"}selected="true"{/if}>1.0</option>
+                        </select>
+                        &nbsp;&nbsp;
+                        内容页
+                        <select name="sitemap_priority_view">
+                            <option value="0.1" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.1'"}selected="true"{/if}>0.1</option>
+                            <option value="0.2" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.2'"}selected="true"{/if}>0.2</option>
+                            <option value="0.3" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.3'"}selected="true"{/if}>0.3</option>
+                            <option value="0.4" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.4'"}selected="true"{/if}>0.4</option>
+                            <option value="0.5" {if condition="empty($config.sitemap_priority_view) || $config.sitemap_priority_view eq '0.5'"}selected="true"{/if}>0.5</option>
+                            <option value="0.6" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.6'"}selected="true"{/if}>0.6</option>
+                            <option value="0.7" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.7'"}selected="true"{/if}>0.7</option>
+                            <option value="0.8" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.8'"}selected="true"{/if}>0.8</option>
+                            <option value="0.9" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.9'"}selected="true"{/if}>0.9</option>
+                            <option value="1.0" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '1.0'"}selected="true"{/if}>1.0</option>
+                        </select>
+                        <span class="err"></span>
+                        <p class="notic">xml地图文件使用，所抓取页面在您网站的重要性，告诉搜索引擎抓取的优先级。数值越大，优先级越高。</p>
+                    </dd>
+                </dl>
+            </div>
             <dl class="row">
                 <dt class="tit">
-                    <label>更新频率</label>
+                    <label for="sitemap_archives_num">生成数量</label>
                 </dt>
                 <dd class="opt">
-                    首页
-                    <select name="sitemap_changefreq_index">
-                        <option value="always" {if condition="empty($config.sitemap_changefreq_index) || $config.sitemap_changefreq_index eq 'always'"}selected="true"{/if}>经常</option>
-                        <option value="hourly" {if condition="!empty($config.sitemap_changefreq_index) && $config.sitemap_changefreq_index eq 'hourly'"}selected="true"{/if}>每小时</option>
-                        <option value="daily" {if condition="!empty($config.sitemap_changefreq_index) && $config.sitemap_changefreq_index eq 'daily'"}selected="true"{/if}>每天</option>
-                        <option value="weekly" {if condition="!empty($config.sitemap_changefreq_index) && $config.sitemap_changefreq_index eq 'weekly'"}selected="true"{/if}>每周</option>
-                        <option value="monthly" {if condition="!empty($config.sitemap_changefreq_index) && $config.sitemap_changefreq_index eq 'monthly'"}selected="true"{/if}>每月</option>
-                        <option value="yearly" {if condition="!empty($config.sitemap_changefreq_index) && $config.sitemap_changefreq_index eq 'yearly'"}selected="true"{/if}>每年</option>
-                        <option value="never" {if condition="!empty($config.sitemap_changefreq_index) && $config.sitemap_changefreq_index eq 'never'"}selected="true"{/if}>从不</option>
-                    </select>
-                    &nbsp;&nbsp;
-                    列表页
-                    <select name="sitemap_changefreq_list">
-                        <option value="always" {if condition="!empty($config.sitemap_changefreq_list) && $config.sitemap_changefreq_list eq 'always'"}selected="true"{/if}>经常</option>
-                        <option value="hourly" {if condition="empty($config.sitemap_changefreq_list) || $config.sitemap_changefreq_list eq 'hourly'"}selected="true"{/if}>每小时</option>
-                        <option value="daily" {if condition="!empty($config.sitemap_changefreq_list) && $config.sitemap_changefreq_list eq 'daily'"}selected="true"{/if}>每天</option>
-                        <option value="weekly" {if condition="!empty($config.sitemap_changefreq_list) && $config.sitemap_changefreq_list eq 'weekly'"}selected="true"{/if}>每周</option>
-                        <option value="monthly" {if condition="!empty($config.sitemap_changefreq_list) && $config.sitemap_changefreq_list eq 'monthly'"}selected="true"{/if}>每月</option>
-                        <option value="yearly" {if condition="!empty($config.sitemap_changefreq_list) && $config.sitemap_changefreq_list eq 'yearly'"}selected="true"{/if}>每年</option>
-                        <option value="never" {if condition="!empty($config.sitemap_changefreq_list) && $config.sitemap_changefreq_list eq 'never'"}selected="true"{/if}>从不</option>
-                    </select>
-                    &nbsp;&nbsp;
-                    内容页
-                    <select name="sitemap_changefreq_view">
-                        <option value="always" {if condition="!empty($config.sitemap_changefreq_view) && $config.sitemap_changefreq_view eq 'always'"}selected="true"{/if}>经常</option>
-                        <option value="hourly" {if condition="!empty($config.sitemap_changefreq_view) && $config.sitemap_changefreq_view eq 'hourly'"}selected="true"{/if}>每小时</option>
-                        <option value="daily" {if condition="empty($config.sitemap_changefreq_view) || $config.sitemap_changefreq_view eq 'daily'"}selected="true"{/if}>每天</option>
-                        <option value="weekly" {if condition="!empty($config.sitemap_changefreq_view) && $config.sitemap_changefreq_view eq 'weekly'"}selected="true"{/if}>每周</option>
-                        <option value="monthly" {if condition="!empty($config.sitemap_changefreq_view) && $config.sitemap_changefreq_view eq 'monthly'"}selected="true"{/if}>每月</option>
-                        <option value="yearly" {if condition="!empty($config.sitemap_changefreq_view) && $config.sitemap_changefreq_view eq 'yearly'"}selected="true"{/if}>每年</option>
-                        <option value="never" {if condition="!empty($config.sitemap_changefreq_view) && $config.sitemap_changefreq_view eq 'never'"}selected="true"{/if}>从不</option>
-                    </select>
-                    <span class="err"></span>
-                    <p class="notic">XML地图文件使用，你输入的网站的网页内容更新的频率。</p>
-                </dd>
-            </dl>
-            <dl class="row">
-                <dt class="tit">
-                    <label>优先级别</label>
-                </dt>
-                <dd class="opt">
-                    首页
-                    <select name="sitemap_priority_index">
-                        <option value="0.1" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.1'"}selected="true"{/if}>0.1</option>
-                        <option value="0.2" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.2'"}selected="true"{/if}>0.2</option>
-                        <option value="0.3" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.3'"}selected="true"{/if}>0.3</option>
-                        <option value="0.4" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.4'"}selected="true"{/if}>0.4</option>
-                        <option value="0.5" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.5'"}selected="true"{/if}>0.5</option>
-                        <option value="0.6" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.6'"}selected="true"{/if}>0.6</option>
-                        <option value="0.7" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.7'"}selected="true"{/if}>0.7</option>
-                        <option value="0.8" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.8'"}selected="true"{/if}>0.8</option>
-                        <option value="0.9" {if condition="!empty($config.sitemap_priority_index) && $config.sitemap_priority_index eq '0.9'"}selected="true"{/if}>0.9</option>
-                        <option value="1.0" {if condition="empty($config.sitemap_priority_index) || $config.sitemap_priority_index eq '1.0'"}selected="true"{/if}>1.0</option>
-                    </select>
-                    &nbsp;&nbsp;
-                    列表页
-                    <select name="sitemap_priority_list">
-                        <option value="0.1" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.1'"}selected="true"{/if}>0.1</option>
-                        <option value="0.2" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.2'"}selected="true"{/if}>0.2</option>
-                        <option value="0.3" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.3'"}selected="true"{/if}>0.3</option>
-                        <option value="0.4" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.4'"}selected="true"{/if}>0.4</option>
-                        <option value="0.5" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.5'"}selected="true"{/if}>0.5</option>
-                        <option value="0.6" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.6'"}selected="true"{/if}>0.6</option>
-                        <option value="0.7" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.7'"}selected="true"{/if}>0.7</option>
-                        <option value="0.8" {if condition="empty($config.sitemap_priority_list) || $config.sitemap_priority_list eq '0.8'"}selected="true"{/if}>0.8</option>
-                        <option value="0.9" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '0.9'"}selected="true"{/if}>0.9</option>
-                        <option value="1.0" {if condition="!empty($config.sitemap_priority_list) && $config.sitemap_priority_list eq '1.0'"}selected="true"{/if}>1.0</option>
-                    </select>
-                    &nbsp;&nbsp;
-                    内容页
-                    <select name="sitemap_priority_view">
-                        <option value="0.1" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.1'"}selected="true"{/if}>0.1</option>
-                        <option value="0.2" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.2'"}selected="true"{/if}>0.2</option>
-                        <option value="0.3" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.3'"}selected="true"{/if}>0.3</option>
-                        <option value="0.4" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.4'"}selected="true"{/if}>0.4</option>
-                        <option value="0.5" {if condition="empty($config.sitemap_priority_view) || $config.sitemap_priority_view eq '0.5'"}selected="true"{/if}>0.5</option>
-                        <option value="0.6" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.6'"}selected="true"{/if}>0.6</option>
-                        <option value="0.7" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.7'"}selected="true"{/if}>0.7</option>
-                        <option value="0.8" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.8'"}selected="true"{/if}>0.8</option>
-                        <option value="0.9" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '0.9'"}selected="true"{/if}>0.9</option>
-                        <option value="1.0" {if condition="!empty($config.sitemap_priority_view) && $config.sitemap_priority_view eq '1.0'"}selected="true"{/if}>1.0</option>
-                    </select>
-                    <span class="err"></span>
-                    <p class="notic">XML地图文件使用，所抓取页面在您网站的重要性，告诉搜索引擎抓取的优先级。数值越大，优先级越高。</p>
-                </dd>
-            </dl>
-            <dl class="row">
-                <dt class="tit">
-                    <label for="sitemap_archives_num">生成文档数量</label>
-                </dt>
-                <dd class="opt">
-                    <input id="sitemap_archives_num" name="sitemap_archives_num" value="{$config.sitemap_archives_num|default='100'}" type="text" style="width: 60px;" />&nbsp;篇
-                    <p class="notic">发布/编辑文档时，会同步更新sitemap.xml，包含首页、栏目页、指定数量的最新发布文档。</p>
-                    <p class="{if isset($config.sitemap_archives_num) && $config.sitemap_archives_num <= 100}none{/if} red" id="p_sitemap_archives_num">推荐设置100篇，数量设置越多，会对文档发布/编辑的速度造成一定影响。</p>
-                </dd>
-            </dl>
-            <dl class="row">
-                <dt class="tit">
-                    <label for="sitemap_tags_num">生成Tag数量</label>
-                </dt>
-                <dd class="opt">
-                    <input id="sitemap_tags_num" name="sitemap_tags_num" value="{$config.sitemap_tags_num|default='100'}" type="text" style="width: 60px;" />&nbsp;篇
-                    <p class="notic">发布/编辑文档时，会同步更新sitemap.xml，包含首页、栏目页、指定数量的最新发布文档。</p>
-                    <p class="{if isset($config.sitemap_tags_num) && $config.sitemap_tags_num <= 100}none{/elt} red" id="p_sitemap_tags_num">推荐设置100篇，数量设置越多，会对文档发布/编辑的速度造成一定影响。</p>
+                    文档&nbsp;<input class="tc" id="sitemap_archives_num" name="sitemap_archives_num" value="{$config.sitemap_archives_num|default='100'}" type="text" style="width: 50px;" />&nbsp;篇
+                    &nbsp;&nbsp;&nbsp;
+                    TAG&nbsp;<input class="tc" id="sitemap_tags_num" name="sitemap_tags_num" value="{$config.sitemap_tags_num|default='100'}" type="text" style="width: 50px;" />&nbsp;篇
+                    <!-- <p class="notic">发布/编辑文档时，会同步更新sitemap.xml，包含首页、栏目页、指定数量的最新发布文档。</p> -->
+                    <p class="notic2">文档加TAG数量不能超过5000条；数值大对更新文档速度有影响</p>
                 </dd>
             </dl>
             <dl class="row zzbaidu">
                 <dt class="tit">
-                    <label for="sitemap_zzbaidutoken">实时推送Url的token</label>
+                    <label for="sitemap_zzbaidutoken">百度推送</label>
                 </dt>
                 <dd class="opt">
                     <input id="sitemap_zzbaidutoken" name="sitemap_zzbaidutoken" value="{$config.sitemap_zzbaidutoken|default=''}" class="input-txt" type="text" />
-                    <p class="notic2">这里填入 <a href="https://ziyuan.baidu.com" target="_blank" style="color: red;">百度搜索资源平台</a> 的准入密钥，才能第一时间推送文章链接给百度蜘蛛。</p>
+                    <span class="err"></span>
+                    <p class="notic-pic"><img src="__SKIN__/images/baidu-token.jpg" width="535"></p>
+                    <p class="notic2">在<a href="https://ziyuan.baidu.com" target="_blank" >百度搜索资源平台</a>获取token并填入，更新文档时主动推送给百度</p>
                 </dd>
             </dl>
             <div class="bot">
@@ -170,39 +188,123 @@
 
     $(document).ready(function(){
         // 生成文档数量
-        $('#sitemap_archives_num').keyup(function(){
-            var sitemap_archives_num = parseInt($(this).val());
-            if (sitemap_archives_num > 100) {
-                $('#p_sitemap_archives_num').show();
-            } else {
-                $('#p_sitemap_archives_num').hide();
-            }
-        });
+        // $('#sitemap_archives_num').keyup(function(){
+        //     var sitemap_archives_num = parseInt($(this).val());
+        //     if (sitemap_archives_num > 100) {
+        //         $('#p_sitemap_archives_num').show();
+        //     } else {
+        //         $('#p_sitemap_archives_num').hide();
+        //     }
+        // });
 
         // 生成Tag数量
-        $('#sitemap_tags_num').keyup(function(){
-            var sitemap_tags_num = parseInt($(this).val());
-            if (sitemap_tags_num > 100) {
-                $('#p_sitemap_tags_num').show();
-            } else {
-                $('#p_sitemap_tags_num').hide();
-            }
-        });
+        // $('#sitemap_tags_num').keyup(function(){
+        //     var sitemap_tags_num = parseInt($(this).val());
+        //     if (sitemap_tags_num > 100) {
+        //         $('#p_sitemap_tags_num').show();
+        //     } else {
+        //         $('#p_sitemap_tags_num').hide();
+        //     }
+        // });
     });
+
+    function sitemap_exp(id)
+    {
+        $('#'+id).toggle();
+    }
+
+    function sitemap_type(obj)
+    {
+        var name = $(obj).attr('name');
+        var isChecked = $(obj).is(":checked");
+        if (isChecked) {
+            if (name == 'sitemap_xml') {
+                $('#div_sitemap_xml').show();
+            }
+            $('#sg_'+name).show();
+        } else {
+            if (name == 'sitemap_xml') {
+                $('#div_sitemap_xml').hide();
+            }
+            $('#sg_'+name).hide();
+        }
+    }
 
     function update_sitemap() {
         layer_loading('正在处理');
         $.ajax({
-            url: "{:url('Sitemap/ajax_update_sitemap')}",
+            url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_sitemap&lang="+__lang__,
             type: "POST",
             dataType: "json",
             data: {_ajax:1},
             success: function(res){
                 layer.closeAll();
                 if (1 == res.code) {
-                    layer.msg(res.msg, {icon: 1, time: 1500}, function(){
-                        window.location.reload();
-                    });
+                    layer.msg(res.msg, {icon: 1, time: 1000});
+                } else {
+                    layer.alert(res.data.msg, {icon: 5, title: false});
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
+    }
+    function update_sitemap_xml(){
+        layer_loading('正在处理');
+        $.ajax({
+            url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_sitemap_xml&lang="+__lang__,
+            type: "POST",
+            dataType: "json",
+            data: {is_auto:'off', _ajax:1},
+            success: function(res){
+                layer.closeAll();
+                if (1 == res.code) {
+                    layer.msg(res.msg, {icon: 1, time: 1000});
+                } else {
+                    layer.alert(res.data.msg, {icon: 5, title: false});
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
+    }
+    function update_sitemap_txt(){
+        layer_loading('正在处理');
+        $.ajax({
+            url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_sitemap_txt&lang="+__lang__,
+            type: "POST",
+            dataType: "json",
+            data: {is_auto:'off', _ajax:1},
+            success: function(res){
+                layer.closeAll();
+                if (1 == res.code) {
+                    layer.msg(res.msg, {icon: 1, time: 1000});
+                } else {
+                    layer.alert(res.data.msg, {icon: 5, title: false});
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
+    }
+    
+    function update_sitemap_html(){
+        layer_loading('正在处理');
+        $.ajax({
+            url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_sitemap_html&lang="+__lang__,
+            type: "POST",
+            dataType: "json",
+            data: {is_auto:'off', _ajax:1},
+            success: function(res){
+                layer.closeAll();
+                if (1 == res.code) {
+                    layer.msg(res.msg, {icon: 1, time: 1000});
                 } else {
                     layer.alert(res.data.msg, {icon: 5, title: false});
                 }

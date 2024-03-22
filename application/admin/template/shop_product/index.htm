@@ -1,20 +1,21 @@
 {include file="public/layout" /}
-<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4; padding: 20px; ">
+<body style="overflow: auto; cursor: default; -moz-user-select: inherit;background-color:#F4F4F4;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 {include file="shop/left" /}
-<div class="page" style="margin-left:98px;">
+<div id="geduan_div" class="h10"></div>
+<div id="page_div" class="page min-hg-c mb-20" style="min-width: auto;box-shadow: none;">
     <div class="flexigrid flexigrid2" style="min-height: 600px;">
         <div class="mDiv">
             <div class="ftitle">
                {eq name="$Think.const.CONTROLLER_NAME.'@add'|is_check_access" value="1"}
-                   <div class="fbutton" style="float: none;">
-                       <a href="{gt name="$Request.param.typeid" value="0"}{:url('ShopProduct/add', ['typeid'=>$Request.param.typeid])}{else /}javascript:quick_release('{$is_product_arctype}');{/gt}">
-                           <div class="add">
-                               <span><i class="layui-icon layui-icon-addition"></i>发布商品</span>
-                           </div>
-                       </a>
-                   </div>
+               <div class="fbutton" style="float: none; display: none;" id="div_add">
+                   <a href="{gt name="$Request.param.typeid" value="0"}{:url('ShopProduct/add', ['typeid'=>$Request.param.typeid, 'callback_url'=>$callback_url])}{else /}javascript:quick_release('{$is_product_arctype}');{/gt}">
+                       <div class="add">
+                           <span><i class="layui-icon layui-icon-addition"></i>发布商品</span>
+                       </div>
+                   </a>
+               </div>
                {/eq}
             </div>
             <form class="navbar-form form-inline" id="searchForm" action="{:url('ShopProduct/index')}" method="get" onsubmit="layer_loading('正在处理');">
@@ -24,7 +25,7 @@
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="商品搜索...">
                         <input type="submit" class="btn" value="搜索">
-						<i class="fa fa-search"></i>
+						<i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -38,38 +39,35 @@
                             <th class="sign w40" axis="col0">
                                 <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                             </th>
-                            <th abbr="article_title" axis="col3" class="w70">
+                            <!-- <th abbr="article_title" axis="col3" class="w70">
                                 <div class="tc">ID</div>
-                            </th>
+                            </th> -->
                             <th align="center" abbr="article_title" axis="col3" class="w60">
-                                <div class="tc">商品</div>
+                                <div class="">商品信息</div>
                             </th>
                             <th align="left" abbr="article_title" axis="col3" class="">
-                                <div class="ml15"></div>
+                                <div class=""></div>
                             </th>
-                            <th align="left" abbr="" axis="col3" class="w80">
-                                <div  class="tc">库存</div>
+                            <th align="left" abbr="" axis="col3" class="w150">
+                                <div class="sort_style"><a href="{:getArchivesSortUrl('users_price')}">价格&nbsp;<i {eq name='$Request.param.orderby' value='users_price'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
                             </th>
-                            <th align="left" abbr="" axis="col3" class="w80">
-                                <div  class="tc">售价</div>
+                            <th align="left" abbr="" axis="col3" class="w150">
+                                <div class="sort_style"><a href="{:getArchivesSortUrl('stock_count')}">库存&nbsp;<i {eq name='$Request.param.orderby' value='stock_count'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
                             </th>
-                            <th align="left" abbr="" axis="col3" class="w80">
-                                <div  class="tc">浏览量</div>
+                            <th abbr="article_time" axis="col6" class="w80">
+                                <div class="sort_style"><a href="{:getArchivesSortUrl('sales_num')}" title="实际销量值">销量&nbsp;<i {eq name='$Request.param.orderby' value='sales_num'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
                             </th>
                             <th abbr="article_time" axis="col6" class="w120">
-                                <div class="tc">分类</div>
+                                <div class="">分类</div>
                             </th>
-                            <th align="center" abbr="article_time" axis="col6" class="w50">
-                                <div class="tc">推荐</div>
-                            </th>
-                            <th abbr="article_time" axis="col6" class="w50">
-                                <div class="tc">销量</div>
+                            <th align="center" abbr="article_time" axis="col6" class="w80">
+                                <div class="">状态</div>
                             </th>
                             <th axis="col1" class="w160">
-                                <div class="tc">操作</div>
+                                <div class="">操作</div>
                             </th>
-                            <th abbr="article_time" axis="col6" class="w60">
-                                <div class="tc">排序</div>
+                            <th abbr="article_time" axis="col6" class="w60 tc">
+                                <div class="sort_style"><a href="{:getArchivesSortUrl('sort_order')}">排序&nbsp;<i {eq name='$Request.param.orderby' value='sort_order'}{eq name='$Request.param.orderway' value='asc'}class="asc"{else /}class="desc"{/eq}{/eq}></i></a></div>
                             </th>
                         </tr>
                     </thead>
@@ -77,7 +75,9 @@
                         {empty name="list"}
                             <tr>
                                 <td class="no-data" align="center" axis="col0" colspan="50">
-                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                    <div class="no_row">
+                                        <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                    </div>
                                 </td>
                             </tr>
                         {else/}
@@ -87,13 +87,13 @@
                                         <div class="tc w40"><input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.aid}"></div>
                                     </td>
 
-                                    <td class="sort">
+                                    <!-- <td class="sort">
                                         <div class="tc w70">{$vo.aid}</div>
-                                    </td>
+                                    </td> -->
 
                                     <td class="w60">
                                         <div class="tc">
-                                            <a href="{:url('ShopProduct/edit',array('id'=>$vo['aid']))}" style='{eq name="vo.is_b" value="1"} font-weight: bold; {/eq}'>
+                                            <a href="{:url('ShopProduct/edit',array('id'=>$vo['aid'], 'callback_url'=>$callback_url))}" style='{eq name="vo.is_b" value="1"} font-weight: bold; {/eq}'>
                                                 <img width="60" height="60" src="{$vo.litpic}">
                                             </a>
                                         </div>
@@ -103,7 +103,7 @@
                                         <div class="fl" style="padding-left: 10px;">
                                            <div class="title">
                                                 {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
-                                                    <a href="{:url('ShopProduct/edit',array('id'=>$vo['aid']))}" style='{eq name="$vo.is_b" value="1"}font-weight: bold;{/eq}'>{$vo.title}</a>
+                                                    <a href="{:url('ShopProduct/edit',array('id'=>$vo['aid'], 'callback_url'=>$callback_url))}" style='{eq name="$vo.is_b" value="1"}font-weight: bold;{/eq}'>{$vo.title}</a>
                                                 {else /}
                                                     {$vo.title}
                                                 {/eq}
@@ -111,50 +111,44 @@
                                         </div>
                                     </td>
 
-                                    <td class="w80">
-                                        <div class="tc">{$vo.stock_count}</div>
+                                    <td class="w150">
+                                        <div class="goodsQuickEdit">￥{$vo.users_price}
+                                            <a href="JavaScript:void(0);" class="none" data-url="{:url('ShopProduct/goods_quick_edit', ['aid'=>$vo.aid])}" onclick="eopnGoodsQuickEdit(this, {$vo.goodsSpec});"><i class="iconfont e-bianji"></i></a>
+                                        </div>
+                                    </td>
+                                    
+                                    <td class="w150">
+                                        <div class="goodsQuickEdit">{$vo.stock_count}
+                                            <a href="JavaScript:void(0);" class="none" data-url="{:url('ShopProduct/goods_quick_edit', ['aid'=>$vo.aid])}" onclick="eopnGoodsQuickEdit(this, {$vo.goodsSpec});"><i class="iconfont e-bianji"></i></a>
+                                        </div>
                                     </td>
 
                                     <td class="w80">
-                                        <div class="tc">￥{$vo.users_price}</div>
-                                    </td>
-
-                                    <td class="w80">
-                                        <div class="tc">{$vo.click}</div>
+                                        <div class="">{$vo.sales_num}</div>
                                     </td>
 
                                     <td>
-                                        <div class="tc w120">
-                                            <a href="{:url('ShopProduct/index', array('typeid'=>$vo['typeid']))}">
+                                        <div class="w120 ellipsis">
+                                            <a href="{:url('ShopProduct/index', array('typeid'=>$vo['typeid']))}" title="{$vo.typename}">
                                                 {$vo.typename|default='<i class="red">数据出错！</i>'}
                                             </a>
                                         </div>
                                     </td>
 
                                     <td class="">
-                                        <div class="tc w50">
-                                            {if condition="$vo['is_recom'] eq 1"}
-                                                <span class="yes" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('archives','aid','{$vo.aid}','is_recom',this);"{/eq} ><i class="fa fa-check-circle"></i>是</span>
-                                            {else /}
-                                                <span class="no" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('archives','aid','{$vo.aid}','is_recom',this);"{/eq} ><i class="fa fa-ban"></i>否</span>
-                                            {/if}
-                                        </div>
-                                    </td>
-
-                                    <td class="w50">
-                                        <div class="tc">{$vo.sales_num}</div>
+                                        <div class="w80">{egt name="$vo.arcrank" value="0" }销售中{else/}仓库中{/egt}</div>
                                     </td>
 
                                     <td align="center" class="operation">
-                                        <div class="tc">
+                                        <div class="">
                                             {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
-                                                <a href="{:url('ShopProduct/edit',array('id'=>$vo['aid']))}" class="btn blue">
+                                                <a href="{:url('ShopProduct/edit',array('id'=>$vo['aid'], 'callback_url'=>$callback_url))}" class="btn blue">
                                                     编辑
                                                 </a>
                                                 <i></i>
                                             {/eq}
                                             {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
-                                                <a class="btn red" href="javascript:void(0);" data-url="{:url('ShopProduct/del')}" data-id="{$vo.aid}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">
+                                                <a class="btn red" href="javascript:void(0);" data-url="{:url('ShopProduct/del')}" data-id="{$vo.aid}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">
                                                     删除
                                                 </a>
                                                 <i></i>
@@ -180,6 +174,7 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        {notempty name="list"}
         <div class="footer-oper">
             <span class="ml15">
                 <input type="checkbox" autocomplete="off" class="checkAll">
@@ -199,7 +194,7 @@
                     <a href="javascript:void(0);" onclick="func_move(this, 'ids');" data-url="{:url('Archives/move', array('typeid'=>$Request.param.typeid))}">移动商品</a>
                     {/eq}
                     {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
-                    <a href="javascript:void(0);" onclick="batch_del(this, 'ids');" data-url="{:url('ShopProduct/del')}" {eq name='$recycle_switch' value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}>删除商品</a>
+                    <a href="javascript:void(0);" onclick="batch_del(this, 'ids');" data-url="{:url('ShopProduct/del')}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}>删除商品</a>
                     {/eq}
                     {eq name="'Archives@check'|is_check_access" value="1"}
                     <hr class="layui-bg-gray">
@@ -209,15 +204,26 @@
                 </div>
             </div>
             {eq name="'RecycleBin@archives_index'|is_check_access" value="1"}
-                {neq name='$recycle_switch' value='1'}<a href="{:url('RecycleBin/archives_index')}" class="layui-btn layui-btn-primary" title="回收站">回收站</a>{/neq}
+                {neq name="$global['web_recycle_switch']" value='1'}<a href="{:url('RecycleBin/archives_index')}" class="layui-btn layui-btn-primary" title="回收站">回收站</a>{/neq}
             {/eq}
             {include file="public/page" /}
         </div>
-        
+        {/notempty}
     </div>
 </div>
+
 <script type="text/javascript">
     $(function(){
+        try{
+            if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
+                $(".page").css("margin-left","");
+            }else{
+                $(".page").css("margin-left","110px");
+            }
+        }catch(e){}
+
+        $('#div_add').show();
+        
         $('input[name*=ids]').click(function(){
             if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
                 $('.checkAll').prop('checked','checked');
@@ -228,7 +234,11 @@
         $('input[type=checkbox].checkAll').click(function(){
             $('input[type=checkbox]').prop('checked',this.checked);
         });
+
+        // 清除由原内容管理、栏目管理跳转过来时携带的特定参数
+        top.$('#Shop_home').attr('data-click', '');
     });
+
     $(document).ready(function() {
         // 表格行点击选中切换
         $('#flexigrid > table>tbody >tr').click(function() {
@@ -248,8 +258,46 @@
         $(document).click(function(){
             $(".dropdown-menus").slideUp(200);
             event.stopPropagation();
-        })
+        });
+
+        $(".goodsQuickEdit").mouseenter(function() {
+            $(this).find('a').show();
+        });
+        $(".goodsQuickEdit").mouseleave(function() {
+            $(this).find('a').hide();
+        });
     });
+
+    function eopnGoodsQuickEdit(obj, goodsSpec) {
+        var iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position: absolute; visibility: hidden; width: 0; height: 0; border: none;';
+        iframe.src = $(obj).data('url');
+        
+        iframe.onload = function() {
+          var iframeWindow = iframe.contentWindow || iframe.contentDocument.defaultView;
+          var pageWidth = iframeWindow.document.documentElement.scrollWidth + 0; // 获取页面宽度并加上 20
+          var pageHeight = iframeWindow.document.documentElement.scrollHeight + 70; // 获取页面高度并加上 20
+          
+          var viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0); // 获取屏幕可视区域的高度
+          var maxHeight = Math.floor(viewportHeight * 0.8); // 计算弹窗的最大高度为屏幕可视区域高度的 80%
+          var popupHeight = Math.min(pageHeight, maxHeight); // 取页面高度和最大高度的较小值作为弹窗的高度
+          
+          layer.open({
+            type: 2,
+            fixed: true,
+            maxmin: false,
+            shadeClose: false,
+            shade: layer_shade,
+            area: [pageWidth + 'px', popupHeight + 'px'], // 将页面宽度和弹窗高度作为弹窗的高宽
+            title: '快捷编辑',
+            content: $(obj).data('url')
+          });
+          
+          document.body.removeChild(iframe);
+        };
+        
+        document.body.appendChild(iframe);
+    }
 
     var aids = '';
     function func_move(obj, name) {
@@ -268,8 +316,15 @@
         })
         if (a.length == 0) {
             layer.alert('请至少选择一项', {
-                icon: 2,
-                title: false
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
             });
             return false;
         }
@@ -281,11 +336,72 @@
             title: '移动文档',
             fixed: true, //不固定
             shadeClose: false,
-            shade: 0.3,
+            shade: layer_shade,
             maxmin: false, //开启最大化最小化按钮
-            area: ['350px', '260px'],
+            area: ['480px', '360px'],
             content: url
         });
+    }
+
+    /**
+     * 批量审核
+     */
+    function batch_check(obj, name) {
+
+        var url = $(obj).attr('data-url');
+
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
+            return;
+        }
+
+        // title = '批量审核';
+        // btn = ['确定', '取消']; //按钮
+        // // 删除按钮
+        // layer.confirm(title, {
+        //     title: false,
+        //     btn: btn //按钮
+        // }, function () {
+        layer_loading('正在处理');
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: {ids:a, _ajax:1},
+            dataType: 'json',
+            success: function (res) {
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {icon: 1, time:1000}, function(){
+                        window.location.reload()
+                    });
+                }else{
+                    layer.alert(res.msg, {icon: 2, title:false});
+                }
+            },
+            error:function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 2, title:false});
+            }
+        });
+        // }, function (index) {
+        //     layer.closeAll(index);
+        // });
     }
 
     /**
@@ -317,3 +433,13 @@
     });
 </script>
 {include file="public/footer" /}
+<script>
+    try{
+        var mt20_1649209614 = sessionStorage.getItem("mt20_1649209614");
+        if (mt20_1649209614 == 1){
+            $("#geduan_div").removeClass("h10");
+        }else{
+            $("#geduan_div").addClass("h10");
+        }
+    }catch(e){}
+</script>

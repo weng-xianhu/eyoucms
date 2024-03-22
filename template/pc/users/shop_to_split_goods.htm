@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html style="background-color: #f7f7f7;">
+    <head>
+        <meta charset="utf-8" />
+        <title>选择商品结算</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/tag_global.js"/}
+    </head>
+
+    <body class="centre">
+        <div class="ey-body-bg">
+            <div class="ey-body">
+                <div class="ey-container w1200">
+                    <div class="ey-con" style="margin: 0 auto;">
+                    {eyou:volist name="$result" id="field"}
+                        <div class="el-main main-bg" style="margin-bottom: 5px;">
+                            <div class="column-title mb20"> <div class="column-name">{$field.name}</div> </div>
+                            <div class="shop-car">
+                                <div id="finance-list_wrapper" class="el-table el-table--fit el-table--enable-row-hover el-table--enable-row-transition"
+                                    style="width: 100%;">
+                                    <table class="el-table__body">
+                                        <thead>
+                                            <tr class="el-table__row">
+                                                <th style="width:375px;"> <div class="cell">商品</div> </th>
+                                                <th style="width:120px;"> <div class="cell tc">单价</div> </th>
+                                                <th style="width:120px;"> <div class="cell tc">小计</div> </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {eyou:volist name="$field.list" id="vo"}
+                                            <tr>
+                                                <td>
+                                                    <div class="goods-item">
+                                                        <div class="goods-item-l fl"><img class="img-responsive" src="{$vo.litpic}" alt="商品图"></div>
+                                                        <div class="goods-item-r fl dpf"><div class="cell asc">{$vo.title}</div></div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="cell tc">￥<span>{$vo.users_price}</span> x <span>{$vo.product_num}</span></div>
+                                                </td>
+                                                <td>
+                                                    <div class="cell tc red">￥<span>{$vo.subtotal}</span></div>
+                                                </td>
+                                            </tr>
+                                            {/eyou:volist}
+                                        </tbody>
+                                    </table>
+                                    <div>
+                                        <div class="el-row">
+                                            <div class="mt10 shopcar-footer">
+                                                <div class="shopcar-footer-l"></div>
+                                                <div class="shopcar-footer-r">
+                                                    合计：<span class="red">{$field.number}</span>件　
+                                                    合计：<span class="red">{$field.amount}</span>元　
+                                                    <a href="JavaScript:void(0);" {$field.submitBuyGoods} class="el-button el-button--primary el-button--medium">去结算</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {/eyou:volist}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    {eyou:static file="users/skin/js/shop_to_split_goods.js"/}
+</html>

@@ -36,6 +36,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'spec_crossed_price' => 
+  array (
+    'name' => 'spec_crossed_price',
+    'type' => 'decimal(10,2) unsigned',
+    'notnull' => false,
+    'default' => '0.00',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'spec_stock' => 
   array (
     'name' => 'spec_stock',
@@ -112,6 +121,42 @@ return array (
   array (
     'name' => 'update_time',
     'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'discount_price' => 
+  array (
+    'name' => 'discount_price',
+    'type' => 'decimal(10,2)',
+    'notnull' => false,
+    'default' => '0.00',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'discount_stock' => 
+  array (
+    'name' => 'discount_stock',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'discount_sales_num' => 
+  array (
+    'name' => 'discount_sales_num',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'is_discount' => 
+  array (
+    'name' => 'is_discount',
+    'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

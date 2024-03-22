@@ -1,416 +1,418 @@
 {include file="public/layout" /}
-<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
-<style type="text/css">
-    .system_table{ border:1px solid #dcdcdc; width:100%;}
-    .system_table td{ height:40px; line-height:40px; font-size:12px; color:#454545; border-bottom:1px solid #dcdcdc; border-right:1px solid #dcdcdc; width:35%; padding-left:1%;}
-    .system_table td.gray_bg{ background:#f7f7f7; width:15%;}
-</style>
-<div id="append_parent"></div>
-<div id="ajaxwaitid"></div>
-<div class="page">
-    <div class="flexigrid">
-        
-        <form class="form-horizontal" id="postForm" action="{:url('Shop/order_mark_status')}" method="post">
-            <input type="hidden" name="order_id" id="order_id" value="{$OrderData.order_id}">
-            <input type="hidden" name="order_code" value="{$OrderData.order_code}">
-            <input type="hidden" name="users_id" value="{$OrderData.users_id}">
-            <input type="hidden" name="consignee" value="{$OrderData.consignee}">
-            <div class="hDiv htitx">
-                <div class="hDivBox">
-                    <table cellspacing="0" cellpadding="0" style="width: 100%">
-                        <thead>
-                            <tr>
-                                <th class="sign w10" axis="col0">
-                                    <div class="tc"></div>
-                                </th>
-                                <th abbr="article_title" axis="col3" class="w10">
-                                    <div class="tc">订单信息</div>
-                                </th>
-                                <th abbr="ac_id" axis="col4">
-                                    <div class=""></div>
-                                </th>
-                            </tr>
-                        </thead>
-                    </table>
+    <script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
+    <body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
+    <style type="text/css">
+        .system_table{ border:1px solid #dcdcdc; width:100%;}
+        .system_table td{ height:40px; line-height:40px; font-size:12px; color:#454545; border-bottom:1px solid #dcdcdc; border-right:1px solid #dcdcdc; width:35%; padding-left:1%;}
+        .system_table td.gray_bg{ background:#f7f7f7; width:15%;}
+    </style>
+    <div id="append_parent"></div>
+    <div id="ajaxwaitid"></div>
+{empty name='$iframe'}
+    {include file="order/left" /}
+    <div class="page" style="min-width:auto;margin-left:100px;padding-bottom: 15px;">
+{else /}
+    <div class="page" style="min-width:auto;">
+{/empty}
+        <div class="flexigrid">
+            {empty name="$iframe"}
+            <div class="fixed-bar">
+                <div class="item-title">
+                    <a class="back_xin" href="{empty name="$backurl"}javascript:history.back();{else /}{$backurl}{/empty}" title="返回"><i class="iconfont e-fanhui"></i></a>
+                    <div class="subject"> <h3>订单详情</h3> <h5></h5> </div>
                 </div>
             </div>
+            {/empty}
+            <div class="order-status pt5 pb5">
+                <div class="status-item current">
+                    <div class="pl5 pr5">
+                    <div class="status-icon"> <i class="iconfont e-duihao"></i> </div>
+                    </div>
+                    <div class="status-title"> <span class="text">买家下单</span> <span class="time">{$OrderData.add_time}</span> </div>
+                </div>
+                {if condition="in_array($OrderData.order_status, [0, 1, 2, 3])"}
+                    {empty name="$OrderData.pay_time"}
+                    <div class="status-item disabled">
+                        <div class="status-icon"> 2 </div>
+                        <div class="status-title"> <span class="text">买家付款</span> <span class="time"></span> </div>
+                    </div>
+                    {else/}
+                    <div class="status-item current">
+                        <div class="status-icon"> <i class="iconfont e-duihao"></i> </div>
+                        <div class="status-title"> <span class="text">买家付款</span> <span class="time">{$OrderData.pay_time}</span> </div>
+                    </div>
+                    {/empty}
+                    {if condition="$OrderData.prom_type == 0"}
+                        {if condition="$OrderData.logistics_type == 2"}
+                            {empty name="$weappVerifyLog.verify_time"}
+                            <div class="status-item disabled">
+                                <div class="status-icon"> 3 </div>
+                                <div class="status-title"> <span class="text">待核销</span> <span class="time"></span> </div>
+                            </div>
+                            {else/}
+                            <div class="status-item current">
+                                <div class="status-icon"> <i class="iconfont e-duihao"></i> </div>
+                                <div class="status-title"> <span class="text">已核销</span> <span class="time">{$weappVerifyLog.verify_time}</span> </div>
+                            </div>
+                            {/empty}
+                        {else/}
+                            {empty name="$OrderData.express_time"}
+                            <div class="status-item disabled">
+                                <div class="status-icon"> 3 </div>
+                                <div class="status-title"> <span class="text">商家发货</span> <span class="time"></span> </div>
+                            </div>
+                            {else/}
+                            <div class="status-item current">
+                                <div class="status-icon"> <i class="iconfont e-duihao"></i> </div>
+                                <div class="status-title"> <span class="text">商家发货</span> <span class="time">{$OrderData.express_time}</span> </div>
+                            </div>
+                            {/empty}
+                        {/if}
+                    {elseif condition="$OrderData.prom_type == 1"}
+                        {gt name="$OrderData.order_status" value="1"}
+                        <div class="status-item current">
+                            <div class="status-icon"> <i class="iconfont e-duihao"></i> </div>
+                            <div class="status-title"> <span class="text">商家发货</span> <span class="time">{$OrderData.express_time|default=$OrderData.pay_time}</span> </div>
+                        </div>
+                        {else/}
+                        <div class="status-item disabled">
+                            <div class="status-icon"> 3 </div>
+                            <div class="status-title"> <span class="text">商家发货</span> <span class="time"></span> </div>
+                        </div>
+                        {/gt}
+                    {/if}
+                    {empty name="$OrderData.confirm_time"}
+                    <div class="status-item disabled">
+                        <div class="status-icon"> 4 </div>
+                        <div class="status-title"> <span class="text">订单完成</span> <span class="time"></span> </div>
+                    </div>
+                    {else/}
+                    <div class="status-item current">
+                        <div class="status-icon"> <i class="iconfont e-duihao"></i> </div>
+                        <div class="status-title"> <span class="text">订单完成</span> <span class="time">{$OrderData.confirm_time}</span> </div>
+                    </div>
+                    {/empty}
+                {/if}
+                {if condition="in_array($OrderData.order_status, [-1])"}
+                <div class="status-item cancel">
+                    <div class="status-icon"> <i class="iconfont e-quxiao"></i> </div>
+                    <div class="status-title"> <span class="text">订单关闭</span> <span class="time">{$OrderData.update_time}</span> </div>
+                </div>
+                {/if}
+                {if condition="in_array($OrderData.order_status, [4])"}
+                <div class="status-item cancel">
+                    <div class="status-icon"> <i class="iconfont e-quxiao"></i> </div>
+                    <div class="status-title"> <span class="text">订单过期</span> <span class="time">{$OrderData.update_time}</span> </div>
+                </div>
+                {/if}
+            </div>
+        </div>
+    </div>
+    {empty name='$iframe'}
+    <div class="page pt0 mt10" style="min-width:auto;margin-left:100px;padding-bottom: 15px;">
+    {else /}
+    <div class="page pt0 mt10" style="min-width: auto; padding-bottom: 15px;">
+    {/empty}
+        <div class="flexigrid">
+            <div class="mDiv"> <div class="ftitle"> <h3>订单状态</h3> </div> </div>
+            <div class="order-information mb30">
+                <div class="order-information-lumping" style="width: 100%;">
+                    <div class="lumping-content">
+                        <div class="lumping-content-title" style="line-height: 37px;">当前状态：</div>
+                        <div class="lumping-content-text">
+                            {eq name="$OrderData.order_status" value="0"}
+                            <span class="f-28" style="color: #ff1f2c;">{$admin_order_status_arr[$OrderData.order_status]|default=''}</span>
+                            {/eq}
+                            {eq name="$OrderData.order_status" value="1"}
+                            {if condition="$OrderData.logistics_type == 2"}
+                            <span class="f-28" style="color: #2d8cf0;">待核销</span>
+                            {else/}
+                            <span class="f-28" style="color: #ff9900;">{$admin_order_status_arr[$OrderData.order_status]|default=''}</span>
+                            {/if}
+                            {/eq}
 
-            <div class="ncap-form-default">
-                <table cellpadding="0" cellspacing="0" class="system_table">
+                            {eq name="$OrderData.order_status" value="2"}
+                                {if condition="$OrderData.prom_type == 0"}
+                                <span class="f-28" style="color: #2d8cf0;">{$admin_order_status_arr[$OrderData.order_status]|default=''}</span>
+                                {elseif condition="$OrderData.prom_type == 1"}
+                                <span class="f-28" style="color: #19be6b;">未完成</span>
+                                {/if}
+                            {/eq}
+
+                            {eq name="$OrderData.order_status" value="3"}
+                            {if condition="$OrderData.prom_type == 0"}
+                            <span class="f-28" style="color: #19be6b;">{$admin_order_status_arr[$OrderData.order_status]|default=''}</span>
+                            {elseif condition="$OrderData.prom_type == 1"}
+                            <span class="f-28" style="color: #19be6b;">已完成</span>
+                            {/if}
+
+                            {/eq}
+
+                            {eq name="$OrderData.order_status" value="4"}
+                            <span class="f-28" style="color: #939799;">{$admin_order_status_arr[$OrderData.order_status]|default=''}</span>
+                            {/eq}
+
+                            {eq name="$OrderData.order_status" value="-1"}
+                            <span class="f-28" style="color: #939799;">{$admin_order_status_arr[$OrderData.order_status]|default=''}</span>
+                            {/eq}
+                        </div>
+                    </div>
+                    <div class="lumping-content">
+                        <div class="lumping-content-title"></div>
+                        <div class="lumping-content-text">
+                            {eq name="$OrderData.order_status" value="0"}
+                            <a class="lumping-btn-big lumping-btn-green mr10" href="JavaScript:void(0);" onclick="orderMark('yfk', '{$OrderData.order_id}', '{$OrderData.users_id}');">确认付款</a>
+                            {/eq}
+
+                            {eq name="$OrderData.order_status" value="1"}
+                            {if condition="2 == $OrderData.logistics_type"}
+                            <a class="lumping-btn-big lumping-btn-green mr10" href="JavaScript:void(0);" onclick="OrderVerify('{$OrderData.order_id}','{$OrderData.users_id}');">确认核销</a>
+                            {else/}
+                            <a class="lumping-btn-big lumping-btn-green mr10" href="JavaScript:void(0);" data-url="{:url('Shop/order_send', ['order_id'=>$OrderData.order_id])}" onclick="orderConfirmSend(this);">确认发货</a>
+                            {/if}
+                            {/eq}
+
+                            {if condition="0 == $OrderData.prom_type && 2 == $OrderData.order_status"}
+                            <a class="lumping-btn-big lumping-btn-green mr10" href="JavaScript:void(0);" onclick="orderMark('ysh','{$OrderData.order_id}','{$OrderData.users_id}');">确认收货</a>
+                            {/if}
+
+                            {eq name="$OrderData.order_status" value="0"}
+                            <a class="lumping-btn-big mr10" href="JavaScript:void(0);" onclick="promptChangePrice();">调整价格</a>
+                            <a class="lumping-btn-big mr10" href="JavaScript:void(0);" onclick="orderMark('gbdd', '{$OrderData.order_id}', '{$OrderData.users_id}');">关闭订单</a>
+                            {/eq}
+
+                            {if condition="1 == $OrderData.order_status"}
+                            <a class="lumping-btn-big mr10" href="JavaScript:void(0);" onclick="orderMark('sdtk', '{$OrderData.order_id}');">手动退款</a>
+                            {/if}
+
+                            {if condition="in_array($OrderData.order_status, [4, -1])"}
+                            <a class="lumping-btn-big mr10" href="JavaScript:void(0);" onclick="orderMark('ddsc','{$OrderData.order_id}','{$OrderData.users_id}');">订单删除</a>
+                            {/if}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+            
+    {empty name='$iframe'}
+    <div class="page pt0 mt10" style="min-width:auto;margin-left:100px;">
+    {else /}
+    <div class="page pt0 mt10" style="min-width: auto;">
+    {/empty}
+        <div class="flexigrid">
+            <div class="mDiv"> <div class="ftitle"> <h3>订单信息</h3> </div> </div>
+            <div class="order-information mb30">
+                <div class="order-information-lumping">
+                    <!-- <div class="lumping-content">
+                        <div class="lumping-content-title">订单序号：</div> <div class="lumping-content-text text-num">{$OrderData.order_id}</div>
+                    </div> -->
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">订单编号：</div> <div class="lumping-content-text text-num">{$OrderData.order_code} <a class="copy order_code curpoin" onclick="orderCopy();" data-clipboard-text="{$OrderData.order_code}"><i class="iconfont e-fuzhi basics-color" title="点击复制"></i></a></div>
+                    </div>
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">订单类型：</div> <div class="lumping-content-text">{$OrderData.prom_type_name}</div>
+                    </div>
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">订单来源：</div> <div class="lumping-content-text">{$OrderData.order_terminal_name}</div>
+                    </div>
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">付款方式：</div>
+                        <div class="lumping-content-text">
+                        {eq name="$vo.order_source" value="30"}积分兑换{else/}{$pay_method_arr[$OrderData.pay_name]|default='微信支付'}{/eq}
+                        </div>
+                    </div>
+                </div>
+                <div class="order-information-contentTwo">
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">配送方式：</div>
+                        <div class="lumping-content-text">{if condition="$OrderData.prom_type == 0"}{eq name="$OrderData.logistics_type" value="1"}物流配送{else/}到店自提{/eq}{elseif condition="$OrderData.prom_type == 1"}无需物流{/if}</div>
+                    </div>
+                    {if condition="!empty($OrderData.express_order)"}
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">物流单号：</div>
+                        <div class="lumping-content-text">
+                        <span class="mr10">{$OrderData.express_name}</span>{$OrderData.express_order}
+                            <a class="copy express_order curpoin" onclick="expressOrderCopy();" data-clipboard-text="{$OrderData.express_order}"><i class="iconfont e-fuzhi basics-color" title="点击复制"></i></a>
+                            <!-- <a href="javascript:void(0);" data-url="{$pcExpressUrl}" onclick="logisticsInquiry(this);">[物流查询]</a> -->
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        // 物流单号复制
+                        function expressOrderCopy() {
+                            var clipboard1 = new Clipboard(".express_order");
+                            clipboard1.on("success", function(e) {
+                                layer.msg("复制成功");
+                            });
+                            clipboard1.on("error", function(e) {
+                                layer.msg("复制失败！请手动复制", {icon: 5});
+                            }); 
+                        }
+
+                        // function logisticsInquiry(obj) {
+                        //     var iframes = layer.open({
+                        //         type: 2,
+                        //         title: '物流查询',
+                        //         shadeClose: false,
+                        //         maxmin: false,
+                        //         area: ['60%', '80%'],
+                        //         content: $(obj).attr('data-url')
+                        //     });
+                        // }
+                    </script>
+                    {/if}
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">收货人：</div> <div class="lumping-content-text">
+                            {eq name="$OrderData.logistics_type" value="2"}{$weappVerifyLog.buyer}{else /}{$OrderData.consignee}{/eq}
+                        </div>
+                    </div>
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">联系电话：</div> <div class="lumping-content-text">
+                            {eq name="$OrderData.logistics_type" value="2"}{$weappVerifyLog.phone}{else /}{$OrderData.mobile}{/eq}
+                        </div>
+                    </div>
+                    {eq name="$OrderData.logistics_type" value="2"}
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">核销码：</div> <div class="lumping-content-text">{$weappVerifyLog.verify_code}</div>
+                    </div>
+                    {/eq}
+                    {if condition="$OrderData.prom_type == 0 && 1 == $OrderData.logistics_type"}
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">收货地址：</div>
+                        <div class="lumping-content-text">
+                            <div class="lumping-content-address" style="max-width: 100%; display: contents;">
+                                {$OrderData.province} {$OrderData.city} {$OrderData.district} {$OrderData.address}
+                            </div>
+                            {if condition="in_array($OrderData.order_status, [0, 1])"}
+                                <a class="ml10" href="JavaScript:void(0);" data-url="{:url('Shop/order_address', ['order_id'=>$OrderData.order_id])}" onclick="changeOrderAddress(this);">修改</a>
+                            {/if}
+                        </div>
+                    </div>
+                    {/if}
+                </div>
+                <div class="order-information-contentTwo">
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">买家信息：</div>
+                        <div class="lumping-content-text">
+                            <img style="float: unset; border: 1px solid #e9edef; width: 24px; height: 24px; border-radius: 50%;" src="{$UsersData.head_pic}">
+                            <a href="javascript:void(0);" data-href="{:url('Member/users_edit', ['id'=>$UsersData.users_id,'from'=>'money_index','iframe'=>1])}" {empty name='$iframe'}onclick="openFullframe(this, '会员资料','100%','100%');"{else /}onclick="parent_openFullframe(this, '会员资料','100%','100%');"{/empty}>{$UsersData.nickname}</a>
+                        </div>
+                    </div>
+                    {notempty name="$OrderData.user_note"}
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">买家留言：</div> <div class="lumping-content-text">{$OrderData.user_note}</div>
+                    </div>
+                    {/notempty}
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">商家备注：</div>
+                        <div class="lumping-content-text">
+                            {notempty name="$OrderData.admin_note"}已有{$adminNoteCount}条备注{/notempty}
+                            <a href="javascript:void(0);" data-href="{:url('shop/order_remarks', ['order_id'=>$OrderData.order_id])}" onclick="openFullframe(this, '商家备注', '600px', '55%');" id="adminNoteHtml">{empty name="$OrderData.admin_note"}添加{else/}查看{/empty}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {empty name='$iframe'}
+    <div class="page pt0 mt10" style="min-width:auto;margin-left:100px;">
+    {else /}
+    <div class="page pt0 mt10" style="min-width: auto;">
+    {/empty}
+        <div class="flexigrid" style=" padding-right: 1px; ">
+            <div class="mDiv"> <div class="ftitle"> <h3>商品信息</h3> </div> </div>
+        </div>
+        <div class="flexigrid flexigrid-xin" style=" padding-right: 1px; ">
+            <div class="tableDiv bubbleInfo mt5">
+                <table cellspacing="0" cellpadding="0"  border="0" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th class=""> <div class="">商品名称</div> </th>
+                            <th class="w240 tc"> <div class="">单价/数量</div> </th>
+                            <th class="w160 tc"> <div class="">小计</div> </th>
+                        </tr>
+                    </thead>
                     <tbody>
+                    {empty name="DetailsData"}
                         <tr>
-                            <td class="gray_bg">订单ID：</td>
-                            <td>{$OrderData.order_id}</td>
-                            <td class="gray_bg">订单编号：</td>
-                            <td>{$OrderData.order_code}</td>
-                        </tr>
-                        <tr>
-                            <td class="gray_bg">用户名：</td>
-                            <td>{$UsersData.username}</td>
-                            <td class="gray_bg">邮箱地址：</td>
-                            <td>{$UsersData.email}</td>
-                        </tr>
-                        <tr>
-                            <td class="gray_bg">手机号码：</td>
-                            <td>{$UsersData.mobile}</td>
-                            <td class="gray_bg">应付金额：</td>
-                            <td>
-                                <input type="hidden" id="order_amount_old" value="{$OrderData.order_amount}">
-                                <span id="order_amount">￥{$OrderData.order_amount}</span>
-                                {gt name="$OrderData.shipping_fee" value="0"}(含运费:{$OrderData.shipping_fee}){/gt}
-                                
-                                {eq name="$OrderData.order_status" value="0"}
-                                    <a href="JavaScript:void(0);" style="color: red;" onclick="PromptChangePrice();">[改价]</a>
-                                {else/}
-                                    {gt name="$OrderData.order_total_amount" value="$OrderData.order_amount"}
-                                        <span style="color: red;" title="应付金额已被更改过">[已改价]</span>
-                                    {/gt}
-                                {/eq}
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <div class="">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
-                        <script type="text/javascript">
-                            // 弹出改价输入框
-                            function PromptChangePrice() {
-                                layer.prompt({
-                                    title: false, 
-                                    formType: 3,
-                                    id: 'BulkSetPrice',
-                                    btn: ['确定', '关闭'],
-                                    closeBtn: 0,
-                                    success: function(layero, index) {
-                                        $("#BulkSetPrice").find('input').attr('placeholder', '请输入应付金额');
-                                        $("#BulkSetPrice").find('input').attr('value', $('#order_amount_old').val());
-                                        $("#BulkSetPrice").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
-                                        $("#BulkSetPrice").find('input').attr('onpaste', "this.value=this.value.replace(/[^\\d.]/g,'')");
-                                        var msg = '<span style="color: red;">改价后让用户重新进入订单列表点击支付</span>';
-                                        $("#BulkSetPrice").append(msg);
-                                        // 修改订单金额后为保证支付金额准确有效<br/>请让用户刷新订单列表页后重新点击支付
-                                    }
-                                }, function(price, index) {
-                                    if (0 < price) {
-                                        layer.close(index);
-                                        OrderChangePrice(price);
-                                    } else {
-                                        layer.msg('应付金额不允许为0', {time: 1500});
-                                    }
-                                });
-                            }
-
-                            // 提交改价数据并追加一条订单操作记录
-                            function OrderChangePrice(Price) {
-                                if (0 >= Price) layer.msg('应付金额不允许为0', {time: 1500});
-                                layer_loading('正在处理');
-                                $.ajax({
-                                    type : 'post',
-                                    url  : "{:url('Shop/order_change_price')}",
-                                    data : {
-                                        order_id: $('#order_id').val(),
-                                        order_amount_old: $('#order_amount_old').val(),
-                                        order_amount: Price,
-                                        _ajax: 1
-                                    },
-                                    dataType : 'json',
-                                    success : function(res) {
-                                        layer.closeAll();
-                                        if (1 == res.code) {
-                                            layer.msg(res.msg, {time: 1500}, function() {
-                                                window.location.reload();
-                                            });
-                                        } else {
-                                            layer.alert(res.msg, {title: false, closeBtn: 0}, function() {
-                                                window.location.reload();
-                                            });
-                                        }
-                                    }
-                                });
-                            }
-                        </script>
-                        <tr>
-                            <td class="gray_bg">支付方式：</td>
-                            <td>
-                                {eq name="$OrderData.payment_method" value="1"}
-                                    货到付款
-                                {else/}
-                                    在线支付
-                                {/eq}
+                    {else/}
+                        {foreach name="DetailsData" item="vo" key="k" }
+                        <tr class="order-empty"><td colspan="7"></td></tr>
+                        <tr class="order-empty">
+                            <td class="pl0">
+                                <div class="goods-detail pl0">
+                                    <div class="goods-image"><img src="{$vo.litpic}"> </div>
+                                    <div class="goods-info"> <p class="goods-title">{$vo.product_name}</p> <p class="goods-spec">{$vo.product_spec}</p> </div>
+                                </div>
                             </td>
-                            <td class="gray_bg">订单状态：</td>
-                            <td>
-                                {$admin_order_status_arr[$OrderData.order_status]|default=''}
-                                {eq name="$OrderData.order_status" value="2"}
-                                    &nbsp;<a href="{:url('Shop/order_send',array('order_id'=>$OrderData['order_id']))}" class="ncap-btn ncap-btn-green" >
-                                        发货详情
-                                    </a>
-                                    {eq name="$OrderData.prom_type" value="0"}
-                                        &nbsp;<a href="javascript:void(0);" data-url="{$MobileExpressUrl}" onclick="LogisticsInquiry(this);" class="ncap-btn ncap-btn-green" >
-                                            物流查询
-                                        </a>
-                                        <script type="text/javascript">
-                                            // 发货、标记未付款
-                                            function LogisticsInquiry(obj){
-                                                var url = $(obj).attr('data-url');
-                                                //iframe窗
-                                                var iframes = layer.open({
-                                                    type: 2,
-                                                    title: '物流查询',
-                                                    shadeClose: false,
-                                                    maxmin: false, //开启最大化最小化按钮
-                                                    area: ['60%', '80%'],
-                                                    content: url
-                                                });
-                                            }
-                                        </script>
-                                    {/eq}
-                                {/eq}
-                            </td>
+                            <td class="tc"> <p>{empty name="$OrderData.points_shop_order"}￥{/empty}{$vo.product_price} x {$vo.num}</p> </td>
+                            <td class="tc"> <p>{empty name="$OrderData.points_shop_order"}￥{/empty}{$vo.subtotal}</p> </td>
                         </tr>
-                        <tr>
-                            <td class="gray_bg">下单时间：</td>
-                            <td>{$OrderData.add_time|MyDate='Y-m-d H:i:s',###}</td>
-                            <td class="gray_bg">付款时间：</td>
-                            <td>{neq name="$OrderData.pay_time" value="0"}{$OrderData.pay_time|MyDate='Y-m-d H:i:s',###}{/neq}</td>
-                        </tr>
-                        <tr>
-                            <td class="gray_bg">付款方式：</td>
-                            <td>
-                                {eq name="$OrderData.payment_method" value="1"}
-                                    快递代收
-                                {else/}
-                                    {$pay_method_arr[$OrderData.pay_name]|default='未付款'}
-                                {/eq}
-                            </td>
-                            <td class="gray_bg">订单类型：</td>
-                            <td>{$OrderData.prom_type_name}</td>
-                        </tr>
-                        {empty name="$OrderData.prom_type"}
-                            <tr>
-                                <td class="gray_bg">物流公司：</td>
-                                <td>{$OrderData.express_name}</td>
-                                <td class="gray_bg">配送单号：</td>
-                                <td>{$OrderData.express_order}</td>
-                            </tr>
-                        {/empty}
+                        {/foreach}
+                    {/empty}
                     </tbody>
                 </table>
             </div>
-
-            <div class="hDiv htitx">
-                <div class="hDivBox">
-                    <table cellspacing="0" cellpadding="0" style="width: 100%">
-                        <thead>
-                            <tr>
-                                <th class="sign w10" axis="col0">
-                                    <div class="tc"></div>
-                                </th>
-                                <th abbr="article_title" axis="col3" class="w10">
-                                    <div class="tc">收货信息</div>
-                                </th>
-                                <th abbr="ac_id" axis="col4">
-                                    <div class=""></div>
-                                </th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-            <div class="ncap-form-default">
-                {empty name="$OrderData.prom_type"}
-                <dl class="row">
-                    <dt class="tit pl15">
-                        <label>收货人</label>
-                    </dt>
-                    <dd class="opt">          
-                        {$OrderData.consignee}
-                    </dd>
-                </dl>
-                <dl class="row">
-                    <dt class="tit pl15">
-                        <label>联系方式</label>
-                    </dt>
-                    <dd class="opt">          
-                        {$OrderData.mobile}
-                    </dd>
-                </dl>
-                <dl class="row">
-                    <dt class="tit pl15">
-                        <label>收货地址</label>
-                    </dt>
-                    <dd class="opt">          
-                        {$OrderData.country} {$OrderData.province} {$OrderData.city} {$OrderData.district} {$OrderData.address}
-                    </dd>
-                </dl>
-               
-                {/empty}
-                <dl class="row">
-                    <dt class="tit pl15">
-                        <label>订单留言</label>
-                    </dt>
-                    <dd class="opt">          
-                        {$OrderData.user_note}
-                    </dd>
-                </dl>
-                <dl class="row">
-                    <dt class="tit pl15">
-                        <label>管理员备注</label>
-                    </dt>
-                    <dd class="opt">          
-                        <textarea rows="5" cols="60" id="admin_note" name="admin_note" style="height:60px;">{$OrderData.admin_note}</textarea>
-                        <span class="err"></span>
-                        <p class="notic"></p>
-                    </dd>
-                </dl>
-                <div class="bot pl120" style="padding-bottom:0px;">
-                    <input type="hidden" name="gourl" value="{$gourl|default=''}">
-                    <a href="JavaScript:void(0);" onclick="UpNote('{$OrderData.order_id}');" class="ncap-btn-big ncap-btn-green" id="submitBtn">保存</a>
-                </div>
-            </div>
-
-            
-
-            <div class="hDiv" style="margin-top: 5px;">
-                <div class="hDivBox">
-                    <table cellspacing="0" cellpadding="0" style="width: 100%">
-                        <thead>
-                            <tr>
-                                
-                                <th abbr="article_title" axis="col3" class="">
-                                    <div class="tl text-l10">商品名称</div>
-                                </th>
-                                <th abbr="article_time" axis="col6" class="w210">
-                                    <div class="tc ">规格属性</div>
-                                </th>
-                                <th abbr="article_time" axis="col6" class="w210">
-                                    <div class="tc">数量</div>
-                                </th>
-                                <th abbr="article_time" axis="col6" class="w150">
-                                    <div class="tc">会员价格</div>
-                                </th>
-                                <th abbr="article_title" axis="col3" class="w300">
-                                    <div class="tc">单品小计</div>
-                                </th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-            <div class="bDiv" style="height: auto;">
-                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
-                    <table style="width: 100%;">
-                        <tbody>
-                        {empty name="DetailsData"}
-                            <tr>
-                                <td class="no-data" align="center" axis="col0" colspan="50">
-                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
-                                </td>
-                            </tr>
+            <div class="order-total">
+                <div class="order-total-box">
+                    <div class="order-total-con">
+                        <div class="total-name"> 商品小计：</div>
+                        {empty name="$OrderData.points_shop_order"}
+                        <div class="total-value">￥{$OrderData.totalAmount}</div>
                         {else/}
-                            {foreach name="DetailsData" item="vo" key="k" }
-                            <tr>
-                                
-                                <td class="" style="width: 100%;">
-                                    <div class="tl text-l10">
-                                        <a href="{$vo.arcurl}" target="_blank">
-                                            <img src="{$vo.litpic}" style="width: 60px;height: 60px;"> {$vo.product_name}
-                                        </a>
-                                    </div>
-                                </td>
-                                <td class="sort">
-                                    <div class="tc w210 text-l10">
-                                        {$vo.data}
-                                    </div>
-                                </td>
-                                <td class="sort">
-                                    <div class="tc w210">
-                                        {$vo.num}
-                                    </div>
-                                </td>
-                                <td class="sort">
-                                    <div class="tc w150">
-                                        ￥{$vo.product_price}
-                                    </div>
-                                </td>
-                                <td class="sort">
-                                    <div class="tc w300">
-                                        ￥{$vo.subtotal}
-                                    </div>
-                                </td>
-                            </tr>
-                            {/foreach}
+                        <div class="total-value">{$OrderData.order_total_amount}</div>
                         {/empty}
-                        </tbody>
-                    </table>
+                    </div>
+                    {notempty name="$OrderData.coupon_id"}
+                    <div class="order-total-con">
+                        <div class="total-name"> 优惠券： </div>
+                        <div class="total-value"> -￥{$OrderData.coupon_price} </div>
+                    </div>
+                    {/notempty}
+                    {eq name="$OrderData.order_source" value="10"}
+                    <div class="order-total-con">
+                        <div class="total-name"> 运费： </div>
+                        <div class="total-value"> ￥{$OrderData.shipping_fee} </div>
+                    </div>
+                    <div class="order-total-con actual-payment mt10">
+                        <div class="total-name"> 实付款： </div>
+                        <div class="total-value"> {empty name="$OrderData.points_shop_order"}￥{/empty}{$OrderData.order_amount} </div>
+                    </div>
+                    {/eq}
+                    {if condition="30 == $OrderData.order_source && $OrderData.pay_use_scores > 0"}
+                    <div class="order-total-con">
+                        <div class="total-name"> 积分兑换： </div>
+                        <div class="total-value">{$OrderData.pay_use_scores_num}积分 </div>
+                    </div>
+                    {/if}
                 </div>
-                <div class="iDiv" style="display: none;"></div>
             </div>
+        </div>
+    </div>
 
-            <!-- <div class="hDiv">
-                <div class="hDivBox">
-                    <table cellspacing="0" cellpadding="0" style="width: 100%">
-                        <thead>
-                        <tr>
-                            <th class="sign w10" axis="col0">
-                                <div class="tc"></div>
-                            </th>
-                            <th abbr="article_title" axis="col3" class="w10">
-                                <div class="tc">操作信息</div>
-                            </th>
-                            <th abbr="ac_id" axis="col4">
-                                <div class=""></div>
-                            </th>
-                        </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-            <div class="ncap-form-default">
-                <input type="hidden" name="status_name" id="status_name">
-                <dl class="row">
-                    <dt class="tit">
-                        <label for="uname">可执行操作</label>
-                    </dt>
-                    <dd class="opt">
-                        {eq name="$OrderData['order_status']" value='0'}
-                            <a href="JavaScript:void(0);" onclick="OrderMark('yfk');" class="ncap-btn-big ncap-btn-green" id="submitBtn">
-                                标记已付款
-                            </a>
-                        {/eq}
-                        {eq name="$OrderData['order_status']" value='2'}
-                            <a href="JavaScript:void(0);" onclick="OrderMark('ysh');" class="ncap-btn-big ncap-btn-green" id="submitBtn">
-                                标记已收货
-                            </a>
-                        {/eq}
-                        {neq name="$OrderData['order_status']" value='-1'}
-                            <a href="JavaScript:void(0);" onclick="OrderMark('wx');" class="ncap-btn-big ncap-btn-green" id="submitBtn">
-                                标记为无效
-                            </a>
-                        {/neq}
-                    </dd>
-                </dl>
-            </div> -->
-
-            
+    {empty name='$iframe'}
+    <div class="page pt0 mt10" style="min-width:auto;margin-left:100px;">
+    {else /}
+    <div class="page pt0 mt10" style="min-width: auto;">
+    {/empty}
+        <div class="flexigrid">
+            <div class="mDiv"> <div class="ftitle"> <h3>订单日志</h3> </div> </div>
             <div class="hDiv" style="margin-top: 5px;">
                 <div class="hDivBox">
                     <table cellspacing="0" cellpadding="0" style="width: 100%">
                         <thead>
-                        <tr>
-                            
-                            <th abbr="article_time" axis="col6">
-                                <div class="tl text-l10">操作记录</div>
-                            </th>
-                            <th class="sign w210" axis="col0">
-                                <div class="tc">操作者</div>
-                            </th>
-                            <th abbr="article_title" axis="col3" class="w210">
-                                <div class="tc">操作时间</div>
-                            </th>
-                            <th abbr="article_time" axis="col6" class="w150">
-                                <div class="tc">订单状态</div>
-                            </th>
-                            <th abbr="article_title" axis="col3" class="w300">
-                                <div class="tc">操作备注</div>
-                            </th>
-                        </tr>
+                            <tr>
+                                <th axis="col6"> <div class="tl text-l10">操作记录</div> </th>
+                                <th axis="col6" class="sign w210"> <div class="tc">操作人</div> </th>
+                                <th axis="col6" class="w210"> <div class="tc">操作时间</div> </th>
+                            </tr>
                         </thead>
                     </table>
                 </div>
@@ -422,40 +424,15 @@
                         {empty name="Action"}
                             <tr>
                                 <td class="no-data" align="center" axis="col0" colspan="50">
-                                    <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                    <div class="no_row"> <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div> </div>
                                 </td>
                             </tr>
                         {else/}
                             {foreach name="Action" item="vo" key="k" }
                             <tr>
-                                
-                                <td class="sort" style="width: 100%;">
-                                    <div class="tl text-l10" >
-                                        {$vo.action_desc}
-                                    </div>
-                                </td>
-                                <td class="sort">
-                                    <div class="tc w210">
-                                        {$vo.username}
-                                    </div>
-                                </td>
-                                <td class="sort">
-                                    <div class="tc w210">
-                                        {$vo.add_time|MyDate='Y-m-d H:i:s',###}
-                                    </div>
-                                </td>
-                               
-                                <td class="sort">
-                                    <div class="tc w150">
-                                        
-                                        {$admin_order_status_arr[$vo.order_status]|default=''}
-                                    </div>
-                                </td>
-                                <td class="sort" >
-                                    <div class="tc w300" >
-                                        {$vo.action_note}
-                                    </div>
-                                </td>
+                                <td class="sort" style="width: 100%;"> <div class="tl text-l10"> {$vo.action_note} </div> </td>
+                                <td class="sort"> <div class="tc w210"> {$vo.action_users} </div> </td>
+                                <td class="sort"> <div class="tc w210"> {$vo.add_time|MyDate='Y-m-d H:i:s',###} </div> </td>
                             </tr>
                             {/foreach}
                         {/empty}
@@ -464,74 +441,287 @@
                 </div>
                 <div class="iDiv" style="display: none;"></div>
             </div>
-        </form>
+        </div>
     </div>
-</div>
-<script type="text/javascript">
-    // 判断输入框是否为空
-    function OrderMark(status_name){
-        if('qfh' == status_name){
-            var order_id = '{$OrderData.order_id}';
-            var url = "{:url('Shop/order_send')}";
-            if (url.indexOf('?') > -1) {
-                url += '&';
-            } else {
-                url += '?';
-            }
-            url += 'order_id='+order_id;
-            window.location.href = url;
-            return false;
-        }else if('yfk' == status_name){
-            var msg = '确认订单已付款？';
-        }else if('ysh' == status_name){
-            var msg = '确认订单已收货？';
-        }else if('wfk' == status_name){
-            var msg = '确认订单未付款？';
-        }else if('wx' == status_name){
-            var msg = '确认订单无效？';
+
+    <script type="text/javascript">
+        $(document).ready(function(){
+            // 表格行点击选中切换
+            $('#flexigrid > table>tbody >tr').click(function(){
+                $(this).toggleClass('trSelected');
+            });
+        });
+
+        // 订单ID
+        var order_id = {$OrderData.order_id};
+        // 订单会员ID
+        var users_id = {$OrderData.users_id};
+        // 订单金额
+        var order_amount = "{$OrderData.order_amount}";
+
+        // 订单号复制
+        function orderCopy() {
+            var clipboard1 = new Clipboard(".order_code");
+            clipboard1.on("success", function(e) {
+                layer.msg("复制成功");
+            });
+            clipboard1.on("error", function(e) {
+                layer.msg("复制失败！请手动复制", {icon: 5});
+            }); 
         }
-        
-        layer.confirm(msg, {
-            title: false,
-            btn: ['确定','取消']
-        },function(){
-            $('#status_name').val(status_name);
-            layer_loading('正在处理');
-            $('#postForm').submit();
-        },function(index){
-            layer.closeAll(index);
-        });
-    }
 
-    // 更新管理员备注
-    function UpNote(order_id){
-        var admin_note = $('#admin_note').val();
-        $.ajax({
-            url: "{:url('Shop/update_note', ['_ajax'=>1])}",
-            data: {order_id:order_id,admin_note:admin_note},
-            type:'post',
-            dataType:'json',
-            success:function(res){
-                layer.closeAll();
-                if ('1' == res.code) {
-                    layer.msg(res.msg, {time: 1500});
-                }else{
-                    layer.msg(res.msg, {time: 1500});
+        // 弹出改价输入框
+        function promptChangePrice() {
+            layer.prompt({
+                formType: 3,
+                shade: layer_shade,
+                move: false,
+                title: '提示',
+                id: 'orderChangePrice',
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['确定', '关闭'],
+                success: function(layero, index) {
+                    $("#orderChangePrice").find('input').attr('placeholder', '请输入应付金额');
+                    $("#orderChangePrice").find('input').attr('value', order_amount);
+                    $("#orderChangePrice").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                    $("#orderChangePrice").find('input').attr('onpaste', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                    var msg = '<span style="color: red;">改价后让买家重新进入订单列表点击支付</span>';
+                    $("#orderChangePrice").append(msg);
+                    // 修改订单金额后为保证支付金额准确有效<br/>请让买家刷新订单列表页后重新点击支付
                 }
+            }, function(price, index) {
+                if (0 < price) {
+                    layer.close(index);
+                    orderChangePrice(price);
+                } else {
+                    layer.msg('应付金额不允许为0', {time: 1500});
+                }
+            });
+        }
+
+        // 提交改价数据并追加一条订单操作记录
+        function orderChangePrice(price) {
+            if (0 >= price) layer.msg('应付金额不允许为0', {time: 1500});
+            layer_loading('正在处理');
+            $.ajax({
+                type: 'post',
+                url : "{:url('Shop/order_change_price')}",
+                data: {order_id: order_id, order_amount: price, order_amount_old: order_amount, _ajax: 1},
+                dataType: 'json',
+                success: function(res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {time: 1500}, function() {
+                            window.location.reload();
+                        });
+                    } else {
+                        layer.alert(res.msg, {title: false, closeBtn: 0}, function() {
+                            window.location.reload();
+                        });
+                    }
+                }
+            });
+        }
+
+        // 订单发货
+        function orderConfirmSend(obj) {
+            var url = $(obj).attr('data-url');
+            var iframes = layer.open({
+                type: 2,
+                title: '订单发货详情',
+                fixed: true, //不固定
+                shadeClose: false,
+                shade: layer_shade,
+                area: ['840px', '600px'],
+                content: url
+            });
+        }
+
+        // 订单操作
+        function orderMark(status_name, order_id, users_id, admin_note, update_time) {
+            if('yfk' == status_name) {
+                var msg = '确认订单已付款？';
+            } else if ('ysh' == status_name) {
+                var msg = '确认订单已收货？';
+            } else if ('gbdd' == status_name) {
+                var msg = '确认关闭订单？';
+            } else if ('ddbz' == status_name) {
+                layer.prompt({
+                    formType: 2,
+                    shade: layer_shade,
+                    value: admin_note,
+                    title: '提示',
+                    closeBtn: 3,
+                    id: 'AdminNote',
+                    area: ['300px', '100px'],
+                    success: function(layero, index) {
+                        if (admin_note) {
+                            var msg = '<br/><span style="color: #999; font-size: 12px;">最后更新：'+update_time+'</span>';
+                            $("#AdminNote").append(msg);
+                            $(".layui-layer-content").css('text-align', 'left');
+                        }
+                    }
+                }, function(value, index, elem) {
+                    OrderNote(order_id, value);
+                    layer.close(index);
+                });
+                return false;
+            } else if ('sdtk' == status_name) {
+                layer.prompt({
+                    formType: 2,
+                    shade: layer_shade,
+                    value: ' ',
+                    title: '提示',
+                    closeBtn: 3,
+                    id: 'manualRefund',
+                    btnAlign:'r',
+                    btn: ['关闭并退款', '取消'],
+                    area: ['300px', '120px'],
+                    success: function(layero, index) {
+                        $("#manualRefund").find('textarea').attr('placeholder', '请填写关闭订单原因(非必填)');
+                        var msg = '<span class="f-16 mb5" style="display: block;">是否关闭订单并自行手动退款</span><span class="red f-12">此操作系统不会自动退款，需手动线下退款</span><br/><br/>';
+                        $("#manualRefund").prepend(msg);
+                        $(".layui-layer-content").css('text-align', 'left');
+                    }
+                }, function(value, index, elem) {
+                    // 手动关闭订单并退款
+                    manualRefund(order_id, value);
+                    layer.close(index);
+                });
+                return false;
+            } else if ('ddsc' == status_name) {
+                var msg = '确认删除订单？';
             }
-        });
-    }
 
-    $(document).ready(function(){
-        // 表格行点击选中切换
-        $('#flexigrid > table>tbody >tr').click(function(){
-            $(this).toggleClass('trSelected');
-        });
+            layer.confirm(msg, {
+                shade: layer_shade,
+                title: '提示',
+                closeBtn: 3,
+                btnAlign:'r',
+                btn: ['确定','取消'],
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                }
+            }, function() {
+                $.ajax({
+                    url:  "{:url('Shop/order_mark_status')}",
+                    data: {order_id: order_id, status_name: status_name, users_id: users_id, _ajax: 1},
+                    type: 'post',
+                    dataType: 'json',
+                    success:function(res) {
+                        layer.closeAll();
+                        if (1 == res.code) {
+                            layer.msg(res.msg, {time: 1500}, function() {
+                                if ('ddsc' == status_name) {
+                                    window.location.href = res.url;
+                                } else {
+                                    window.location.reload();
+                                }
+                            });
+                        } else {
+                            layer.msg(res.msg, {time: 1500});
+                        }
+                    }
+                });
+            },function(index) {
+                layer.closeAll(index);
+            });
+        }
 
-        // 点击刷新数据
-        $('.fa-refresh').click(function(){
-            location.href = location.href;
-        });
-    });
-</script>
+        // 手动关闭订单并退款
+        function manualRefund(order_id, refund_note) {
+            $.ajax({
+                url: "{:url('Shop/order_manual_refund')}",
+                data: {order_id: order_id, refund_note: refund_note, _ajax: 1},
+                type:'post',
+                dataType:'json',
+                success:function(res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {time: 1500}, function() {
+                            window.location.reload();
+                        });
+                    } else {
+                        layer.msg(res.msg, {time: 1500});
+                    }
+                }
+            });
+        }
+
+        // 订单更新收货地址
+        function changeOrderAddress(obj) {
+            var url = $(obj).attr('data-url');
+            var iframes = layer.open({
+                type: 2,
+                title: '收货地址',
+                fixed: true, //不固定
+                shadeClose: false,
+                shade: layer_shade,
+                area: ['660px', '550px'],
+                content: url
+            });
+        }
+        function OrderVerify(order_id, users_id) {
+            // 是否开启核销功能
+            var openVerify = "{$weappInfo['data']['openVerify']|default=0}";
+            if (0 === parseInt(openVerify)) {
+                layer.alert('已关闭核销功能，核销订单将无法操作', {
+                    shade: layer_shade,
+                    area: ['480px', '190px'],
+                    move: false,
+                    title: '提示',
+                    btnAlign:'r',
+                    closeBtn: 3,
+                    success: function () {
+                        $(".layui-layer-content").css('text-align', 'left');
+                    }
+                });
+                return false;
+            }
+
+            // 是否开启后台二次核销
+            var openSecondVerify = "{$weappInfo['data']['openSecondVerify']|default=0}";
+            layer.confirm('核销后用户的核销凭证将失效，确认核销此单?', {
+                shade: layer_shade,
+                title: '提示',
+                closeBtn: 3,
+                btnAlign:'r',
+                btn: ['确定','取消'],
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                    if (1 === parseInt(openSecondVerify)) {
+                        var html = '<div style="padding: 0  0 10px 20px; color: red;">请输入核销码二次验证:</div><input type="text" id="verify_code" style="margin-left: 20px; margin-bottom: 5px;" placeholder="请输入订单核销码"/></div>';
+                        $(".layui-layer-content").after(html);
+                    }
+                }
+            }, function() {
+                var verify_code = 1 === parseInt(openSecondVerify) ? $("#verify_code").val() : '';
+                if ('' == verify_code && 1 === parseInt(openSecondVerify)) {
+                    $('#verify_code').focus();
+                    return false;
+                }
+                layer_loading('正在处理');
+                $.ajax({
+                    url: "{:url('Shop/verify')}",
+                    data: {order_id: order_id, verify_code: verify_code, users_id: users_id, _ajax: 1},
+                    type:'post',
+                    dataType:'json',
+                    success:function(res) {
+                        layer.closeAll();
+                        if (1 == res.code) {
+                            layer.msg(res.msg, {time: 1500},function(){
+                                window.location.reload();
+                            });
+                        } else {
+                            layer.msg(res.msg, {time: 1500});
+                        }
+                    }
+                });
+            }, function(index) {
+                layer.closeAll(index);
+            });
+        }
+
+    </script>
 {include file="public/footer" /}

@@ -8,7 +8,7 @@ return [
     'Undefined offset'                                          => '未定义数组下标，PHP内部数据错误',
     'Parse error'                                               => '语法解析错误',
     'Type error'                                                => '类型错误',
-    'Fatal error'                                               => '致命错误，联系技术支持',
+    'Fatal error'                                               => '致命错误',
     'syntax error'                                              => '语法错误',
 
     // 框架核心错误提示

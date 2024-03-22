@@ -15,25 +15,66 @@ namespace app\admin\controller;
 use app\admin\controller\Base;
 use think\Controller;
 use think\Db;
+use think\Page;
+use app\admin\logic\UpgradeLogic;
+use app\admin\logic\EyouCmsLogic;
 
 class Index extends Base
 {
+    public $eyouCmsLogic;
+
+    public function _initialize()
+    {
+        parent::_initialize();
+        $this->eyouCmsLogic = new EyouCmsLogic;
+        //初始化admin_menu表（将原来左边栏目设置为跟原来一样）
+        $ajaxLogic = new \app\admin\logic\AjaxLogic;
+        $ajaxLogic->initialize_admin_menu();
+    }
+    
     public function index()
     {
-        $language_db = Db::name('language');
+        // $dbtables = Db::query('SHOW TABLE STATUS');
+        // $list = array();
+        // foreach ($dbtables as $k => $v) {
+        //     if (preg_match('/^'.PREFIX.'/i', $v['Name'])) {
+        //         $list[$k] = $v;
+        //     }
+        // }
+        // $str = '';
+        // foreach ($list as $_k => $_v) {
+        //     $table = $_v['Name'];
+        //     $str .= $table.'|';
+        //     $str2 = "|";
+        //     $fields = Db::table($table)->getTableFields();
+        //     foreach ($fields as $key => $value) {
+        //         if ($key == 0) {
+        //             $str .= "{$value}";
+        //         } else {
+        //             $str .= ",{$value}";
+        //             $str2 .= ";";
+        //         }
+        //     }
+        //     $str = $str . $str2 . "|". PHP_EOL . PHP_EOL;
+        // }
+        // echo($str);
+        // exit;
 
+        $language_db = Db::name('language');
         /*多语言列表*/
-        $web_language_switch = tpCache('web.web_language_switch');
+        $web_language_switch = tpCache('global.web_language_switch');
         $languages = [];
-        if (1 == intval($web_language_switch)) {
-            $languages = $language_db->field('a.mark, a.title')
-                ->alias('a')
-                ->where('a.status',1)
-                ->getAllWithIndex('mark');
-        }
+        $languages = $language_db->field('a.mark, a.title')
+            ->alias('a')
+            ->where('a.status',1)
+            ->order('sort_order asc,id asc')
+            ->getAllWithIndex('mark');
         $this->assign('languages', $languages);
         $this->assign('web_language_switch', $web_language_switch);
         /*--end*/
+
+        $web_adminlogo = tpCache('web.web_adminlogo', [], $this->main_lang);
+        $this->assign('web_adminlogo', handle_subdir_pic($web_adminlogo));
 
         /*代理贴牌功能限制-s*/
         $function_switch = $upgrade = true;
@@ -48,54 +89,68 @@ class Index extends Base
         /*代理贴牌功能限制-e*/
 
         /*小程序开关*/
-        $web_diyminipro_switch = tpCache('web.web_diyminipro_switch');
-        if (!is_dir('./weapp/Diyminipro/') || $this->admin_lang != $this->main_lang) {
-            $web_diyminipro_switch = -1;
-        }
-        $this->assign('web_diyminipro_switch', $web_diyminipro_switch);
-        /*end*/
-
-        /*网站首页链接*/
-        // 去掉入口文件
-        $inletStr = '/index.php';
-        $seo_inlet = config('ey_config.seo_inlet');
-        1 == intval($seo_inlet) && $inletStr = '';
-        // --end
-        $home_default_lang = config('ey_config.system_home_default_lang');
-        $admin_lang = $this->admin_lang;
-        $home_url = request()->domain().ROOT_DIR.'/';  // 支持子目录
-        if ($home_default_lang != $admin_lang) {
-            $home_url = $language_db->where(['mark'=>$admin_lang])->getField('url');
-            if (empty($home_url)) {
-                $seoConfig = tpCache('seo');
-                $seo_pseudo = !empty($seoConfig['seo_pseudo']) ? $seoConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
-                if (1 == $seo_pseudo) {
-                    $home_url = request()->domain().ROOT_DIR.$inletStr; // 支持子目录
-                    if (!empty($inletStr)) {
-                        $home_url .= '?';
-                    } else {
-                        $home_url .= '/?';
-                    }
-                    $home_url .= http_build_query(['lang'=>$admin_lang]);
-                } else {
-                    $home_url = request()->domain().ROOT_DIR.$inletStr.'/'.$admin_lang; // 支持子目录
+        $diyminipro_list = [];
+        if ($this->admin_lang == $this->main_lang) {
+            $diyminipro_list = Db::name('weapp')->field('id,code,name,config')->where(['code'=>['IN',['Diyminipro','DiyminiproMall','BdDiyminipro','TtDiyminipro']],'status'=>1])->order('code desc')->select();
+            foreach ($diyminipro_list as $key => $val) {
+                $val['config'] = (array)json_decode($val['config']);
+                $val['litpic'] = empty($val['config']['litpic']) ? '' : handle_subdir_pic($val['config']['litpic']);
+                if ('Diyminipro' == $val['code']) {
+                    $val['name'] = '微信企业小程序';
+                } else if ('DiyminiproMall' == $val['code']) {
+                    $val['name'] = '微信商城小程序';
+                } else if ('BdDiyminipro' == $val['code']) {
+                    $val['name'] = '百度企业小程序';
+                } else if ('TtDiyminipro' == $val['code']) {
+                    $val['name'] = '抖音企业小程序';
                 }
+                $diyminipro_list[$key] = $val;
             }
         }
-        $this->assign('home_url', $home_url);
-        /*--end*/
+        $this->assign('diyminipro_list', $diyminipro_list);
+        /*end*/
 
+        //获取前台入口链接
+        $this->assign('home_url', $this->eyouCmsLogic->shouye($this->globalConfig));
+        /*--end*/
         $this->assign('admin_info', getAdminInfo(session('admin_id')));
-        $this->assign('menu',getMenuList());
+        //左侧菜单列表（old）
+//        $this->assign('menu',getMenuList());
+        //获取所有权限
+        $all_menu_tree = getAllMenu();
+        $all_menu_list = tree_to_list($all_menu_tree,'child','id');
+        $this->assign('all_menu_list',$all_menu_list);
+        //获取选中的权限
+        $ajaxLogic = new \app\admin\logic\AjaxLogic;
+        $ajaxLogic->admin_menu_clear();
+        // $ajaxLogic->eyou_v165_del_func();
+        $menu_list = Db::name("admin_menu")->where(['status'=>1,'is_menu'=>1])->order("sort_order asc,update_time asc,id asc")->select();
+        foreach ($menu_list as $key => $val) {
+            if (stristr($val['param'], '|sm|Diyminipro|')) {
+                $val['title'] = '微信企业小程序';
+            } else if (stristr($val['param'], '|sm|DiyminiproMall|')) {
+                $val['title'] = '微信商城小程序';
+            } else if (stristr($val['param'], '|sm|BdDiyminipro|')) {
+                $val['title'] = '百度企业小程序';
+            } else if (stristr($val['param'], '|sm|TtDiyminipro|')) {
+                $val['title'] = '抖音企业小程序';
+            }
+            $menu_list[$key] = $val;
 
-        /*检测是否存在会员中心模板*/
-        if ('v1.0.1' > getVersion('version_themeusers') && !empty($this->globalConfig['web_users_switch'])) {
-            $is_syn_theme_users = 1;
-        } else {
-            $is_syn_theme_users = 0;
+            // 其他语言不显示留言管理
+            /*if ($this->admin_lang != $this->main_lang) {
+                foreach ([2004018] as $_k => $_v) {
+                    if ($_v == $val['menu_id']) {
+                        unset($menu_list[$key]);
+                    }
+                }
+            }*/
         }
-        $this->assign('is_syn_theme_users',$is_syn_theme_users);
-        /*--end*/
+        $menu_list = getAdminMenuList($menu_list);
+        $this->assign('menu_list',$menu_list);
+        //获取因为没有开启相关模块没有权限的节点
+        $not_role_menu_id_arr = get_not_role_menu_id();
+        $this->assign('not_role_menu_id_arr',$not_role_menu_id_arr);
 
         // 是否开启安全补丁
         $security_patch = tpSetting('upgrade.upgrade_security_patch');
@@ -110,15 +165,15 @@ class Index extends Base
    
     public function welcome()
     {
+        $assign_data = [];
         // 更新数据缓存表信息
         $this->update_sql_cache_table();
         
         /*小程序组件更新*/
-        $is_update_component_access = 1;
+        $assign_data['is_update_component_access'] = 1;
         if (!is_dir('./weapp/Diyminipro/') || $this->admin_lang != $this->main_lang) {
-            $is_update_component_access = 0;
+            $assign_data['is_update_component_access'] = 0;
         }
-        $this->assign('is_update_component_access', $is_update_component_access);
         /*end*/
 
         // 纠正上传附件的大小，始终以空间大小为准
@@ -140,17 +195,6 @@ class Index extends Base
             /*--end*/
         }
 
-        /*未备份数据库提示*/
-        $system_explanation_welcome = !empty($this->globalConfig['system_explanation_welcome']) ? $this->globalConfig['system_explanation_welcome'] : 0;
-        $sqlfiles = glob(DATA_PATH.'sqldata/*');
-        foreach ($sqlfiles as $file) {
-            if(stristr($file, getCmsVersion())){
-                $system_explanation_welcome = 1;
-            }
-        }
-        $this->assign('system_explanation_welcome', $system_explanation_welcome);
-        /*--end*/
-
         /*检查密码复杂度*/
         $admin_login_pwdlevel = -1;
         $system_explanation_welcome_2 = !empty($this->globalConfig['system_explanation_welcome_2']) ? $this->globalConfig['system_explanation_welcome_2'] : 0;
@@ -160,74 +204,161 @@ class Index extends Base
                 $system_explanation_welcome_2 = 1;
             }
         }
-        $this->assign('admin_login_pwdlevel', $admin_login_pwdlevel);
-        $this->assign('system_explanation_welcome_2', $system_explanation_welcome_2);
+        $assign_data['admin_login_pwdlevel'] = $admin_login_pwdlevel;
+        $assign_data['system_explanation_welcome_2'] = $system_explanation_welcome_2;
         /*end*/
 
-        // 同步导航与内容统计的状态
-        $this->syn_open_quickmenu();
-
-        // 快捷导航
-        $quickMenu = Db::name('quickentry')->where([
-                'type'      => 1,
-                'checked'   => 1,
-                'status'    => 1,
-            ])->order('sort_order asc, id asc')->select();
-        foreach ($quickMenu as $key => $val) {
-            if ($this->php_servicemeal <= 1 && $val['controller'] == 'Shop' && $val['action'] == 'index') {
-                unset($quickMenu[$key]);
-                continue;
-            }
-            $quickMenu[$key]['vars'] = !empty($val['vars']) ? $val['vars']."&lang=".$this->admin_lang : "lang=".$this->admin_lang;
-        }
-        $this->assign('quickMenu',$quickMenu);
-
-        // 内容统计
-        $contentTotal = $this->contentTotalList();
-        $this->assign('contentTotal',$contentTotal);
-
-        // 是否开启安全补丁
-        $security_patch = tpSetting('upgrade.upgrade_security_patch');
-        if (empty($security_patch)) $security_patch = 0;
-        $this->assign('security_patch', $security_patch);
-
         /*代理贴牌功能限制-s*/
-        $upgrade = true;
+        $assign_data['upgrade'] = true;
         if (function_exists('checkAuthRule')) {
             //系统更新
-            $upgrade = checkAuthRule('upgrade');
+            $assign_data['upgrade'] = checkAuthRule('upgrade');
         }
-        $this->assign('upgrade', $upgrade);
         /*代理贴牌功能限制-e*/
 
-        // 服务器信息
-        $this->assign('sys_info',$this->get_sys_info());
+        // 是否开启安全补丁
+        $assign_data['security_patch'] = (int)tpSetting('upgrade.upgrade_security_patch');
         // 升级弹窗
-        $this->assign('web_show_popup_upgrade', $this->globalConfig['web_show_popup_upgrade']);
-
+        if (2 == $this->globalConfig['web_show_popup_upgrade'] && $this->php_servicemeal <= 0) {
+            $this->globalConfig['web_show_popup_upgrade'] = -1;
+        }
+        $assign_data['web_show_popup_upgrade'] = $this->globalConfig['web_show_popup_upgrade'];
         // 升级系统时，同时处理sql语句
         $this->synExecuteSql();
 
         $ajaxLogic = new \app\admin\logic\AjaxLogic;
-        $ajaxLogic->update_template('users'); // 升级前台会员中心的模板文件
+        // $ajaxLogic->update_template('users'); // 升级前台会员中心的模板文件
         $ajaxLogic->system_langnum_file(); // 记录当前是多语言还是单语言到文件里
-        $ajaxLogic->admin_logic_1609900642(); // 内置方法
-        $ajaxLogic->admin_logic_1608884981();// 补充后台登录logo与背景图(v1.6.1节点去掉)
-        $ajaxLogic->admin_logic_1610086647(); // 内置手机端会员中心底部菜单数据(v1.6.1节点去掉)
-        $ajaxLogic->admin_logic_model_addfields(); // 同步内置模型内置的附加表字段(v1.6.1节点去掉)
-        $ajaxLogic->admin_logic_arctype_topid(); // 纠正栏目的topid字段值(v1.6.1节点去掉)
-        $ajaxLogic->admin_logic_balance_pay(); // 内置余额支付开关(v1.6.1节点去掉)
-        $ajaxLogic->admin_logic_1610086648(); // 文档图片自适应修改为默认关闭(v1.6.1节点去掉)
-        $ajaxLogic->admin_logic_1614829120(); // 补充站内信模板的数据(v1.6.1节点去掉)
-        $ajaxLogic->admin_logic_1616123192(); // 补充邮箱/短信模板的数据(v1.6.1节点去掉)
-        // 补充问题点赞表的like_source字段(v1.6.1节点去掉--陈风任)
-        $ajaxLogic->admin_logic_1617069276();
-        // 纠正商品主表的评价数(appraise 字段)、收藏数(collection 字段)(v1.6.1节点去掉--陈风任)
-        $ajaxLogic->admin_logic_archives_1618279798();
+        $ajaxLogic->system_citysite_file(); // 记录当前是否多站点到文件里
 
+        $ajaxLogic->admin_logic_1609900642(); // 内置方法
         // 纠正SQL缓存表结果字段类型(v1.6.1节点去掉--陈风任)
         $ajaxLogic->admin_logic_1623036205();
-        
+        // 评价主表评分由原先的(好评、中评、差评)转至实际星评数(1、2、3、4、5)(v1.6.1节点去掉--陈风任)
+        $ajaxLogic->admin_logic_1651114275();
+        //融合多商家模板升级数据库表、字段变动
+        $ajaxLogic->admin_logic_1658220528();
+        // 添加商城订单主表字段(消费获得积分数(obtain_scores)；订单是否已赠送积分(is_obtain_scores))
+        $ajaxLogic->admin_logic_1677653220();
+        // 更新会员积分数据表，积分类型字段 type
+        $ajaxLogic->admin_logic_1680749290();
+        // 纠正文章模型发布的文章数据中【付费预览】-【自动截取】的大小，由KB改为字节，article_pay表的size字段(1024字节=1KB)
+        $ajaxLogic->admin_logic_1685094852();
+        // 运费模板数据同步--陈风任
+        $ajaxLogic->admin_logic_1687687709();
+
+        $viewfile = 'welcome';
+        $web_theme_welcome_tplname = empty($this->globalConfig['web_theme_welcome_tplname']) ? '' : $this->globalConfig['web_theme_welcome_tplname'];
+        if (!empty($web_theme_welcome_tplname) && file_exists("application/admin/template/theme/{$web_theme_welcome_tplname}")) {
+            $welcome_tplname = str_ireplace('.htm', '', $web_theme_welcome_tplname);
+            $viewfile = "theme/{$welcome_tplname}";
+        }
+
+        if (preg_match('/^(.*)\/welcome_shop$/i', $viewfile)) {
+            // 商城版欢迎页主题
+            $this->eyouCmsLogic->welcome_shop($assign_data, $this->globalConfig, $this->usersConfig);
+        } else if (preg_match('/^(.*)\/welcome_taskflow$/i', $viewfile)) {
+            // 任务流版欢迎页主题
+            $this->eyouCmsLogic->welcome_taskflow($assign_data, $this->globalConfig, $this->usersConfig);
+        } else {
+            // 默认欢迎页主题
+            $this->eyouCmsLogic->welcome_default($assign_data, $this->globalConfig, $this->usersConfig);
+        }
+
+        $this->assign($assign_data);
+        $html = $this->fetch($viewfile);
+
+        // 后台密码修改提醒 - 大黄
+        if (file_exists('./weapp/PasswordRemind/model/PasswordRemindModel.php')) {
+            $PasswordRemindModel = new \weapp\PasswordRemind\model\PasswordRemindModel;
+            $html = $PasswordRemindModel->getInfo($html);
+        }
+
+        return $html;
+    }
+
+    /**
+     * 实时概况快捷导航管理
+     */
+    public function ajax_surveyquickmenu()
+    {
+        if (IS_AJAX_POST) {
+            $checkedids = input('post.checkedids/a', []);
+            if (count($checkedids) != 4){
+                $this->error('保存数量必须为4个');
+            }
+            $ids = input('post.ids/a', []);
+            $saveData = [];
+            foreach ($ids as $key => $val) {
+                if (in_array($val, $checkedids)) {
+                    $checked = 1;
+                } else {
+                    $checked = 0;
+                }
+                $saveData[$key] = [
+                    'id'            => $val,
+                    'checked'       => $checked,
+                    'sort_order'    => intval($key) + 1,
+                    'update_time'   => getTime(),
+                ];
+            }
+            if (!empty($saveData)) {
+                $r = model('Quickentry')->saveAll($saveData);
+                if ($r !== false) {
+                    $this->success('操作成功', url('Index/welcome'));
+                }
+            }
+            $this->error('操作失败');
+        }
+        $menuList = Db::name('quickentry')->where([
+            'type'      => 21,
+            'groups'    => 1,
+            'status'    => 1,
+        ])->order('sort_order asc, id asc')->select();
+
+        $this->assign('menuList',$menuList);
+
+        return $this->fetch();
+    }
+
+    /**
+     * 实时概况快捷导航管理 - 任务流版
+     */
+    public function ajax_surveyquickmenu_taskflow()
+    {
+        if (IS_AJAX_POST) {
+            $checkedids = input('post.checkedids/a', []);
+            $ids = input('post.ids/a', []);
+            $saveData = [];
+            foreach ($ids as $key => $val) {
+                if (in_array($val, $checkedids)) {
+                    $checked = 1;
+                } else {
+                    $checked = 0;
+                }
+                $saveData[$key] = [
+                    'id'            => $val,
+                    'checked'       => $checked,
+                    'sort_order'    => intval($key) + 1,
+                    'update_time'   => getTime(),
+                ];
+            }
+            if (!empty($saveData)) {
+                $r = model('Quickentry')->saveAll($saveData);
+                if ($r !== false) {
+                    $this->success('操作成功', url('Index/welcome'));
+                }
+            }
+            $this->error('操作失败');
+        }
+        $menuList = Db::name('quickentry')->where([
+            'type'      => 31,
+            'groups'    => 1,
+            'status'    => 1,
+        ])->order('sort_order asc, id asc')->select();
+
+        $this->assign('menuList',$menuList);
+
         return $this->fetch();
     }
 
@@ -238,7 +369,7 @@ class Index extends Base
     private function synExecuteSql()
     {
         // 新增订单提醒的邮箱模板
-        if (!tpCache('system.system_smtp_tpl_5')){
+        if (!tpCache('global.system_smtp_tpl_5')){
             /*多语言*/
             if (is_language()) {
                 $langRow = Db::name('language')->cache(true, EYOUCMS_CACHE_TIME, 'language')
@@ -317,113 +448,6 @@ class Index extends Base
     }
 
     /**
-     * 内容统计 - 数量处理
-     */
-    private function contentTotalList()
-    {
-        $archivesTotalRow = null;
-        $quickentryList = Db::name('quickentry')->where([
-                'type'      => 2,
-                'checked'   => 1,
-                'status'    => 1,
-            ])->order('sort_order asc, id asc')->select();
-        foreach ($quickentryList as $key => $val) {
-            $code = $val['controller'].'@'.$val['action'].'@'.$val['vars'];
-            $quickentryList[$key]['vars'] = !empty($val['vars']) ? $val['vars']."&lang=".$this->admin_lang : "lang=".$this->admin_lang;
-            if ($code == 'Guestbook@index@channel=8') // 留言列表
-            {
-                $map = [
-                    'lang'    => $this->admin_lang,
-                ];
-                $quickentryList[$key]['total'] = Db::name('guestbook')->where($map)->count();
-            }
-            else if (1 == $val['groups']) // 模型内容统计
-            {
-                if (null === $archivesTotalRow) {
-                    $map = [
-                        'lang'    => $this->admin_lang,
-                        'status'    => 1,
-                        'is_del'    => 0,
-                    ];
-                    $mapNew = "(users_id = 0 OR (users_id > 0 AND arcrank >= 0))";
-
-                    /*权限控制 by 小虎哥*/
-                    $admin_info = session('admin_info');
-                    if (0 < intval($admin_info['role_id'])) {
-                        $auth_role_info = $admin_info['auth_role_info'];
-                        if(! empty($auth_role_info)){
-                            if(isset($auth_role_info['only_oneself']) && 1 == $auth_role_info['only_oneself']){
-                                $map['admin_id'] = $admin_info['admin_id'];
-                            }
-                        }
-                    }
-                    /*--end*/
-                    $SqlQuery = Db::name('archives')->field('channel, count(aid) as total')->where($map)->where($mapNew)->group('channel')->select(false);
-                    $SqlResult = Db::name('sql_cache_table')->where(['sql_md5'=>md5($SqlQuery)])->getField('sql_result');
-                    if (!empty($SqlResult)) {
-                        $archivesTotalRow = json_decode($SqlResult, true);
-                    } else {
-                        $archivesTotalRow = Db::name('archives')->field('channel, count(aid) as total')->where($map)->where($mapNew)->group('channel')->getAllWithIndex('channel');
-                        /*添加查询执行语句到mysql缓存表*/
-                        $SqlCacheTable = [
-                            'sql_name' => '|model|all|count|',
-                            'sql_result' => json_encode($archivesTotalRow),
-                            'sql_md5' => md5($SqlQuery),
-                            'sql_query' => $SqlQuery,
-                            'add_time' => getTime(),
-                            'update_time' => getTime(),
-                        ];
-                        Db::name('sql_cache_table')->insertGetId($SqlCacheTable);
-                        /*END*/
-                    }
-                }
-                parse_str($val['vars'], $vars);
-                $total = !empty($archivesTotalRow[$vars['channel']]['total']) ? intval($archivesTotalRow[$vars['channel']]['total']) : 0;
-                $quickentryList[$key]['total'] = $total;
-            }
-            else if ($code == 'AdPosition@index@') // 广告
-            {
-                $map = [
-                    'lang'    => $this->admin_lang,
-                    'is_del'    => 0,
-                ];
-                $quickentryList[$key]['total'] = Db::name('ad_position')->where($map)->count();
-            }
-            else if ($code == 'Links@index@') // 友情链接
-            {
-                $map = [
-                    'lang'    => $this->admin_lang,
-                ];
-                $quickentryList[$key]['total'] = Db::name('links')->where($map)->count();
-            }
-            else if ($code == 'Tags@index@') // Tags标签
-            {
-                $map = [
-                    'lang'    => $this->admin_lang,
-                ];
-                $quickentryList[$key]['total'] = Db::name('tagindex')->where($map)->count();
-            }
-            else if ($code == 'Member@users_index@') // 会员
-            {
-                $map = [
-                    'lang'    => $this->admin_lang,
-                    'is_del'    => 0,
-                ];
-                $quickentryList[$key]['total'] = Db::name('users')->where($map)->count();
-            }
-            else if ($code == 'Shop@index@') // 订单
-            {
-                $map = [
-                    'lang'    => $this->admin_lang,
-                ];
-                $quickentryList[$key]['total'] = Db::name('shop_order')->where($map)->count();
-            }
-        }
-
-        return $quickentryList;
-    }
-
-    /**
      * 快捷导航管理
      */
     public function ajax_quickmenu()
@@ -454,12 +478,18 @@ class Index extends Base
             $this->error('操作失败');
         }
 
-        /*同步v1.3.9以及早期版本的自定义模型*/
-        $this->syn_custom_quickmenu(1);
-        /*end*/
+        $welcome_type = input('param.welcome_type/s');
+        if ($welcome_type == 'shop') {
+            $type = [11];
+        } else {
+            /*同步v1.3.9以及早期版本的自定义模型*/
+            $this->syn_custom_quickmenu(1);
+            /*end*/
+            $type = [1];
+        }
 
         $menuList = Db::name('quickentry')->where([
-                'type'      => ['IN', [1]],
+                'type'      => ['IN', $type],
                 'groups'    => 0,
                 'status'    => 1,
             ])->order('sort_order asc, id asc')->select();
@@ -468,9 +498,62 @@ class Index extends Base
                 unset($menuList[$key]);
                 continue;
             }
+            if (!empty($this->globalConfig['web_recycle_switch']) && $val['controller'] == 'RecycleBin' && $val['action'] == 'archives_index'){
+                unset($menuList[$key]);
+                continue;
+            }
+            if (is_language() && $this->main_lang != $this->admin_lang) {
+                $controllerArr = ['Weapp','Filemanager','Sitemap','Admin','Member','Seo','Channeltype','Tools'];
+                if (empty($globalConfig['language_split'])) {
+                    $controllerArr[] = 'RecycleBin';
+                }
+                $ctlActArr = ['System@water','System@thumb','System@api_conf'];
+                if (in_array($val['controller'], $controllerArr) || in_array($val['controller'].'@'.$val['action'], $ctlActArr)) {
+                    unset($menuList[$key]);
+                    continue;
+                }
+            }
         }
         $this->assign('menuList',$menuList);
 
+        return $this->fetch();
+    }
+
+    /**
+     *
+     * 插件快捷导航管理
+     */
+    public function ajax_weapp_quickmenu()
+    {
+        if (IS_AJAX_POST) {
+            $checkedids = input('post.checkedids/a', []);
+            $ids = input('post.ids/a', []);
+            $saveData = [];
+            foreach ($ids as $key => $val) {
+                if (in_array($val, $checkedids)) {
+                    $checked = 1;
+                } else {
+                    $checked = 0;
+                }
+                $saveData[$key] = [
+                    'id'            => $val,
+                    'checked'       => $checked,
+                    'quick_sort'    => intval($key) + 1,
+                    'update_time'   => getTime(),
+                ];
+            }
+            if (!empty($saveData)) {
+                $r = model('Weapp')->saveAll($saveData);
+                if ($r !== false) {
+                    $this->success('操作成功', url('Index/welcome'));
+                }
+            }
+            $this->error('操作失败');
+        }
+
+        $where = ['status'=>1];
+        $menuList = Db::name('weapp')->where($where)->order('quick_sort asc, id asc')->select();
+        $this->assign('menuList',$menuList);
         return $this->fetch();
     }
 
@@ -506,157 +589,22 @@ class Index extends Base
     }
 
     /**
-     * 同步受开关控制的导航和内容统计
-     */
-    private function syn_open_quickmenu()
-    {
-        $tpcacheConfig = tpCache('global');
-        $usersConfig = getUsersConfigData('all');
-
-        /*商城中心 - 受本身开关和会员中心开关控制*/
-        if (!empty($tpcacheConfig['web_users_switch']) && !empty($usersConfig['shop_open'])) {
-            $shop_open = 1;
-        } else {
-            $shop_open = 0;
-        }
-        /*end*/
-
-        $saveData = [
-            [
-                'id'    => 31,
-                'status'    => !empty($tpcacheConfig['web_users_switch']) ? 1 : 0,
-                'update_time'   => getTime(),
-            ],
-            [
-                'id'    => 32,
-                'status'    => (1 == $tpcacheConfig['web_weapp_switch']) ? 1 : 0,
-                'update_time'   => getTime(),
-            ],
-            [
-                'id'    => 33,
-                'status'    => !empty($tpcacheConfig['web_users_switch']) ? 1 : 0,
-                'update_time'   => getTime(),
-            ],
-            [
-                'id'    => 34,
-                'status'    => $shop_open,
-                'update_time'   => getTime(),
-            ],
-            [
-                'id'    => 35,
-                'status'    => $shop_open,
-                'update_time'   => getTime(),
-            ],
-        ];
-        model('Quickentry')->saveAll($saveData);
-
-        /*处理模型导航和统计*/
-        $channeltypeRow = Db::name('channeltype')->cache(true,EYOUCMS_CACHE_TIME,"channeltype")->select();
-        foreach ($channeltypeRow as $key => $val) {
-            $updateData = [
-                'groups'    => 1,
-                'vars'  => 'channel='.$val['id'],
-                'status'    => $val['status'],
-                'update_time'   => getTime(),
-            ];
-            Db::name('quickentry')->where([
-                    'vars' => 'channel='.$val['id']
-                ])->update($updateData);
-        }
-        /*end*/
-    }
-
-    /**
-     * 服务器信息
-     */
-    private function get_sys_info()
-    {
-        $sys_info['os']             = PHP_OS;
-        $sys_info['zlib']           = function_exists('gzclose') ? 'YES' : '<font color="red">NO（请开启 php.ini 中的php-zlib扩展）</font>';//zlib
-        $sys_info['safe_mode']      = (boolean) ini_get('safe_mode') ? 'YES' : 'NO';//safe_mode = Off       
-        $sys_info['timezone']       = function_exists("date_default_timezone_get") ? date_default_timezone_get() : "no_timezone";
-        $sys_info['curl']           = function_exists('curl_init') ? 'YES' : '<font color="red">NO（请开启 php.ini 中的php-curl扩展）</font>';  
-        $web_server                 = $_SERVER['SERVER_SOFTWARE'];
-        if (stristr($web_server, 'apache')) {
-            $web_server = 'apache';
-        } else if (stristr($web_server, 'nginx')) {
-            $web_server = 'nginx';
-        } else if (stristr($web_server, 'iis')) {
-            $web_server = 'iis';
-        }
-        $sys_info['web_server']     = $web_server;
-        $sys_info['phpv']           = phpversion();
-        $sys_info['ip']             = serverIP();
-        $sys_info['postsize']       = @ini_get('file_uploads') ? ini_get('post_max_size') :'未知';
-        $sys_info['fileupload']     = @ini_get('file_uploads') ? ini_get('upload_max_filesize') :'未开启';
-        $sys_info['max_ex_time']    = @ini_get("max_execution_time").'s'; //脚本最大执行时间
-        $sys_info['set_time_limit'] = function_exists("set_time_limit") ? true : false;
-        $sys_info['domain']         = $_SERVER['HTTP_HOST'];
-        $sys_info['memory_limit']   = ini_get('memory_limit');
-        $sys_info['version']        = file_get_contents(DATA_PATH.'conf/version.txt');
-        $mysqlinfo = Db::query("SELECT VERSION() as version");
-        $sys_info['mysql_version']  = $mysqlinfo[0]['version'];
-        if(function_exists("gd_info")){
-            $gd = gd_info();
-            $sys_info['gdinfo']     = $gd['GD Version'];
-        }else {
-            $sys_info['gdinfo']     = "未知";
-        }
-        if (extension_loaded('zip')) {
-            $sys_info['zip']     = "YES";
-        } else {
-            $sys_info['zip']     = '<font color="red">NO（请开启 php.ini 中的php-zip扩展）</font>';
-        }
-        $upgradeLogic = new \app\admin\logic\UpgradeLogic();
-        $sys_info['curent_version'] = $upgradeLogic->curent_version; //当前程序版本
-        $sys_info['web_name'] = tpCache('global.web_name');
-
-        return $sys_info;
-    }
-
-    /**
      * 录入商业授权
      */
     public function authortoken()
     {
-        $domain = config('service_ey');
-        $domain = base64_decode($domain);
-        $vaules = array(
-            'client_domain' => urldecode($this->request->host(true)),
-        );
-        $url = $domain.'/index.php?m=api&c=Service&a=check_authortoken&'.http_build_query($vaules);
-        $context = stream_context_set_default(array('http' => array('timeout' => 3,'method'=>'GET')));
-        $response = @file_get_contents($url,false,$context);
-        if (false === $response) {
-            $url = str_replace('http://service', 'https://service', $url);
-            $response = @httpRequest($url);
-        }
-        $params = json_decode($response,true);
-        if (false === $response || (is_array($params) && 1 == $params['code'])) {
-            $web_authortoken = $params['msg'];
-            /*多语言*/
-            if (is_language()) {
-                $langRow = Db::name('language')->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                    ->order('id asc')
-                    ->select();
-                foreach ($langRow as $key => $val) {
-                    tpCache('web', ['web_authortoken'=>$web_authortoken], $val['mark']);
-                }
-            } else { // 单语言
-                tpCache('web', array('web_authortoken'=>$web_authortoken));
-            }
-            /*--end*/
-
+        $is_force = input('param.is_force/d', 0);
+        $redata = verify_authortoken($is_force);
+        if (!empty($redata['code'])) {
             $source = realpath('public/static/admin/images/logo_ey.png');
             $destination = realpath('public/static/admin/images/logo.png');
             @copy($source, $destination);
 
-            delFile(RUNTIME_PATH.'html'); // 清空缓存页面
-            session('isset_author', null);
             adminLog('验证商业授权');
-            $this->success('域名授权成功', request()->baseFile(), '', 1, [], '_parent');
+            $this->success('授权校验成功', $this->request->baseFile(), '', 1, [], '_parent');
         }
-        $this->error('域名（'.$this->request->domain().'）未授权', request()->baseFile(), '', 3, [], '_parent');
+        $msg = empty($redata['msg']) ? '域名（'.$this->request->host(true).'）未授权' : $redata['msg'];
+        $this->error($msg, $this->request->baseFile(), '', 5, [], '_parent');
     }
 
     /**
@@ -667,7 +615,7 @@ class Index extends Base
         $filename = input('param.filename/s', '');
         if (!empty($filename)) {
             $source = realpath(preg_replace('#^'.ROOT_DIR.'/#i', '', $filename)); // 支持子目录
-            $web_is_authortoken = tpCache('web.web_is_authortoken');
+            $web_is_authortoken = tpCache('global.web_is_authortoken');
             if (empty($web_is_authortoken)) {
                 $destination = realpath('public/static/admin/images/logo.png');
             } else {
@@ -708,6 +656,7 @@ class Index extends Base
             $field    = input('param.field/s'); // 修改哪个字段
             $value    = input('param.value/s', '', null); // 修改字段值
             $value    = eyPreventShell($value) ? $value : strip_sql($value);
+            $_POST[$id_name] = $id_value;
             if ('archives' == $table && 'arcrank' == $field) {
                 $ScreeningTable = $table;
                 $ScreeningField = $field;
@@ -731,10 +680,16 @@ class Index extends Base
             }
             foreach ($param as $key => $val) {
                 if ('value' == $key) {
-                    continue;
-                }
-                if (!preg_match('/^([A-Za-z0-9_-]*)$/i', $val)) {
-                    $this->error('数据含有非法入侵字符！');
+                    if (stristr($val, '&lt;') && stristr($val, '&gt;')) {
+                        $val = htmlspecialchars_decode($val);
+                    }
+                    if (preg_match('/<script([^\>]*)>/i', $val)) {
+                        $this->error('数据含有非法入侵字符！');
+                    }
+                } else {
+                    if (!preg_match('/^([A-Za-z0-9_-]*)$/i', $val)) {
+                        $this->error('数据含有非法入侵字符！');
+                    }
                 }
             }
             /*end*/
@@ -860,6 +815,25 @@ class Index extends Base
                     }
                     break;
 
+                // 多语言表
+                case 'language':
+                    {
+                        $return = model('Language')->isValidateStatus($field,$value);
+                        if (is_array($return)) {
+                            $time = !empty($return['time']) ? $return['time'] : 3;
+                            $this->error($return['msg'], null, [], $time);
+                        }
+                    }
+                    break;
+                // 积分商品列表
+                case 'memgift':
+                    {
+                        if ('sort_order' == $field) {
+                            $data['refresh'] = 1;
+                            $data['time'] = 500;
+                        }
+                    }
+                    break;
                 default:
                     # code...
                     break;
@@ -885,12 +859,15 @@ class Index extends Base
             // 根据条件保存修改的数据
             $r = Db::name($table)->where([$id_name => $id_value])->cache(true,null,$table)->save($savedata);
             if ($r !== false) {
-                if ('archives' == $ScreeningTable && 'arcrank' == $ScreeningField) {
+                if (!empty($ScreeningTable) && !empty($ScreeningField) && 'archives' == $ScreeningTable && 'arcrank' == $ScreeningField) {
                     $Result = model('SqlCacheTable')->ScreeningArchives($ScreeningAid, $ScreeningValue);
                     if (!empty($Result)) {
                         $data['refresh'] = 1;
                         $data['time'] = 500;
                     }
+                }elseif ('users' == $table && 'is_activation' == $field){
+                    $data['refresh'] = 1;
+                    $data['time'] = 500;
                 }
                 // 以下代码可以考虑去掉，与行为里的清除缓存重复 AppEndBehavior.php / clearHtmlCache
                 switch ($table) {
@@ -923,18 +900,62 @@ class Index extends Base
                                 'arcrank'=>$value,
                                 'update_time'   => getTime(),
                             ]);
+                            \think\Cache::clear('taglist');
+                            adminLog('文档'.($value >=0 ? '通过审核' : '取消审核').'：'.$id_value);
+                            if (isset($value) && -1 === intval($value)) {
+                                // 系统快捷下架时，积分商品的被动处理
+                                model('ShopPublicHandle')->pointsGoodsPassiveHandle([$id_value]);
+                            }
+                            // 清空sql_cache_table数据缓存表 并 添加查询执行语句到mysql缓存表
+                            Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
+                            model('SqlCacheTable')->InsertSqlCacheTable(true);
                         }
+                        break;
+                    }
+                
+                    // 问答插件
+                    case 'weapp_ask_users_level':
+                    {
+                        if ('ask_is_release' == $field) {
+                            Db::name('users_level')->where('level_id', $id_value)->update([
+                                'ask_is_release'=>$value,
+                                'update_time'   => getTime(),
+                            ]);
+                        } else if ('ask_is_review' == $field) {
+                            Db::name('users_level')->where('level_id', $id_value)->update([
+                                'ask_is_review'=>$value,
+                                'update_time'   => getTime(),
+                            ]);
+                        }
+                        \think\Cache::clear('users_level');
+                        break;
+                    }
+                
+                    // 会员字段
+                    case 'users_list':
+                    case 'users_parameter':
+                    {
+                        \think\Cache::clear('users_parameter');
+                        \think\Cache::clear('users_list');
+                        break;
+                    }
+                
+                    // 广告
+                    case 'ad':
+                    case 'ad_position':
+                    {
+                        \think\Cache::clear('ad_position');
+                        \think\Cache::clear('ad');
                         break;
                     }
                     
                     default:
                         // 清除logic逻辑定义的缓存
                         extra_cache('admin_'.$table.'_list_logic', null);
-                        // 清除一下缓存
-                        // delFile(RUNTIME_PATH.'html'); // 先清除缓存, 否则不好预览
-                        \think\Cache::clear($table);
                         break;
                 }
+                \think\Cache::clear($table);
+                delFile(HTML_ROOT.'index');
                 $this->success('更新成功', $url, $data);
             }
             $this->error('更新失败', null, []);
@@ -946,10 +967,23 @@ class Index extends Base
      */
     public function switch_map()
     {
+        /*权限控制 by 小虎哥*/
+        $auth_role_info = session('admin_info.auth_role_info');
+        if(0 < intval(session('admin_info.role_id')) && ! empty($auth_role_info) && intval($auth_role_info['switch_map']) <= 0){
+            $this->error('您没有操作权限，请联系超级管理员分配权限');
+        }
+        /*--end*/
+        
+        $msg = '操作成功';
+        $seo_pseudo = $this->globalConfig['seo_pseudo'];
+        $web_users_tpl_theme = $this->globalConfig['web_users_tpl_theme'];
+        empty($web_users_tpl_theme) && $web_users_tpl_theme = 'users';
+
         if (IS_POST) {
             $inc_type = input('post.inc_type/s');
             $name = input('post.name/s');
             $value = input('post.value/s');
+            $is_force = input('post.is_force/d'); // 是否强制开启，跳过检测提示，目前用于（多语言、多站点）
 
             $data = [];
             switch ($inc_type) {
@@ -982,11 +1016,11 @@ class Index extends Base
                                 'update_time'   => getTime(),
                             ]);
                     }
-
                     if (in_array($name, ['shop_open'])) {
                         // $data['reload'] = 1;
                         /*检测是否存在订单中心模板*/
-                        if ('v1.0.1' > getVersion('version_themeshop') && !empty($value)) {
+                        $shop_tpl_list = glob("./template/".TPL_THEME."pc/{$web_users_tpl_theme}/shop_*");
+                        if (!empty($value) && empty($shop_tpl_list)) {
                             $is_syn = 1;
                         } else {
                             $is_syn = 0;
@@ -997,7 +1031,6 @@ class Index extends Base
                         if ('shop_open' == $name) {
                             Db::name('users_menu')->where([
                                     'mca'   => 'user/Shop/shop_centre',
-                                    'lang'  => $this->admin_lang,
                                 ])->update([
                                     'status'    => (1 == $value) ? 1 : 0,
                                     'update_time'   => getTime(),
@@ -1007,7 +1040,13 @@ class Index extends Base
                         // 同步会员中心的左侧菜单
                         Db::name('users_menu')->where([
                                 'mca'   => 'user/Pay/pay_consumer_details',
-                                'lang'  => $this->admin_lang,
+                            ])->update([
+                                'status'    => (1 == $value) ? 1 : 0,
+                                'update_time'   => getTime(),
+                            ]);
+                        //同步会员中心手机端底部菜单开关
+                        Db::name('users_bottom_menu')->where([
+                                'mca'   => ['IN',['user/Pay/pay_account_recharge']]
                             ])->update([
                                 'status'    => (1 == $value) ? 1 : 0,
                                 'update_time'   => getTime(),
@@ -1016,38 +1055,41 @@ class Index extends Base
 
                     //同步会员中心手机端底部菜单开关  ---start
                     Db::name('users_bottom_menu')->where([
-                        'mca'   => ['IN',['user/Shop/shop_centre','user/Shop/shop_cart_list',]]
-                    ])->update([
-                        'status'    => (1 == $value) ? 1 : 0,
-                        'update_time'   => getTime(),
-                    ]);
+                            'mca'   => ['IN',['user/Shop/shop_centre','user/Shop/shop_cart_list']]
+                        ])->update([
+                            'status'    => (1 == $value) ? 1 : 0,
+                            'update_time'   => getTime(),
+                        ]);
                     //同步会员中心手机端底部菜单开关  ---end
-
-
                     break;
                 }
 
                 case 'users':
                 {
                     // 会员投稿
+                    if ('users_open_release' == $name) {
+                        if (empty($this->php_servicemeal) && !empty($value)) {
+                            $str = '6K+l5Yqf6IO95Y+q6ZmQ5LqO5o6I5p2D5Z+f5ZCN77yB';
+                            $this->error(base64_decode($str));
+                        }
+                    }
+                    
                     //同步会员中心手机端底部菜单开关  ---start
                     Db::name('users_bottom_menu')->where([
-                        'mca'   => ['IN',['user/UsersRelease/article_add','user/UsersRelease/release_centre',]]
-                    ])->update([
-                        'status'    => (1 == $value) ? 1 : 0,
-                        'update_time'   => getTime(),
-                    ]);
+                            'mca'   => ['IN',['user/UsersRelease/article_add','user/UsersRelease/release_centre']]
+                        ])->update([
+                            'status'    => (1 == $value) ? 1 : 0,
+                            'update_time'   => getTime(),
+                        ]);
                     //同步会员中心手机端底部菜单开关  ---end
-
                     // 会员投稿
                     $r = Db::name('users_menu')->where([
-                        'mca'  => 'user/UsersRelease/release_centre',
-                        'lang' => $this->admin_lang,
-                    ])->update([
-                        'status'      => (1 == $value) ? 1 : 0,
-                        'update_time' => getTime(),
-                    ]);
-                    if ($r) {
+                            'mca'  => 'user/UsersRelease/release_centre',
+                        ])->update([
+                            'status'      => (1 == $value) ? 1 : 0,
+                            'update_time' => getTime(),
+                        ]);
+                    if ($r !== false) {
                         getUsersConfigData($inc_type, [$name => $value]);
 
                         if (1 == $value) {
@@ -1073,21 +1115,20 @@ class Index extends Base
                     // 会员升级
                     //同步会员中心手机端底部菜单开关  ---start
                     Db::name('users_bottom_menu')->where([
-                        'mca'   => ['IN',['user/Level/level_centre','user/Pay/pay_account_recharge',]]
-                    ])->update([
-                        'status'    => (1 == $value) ? 1 : 0,
-                        'update_time'   => getTime(),
-                    ]);
+                            'mca'   => ['IN',['user/Level/level_centre','user/Pay/pay_account_recharge']]
+                        ])->update([
+                            'status'    => (1 == $value) ? 1 : 0,
+                            'update_time'   => getTime(),
+                        ]);
                     //同步会员中心手机端底部菜单开关  ---end
 
                     // 会员升级
                     $r = Db::name('users_menu')->where([
-                        'mca'  => 'user/Level/level_centre',
-                        'lang' => $this->admin_lang,
-                    ])->update([
-                        'status'      => (1 == $value) ? 1 : 0,
-                        'update_time' => getTime(),
-                    ]);
+                            'mca'  => 'user/Level/level_centre',
+                        ])->update([
+                            'status'      => (1 == $value) ? 1 : 0,
+                            'update_time' => getTime(),
+                        ]);
                     if ($r) {
                         getUsersConfigData($inc_type, [$name => $value]);
 
@@ -1111,6 +1152,18 @@ class Index extends Base
 
                 case 'web':
                 {
+                    if (empty($is_force)) {
+                        if ($name == 'web_language_switch' && $value == 1) { // 多语言开关
+                            if (!empty($this->globalConfig['web_citysite_open'])) {
+                                $this->error('强制开启多语言，会自动关闭城市分站。');
+                            }
+                        } else if ($name == 'web_citysite_open' && $value == 1) { // 多站点开关
+                            if (!empty($this->globalConfig['web_language_switch'])) {
+                                $this->error('强制开启城市分站，会自动关闭多语言。');
+                            }
+                        }
+                    }
+
                     /*多语言*/
                     if (is_language()) {
                         $langRow = \think\Db::name('language')->order('id asc')
@@ -1127,7 +1180,7 @@ class Index extends Base
                     if (in_array($name, ['web_users_switch'])) {
                         // $data['reload'] = 1;
                         /*检测是否存在会员中心模板*/
-                        if ('v1.0.1' > getVersion('version_themeusers') && !empty($value)) {
+                        if (!empty($value) && !file_exists('template/'.TPL_THEME.'pc/'.$web_users_tpl_theme)) {
                             $is_syn = 1;
                         } else {
                             $is_syn = 0;
@@ -1146,12 +1199,68 @@ class Index extends Base
                         model('Language')->setLangNum();
                         // 重新生成sitemap.xml
                         sitemap_all();
+                        // 强制关闭多站点
+                        if (!empty($is_force)) {
+                            $data['reload'] = 1;
+                            /*多语言*/
+                            if (is_language()) {
+                                $langRow = \think\Db::name('language')->order('id asc')
+                                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                                    ->select();
+                                foreach ($langRow as $key => $val) {
+                                    tpCache('web', ['web_citysite_open' => 0], $val['mark']);
+                                }
+                            } else { // 单语言
+                                tpCache('web', ['web_citysite_open' => 0]);
+                            }
+                            /*--end*/
+                            model('Citysite')->setCitysiteOpen();
+                        }
+                        // 清除页面缓存
+                        delFile(HTML_ROOT);
+                    } else if ($name == 'web_citysite_open') { // 多城市站点开关
+                        model('Citysite')->setCitysiteOpen();
+                        // 强制关闭多语言
+                        if (!empty($is_force)) {
+                            $data['reload'] = 1;
+                            $msg = "已开启城市分站<br/>1、仅支持动态URL、伪静态这两种模式；<br/>2、可在下方的【高级扩展】进入城市分站；";
+                        }
+                        /*多语言*/
+                        if (is_language()) {
+                            $langRow = \think\Db::name('language')->order('id asc')
+                                ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                                ->select();
+                            foreach ($langRow as $key => $val) {
+                                tpCache('web', ['web_language_switch' => 0], $val['mark']);
+                                if (!empty($value) && 2 == $seo_pseudo) {
+                                    tpCache('seo', ['seo_pseudo'=>1, 'seo_dynamic_format'=>1], $val['mark']);
+                                    if (file_exists('./index.html')) {
+                                        @unlink('./index.html');
+                                    }
+                                }
+                            }
+                        } else { // 单语言
+                            tpCache('web', ['web_language_switch' => 0]);
+                            if (!empty($value) && 2 == $seo_pseudo) {
+                                tpCache('seo', ['seo_pseudo'=>1, 'seo_dynamic_format'=>1]);
+                                if (file_exists('./index.html')) {
+                                    @unlink('./index.html');
+                                }
+                            }
+                        }
+                        /*--end*/
+                        // 统计多语言数量
+                        model('Language')->setLangNum();
+                        // 重新生成sitemap.xml
+                        sitemap_all();
+                        // 清除页面缓存
+                        delFile(HTML_ROOT);
                     }
                     break;
                 }
             }
 
-            $this->success('操作成功', null, $data);
+            $this->success($msg, null, $data);
         }
 
         /*代理贴牌功能限制-s*/
@@ -1162,10 +1271,11 @@ class Index extends Base
         }
         $this->assign('weapp_switch', $weapp_switch);
         /*代理贴牌功能限制-e*/
-        
-        $this->assign('globalConfig', $this->globalConfig);
 
         $UsersConfigData = getUsersConfigData('all');
+        if (file_exists('./data/conf/memgift_open.txt')) {
+            $UsersConfigData['memgift_open'] = 1;
+        }
         $this->assign('userConfig',$UsersConfigData);
 
         $is_online = 0;
@@ -1175,7 +1285,7 @@ class Index extends Base
         $this->assign('is_online',$is_online);
 
         /*检测是否存在会员中心模板*/
-        if ('v1.0.1' > getVersion('version_themeusers')) {
+        if (!file_exists('template/'.TPL_THEME.'pc/'.$web_users_tpl_theme)) {
             $is_themeusers_exist = 1;
         } else {
             $is_themeusers_exist = 0;
@@ -1184,7 +1294,8 @@ class Index extends Base
         /*--end*/
 
         /*检测是否存在商城中心模板*/
-        if ('v1.0.1' > getVersion('version_themeshop')) {
+        $shop_tpl_list = glob("./template/".TPL_THEME."pc/{$web_users_tpl_theme}/shop_*");
+        if (empty($shop_tpl_list)) {
             $is_themeshop_exist = 1;
         } else {
             $is_themeshop_exist = 0;
@@ -1205,8 +1316,62 @@ class Index extends Base
         $this->assign('pay_list', $pay);
         /*--end*/
 
-        $recycle_switch = tpSetting('recycle.recycle_switch');
-        $this->assign('recycle_switch', $recycle_switch);//回收站
+        //获取所有权限列表（id为键值的list格式）
+        $all_menu_tree = getAllMenu();
+        $all_menu_list = tree_to_list($all_menu_tree,'child','id');
+        $this->assign('all_menu_list',$all_menu_list);
+
+        //选中的且需要展示在“当前导航”菜单栏目
+        $admin_menu_list = Db::name("admin_menu")->field("menu_id,controller_name,action_name,title,icon,is_menu,is_switch")->where(['is_menu'=>1,'status'=>1])->order("sort_order asc,update_time asc")->select();
+        $admin_menu_id_arr = [];  //在“当前导航”栏目显示菜单集合
+        foreach ($admin_menu_list as $key=>$val){
+            $admin_menu_id_arr[] = $val['menu_id'];
+            
+            // 其他语言不显示留言管理
+            /*if ($this->admin_lang != $this->main_lang) {
+                foreach ([2004018] as $_k => $_v) {
+                    if ($_v == $val['menu_id']) {
+                        unset($admin_menu_list[$key]);
+                    }
+                }
+            }*/
+        }
+        //用户手动关闭的权限集合
+        $this->assign('admin_menu_id_arr', $admin_menu_id_arr);
+        $menu_list = getAdminMenuList($admin_menu_list);
+        $this->assign('menu_list',$menu_list);
+        //获取因为没有开启相关模块没有权限的节点（用于初始化）
+        $not_role_menu_id_arr = get_not_role_menu_id();
+        $this->assign('not_role_menu_id_arr',$not_role_menu_id_arr);
+
+        //模块开关与入口关联(用于动态js)
+        $global = include APP_PATH.MODULE_NAME.'/conf/global.php';
+        $this->assign('module_rele_menu',$global['module_rele_menu']);
+        $this->assign('module_default_menu',$global['module_default_menu']);
+        $this->assign('module_reverse_menu',$global['module_reverse_menu']);
+
+        // 可视编辑入口
+        $is_show_uiset = 0;
+        if (file_exists(ROOT_PATH.'template/'.TPL_THEME.'pc/uiset.txt') || file_exists(ROOT_PATH.'template/'.TPL_THEME.'mobile/uiset.txt')) {
+            $is_show_uiset = 1;
+        }
+        $this->assign('is_show_uiset', $is_show_uiset);
+        //创始人才有权限控制
+        $admin_info = session('admin_info');
+        $is_founder = !empty($admin_info['is_founder']) ? $admin_info['is_founder'] : 0;
+        $this->assign('is_founder', $is_founder);
+
+        $security_ask_open = (int)tpSetting('security.security_ask_open');
+        $this->assign('security_ask_open', $security_ask_open);
+
+        $shopLogic = new \app\admin\logic\ShopLogic;
+        // 列出营销功能里已使用的模块
+        $marketFunc = $shopLogic->marketLogic();
+        $this->assign('marketFunc', $marketFunc);
+        // 列出功能地图里已使用的模块
+        $useFunc = $shopLogic->useFuncLogic();
+        $this->assign('useFunc', $useFunc);
+
         return $this->fetch();
     }
 
@@ -1221,10 +1386,493 @@ class Index extends Base
             $ArchivesMaxID = Db::name('archives')->max('aid');
             if ($ArchivesMaxID != $CacheMaxID) {
                 /*清空sql_cache_table数据缓存表 并 添加查询执行语句到mysql缓存表*/
-                Db::name('sql_cache_table')->query('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
+                Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
                 model('SqlCacheTable')->InsertSqlCacheTable(true);
                 /* END */
             }
         }
+    }
+
+    /**
+     * 主题风格
+     * @return [type] [description]
+     */
+    public function theme_index()
+    {
+        // 主题风格
+        // $list = Db::name('admin_theme')->where(['theme_type'=>1])->order('is_system desc, sort_order asc, theme_id asc')->select();
+        // $this->assign('list', $list);
+
+        // 登录页自定义模板
+        $login_tplist = glob('application/admin/template/theme/login_*.htm');
+        foreach ($login_tplist as $key => $val) {
+            $val = preg_replace('/^(.*)login_([\w\-]+)\.htm$/i', 'login_${2}.htm', $val);
+            $login_tplist[$key] = $val;
+        }
+        $this->assign('login_tplist', $login_tplist);
+
+        // 欢迎页主题风格
+        $welcome_list = Db::name('admin_theme')->where(['theme_type'=>2])->order('is_system desc, sort_order asc, theme_id asc')->select();
+        foreach ($welcome_list as $key => $val) {
+            $val['disabled'] = $val['disabled_tips'] = '';
+            if ($val['welcome_tplname'] == 'welcome_shop.htm') {
+                if (empty($this->usersConfig['shop_open'])) {
+                    $val['disabled'] = ' disabled="disabled" readonly="true" ';
+                    $val['disabled_tips'] = ' title="需开启商城中心才能使用" ';
+                }
+            } else if ($val['welcome_tplname'] == 'welcome_taskflow.htm') {
+                $weappRow = model('weapp')->getWeappList('TaskFlow');
+                if (!is_dir('./weapp/TaskFlow/') || empty($weappRow['status'])) {
+                    $val['disabled'] = ' disabled="disabled" readonly="true" ';
+                    $val['disabled_tips'] = ' title="需安装【工作任务流】插件才能使用" ';
+                }
+            }
+            $welcome_list[$key] = $val;
+        }
+        $this->assign('welcome_list', $welcome_list);
+
+        return $this->fetch();
+    }
+
+    /**
+     * 主题设置 - 保存
+     * @return [type] [description]
+     */
+    public function theme_conf()
+    {
+        if (IS_POST) {
+            $post = input('post.');
+            $webData = [];
+            $image_ext = config('global.image_ext');
+            $image_ext_arr = explode(',', $image_ext);
+            foreach ($post as $key => $val) {
+                $val = trim($val);
+                if (in_array($key, ['admin_logo','login_logo','login_bgimg'])) { // 后台LOGO/登录LOGO
+                    $source = preg_replace('#^'.$this->root_dir.'#i', '', $val); // 支持子目录
+                    $source_ext = pathinfo('.'.$source, PATHINFO_EXTENSION);
+                    if (!empty($source_ext) && !in_array($source_ext, $image_ext_arr)) {
+                        $this->error('上传图片扩展名错误！');
+                    }
+                }
+                if ('theme_id' == $key) {
+                    $key = 'web_theme_styleid';
+                } else if ('login_logo' == $key) {
+                    $key = 'web_loginlogo';
+                } else if ('login_bgimg_model' == $key) {
+                    $key = 'web_loginbgimg_model';
+                } else if ('login_bgimg' == $key) {
+                    $key = 'web_loginbgimg';
+                } else if ('theme_color_model' == $key) {
+                    $key = 'web_theme_color_model';
+                } else if ('theme_main_color' == $key) {
+                    $key = 'web_theme_color';
+                } else if ('theme_assist_color' == $key) {
+                    $key = 'web_assist_color';
+                } else if ('admin_logo' == $key) {
+                    $key = 'web_adminlogo';
+                } else if ('login_tplname' == $key) {
+                    $key = 'web_theme_login_tplname';
+                }
+                $webData[$key] = $val;
+            }
+            $webData['web_theme_style_uptime'] = getTime();
+            if (!empty($webData)) {
+                /*多语言*/
+                if (is_language()) {
+                    $langRow = \think\Db::name('language')->order('id asc')
+                        ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                        ->select();
+                    foreach ($langRow as $key => $val) {
+                        tpCache('web', $webData, $val['mark']);
+                    }
+                } else {
+                    tpCache('web', $webData);
+                }
+                /*--end*/
+                $ajaxLogic = new \app\admin\logic\AjaxLogic;
+                $ajaxLogic->admin_update_theme_css();
+            }
+
+            $is_change = 0;
+            // $theme_info = Db::name('admin_theme')->field('theme_title,theme_pic,add_time,update_time', true)->where(['theme_id'=>$post['theme_id']])->find();
+            // foreach ($post as $key => $val) {
+            //     if (in_array($key, ['login_logo','login_bgimg','admin_logo'])) {
+            //         $val = handle_subdir_pic($val);
+            //         $theme_info[$key] = handle_subdir_pic($theme_info[$key]);
+            //     }
+            //     if (isset($theme_info[$key]) && $theme_info[$key] != $val) {
+            //         $is_change = 1;
+            //         break;
+            //     }
+            // }
+            // if (empty($post['is_select_theme'])) {
+            //     $is_change = 0;
+            // }
+
+            $this->success('操作成功，需刷新后台看效果！', null, ['is_change'=>$is_change]);
+        }
+    }
+
+    /**
+     * 欢迎页设置 - 保存
+     * @return [type] [description]
+     */
+    public function theme_welcome_conf()
+    {
+        if (IS_POST) {
+            $post = input('post.');
+            $webData = ['web_theme_welcome_tplname'=>$post['welcome_tplname']];
+            /*多语言*/
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('web', $webData, $val['mark']);
+                }
+            } else {
+                tpCache('web', $webData);
+            }
+            /*--end*/
+            $this->success('操作成功');
+        }
+    }
+
+    /**
+     * 新增主题风格
+     * @return [type] [description]
+     */
+    public function theme_add_login()
+    {
+        if (IS_POST) {
+            $post = input('post.');
+            $post['theme_title'] = trim($post['theme_title']);
+            if (empty($post['theme_title'])) {
+                $this->error('主题名称不能为空！');
+            }
+            if (isset($post['theme_id'])) {
+                unset($post['theme_id']);
+            }
+            $newData = [
+                'theme_type'=>1,
+                'is_system' => 0,
+                'sort_order' => 100,
+                'add_time' => getTime(),
+                'update_time' => getTime(),
+            ];
+            $newData = array_merge($post, $newData);
+            $theme_id = Db::name('admin_theme')->insertGetId($newData);
+            if ($theme_id !== false) {
+                /*多语言*/
+                if (is_language()) {
+                    $langRow = \think\Db::name('language')->order('id asc')
+                        ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                        ->select();
+                    foreach ($langRow as $key => $val) {
+                        tpCache('web', ['web_theme_styleid'=>$theme_id], $val['mark']);
+                    }
+                } else {
+                    tpCache('web', ['web_theme_styleid'=>$theme_id]);
+                }
+                /*--end*/
+                $this->success('操作成功，需刷新后台看效果！');
+            }
+            $this->error('操作失败');
+        }
+    }
+
+    /**
+     * 获取主题风格信息
+     * @return [type] [description]
+     */
+    public function ajax_get_theme_info()
+    {
+        $theme_id = input('param.theme_id/d');
+        $info = Db::name('admin_theme')->where(['theme_id'=>$theme_id])->find();
+        $this->success('读取成功', null, ['info'=>$info]);
+    }
+
+    /**
+     * 生成随机欢迎页文件名，确保唯一性
+     */
+    private function theme_rand_filename($filename = '', $prefix = 'style', $filename_list = [])
+    {
+        if (empty($filename)) {
+            $filename = $prefix . mt_rand(100,999);
+        }
+        if (in_array($filename, $filename_list)) {
+            $filename = $prefix . mt_rand(100,999);
+            return $this->theme_rand_filename($filename, $prefix, $filename_list);
+        }
+
+        return $filename;
+    }
+
+    //ajax获取任务流数据
+    public function get_task_list()
+    {
+        $this->eyouCmsLogic->get_task_list();
+    }
+
+    /**
+     * 创建指定模板文件
+     * @return [type] [description]
+     */
+    public function ajax_theme_tplfile_add()
+    {
+        $type = input('param.type/s', '');
+        $tpldirpath = '';
+        if ('welcome' == $type) {
+            $select_input_id = 'welcome_tplname';
+            $tpldirpath = '/application/admin/template/theme';
+        } else if ('login' == $type) {
+            $select_input_id = 'login_tplname';
+            $tpldirpath = '/application/admin/template/theme';
+        }
+        $view_suffix = config('template.view_suffix');
+
+        if (IS_POST) {
+            $post = input('post.', '', null);
+            $content = input('post.content', '', null);
+            $post['filename'] = trim($post['filename']);
+            $post['theme_title'] = empty($post['theme_title']) ? '' : trim($post['theme_title']);
+            if ('welcome' == $post['type']) {
+                if (empty($post['theme_title'])) {
+                    $this->error('模板名称不能为空！');
+                }
+            }
+            if (!empty($post['filename'])) {
+                if (!preg_match("/^[\w\-\_]{1,}$/u", $post['filename'])) {
+                    $this->error('文件名称只允许字母、数字、下划线、连接符的任意组合！');
+                }
+                $filename = "{$type}_{$post['filename']}.{$view_suffix}";
+            } else {
+                $this->error('文件名称不能为空！');
+            }
+
+            if (file_exists(ROOT_PATH.ltrim($tpldirpath, '/').'/'.$filename)) {
+                $this->error('文件名称已经存在，请重新命名！', null, ['focus'=>'filename']);
+            }
+
+            $nosubmit = input('param.nosubmit/d');
+            if (1 == $nosubmit) {
+                $this->success('检测通过');
+            }
+
+            if (empty($content)) {
+                $this->error('HTML代码不能为空！');
+            }
+
+            $filemanagerLogic = new \app\admin\logic\FilemanagerLogic;
+            $file = ROOT_PATH.trim($tpldirpath, '/').'/'.$filename;
+            if (!is_writable(dirname($file))) {
+                $this->error("请把以下目录设置为可写入权限<br/>{$tpldirpath}");
+            }
+            $ext = preg_replace('/^(.*)\.([^\.]+)$/i', '${2}', $filename);
+            if ('htm' == $ext) {
+                $content = htmlspecialchars_decode($content, ENT_QUOTES);
+                if (preg_match('#<([^?]*)\?php#i', $content) || preg_match('#<\?(\s*)=#i', $content) || (preg_match('#<\?#i', $content) && preg_match('#\?>#i', $content)) || preg_match('#\{eyou\:php([^\}]*)\}#i', $content) || preg_match('#\{php([^\}]*)\}#i', $content) || preg_match('#(\s+)language(\s*)=(\s*)("|\')?php("|\')?#i', $content)) {
+                    $this->error('模板里不允许有php语法，为了安全考虑，请通过FTP工具进行编辑上传。');
+                }
+                foreach ($filemanagerLogic->disableFuns as $key => $val) {
+                    $val_new = msubstr($val, 0, 1).'-'.msubstr($val, 1);
+                    $content = preg_replace("/(@)?".$val."(\s*)\(/i", "{$val_new}(", $content);
+                }
+            }
+            $fp = fopen($file, "w");
+            fputs($fp, $content);
+            fclose($fp);
+
+            $theme_id = 0;
+            if ('welcome' == $post['type']) {
+                $newData = [
+                    'theme_type'=>2,
+                    'theme_title'=>$post['theme_title'],
+                    'theme_pic'=>ROOT_DIR."/public/static/admin/images/theme/theme_pic_default.png",
+                    'welcome_tplname'=>$filename,
+                    'is_system' => 0,
+                    'sort_order' => 100,
+                    'add_time' => getTime(),
+                    'update_time' => getTime(),
+                ];
+                $theme_id = Db::name('admin_theme')->insertGetId($newData);
+            }
+            $data = [
+                'filename'=>$filename,
+                'type'=>$type,
+                'select_input_id'=>$select_input_id,
+                'theme_id'=>$theme_id,
+                'theme_title'=>$post['theme_title'],
+            ];
+            $this->success('操作成功', null, $data);
+        }
+
+        $content = '';
+        if ('welcome' == $type) {
+            $content = file_get_contents(APP_PATH.'admin/template/index/welcome.htm');
+        } else if ('login' == $type) {
+            $content = file_get_contents(APP_PATH.'admin/template/admin/login.htm');
+        }
+        $this->assign('content', $content);
+        $this->assign('type', $type);
+        $this->assign('tpldirpath', $tpldirpath);
+        return $this->fetch('theme_tplfile_add');
+    }
+
+    /**
+     * 编辑指定模板文件
+     * @return [type] [description]
+     */
+    public function ajax_theme_tplfile_edit()
+    {
+        $type = input('param.type/s', '');
+        if ('welcome' == $type) {
+            $select_input_id = 'welcome_tplname';
+        } else if ('login' == $type) {
+            $select_input_id = 'login_tplname';
+        }
+        $tpldirpath = '/application/admin/template/theme';
+        $view_suffix = config('template.view_suffix');
+
+        if (IS_POST) {
+            $post = input('post.', '', null);
+            if (!empty($post['theme_id'])) {
+                $content = input('post.content', '', null);
+                $post['filename'] = trim($post['filename']);
+                $post['theme_title'] = empty($post['theme_title']) ? '' : trim($post['theme_title']);
+                if ('welcome' == $post['type']) {
+                    if (empty($post['theme_title'])) {
+                        $this->error('模板名称不能为空！');
+                    }
+                }
+                if (!empty($post['filename'])) {
+                    if (!preg_match("/^[\w\-\_]{1,}$/u", $post['filename'])) {
+                        $this->error('文件名称只允许字母、数字、下划线、连接符的任意组合！');
+                    }
+                    $filename = "{$type}_{$post['filename']}.{$view_suffix}";
+                } else {
+                    $this->error('文件名称不能为空！');
+                }
+
+                if ($filename != $post['welcome_tplname'] && file_exists(ROOT_PATH.ltrim($tpldirpath, '/').'/'.$filename)) {
+                    $this->error('文件名称已经存在，请重新命名！', null, ['focus'=>'filename']);
+                }
+
+                $nosubmit = input('param.nosubmit/d');
+                if (1 == $nosubmit) {
+                    $this->success('检测通过');
+                }
+
+                if (empty($content)) {
+                    $this->error('HTML代码不能为空！');
+                }
+
+                $filemanagerLogic = new \app\admin\logic\FilemanagerLogic;
+                $file = ROOT_PATH.trim($tpldirpath, '/').'/'.$filename;
+                if (!is_writable(dirname($file))) {
+                    $this->error("请把以下目录设置为可写入权限<br/>{$tpldirpath}");
+                }
+                $ext = preg_replace('/^(.*)\.([^\.]+)$/i', '${2}', $filename);
+                if ('htm' == $ext) {
+                    $content = htmlspecialchars_decode($content, ENT_QUOTES);
+                    if (preg_match('#<([^?]*)\?php#i', $content) || preg_match('#<\?(\s*)=#i', $content) || (preg_match('#<\?#i', $content) && preg_match('#\?>#i', $content)) || preg_match('#\{eyou\:php([^\}]*)\}#i', $content) || preg_match('#\{php([^\}]*)\}#i', $content) || preg_match('#(\s+)language(\s*)=(\s*)("|\')?php("|\')?#i', $content)) {
+                        $this->error('模板里不允许有php语法，为了安全考虑，请通过FTP工具进行编辑上传。');
+                    }
+                    foreach ($filemanagerLogic->disableFuns as $key => $val) {
+                        $val_new = msubstr($val, 0, 1).'-'.msubstr($val, 1);
+                        $content = preg_replace("/(@)?".$val."(\s*)\(/i", "{$val_new}(", $content);
+                    }
+                }
+                $fp = fopen($file, "w");
+                if ($fp != false && fwrite($fp, $content)) {
+                    fclose($fp);
+                    if ($filename != $post['welcome_tplname']) {
+                        rename(ROOT_PATH.ltrim($tpldirpath, '/').'/'.$post['welcome_tplname'], ROOT_PATH.ltrim($tpldirpath, '/').'/'.$filename);
+                    }
+                }
+
+                if ('welcome' == $post['type']) {
+                    $newData = [
+                        'theme_type'=>2,
+                        'theme_title'=>$post['theme_title'],
+                        'theme_pic'=>ROOT_DIR."/public/static/admin/images/theme/theme_pic_default.png",
+                        'welcome_tplname'=>$filename,
+                        'is_system' => 0,
+                        'update_time' => getTime(),
+                    ];
+                    Db::name('admin_theme')->where(['theme_id'=>$post['theme_id']])->update($newData);
+                }
+                $data = [
+                    'filename'=>$filename,
+                    'type'=>$type,
+                    'select_input_id'=>$select_input_id,
+                    'theme_id'=>$post['theme_id'],
+                    'theme_title'=>$post['theme_title'],
+                ];
+                $this->success('操作成功', null, $data);
+            }
+            $this->error('操作失败');
+        }
+
+        $theme_id = input('param.theme_id/d', 0);
+        $info = Db::name('admin_theme')->where(['theme_id'=>$theme_id])->find();
+        if (empty($info)) {
+            $this->error('数据不存在，请联系管理员！');
+            exit;
+        }
+        if (!empty($info['is_system'])) {
+            $this->error('内置模板禁止编辑，系统更新会覆盖');
+        }
+
+        $is_default_theme = 0;
+        if (!empty($info['is_system']) && empty($info['welcome_tplname'])) {
+            $is_default_theme = 1;
+            if ('welcome' == $type) {
+                $content = file_get_contents(APP_PATH."admin/template/index/{$type}.{$view_suffix}");
+                $info['welcome_tplname'] = "welcome.{$view_suffix}";
+            } else if ('login' == $type) {
+                $viewfile = 'login';
+                if (2 <= $this->php_servicemeal) {
+                    $viewfile = 'login_zy';
+                }
+                $content = file_get_contents(APP_PATH."admin/template/admin/{$viewfile}.{$view_suffix}");
+                $info['welcome_tplname'] = "{$viewfile}.{$view_suffix}";
+            }
+        } else {
+            $content = file_get_contents(APP_PATH."admin/template/theme/{$info['welcome_tplname']}");
+        }
+        $info['filename'] = preg_replace('/^'.$type.'(_([^\.]+))?\.'.$view_suffix.'$/i', '${2}', $info['welcome_tplname']);
+        $this->assign('content', $content);
+        $this->assign('type', $type);
+        $this->assign('tpldirpath', $tpldirpath);
+        $this->assign('is_default_theme', $is_default_theme);
+        $this->assign('info', $info);
+        return $this->fetch('theme_tplfile_edit');
+    }
+
+    /**
+     * 删除指定模板文件
+     */
+    public function ajax_theme_tplfile_del()
+    {
+        $theme_id = input('param.theme_id/d');
+        if (IS_POST && !empty($theme_id)) {
+            $type = input('param.type/s', '');
+            $select_input_id = '';
+            if ('welcome' == $type) {
+                $select_input_id = 'welcome_tplname';
+            } else if ('login' == $type) {
+                $select_input_id = 'login_tplname';
+            }
+            $tpldirpath = '/application/admin/template/theme';
+            $info = Db::name('admin_theme')->where(['theme_id'=>$theme_id])->find();
+            $r = Db::name('admin_theme')->where(['theme_id'=>$theme_id])->delete();
+            if ($r !== false) {
+                @unlink('.'.$tpldirpath.'/'.$info['welcome_tplname']);
+                adminLog('删除欢迎页模板：'.$info['theme_title']);
+                $this->success('删除成功', null, ['select_input_id'=>$select_input_id]);
+            }
+        }
+        $this->error('删除失败');
     }
 }

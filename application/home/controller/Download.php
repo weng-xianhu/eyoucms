@@ -13,14 +13,17 @@
 
 namespace app\home\controller;
 
+use think\Db;
+
 class Download extends Base
 {
     // 模型标识
     public $nid = 'download';
     // 模型ID
     public $channeltype = '';
-    
-    public function _initialize() {
+
+    public function _initialize()
+    {
         parent::_initialize();
         $channeltype_list = config('global.channeltype_list');
         $this->channeltype = $channeltype_list[$this->nid];
@@ -30,28 +33,28 @@ class Download extends Base
     {
         $tid_tmp = $tid;
         $seo_pseudo = config('ey_config.seo_pseudo');
-    	if (empty($tid)) {
+        if (empty($tid)) {
             $map = array(
-                'channeltype'   => $this->channeltype,
+                'channeltype' => $this->channeltype,
                 'parent_id' => 0,
                 'is_hidden' => 0,
-                'status'    => 1,
+                'status' => 1,
             );
-    	} else {
+        } else {
             if (3 == $seo_pseudo) {
-                $map = array('dirname'=>$tid);
+                $map = array('dirname' => $tid);
             } else {
                 if (!is_numeric($tid) || strval(intval($tid)) !== strval($tid)) {
-                    abort(404,'页面不存在');
+                    abort(404, '页面不存在');
                 }
-                $map = array('id'=>$tid);
+                $map = array('id' => $tid);
             }
         }
         $map['lang'] = $this->home_lang; // 多语言
         $row = M('arctype')->field('id,dirname')->where($map)->order('sort_order asc')->limit(1)->find();
         $tid = !empty($row['id']) ? intval($row['id']) : 0;
         $dirname = !empty($row['dirname']) ? $row['dirname'] : '';
-        
+
         /*301重定向到新的伪静态格式*/
         $this->jumpRewriteFormat($tid, $dirname, 'lists');
         /*--end*/
@@ -70,18 +73,18 @@ class Download extends Base
         $param = I('param.');
         $aid = !empty($param['aid']) ? intval($param['aid']) : '';
         if (empty($aid)) {
-            abort(404,'页面不存在');
+            abort(404, '页面不存在');
         }
         $result = model('Download')->getInfo($aid);
         if (empty($result)) {
-            abort(404,'页面不存在');
+            abort(404, '页面不存在');
         } elseif ($result['arcrank'] == -1) {
             $this->success('待审核稿件，你没有权限阅读！');
             exit;
         }
         // 外部链接跳转
         if ($result['is_jump'] == 1) {
-            header('Location: '.$result['jumplinks']);
+            header('Location: ' . $result['jumplinks']);
             exit;
         }
         /*--end*/

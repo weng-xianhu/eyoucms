@@ -1,12 +1,54 @@
+// 当分页不足以显示隐藏div
+$(function() {
+    if (parseInt($('div.dataTables_paginate li').length) > 0) {
+        $('div.dataTables_paginate').show();
+    }
+});
 
-function showErrorMsg(msg){
-    layer.msg(msg, {icon: 5,time: 2000});
+function showErrorMsg(msg, callback) {
+    layer.msg(msg, {icon: 5,time: 2000}, function(index) {
+        if (typeof callback !== 'undefined') callback();
+        layer.close(index);
+    });
 }
-function showErrorAlert(msg, icon){
+
+function showErrorAlert(msg, icon, callback) {
     if (!icon && icon != 0) {
         icon = 5;
     }
-    layer.alert(msg, {icon: icon, title: false, closeBtn: false});
+    layer.alert(msg, {icon: icon, title: false, closeBtn: false}, function(index) {
+        if (typeof callback !== 'undefined') callback();
+        layer.close(index);
+    });
+}
+
+function showMbErrorMsg(msg) {
+    layer.open({
+        content: msg, skin: 'footer'
+    });
+}
+
+function showMbErrorAlert(msg) {
+    layer.open({
+        content: '<font color="red">提示：'+msg+'</font>', btn: '确定'
+    });
+}
+
+function showSuccessMsg(msg, callback) {
+    layer.msg(msg, {time: 1500}, function(index) {
+        if (typeof callback !== 'undefined') callback();
+        layer.close(index);
+    });
+}
+
+function showSuccessAlert(msg, icon, callback) {
+    if (!icon && icon != 0) {
+        icon = 1;
+    }
+    layer.alert(msg, {icon: icon, title: false, closeBtn: false}, function(index) {
+        if (typeof callback !== 'undefined') callback();
+        layer.close(index);
+    });
 }
 
 /*
@@ -53,7 +95,7 @@ function GetUploadify(num,elementid,path,callback,url,title,is_mobile)
             content: upurl
          });
     } else {
-        layer.alert('允许上传0张图片', {icon:5});
+        showErrorAlert('允许上传0张图片');
         return false;
     }
 }
@@ -123,11 +165,22 @@ function layer_loading(msg){
     return loading;
 }
 
+// 加载层
+function layer_loading_mini(icon){
+    //loading层
+    if (!icon) {
+        icon = 2;
+    }
+    var loading = layer.load(icon, {
+        shade: [0.2,'#000'] //0.1透明度的白色背景
+    });
+
+    return loading;
+}
+
 // 渲染编辑器
-function showEditor_1597892187(elemtid){
-
+function showEditor_1597892187(elemtid) {
     var content = '';
-
     try{
         content = UE.getEditor(elemtid).getContent();
         UE.getEditor(elemtid).destroy();
@@ -154,4 +207,186 @@ function showEditor_1597892187(elemtid){
     };
     
     eval("ue_"+elemtid+" = UE.getEditor(elemtid, options);ue_"+elemtid+".ready(function() {ue_"+elemtid+".setContent(content);});");
+}
+
+/**
+ * 设置cookie
+ * @param {[type]} name  [description]
+ * @param {[type]} value [description]
+ * @param {[type]} time  [description]
+ */
+function ey_setCookies(name, value, time)
+{
+    var cookieString = name + "=" + escape(value) + ";";
+    if (time != 0) {
+        var Times = new Date();
+        Times.setTime(Times.getTime() + time);
+        cookieString += "expires="+Times.toGMTString()+";"
+    }
+    document.cookie = cookieString+"path=/";
+}
+
+// 读取 cookie
+function ey_getCookie(c_name)
+{
+    if (document.cookie.length>0)
+    {
+        c_start = document.cookie.indexOf(c_name + "=")
+        if (c_start!=-1)
+        {
+            c_start=c_start + c_name.length+1
+            c_end=document.cookie.indexOf(";",c_start)
+            if (c_end==-1) c_end=document.cookie.length
+            return unescape(document.cookie.substring(c_start,c_end))
+        }
+    }
+    return "";
+}
+
+function getQueryString(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) return unescape(r[2]);
+    return null;
+}
+
+function unifiedFilter(obj) {
+    var value = $(obj).val();
+    if (undefined != value || 'undefined' != value || '' != value) {
+        var url = $(obj).attr('data-url');
+        if (url.indexOf('?') > -1) {
+            url += '&';
+        } else {
+            url += '?';
+        }
+        url += $(obj).attr('data-field') + '=' + value;
+        window.location.href = url;
+    }
+}
+
+var layer_shade = [0.7, '#fafafa'];
+// 统一提示确认框
+function unifiedConfirmBox(msg, width, height, callback_1, btn, callback_2, callback_cancel) {
+    if (typeof msg === 'undefined' || !msg) msg = '确认执行此操作？';
+    if (typeof btn === 'undefined' || !btn) btn = ['确定', '取消'];
+    if (typeof width === 'undefined' || !width) width = '480px;';
+    if (typeof height === 'undefined' || !height) height = '200px;';
+    layer.confirm(msg, {
+        move: false,
+        closeBtn: 3,
+        title: '提示',
+        btnAlign: 'r',
+        shade: layer_shade,
+        btn: btn,
+        area: [width, height],
+        success: function () {
+            $(".layui-layer-content").css('text-align', 'left');
+        },
+        cancel: function() {
+            if (typeof callback_cancel !== 'undefined') callback_cancel();
+        }
+    }, function (index) {
+        // 确认操作
+        if (typeof callback_1 !== 'undefined') callback_1();
+        layer.close(index);
+    }, function (index) {
+        // 取消操作
+        if (typeof callback_2 !== 'undefined') callback_2();
+        layer.close(index);
+    });
+}
+
+// 统一提醒信息框
+function unifiedRemindBox(msg, width, height) {
+    if (typeof msg === 'undefined') msg = '请输入你的提醒信息...';
+    if (typeof width === 'undefined') width = '480px;';
+    if (typeof height === 'undefined') height = '200px;';
+    layer.confirm(msg, {
+        move: false,
+        closeBtn: 3,
+        title: '提示',
+        btnAlign: 'r',
+        shade: layer_shade,
+        btn: ['确定'],
+        area: [width, height],
+        success: function () {
+            $(".layui-layer-content").css('text-align', 'left');
+        }
+    });
+}
+
+function windowOpen(url) {
+    window.open(url);
+}
+
+function windowLocation(url) {
+    window.location.href = url;
+}
+
+function singleDelAction(obj, id, msg) {
+    id = id ? [id] : [];
+    if (id.length == 0) {
+        showErrorAlert('请选择删除内容');
+        return false;
+    }
+    var data = {
+        _ajax: 1,
+        del_id: id,
+    };
+    ajaxSubmitPost(obj, '', msg, data);
+}
+
+function batchDelAction(obj, name, msg) {
+    var ids = [];
+    $('input[name^='+name+']').each(function(i, o) {
+        if ($(o).is(':checked')) ids.push($(o).val());
+    });
+    if (ids.length == 0) {
+        showErrorAlert('请至少选择一项');
+        return false;
+    }
+    var data = {
+        _ajax: 1,
+        del_id: ids,
+    };
+    ajaxSubmitPost(obj, '', msg, data);
+}
+
+function ajaxSubmitPost(obj, url, msg, data) {
+    url = $(obj).attr('data-url') ? $(obj).attr('data-url') : url;
+    unifiedConfirmBox(msg, null, null, function() {
+        layer_loading('正在处理');
+        $.ajax({
+            url : url,
+            data: data,
+            type: "post",
+            dataType: 'json',
+            success: function (res) {
+                layer.closeAll();
+                if (1 === parseInt(res.code)) {
+                    showSuccessMsg(res.msg, function() {
+                        window.location.reload();
+                    });
+                } else {
+                    showErrorAlert(res.msg);
+                }
+            },
+            error: function(e) {
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    });
+}
+
+// 发送(短信、邮箱)提醒
+function eyUnifiedSendRemind(result) {
+    if (result) {
+        $.ajax({
+            url: result.url,
+            data: result.data,
+            type: 'post',
+            dataType: 'json'
+        });
+    }
 }

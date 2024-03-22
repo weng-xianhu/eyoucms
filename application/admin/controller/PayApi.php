@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -98,7 +98,7 @@ class PayApi extends Base {
                 // 第三方插件
                 $ControllerName  = "\weapp\\" . $Config['pay_mark']."\controller\\" . $Config['pay_mark'];
                 $UnifyController = new $ControllerName;
-                $TemplateHtml = $UnifyController->UnifySaveConfigAction($post);
+                $UnifyController->UnifySaveConfigAction($post);
             }
         }
     }
@@ -124,7 +124,7 @@ class PayApi extends Base {
             
             // 验证微信配置是否正确，不正确则返回提示
             $Result = model('PayApi')->VerifyWeChatConfig($post['pay_info']);
-            if ($Result['return_code'] == 'FAIL') $this->error($Result['return_msg']);
+            if (!empty($Result['return_code']) && $Result['return_code'] == 'FAIL') $this->error($Result['return_msg']);
         }
 
         // 保存配置
@@ -173,13 +173,17 @@ class PayApi extends Base {
         if (0 == $php_version) {
             if (empty($post['pay_info']['is_open_alipay'])) {
                 // 配置信息不允许为空
+                if (empty($post['pay_terminal']['computer']) && empty($post['pay_terminal']['computer'])) $this->error('请勾选支付终端');
                 if (empty($post['pay_info']['app_id'])) $this->error('请填写支付宝APPID');
-                if (empty($post['pay_info']['alipay_public_key'])) $this->error('请填写支付宝公钥');
                 if (empty($post['pay_info']['merchant_private_key'])) $this->error('请填写商户私钥');
+                if (empty($post['pay_info']['alipay_public_key'])) $this->error('请填写支付宝公钥');
 
                 // 验证支付宝配置是否正确，不正确则返回提示
                 $Result = model('PayApi')->VerifyAliPayConfig($post['pay_info']);
-                if ('ok' != $Result) $this->error($Result);
+                if ('ok' != $Result) {
+                    empty($Result) && $Result = '配置信息不正确，请重新获取';
+                    $this->error($Result);
+                }
             }
 
             // 处理数据中的空格和换行
@@ -190,9 +194,9 @@ class PayApi extends Base {
         } else if (1 == $php_version) {
             if (empty($post['pay_info']['is_open_alipay'])) {
                 // 配置信息不允许为空
-                if (empty($post['pay_info']['id'])) $this->error('请填写合作者身份ID');
-                if (empty($post['pay_info']['code'])) $this->error('请填写安全校验码');
                 if (empty($post['pay_info']['account'])) $this->error('请填写支付宝账号');
+                if (empty($post['pay_info']['code'])) $this->error('请填写安全校验码');
+                if (empty($post['pay_info']['id'])) $this->error('请填写合作者身份ID');
             }
         }
 

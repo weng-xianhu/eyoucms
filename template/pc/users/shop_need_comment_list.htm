@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>评价晒单-{eyou:global name='web_name' /}</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        {eyou:static file="users/skin/css/eyoucms.css"/}
+        {eyou:static file="users/skin/css/element/index.css" /}
+        {eyou:static file="users/skin/css/e-user.css" /}
+        {eyou:include file="users/skin/css/diy_css.htm"/}
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
+        {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
+        {eyou:static file="/public/static/common/js/tag_global.js"/}
+    </head>
+
+    <body class="centre shop">
+        {eyou:include file="users/users_header.htm" /}
+        <div class="breadcrumbs"></div>
+        <div class="ey-body-bg">
+            <div class="ey-body pd0">
+                <div class="ey-container w1226">
+                    {eyou:include file="users/users_left.htm" /}
+                    <div class="ey-con mi-comment xin_mian fr">
+                        <div class="el-row shop-oper">
+                            <h1 class="title">评价晒单</h1>
+                        </div>
+                        <div class="el-row shop-oper mt20">
+                            <div class="shop-oper-bottom">
+                                <div class="shop-oper-l">
+                                    <div class="el-button-group">
+                                        {eyou:spstatus id="count"}
+                                        <a class="el-button-xin el-button--default first active" href="{eyou:url link='user/ShopComment/need_comment_list'/}">待评价 <em>({$count.waitComment})</em> </a>
+                                        <a class="el-button-xin el-button--default" href="{eyou:url link='user/ShopComment/index'/}">已评价 <em>({$count.CommentList})</em> </a>
+                                        {/eyou:spstatus}
+                                    </div>
+                                </div>
+                                <div class="shop-oper-r">
+                                    {eyou:spsearch id="search"}
+                                    <form action="{$search.action}" method="get">
+                                       {$search.hidden}
+                                        <div class="input-with-select el-input el-input-group el-input-group--append">
+                                            <input type="search" name="keywords" value="{$Request.param.keywords}" autocomplete="off" placeholder="输入订单号查询" class="search-text">
+                                            <input type="submit" value="" class="search-btn iconfont">
+                                        </div>
+                                    </form>
+                                    {/eyou:spsearch}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="comment-box">
+                            <div class="comment-list">
+                                <div class="goods-list-detail">
+                                    {empty name="$eyou.field"}
+                                    <div class="el-row cell null-data tc pt100 bgfff">
+                                        <p><img id="litpic_img" src="{eyou:static file='users/skin/images/null-data.png' /}"></p>
+                                        <p>当前暂无订单记录哦~</p>
+                                    </div>
+                                    {eyou:else /}
+                                    <ul class="goods-list-ul clearfix">
+                                        {eyou:volist name="$eyou.field" id="vo"}
+                                        <li class="goods-list-li">
+                                            <div class="goods-top">
+                                                <div class="time">下单时间：{$vo.add_time|date='Y年m月d日 H:i:s',###}</div>
+                                                <div class="id">订单号：{$vo.order_code}</div>
+                                                <div class="pay">实付金额：<span>{$vo.order_amount}</span>元</div>
+                                            </div>
+                                            <div class="goods-content">
+                                                <div class="cont-l">
+                                                    {eyou:volist name="$vo.goods" id="v"}
+                                                    <a href="{$v.arcurl}" target="_blank"><img src="{$v.litpic}"></a>
+                                                    {/eyou:volist}
+                                                    <div class="text">共{$vo.goods|count}种商品</div>
+                                                </div>
+                                                <div class="cont-r">
+                                                    <a href="{$vo.OrderDetailsUrl}" class="btn-xin el-button btn-line-gray mb10">订单详情</a>
+                                                    <a href="{$vo.CommentProduct}" class="btn-xin el-button btn-primary">立即评价</a>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        {/eyou:volist}
+                                    </ul>
+                                    {/empty}
+                                </div>
+                            </div>
+                        </div>
+                        {$page}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {eyou:include file="users/users_footer.htm" /}

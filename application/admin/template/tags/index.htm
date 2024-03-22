@@ -1,22 +1,23 @@
 {include file="public/layout" /}
-<body class="bodystyle" style="cursor: default; -moz-user-select: inherit; min-width:400px;">
+<body {neq name='$source' value='archives'}class="bodystyle"{/neq} style="cursor: default; -moz-user-select: inherit; min-width:400px;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width: 400px;">
+<div class="page min-hg-c-10" style="min-width: 400px;">
     <div class="fixed-bar">
         <div class="item-title">
             {eq name='$source' value='archives'}
-            <a class="back" href="javascript:void(0);" onclick="closeIframes(this);" title="返回"><i class="fa fa-angle-double-left"></i>返回</a>
+            <a class="back_xin" href="javascript:void(0);" onclick="closeIframes(this);" title="返回"><i class="iconfont e-fanhui"></i></a>
             {else /}
-            <a class="back" href="{:url('Index/switch_map')}" title="返回列表"><i class="fa fa-angle-double-left"></i>返回</a>
+            <a class="back_xin" href="{:url('Index/switch_map')}" title="返回"><i class="iconfont e-fanhui"></i></a>
             {/eq}
-            <ul class="tab-base nc-row">
-                <li><a href="{:url('Tags/index')}" class="tab current"><span>TAG标签列表</span></a></li>
-            </ul>
+            <div class="subject">
+                <h3>TAG标签列表</h3>
+                <h5></h5>
+            </div>
         </div>
     </div>
     <div class="flexigrid">
-        <div class="mDiv">
+        <div class="mDiv pt0">
             <div class="ftitle">
                 {eq name="'Tags@batch_add'|is_check_access" value="1"}
                 <div class="fbutton">
@@ -28,20 +29,20 @@
                 </div>
                 {/eq}
                 <div class="fbutton">
-                    <a href="javascript:void(0);" data-href="{:url('Tags/edit_index_seo')}" onclick="openFullframe(this, 'Tag主页SEO', '700px', '500px');">
+                    <a href="javascript:void(0);" data-href="{:url('Tags/edit_index_seo')}" onclick="openFullframe(this, 'Tag主页SEO', '760px', '520px');">
                         <div class="add" title="Tag主页SEO">
                             <span>Tag主页SEO</span>
                         </div>
                     </a>
                 </div>
             </div>
-            <form class="navbar-form form-inline" action="{:url('Tags/index')}" method="get" onsubmit="layer_loading('正在处理');">
+            <form id="searchForm" class="navbar-form form-inline" action="{:url('Tags/index')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="搜索名称...">
                         <input type="submit" class="btn" value="搜索">
-                        <i class="fa fa-search"></i>
+                        <i class="iconfont e-sousuo"></i>
                     </div>
                 </div>
             </form>
@@ -84,7 +85,9 @@
                     {empty name="list"}
                         <tr>
                             <td class="no-data" align="center" axis="col0" colspan="50">
-                                <i class="fa fa-exclamation-circle"></i>没有符合条件的记录
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
                             </td>
                         </tr>
                     {else/}
@@ -146,6 +149,7 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        {notempty name="list"}
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
@@ -169,6 +173,7 @@
 			 </div>
             <div style="clear:both"></div>
         </div>
+        {/notempty}
     </div>
 </div>
 <script>
@@ -214,7 +219,8 @@
                     id: 'relation_iframes',
                     fixed: true, //不固定
                     shadeClose: false,
-                    shade: 0.3,
+                    closeBtn: 3,
+                    shade: layer_shade,
                     area: ['90%', '90%'],
                     content: url,
                 });
@@ -229,8 +235,13 @@
      * 关闭当前弹窗
      */
     function closeIframes(obj) {
-        parent.layer.close(parentObj);
-        parent.$('#often_tags').hide();
+        if (parentObj){
+            parent.layer.close(parentObj);
+            parent.$('#often_tags').hide();
+        }else{
+            history.back();
+        }
+
     }
 
     // 编辑TAG标签的SEO优化
@@ -242,7 +253,8 @@
             title: 'TAG标签 - 编辑',
             fixed: true,
             shadeClose: false,
-            shade: 0.3,
+            shade: layer_shade,
+            closeBtn: 3,
             maxmin: true,
             area: ['700px', '480px'],
             content: url
@@ -252,8 +264,15 @@
     // 一键清空
     function clearall() {
         layer.confirm('此操作不可恢复，确认一键清空？', {
-            title: false,
-            btn: ['确定', '取消'] //按钮
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function () {
             layer_loading('正在处理');
             $.ajax({
@@ -269,9 +288,9 @@
                         layer.alert(res.msg, {icon: 2, title:false});
                     }
                 },
-                error:function() {
+                error:function(e) {
                     layer.closeAll();
-                    layer.alert(ey_unknown_error, {icon: 2, title:false});
+                    layer.alert(e.responseText, {icon: 2, title:false});
                 }
             });
         });

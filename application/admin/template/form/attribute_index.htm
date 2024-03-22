@@ -1,0 +1,314 @@
+{include file="public/layout" /}
+
+<body style="background-color: rgb(255, 255, 255); overflow: auto; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="box-shadow:none;">
+    <div class="flexigrid">
+        <div class="mDiv pt0">
+            <div class="ftitle">
+                {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                    {eq name="$Think.const.CONTROLLER_NAME.'@attribute_add'|is_check_access" value="1"}
+                    <div class="fbutton">
+                        <a href="javascript:void(0);" data-href="{:url('Form/attribute_add', array('typeid'=>$typeid))}" onclick="openFullframe(this, '新增表单字段', '80%', '80%');">
+                            <div class="add">
+                                <span><i class="layui-icon layui-icon-addition"></i>新增字段</span>
+                            </div>
+                        </a>
+                    </div>
+                    {/eq}
+                {/if}
+            </div>
+            <form id="searchForm" class="navbar-form form-inline" action="{:url('Form/attribute_index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="标题搜索...">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="iconfont e-sousuo"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
+                        </th>
+                        {/if}
+                        <th abbr="article_title" axis="col3" class="w40">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_title" axis="col3" class="">
+                            <div style="text-align: left; padding-left: 10px;" class="">字段标题</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w100">
+                            <div class="tc">字段类型</div>
+                        </th>
+                        <th abbr="article_time" axis="col6" class="w200">
+                            <div class="tc">所属表单</div>
+                        </th>
+                        <th abbr="article_title" axis="col3"  class="w100">
+                            <div class="tc">后台列表显示</div>
+                        </th>
+                        <th axis="col1" class="w180">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table>
+                    <tbody>
+                    {empty name="list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    {else/}
+                        {volist name="list" id="vo" key="k"}
+                        <tr>
+                            {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                            <td class="sign">
+                                <div class="tc w40">
+                                    <input type="checkbox" autocomplete="off" name="ids[]" value="{$vo.attr_id}">
+
+                                </div>
+                            </td>
+                            {/if}
+                            <td class="sort">
+                                <div class="tc w40">
+                                    {$vo.attr_id}
+                                </div>
+                            </td>
+                            <td style="width: 100%">
+                                <div style="text-align: left; padding-left: 10px;">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@attribute_edit'|is_check_access" value="1"}
+                                    <a href="{:url('Form/attribute_edit',array('id'=>$vo['orgin_attr_id']))}">{$vo.attr_name}</a>
+                                    {else /}
+                                    {$vo.attr_name}
+                                    {/eq}
+                                </div>
+                            </td>
+                            <td align="center" class="">
+                                <div class="w100 tc">
+                                    {$attrInputTypeArr[$vo['attr_input_type']]|default=''}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w200 tc">{$vo.form_name|default='<i class="red">数据出错！</i>'}</div>
+                            </td>
+                            <td>
+                                <div class="tc w100">
+                                    {if condition="$vo['is_showlist'] eq 1"}
+                                        <span class="yes" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('guestbook_attribute','attr_id','{$vo.orgin_attr_id}','is_showlist',this);"{/eq} ><i class="fa fa-check-circle"></i>是</span>
+                                    {else /}
+                                        <span class="no" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}onClick="changeTableVal('guestbook_attribute','attr_id','{$vo.orgin_attr_id}','is_showlist',this);"{/eq} ><i class="fa fa-ban"></i>否</span>
+                                    {/if}
+                                </div>
+                            </td>
+                            <td class="operation">
+                                <div class="w180 tc">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@attribute_edit'|is_check_access" value="1"}
+                                        <a href="javascript:void(0);" data-href="{:url('Form/attribute_edit',array('id'=>$vo['attr_id']))}" class="btn blue" onclick="openFullframe(this, '编辑表单字段 ', '80%', '80%');">编辑</a>
+                                        <i></i>
+                                    {/eq}
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@attribute_del'|is_check_access" value="1"}
+                                        {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                                            <a class="btn red"  href="javascript:void(0);" data-url="{:url('Form/attribute_del')}" data-id="{$vo.attr_id}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
+                                            <i></i>
+                                        {else /}
+                                            <a class="btn grey"  href="javascript:void(0);">删除</a>
+                                            <i></i>
+                                        {/if}
+                                    {/eq}
+                                    <a class="btn blue" href="javascript:void(0);" onclick="copyToClipBoard('{$vo.fieldname}', '{$vo.attr_id}', {$vo.attr_input_type|default='0'})">标签调用</a>
+                                </div>
+                            </td>
+                           
+                        </tr>
+                        {/volist}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        <div class="tDiv">
+            <div class="tDiv2">
+                {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                    <div class="fbutton checkboxall">
+                        <input type="checkbox" autocomplete="off" class="checkAll">
+                    </div>
+                    {eq name="$Think.const.CONTROLLER_NAME.'@attribute_del'|is_check_access" value="1"}
+                    <div class="fbutton">
+                        <a onclick="batch_del(this, 'ids');" data-url="{:url('Form/attribute_del')}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} class="layui-btn layui-btn-primary">
+                            <span>批量删除</span>
+                        </a>
+                    </div>
+                    {/eq}
+                {/if}
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function(){
+        $('input[name*=ids]').click(function(){
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked','checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function(){
+            $('input[type=checkbox]').prop('checked',this.checked);
+        });
+    });
+    
+    $(document).ready(function(){
+
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+
+        $('#searchForm select[name=typeid]').change(function(){
+            $('#searchForm').submit();
+        });
+    });
+
+    /**
+     * 代码调用js
+     * @param id  id
+     * @param limit 条数
+     */
+    function copyToClipBoard(fieldname, attr_id, attr_input_type) {
+        if ($.inArray(attr_input_type, [0,6,7]) > -1) { // 单行文本\Email邮箱\手机号码
+            var liststr = "<input type='text' id='"+fieldname+"' name='{$"+"field."+fieldname+"}'>";
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
+            contentdiv += '<dd>表单调用代码：</dd>';
+            contentdiv += '<dd><input type="text" style="width:400px;" value="' + liststr + '" /></dd>';
+            height = '250px';
+        } 
+        else if (1 == attr_input_type) { // 下拉框
+            var liststr = "<select name='{$"+"field."+fieldname+"}' id='"+fieldname+"'>\r\n    <option value='无'>无</option>\r\n    {eyou:volist name='$"+"field.options_"+attr_id+"' id='vo'}\r\n        <option value='{$"+"vo.value}'>{$"+"vo.value}</option>\r\n    {/eyou:volist"+"}\r\n</select>";
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
+            contentdiv += '<dd>表单调用代码：</dd>';
+            contentdiv += '<dd><textarea rows="4" cols="60" style="width:400px;height:110px;">' + liststr + '</textarea></dd>';
+            height = '330px';
+        } 
+        else if (2 == attr_input_type) { // 多行文本
+            var liststr = "<textarea id='"+fieldname+"' name='{$"+"field."+fieldname+"}'></textarea>";
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
+            contentdiv += '<dd>表单调用代码：</dd>';
+            contentdiv += '<dd><input type="text" style="width:400px;" value="' + liststr + '" /></dd>';
+            height = '300px';
+        } 
+        else if (3 == attr_input_type) { // 单选框
+            var liststr = "{eyou:volist name='$"+"field.options_"+attr_id+"' id='vo'}\r\n    <label><input type='radio' id='"+fieldname+"' name='{$"+"field."+fieldname+"}' value='{$"+"vo.value}'>{$"+"vo.value}</label>\r\n{/eyou:volist"+"}";
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
+            contentdiv += '<dd>表单调用代码：</dd>';
+            contentdiv += '<dd><textarea rows="4" cols="60" style="width:400px;height:80px;">' + liststr + '</textarea></dd>';
+            height = '300px';
+        } 
+        else if (4 == attr_input_type) { // 多选框
+            var liststr = "{eyou:volist name='$"+"field.options_"+attr_id+"' id='vo'}\r\n    <label><input type='checkbox' name='{$"+"field."+fieldname+"}' value='{$"+"vo.value}'>{$"+"vo.value}</label>\r\n{/eyou:volist"+"}";
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
+            contentdiv += '<dd>表单调用代码：</dd>';
+            contentdiv += '<dd><textarea rows="4" cols="60" style="width:400px;height:80px;">' + liststr + '</textarea></dd>';
+            height = '300px';
+        } 
+        else if (5 == attr_input_type) { // 上传图片
+            var liststr = "<input type='file' name='{$"+"field."+fieldname+"}' value='' accept='image/*'>";
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
+            contentdiv += '<dd>表单调用代码：</dd>';
+            contentdiv += '<dd><input type="text" style="width:400px;" value="' + liststr + '" /></dd>';
+            contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color:red; ">特别注意：请在前台模板的表单标签里追加 {$'+'field.formhidden} 到 &lt;form  &gt;表单里，<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('+"'https://www.eyoucms.com/plus/view.php?aid=8378&origin_eycms=1','单张图教程说明'"+')">详细说明</a>。</dd>'
+            height = '300px';
+        }
+        else if (8 == attr_input_type) { // 上传附件
+            var liststr = "<input type='file' name='{$"+"field."+fieldname+"}' value=''>";
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
+            contentdiv += '<dd>表单调用代码：</dd>';
+            contentdiv += '<dd><input type="text" style="width:400px;" value="' + liststr + '" /></dd>';
+            contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color:red; ">特别注意：请在前台模板的表单标签里追加 {$'+'field.formhidden} 到 &lt;form  &gt;表单里。</dd>'
+            height = '300px';
+        }else if(11 == attr_input_type){   //多张图
+            var liststr = "<input type='file' name='{$"+"field."+fieldname+"}' multiple accept='image/*' value=''>";
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
+            contentdiv += '<dd>表单调用代码：</dd>';
+            contentdiv += '<dd><input type="text" style="width:400px;" value="' + liststr + '" /></dd>';
+            contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color:red; ">特别注意：请在前台模板的表单标签里追加 {$'+'field.formhidden} 到 &lt;form  &gt;表单里。</dd>'
+            height = '300px';
+        }else if (9 == attr_input_type) { // 区域联动
+            var liststr = "<!--一级-->\n<select {$"+"field.first_id_"+attr_id+"}>\r\n    <option value=''>请选择</option>\r\n    {eyou:volist name='$"+"field.options_"+attr_id+"' id='vo'}\r\n        <option value='{$"+"vo.id}'>{$"+"vo.name}</option>\r\n    {/eyou:volist"+"}\r\n</select>\n"+
+                "<!--二级-->\n<select {$"+"field.second_id_"+attr_id+"}></select>\n" +
+                "<!--三级-->\n<select {$"+"field.third_id_"+attr_id+"}></select>\n" +
+                "{$"+"field.hidden_"+attr_id+"}";
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
+            contentdiv += '<dd>表单调用代码：</dd>';
+            contentdiv += '<dd><textarea rows="4" cols="60" style="width:400px;height:180px;">' + liststr + '</textarea></dd>';
+            contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color:red; ">特别注意：请在前台模板的表单标签里追加 {$'+'field.hidden_'+attr_id+'} 到 &lt;form&gt;表单里。</dd>';
+            height = '460px';
+        }else if (10 == attr_input_type) { // 时间
+            var liststr = "<input type=\"text\" name='{$"+"field."+fieldname+"}' id='{$"+"field."+fieldname+"}' placeholder='{$"+"field.itemname_"+attr_id+"}' autocomplete=\"off\">\n\n" +
+                "{"+"eyou:static file='/public/plugins/laydate-v5.3.1/laydate.js' /}\n" +
+                "<script type='text/javascript'>\n" +
+                "    laydate.render({\n" +
+                "       elem: '#{$"+"field."+fieldname+"}'\n" +
+                "       ,type: 'datetime'\n" +
+                "    });\n" +
+                "<"+"/script>";
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>';
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>';
+            contentdiv += '<dd>表单调用代码：</dd>';
+            contentdiv += '<dd><textarea rows="4" cols="60" style="width:400px;height:180px;">' + liststr + '</textarea></dd>';
+            contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color:red; ">特别注意：在弹窗表单里，可能遇到日期插件无法使用，请自行更换其他日期插件处理，谢谢。</dd>';
+            height = '470px';
+        }else {
+            var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>字段名称：</dd>'
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.itemname_'+attr_id+'}"></dd>'
+            contentdiv += '<dd>字段名称：</dd>'
+            contentdiv += '<dd><input type="text" style=" width:400px;margin-bottom:10px;" value="{$'+'field.'+fieldname+'}"></dd>'
+            height = '250px';
+        }
+        contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color: #F60;">请将相应标签复制并粘贴到对应模板文件中！</dd></dl></div>'
+        layer.open({
+            shade: layer_shade,
+            title: '标签调用',
+            type: 1,
+            skin: 'layui-layer-demo',
+            area: ['480px', height], //宽高
+            content: contentdiv
+        });
+    }
+</script>
+
+{include file="public/footer" /}

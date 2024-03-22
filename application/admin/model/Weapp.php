@@ -50,7 +50,8 @@ class Weapp extends Model
      */
     public function clearWeappCache()
     {
-        extra_cache('common_weapp_getWeappList', NULL);
+        \think\Cache::clear('weapp');
+        cache('common_weapp_getWeappList', null);
         $weappM = new \app\common\model\Weapp;
         $weappM->getWeappList();
     }

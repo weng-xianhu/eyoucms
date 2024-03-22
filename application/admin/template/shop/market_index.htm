@@ -1,25 +1,69 @@
 {include file="public/layout" /}
-<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;min-width:auto;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 {include file="shop/left" /}
-<div class="page" style="min-width:auto;margin-left:98px;padding: 0;">
+<div class="page" style="padding: 0;background-color:transparent">
     <div class="on-off_panel" style="margin-bottom: 0;">
         <div class="title">营销功能</div>
             <div class="on-off_list">
                 <div class="on-off_list b-icon">
-                    <ul>
-                        {eq name="'Sharp@index'|is_check_access" value="1"}
-                            <li class="more_li"><a href="{:url('Sharp/index')}"><i class="fa fa-bolt"></i><span>整点秒杀</span></a></li>
-                        {/eq}
+                    <ul class="marketing-nav">
+                        {if condition="true || in_array('sharp', $marketFunc)"}
+                            {eq name="'Sharp@index'|is_check_access" value="1"}
+                                <li class="more_li">
+                                    <a href="{:url('Sharp/index')}">
+                                        <div class="icon" style="background-color: #fd5148;"><i class="iconfont e-zhengdianmiaosha"></i></div>
+                                        <span><h2>整点秒杀</h2><br><p>低价、限购，吸引更多会员</p></span>
+                                    </a>
+                                </li>
+                            {/eq}
+                        {/if}
 
-                        {eq name="'Coupon@water'|is_check_access" value="1"}
-                            <li class="more_li"><a href="{:url('Coupon/index')}"><i class="fa fa-credit-card"></i><span>优惠券</span></a></li>
-                        {/eq}
+                        {if condition="true || in_array('coupon', $marketFunc)"}
+                            {eq name="'Coupon@index'|is_check_access" value="1"}
+                                <li class="more_li">
+                                    <a href="{:url('Coupon/index')}">
+                                        <div class="icon" style="background-color: #18a5ed;"><i class="iconfont e-youhuiquan"></i></div>
+                                        <span><h2>优惠券</h2><br><p>消费领取优惠券，增加二次消费</p></span>
+                                    </a>
+                                </li>
+                            {/eq}
+                        {/if}
+
+                        <!-- {eq name="'ShopComment@comment_index'|is_check_access" value="1"}
+                            <li class="more_li">
+                                <a href="{:url('ShopComment/comment_index')}">
+                                    <div class="icon" style="background-color: #2dc714;"><i class="iconfont e-keshihuabianji"></i></div>
+                                    <span><h2>商品评价</h2><br><p>分享商品感受、增加口碑</p></span>
+                                </a>
+                            </li>
+                        {/eq} -->
+                        
+                        <!-- {eq name="'Discount@index'|is_check_access" value="1"}
+                        <li class="more_li">
+                            <a href="{:url('Discount/index')}">
+                                <div class="icon" style="background-color: #fd5148;"><i class="iconfont e-zhengdianmiaosha"></i></div>
+                                <span><h2>限时折扣</h2><br><p>低价、限购，吸引更多会员</p></span>
+                            </a>
+                        </li>
+                        {/eq} -->
                     </ul>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script>
+    try{
+        if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
+            $(".page").css("margin-left","");
+            $(".page").css("min-width","");
+        }else{
+            $(".page").css("margin-left","100px");
+            $(".page").css("min-width","auto");
+        }
+    }catch(e){}
+
+</script>
 {include file="public/footer" /}

@@ -1,0 +1,228 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page min-hg-c-10">
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th class="sign w40" axis="col0">
+                            <div class="tc"><input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);"></div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w60">
+                            <div class="tc">ID</div>
+                        </th>
+                        <th abbr="article_title" axis="col11" >
+                            <div style="text-align: left; padding-left: 10px;" class="">导航名称</div>
+                        </th>
+                        <th abbr="article_title"  axis="col7" class="w200">
+                            <div class="tc">操作</div>
+                        </th>
+                        <th abbr="article_show" axis="col5" class="w100">
+                            <div class="tc">排序</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <form id="PostForm">
+                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                    <table style="width: 100%">
+                        <tbody id="Template">
+                        {empty name="list"}
+                            <tr>
+                                <td class="no-data" align="center" axis="col0" colspan="50">
+                                    <div class="no_row">
+                                        <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {else/}
+                            {volist name="list" id="vo"}
+                            <tr>
+                                <td class="sign">
+                                    <div class="w40 tc"><input type="checkbox" name="ids[]" value="{$vo.position_id}"></div>
+                                </td>
+                                <td class="sort">
+                                    <div class="w60 tc">
+                                        {$vo.position_id}
+                                        <input type="hidden" name="position_id[]" value="{$vo.position_id}">
+                                    </div>
+                                </td>
+                                <td style="width: 100%">
+                                    <div style="text-align: left;">
+                                        <input type="text" name="position_name[]" value="{$vo.position_name}" class="w180">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="w200 tc">
+                                        <a href="javascript:void(0);" onclick="tag_call('{$vo.position_id}');" class="btn blue"><i class="fa fa-pencil-square-o"></i>标签调用</a>
+                                        <a class="btn red"  href="javascript:void(0)" data-url="{:url('Navigation/del')}" data-id="{$vo.position_id}" onClick="delfun(this);"><i class="fa fa-trash-o"></i>删除</a>
+                                    </div>
+                                </td>
+                                <td class="sort">
+                                    <div class="w100 tc">
+                                        <input style="text-align: left;" name="sort_order[]" type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'');" onchange="changeTableVal('nav_position','position_id','{$vo.position_id}','sort_order',this);" size="4"  value="{$vo.sort_order}" />
+                                    </div>
+                                </td>
+                            </tr>
+                            {/volist}
+                        {/empty}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        {notempty name="list"}
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall">
+                    <input type="checkbox" onclick="javascript:$('input[name*=ids]').prop('checked',this.checked);">
+                </div>
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-url="{:url('Navigation/add_position')}" onclick="AddPosition(this);" >
+                        <div class="add" title="保存">
+                            <span>保存</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="fbutton">
+                    <a onclick="add();" >
+                        <div class="add" title="新增">
+                            <span>新增</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="fbutton">
+                    <a onclick="batch_del(this, 'ids');" data-url="{:url('Navigation/del')}">
+                        <div class="add" title="批量删除">
+                            <span>批量删除</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="fbuttonr">
+                    <div class="pages">
+                       {$pageStr}
+                    </div>
+                </div>
+                <div class="fbuttonr">
+                    <div class="total">
+                       <h5>共有{$pager->totalRows}条,每页显示
+                            <select name="pagesize" style="width: 60px;" onchange="ey_selectPagesize(this);">
+                                <option {if condition="$pager->listRows == 15"} selected {/if} value="15">15</option>
+                                <option {if condition="$pager->listRows == 30"} selected {/if} value="30">30</option>
+                                <option {if condition="$pager->listRows == 50"} selected {/if} value="50">50</option>
+                                <option {if condition="$pager->listRows == 100"} selected {/if} value="100">100</option>
+                                <option {if condition="$pager->listRows == 200"} selected {/if} value="200">200</option>
+                            </select>
+                       </h5>
+                    </div>
+                </div>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <!--分页位置-->
+        {$pageStr}
+        {/notempty}
+    </div>
+</div>
+<script>
+    // 标签调用
+    function tag_call(position_id) {
+        var liststr ="{\eyou:navigation position_id='"+position_id+"' id='nav'}\n" +
+            '    <li>\n' +
+            '        <img src="{\$nav.nav_pic}">\n' +
+            '        <a href="{\$nav.nav_url}" {\$nav.target} {\$nav.nofollow}>{\$nav.nav_name}</a>\n' +
+            '    </li>\n' +
+            '{\/eyou:navigation}';
+        var contentdiv = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px;"><dd>标签简单调用代码：</dd>';
+        contentdiv += '<dd><textarea  style="width:410px;height:135px;">' + liststr + '</textarea></dd>';
+        contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color: #F60;">请将相应标签复制并粘贴到对应模板文件中！<a href="https://www.eyoucms.com/doc/label/all/11849.html">复杂调用点击去看手册</a></dd></dl></div>'
+        layer.open({
+            title: '标签调用',
+            type: 1,
+            shade: layer_shade,
+            skin: 'layui-layer-demo',
+            area: ['480px', '300px'], //宽高
+            content: contentdiv
+        });
+    }
+    // 删除未保存的级别
+    function DelHtml(obj){
+        $('#'+$(obj).attr('data-trid')).remove();
+    }
+    function AddPosition(obj) {
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : $(obj).attr('data-url'),
+            data : $('#PostForm').serialize(),
+            dataType : 'json',
+            success : function(data){
+                layer.closeAll();
+                if(data.code == 1){
+                    layer.msg(data.msg, {icon: 1, time:1000},function(){
+                        window.location.reload();
+                    });
+                }else{
+                    layer.alert(data.msg, {icon: 2, title:false});
+                }
+            }
+        })
+    }
+    // tr数,取唯一标识
+    var tr_id = $('#Template .tr').length;
+    function add(){
+        var AddHtml = [];
+        AddHtml +=
+            '<tr class="tr" id="tr_'+tr_id+'">'+
+            '<td class="sign ">'+
+            '<div class="w60 tc"></div>'+
+            '</td>'+
+
+            '<td >'+
+            '<div class="w60 tc">'+
+            '<input type="hidden" name="position_id[]" value="">\n'+
+            '</div>'+
+            '</td>'+
+
+            '<td style="width: 100%">'+
+            '<div style="text-align: left;">'+
+            '<input type="text" name="position_name[]" class="w180">'+
+            '</div>'+
+            '</td>'+
+
+            '<td class="">'+
+            '<div class="w200 tc">'+
+            '<a class="btn red" href="javascript:void(0);" data-trid="tr_'+tr_id+'" onclick="DelHtml(this)"><i class="fa fa-trash-o"></i>删除</a>'+
+            '</div>'+
+            '</td>'+
+
+            '<td class="sort">'+
+            '<div class="w100 tc">'+
+            '<input type="text" name="sort_order[]">'+
+            '</div>'+
+            '</td>'+
+            '</tr>';
+        $('#Template').append(AddHtml);
+        tr_id += 1;
+    }
+    $(document).ready(function(){
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function(){
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function(){
+            location.href = location.href;
+        });
+    });
+</script>
+{include file="public/footer" /}

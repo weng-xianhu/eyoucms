@@ -15,141 +15,123 @@
                 <!-- 隐藏域 start -->
             {/case}
 
-            {case value="text|email|mobile"}
+            {case value="text"}
                 <!-- 单行文本框 start -->
-                <dl class="row">
-                    <dt class="tit">
-                        <label>{if condition="1 == $vo.is_required"}<!-- <em>*</em> -->{/if}{$vo.title}</label>
-                    </dt>
-                    <dd class="opt">
-                        <input type="text" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">{$vo.dfvalue_unit|default=''}
-                        <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
-                    </dd>
-                </dl>
+                <div class="users-form-item  users-col-span-7">
+                    <label class="users-form-item-label">{$vo.title}：</label>
+                    <div class="users-form-item-content">
+                        <input type="text" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">
+                    </div>
+                </div>
                 <!-- 单行文本框 end -->
             {/case}
 
             {case value="multitext"}
                 <!-- 多行文本框 start -->
-                <dl class="row">
-                    <dt class="tit">
-                        <label>{if condition="1 == $vo.is_required"}<!-- <em>*</em> -->{/if}{$vo.title}</label>
-                    </dt>
-                    <dd class="opt">
+                <div class="users-form-item  users-col-span-100" style="height: unset;line-height: unset;">
+                    <label class="users-form-item-label">{$vo.title}：</label>
+                    <div class="users-form-item-content" style="height: unset;line-height: unset;">
                         <textarea rows="5" cols="60" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" style="height:60px;">{$vo.dfvalue|default=''}</textarea>
-                        <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
-                    </dd>
-                </dl>
+                    </div>
+                </div>
                 <!-- 多行文本框 end -->
             {/case}
 
             {case value="checkbox"}
                 <!-- 复选框 start -->
-                <dl class="row">
-                    <dt class="tit">
-                        <label>{if condition="1 == $vo.is_required"}<!-- <em>*</em> -->{/if}{$vo.title}</label>
-                    </dt>
-                    <dd class="opt">
-                        {volist name="$vo.dfvalue" id="v2"}
-                        <label><input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>{$v2}</label>&nbsp;
-                        {/volist}
-                        <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
-                    </dd>
-                </dl>
+                <div class="users-form-item  users-col-span-100">
+                    <label class="users-form-item-label">{$vo.title}：</label>
+                    <div class="users-form-item-content">
+                        <div class="source">
+                            {volist name="$vo.dfvalue" id="v2"}
+                            <div class="users-tooltip">
+                                <div class="users-tooltip-rel">
+                                    <input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>{$v2}
+                                </div>
+                            </div>
+                            {/volist}
+                        </div>
+                    </div>
+                </div>
                 <!-- 复选框 end -->
             {/case}
 
             {case value="radio"}
                 <!-- 单选项 start -->
-                <dl class="row">
-                    <dt class="tit">
-                        <label>{if condition="1 == $vo.is_required"}<!-- <em>*</em> -->{/if}{$vo.title}</label>
-                    </dt>
-                    <dd class="opt">
-                        {volist name="$vo.dfvalue" id="v2"}
-                        <label><input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>{$v2}</label>&nbsp;
-                        {/volist}
-                        <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
-                    </dd>
-                </dl>
+                <div class="users-form-item  users-col-span-100">
+                    <label class="users-form-item-label">{$vo.title}：</label>
+                    <div class="users-form-item-content">
+                        <div class="source">
+                            {volist name="$vo.dfvalue" id="v2"}
+                            <div class="users-tooltip">
+                                <div class="users-tooltip-rel">
+                                    <input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>{$v2}
+                                </div>
+                            </div>
+                            {/volist}
+                        </div>
+                    </div>
+                </div>
                 <!-- 单选项 end -->
             {/case}
 
             {case value="switch"}
                 <!-- 开关 start -->
-                <dl class="row">
-                    <dt class="tit">
-                        <label>{if condition="1 == $vo.is_required"}<!-- <em>*</em> -->{/if}{$vo.title}</label>
-                    </dt>
-                    <dd class="opt">
+                <div class="users-form-item  users-col-span-7">
+                    <label class="users-form-item-label">{$vo.title}：</label>
+                    <div class="users-form-item-content">
                         <div class="onoff">
                             <label for="{$vo.fieldArr}_{$vo.name|default=''}1" class="cb-enable {if condition="0 != $vo['dfvalue']"}selected{/if}">是</label>
                             <label for="{$vo.fieldArr}_{$vo.name|default=''}0" class="cb-disable {if condition="0 == $vo['dfvalue']"}selected{/if}">否</label>
                             <input id="{$vo.fieldArr}_{$vo.name|default=''}1" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="1" type="radio" {if condition="0 != $vo['dfvalue']"}checked="checked"{/if}>
                             <input id="{$vo.fieldArr}_{$vo.name|default=''}0" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="0" type="radio" {if condition="0 == $vo['dfvalue']"}checked="checked"{/if}>
                         </div>
-                        <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
-                    </dd>
-                </dl>
+                    </div>
+                </div>
                 <!-- 开关 end -->
             {/case}
 
             {case value="select"}
                 <!-- 下拉框 start -->
-                <dl class="row">
-                    <dt class="tit">
-                        <label>{if condition="1 == $vo.is_required"}<!-- <em>*</em> -->{/if}{$vo.title}</label>
-                    </dt>
-                    <dd class="opt"> 
+                <div class="users-form-item  users-col-span-7">
+                    <label class="users-form-item-label">{$vo.title}：</label>
+                    <div class="users-form-item-content"> 
                         <select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}">
                             <option value="">请选择</option>
                             {volist name="$vo.dfvalue" id="v2"}
                             <option value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}selected{/if}>{$v2}</option>
                             {/volist}
                         </select>
-                        <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
-                    </dd>
-                </dl>
+                    </div>
+                </div>
                 <!-- 下拉框 end -->
             {/case}
 
             {case value="img"}
                 <!-- 单张图 start -->
-                <dl class="row">
-                    <dt class="tit">
-                        <label>{if condition="1 == $vo.is_required"}<!-- <em>*</em> -->{/if}{$vo.title}</label>
-                    </dt>
-                    <dd class="opt">
-                        <div class="input-file-show div_{$vo.fieldArr}_{$vo.name|default=''}_eyou_local" {neq name="$vo[$vo['name'].'_eyou_is_remote']" value="0"}style="display: none;"{/neq}>
+                <div class="users-form-item  users-col-span-7">
+                    <label class="users-form-item-label">{$vo.title}：</label>
+                    <div class="users-form-item-content">
+                        <div class="input-file-show div_{$vo.fieldArr}_{$vo.name|default=''}">
                             <span class="show">
-                                <a id="img_a_{$vo.fieldArr}_{$vo.name|default=''}" target="_blank" class="nyroModal" rel="gal" href="{$vo[$vo['name'].'_eyou_local']|default='javascript:void(0);'}">
-                                    <i id="img_i_{$vo.fieldArr}_{$vo.name|default=''}" class="fa fa-picture-o" {notempty name="$vo[$vo['name'].'_eyou_local']"}onmouseover="layer_tips=layer.tips('<img src={$vo[$vo['name'].'_eyou_local']} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
+                                <a id="img_a_{$vo.fieldArr}_{$vo.name|default=''}" target="_blank" class="nyroModal" rel="gal" href="{$vo['dfvalue']|default='javascript:void(0);'}">
+                                    <i id="img_i_{$vo.fieldArr}_{$vo.name|default=''}" class="fa fa-picture-o" {notempty name="$vo['dfvalue']"}onmouseover="layer_tips=layer.tips('<img src={$vo['dfvalue']} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
                                 </a>
                             </span>
                             <span class="type-file-box">
-                                <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}_eyou_local" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_local]" value="{$vo[$vo['name'].'_eyou_local']|default=''}" class="type-file-text" autocomplete="off">
-                                <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
+                                <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo['dfvalue']|default=''}" class="type-file-text" autocomplete="off" style="width: 70%;">
+                                <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button"  style="width: 30%;">
                                 <input class="type-file-file" onClick="GetUploadify(1,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back')" size="30" hidefocus="true" nc_type="change_site_{$vo.fieldArr}_{$vo.name|default=''}"
                                      title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
                             </span>
                         </div>
-                        <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}_eyou_remote" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_remote]" value="{$vo[$vo['name'].'_eyou_remote']|default=''}" placeholder="http://" class="input-txt" {neq name="$vo[$vo['name'].'_eyou_is_remote']" value="1"}style="display: none;"{/neq}>
-                        &nbsp;
-                        <label><input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_is_remote]" id="{$vo.fieldArr}_{$vo.name|default=''}_eyou_is_remote" value="1" {eq name="$vo[$vo['name'].'_eyou_is_remote']" value="1"}checked="checked"{/eq} onClick="clickRemote(this, '{$vo.fieldArr}_{$vo.name|default=''}_eyou');">远程图片</label>
-                        <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
-                    </dd>
-                </dl>
+                        
+                    </div>
+                </div>
                 <script type="text/javascript">
                     function {$vo.fieldArr}_{$vo.name|default=''}_call_back(fileurl_tmp)
                     {
-                      $("#{$vo.fieldArr}_{$vo.name|default=''}_eyou_local").val(fileurl_tmp);
+                      $("#{$vo.fieldArr}_{$vo.name|default=''}").val(fileurl_tmp);
                       $("#img_a_{$vo.fieldArr}_{$vo.name|default=''}").attr('href', fileurl_tmp);
                       $("#img_i_{$vo.fieldArr}_{$vo.name|default=''}").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
                     }
@@ -159,67 +141,75 @@
 
             {case value="imgs"}
                 <!-- 多张图 start -->
-                <dl class="row" id="dl_{$vo.fieldArr}_{$vo.name|default=''}">
-                    <dt class="tit">
-                        <label>{if condition="1 == $vo.is_required"}<!-- <em>*</em> -->{/if}{$vo.title}</label>
-                    </dt>
-                    <dd class="opt">
-                        <div class="tab-pane" id="tab_{$vo.fieldArr}_{$vo.name|default=''}">
-                            <table class="table table-bordered">
-                                <tbody>
-                                <tr>
-                                    <td class="sort-list-{$vo.fieldArr}_{$vo.name|default=''}">
-                                        {volist name="$vo[$vo['name'].'_eyou_imgupload_list']" id="v2" key="k2"}
-                                        <div class="fieldext_upload" style="display:inline-block;">
-                                            <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}">
-                                            <a href="{$v2}" onclick="" class="upimg" target="_blank">
-                                                <img src="{$v2}" width="100" height="100">
+				<div class="users-form-item  users-col-span-100" style="height: unset;line-height: unset;">
+				    <label class="users-form-item-label">{$vo.title}：</label>
+				    <div class="users-form-item-content" style="height: unset;line-height: unset;">
+                        <div class="tab-pane pics" >
+                            <div id="tab_{$vo.fieldArr}_{$vo.name|default=''}">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="sort-list-img sort-list-{$vo.fieldArr}_{$vo.name|default=''}">
+                                                {volist name="$vo[$vo['name'].'_eyou_imgupload_list']" id="v2" key="k2"}
+                                                <div class="images_upload images_upload_html">
+                                                    <div class="images_upload_box">
+                                                        <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}">
+                                                        <a href="{$v2}" onclick="" class="upimg" target="_blank">
+                                                            <img src="{$v2}">
+                                                        </a>
+                                                        <a href="javascript:void(0)" onclick="{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'{$v2}')" class="delect" title="删除"></a>
+                                                        
+                                                    </div>
+                                                </div>
+                                                {/volist}
+                                                <div class="images_upload"></div>
+                                            </div>
+                                            <a href="javascript:void(0);" onClick="GetUploadify(100,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back');"  class="img-upload mb15">
+                                                <div class="y-line"></div>
+                                                <div class="x-line"></div>
                                             </a>
-                                            <br>
-                                            <a href="javascript:void(0)" onclick="{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'{$v2}')">删除</a>
-                                        </div>
-                                        {/volist}
-                                        <div class="fieldext_upload" style="display:inline-block;">
-                                            <a href="javascript:void(0);" onClick="GetUploadify(100,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back');" class="upimg">
-                                            <i class="fa fa-upload"></i>
-                                            上传
-                                            </a>
-                                            <br/>
-                                            <a href="javascript:void(0)">&nbsp;&nbsp;</a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <!-- 上传图片显示的样板 start -->
-                        <div class="{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl none">
-                            <div class="fieldext_upload" style="display:inline-block;">
-                                <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="" />
-                                <a href="javascript:void(0);" onClick="" class="upimg">
-                                    <img src="__STATIC__/admin/images/add-button.jpg" width="100" height="100" />
-                                </a>
-                                <br/>
-                                <a href="javascript:void(0)">&nbsp;&nbsp;</a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
                             </div>
+                            <!-- 上传图片显示的样板 start -->
+                            <div class="{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl none">
+                                <div class="images_upload sort-list-img images_upload_html">
+                                    <div class="images_upload_box">
+                                        <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="" />
+                                        <a href="javascript:void(0);" onClick="" class="upimg">
+                                            <img src="__STATIC__/admin/images/add-button.jpg" />
+                                        </a>
+                                        <a href="javascript:void(0)" class="delect" title="删除"></a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 上传图片显示的样板 end -->
                         </div>
-                        <!-- 上传图片显示的样板 end -->
-                    </dd>
-                </dl>
+				    </div>
+				</div>
+                
                 <script type="text/javascript">
                     // 上传多图回调函数
                     function {$vo.fieldArr}_{$vo.name|default=''}_call_back(paths){
-                        
+
                         var  last_div = $(".{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl").html();
                         for (var i=0;i<paths.length ;i++ )
                         {
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").before(last_div);  // 插入一个 新图片
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").find('img').attr('src',paths[i]);// 修改他的图片路径
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('删除');
-                            $("#dl_{$vo.fieldArr}_{$vo.name|default=''}").find(".fieldext_upload:eq(0)").find('input').val(paths[i]); // 设置隐藏域 要提交的值
-                        }             
+                            if ($(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html").length > 0) {
+                                $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").after(last_div);  // 插入一个 新图片
+                            } else {
+                                $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload:last").before(last_div);  // 插入一个 新图片
+                            }
+                            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+                            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").find('img').attr('src',paths[i]);// 修改他的图片路径
+                            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('');
+                            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .images_upload_html:last").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+                        }
                     }
+                    
                     /*
                      * 上传之后删除组图input     
                      * @access   public
@@ -229,17 +219,17 @@
                     {
                         $.ajax({
                             type:'GET',
-                            url:"{:url('Uploadify/delupload', ['_ajax'=>1])}",
+                            url:"{:url('Uploadimgnew/delupload', ['_ajax'=>1])}",
                             data:{action:"del", filename:path},
                             success:function(){
-                                $(obj).parent().remove(); // 删除完服务器的, 再删除 html上的图片                
+                                $(obj).parent().parent().remove(); // 删除完服务器的, 再删除 html上的图片                
                             }
                         });
                         // 删除数据库记录
                         $.ajax({
                             type:'GET',
                             url:"{:url('Field/del_channelimgs', ['_ajax'=>1])}",
-                            data:{filename:path,channel:"{$channeltype|default='0'}",fieldname:"{$vo.name}",aid:"{$aid|default='0'}"},
+                            data:{filename:path,channel:"{$channeltype|default='0'}",fieldid:"{$vo.id}",aid:"{$aid|default='0'}"},
                             success:function(){
                                 //         
                             }
@@ -308,23 +298,24 @@
 
             {case value="datetime"}
                 <!-- 日期和时间 start -->
-                <dl class="row">
-                    <dt class="tit">
-                        <label>{if condition="1 == $vo.is_required"}<!-- <em>*</em> -->{/if}{$vo.title}</label>
-                    </dt>
-                    <dd class="opt"> 
-                        <input type="text" class="input-txt" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" value="{php}if(empty($vo['dfvalue'])){echo date('Y-m-d H:i:s');}else{echo $vo['dfvalue'];}{/php}">        
+                <div class="users-form-item  users-col-span-7">
+                    <label class="users-form-item-label">{$vo.title}：</label>
+                    <div class="users-form-item-content">
+                        <input type="text" class="input-txt" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" value="{php}if(empty($vo['dfvalue'])){echo date('Y-m-d H:i:s');}else{echo $vo['dfvalue'];}{/php}">
                         <span class="add-on input-group-addon">
                             <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
                         </span> 
-                        <span class="err"></span>
-                        <p class="notic">{$vo.remark|default=''}</p>
-                    </dd>
-                </dl>
+                    </div>
+                </div>
                 <script type="text/javascript">
-                    $(function () {
-                        $('#{$vo.fieldArr}_{$vo.name|default=''}').layDate();   
-                    });
+                    layui.use('laydate', function() {
+                        var laydate = layui.laydate;
+
+                        laydate.render({
+                            elem: "#{$vo.fieldArr}_{$vo.name|default=''}"
+                            ,type: 'datetime'
+                        });
+                    })
                 </script>
                 <!-- 日期和时间 end -->
             {/case}
@@ -343,7 +334,7 @@
                 </dl>
                 <script type="text/javascript">
                     UE.getEditor('{$vo.fieldArr}_{$vo.name|default=''}',{
-                        serverUrl :"{:url('Ueditor/index',array('savepath'=>'ueditor'))}",
+                        serverUrl :"{:url('Ueditor/index',array('savepath'=>'allimg'))}",
                         zIndex: 999,
                         initialFrameWidth: "100%", //初化宽度
                         initialFrameHeight: 450, //初化高度            
@@ -369,18 +360,19 @@
             {/eyou:case}
             {case value="file"}
             <!-- 单个文件 start -->
-            <dl class="row">
-                <dt class="tit">
-                    <label>{if condition="1 == $vo.is_required"}<!-- <em>*</em> -->{/if}{$vo.title}</label>
-                </dt>
-                <dd class="opt">
+            <div class="users-form-item  users-col-span-7">
+                <label class="users-form-item-label">{$vo.title}：</label>
+                <div class="users-form-item-content"> 
                     <a id="download_file_{$vo.fieldArr}_{$vo.name|default=''}" style="margin-right: 30px;text-decoration: underline;{eyou:notempty name='$vo.info' /}display: '';{eyou:else /}display: none;{/eyou:notempty}"
                        {eyou:notempty name='$vo.info' /} href="{$vo.info|default=''}" download="{$vo.info|get_filename=###}" {/eyou:notempty}>
                     <img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件</a>
                     <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.info|default=''}" style="display: none;">
-                    <button type="button" class="layui-btn" id="upload_{$vo.fieldArr}_{$vo.name|default=''}" style="height: 30px;line-height: 30px;padding: 0 5px;background-color: #4fc0e8;">上传文件</button>
-                </dd>
-            </dl>
+                    <button type="button" class="users-btn users-btn-text" id="upload_{$vo.fieldArr}_{$vo.name|default=''}">
+                        <span>上传文件</span>
+                    </button>
+                </div>
+            </div>
+            
             <script type="text/javascript">
                 layui.use('upload', function(){
                     var upload = layui.upload;

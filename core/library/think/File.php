@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
 namespace think;
 
@@ -262,7 +271,7 @@ class File extends SplFileObject
         $extension = strtolower(pathinfo($this->getInfo('name'), PATHINFO_EXTENSION));
 
         // 如果上传的不是图片，或者是图片而且后缀确实符合图片类型则返回 true
-        return !in_array($extension, ['gif', 'jpg', 'jpeg', 'bmp', 'png', 'swf', 'webp']) || in_array($this->getImageType($this->filename), [1, 2, 3, 4, 6, 13, 15, 18]);
+        return !in_array($extension, ['gif', 'jpg', 'jpeg', 'bmp', 'png', 'swf', 'webp', 'svg']) || in_array($this->getImageType($this->filename), [1, 2, 3, 4, 6, 13, 15, 18, 8080]);
     }
 
     /**
@@ -278,8 +287,19 @@ class File extends SplFileObject
         }
 
         try {
-            $info = getimagesize($image);
-            return $info ? $info[2] : false;
+            $info = @getimagesize($image);
+            if ($info) {
+                return $info[2];
+            } else {
+                if (function_exists('simplexml_load_file')) {
+                    $svgXML = simplexml_load_file($image);
+                    $xmlattributes = $svgXML->attributes();
+                    if (is_object($xmlattributes)) {
+                        return 8080;
+                    }
+                }
+                return false;
+            }
         } catch (\Exception $e) {
             return false;
         }

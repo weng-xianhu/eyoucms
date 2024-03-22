@@ -5,18 +5,20 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{$eyou.field.seo_title}_标签页_{eyou:global name="web_name" /}</title>
-<meta name="description" content="{$eyou.field.seo_description}" />
 <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+<meta name="description" content="{$eyou.field.seo_description}" />
 <link href="{eyou:global name='web_ico' /}" rel="shortcut icon" type="image/x-icon" />
 {eyou:static file="skin/style/pintuer.css" /}
 {eyou:static file="skin/style/header.css" /}
 {eyou:static file="skin/style/style.css" /}
-{eyou:static file="skin/Lib/font-awesome/css/font-awesome.min.css" /}
+{eyou:static file="skin/style/iconfont.css" /}
 <!--[if lt IE 9]>{eyou:static file="skin/js/respond.js" /} <![endif]-->
 </head>
 <body>
 <div id="mobile-mask">
+<!-- 公用头部 begin -->
 {eyou:include file="header.htm" /}
+<!-- 公用头部 end -->    
 <div class="layout bg-gray">
 	<div class="container">
 		<div class="line">
@@ -39,12 +41,12 @@
 					{eyou:list titlelen='60' pagesize='20'}
 					<li class="dot">
 						<a href="{$field.arcurl}" title="{$field.title}">【{$field.typename}】{$field.title}</a>
-						<span>{$field.add_time|MyDate='Y-m-d',###}</span>
+						<span>{$field.update_time|MyDate='Y-m-d',###}</span>
 					</li>
 					{/eyou:list}
 				</ul>
 			</div>
-			<!-- 分页 -->
+			<!-- 分页 begin -->
 			<div class="xl12 xs12 text-center">
 				<div class="blank-small"></div>
 				<ul class="pagination">
@@ -52,12 +54,14 @@
 				</ul>
 				<div class="blank-large"></div>
 			</div>
-			<!-- 分页 -->
+			<!-- 分页 end -->
 		</div>
 	</div>
 </div>
+<!-- 公用底部 begin -->
 {eyou:include file="footer.htm" /}
-</div><!-- id="mobile-mask" -->
+<!-- 公用底部 end -->
+</div>
 {eyou:static file="skin/js/jquery.min.js" /}
 {eyou:static file="skin/js/pintuer.js" /}
 {eyou:static file="skin/js/common.js" /}

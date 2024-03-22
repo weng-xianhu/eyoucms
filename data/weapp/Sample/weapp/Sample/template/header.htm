@@ -9,25 +9,41 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <!-- Apple devices fullscreen -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link href="__PUBLIC__/plugins/layui/css/layui.css?v={$version}" rel="stylesheet" type="text/css">
 <link href="__WEAPP_TEMPLATE__/skin/css/main.css?v={$weappInfo.version|default='v1.0.0'}" rel="stylesheet" type="text/css">
 <link href="__WEAPP_TEMPLATE__/skin/css/page.css?v={$weappInfo.version|default='v1.0.0'}" rel="stylesheet" type="text/css">
 <link href="__SKIN__/font/css/font-awesome.min.css?v={$version}" rel="stylesheet" />
+<link href="__SKIN__/font/css/iconfont.css?v={$version}" rel="stylesheet" />
 <!--[if IE 7]>
   <link rel="stylesheet" href="__SKIN__/font/css/font-awesome-ie7.min.css?v={$version}">
 <![endif]-->
-<link href="__SKIN__/js/jquery-ui/jquery-ui.min.css?v={$version}" rel="stylesheet" type="text/css"/>
-<link href="__SKIN__/css/perfect-scrollbar.min.css?v={$version}" rel="stylesheet" type="text/css"/>
-<style type="text/css">html, body { overflow: visible;}</style>
 <script type="text/javascript">
     // 入口路径
     var eyou_basefile = "{$Request.baseFile}";
     var module_name = "{$Think.const.MODULE_NAME}";
-    var GetUploadify_url = "{:url('Uploadify/upload')}";
-</script>  
-<script type="text/javascript" src="__SKIN__/js/jquery.js?v={$version}"></script>
+    var GetUploadify_url = "{:url('Uploadimgnew/upload')}";
+    var __root_dir__ = "__ROOT_DIR__";
+    var __lang__ = "{$admin_lang}";
+    var __seo_pseudo__ = {$global['seo_pseudo']|default=1};
+    var __web_xss_filter__ = {$global['web_xss_filter']|default=0};
+    var __is_mobile__ = {$is_mobile|default=0};
+    var __security_ask_open__ = {$global['security_ask_open']|default=0};
+</script>
+<link href="__SKIN__/js/jquery-ui/jquery-ui.min.css?v={$version}" rel="stylesheet" type="text/css"/>
+<link href="__SKIN__/js/perfect-scrollbar.min.css?v={$version}" rel="stylesheet" type="text/css"/>
+<style type="text/css">html, body { overflow: visible;}</style>
+<link href="__SKIN__/css/diy_style.css?v={$version}" rel="stylesheet" type="text/css" />
+{if condition="file_exists(ROOT_PATH.'public/static/admin/css/theme_style.css')"}
+    <link href="__SKIN__/css/theme_style.css?v={$version}_{$global['web_theme_style_uptime']|default=0}" rel="stylesheet" type="text/css">
+{elseif condition="file_exists(APP_PATH.'admin/template/public/theme_css.htm') && function_exists('hex2rgba')" /}
+    {include file="/application/admin/template/public/theme_css.htm" /}
+{/if}
+<script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
 <script type="text/javascript" src="__SKIN__/js/jquery-ui/jquery-ui.min.js?v={$version}"></script>
 <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js?v={$version}"></script>
+<script type="text/javascript" src="__SKIN__/js/jquery.cookie.js?v={$version}"></script>
 <script type="text/javascript" src="__WEAPP_TEMPLATE__/skin/js/admin.js?v={$weappInfo.version|default='v1.0.0'}"></script>
 <script type="text/javascript" src="__SKIN__/js/perfect-scrollbar.min.js?v={$version}"></script>
+<script type="text/javascript" src="__PUBLIC__/plugins/layui/layui.js?v={$version}"></script>
 <script src="__WEAPP_TEMPLATE__/skin/js/global.js?v={$weappInfo.version|default='v1.0.0'}"></script>
 </head>

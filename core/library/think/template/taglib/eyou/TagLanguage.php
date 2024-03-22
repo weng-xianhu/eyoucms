@@ -18,7 +18,7 @@ namespace think\template\taglib\eyou;
  */
 class TagLanguage extends Base
 {
-    public $currentstyle = '';
+    public $currentclass = '';
     
     //初始化
     protected function _initialize()
@@ -30,13 +30,13 @@ class TagLanguage extends Base
      * 获取多语言列表
      * @author 小虎哥 by 2018-4-20
      */
-    public function getLanguage($type = 'default', $limit = '', $currentstyle = '')
+    public function getLanguage($type = 'default', $limit = '', $currentclass = '')
     {
-        $this->currentstyle = $currentstyle;
+        $this->currentclass = $currentclass;
         
         $map = ['status'=>1];
         if ('default' == $type) {
-            $map['mark'] = ['NEQ', $this->home_lang];
+            $map['mark'] = ['NEQ', self::$home_lang];
         }
 
         /*关闭多语言*/
@@ -49,7 +49,6 @@ class TagLanguage extends Base
         $result = M("language")->where($map)
             ->order('sort_order asc')
             ->limit($limit)
-            // ->cache(true,EYOUCMS_CACHE_TIME,"language")
             ->select();
 
         /*去掉入口文件*/
@@ -87,10 +86,10 @@ class TagLanguage extends Base
             /*--end*/
             
             /*标记被选中效果*/
-            if ($val['mark'] == $this->home_lang) {
-                $val['currentstyle'] = $this->currentstyle;
+            if ($val['mark'] == self::$home_lang) {
+                $val['currentclass'] = $val['currentstyle'] = $this->currentclass;
             } else {
-                $val['currentstyle'] = '';
+                $val['currentclass'] = $val['currentstyle'] = '';
             }
             /*--end*/
 

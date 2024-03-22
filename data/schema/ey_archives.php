@@ -18,6 +18,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'stypeid' => 
+  array (
+    'name' => 'stypeid',
+    'type' => 'varchar(90)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'channel' => 
   array (
     'name' => 'channel',
@@ -39,6 +48,15 @@ return array (
   'title' => 
   array (
     'name' => 'title',
+    'type' => 'varchar(200)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'subtitle' => 
+  array (
+    'name' => 'subtitle',
     'type' => 'varchar(200)',
     'notnull' => false,
     'default' => '',
@@ -135,6 +153,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'origin' => 
+  array (
+    'name' => 'origin',
+    'type' => 'varchar(200)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'author' => 
   array (
     'name' => 'author',
@@ -165,7 +192,7 @@ return array (
   'jumplinks' => 
   array (
     'name' => 'jumplinks',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(255)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -216,12 +243,48 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'merchant_id' => 
+  array (
+    'name' => 'merchant_id',
+    'type' => 'int(11) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'free_shipping' => 
+  array (
+    'name' => 'free_shipping',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'users_price' => 
   array (
     'name' => 'users_price',
     'type' => 'decimal(10,2)',
     'notnull' => false,
     'default' => '0.00',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'crossed_price' => 
+  array (
+    'name' => 'crossed_price',
+    'type' => 'decimal(10,2) unsigned',
+    'notnull' => false,
+    'default' => '0.00',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'users_discount_type' => 
+  array (
+    'name' => 'users_discount_type',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),
@@ -252,6 +315,24 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'virtual_sales' => 
+  array (
+    'name' => 'virtual_sales',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'sales_all' => 
+  array (
+    'name' => 'sales_all',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'stock_count' => 
   array (
     'name' => 'stock_count',
@@ -276,6 +357,15 @@ return array (
     'type' => 'tinyint(1) unsigned',
     'notnull' => false,
     'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'logistics_type' => 
+  array (
+    'name' => 'logistics_type',
+    'type' => 'varchar(100)',
+    'notnull' => false,
+    'default' => '1',
     'primary' => false,
     'autoinc' => false,
   ),
@@ -342,6 +432,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'restric_type' => 
+  array (
+    'name' => 'restric_type',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'is_del' => 
   array (
     'name' => 'is_del',
@@ -399,9 +498,36 @@ return array (
   'htmlfilename' => 
   array (
     'name' => 'htmlfilename',
-    'type' => 'varchar(250)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'province_id' => 
+  array (
+    'name' => 'province_id',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'city_id' => 
+  array (
+    'name' => 'city_id',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'area_id' => 
+  array (
+    'name' => 'area_id',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),
@@ -420,6 +546,42 @@ return array (
     'type' => 'int(11)',
     'notnull' => false,
     'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'no_vip_pay' => 
+  array (
+    'name' => 'no_vip_pay',
+    'type' => 'tinyint(3)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'editor_remote_img_local' => 
+  array (
+    'name' => 'editor_remote_img_local',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'editor_img_clear_link' => 
+  array (
+    'name' => 'editor_img_clear_link',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'reason' => 
+  array (
+    'name' => 'reason',
+    'type' => 'text',
+    'notnull' => false,
+    'default' => NULL,
     'primary' => false,
     'autoinc' => false,
   ),

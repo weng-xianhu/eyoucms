@@ -15,6 +15,97 @@
     </div>
     <!-- 单张图 end -->
 {/eyou:case}
+<!-- 扩展 -->
+
+{case value="imgs"}
+<script type="text/javascript" src="__STATIC__/admin/js/jquery-ui/jquery-ui.min.js"></script>
+<!-- 多张图 start -->
+<div class="item-from-row" id="dl_{$vo.fieldArr}_{$vo.name|default=''}">
+    <div class="from-row-l">
+        <label for="title"> {$vo.title}：</label>
+    </div>
+    <div class="from-row-r">
+
+        <div class="images_upload_main" id="tab_{$vo.fieldArr}_{$vo.name|default=''}">
+            <!-- <a href="javascript:void(0);" onClick="GetUploadify(100,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back', '', '{$vo.title}');" class="el-button el-button--primary is-plain el-button--small">
+               <i class="el-icon-picture"></i>上传图片
+            </a> -->
+            <div class="sort-list-{$vo.fieldArr}_{$vo.name|default=''} mt10">
+                {volist name="$vo[$vo['name'].'_eyou_imgupload_list']" id="v2" key="k2"}
+                <div class="fieldext_upload fieldext_upload_html" >
+                    <div class="images_upload_item">
+                        <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2|default=''}">
+                        <a href="{$v2|default=''}" onclick="" target="_blank">
+                            <img src="{$v2|default=''}" width="120" height="120">
+                        </a>
+                        <a class="delete" title="删除" href="javascript:void(0)" onclick="{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'{$v2|default=''}')"></a>
+                    </div>
+                </div>
+                {/volist}
+                <div class="fieldext_upload" style="display:none;"></div>
+            </div>
+            <a href="javascript:void(0);" onClick="GetUploadify(100,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back', '', '{$vo.title}');" class="img-upload" title="上传图片">
+                <div class="y-line"></div>
+                <div class="x-line"></div>
+            </a>
+        </div>
+        <!-- 上传图片显示的样板 start -->
+        <div class="{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl" style="display: none;">
+            <div class="fieldext_upload fieldext_upload_html">
+                <div class="images_upload_item">
+                    <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="" />
+                    <a href="javascript:void(0);" onClick="" >
+                        <img src="__STATIC__/admin/images/add-button.jpg" width="120" height="120" />
+                    </a>
+                    <a class="delete" href="javascript:void(0)" title="删除">&nbsp;&nbsp;</a>
+                </div>
+            </div>
+        </div>
+        <!-- 上传图片显示的样板 end -->
+    </div>
+</div>
+<script type="text/javascript">
+    // 上传多图回调函数
+    function {$vo.fieldArr}_{$vo.name|default=''}_call_back(paths){
+        var  last_div = $(".{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl").html();
+        for (var i=0;i<paths.length ;i++ )
+        {
+            if ($(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html").length > 0) {
+                $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").after(last_div);  // 插入一个 新图片
+            } else {
+                $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload:last").before(last_div);  // 插入一个 新图片
+            }
+            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('img').attr('src',paths[i]);// 修改他的图片路径
+            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('');
+            $(".sort-list-{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+        }
+    }
+    /*
+     * 上传之后删除组图input
+     * @access   public
+     * @val      string  删除的图片input
+     */
+    function {$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(obj,path)
+    {
+        $(obj).parent().remove();
+    }
+
+    /** 以下 图集相册的拖动排序相关 js*/
+
+    $( ".sort-list-{$vo.fieldArr}_{$vo.name|default=''}" ).sortable({
+        start: function( event, ui) {
+
+        }
+        ,stop: function( event, ui ) {
+        }
+    });
+    //因为他们要拖动，所以尽量设置他们的文字不能选择。
+    $( ".sort-list-{$vo.fieldArr}_{$vo.name|default=''}" ).disableSelection();
+</script>
+<!-- 多张图 end -->
+{/case}
+
 {case value="file"}
     {eyou:static file="/public/plugins/layui/css/layui.css" /}
     {eyou:static file="/public/plugins/layui/layui.js" /}
@@ -70,3 +161,33 @@
     </script>
     <!-- 单个文件 end -->
 {/case}
+{eyou:case value="datetime"}
+    <!-- 日期和时间 start -->
+    {eyou:static file="/public/plugins/layui/css/layui.css" /}
+    {eyou:static file="/public/plugins/layui/layui.js" /}
+    <div class="item-from-row">
+        <div class="from-row-l">{$vo.title}：
+            {eyou:if condition="1 == $vo.is_required"}
+                <span class="red">*</span>
+            {eyou:else/}
+                <span class="red"></span>
+            {/eyou:if}
+        </div>
+        <div class="from-row-r">
+            <input type="text" class="el-input__inner w300" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" autocomplete="off">{$vo.dfvalue_unit|default=''}
+            <span class="err"></span>
+            <p class="notic">{$vo.remark|default=''}</p>
+        </div>
+    </div>
+    <script type="text/javascript">
+        layui.use(function(){
+            var laydate = layui.laydate;
+
+            laydate.render({
+                elem: "#{$vo.fieldArr}_{$vo.name|default=''}"
+                ,type: 'datetime'
+            });
+        })
+    </script>
+    <!-- 日期和时间 end -->
+{/eyou:case}

@@ -4,6 +4,17 @@
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
+    {empty name="$iframe"}
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back_xin" href="javascript:history.back();" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>个人信息</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    {/empty}
     <form class="form-horizontal" id="postForm" action="{:url('Admin/admin_edit')}" method="post">
         <input type="hidden" name="admin_id" value="{$info.admin_id}">
         <div class="ncap-form-default">
@@ -24,8 +35,12 @@
                     <label for="username">用&nbsp;&nbsp;户&nbsp;&nbsp;名</label>
                 </dt>
                 <dd class="opt">
-                    {$info.user_name}
-                    <input type="hidden" name="user_name" value="{$info.user_name}">
+                    {if condition="empty($admin_info.parent_id)"}
+                        <input type="text" name="user_name" value="{$info.user_name}" class="input-txt" placeholder="" autocomplete="off">
+                        <p class="notic">为了安全起见，请勿设置网络常见的用户名，且不能与笔名一致，以免被暴露在网站前台</p>
+                    {else /}
+                        {$info.user_name}
+                    {/if}
                 </dd>
             </dl>
             <dl class="row">
@@ -34,7 +49,7 @@
                 </dt>
                 <dd class="opt">
                     <input type="text" name="password" value="" id="password" autocomplete="off" class="input-txt" placeholder="不修改留空">
-                    <p class="notic">推荐密码至少是以0-9a-zA-Z.@_-!等符号组合！</p>
+                    <p class="notic">密码长度至少5位或以上，建议密码长度设置一些，且以0-9a-zA-Z.@_-!等符号组合！</p>
                     <p id="password_tips"></p>
                 </dd>
             </dl>
@@ -53,8 +68,8 @@
                     <label for="pen_name">笔名</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="pen_name" value="{$info.pen_name}" id="pen_name" class="input-txt">
-                    <p class="notic">发布文档后显示责任编辑的名字</p>
+                    <input type="text" name="pen_name" value="{$info.pen_name}" id="pen_name" class="input-txt" autocomplete="off">
+                    <p class="notic">发布文档后显示责任编辑的名字，禁止与用户名设置一致，以免存在安全隐患</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -62,7 +77,7 @@
                     <label for="true_name">真实姓名</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="true_name" value="{$info.true_name|default=''}" id="true_name" class="input-txt">
+                    <input type="text" name="true_name" value="{$info.true_name|default=''}" id="true_name" class="input-txt" autocomplete="off">
                     <p class="notic"></p>
                 </dd>
             </dl>
@@ -71,7 +86,7 @@
                     <label for="mobile">手机号码</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="mobile" value="{$info.mobile}" id="mobile" class="input-txt">
+                    <input type="text" name="mobile" value="{$info.mobile}" id="mobile" class="input-txt" autocomplete="off">
                     <p class="notic"></p>
                 </dd>
             </dl>
@@ -80,15 +95,56 @@
                     <label for="email">Email邮箱</label>
                 </dt>
                 <dd class="opt">
-                    <input type="text" name="email" value="{$info.email}" id="email" class="input-txt">
+                    <input type="text" name="email" value="{$info.email}" id="email" class="input-txt" autocomplete="off">
                     <p class="notic"></p>
                 </dd>
             </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="desc">工作内容</label>
+                </dt>
+                <dd class="opt">
+                    <textarea rows="5" cols="60" id="desc" name="desc" style="height:60px;">{$info.desc}</textarea>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+
+            {if condition="!empty($thirdata['data']['security_wechat_open'])"}
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="bind_wechat">绑定微信</label>
+                    </dt>
+                    <dd class="opt">
+                        <span id="span_wechat_nickname">
+                            {empty name="$wechatInfo['wx_id']"}未绑定{else /}{$wechatInfo.nickname}{/empty}
+                        </span>
+                        <a href="javascript:void(0);" id="wechat_bind" data-logintype="{$thirdata['type']}" onclick="wechat_bind(this);" class="ncap-btn ncap-btn-green" {notempty name='$wechatInfo.wx_id'} style="display: none;" {/notempty}>立即绑定</a>
+                        <a href="javascript:void(0);" id="wechat_unbind" data-logintype="{$thirdata['type']}" onclick="wechat_unbind(this);" class="ncap-btn ncap-btn-green" {empty name='$wechatInfo.wx_id'} style="display: none;" {/empty}>解除绑定</a>
+                        <input type="hidden" id="is_bind_wechat" value="{empty name='$wechatInfo.wx_id'}bind{else /}unbind{/empty}">
+                    </dd>
+                </dl>
+            {elseif condition="!empty($thirdata['data']['switch'])" /}
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="bind_wechat">绑定微信</label>
+                    </dt>
+                    <dd class="opt">
+                        <span id="span_wechat_nickname">
+                            {empty name="$wechatInfo['wx_id']"}未绑定{else /}已绑定公众号{/empty}
+                        </span>
+                        <a href="javascript:void(0);" id="wechat_bind" data-logintype="{$thirdata['type']}" onclick="wechat_bind(this);" class="ncap-btn ncap-btn-green" {notempty name='$wechatInfo.wx_id'} style="display: none;" {/notempty}>立即绑定</a>
+                        <a href="javascript:void(0);" id="wechat_unbind" data-logintype="{$thirdata['type']}" onclick="wechat_unbind(this);" class="ncap-btn ncap-btn-green" {empty name='$wechatInfo.wx_id'} style="display: none;" {/empty}>解除绑定</a>
+                        <input type="hidden" id="is_bind_wechat" value="{empty name='$wechatInfo.wx_id'}bind{else /}unbind{/empty}">
+                    </dd>
+                </dl>
+            {/if}
+
             {if condition="$info.admin_id != $Think.session.admin_info.admin_id AND 0 >= $Think.session.admin_info.role_id"}
             <dl class="row"><dt class="tit"><label><b>管理员权限设置</b></label></dt></dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="name">管理员权限组</label>
+                    <label for="name">管理员角色组</label>
                 </dt>
                 <dd class="opt">
                     <p><label><input type="radio" name="role_id" value="-1" onclick="changeRole(-1);" {if condition="-1 == $info.role_id"}checked="checked"{/if} />超级管理员</label></p>
@@ -124,6 +180,16 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
+                    <label for="name">功能地图</label>
+                </dt>
+                <dd class="opt">
+                    <label><img class="cboximg" src="__SKIN__/images/{eq name="$role_info.switch_map" value="1"}ok{else /}del{/eq}.png" /><input type="checkbox" name="switch_map" value="1" {eq name="$role_info.switch_map" value="1"} checked="checked"{/eq} class="none" />允许操作</label>
+                    <span class="err"></span>
+                    <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
                     <label for="name">文档权限</label>
                 </dt>
                 <dd class="opt">
@@ -152,13 +218,14 @@
                     <p><label><img class="cboximg" src="__SKIN__/images/{if condition="!empty($role_info.cud) && in_array('edit', $role_info.cud)"}ok{else /}del{/if}.png" /><input type="checkbox" name="cud[]" value="edit" {if condition="! empty($role_info.cud) && in_array('edit', $role_info.cud)"} checked="checked"{/if} class="none" />修改信息</label></p>
                     <p><label><img class="cboximg" src="__SKIN__/images/{if condition="!empty($role_info.cud) && in_array('del', $role_info.cud)"}ok{else /}del{/if}.png" /><input type="checkbox" name="cud[]" value="del" {if condition="! empty($role_info.cud) && in_array('del', $role_info.cud)"} checked="checked"{/if} class="none" />删除信息</label></p>
                     <p><label><img class="cboximg" src="__SKIN__/images/{if condition="!empty($role_info.cud) && in_array('changetableval', $role_info.cud)"}ok{else /}del{/if}.png" /><input type="checkbox" name="cud[]" value="changetableval" {if condition="! empty($role_info.cud) && in_array('changetableval', $role_info.cud)"} checked="checked"{/if} class="none" />审核信息</label></p>
+                    <p class="none"><label><img class="cboximg" src="__SKIN__/images/{if condition="!empty($role_info.cud) && in_array('rebackdraft', $role_info.cud)"}ok{else /}del{/if}.png" /><input type="checkbox" name="cud[]" value="rebackdraft" {if condition="! empty($role_info.cud) && in_array('rebackdraft', $role_info.cud)"} checked="checked"{/if} class="none" />退回信息</label></p>
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="name">功能权限</label>
+                    <label>功能权限</label>
                 </dt>
                 <dd class="opt">
                     <p>
@@ -171,42 +238,12 @@
                           {if condition="1002 == $vo2['id']"}
                             <div class="admin_poplistdiv">
                                 <h2>{$vo2.name}</h2>
-                            {if condition="! empty($arctypes)"}
+                                {if condition="! empty($arctype_p_html)"}
                                 <p>
-                                    {php}$first_arctype_id = '';{/php}
-                                    {foreach name="arctypes" item="arctype" key="k"}
-                                        {if condition="isset($arctype_array[$arctype['id']])"}
-                                            {if condition="$k>0"}
-                                            <em class="arctype_bg expandable"></em>
-                                            {else /}
-                                            <em class="arctype_bg collapsable"></em>
-                                            {php}$first_arctype_id = $arctype['id'];{/php}
-                                            {/if}
-                                        {/if}
-                                        <label><img class="cboximg" src="__SKIN__/images/{if condition="! empty($role_info.permission.arctype) && in_array($arctype.id, $role_info.permission.arctype)"}ok{else /}del{/if}.png" /><input type="checkbox" class="arctype_cbox arctype_id_{$arctype.id} none" name="permission[arctype][]" value="{$arctype.id}" {if condition="! empty($role_info.permission.arctype) && in_array($arctype.id, $role_info.permission.arctype)"} checked="checked"{/if} />{$arctype.typename}</label>
-                                    {/foreach}
+                                    {$arctype_p_html}
                                 </p>
-                                
-                                {foreach name="arctypes" item="arctype" key="k"}
-                                {if condition="isset($arctype_array[$arctype['id']])"}
-                                    <div class="arctype_child" id="arctype_child_{$arctype['id']}"{if condition="$first_arctype_id==$arctype['id']"} style="display: block;"{/if}>
-                                    {foreach $arctype_array[$arctype['id']] as $item}
-                                        <div class="arctype_child1">
-                                            <label><img class="cboximg" src="__SKIN__/images/{if condition="! empty($role_info.permission.arctype) && in_array($item.id, $role_info.permission.arctype)"}ok{else /}del{/if}.png" /><input type="checkbox" class="arctype_cbox arctype_id_{$item.id} none" name="permission[arctype][]" value="{$item.id}" data-pid="{$item.parent_id}" {if condition="! empty($role_info.permission.arctype) && in_array($item.id, $role_info.permission.arctype)"} checked="checked"{/if} />{$item.typename}</label>
-                                        </div>
-                                        {if condition="isset($arctype_array[$item['id']])"}
-                                        <div class="arctype_child2" id="arctype_child_{$item['id']}">
-                                            <span class="button level1 switch center_docu"></span>
-                                            {foreach $arctype_array[$item['id']] as $vo}
-                                            <label><img class="cboximg" src="__SKIN__/images/{if condition="! empty($role_info.permission.arctype) && in_array($vo.id, $role_info.permission.arctype)"}ok{else /}del{/if}.png" /><input type="checkbox" class="arctype_cbox none" name="permission[arctype][]" value="{$vo.id}" data-pid="{$vo.parent_id}" data-tpid="{$item.parent_id}" {if condition="! empty($role_info.permission.arctype) && in_array($vo.id, $role_info.permission.arctype)"} checked="checked"{/if} />{$vo.typename}</label>
-                                            {/foreach}
-                                        </div>
-                                        {/if}
-                                    {/foreach}
-                                    </div>
+                                {$arctype_child_html}
                                 {/if}
-                                {/foreach}
-                            {/if}
                             </div>
                           {else /}
                             <div class="admin_poplistdiv">
@@ -246,10 +283,14 @@
                 </dd>
             </dl>
             {/if}
-            <div class="bot" style="position: relative;"><a href="JavaScript:void(0);" onclick="adsubmit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a></div>
+            <div class="bot2">
+                {:token('__token_admin_edit__')}
+                <a href="JavaScript:void(0);" onclick="adsubmit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+            </div>
         </div>
     </form>
 </div>
+<input type="hidden" name="security_ask_old" id="security_ask_old" value="{$global['security_ask']|default=''}">
 <textarea name="admin_role_list" id="admin_role_list" class="none">{$admin_role_list|json_encode}</textarea>
 <script type="text/javascript">
     $(function(){
@@ -258,10 +299,10 @@
 
         /*超级管理员默认全选复选框*/
         if (0 >= {$info.role_id}) {
-            $('#postForm input[type="checkbox"]').attr('checked', 'checked');
+            $('#postForm input[type="checkbox"]').prop('checked', 'checked');
             $('#postForm img.cboximg').attr('src', '__SKIN__/images/ok.png');
-            $('#postForm input[name=only_oneself]').val(0);
-            $('#postForm input[name=only_oneself]').parent().find('img.cboximg').attr('src', '__SKIN__/images/del.png');
+            // $('#postForm input[name=only_oneself]').val(0);
+            // $('#postForm input[name=only_oneself]').parent().find('img.cboximg').attr('src', '__SKIN__/images/del.png');
         }
         /*--end*/
 
@@ -280,16 +321,16 @@
             var acid = $(this).val(), input = 'arctype_child_' + acid;
             var pid = $(this).data('pid');
             var tpid = $(this).data('tpid');
-            if($(this).attr('checked')){
+            if($(this).prop('checked')){
                 if (0 < $('input[data-pid="'+pid+'"]:checked').length) {
-                    $('.arctype_id_'+pid).attr('checked', 'checked');
+                    $('.arctype_id_'+pid).prop('checked', 'checked');
                     $('.arctype_id_'+pid).parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
                 }
                 if (0 < $('#arctype_child_'+tpid).find('input[type="checkbox"]:checked').length) {
-                    $('.arctype_id_'+tpid).attr('checked', 'checked');
+                    $('.arctype_id_'+tpid).prop('checked', 'checked');
                     $('.arctype_id_'+tpid).parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
                 }
-                $('#'+input).find('input[type="checkbox"]').attr('checked', 'checked');
+                $('#'+input).find('input[type="checkbox"]').prop('checked', 'checked');
                 $('#'+input).find('input[type="checkbox"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
             }else{
                 if (1 > $('input[data-pid="'+pid+'"]:checked').length) {
@@ -305,8 +346,8 @@
             }
         });
         $('#select_cud').bind('click', function(){
-            if($(this).attr('checked')){
-                $('#postForm input[name^="cud"]').attr('checked', 'checked');
+            if($(this).prop('checked')){
+                $('#postForm input[name^="cud"]').prop('checked', 'checked');
                 $('#postForm input[name^="cud"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
             }else{
                 $('#postForm input[name^="cud"]').removeAttr('checked');
@@ -315,8 +356,8 @@
         });
 
         $('#select_all_permission').bind('click', function(){
-            if($(this).attr('checked')){
-                $('#postForm input[name^="permission"]').attr('checked', 'checked');
+            if($(this).prop('checked')){
+                $('#postForm input[name^="permission"]').prop('checked', 'checked');
                 $('#postForm input[name^="permission"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
             }else{
                 $('#postForm input[name^="permission"]').removeAttr('checked');
@@ -333,13 +374,13 @@
     function hasSelectAll(){
         var c = true;
         $('#postForm input[name^="permission"]').each(function(idx, ele){
-            if(! $(ele).attr('checked')){
+            if(! $(ele).prop('checked')){
                 c = false;
                 return;
             }
         });
         if(c){
-            $('#select_all_permission').attr('checked', 'checked');
+            $('#select_all_permission').prop('checked', 'checked');
             $('#select_all_permission').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
         }else{
             $('#select_all_permission').removeAttr('checked');
@@ -348,13 +389,13 @@
 
         var c = true;
         $('#postForm input[name^="cud"]').each(function(idx, ele){
-            if(! $(ele).attr('checked')){
+            if(! $(ele).prop('checked')){
                 c = false;
                 return;
             }
         });
         if(c){
-            $('#select_cud').attr('checked', 'checked');
+            $('#select_cud').prop('checked', 'checked');
             $('#select_cud').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
         }else{
             $('#select_cud').removeAttr('checked');
@@ -366,8 +407,8 @@
         if (-1 == value) {
             $('#postForm input[type="checkbox"]').attr("checked","checked").attr('disabled', 'disabled');
             $('#postForm img.cboximg').attr('src', '__SKIN__/images/ok.png');
-            $('#postForm input[name=only_oneself]').val(0);
-            $('#postForm input[name=only_oneself]').parent().find('img.cboximg').attr('src', '__SKIN__/images/del.png');
+            // $('#postForm input[name=only_oneself]').val(0);
+            // $('#postForm input[name=only_oneself]').parent().find('img.cboximg').attr('src', '__SKIN__/images/del.png');
             return;
         }
         
@@ -375,8 +416,9 @@
         $('#postForm img.cboximg').attr('src', '__SKIN__/images/del.png');
 
         // if(value == "0"){
-        //     $('#postForm input[name!="role_id"]').attr('checked', 'checked');
+        //     $('#postForm input[name!="role_id"]').prop('checked', 'checked');
         //     $('#postForm input[name="online_update"]').removeAttr('checked');
+        //     $('#postForm input[name="switch_map"]').removeAttr('checked');
         //     $('#postForm input[name="only_oneself"]').removeAttr('checked');
         //     return ;
         // }
@@ -386,30 +428,34 @@
             if(item.id == value){
                 if(item.language){
                     item.language.map(function(row){
-                        $('#postForm input[name^="language"][value="'+row+'"]').attr('checked', 'checked');
+                        $('#postForm input[name^="language"][value="'+row+'"]').prop('checked', 'checked');
                         $('#postForm input[name^="language"][value="'+row+'"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
                     });
                 }
 
                 if(item.online_update){
-                    $('#postForm input[name="online_update"]').attr('checked', 'checked');
+                    $('#postForm input[name="online_update"]').prop('checked', 'checked');
                     $('#postForm input[name="online_update"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
                 };
+                if(item.switch_map){
+                    $('#postForm input[name="switch_map"]').prop('checked', 'checked');
+                    $('#postForm input[name="switch_map"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+                };
                 // if(item.editor_visual){
-                //     $('#postForm input[name="editor_visual"]').attr('checked', 'checked');
+                //     $('#postForm input[name="editor_visual"]').prop('checked', 'checked');
                 //     $('#postForm input[name="editor_visual"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
                 // };
                 if(item.only_oneself){
-                    $('#postForm input[name="only_oneself"]').attr('checked', 'checked');
+                    $('#postForm input[name="only_oneself"]').prop('checked', 'checked');
                     $('#postForm input[name="only_oneself"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
                 };
                 if(item.check_oneself){
-                    $('#postForm input[name="check_oneself"]').attr('checked', 'checked');
+                    $('#postForm input[name="check_oneself"]').prop('checked', 'checked');
                     $('#postForm input[name="check_oneself"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
                 };
                 if(item.cud){
                     item.cud.map(function(row){
-                        $('#postForm input[name^="cud"][value="'+row+'"]').attr('checked', 'checked');
+                        $('#postForm input[name^="cud"][value="'+row+'"]').prop('checked', 'checked');
                         $('#postForm input[name^="cud"][value="'+row+'"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
                     });
                 }
@@ -418,19 +464,24 @@
                         if(p == 'plugins'){
                             if(item.permission[p]){
                                 for(var pluginId in item.permission[p]){
-                                    $('#postForm input[name="permission['+p+']['+pluginId+'][id]"][value="'+pluginId+'"]').attr('checked', 'checked');
+                                    $('#postForm input[name="permission['+p+']['+pluginId+'][id]"][value="'+pluginId+'"]').prop('checked', 'checked');
                                     $('#postForm input[name="permission['+p+']['+pluginId+'][code]"][value="'+pluginId+'"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
                                     if(item.permission[p][pluginId].child){
                                         item.permission[p][pluginId].child.map(function(row){
-                                            $('#postForm input[name="permission['+p+']['+pluginId+'][child][]"][value="'+row+'"]').attr('checked', 'checked');
+                                            $('#postForm input[name="permission['+p+']['+pluginId+'][child][]"][value="'+row+'"]').prop('checked', 'checked');
                                             $('#postForm input[name="permission['+p+']['+pluginId+'][child][]"][value="'+row+'"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
                                         });
                                     }
                                 }
                             }
+                        } else if (p == 'arctype') {
+                            item.permission[p].map(function(row){
+                                $('#postForm .arctype_id_'+row).prop('checked', 'checked');
+                                $('#postForm .arctype_id_'+row).parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
+                            });
                         }else{
                             item.permission[p].map(function(row){
-                                $('#postForm input[name="permission['+p+'][]"][value="'+row+'"]').attr('checked', 'checked');
+                                $('#postForm input[name="permission['+p+'][]"][value="'+row+'"]').prop('checked', 'checked');
                                 $('#postForm input[name="permission['+p+'][]"][value="'+row+'"]').parent().find('img.cboximg').attr('src', '__SKIN__/images/ok.png');
                             });
                         }
@@ -453,7 +504,7 @@
             title: '自定义用户组',
             fixed: true, //不固定
             shadeClose: false,
-            shade: 0.3,
+            shade: layer_shade,
             maxmin: false, //开启最大化最小化按钮
             area: ['90%', '90%'],
             content: url
@@ -505,40 +556,216 @@
     var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
     // 判断输入框是否为空
     function adsubmit(){
-/*        
-        var password = $('#password').val();
-        var password2 = $('#password2').val();
-        if (password != '' || password2 != '') {
-            if (password != password2) {
-                showErrorMsg('两次密码输入不一致！');
-                $('input[name=password]').focus();
+        if ($('input[name=user_name]').length > 0) {
+            var user_name = $('input[name=user_name]').val();
+            if($.trim(user_name) == '') {
+                showErrorMsg('用户名不能为空！');
+                $('input[name=user_name]').focus();
                 return false;
+            } 
+        }
+        var password = $.trim($('#password').val());
+        if (0 < password.length) {
+            {$pwdJsCode|default=''}
+            var security_verifyfunc = {$global['security_verifyfunc']|json_encode=###};
+            if($.inArray('edit_pwd', security_verifyfunc) != -1){
+                if (!ajax_isverify_answer()) {
+                    autoload_security();
+                    return false;
+                }
             }
         }
-*/
+
         layer_loading('正在处理');
-        $.ajax({
-            type : 'post',
-            url : "{:url('Admin/admin_edit', ['_ajax'=>1])}",
-            data : $('#postForm').serialize(),
-            dataType : 'json',
-            success : function(res){
-                layer.closeAll();
-                if(res.code == 1){
-                    var _parent = parent;
-                    _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
-                        _parent.window.location.reload();
-                    });
-                }else{
-                    showErrorMsg(res.msg);
+        setTimeout(function (){
+            $.ajax({
+                type : 'post',
+                url : "{:url('Admin/admin_edit', ['_ajax'=>1,'iframe'=>$iframe])}",
+                data : $('#postForm').serialize(),
+                dataType : 'json',
+                success : function(res){
+                    layer.closeAll();
+                    if(res.code == 1){
+                        var _parent = parent;
+                        _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            _parent.window.location.reload();
+                        });
+                    }else{
+                        showErrorMsg(res.msg);
+                        $('input[name='+res.data.input_name+']').focus();
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    layer.alert(e.responseText, {icon: 5, title:false});
                 }
-            },
-            error: function(e){
-                layer.closeAll();
-                layer.alert(e.responseText, {icon: 5, title:false});
-            }
-        });
+            });
+        }, 1);
+    }
+
+    /**
+     * 绑定微信应用
+     * @return {[type]} [description]
+     */
+    var notifyPolling = null;
+    function wechat_bind(obj)
+    {
+        var logintype = $(obj).attr('data-logintype');
+        if ('WechatLogin' == logintype) {
+            var gourl = window.location.href;
+            var url = "{:url('Admin/wechat_bind', ['admin_id'=>$info['admin_id']], true, true)}";
+            url += "&gourl="+encodeURIComponent(gourl);
+            var iframes = layer.open({
+                type: 2,
+                title: '微信扫码绑定',
+                fixed: true, //不固定
+                shadeClose: false,
+                shade: layer_shade,
+                // maxmin: true, //开启最大化最小化按钮
+                area: ['500px', '460px'],
+                content: url
+            });
+        } else if ('EyouGzhLogin' == logintype) {
+            layer_loading('正在加载');
+            var admin_id = {$info['admin_id']|default=0};
+            $.ajax({
+                type: 'POST',
+                url: "{:url('Admin/mp_getqrcode')}",
+                data: {op:'bind', admin_id:admin_id, _ajax:1},
+                dataType: "JSON",
+                success: function(res){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        var html_content = '<img src="https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket='+ res.data.ticket +'" style="width: 250px; height: 250px;"><p style="color: red;padding: 8px 0;font-size: 15px;text-align: center;">打开微信扫一扫</p> <script type="text/javascript"> getNotify("'+admin_id+'","'+res.data.uniqid_scene+'"); <\/script>';
+                        layer.open({
+                            type: 1,
+                            title:'微信扫码绑定',
+                            id: 'layer_official_account',
+                            shadeClose: false,
+                            content: html_content,
+                            end: function() {
+                                clearNotify();
+                            }
+                        });
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }
+    }
+
+    /**
+     * 轮询是否绑定官方公众号
+     * @return {[type]} [description]
+     */
+    function getNotify(admin_id, uniqid_scene){
+        notifyPolling = setTimeout(function(){
+            $.ajax({
+                type: 'POST',
+                url: "{:url('Admin/mp_bingwxgzhopenid')}",
+                data: {op:'bind', admin_id:admin_id, uniqid_scene:uniqid_scene, _ajax:1},
+                dataType: "JSON",
+                success: function(res){
+                    if (1 == res.data.code) {
+                        layer.closeAll();
+                        clearNotify();
+                        $('#span_wechat_nickname').html('已绑定公众号');
+                        $('#wechat_bind').hide();
+                        $('#wechat_unbind').show();
+                        layer.msg('绑定成功', {shade: layer_shade, time: 1000});
+                    } else if (0 == res.code) {
+                        layer.closeAll();
+                        clearNotify();
+                        layer.alert(res.msg, {icon: 5, title:false, closeBtn:false}, function(){
+                            window.location.reload();
+                        });
+                    } else if (2 == res.data.code) {
+                        getNotify(admin_id, uniqid_scene);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    clearNotify();
+                    layer.alert('扫码检测异常，重新尝试！', {icon: 5, title:false, closeBtn:false}, function(){
+                        window.location.reload();
+                    });
+                }
+            });
+        }, 1800);
+    }
+
+    function clearNotify(){
+        if(notifyPolling > 0){
+            clearTimeout(notifyPolling);
+            notifyPolling = null;
+        }
+    }
+
+    /**
+     * 解除绑定微信应用
+     * @return {[type]} [description]
+     */
+    function wechat_unbind(obj)
+    {
+        var logintype = $(obj).attr('data-logintype');
+        if ('WechatLogin' == logintype) {
+            var admin_id = {$info['admin_id']|default=0};
+            layer_loading('正在处理');
+            $.ajax({
+                type : 'post',
+                url : "{:url('Admin/wechat_unbind_handle')}",
+                data : {admin_id:admin_id, _ajax:1},
+                dataType : 'json',
+                success : function(res){
+                    layer.closeAll();
+                    if(res.code == 1){
+                        $('#span_wechat_nickname').html('未绑定');
+                        $('#wechat_bind').show();
+                        $('#wechat_unbind').hide();
+                        layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            // window.location.reload();
+                        });
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        } else if ('EyouGzhLogin' == logintype) {
+            var admin_id = {$info['admin_id']|default=0};
+            layer_loading('正在处理');
+            $.ajax({
+                type: 'POST',
+                url: '{:url("Admin/mp_unbindwx")}',
+                data: {admin_id:admin_id, _ajax:1},
+                dataType: "JSON",
+                success: function(res){
+                    layer.closeAll();
+                    if (1 == res.code){
+                        $('#span_wechat_nickname').html('未绑定');
+                        $('#wechat_bind').show();
+                        $('#wechat_unbind').hide();
+                        layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            // window.location.reload();
+                        });
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }
     }
 </script>
 

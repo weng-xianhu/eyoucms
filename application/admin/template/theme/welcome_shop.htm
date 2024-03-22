@@ -1,0 +1,660 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Apple devices fullscreen -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- Apple devices fullscreen -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="__SKIN__/css/main.css?v={$version}" rel="stylesheet" type="text/css">
+    <!-- <link href="__SKIN__/css/main_new.css?v={$version}" rel="stylesheet" type="text/css"> -->
+    <link href="__SKIN__/css/theme/shop_main.css?v={$version}" rel="stylesheet" type="text/css">
+    <link href="__SKIN__/font/css/font-awesome.min.css?v={$version}" rel="stylesheet"/>
+    <link href="__SKIN__/font/css/iconfont.css?v={$version}" rel="stylesheet"/>
+    <link href="__SKIN__/css/theme/shop_index.css?v={$version}" rel="stylesheet" type="text/css">
+    <!--[if IE 7]>
+    <link rel="stylesheet" href="__SKIN__/font/css/font-awesome-ie7.min.css?v={$version}">
+    <![endif]-->
+    <link href="__SKIN__/css/diy_style.css?v={$version}" rel="stylesheet" type="text/css"/>
+    {include file="public/theme_css" /}
+    <script type="text/javascript">
+        var eyou_basefile = "{$Request.baseFile}";
+        var module_name = "{$Think.const.MODULE_NAME}";
+        var __lang__ = "{$admin_lang}";
+        var __root_dir__ = "__ROOT_DIR__";
+        var __main_lang__ = "{$main_lang}";
+        var VarSecurityPatch = "{$security_patch|default='0'}";
+    </script>
+    <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
+    <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js?v={$version}"></script>
+    <script src="__SKIN__/js/upgrade.js?v={$version}"></script>
+    <script src="__SKIN__/js/global.js?v={$version}"></script>
+    <script type="text/javascript" src="__PUBLIC__/plugins/Echarts/echarts.min.js?v={$version}"></script>
+</head>
+<body style="background-color:#F4F4F4;padding:0px; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="survey">
+    <div class="survey_left">
+        
+        <div class="warpper">
+            <div class="content start_content">
+                <div class="contentWarp">
+                    {if condition="empty($system_explanation_welcome_2)"}
+                    <div id="explanation_welcome" class="mb10">
+                        {if condition='empty($system_explanation_welcome_2)'}
+                        <div class="explanation" style="color: rgb(44, 188, 163); background-color: #fff!important; width: 100%; height: 100%;">
+                            <div class="title checkZoom" data-type="2" style="height:0px;">
+                                <span title="不再提示" style="display: block;"></span>
+                            </div>
+                            <ul>
+                                <li style="color: red;">后台登录密码强度：{$admin_login_pwdlevel|getPasswordLevelTitle}，容易被暴力破解，请及时
+                                <a href="javascript:void(0);" data-href="{:url('Admin/admin_edit', ['id'=>$Think.session.admin_info.admin_id,'iframe'=>1])}" onclick="openFullframe(this, '管理员-修改密码');">【修改密码】</a>提高安全性。</li>
+                            </ul>
+                        </div>
+                        {/if}
+                    </div>
+                    {/if}
+                    <div class="index_box">
+                        <div class="real_time_count">
+                             <div class="survey_title">
+                                 <h3 class="fl">实时概况 <span class="f-12 color-grey">更新时间：{$current_time}</span></h3>
+                                 <div class="fr"><a href="javascript:void(0);" id="surveyQuickMenuAdd"><i style="font-size: 20px;" class="iconfont e-tianjia"></i></a></div><!-- 链接商品订单页面 -->
+                             </div>
+                             <div class="container-fluid list-stats-survey">
+                                 <ul class="stats4">
+                                     {volist name="$surveyQuickMenu" id="vo"}
+                                    <li>
+                                        <div class="card_box">
+                                            <div class="title-survey">{in name='$vo.vars' value='4,6'}新增{else /}今日{/in}{$vo.title}</div>
+                                            {if condition="in_array($vo.vars,[3,5])"}
+                                            <p><cite id="UsersNum">{$vo.data.today.total|default=0}</cite></p>
+                                            <div class="bottom">昨日：{$vo.data.yesterday.total|default=0}</div>
+                                            {else /}
+                                            <p><cite id="UsersNum">{$vo.data.today.num|default=0}</cite></p>
+                                            <div class="bottom">昨日：{$vo.data.yesterday.num|default=0}</div>
+                                            {/if}
+                                        </div>
+                                        <div class="card_box mt10">
+                                            <div class="title-survey">{$vo.laytext}</div>
+                                            <p><cite id="PayOrderNum">{$vo.data.total|default=0}</cite></p>
+                                        </div>
+                                    </li>
+                                    {/volist}
+                                </ul>
+                             </div>
+                        </div>
+                    </div>
+                    <div class="index_box">
+                        <div class="info_count">
+                            <div class="survey_title">
+                                <h3 class="fl">常用功能</h3>
+                                <div class="fr"><a href="javascript:void(0);" id="quickMenuAdd"><i style="font-size: 20px;" class="iconfont e-tianjia"></i></a></div>
+                            </div>
+                             <div class="container-fluid">
+                                 <ul>
+                                     {volist name="$quickMenu" id="vo"}
+                                     {if condition="is_check_access($vo['controller'].'@'.$vo['action'])"}
+                                     <li>
+                                         <a href="javascript:void(0);" onclick="GoLocation(this);" data-href="{:url($vo.controller.'/'.$vo.action, $vo.vars)}">
+                                             <div class="icon">
+                                                 <img src="{$vo.litpic}">
+                                             </div>
+                                             <p class="navs">{$vo.title}</p>
+                                         </a>
+                                     </li>
+                                     {/if}
+                                     {/volist}
+                                    </ul>
+                             </div>
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        function GoLocation(obj) {
+                            layer_loading('正在加载');
+                            window.location.href = $(obj).data('href');
+                        }
+                    </script>
+                    <div class="index_box">
+                        <div class="info_count">
+                             <div class="survey_title">
+                                 <h3 class="fl">订单趋势</h3>
+                                 <div class="fr"><a class="basics-color" href="{:url('Statistics/index')}" onclick="pleftMenuFocus('Statistics_index');">更多</a></div><!-- 链接数据页面 -->
+                             </div>
+                             <div class="container-fluid">
+                                 <div class="list-stats">
+                                     <div class="stats-con">
+                                         <div id="stats-box" style="width:90%;height:400px;margin: 0 auto;"></div>
+                                 
+                                     </div>
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+                    <div class="index_box">
+                        <div class="utilities_count">
+                             <div class="survey_title">
+                                 <h3 class="fl">应用工具</h3>
+                                 <div class="fr"><a href="javascript:void(0);" id="quickWeappMenuAdd"><i style="font-size: 20px;" class="iconfont e-tianjia"></i></a></div>
+                             </div>
+                             <div class="container-fluid">
+                                 <ul class="marketing-nav">
+                                     {volist name="$weappMenuList" id="vo"}
+                                     <li class="more_li">
+                                         {notempty name="$vo.is_system"}
+                                         <a href="{$vo['config']['management']['href']}" target="{$vo['config']['management']['target']|default='_self'}">
+                                             <div class="icon" style="background-color: #fd5148;">
+                                                 <i class="{$vo.config.litpic|default='iconfont e-chajian'}"></i>
+                                             </div>
+                                             <span>
+                                            <h2>{$vo['name']}</h2>
+                                            <br>
+                                            <p>{$vo.config.description|default='暂无描述~'}</p>
+                                        </span>
+                                         </a>
+                                         {else /}
+                                         <a href="{$vo['config']['management']['href']}" {$vo['config']['management']['event']|default=''} target="{$vo['config']['management']['target']|default='_self'}" data-id="{$vo['id']}" data-code="{$vo['code']}" data-min_version="{$vo['config']['min_version']}" data-is_buy="{$vo['is_buy']}">
+                                         <img src="{$vo.config.litpic}" width="56" height="56">
+                                         <span>
+                                            <h2>{$vo['name']}</h2>
+                                            <br>
+                                            <p>{$vo.config.description|default='暂无描述~'}</p>
+                                        </span>
+                                         </a>
+                                         {/notempty}
+                                     </li>
+                                     {/volist}
+
+                                </ul>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="survey_right">
+        <div class="warpper">
+            <div class="content start_content">
+                <div class="contentWarp">
+                    <div class="preview">
+                        <h3>访问店铺</h3>
+                        <div class="preview_content">
+                            <div class="qrcode-wrap tab_qrcode_1">
+                                <div class="qrcode-pc">
+                                    <img src="__SKIN__/images/theme/wxapp.jpg" class="qrcode" alt="PC端二维码">
+                                </div>
+                                <div class="qrcode-pc-url">
+                                    <a class="curpoin" href="{$home_url}" target="_blank">访问店铺</a>
+                                </div>
+                                <p class="mt5">点击按钮，直接访问</p>
+                            </div>
+                            <div class="qrcode-wrap tab_qrcode_2" style="display: none;">
+                                <img src="{$h5_qrcodeurl}" class="qrcode" alt="手机端二维码">
+                                <img src="__SKIN__/images/theme/h5_pic.png" class="qrcode_pic" alt="手机端二维码" >
+                                <p class="mt5">扫码访问手机店铺</p>
+                            </div>
+                            <div class="qrcode-wrap tab_qrcode_3" style="display: none;">
+                                {notempty name="$weixin_data['appid']"}
+                                    <img src="{$weixin_qrcodeurl|default=''}" id="weixin_img_qrcode" class="qrcode" alt="小程序码" style="{empty name="$weixin_qrcodeurl"}display: none;{/empty}">
+                                    <div class="qrcode-pc" id="weixin_span_qrcode" style="{notempty name="$weixin_qrcodeurl"}display: none;{/notempty}">
+                                        <img src="__SKIN__/images/theme/wxapp.jpg" class="qrcode" alt="小程序码">
+                                        <img src="__SKIN__/images/theme/wxapp_pic.png" class="qrcode_pic" alt="小程序码" >
+                                    </div>
+                                {else /}
+                                    <div class="qrcode-pc">
+                                        <img src="__SKIN__/images/theme/wxapp.jpg" class="qrcode" alt="小程序码">
+                                        <img src="__SKIN__/images/theme/wxapp_pic.png" class="qrcode_pic" alt="小程序码" >
+                                    </div>
+                                    <div class="qrcode-pc-url">
+                                        <a class="curpoin" href="{:url('Store/weixin_conf')}">前往配置</a>
+                                    </div>
+                                {/notempty}
+                                <p class="mt5">扫码访问小程序店铺</p>
+                            </div>
+                            <div class="qrcode-tips">
+                                {empty name="$global['web_status']"}
+                                <span><a href="javascript:void(0);" data-index='1' class="qrcode-tips-name current">电脑端</a></span>
+                                <span><a href="javascript:void(0);" data-index='2' class="qrcode-tips-name">手机端</a></span>
+                                {/empty}
+                                <span><a href="javascript:void(0);" data-index='3' class="qrcode-tips-name {notempty name="$global['web_status']"} current {/notempty}">微信小程序</a></span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 待办事项 -->
+                    <div class="pending mt15">
+                        <h3>待办事项</h3>
+                        <div class="pending-list">
+                            <ul>
+                                <li>
+                                    <a href="{:url('Shop/index',['order_status'=>1])}">待发货订单
+                                        {eq name="$toDoList.undelivery" value="0"}
+                                        <span style="background: #65cd9a;">{$toDoList.undelivery}</span>
+                                        {else /}
+                                        <span>{$toDoList.undelivery}</span>
+                                        {/eq}
+                                        <i class="iconfont e-right"></i>
+                                    </a>
+                                </li>
+                                
+                                <li>
+                                    <a href="{:url('ShopService/after_service',['queryStatus'=>1])}">待处理维权
+                                        {eq name="$toDoList.service" value="0"}
+                                        <span style="background: #65cd9a;">{$toDoList.service}</span>
+                                        {else /}
+                                        <span>{$toDoList.service}</span>
+                                        {/eq}
+                                        <i class="iconfont e-right"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{:url('ShopProduct/index',['query'=>3])}">待补货商品
+                                        {eq name="$toDoList.warning" value="0"}
+                                        <span style="background: #65cd9a;">{$toDoList.warning}</span>
+                                        {else /}
+                                        <span>{$toDoList.warning}</span>
+                                        {/eq}
+                                        <i class="iconfont e-right"></i>
+                                    </a>
+                                </li>
+                                
+                            </ul>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="td_upgrade_msg" style="display: none;">
+    <div id="upgrade_filelist" style="display:none;"></div>
+    <div id="upgrade_intro" style="display:none;"></div>
+    <div id="upgrade_notice" style="display:none;"></div>
+    <a href="javascript:void(0);" id="a_upgrade" data-version="" data-max_version="" data-curent_version="{$sys_info.curent_version|default='v1.0'}" data-iframe="workspace" title="" data-tips_url="{:url('Upgrade/setPopupUpgrade')}" data-upgrade_url="{:url('Upgrade/OneKeyUpgrade')}" data-check_authority="{:url('Upgrade/check_authority')}">{if condition='!empty($security_patch)'}正在版本检测中……{else/}{eq name="upgrade" value="true"}正在版本检测中……{else/}已是最新版{/eq}{/if}</a>
+</div>
+                        
+<div id="footer" style="position: static; bottom: 0px; font-size:14px;">
+    <p>
+        <b>{$global.web_copyright|htmlspecialchars_decode}</b>
+    </p>
+</div>
+<script type="text/javascript">
+    $(function () {
+        // 选项卡切换列表
+        $('.qrcode-tips').find('.qrcode-tips-name').click(function(){
+            $('.qrcode-tips').find('.qrcode-tips-name').each(function(){
+                $(this).removeClass('current');
+            });
+            $(this).addClass('current');
+            var tab_index = $(this).data('index');          
+            $(".tab_qrcode_1, .tab_qrcode_2, .tab_qrcode_3").hide();          
+            $(".tab_qrcode_" + tab_index).show();
+            layer.closeAll();
+        });
+
+        function ajax_get_weixin_qrcode()
+        {
+            var weixin_qrcodeurl = "{$weixin_qrcodeurl}";
+            if (weixin_qrcodeurl != '') {
+                $('#weixin_img_qrcode').attr('src', weixin_qrcodeurl);
+                setTimeout(function(){
+                    $('#weixin_img_qrcode').attr('width', 122).attr('height', 122);
+                },100);
+            }
+
+            $.ajax({
+                url: "{:url('Canal/ajax_get_weixin_qrcode', ['_ajax'=>1])}",
+                type: 'GET',
+                dataType: 'JSON',
+                data: {},
+                success: function (res) {
+                    if (1 == res.code) {
+                        $('#weixin_span_qrcode').hide();
+                        $('#weixin_img_qrcode').attr('src', '');
+                        $('#weixin_img_qrcode').attr('src', res.data.qrcodeurl).attr('width', 122).attr('height', 122).show();
+                    }
+                }
+            });
+        }
+        ajax_get_weixin_qrcode();
+    });
+
+    function getBeforeDate(n) {
+        var n = n;
+        var d = new Date();
+        var year = d.getFullYear();
+        var mon = d.getMonth() + 1;
+        var day = d.getDate();
+        if(day <= n) {
+            if(mon > 1) {
+                mon = mon - 1;
+            } else {
+                year = year - 1;
+                mon = 12;
+            }
+        }
+        d.setDate(d.getDate() - n);
+        year = d.getFullYear();
+        mon = d.getMonth() + 1;
+        day = d.getDate();
+        s = year + "-" + (mon < 10 ? ('0' + mon) : mon) + "-" + (day < 10 ? ('0' + day) : day);
+        return s;
+    }
+
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('stats-box'));
+
+    // 指定图表的配置项和数据
+    var option = {
+        color: ['#3398DB', '#6be6c1'],
+        title: {
+            text: ''
+        },
+        tooltip: {
+            trigger: 'axis',
+        },
+        legend: {
+            data: ['成交量', '成交额']
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        toolbox: {
+            feature: {
+                saveAsImage: {}
+            }
+        },
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: [getBeforeDate(6), getBeforeDate(5), getBeforeDate(4), getBeforeDate(3), getBeforeDate(2), getBeforeDate(1), getBeforeDate(0)],
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: ['#eee'],
+                    width: 1,
+                    type: 'solid'
+                }
+            }
+        },
+        yAxis:
+            {
+                type: 'value',
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: ['#eee'],
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            } ,
+        // [{
+        //     type: 'value',
+        //     name:'成交量',
+        //     splitLine: {
+        //         show: true,
+        //         lineStyle: {
+        //             color: ['#eee'],
+        //             width: 1,
+        //             type: 'solid'
+        //         }
+        //     }
+        // },{
+        //     type: 'value',
+        //     name:'成交额',
+        //     splitLine: {
+        //         show: true,
+        //         lineStyle: {
+        //             color: ['#eee'],
+        //             width: 1,
+        //             type: 'solid'
+        //         }
+        //     }
+        // }],
+        series: [{
+                name: '成交量',
+                type: 'line',
+                data: ['{$DealNum.0}','{$DealNum.1}','{$DealNum.2}','{$DealNum.3}','{$DealNum.4}','{$DealNum.5}','{$DealNum.6}'],
+            },
+            {
+                name: '成交额',
+                type: 'line',
+                // yAxisIndex:1,
+                data: ['{$DealAmount.0}','{$DealAmount.1}','{$DealAmount.2}','{$DealAmount.3}','{$DealAmount.4}','{$DealAmount.5}','{$DealAmount.6}'],
+            },
+        ]
+    };
+
+    // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+    
+</script>
+<script type="text/javascript">
+    $(function () {
+        if (1 == VarSecurityPatch) {
+            checkUpgradeSecurityVersion();
+        } else {
+            {eq name="upgrade" value="true"}
+            check_upgrade_version();
+            {/eq}
+        }
+
+        $.get("{:url('Ajax/welcome_handle', ['_ajax'=>1])}"); // 进入欢迎页面需要异步处理的业务
+        check_language_tips();
+
+        // 检测语言版本
+        function check_language_tips()
+        {
+            if (__main_lang__ != __lang__) {
+                var language_title = $('#language_title', window.parent.document).html();
+                layer.msg('当前后台已切换至【'+language_title+'】编辑状态！', {time:3000});
+            }
+        }
+
+        // 检测系统安全补丁更新弹窗
+        function checkUpgradeSecurityVersion() {
+            $.ajax({
+                type : "GET",
+                url  : "{:url('Ajax/check_upgrade_version', ['_ajax'=>1])}",
+                data : {},
+                dataType : "JSON",
+                success: function(res) {
+                    if (1 == res.code) {
+                        if (2 == res.data.code) {
+                            /*显示顶部导航更新提示*/
+                            try {
+                                $("#upgrade_filelist", window.parent.document).html(res.data.msg.upgrade);
+                                $("#upgrade_intro", window.parent.document).html(res.data.msg.intro);
+                                $("#upgrade_notice", window.parent.document).html(res.data.msg.notice);
+                                $('#a_upgrade', window.parent.document).attr('data-version',res.data.msg.key_num).attr('data-max_version',res.data.msg.max_version).show();
+                            } catch(e) {}
+
+                            $('#upgrade_filelist').html(res.data.msg.upgrade);
+                            $('#upgrade_intro').html(res.data.msg.intro);
+                            $('#upgrade_notice').html(res.data.msg.notice);
+                            $('#a_upgrade').attr('data-version', res.data.msg.key_num).attr('data-max_version', res.data.msg.max_version).attr('title', res.data.msg.tips);
+                            $('#a_upgrade').html('检测到安全补丁包'+res.data.msg.key_num+'[点击查看]').css('color', '#F00');
+                            /* END */
+
+                            var webShowPopupUpgrade = {$web_show_popup_upgrade|default=1};
+                            var adminInfoRoleID = {$Think.session.admin_info.role_id|default=0};
+                            var adminInfoAuthRoleInfoOnlineUpdate = {$Think.session.admin_info.auth_role_info.online_update|default=0};
+                            if (-1 != webShowPopupUpgrade && (0 >= adminInfoRoleID || 1 == adminInfoAuthRoleInfoOnlineUpdate)) {
+                                btn_upgrade($("#a_upgrade"), 1);
+                            }
+                        } else if (0 == res.data.code) {
+                            layer.alert(res.data.msg, {title:false, closeBtn:0});
+                        } else {
+                            $('#td_upgrade_msg').html(res.data.msg);
+                        }
+                    }
+                }
+            });
+        }
+
+        // 版本检测更新弹窗
+        function check_upgrade_version() {
+            $.ajax({
+                type : "GET",
+                url  : "{:url('Ajax/check_upgrade_version', ['_ajax'=>1])}",
+                data : {},
+                dataType : "JSON",
+                success: function(res) {
+                    if (1 == res.code) {
+                        if (2 == res.data.code) {
+                            /*显示顶部导航更新提示*/
+                            try {
+                                $("#upgrade_filelist", window.parent.document).html(res.data.msg.upgrade);
+                                $("#upgrade_intro", window.parent.document).html(res.data.msg.intro);
+                                $("#upgrade_notice", window.parent.document).html(res.data.msg.notice);
+                                $('#a_upgrade', window.parent.document).attr('data-version',res.data.msg.key_num).attr('data-max_version',res.data.msg.max_version).show();
+                            } catch(e) {}
+
+                            $('#upgrade_filelist').html(res.data.msg.upgrade);
+                            $('#upgrade_intro').html(res.data.msg.intro);
+                            $('#upgrade_notice').html(res.data.msg.notice);
+                            $('#a_upgrade').attr('data-version', res.data.msg.key_num).attr('data-max_version', res.data.msg.max_version).attr('title', res.data.msg.tips);
+                            $('#a_upgrade').html('检测到新版本'+res.data.msg.key_num+'[点击查看]').css('color', '#F00');
+                            /* END */
+
+                            {if condition="-1 != $web_show_popup_upgrade AND (0 >= $Think.session.admin_info.role_id OR 1 == $Think.session.admin_info.auth_role_info.online_update)"}
+                                btn_upgrade($("#a_upgrade"), 1);
+                            {/if}
+                        } else {
+                            $('#td_upgrade_msg').html(res.data.msg);
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    $(function() {
+        //操作提示缩放动画
+        $(".checkZoom").click(function(){
+            $(this).parent().animate({
+                color: "#FFF",
+                backgroundColor: "#4FD6BE",
+                width: "0",
+                height: "0",
+            },300,function(){
+                $(this).remove();
+            });
+            if(1 >= $('#explanation_welcome').find('div.explanation').length) {
+                $('#explanation_welcome').remove();
+            }
+            var url = eyou_basefile+"?m=admin&c=Ajax&a=explanation_welcome&type="+$(this).attr('data-type')+"&lang="+__lang__+"&_ajax=1";
+            $.get(url);
+        });
+
+        {eq name='$main_lang' value='$admin_lang'}
+        checkInlet(); // 自动检测隐藏index.php
+        {/eq}
+    });
+
+    // 自动检测隐藏index.php
+    function checkInlet() {
+        layer.open({
+            type: 2,
+            title: false,
+            area: ['0px', '0px'],
+            shade: 0.0,
+            closeBtn: 0,
+            shadeClose: true,
+            content: '//{$website_host}__ROOT_DIR__/api/Rewrite/setInlet.html',
+            success: function(layero, index){
+                layer.close(index);
+                var body = layer.getChildFrame('body', index);
+                var content = body.html();
+                if (content.indexOf("Congratulations on passing") == -1)
+                {
+                    $.ajax({
+                        type : "POST",
+                        url  : "__ROOT_DIR__/index.php?m=api&c=Rewrite&a=setInlet&_ajax=1",
+                        data : {seo_inlet:0},
+                        dataType : "JSON",
+                        success: function(res) {
+
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    // 新增快捷导航
+    $('#quickMenuAdd').click(function(){
+        var iframes = layer.open({
+            type: 2,
+            title: '常用功能',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            // maxmin: false, //开启最大化最小化按钮
+            area: ['550px', '300px'],
+            content: "{:url('Index/ajax_quickmenu',['welcome_type'=>'shop'])}"
+        });
+    });
+
+    // 新增插件快捷导航
+    $('#quickWeappMenuAdd').click(function(){
+        var iframes = layer.open({
+            type: 2,
+            title: '应用工具',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            // maxmin: false, //开启最大化最小化按钮
+            area: ['550px', '300px'],
+            content: "{:url('Index/ajax_weapp_quickmenu')}"
+        });
+    });
+
+    // 新增实时概况快捷导航
+    $('#surveyQuickMenuAdd').click(function(){
+        var iframes = layer.open({
+            type: 2,
+            title: '实时概况',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            // maxmin: false, //开启最大化最小化按钮
+            area: ['550px', '200px'],
+            content: "{:url('Index/ajax_surveyquickmenu')}"
+        });
+    });
+
+    /**
+     * 更新组件库
+     * @return {[type]} [description]
+     */
+    var is_update_component_access = {$is_update_component_access|default=0};
+    function update_component_access()
+    {
+        if (1 == is_update_component_access) {
+            $.ajax({
+                type : 'post',
+                url : eyou_basefile+'?m=admin&c=Diyminipro&a=ajax_syn_component_access&lang='+__lang__,
+                data : {mini_id:0, _ajax:1},
+                dataType : 'json',
+                success : function(res){
+                    if(res.code == 1) {
+                        console.log(res.msg);
+                    }
+                }
+            });
+        }
+    }
+    update_component_access();
+</script>
+{include file="public/footer" /}

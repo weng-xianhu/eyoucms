@@ -31,7 +31,7 @@ class TagGlobal extends Base
     public function getGlobal($name = '')
     {
         $result = [];
-        $globalConfig = tpCache('global', [], $this->main_lang);
+        $globalConfig = tpCache('global', [], self::$home_lang);
         if (!empty($name)) {
             $name = str_replace('，', ',', $name);
             $names = explode(',', $name);
@@ -40,7 +40,7 @@ class TagGlobal extends Base
             }
         } else {
             $result = [];
-            $varslist = ['web_name','web_logo','web_basehost','web_title','web_keywords','web_description','web_copyright'];
+            $varslist = ['web_name','web_logo','web_basehost','web_title','web_keywords','web_description','web_copyright','web_recordnum','web_garecordnum'];
             foreach ($globalConfig as $key => $value) {
                 if (in_array($key, $varslist) || preg_match('/^web_attr_(\d+)$/i', $key)) {
                     $result[$key] = $value;
@@ -52,7 +52,7 @@ class TagGlobal extends Base
             switch ($key) {
                 case 'web_basehost':
                     if (empty($value)) {
-                        $value = $this->request->domain().$this->root_dir;
+                        $value = self::$request->domain().$this->root_dir;
                     }
                     break;
 

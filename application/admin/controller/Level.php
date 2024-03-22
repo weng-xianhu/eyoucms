@@ -7,10 +7,9 @@
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
  * ============================================================================
- * Author: 陈风任 <491085389@qq.com>
- * Date: 2019-06-21
+ * Author: 小虎哥 <1105415366@qq.com>
+ * Date: 2018-4-3
  */
-
 namespace app\admin\controller;
 
 use think\Page;
@@ -26,7 +25,6 @@ class Level extends Base {
         parent::__construct();
         /*会员中心数据表*/
         $this->users_db        = Db::name('users');         // 会员信息表
-        $this->users_level_db  = Db::name('users_level');   // 会员等级表
         $this->users_money_db  = Db::name('users_money');   // 会员充值表
         $this->users_type_manage_db  = Db::name('users_type_manage');   // 会员等级表
         /*结束*/
@@ -46,7 +44,7 @@ class Level extends Base {
     public function index()
     {
         // 会员级别
-        $list = $this->users_level_db->where(['is_system'=>0])->order('level_value asc, level_id asc')->select();
+        $list = model('UsersLevel')->getList('*', ['is_system'=>0]);
         $this->assign('list',$list);
 
         // 会员升级期限
@@ -67,73 +65,75 @@ class Level extends Base {
     {
         // 查询条件
         $where = [
-            // 升级消费
             'a.cause_type' => 0,
-            // 已完成状态
-            'a.status'     => 2,
-            // 语言标识
-            'a.lang'       => $this->admin_lang,
+            'a.status' => ['IN', [2, 3]],
+            'a.lang' => $this->admin_lang,
         ];
-        // 订单号查询
-        $order_number = input('order_number/s');
-        if (!empty($order_number)) {
-            $where['order_number'] = array('LIKE', "%{$order_number}%");
-        }
 
-        //时间检索条件
-        $begin    = strtotime(input('param.add_time_begin/s'));
-        $end    = input('param.add_time_end/s');
+        // 订单号或会员名查询
+        $keywords = input('keywords/s');
+        if (!empty($keywords)) $where['a.order_number|b.username'] = array('LIKE', "%{$keywords}%");
+
+        // 支付方式查询
+        $pay_method = input('pay_method/s');
+        if (!empty($pay_method)) $where['a.pay_method'] = $pay_method;
+
+        // 会员级别查询
+        $level_id = input('level_id/d');
+        if (!empty($level_id)) $where['a.level_id'] = $level_id;
+
+        // 时间检索条件
+        $begin = strtotime(input('param.add_time_begin/s'));
+        $end = input('param.add_time_end/s');
         !empty($end) && $end .= ' 23:59:59';
-        $end    = strtotime($end);
+        $end = strtotime($end);
         // 时间检索
         if ($begin > 0 && $end > 0) {
-            $where['a.add_time'] = array('between',"$begin,$end");
+            $where['a.add_time'] = array('between', "$begin, $end");
         } else if ($begin > 0) {
             $where['a.add_time'] = array('egt', $begin);
         } else if ($end > 0) {
             $where['a.add_time'] = array('elt', $end);
         }
 
-        // 查询满足要求的总记录数
-        $count = $this->users_money_db->alias('a')->where($where)->count('moneyid');
-        $total_money = $this->users_money_db->alias('a')->where($where)->value("SUM(`money`) as `total_money`");
-        $this->assign('total_money', $total_money);
+        // 分页查询
+        $count = $this->users_money_db->alias('a')->join('__USERS__ b', 'a.users_id = b.users_id', 'LEFT')->where($where)->count();
+        $Page = new Page($count, config('paginate.list_rows'));
 
-        // 实例化分页类 传入总记录数和每页显示的记录数
-        $pageObj = new Page($count, config('paginate.list_rows'));
-        // 订单表数据查询
-        $list = $this->users_money_db->field('a.*,b.username')
+        // 数据查询
+        $list = $this->users_money_db->field('a.*, b.head_pic, b.username, b.nickname')
             ->alias('a')
             ->join('__USERS__ b', 'a.users_id = b.users_id', 'LEFT')
-            ->where($where)
-            ->order('moneyid desc')
-            ->limit($pageObj->firstRow.','.$pageObj->listRows)
+            ->where($where) 
+            ->order('a.moneyid desc')
+            ->limit($Page->firstRow.','.$Page->listRows)
             ->select();
         foreach ($list as $key => $value) {
+            $value['username'] = !empty($value['nickname']) ? $value['nickname'] : $value['username'];
             // 反序列化参数
-            $list[$key]['cause'] = unserialize($value['cause']);
+            $value['cause'] = unserialize($value['cause']);
+            $value['head_pic'] = get_head_pic($value['head_pic']);
+            $list[$key] = $value;
         }
+        $show = $Page->show();
+        $this->assign('page', $show);
+        $this->assign('list', $list);
+        $this->assign('pager', $Page);
 
-        // 分页显示
-        $pageStr = $pageObj->show();
-        $this->assign('page', $pageStr);
-        $this->assign('pager', $pageObj);
-
-        // 订单数据
-        $this->assign('list',$list);
-
-        // 支付方式
-        $pay_method_arr = config('global.pay_method_arr');
-        $this->assign('pay_method_arr',$pay_method_arr);
+        // 会员等级列表
+        $usersLevel = model('UsersLevel')->getList('level_id, level_name', [], 'level_id');
+        $this->assign('usersLevel', $usersLevel);
 
         // 支付状态
         $pay_status_arr = config('global.pay_status_arr');
-        $this->assign('pay_status_arr',$pay_status_arr);
+        $this->assign('pay_status_arr', $pay_status_arr);
 
-        //是否开启文章付费
-        $channelRow = Db::name('channeltype')->where('nid', 'article')->find();
-        $channelRow['data'] = json_decode($channelRow['data'], true);
-        $this->assign('channelRow',$channelRow);
+        // 是否开启文章付费
+        $channelRow = Db::name('channeltype')->where('nid', 'in',['article','download'])->getAllWithIndex('nid');
+        foreach ($channelRow as &$val){
+            if (!empty($val['data'])) $val['data'] = json_decode($val['data'], true);
+        }
+        $this->assign('channelRow', $channelRow);
         
         return $this->fetch();
     }

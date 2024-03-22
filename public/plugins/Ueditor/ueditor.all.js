@@ -27,6 +27,8 @@ UE._customizeUI = {};
 
 UE.version = "1.4.3";
 
+UE.ey_version = Math.floor(Math.random()*10000000);
+
 var dom = UE.dom = {};
 
 // core/browser.js
@@ -7924,6 +7926,7 @@ var fillCharReg = new RegExp(domUtils.fillChar, 'g');
          * ```
          */
         getContentLength: function (ingoneHtml, tagNames) {
+            // getUeContent();//上传图片时候不能实时
             var count = this.getContent(false,false,true).length;
             if (ingoneHtml) {
                 tagNames = (tagNames || []).concat([ 'hr', 'img', 'iframe']);
@@ -8047,7 +8050,7 @@ UE.Editor.defaultOptions = function(editor){
         initialContent: '',
         initialStyle:'',
         autoClearinitialContent: false,
-        iframeCssUrl: _url + 'themes/iframe.css?v=1',
+        iframeCssUrl: _url + 'themes/iframe.css?v=' + UE.ey_version,
         textarea: 'editorValue',
         focus: false,
         focusInEnd: true,
@@ -10024,6 +10027,14 @@ UE.plugins['defaultfilter'] = function () {
                         if (browser.webkit && (val = node.getStyle('white-space'))) {
                             if (/nowrap|normal/.test(val)) {
                                 node.setStyle('white-space', '');
+                                if (me.options.autoClearEmptyNode && utils.isEmptyObject(node.attrs)) {
+                                    node.parentNode.removeChild(node, true)
+                                }
+                            }
+                        }
+                        if (browser.webkit && (val = node.getStyle('text-wrap'))) {
+                            if (/nowrap|normal/.test(val)) {
+                                node.setStyle('text-wrap', '');
                                 if (me.options.autoClearEmptyNode && utils.isEmptyObject(node.attrs)) {
                                     node.parentNode.removeChild(node, true)
                                 }
@@ -12077,7 +12088,7 @@ UE.commands['scrawl'] = {
 UE.plugins['removeformat'] = function(){
     var me = this;
     me.setOpt({
-       'removeFormatTags': 'b,big,code,del,dfn,em,font,i,ins,kbd,q,samp,small,span,strike,strong,sub,sup,tt,u,var',
+       'removeFormatTags': 'b,big,code,del,dfn,em,font,i,ins,kbd,q,samp,small,span,strike,strong,sub,sup,tt,u,var,div',
        'removeFormatAttributes':'class,style,lang,width,height,align,hspace,valign'
     });
     me.commands['removeformat'] = {
@@ -17094,7 +17105,8 @@ UE.plugins['fiximgclick'] = (function () {
                     'width': target.width + 'px',
                     'height': target.height + 'px',
                     'left': iframePos.x + imgPos.x - me.editor.document.body.scrollLeft - editorPos.x - parseInt(resizer.style.borderLeftWidth) + 'px',
-                    'top': iframePos.y + imgPos.y - me.editor.document.body.scrollTop - editorPos.y - parseInt(resizer.style.borderTopWidth) + 'px'
+                    // 'top': iframePos.y + imgPos.y - me.editor.document.body.scrollTop - editorPos.y - parseInt(resizer.style.borderTopWidth) + 'px'
+                    'top': iframePos.y + imgPos.y - me.editor.window.scrollY - editorPos.y - parseInt(resizer.style.borderTopWidth) + 'px' // 点击图片的边框错位 by 小虎哥
                 });
             }
         }
@@ -17672,9 +17684,14 @@ UE.plugins['video'] = function (){
             case 'video':
                 var ext = url.substr(url.lastIndexOf('.') + 1);
                 if(ext == 'ogv') ext = 'ogg';
-                str = '<video' + (id ? ' id="' + id + '"' : '') + ' class="' + classname + ' video-js" ' + (align ? ' style="float:' + align + '"': '') +
-                    ' controls preload="auto" width="' + width + '" height="' + height + '" src="' + url + '" data-setup="{}">' +
-                    '<source src="' + url + '" type="video/' + ext + '" /></video>';
+                if (ext == 'mp3') {
+                    str = '<audio' + (id ? ' id="' + id + '"' : '') + ' class=" audio-js" ' + (align ? ' style="float:' + align + '"': '') +
+                        ' controls preload="none" width="' + width + '" height="' + height + '" src="' + url + '">" /></audio>';
+                } else {
+                    str = '<video' + (id ? ' id="' + id + '"' : '') + ' class="' + classname + ' video-js" ' + (align ? ' style="float:' + align + '"': '') +
+                        ' controls preload="auto" width="' + width + '" height="' + height + '" src="' + url + '" data-setup="{}">' +
+                        '<source src="' + url + '" type="video/' + ext + '" /></video>';
+                }
                 break;
         }
         return str;
@@ -23447,7 +23464,19 @@ UE.commands['insertparagraph'] = {
     }
 };
 
-
+// 注册手机预览事件
+UE.commands['previewmobile'] = {
+    execCommand : function(){
+        var editor = this;
+        document.getElementById("previewmobile-div").style.display = 'block';
+        var ifr_document = document.getElementById("previewmobile").contentWindow; // 获取内联框架
+        if(ifr_document){
+            var ifr_content = ifr_document.document.getElementById("phone_preview_div");
+            ifr_content.innerHTML = editor.getContent() == null ? "" : editor.getContent(); // 富文本编辑器内容填充
+        }
+        return true;
+    }
+};
 
 // plugins/webapp.js
 /**
@@ -24635,6 +24664,14 @@ UE.plugin.register('simpleupload', function (){
         commands: {
             'simpleupload': {
                 queryCommandState: function () {
+                    //自定义begin
+                    try{
+                        var fn1=eval(get_ue_content_ey_m_1645596891);
+                        if (typeof(fn1)==='function'){
+                            get_ue_content_ey_m_1645596891();
+                        }
+                    }catch(e){}
+                    //end
                     return isLoaded ? 0:-1;
                 }
             }
@@ -25904,16 +25941,28 @@ UE.ui = baidu.editor.ui = {};
                 utils.cssRule('edui-customize-'+this.name+'-style',this.cssRules);
             }
         },
-        getHtmlTpl: function (){
-            return '<div id="##" class="edui-box %%">' +
-                '<div id="##_state" stateful>' +
-                 '<div class="%%-wrap"><div id="##_body" unselectable="on" ' + (this.title ? 'title="' + this.title + '"' : '') +
-                 ' class="%%-body" onmousedown="return $$._onMouseDown(event, this);" onclick="return $$._onClick(event, this);">' +
-                  (this.showIcon ? '<div class="edui-box edui-icon"></div>' : '') +
-                  (this.showText ? '<div class="edui-box edui-label">' + this.label + '</div>' : '') +
-                 '</div>' +
-                '</div>' +
-                '</div></div>';
+        getHtmlTpl: function () {
+            if (this.title === '多图上传') {
+                return '<div id="##" class="edui-box %%">' +
+                    '<div id="##_state" stateful>' +
+                     '<div class="%%-wrap"><div id="##_body" unselectable="on" ' + (this.title ? 'title="' + this.title + '"' : '') +
+                     ' class="%%-body" onmousedown="return $$._onMouseDown(event, this);" onclick="OpenImagesList(event, this);">' +
+                      (this.showIcon ? '<div class="edui-box edui-icon"></div>' : '') +
+                      (this.showText ? '<div class="edui-box edui-label">' + this.label + '</div>' : '') +
+                     '</div>' +
+                    '</div>' +
+                    '</div></div>';
+            } else {
+                return '<div id="##" class="edui-box %%">' +
+                    '<div id="##_state" stateful>' +
+                     '<div class="%%-wrap"><div id="##_body" unselectable="on" ' + (this.title ? 'title="' + this.title + '"' : '') +
+                     ' class="%%-body" onmousedown="return $$._onMouseDown(event, this);" onclick="return $$._onClick(event, this);">' +
+                      (this.showIcon ? '<div class="edui-box edui-icon"></div>' : '') +
+                      (this.showText ? '<div class="edui-box edui-label">' + this.label + '</div>' : '') +
+                     '</div>' +
+                    '</div>' +
+                    '</div></div>';
+            }
         },
         postRender: function (){
             this.Stateful_postRender();
@@ -27817,7 +27866,7 @@ UE.ui = baidu.editor.ui = {};
     };
 
     var iframeUrlMap = {
-        'anchor':'~/dialogs/anchor/anchor.html',
+        'anchor':'~/dialogs/anchor/anchor.html?v=' + UE.ey_version + Math.floor(Math.random()*10000000),
         'insertimage':'~/dialogs/image/image.html',
         'link':'~/dialogs/link/link.html',
         'spechars':'~/dialogs/spechars/spechars.html',
@@ -27849,7 +27898,7 @@ UE.ui = baidu.editor.ui = {};
         'blockquote', 'pasteplain', 'pagebreak',
         'selectall', 'print','horizontal', 'removeformat', 'time', 'date', 'unlink',
         'insertparagraphbeforetable', 'insertrow', 'insertcol', 'mergeright', 'mergedown', 'deleterow',
-        'deletecol', 'splittorows', 'splittocols', 'splittocells', 'mergecells', 'deletetable', 'drafts'];
+        'deletecol', 'splittorows', 'splittocols', 'splittocells', 'mergecells', 'deletetable', 'drafts','previewmobile'];
 
     for (var i = 0, ci; ci = btnCmds[i++];) {
         ci = ci.toLowerCase();
@@ -28790,6 +28839,14 @@ UE.ui = baidu.editor.ui = {};
                 if (!opt.wordCount) {
                     return;
                 }
+                //自定义begin
+                try{
+                    var fn1=eval(get_ue_content_ey_m_1645596891);
+                    if (typeof(fn1)==='function'){
+                        get_ue_content_ey_m_1645596891();
+                    }
+                }catch(e){}
+                //end
                 var count = editor.getContentLength(true);
                 if (count > max) {
                     countDom.innerHTML = errMsg;
@@ -29350,7 +29407,7 @@ UE.ui = baidu.editor.ui = {};
         var editor = new UE.Editor(options);
         editor.options.editor = editor;
         utils.loadFile(document, {
-            href:editor.options.themePath + editor.options.theme + "/css/ueditor.css",
+            href:editor.options.themePath + editor.options.theme + "/css/ueditor.css?v=" + UE.ey_version,
             tag:"link",
             type:"text/css",
             rel:"stylesheet"
@@ -29443,6 +29500,20 @@ UE.ui = baidu.editor.ui = {};
                 }
             })
         };
+        // 自定义代码begin --- 在这里添加预览弹窗
+        var preDocu = document.getElementById("previewmobile-div");
+        if (preDocu == null || typeof(preDocu) == "undefined" || preDocu == 0 ) {
+            var previewmobile = document.createElement('div'); // 报错提示
+            previewmobile.id = "previewmobile-div";
+            previewmobile.style.cssText = 'display:none;position:fixed;top:0;left:0;right:0;bottom:0;background-color: rgba(33,33,33,0.6); z-index: 999;';
+            previewmobile.innerHTML = '<div style="box-sizing:border-box;position:absolute;top:50%;left: 100%;transform: translate(-50%, -50%);padding: 75px 22px 93px 19px;width: 450px;height: 700px;background: url('+editor.options.UEDITOR_HOME_URL+'themes/default/images/iphone-bg.png) no-repeat;background-size: 76%"><iframe id="previewmobile" style="width:74.3%;height:100%;" src="'+editor.options.UEDITOR_HOME_URL+'dialogs/previewmobile/previewmobile.html"></iframe></div>';
+            document.body.appendChild(previewmobile);
+            document.getElementById("previewmobile-div").addEventListener("click", function(e) {
+                document.getElementById("previewmobile-div").style.display = "none";
+            });
+        }
+        //自定义代码end
+
         return editor;
     };
 
@@ -29469,11 +29540,28 @@ UE.ui = baidu.editor.ui = {};
      *
      */
     UE.getEditor = function (id, opt) {
+        //以下为原生
         var editor = instances[id];
         if (!editor) {
             editor = instances[id] = new UE.ui.Editor(opt);
             editor.render(id);
         }
+        // 自定义代码begin --- 在这里添加预览弹窗
+        var preDocu = document.getElementById("previewmobile-div");
+        if (preDocu == null || typeof(preDocu) == "undefined" || preDocu == 0 ) {
+            var previewmobile = document.createElement('div');
+            previewmobile.id = "previewmobile-div";
+            previewmobile.style.cssText = 'display:none;position:fixed;top:0;left:0;right:0;bottom:0;background-color: rgba(33,33,33,0.6); z-index: 999;';
+            previewmobile.innerHTML = '<div style="box-sizing:border-box;position:absolute;top:50%;left: 50%;transform: translate(-50%, -50%);padding: 75px 22px 93px 19px;width: 450px;height: 700px;background: url('+editor.options.UEDITOR_HOME_URL+'themes/default/images/iphone-bg.png) no-repeat;background-size: 76%">' +
+                '<iframe id="previewmobile" style="width:74.3%;height:100%;" src="'+editor.options.UEDITOR_HOME_URL+'dialogs/previewmobile/previewmobile.html"></iframe>' +
+                '</div>';
+            document.body.appendChild(previewmobile);
+            document.getElementById("previewmobile-div").addEventListener("click", function(e) {
+                document.getElementById("previewmobile-div").style.display = "none";
+            });
+        }
+        // 自定义代码end
+
         return editor;
     };
 

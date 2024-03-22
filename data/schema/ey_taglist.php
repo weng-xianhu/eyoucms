@@ -21,7 +21,7 @@ return array (
   'typeid' => 
   array (
     'name' => 'typeid',
-    'type' => 'smallint(5) unsigned',
+    'type' => 'int(10) unsigned',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

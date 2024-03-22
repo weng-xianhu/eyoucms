@@ -27,6 +27,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'content_ey_m' => 
+  array (
+    'name' => 'content_ey_m',
+    'type' => 'longtext',
+    'notnull' => false,
+    'default' => NULL,
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'courseware' => 
   array (
     'name' => 'courseware',

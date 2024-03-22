@@ -121,9 +121,17 @@
     // 删除指定规格值
     function DelSpecTplValue(obj, preset_id = null){
         var del_val =  $(obj).next().val();
-        layer.confirm('此操作不可恢复，确认删除规格值：<span style="color:red;">'+del_val+'</span>？', {
-            title: false,
-            btn: ['确定', '取消']
+        layer.confirm('确认删除规格值：<span style="color:red;">'+del_val+'</span>？', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定', '取消'] ,//按钮
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
         }, function () {
             if (preset_id) {
                 var url = "{:url('Shop/spec_del')}";

@@ -1,0 +1,117 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;min-width:auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page" style="min-width:auto;padding-bottom: 15px;">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back_xin" href="{:url('Weapp/index')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>消息通知</h3>
+                <h5></h5>
+            </div>
+            <ul class="tab-base nc-row">
+                <li> <a href="{:url('Notice/buyer_notice')}" {if condition="'buyer_notice' == $Request.action"}class="current"{/if}>用户通知</a> </li>
+                <li> <a href="{:url('Notice/seller_notice')}"  {if condition="'seller_notice' == $Request.action"}class="current"{/if}>站长通知</a> </li>
+            </ul>
+        </div>
+    </div>
+    <div class="flexigrid">
+        <!-- <div class="mDiv pt0">
+            <div class="ftitle">
+                <h3>站长通知</h3>
+            </div>
+        </div> -->
+        <div class="notice-list-box">
+			<!-- 留言表单 -->
+			<div class="notice-list">
+			    <div class="card-head" onclick="window.location.href='{$sms_tplist[1]['details_url']}'">
+			        <div class="card-title">
+			            <span>留言表单</span>
+			            <p class="notic">用户提交留言后发送</p>
+			        </div>
+			        <div><i class="iconfont e-right"></i></div>
+			    </div>
+			    <div class="list-card-body">
+					<div class="list-card-child">
+					    <span>邮件发送</span>
+					    {notempty name="$sms_tplist[2]['is_open']"}
+					        <span class="yes curpoin" onClick="changeTableVal('sms_template','tpl_id','{$sms_tplist[2]['tpl_id']}','is_open',this);" data-yestext='<i class="iconfont e-duihao" title="点击关闭"></i>' data-notext='<i class="iconfont e-quxiao" title="点击开启"></i>'><i class="iconfont e-duihao" title="点击关闭"></i></span>
+					    {else /}
+					        <span class="no curpoin" onClick="changeTableVal('sms_template','tpl_id','{$sms_tplist[2]['tpl_id']}','is_open',this);" data-yestext='<i class="iconfont e-duihao" title="点击关闭"></i>' data-notext='<i class="iconfont e-quxiao" title="点击开启"></i>'><i class="iconfont e-quxiao" title="点击开启"></i></span>
+					    {/notempty}
+					</div>
+			        <div class="list-card-child">
+			            <span>短信通知{empty name="$php_servicemeal"} <i class="anchor-icon anchor-icon-biao" title="限基础授权以上可用"></i>{/empty}</span>
+			            {notempty name="$sms_tplist[1]['is_open']"}
+			                <span class="yes curpoin" onClick="changeTableVal('sms_template','tpl_id','{$sms_tplist[1]['tpl_id']}','is_open',this);" data-yestext='<i class="iconfont e-duihao" title="点击关闭"></i>' data-notext='<i class="iconfont e-quxiao" title="点击开启"></i>'><i class="iconfont e-duihao" title="点击关闭"></i></span>
+			            {else /}
+			                <span class="no curpoin" onClick="changeTableVal('sms_template','tpl_id','{$sms_tplist[1]['tpl_id']}','is_open',this);" data-yestext='<i class="iconfont e-duihao" title="点击关闭"></i>' data-notext='<i class="iconfont e-quxiao" title="点击开启"></i>'><i class="iconfont e-quxiao" title="点击开启"></i></span>
+			            {/notempty}
+			        </div>
+			    </div>
+			</div>
+            <!-- 用户支付通知 -->
+            <div class="notice-list">
+                <div class="card-head" onclick="window.location.href='{$sms_tplist[15]['details_url']}'">
+                    <div class="card-title">
+                        <span>订单付款</span>
+                        <p class="notic">订单支付成功后发送</p>
+                    </div>
+                    <div><i class="iconfont e-right"></i></div>
+                </div>
+                <div class="list-card-body">
+					<div class="list-card-child">
+					    <span>邮件发送</span>
+					    {notempty name="$sms_tplist[2]['is_open']"}
+					        <span class="yes curpoin" onClick="changeTableVal('sms_template','tpl_id','{$sms_tplist[2]['tpl_id']}','is_open',this);" data-yestext='<i class="iconfont e-duihao" title="点击关闭"></i>' data-notext='<i class="iconfont e-quxiao" title="点击开启"></i>'><i class="iconfont e-duihao" title="点击关闭"></i></span>
+					    {else /}
+					        <span class="no curpoin" onClick="changeTableVal('sms_template','tpl_id','{$sms_tplist[2]['tpl_id']}','is_open',this);" data-yestext='<i class="iconfont e-duihao" title="点击关闭"></i>' data-notext='<i class="iconfont e-quxiao" title="点击开启"></i>'><i class="iconfont e-quxiao" title="点击开启"></i></span>
+					    {/notempty}
+					</div>
+                    <div class="list-card-child">
+                        <span>短信通知{empty name="$php_servicemeal"} <i class="anchor-icon anchor-icon-biao" title="限基础授权以上可用"></i>{/empty}</span>
+                        {notempty name="$sms_tplist[15]['is_open']"}
+                            <span class="yes curpoin" onClick="changeTableVal('sms_template','tpl_id','{$sms_tplist[15]['tpl_id']}','is_open',this);" data-yestext='<i class="iconfont e-duihao" title="点击关闭"></i>' data-notext='<i class="iconfont e-quxiao" title="点击开启"></i>'><i class="iconfont e-duihao" title="点击关闭"></i></span>
+                        {else /}
+                            <span class="no curpoin" onClick="changeTableVal('sms_template','tpl_id','{$sms_tplist[15]['tpl_id']}','is_open',this);" data-yestext='<i class="iconfont e-duihao" title="点击关闭"></i>' data-notext='<i class="iconfont e-quxiao" title="点击开启"></i>'><i class="iconfont e-quxiao" title="点击开启"></i></span>
+                        {/notempty}
+                    </div>
+                    {if condition="$php_servicemeal < 1 || $php_servicemeal >= 2"}
+                    <div class="list-card-child">
+                        <span>微信公众号{empty name="$php_servicemeal"} <i class="anchor-icon anchor-icon-biao-zy" title="限专业授权以上可用"></i>{/empty}</span>
+                        {notempty name="$wechat_tplist[15]['is_open']"}
+                            <span class="yes curpoin" onClick="changeTableVal('wechat_template','tpl_id','{$wechat_tplist[15]['tpl_id']}','is_open',this);" data-yestext='<i class="iconfont e-duihao" title="点击关闭"></i>' data-notext='<i class="iconfont e-quxiao" title="点击开启"></i>'><i class="iconfont e-duihao" title="点击关闭"></i></span>
+                        {else /}
+                            <span class="no curpoin" onClick="changeTableVal('wechat_template','tpl_id','{$wechat_tplist[15]['tpl_id']}','is_open',this);" data-yestext='<i class="iconfont e-duihao" title="点击关闭"></i>' data-notext='<i class="iconfont e-quxiao" title="点击开启"></i>'><i class="iconfont e-quxiao" title="点击开启"></i></span>
+                        {/notempty}
+                    </div>
+                    {/if}
+                </div>
+            </div>
+            
+            
+        </div>
+    </div>
+</div>
+
+{include file="public/footer" /}
+<script>
+    $(function(){
+        auto_notic_tips();
+        /**
+        * 自动小提示
+        */
+        function auto_notic_tips()
+        {
+            var html = '<a class="ui_tips" href="javascript:void(0);" onmouseover="layer_tips = layer.tips($(this).parent().find(\'p.notic\').html(), this, {time:100000});" onmouseout="layer.close(layer_tips);">提示</a>';
+            $.each($('.card-title > p.notic'), function(index, item){
+                var a_length = $(item).prev("a.ui_tips").length;
+                if ($(item).html() != '' && 0 == a_length) {
+                    $(item).before(html);
+                }
+            });
+        }
+    });
+</script>
