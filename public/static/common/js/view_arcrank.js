@@ -22,10 +22,10 @@ function ey_1564127378() {
     var get_url = JsonData.get_url;
     var ClosePage = JsonData.ClosePage;
 
-    var users_id = ey_getCookie('users_id');
-    if (users_id == '' || users_id == 0) {
-        ey_body_render('none');
-    }
+    // var users_id = ey_getCookie('users_id');
+    // if (users_id == '' || users_id == 0) {
+    //     ey_body_render('none');
+    // }
 
     // 步骤一:创建异步对象
     var ajax = new XMLHttpRequest();
@@ -53,6 +53,8 @@ function ey_1564127378() {
                     // 不可以查看
                     document.body.innerHTML = "";
                     setTimeout(function () {
+                        res.msg = res.msg.replace("__html__",'');
+                        res.msg = res.msg.replace("<br/>",'，');
                         confirm(res.msg);
                         if (ClosePage) {
                             window.close();
@@ -66,6 +68,8 @@ function ey_1564127378() {
                 ey_body_render(body_display);
                 if ('undefined' != res.data.is_admin && 1 == res.data.is_admin) {
                     setTimeout(function () {
+                        res.msg = res.msg.replace("__html__",'');
+                        res.msg = res.msg.replace("<br/>",'，');
                         alert(res.data.msg);
                     }, 1000);
                 }
@@ -322,6 +326,7 @@ function video_moban_3(type)
                                 var href = document.getElementById("Xuexi20210201").getAttribute("href");
                                 document.getElementById("VipFreeLearn20210201").setAttribute("href", href);
                                 document.getElementById("VipFreeLearn20210201").style.display = '';
+                                document.getElementById("VipFreeLearn20210201").innerHTML = ('立即观看');//2024-03-22新更改逻辑
                             }
                         } else {
                             document.getElementById("Xuexi20210201").style.display = '';
@@ -330,10 +335,14 @@ function video_moban_3(type)
                 } else {
                     //没有播放权限
                     if (-1 < $.inArray(res.data.status_value, [1,3])) {
-                        if (res.data.is_pay > 0) {
+                        if (res.data.is_pay > 0 || (res.data.vip_status == 0 && 3 == res.data.status_value)) {
                             if (document.getElementById("VipFreeLearn20210201") && 3 == res.data.status_value) {  // 易而优
                                 document.getElementById("VipFreeLearn20210201").style.display = '';
-                                document.getElementById("VipFreeLearn20210201").innerHTML = 'VIP升级';
+                                if (3 == res.data.status_value ) {
+                                    document.getElementById("VipFreeLearn20210201").innerHTML = (res.data.status_name+'可购买');
+                                }else{
+                                    document.getElementById("VipFreeLearn20210201").innerHTML = ('升级'+res.data.status_name+'免费学');
+                                }
                                 document.getElementById("VipFreeLearn20210201").setAttribute("title", res.data.status_name+'可免费观看');
                             }
                         } else {

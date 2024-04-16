@@ -72,4 +72,13 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'wx_delivery_id' => 
+  array (
+    'name' => 'wx_delivery_id',
+    'type' => 'varchar(20)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
 );

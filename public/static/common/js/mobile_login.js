@@ -19,7 +19,7 @@ function send_mobile_code() {
     // 手机号是否为空
     if (!mobile) {
         $("input[name=mobile]").focus();
-        layer.msg('请输入手机号码！', {time: 1500});
+        layer.msg(ey_foreign_users28, {time: 1500});
         return false;
     }
 
@@ -107,7 +107,7 @@ function checkMobileUserLogin1649732103() {
     var mobile_code = $('#theMobileForm input[name=mobile_code]');
 
     if (mobile.val() == '') {
-        layer.msg('手机号不能为空！', {
+        layer.msg(ey_foreign_users28, {
             time: 1500
         });
         mobile.focus();
@@ -115,7 +115,7 @@ function checkMobileUserLogin1649732103() {
     }
 
     if (mobile_code.val() == '') {
-        layer.msg('验证码不能为空！', {
+        layer.msg(ey_foreign_users30, {
             time: 1500
         });
         mobile_code.focus();

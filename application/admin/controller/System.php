@@ -142,8 +142,7 @@ class System extends Base
         //     $config['web_logo_local'] = handle_subdir_pic($config['web_logo']);
         // }
         $config['web_logo_local'] = handle_subdir_pic($config['web_logo']);
-
-        $config['web_ico'] = preg_replace('#^(/[/\w\-]+)?(/)#i', $this->root_dir.'$2', $config['web_ico']); // 支持子目录
+        $config['web_ico'] = handle_subdir_pic($config['web_ico']);
         
         /*系统模式*/
         $web_cmsmode = isset($config['web_cmsmode']) ? $config['web_cmsmode'] : 2;

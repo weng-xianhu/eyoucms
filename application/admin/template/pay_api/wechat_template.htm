@@ -8,6 +8,12 @@
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page min-hg-c-10" style="min-width: 400px;">
+    <!-- 操作说明 -->
+    <div id="" class="explanation mb15">
+        <ul>
+            <li><span style="color: red;">注意：微信公众号类型必须是认证服务号</span></li>
+        </ul>
+    </div>
     <div class="flexigrid">
         <form class="form-horizontal" id="postWechatForm">
             <input type="hidden" name="pay_id" value="{$Config.pay_id}">
@@ -68,7 +74,7 @@
                     </dt>
                     <dd class="opt">
                         <input type="text" name="pay_info[key]" id="key" value="{$pay_info.key|default=''}" class="input-txt" autocomplete="off">
-                        <p class="notic">请输入您的微信公众平台中的微信KEY值，用于微信支付。</p>
+                        <p class="notic-pic"><img src="__SKIN__/images/pay_info_key.jpg" width="535"></p>
                     </dd>
                 </dl>
                 <dl class="row">

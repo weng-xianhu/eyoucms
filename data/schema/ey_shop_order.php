@@ -243,6 +243,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'is_total_amount' => 
+  array (
+    'name' => 'is_total_amount',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'country' => 
   array (
     'name' => 'country',

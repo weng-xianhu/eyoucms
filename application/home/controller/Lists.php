@@ -526,6 +526,8 @@ class Lists extends Base
                 /*--end*/
                 $dataStr = '';
                 if (empty($guestbookRow)) { // 非重复表单的才能写入数据库
+                    $examine = Db::name('form')->where('form_id',$typeid)->value('open_examine');
+                    $data['examine'] = empty($examine) ? 1 : 0;
                     $aid = Db::name('guestbook')->insertGetId($data);
                     if ($aid > 0) {
                         $res = $this->saveGuestbookAttr($aid, $typeid, $post);
@@ -545,8 +547,15 @@ class Lists extends Base
                     /*--end*/
 
                     /*发送站内信给后台*/
-                    SendNotifyMessage($ContentArr, 1, 1, 0);
+                    SendNotifyMessage($ContentArr, 1, 1, 0,'',['aid'=>$aid]);
                     /* END */
+
+                    // 留言表单通知
+                    $params = [
+                        'users_id' => $data['users_id'],
+                        'result_id' => $aid,
+                    ];
+                    eyou_send_notice(1, $params);
                 } else {
                     $_POST['aid'] = $guestbookRow['aid'];
                     // 存在重复数据的表单，将在后台显示在最前面

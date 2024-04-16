@@ -116,11 +116,21 @@ class Shop extends Base
     // 订单提交
     public function shop_under_order($error = true)
     {
+        // 存在游客免登录查询则执行
+        if (is_dir('./weapp/FreeLogin/') && !empty($this->users_id)) {
+            session('eyou_referurl', $this->request->url(true));
+            auto_bind_wechatlogin($this->users, $referurl);
+            if (!empty($referurl)) {
+                header('Location: '. $referurl);
+                exit;
+            }
+        }
+
         if (empty($error)) {
             if ($this->usersTplVersion == 'v3') {
                 $this->redirect(url('user/Shop/shop_cart_list'));
             } else {
-                $this->error('您的购物车还没有商品！');
+                $this->error(foreign_lang('users1'));
             }
         }
         // 获取当前页面URL，存入session，若操作添加地址后返回当前页面
@@ -216,7 +226,7 @@ class Shop extends Base
                     AddOrderAction($order_id,$this->users_id,'0','0','0','0','订单取消！','会员关闭订单！');
                     $this->success('订单已取消！');
                 }else{
-                    $this->error('操作失败！');
+                    $this->error(foreign_lang('system11', $this->home_lang));
                 }
             }
         }
@@ -416,7 +426,7 @@ class Shop extends Base
                     }
                     $CartAmountVal = $this->shop_cart_db->where([ 'users_id' => $this->users_id,'lang' => $this->home_lang])->sum('product_num');
                     if (!empty($cart_id)) {
-                        $this->success('操作成功！', null, ['NumberVal'=>$CartData['num'], 'AmountVal'=>$CartData['price'], 'CartAmountVal'=>$CartAmountVal]);
+                        $this->success(foreign_lang('system12', $this->home_lang), null, ['NumberVal'=>$CartData['num'], 'AmountVal'=>$CartData['price'], 'CartAmountVal'=>$CartAmountVal]);
                     }
                 } else {
                     $this->error('商品数量最少为1', null, ['error'=>'0']);
@@ -486,7 +496,7 @@ class Shop extends Base
                     'CartCount' => $CartCount,
                     'CartAmountVal' => $CartAmountVal,
                 ];
-                $this->success('操作成功！', null, $data);
+                $this->success(foreign_lang('system12', $this->home_lang), null, $data);
             } else {
                 $this->error('删除失败！');
             }
@@ -590,9 +600,9 @@ class Shop extends Base
                     'AmountVal' => $CartData['price'],
                     'CartCount' => $CartCount,
                 ];
-                $this->success('操作成功！', null, $data);
+                $this->success(foreign_lang('system12', $this->home_lang), null, $data);
             } else {
-                $this->error('操作失败！');
+                $this->error(foreign_lang('system11', $this->home_lang));
             }
         }
     }
@@ -629,9 +639,9 @@ class Shop extends Base
             // 更新数据
             $return = $this->shop_cart_db->where($where)->update($update);
             if (!empty($return)) {
-                $this->success('操作成功！');
+                $this->success(foreign_lang('system12', $this->home_lang));
             } else {
-                $this->error('操作失败！');
+                $this->error(foreign_lang('system11', $this->home_lang));
             }
         }
     }
@@ -816,7 +826,7 @@ class Shop extends Base
                 }
             }
         }
-        $this->error('操作失败！');
+        $this->error(foreign_lang('system11', $this->home_lang));
     }
 
     // 订单提交处理逻辑，添加商品信息及计算价格等
@@ -1186,7 +1196,7 @@ class Shop extends Base
                                             }
                                         }
                                     }
-                                } else if (in_array($payment_type, ['zxzf_wechat', 'zxzf_alipay', 'zxzf_Paypal', 'zxzf_UnionPay'])) {
+                                } else if (in_array($payment_type, ['zxzf_wechat', 'zxzf_alipay', 'zxzf_Paypal', 'zxzf_UnionPay', 'zxzf_PersonPay'])) {
                                     // 内置第三方在线支付
                                     $payment_type_arr = explode('_', $payment_type);
                                     $pay_mark = !empty($payment_type_arr[1]) ? $payment_type_arr[1] : '';
@@ -1235,7 +1245,12 @@ class Shop extends Base
                         SendNotifyMessage($OrderData, 5, 1, 0);
                         // 返回结束
                         $ReturnData['is_gourl'] = 1;
-
+                        // 订单支付通知
+                        $params = [
+                            'users_id' => $this->users_id,
+                            'result_id' => $OrderId,
+                        ];
+                        eyou_send_notice(9, $params);
                         // 返回提示
                         $this->success('订单已生成！', urldecode(url('user/Shop/shop_centre')), $ReturnData);
                     }
@@ -2262,9 +2277,9 @@ class Shop extends Base
                 // 添加记录单
                 $post['users_id'] = $this->users_id;
                 $this->shop_common->AddOrderServiceLog($post, 1);
-                $this->success('操作成功');
+                $this->success(foreign_lang('system12', $this->home_lang));
             } else {
-                $this->error('操作失败');
+                $this->error(foreign_lang('system11', $this->home_lang));
             }
         }
     }
@@ -2291,9 +2306,9 @@ class Shop extends Base
                 // 添加记录单
                 $post['users_id'] = $this->users_id;
                 $this->shop_common->AddOrderServiceLog($post, 1);
-                $this->success('操作成功！');
+                $this->success(foreign_lang('system12', $this->home_lang));
             } else {
-                $this->error('操作失败！');
+                $this->error(foreign_lang('system11', $this->home_lang));
             }
         }
     }

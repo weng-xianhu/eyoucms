@@ -167,6 +167,19 @@ class FieldLogic extends Model
                     case 'htmltext':
                     {
                         $val = htmlspecialchars_decode($val);
+                        
+                        // 多城市分站的内容变量替换
+                        if (config('city_switch_on')) {
+                            $searchs = ['{site_name}'];
+                            $site_info = cookie('site_info');
+                            $site_info = empty($site_info) ? [] : (array)json_decode($site_info);
+                            if (!empty($site_info)) {
+                                $replaces = [$site_info['name']];
+                            } else {
+                                $replaces = [''];
+                            }
+                            $val = str_replace($searchs, $replaces, $val);
+                        }
 
                         /*追加指定内嵌样式到编辑器内容的img标签，兼容图片自动适应页面*/
                         $titleNew = !empty($data['title']) ? $data['title'] : '';

@@ -61,6 +61,35 @@ class View extends Base
             if (config('lang_switch_on') && !empty($this->home_lang)) {
                 $map['a.lang'] = $this->home_lang;
             }
+            /*为了兼容不同栏目可以存在相同自定义文档文件名，需要加上栏目ID的条件查询*/
+            if (3 == $seo_pseudo) {
+                $pathinfo = $this->request->pathinfo();
+                if (!empty($pathinfo)) {
+                    $cur_typeids = [];
+                    $s_arr = explode('/', $pathinfo);
+                    $seo_rewrite_format = tpCache('seo.seo_rewrite_format');
+                    $seo_rewrite_view_format = tpCache('seo.seo_rewrite_view_format');
+                    if (2 == $seo_rewrite_format) {
+                        $dirname = empty($s_arr[count($s_arr) - 2]) ? '' : $s_arr[count($s_arr) - 2];
+                        $cur_typeids = Db::name('arctype')->where(['dirname'=>$dirname, 'lang'=>$this->home_lang])->column('id');
+                    } else {
+                        if (in_array($seo_rewrite_view_format, [3,4])) {
+                            $dirname = empty($s_arr[count($s_arr) - 2]) ? '' : $s_arr[count($s_arr) - 2];
+                            $cur_typeids = Db::name('arctype')->where(['dirname'=>$dirname, 'lang'=>$this->home_lang])->column('id');
+                        } else if (in_array($seo_rewrite_view_format, [1])) {
+                            if ($this->home_lang == $this->main_lang) {
+                                $dirname = $s_arr[0];
+                            } else {
+                                $dirname = $s_arr[1];
+                            }
+                            $cur_toptypeid = Db::name('arctype')->where(['dirname'=>$dirname, 'lang'=>$this->home_lang])->value('id');
+                            $cur_typeids = Db::name('arctype')->where(['id|topid'=>$cur_toptypeid])->column('id');
+                        }
+                    }
+                    $map['a.typeid'] = ['IN', $cur_typeids];
+                }
+            }
+            /*--end*/
         } else {
             $map = array('a.aid' => intval($aid));
         }
@@ -135,7 +164,7 @@ class View extends Base
         if (!empty($arctypeInfo)) {
 
             /*URL上参数的校验*/
-            if (3 == $seo_pseudo) {
+            /*if (3 == $seo_pseudo) {
                 $dirname            = input('param.dirname/s');
                 $dirname2           = '';
                 $seo_rewrite_format = config('ey_config.seo_rewrite_format');
@@ -153,7 +182,7 @@ class View extends Base
                 if ($dirname != $dirname2) {
                     abort(404, '页面不存在');
                 }
-            }
+            }*/
             /*--end*/
 
             // 是否有子栏目，用于标记【全部】选中状态
@@ -851,6 +880,62 @@ EOF;
                 $this->redirect($url);
             }
         }
+    }
+
+    /**
+     * 视频附件下载
+     */
+    public function download_media_file()
+    {
+        $aid = input('param.aid/d', 0);
+
+        $result = Db::name('archives')->alias('a')
+            ->join('media_content b','a.aid = b.aid')
+            ->where('a.aid',$aid)->field('b.courseware,a.*')
+            ->find();
+        if (!empty($result['courseware'])) {
+            $file_url = preg_replace('#^(' . $this->root_dir . ')?(/)#i', '$2', $result['courseware']);
+            if ((!is_http_url($result['file_url']) && !file_exists('.' . $file_url))) {
+                $this->error('附件文件不存在！');
+            }
+        }
+
+        $users = GetUsersLatestData();
+        if (empty($users['users_id']) && !empty($result['restric_type'])) $this->error('请先登录');
+        
+        $arc_level_value = '';
+        //会员级别名称 如果有
+        if (!empty($result['arc_level_id'])) {
+            $arc_level_value = Db::name('users_level')->where(['level_id'=>$result['arc_level_id']])->value('level_value');
+        }
+
+        $is_buy = 0;//0-未购买 1-已购买
+        if (1 == $result['restric_type'] || (2 == $result['restric_type'] && 1 == $result['no_vip_pay']) || 3 == $result['restric_type']){
+            $where = [
+                'users_id' => $users['users_id'],
+                'product_id' => $aid,
+                'order_status' => 1
+            ];
+            // 存在数据则已付费
+            $is_buy = Db::name('media_order')->where($where)->count();
+        }
+
+        if ( 1 == $result['restric_type'] && empty($is_buy)){
+            $this->error('请先购买！');
+        }elseif (2 == $result['restric_type'] && 0 == $result['no_vip_pay'] && $arc_level_value > $users['level_value']){
+            $this->error('请先升级会员！');
+        }elseif (2 == $result['restric_type'] && 1 == $result['no_vip_pay'] && empty($is_buy)){
+            $this->error('请先购买！');
+        }elseif (3 == $result['restric_type']){
+            if ($arc_level_value > $users['level_value']){
+                $this->error('请先升级会员！');
+            }elseif (empty($is_buy)){
+                $this->error('请先购买！');
+            }
+        }
+
+        download_file($file_url, '', $file_url);
+        exit;
     }
 
     /**

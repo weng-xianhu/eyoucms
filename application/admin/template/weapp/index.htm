@@ -129,15 +129,11 @@
                 <div class="plug-item-content">
                     <div class="plug-item-top">
                         <div class="plug-img">
-                            <a href="{:url('Weapp/execute',array('sm'=>$vo['code'],'sc'=>$vo['code'],'sa'=>'index'))}"><img src="{$vo.config.litpic|get_default_pic=###}?v={$vo.config.version}" ></a>
+                            <a href="{:url('Weapp/execute',array('sm'=>$vo['code'],'sc'=>$vo['code'],'sa'=>'index'))}" {if condition="!empty($vo['config']['management']['href'])"} target="{$vo['config']['management']['target']|default='_self'}" {/if}><img src="{$vo.config.litpic|get_default_pic=###}?v={$vo.config.version}" ></a>
                         </div>
                         <div class="plug-text">
                             <div class="plug-text-title">
-                                {if condition="empty($vo['config']['management']['href'])"}
-                                    <a class="title-l" href="{:url('Weapp/execute',array('sm'=>$vo['code'],'sc'=>$vo['code'],'sa'=>'index'))}">{$vo.name}</a>
-                                {else /}
-                                    <a class="title-l" href="{:url('Weapp/execute',array('sm'=>$vo['code'],'sc'=>$vo['code'],'sa'=>'index'))}" target="{$vo['config']['management']['target']|default='_self'}">{$vo.name}</a>
-                                {/if}
+                                <a class="title-l" href="{:url('Weapp/execute',array('sm'=>$vo['code'],'sc'=>$vo['code'],'sa'=>'index'))}" {if condition="!empty($vo['config']['management']['href'])"} target="{$vo['config']['management']['target']|default='_self'}" {/if}>{$vo.name}</a>
                                 {$RenewList[$vo['code']]['maturity_text']|default=''}
                                 {notempty name="$is_founder"}
                                     {if condition="!empty($vo.config.management.href)"}
@@ -338,7 +334,7 @@
                     });
                 }
             }
-        });                 
+        });
     }
 
     function install(obj)

@@ -59,13 +59,14 @@ class Users extends Model
                 }
                 $attr_value = trim($post_users[$value['name']]);
                 if (empty($attr_value)) {
+                    $msg = sprintf(foreign_lang('users2', $this->home_lang), $value['title']);
                     if ('array' === $return) {
                         return [
                             'field' => $value['name'],
-                            'msg'   => $value['title'].'不能为空！',
+                            'msg'   => $msg,
                         ];
                     } else {
-                        return $value['title'].'不能为空！';
+                        return $msg;
                     }
                 }
             }
@@ -106,14 +107,15 @@ class Users extends Model
                 if (!preg_match('/(_code|_vertify)$/i', $key)) {
                     $email = $val;
                     if (!empty($val) && !check_email($val)) {
+                        $msg = sprintf(foreign_lang('users3', $this->home_lang), $users_parameter[$key]['title']);
                         if ('array' == $return) {
                             return [
                                 'code_status'   =>  0,
                                 'field' => $key,
-                                'msg'   => $users_parameter[$key]['title'].'格式不正确！',
+                                'msg'   => $msg,
                             ];
                         } else {
-                            return $users_parameter[$key]['title'].'格式不正确！';
+                            return $msg;
                         }
                     }
                 } else {
@@ -123,14 +125,15 @@ class Users extends Model
                 if (!preg_match('/(_code|_vertify)$/i', $key)) {
                     $mobile = $val;
                     if (!empty($val) && !check_mobile($val)) {
+                        $msg = sprintf(foreign_lang('users3', $this->home_lang), $users_parameter[$key]['title']);
                         if ('array' == $return) {
                             return [
                                 'code_status'   =>  0,
                                 'field' => $key,
-                                'msg'   => $users_parameter[$key]['title'].'格式不正确！',
+                                'msg'   => $msg,
                             ];
                         } else {
-                            return $users_parameter[$key]['title'].'格式不正确！';
+                            return $msg;
                         }
                     }
                 } else {
@@ -155,14 +158,15 @@ class Users extends Model
                 if (!empty($record)) {
                     $record['add_time'] += Config::get('global.email_default_time_out');
                     if (1 == $record['status'] || $record['add_time'] <= $time) {
+                        $msg = foreign_lang('users4', $this->home_lang);
                         if ('array' == $return) {
                             return [
                                 'code_status'   =>  0,
                                 'field' => 'email_1_code',
-                                'msg'   => '邮箱验证码已被使用或超时，请重新发送！',
+                                'msg'   => $msg,
                             ];
                         } else {
-                            return '邮箱验证码已被使用或超时，请重新发送！';
+                            return $msg;
                         }
                     }else{
                         // 返回后处理邮箱验证码失效操作
@@ -173,6 +177,7 @@ class Users extends Model
                         return $data;
                     }
                 }else{
+                    $msg = foreign_lang('users5', $this->home_lang);
                     if (!empty($users_id)) {
                         // 当会员修改邮箱地址，验证码为空或错误返回
                         $row = $this->getUsersListData('email',$users_id);
@@ -181,10 +186,10 @@ class Users extends Model
                                 return [
                                     'code_status'   =>  0,
                                     'field' => 'email_1_code',
-                                    'msg'   => '邮箱验证码不正确，请重新输入！',
+                                    'msg'   => $msg,
                                 ];
                             } else {
-                                return '邮箱验证码不正确，请重新输入！';
+                                return $msg;
                             }
                         }
                     }else{
@@ -193,10 +198,10 @@ class Users extends Model
                             return [
                                 'code_status'   =>  0,
                                 'field' => 'email_1_code',
-                                'msg'   => '邮箱验证码不正确，请重新输入！',
+                                'msg'   => $msg,
                             ];
                         } else {
-                            return '邮箱验证码不正确，请重新输入！';
+                            return $msg;
                         }
                     }
                 }
@@ -206,6 +211,7 @@ class Users extends Model
             $time = getTime();
             /*处理短信验证码逻辑*/
             if (!empty($mobile)) {
+                $msg = foreign_lang('users6', $this->home_lang);
                 $where = [
                     'mobile' => $mobile,
                     'code' => $mobile_code
@@ -218,10 +224,10 @@ class Users extends Model
                             $data = [
                                 'code_status'   =>  0,
                                 'field' => 'mobile_1_code',
-                                'msg'   => '短信验证码不正确，请重新输入！',
+                                'msg'   => $msg,
                             ];
                         } else {
-                            $data = '短信验证码不正确，请重新输入！';
+                            $data = $msg;
                         }
                     } else {
                         // 返回后处理短信验证码失效操作
@@ -239,10 +245,10 @@ class Users extends Model
                                 $data = [
                                     'code_status'   =>  0,
                                     'field' => 'mobile_1_code',
-                                    'msg'   => '短信验证码不正确，请重新输入！',
+                                    'msg'   => $msg,
                                 ];
                             } else {
-                                $data = '短信验证码不正确，请重新输入！';
+                                $data = $msg;
                             }
                         }
                     } else {
@@ -251,10 +257,10 @@ class Users extends Model
                             $data = [
                                 'code_status'   =>  0,
                                 'field' => 'mobile_1_code',
-                                'msg'   => '短信验证码不正确，请重新输入！',
+                                'msg'   => $msg,
                             ];
                         } else {
-                            $data = '短信验证码不正确，请重新输入！';
+                            $data = $msg;
                         }
                     }
                 }
@@ -277,14 +283,15 @@ class Users extends Model
 
                 $users_list = M('users_list')->where($where_2)->field('info')->find();
                 if (!empty($users_list['info'])) {
+                    $msg = sprintf(foreign_lang('users7', $this->home_lang), $value['title']);
                     if ('array' == $return) {
                         return [
                             'code_status'   =>  0,
                             'field' => $key,
-                            'msg'   => $value['title'].'已存在！',
+                            'msg'   => $msg,
                         ];
                     } else {
-                        return $value['title'].'已存在！';
+                        return $msg;
                     }
                 }
             }

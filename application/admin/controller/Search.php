@@ -244,7 +244,6 @@ class Search extends Base
 
         // 执行操作
         if (IS_AJAX_POST) {
-//            $post = input('post.');
             // 查询条件
             $condition['lang'] = $this->admin_lang;
             $orderby = "is_hot desc, id desc";

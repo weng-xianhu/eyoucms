@@ -84,10 +84,10 @@ if (!function_exists('func_encrypt')) {
      * @param string $str 字符串
      * @return array
      */
-    function func_encrypt($pwd, $is_admin = false, $type = 'bcrypt')
+    function func_encrypt($pwd, $is_admin = false, $type = 'bcrypt', $auth_code = '')
     {
         $pwd = trim($pwd);
-        $auth_code = get_auth_code($type);
+        empty($auth_code) && $auth_code = get_auth_code($type);
         if ('bcrypt' == $type) {
             $encry_pwd = crypt($pwd, $auth_code);
         } else {
@@ -670,6 +670,7 @@ if (!function_exists('check_email')) {
         return false;
     }
 }
+
 if (!function_exists('check_domain'))
 {
     /**
@@ -688,6 +689,7 @@ if (!function_exists('check_domain'))
         }
     }
 }
+
 if (!function_exists('getSubstr')) {
     /**
      * 实现中文字串截取无乱码的方法
@@ -2433,6 +2435,8 @@ if (!function_exists('view_logic')) {
 
             case '5': // 视频模型
                 {
+                    $result['courseware'] = !empty($result['courseware']) ? url('home/View/download_media_file',['aid'=>$result['aid']]) : '';
+
                     if (true === $allAttrInfo_bool) {
                         $allAttrInfo                  = [];
                         $mediaFileModel = new \app\home\model\MediaFile;

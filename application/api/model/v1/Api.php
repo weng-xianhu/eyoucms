@@ -153,6 +153,10 @@ class Api extends Base
                 /*规格数据*/
                 $detail['spec_attr'] = $this->getSpecAttr($aid, $users);
                 /* END */
+                //商品总销量 = 实际总销量 + 虚拟销量
+                $detail['sales_all'] = intval($detail['sales_num']) + intval($detail['sales_all']);
+                // 商品服务标签关联绑定数据
+                if (!empty($aid)) $detail['goodsLabel'] = model('ShopGoodsLabel')->getGoodsLabelList($aid, true);
 
                 // 产品相册
                 $productImgModel = new \app\home\model\ProductImg;
@@ -1483,26 +1487,36 @@ class Api extends Base
                 $product_name = $product_name_new . '等...';
             }
             $data = [
-                'first' => [
-                    'value' => $template_info['template_title'],
-                ],
-                'keyword1' => [
+                'character_string3' => [
                     'value' => $orderInfo['order_code'],
                 ],
-                'keyword2' => [
+                'thing11' => [
                     'value' => $product_name,
                 ],
-                'keyword3' => [
-                    'value' => count($orderDetailsInfo),
-                ],
-                'keyword4' => [
+                'amount4' => [
                     'value' => "¥{$orderInfo['order_amount']}",
                 ],
-                'keyword5' => [
+                'time7' => [
                     'value' => MyDate('Y-m-d H:i:s', $orderInfo['pay_time']),
                 ],
-                'remark' => [
-                    'value' => !empty($keywordsList['remark']) ? $keywordsList['remark']['example'] : '请您登录商城查看订单并发货！',
+            ];
+        }
+        // 留言表单通知
+        else if (1 == $send_scene) {
+            $gourl = request()->domain().ROOT_DIR;
+            $gbookInfo = Db::name('guestbook')->where(['aid' => $result_id])->find();
+            if (1 == $gbookInfo['form_type']) { // 自由表单
+                $title = Db::name('form')->where(['form_id' => $gbookInfo['typeid']])->value('form_name');
+            } else { // 留言模型
+                $title = Db::name('arctype')->where(['id' => $gbookInfo['typeid']])->value('typename');
+            }
+            $title = msubstr($title, 0, 22);
+            $data = [
+                'thing7' => [
+                    'value' => $title,
+                ],
+                'time6' => [
+                    'value' => MyDate('Y-m-d H:i:s', $gbookInfo['add_time']),
                 ],
             ];
         }

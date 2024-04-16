@@ -1607,6 +1607,7 @@ class Language extends Base
             $ArchivesLogic = new ArchivesLogic;
             $res = $ArchivesLogic->batch_copy_all($mark,$is_jump);
             if (false !== $res){
+                model('Arctype')->hand_type_count(['lang'=>$mark]);//统计栏目文档数量
                 $this->success('同步成功!');
             }
         }

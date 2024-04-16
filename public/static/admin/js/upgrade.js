@@ -3,7 +3,11 @@
 
 $(document).ready(function(){
     $("#a_upgrade").click(function(){
-        btn_upgrade(this, 0);  
+        if ($(this).attr('data-php_servicemeal') > 0) {
+            btn_upgrade(this, 0);
+        } else {
+            upgrade_buy_tips(this);
+        }
     });
 });
 
@@ -274,6 +278,27 @@ function upgrade(obj){
             }
         }
     });                 
+}
+
+function upgrade_buy_tips(obj)
+{
+    var msg = '<style type="text/css">.layui-layer-content{text-align:left!important;}</style>由于升级服务器并发压力过大，暂停非授权站点在线升级，有需要可以购买商业授权，如有不便请多包涵！';
+    parent.layer.alert(msg, {
+        shade: layer_shade,
+        area: ['480px', '230px'],
+        move: false,
+        title: '温馨提示',
+        btnAlign:'r',
+        closeBtn: 3,
+        btn: ['购买授权', '确定'],
+        success: function(){
+            $(".layui-layer-btn", window.parent.document).find('a.layui-layer-btn1').removeClass('layui-layer-btn1').addClass('layui-layer-btn2');
+            $(".layui-layer-btn", window.parent.document).find('a.layui-layer-btn0').removeClass('layui-layer-btn0').addClass('layui-layer-btn1');
+            $(".layui-layer-btn", window.parent.document).find('a.layui-layer-btn2').removeClass('layui-layer-btn2').addClass('layui-layer-btn0');
+        }
+    }, function(){
+        window.open('https://www.eyoucms.com/buy');
+    });
 }
 
 function layer_loading2(msg){

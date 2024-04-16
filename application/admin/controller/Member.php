@@ -605,48 +605,18 @@ class Member extends Base {
         $this->error('参数有误');
     }
 
+
     // 级别列表
     public function level_index()
     {
-        $list = array();
-        $keywords = input('keywords/s');
-
-        $condition = array();
-        // 应用搜索条件
-        if (!empty($keywords)) {
-            $condition['a.level_name'] = array('LIKE', "%{$keywords}%");
-        }
-
-        /**
-         * 数据查询
-         */
-        $count = $this->users_level_db->alias('a')->where($condition)->count();
-        $Page = new Page($count, config('paginate.list_rows'));
-        $list = $this->users_level_db->field('a.*')
-            ->alias('a')
-            ->where($condition)
-            ->order('a.level_value asc, a.level_id asc')
-            ->limit($Page->firstRow.','.$Page->listRows)
-            ->select();
-
-        $show = $Page->show();
-        $this->assign('page',$show);
-        $this->assign('list',$list);
-        $this->assign('pager',$Page);
-
-        // 用于判断是否可以删除会员级别，当会员级别下存在会员时，不可删除。
-        $levelgroup = $this->users_db->field('level')
-            ->group('level')
-            ->getAllWithIndex('level');
-        $this->assign('levelgroup',$levelgroup);
+        // 级别列表
+        $this->getUsersLevelList(false);
 
         /*是否安装启用下载次数限制插件*/
         $isShowDownCount = 0;
         if (is_dir('./weapp/Downloads/')) {
-            $DownloadsRow = model('Weapp')->getWeappList('Downloads');
-            if (!empty($DownloadsRow['status']) && 1 == $DownloadsRow['status']) {
-                $isShowDownCount = 1;
-            }
+            $downloadsRow = model('Weapp')->getWeappList('Downloads');
+            if (!empty($downloadsRow['status']) && 1 == $downloadsRow['status']) $isShowDownCount = 1;
         }
         $this->assign('isShowDownCount', $isShowDownCount);
         /*end*/
@@ -654,65 +624,43 @@ class Member extends Base {
         return $this->fetch();
     }
 
+    // 会员级别状态
+    public function level_status()
+    {
+        if (IS_AJAX_POST) {
+            // 保存会员级别信息
+            $result = model('UsersLevel')->updateUsersLevelStatus();
+            if (!empty($result)) $this->usersLevelSuccess('更新成功');
+        }
+        $this->error('操作失败');
+    }
+
     // 级别 - 新增
     public function level_add()
     {   
-        if (IS_POST) {
-            $post = input('post.');
-            // 级别名称不可重复
-            $PostLevelName = array_unique($post['level_name']);
-            if (count($PostLevelName) != count($post['level_name'])) {
-                $this->error('级别名称不可重复！');
-            }
-            // 会员等级值不可重复
-            $PostLevelValue = array_unique($post['level_value']);
-            if (count($PostLevelValue) != count($post['level_value'])) {
-                $this->error('会员等级值不可重复！');
-            }
-            // 数据拼装
-            $AddUsersLevelData = $where = [];
-            foreach ($post['level_name'] as $key => $value) {
-                $level_id    = $post['level_id'][$key];
-                $level_name  = trim($value);
-                $level_value = intval(trim($post['level_value'][$key]));
-                if (isset($post['discount'][$key])) {
-                    $discount = trim($post['discount'][$key]);
-                    if ($discount < 0 || $discount == '') {
-                        $discount = 100;
-                    }
-                } else {
-                    $discount = 100;
-                }
-                $down_count    = isset($post['down_count'][$key]) ? intval($post['down_count'][$key]) : 100;
-
-                if (empty($level_name)) $this->error('级别名称不可为空！');
-                if (empty($level_value)) $this->error('会员等级值不可为空！');
-
-                $AddUsersLevelData[$key] = [
-                    'level_id'    => $level_id,
-                    'level_name'  => $level_name,
-                    'level_value' => $level_value,
-                    'discount'    => $discount,
-                    'down_count'    => $down_count,
-                    'update_time' => getTime(),
-                ];
-
-                if (empty($level_id)) {
-                    $AddUsersLevelData[$key]['lang']     = $this->admin_lang;
-                    $AddUsersLevelData[$key]['add_time'] = getTime();
-                    unset($AddUsersLevelData[$key]['level_id']);
-                }
-            }
-
-            $ReturnId = model('UsersLevel')->saveAll($AddUsersLevelData);
-            if ($ReturnId) {
-                \think\Cache::clear('users_level');
-                adminLog('新增会员级别：'.implode(',', $post['level_name']));
-                $this->success('操作成功', url('Member/level_index'));
-            } else {
-                $this->error('操作失败');
-            }
+        if (IS_AJAX_POST) {
+            // 保存会员级别信息
+            $result = model('UsersLevel')->saveUsersLevelDetails();
+            if (!empty($result)) $this->usersLevelSuccess('保存成功');
+            $this->error('操作失败');
         }
+
+        return $this->fetch();
+    }
+
+    // 级别 - 编辑
+    public function level_edit()
+    {
+        if (IS_AJAX_POST) {
+            // 保存会员级别信息
+            $result = model('UsersLevel')->saveUsersLevelDetails('update');
+            if (!empty($result)) $this->usersLevelSuccess('保存成功');
+            $this->error('操作失败');
+        }
+
+        // 查询会员级别信息
+        $usersLevel = model('UsersLevel')->getUsersLevelDetails();
+        $this->assign('usersLevel', $usersLevel);
 
         return $this->fetch();
     }
@@ -720,60 +668,33 @@ class Member extends Base {
     // 级别 - 删除
     public function level_del()
     {
-        $level_id = input('del_id/a');
-        $level_id = eyIntval($level_id);
-
-        if (IS_AJAX_POST && !empty($level_id)) {
-            // 查询条件
-            $where = [
-                'level_id'  => ['IN', $level_id],
-            ];
-            // 查询会员级别
-            $result = model('UsersLevel')->getList('level_name,is_system,level_value', $where);
-            $level_name_list = get_arr_column($result, 'level_name');
-            // 系统内置级别不可删除
-            foreach ($result as $val) {
-                if (1 == intval($val['is_system'])) {
-                    $this->error('系统内置，不可删除！');
-                }
-            }
-            // 有使用的会员不可删除
-            $info = $this->users_db->where([
-                    'level' => ['IN', $level_id],
-                ])->count();
-            if (!empty($info)) {
-                $this->error('选中的级别存在会员，不可删除！');
-            }
-            // 删除指定级别
-            $return = $this->users_level_db->where($where)->delete();
-            if ($return) {
-                // 查询指定会员级别
-                $where1 = [
-                    'level_value' => ['>', $result[0]['level_value']],
-                ];
-                $result_1 = $this->users_level_db->where($where1)->order('level_value asc')->field('level_id')->find();
-                if (empty($result_1)) {
-                    $where1 = [
-                        'level_value' => ['<', $result[0]['level_value']],
-                    ];
-                    $result_1 = $this->users_level_db->where($where1)->order('level_value asc')->field('level_id')->find();
-                }
-                // 拼装更新条件
-                $UpData = [
-                    'level_id'      => $result_1['level_id'],
-                    'update_time'   => getTime(),
-                ];
-                // 更新会员升级表数据
-                Db::name('users_type_manage')->where($where)->update($UpData);
-                \think\Cache::clear('users_level');
-                adminLog('删除会员级别：'.implode(',', $level_name_list));
-                $this->success('删除成功');
-            }else{
-                $this->error('删除失败');
-            }
+        if (IS_AJAX_POST) {
+            // 保存会员级别信息
+            $result = model('UsersLevel')->delUsersLevelDetails();
+            if (!empty($result)) $this->usersLevelSuccess('删除成功');
         }
-        $this->error('参数有误');
+        $this->error('操作失败，刷新重试');
     }
+
+    // 会员级别成功返回
+    private function usersLevelSuccess($msg = '操作成功', $url = null, $result = [])
+    {
+        // 获取会员级别列表
+        $result['html'] = $this->getUsersLevelList();
+        $this->success($msg, $url, $result);
+    }
+
+    // 级别列表
+    private function getUsersLevelList($return = true)
+    {
+        // 获取会员级别列表
+        $result = model('UsersLevel')->getUsersLevelList();
+        $this->assign($result);
+
+        // 返回页面内容
+        if (!empty($return)) return $this->fetch('member/level_list');
+    }
+
 
     // 属性列表
     public function attr_index()
@@ -1254,11 +1175,26 @@ class Member extends Base {
             ->order('a.moneyid desc')
             ->limit($Page->firstRow.','.$Page->listRows)
             ->select();
+        $order_number_arr = [];
         foreach ($list as $key => $value) {
+            if (in_array($value['status'],[2,3])  && 'wechat' == $value['pay_method']) $order_number_arr[] = $value['order_number'];
             $value['username'] = !empty($value['nickname']) ? $value['nickname'] : $value['username'];
             $value['head_pic'] = get_head_pic($value['head_pic']);
             $list[$key] = $value;
         }
+
+        if (!empty($order_number_arr)){
+            //处理微信推送数据
+            $wsi_where['order_code'] = ['in',$order_number_arr];
+            $wsi_where['order_source'] = ['in',[1,20]];
+            $wx_push_arr = Db::name('wx_shipping_info')->where($wsi_where)->getAllWithIndex('order_code');
+            if(!empty($wx_push_arr)){
+                foreach ($list as $key => $value) {
+                    if (!empty($wx_push_arr[$value['order_number']])) $list[$key]['wx_shipping_info'] = $wx_push_arr[$value['order_number']];
+                }
+            }
+        }
+
         $show = $Page->show();
         $this->assign('page', $show);
         $this->assign('list', $list);
@@ -1632,7 +1568,68 @@ class Member extends Base {
         $this->assign('list',$list);
         $this->assign('pager',$Page);
 
+        $pc_user_left_menu_config = Config::get('global.pc_user_left_menu_config');
+        $this->assign('menu_list',$pc_user_left_menu_config);
+
         return $this->fetch();
+    }
+
+    //保存会员中心左侧菜单
+    public function save_users_menu()
+    {
+        if (IS_AJAX_POST){
+            $post = input('post.');
+            $usersTplVersion = getUsersTplVersion();
+            $pc_user_left_menu_config = Config::get('global.pc_user_left_menu_config');
+            if (!empty($post['data'])){
+                $insert = [];
+                foreach ($post['data'] as $k => $v){
+                    if (empty($v['title'])) continue;
+                    $v['title'] = htmlspecialchars($v['title']);
+                    if (!empty($v['id'])){
+                        $v['update_time'] = getTime();
+                        Db::name('users_menu')->update($v);
+                    }else{
+                        unset($v['id']);
+                        if (7 != $v['type']) {
+                            $v['mca'] = $pc_user_left_menu_config[$v['type']]['mca'];
+                            $v['active_url'] = $pc_user_left_menu_config[$v['type']]['active_url'];
+                        }else{
+                            $v['active_url'] = $v['mca'];
+                        }
+                        $v['version'] = $usersTplVersion;
+                        $v['add_time'] = getTime();
+                        $v['update_time'] = getTime();
+                        $insert[] = $v;
+                    }
+                }
+                if (!empty($insert)){
+                    Db::name('users_menu')->insertAll($insert);
+                }
+            }
+            $this->success('保存成功!');
+        }
+        $this->error('请求失败!');
+    }
+
+    //删除会员中心左侧菜单
+    public function del_users_menu()
+    {
+        $menu_id = input('del_id/a');
+        $menu_id = eyIntval($menu_id);
+
+        if (IS_AJAX_POST && !empty($menu_id)) {
+            $title_list = Db::name('users_menu')->where('id','in',$menu_id)->column('title');
+            $return = Db::name('users_menu')->where('id','in',$menu_id)->delete();
+            if ($return) {
+                \think\Cache::clear('users_menu');
+                adminLog('删除会员中心左侧菜单：'.implode(',', $title_list));
+                $this->success('删除成功');
+            }else{
+                $this->error('删除失败');
+            }
+        }
+        $this->error('参数有误');
     }
 
 
@@ -1773,10 +1770,23 @@ class Member extends Base {
             ->order('a.order_id desc')
             ->limit($Page->firstRow.','.$Page->listRows)
             ->select();
+        $order_code_arr = [];
         foreach ($list as $key => $value) {
+            if (1 == $value['order_status'] && 'wechat' == $value['pay_name']) $order_code_arr[] = $value['order_code'];
             $value['username'] = !empty($value['nickname']) ? $value['nickname'] : $value['username'];
             $value['head_pic'] = get_head_pic($value['head_pic']);
             $list[$key] = $value;
+        }
+        if (!empty($order_code_arr)){
+            //处理微信推送数据
+            $wsi_where['order_code'] = ['in',$order_code_arr];
+            $wsi_where['order_source'] = 8;
+            $wx_push_arr = Db::name('wx_shipping_info')->where($wsi_where)->getAllWithIndex('order_code');
+            if(!empty($wx_push_arr)){
+                foreach ($list as $key => $value) {
+                    if (!empty($wx_push_arr[$value['order_code']])) $list[$key]['wx_shipping_info'] = $wx_push_arr[$value['order_code']];
+                }
+            }
         }
         $show = $Page->show();
         $this->assign('list', $list);
@@ -1886,11 +1896,25 @@ class Member extends Base {
             ->order('a.order_id desc')
             ->limit($Page->firstRow.','.$Page->listRows)
             ->select();
+        $order_code_arr = [];
         foreach ($list as $key => $value) {
+            if (1 == $value['order_status'] && 'wechat' == $value['pay_name']) $order_code_arr[] = $value['order_code'];
             $value['username'] = !empty($value['nickname']) ? $value['nickname'] : $value['username'];
             $value['head_pic'] = get_head_pic($value['head_pic']);
             $list[$key] = $value;
         }
+        if (!empty($order_code_arr)){
+            //处理微信推送数据
+            $wsi_where['order_code'] = ['in',$order_code_arr];
+            $wsi_where['order_source'] = 9;
+            $wx_push_arr = Db::name('wx_shipping_info')->where($wsi_where)->getAllWithIndex('order_code');
+            if(!empty($wx_push_arr)){
+                foreach ($list as $key => $value) {
+                    if (!empty($wx_push_arr[$value['order_code']])) $list[$key]['wx_shipping_info'] = $wx_push_arr[$value['order_code']];
+                }
+            }
+        }
+
         $show = $Page->show();
         $this->assign('list', $list);
         $this->assign('page', $show);
@@ -2216,11 +2240,25 @@ class Member extends Base {
             ->order('a.order_id desc')
             ->limit($Page->firstRow.','.$Page->listRows)
             ->select();
+        $order_code_arr = [];
         foreach ($list as $key => $value) {
+            if (1 == $value['order_status'] && 'wechat' == $value['pay_name']) $order_code_arr[] = $value['order_code'];
             $value['username'] = !empty($value['nickname']) ? $value['nickname'] : $value['username'];
             $value['head_pic'] = get_head_pic($value['head_pic']);
             $list[$key] = $value;
         }
+        if (!empty($order_code_arr)){
+            //处理微信推送数据
+            $wsi_where['order_code'] = ['in',$order_code_arr];
+            $wsi_where['order_source'] = 10;
+            $wx_push_arr = Db::name('wx_shipping_info')->where($wsi_where)->getAllWithIndex('order_code');
+            if(!empty($wx_push_arr)){
+                foreach ($list as $key => $value) {
+                    if (!empty($wx_push_arr[$value['order_code']])) $list[$key]['wx_shipping_info'] = $wx_push_arr[$value['order_code']];
+                }
+            }
+        }
+
         $show = $Page->show();
         $this->assign('list', $list);
         $this->assign('page', $show);
@@ -2677,5 +2715,5 @@ class Member extends Base {
         }
         $this->error('操作失败');
     }
-
+  
 }

@@ -902,11 +902,12 @@ if (!function_exists('showArchivesFlagStr'))
         $arr = [];
         $flaglist = ['is_head','is_recom','is_special','is_b','is_jump','is_roll','is_slide','is_diyattr'];
         foreach ($flaglist as $key => $fieldname) {
-            if (!empty($archivesInfo[$fieldname]) && !empty($flagResult[$fieldname]['flag_name'])) {
-                if (in_array($flagResult[$fieldname]['flag_name'], ['推荐','加推','标粗','有图']) || stristr($flagResult[$fieldname]['flag_name'], '最')) {
-                    $small_name = msubstr($flagResult[$fieldname]['flag_name'], 1, 1);
+            $flag_name = empty($flagResult[$fieldname]['flag_name']) ? '' : htmlspecialchars_decode($flagResult[$fieldname]['flag_name']);
+            if (!empty($archivesInfo[$fieldname]) && !empty($flag_name)) {
+                if (in_array($flag_name, ['推荐','加推','标粗','有图']) || stristr($flag_name, '最')) {
+                    $small_name = msubstr($flag_name, 1, 1);
                 } else {
-                    $small_name = msubstr($flagResult[$fieldname]['flag_name'], 0, 1);
+                    $small_name = msubstr($flag_name, 0, 1);
                 }
                 $arr[$fieldname] = [
                     'small_name'   => $small_name,

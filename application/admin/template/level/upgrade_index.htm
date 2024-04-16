@@ -155,7 +155,18 @@
                                 </div>
                             </td>
                             
-                            <td class="sort "> <div class="tc"> {$vo.add_time|date='Y-m-d H:i:s',###} </div> </td>
+                            <td class="sort ">
+                                <div class="tc">
+                                    {$vo.add_time|date='Y-m-d H:i:s',###}
+                                    {if condition="in_array($vo.status,[2,3]) && !empty($vo['wx_shipping_info'])"}
+                                    {eq name="$vo['wx_shipping_info']['errcode']" value="0"}
+                                    <p style="color: #19be6b">推送微信小程序成功</p>
+                                    {else /}
+                                    <p style="color: red" title="{$vo['wx_shipping_info']['errmsg']}" data-title="{$vo['wx_shipping_info']['errmsg']}" data-ordercode="{$vo.order_number}" data-source="3" data-usersid="{$vo.users_id}" onclick="push_shipping(this);">推送微信小程序失败</p>
+                                    {/eq}
+                                    {/if}
+                                </div>
+                            </td>
                             
 							<td> <div class="tc"> {$pay_status_arr[$vo['status']]} </div> </td>
 						</tr>

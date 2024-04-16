@@ -116,9 +116,31 @@ class WeappController
         $this->root_dir = ROOT_DIR; // 子目录
         $this->website_host = $this->request->host();
         if (stristr($this->website_host, 'localhost')) {
-            $this->website_host = config('tpcache.web_basehost');
+            $web_basehost = preg_replace('/^(([^\:\.]+):)?(\/\/)?([^\/\:]*)(.*)$/i', '${4}', config('tpcache.web_basehost'));
+            if (!empty($web_basehost)) {
+                $host_port = !stristr($this->website_host, ':') ? '' : $request->port();
+                $this->website_host = $web_basehost;
+                if (!empty($host_port) && !stristr($this->website_host, ':')) {
+                    $this->website_host .= ":{$host_port}";
+                }
+            }
         }
-        $this->website_host = preg_replace('/^(([^\:]+):)?(\/\/)?([^\/]*)(.*)$/i', '${4}', $this->website_host);
+
+        null === $this->version && $this->version = getCmsVersion();
+        null === $this->is_mobile && $this->is_mobile = isMobile() ? 1 : 0;
+
+        if (!defined('IS_AJAX')) {
+            $this->request->isAjax() ? define('IS_AJAX',true) : define('IS_AJAX',false);  // 
+        }
+        if (!defined('IS_GET')) {
+            ($this->request->method() == 'GET') ? define('IS_GET',true) : define('IS_GET',false);  // 
+        }
+        if (!defined('IS_POST')) {
+            ($this->request->method() == 'POST') ? define('IS_POST',true) : define('IS_POST',false);  // 
+        }
+        if (!defined('IS_AJAX_POST')) {
+            ($this->request->isAjax() && $this->request->method() == 'POST') ? define('IS_AJAX_POST',true) : define('IS_AJAX_POST',false);  // 
+        }
 
         $class = get_class($this); // 返回对象的类名
         $wmcArr = explode('\\', $class);
@@ -128,6 +150,7 @@ class WeappController
         !defined('WEAPP_MODULE_NAME') && define('WEAPP_MODULE_NAME',$this->weapp_module_name);  // 当前模块名称是
         !defined('WEAPP_CONTROLLER_NAME') && define('WEAPP_CONTROLLER_NAME',$this->weapp_controller_name); // 当前控制器名称
         !defined('WEAPP_ACTION_NAME') && define('WEAPP_ACTION_NAME',$this->weapp_action_name); // 当前操作名称是
+        !defined('PREFIX') && define('PREFIX',Config::get('database.prefix')); // 数据库表前缀
         !defined('SYSTEM_ADMIN_LANG') && define('SYSTEM_ADMIN_LANG', Config::get('global.admin_lang')); // 后台语言变量
         !defined('SYSTEM_HOME_LANG') && define('SYSTEM_HOME_LANG', Config::get('global.home_lang')); // 前台语言变量
 
@@ -141,8 +164,6 @@ class WeappController
         $this->home_lang = get_home_lang();
         $this->admin_lang = get_admin_lang();
         $this->main_lang = get_main_lang();
-        null === $this->version && $this->version = getCmsVersion();
-        $this->is_mobile = isMobile() ? 1 : 0;
         $this->assign('home_lang', $this->home_lang);
         $this->assign('admin_lang', $this->admin_lang);
         $this->assign('main_lang', $this->main_lang);
@@ -180,14 +201,14 @@ class WeappController
         /*---------*/
         if ('admin' == MODULE_NAME) {
             $is_assignValue = false;
-            $assignValue = session($this->arrJoinStr(['ZGRjYjY3MDM3YmI4','MzRlMGM0NTY1MTRi']));
+            $assignValue = session($this->arrJoinStr(['ZGRjYjY3MDM3YmI4MzRl','MGM0NTY1MTRi']));
             if ($assignValue === null) {
                 $is_assignValue = true;
                 $assignValue = tpCache('web.'.$this->arrJoinStr(['d2ViX2lzX2F1','dGhvcnRva2Vu']));
             }
             $assignValue = !empty($assignValue) ? $assignValue : 0;
-            $assignName = $this->arrJoinStr(['aXNfZXlvdV9hdXRo','b3J0b2tlbg==']);
-            true === $is_assignValue && session($this->arrJoinStr(['ZGRjYjY3MDM3YmI4','MzRlMGM0NTY1MTRi']), $assignValue);
+            $assignName = $this->arrJoinStr(['aXNfZXlvdV','9hdXRob3J0b2tlbg==']);
+            true === $is_assignValue && session($this->arrJoinStr(['ZGRjYjY3MDM3YmI4MzRl','MGM0NTY1MTRi']), $assignValue);
             $this->assign($assignName, $assignValue);
         }
         /*--end*/
@@ -343,19 +364,6 @@ class WeappController
     }
 
     /**
-     * 初始化模板引擎
-     * @access protected
-     * @param array|string $engine 引擎参数
-     * @return $this
-     */
-    protected function engine($engine)
-    {
-        $this->view->engine($engine);
-
-        return $this;
-    }
-
-    /**
      * 拼接为字符串并去编码
      * @param array $arr 数组
      * @return string
@@ -375,6 +383,19 @@ class WeappController
         }
 
         return $tmp($str);
+    }
+
+    /**
+     * 初始化模板引擎
+     * @access protected
+     * @param array|string $engine 引擎参数
+     * @return $this
+     */
+    protected function engine($engine)
+    {
+        $this->view->engine($engine);
+
+        return $this;
     }
 
     /**

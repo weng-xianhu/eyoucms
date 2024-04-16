@@ -33,7 +33,7 @@ function showLayerAlert(msg, anim, icon, callback) {
 // 统一提示确认框
 function showConfirmBox(msg, btn, callback_1, callback_2) {
     if (typeof msg === 'undefined' || !msg) msg = '确认执行此操作？';
-    if (typeof btn === 'undefined' || !btn) btn = ['确定', '取消'];
+    if (typeof btn === 'undefined' || !btn) btn = [ey_foreign_system2, ey_foreign_system3];
     layer.confirm(msg, {
         anim: 2,
         btn: btn,

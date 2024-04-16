@@ -1,0 +1,98 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll;min-width:auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page min-hg-c-i" style="min-width: auto;box-shadow:none;">
+    <div class="flexigrid">
+        {include file="canal/bar" /}
+        <!-- 操作说明 -->
+        <div id="" class="explanation mb15">
+            <ul>
+                <li>1.登录 <a href="https://mp.weixin.qq.com" target="_blank">微信公众号</a>，确认是否已经配置了 JS接口安全域名 、网页授权域名，<a href="javascript:void(0);" onclick="Images('https://www.eyoucms.com/uploads/allimg/20240411/1008-2404111KH3109.png', 900, 600);">查看教程</a></li>
+                <li>2.登录 <a href="https://mp.weixin.qq.com" target="_blank">微信公众号</a>，在设置与开发>公众号设置>服务类目>里添加这个类目： <font color="#fe7300">商业服务->软件/建站/技术开发</font></li>
+                <li>3.如果所选服务类目的行业和以上不一致，将会导致模板消息不可用</li>
+                <li style="color: red;">4.请先把登录账号与您的微信进行绑定关联，否则接收不到推送信息！<a href="javascript:void(0);"  data-href="{:url('Admin/admin_edit', ['id'=>$admin_id,'iframe'=>1])}" onclick="openHelpframe(this, '个人信息', '100%', '100%');">打开个人信息</a></li>
+            </ul>
+        </div>
+        <form class="form-horizontal pl10 pr10" id="post_form" action="" method="post">
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">场景开启</dt>
+                    <dd class="opt">
+                        <ul class="nc-row ncap-waybill-list">
+                            <li style="width: 100%;">
+                                {volist name="$list" id='vo'}
+                                <label class="label" >
+                                    <input class="check" type="checkbox" name="send_scene_arr[]" value="{$vo.send_scene}" {if condition="!empty($vo['is_open'])"} checked="checked" {/if}><span>{$vo.tpl_title}</span>
+                                </label>&nbsp;&nbsp;
+                                {/volist}
+                            </li>
+                        </ul>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit"> <label for="">模板演示</label> </dt>
+                    <dd class="opt"> 
+                        {volist name="$list" id='vo'}
+                        <div class="default-template-content fl" style="margin-right: 20px;">
+                            <img src="__STATIC__/admin/images/notice_template_wxapp_bg.png" alt="" class="bg-img">
+                            <div class="line"></div>
+                            <div class="wxapp-notice">
+                                 <div class="title">
+                                     <div class="logo">
+                                         <div>公众号名称</div>
+                                     </div>
+                                 </div>
+                                 <div class="content">
+                                     <div class="template-title">{$vo.template_title}</div>
+                                     <div class="template-html">
+                                        {volist name="$vo['tpl_data']['keywordsList']" id="vo"}
+                                        <div class="flex">
+                                            <div class="label">{$vo.name}</div>
+                                            <div>{$vo.example}</div>
+                                        </div>
+                                        {/volist}
+                                     </div>
+                                 </div>
+                                 <div class="template-link">查看详情 <i class="iconfont e-right" style="float: right;"></i></div>
+                            </div>
+                        </div>
+                        {/volist}
+                    </dd>
+                </dl>
+            </div>
+            <div class="ncap-form-default">
+                <div class="bot2" style="padding-left: 160px;">
+                    <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    function checkForm() {
+        layer_loading('正在处理');
+        $.ajax({
+            type: 'post',
+            url : "{:url('Canal/wechat_push_notice', ['_ajax'=>1])}",
+            data: $('#post_form').serialize(),
+            dataType: 'json',
+            success: function(res) {
+                layer.closeAll();
+                if (res.code == 1) {
+                    layer.msg(res.msg, {shade: layer_shade, time: 1000}, function() {
+                        window.location.reload();
+                    });
+                } else {
+                    showErrorAlert(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

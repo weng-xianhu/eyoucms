@@ -56,7 +56,7 @@ class Article extends Base
             ];
             $archives = Db::name('archives')->field('aid, title, litpic, users_price')->where($where)->find();
             if (empty($archives)) $this->error('操作异常，请刷新重试');
-            $archives['users_price'] = get_discount_price($this->users['level_discount'], $archives['users_price']);
+            $archives['users_price'] = get_discount_price($this->users, $archives['users_price']);
 
             // 订单生成规则
             $time = getTime();

@@ -17,11 +17,13 @@
     <script type="text/javascript">
         try{
             if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
-                $(".page").css("margin-left","");
+                $(".page").css("margin-left","10px");
                 $(".page").css("min-width","");
+                $('#submit_bot2').css('left', "10px");
             }else{
                 $(".page").css("margin-left","110px");
                 $(".page").css("min-width","auto");
+                $('#submit_bot2').css('left', "110px");
             }
         }catch(e){}
     </script>
@@ -60,17 +62,22 @@
                     </div>
                 </div>
                 <dl class="pro-type row">
-                    <div class="pro-type-item active" onclick="goodsType(this, 0);">
+                    <div class="pro-type-item {in name='$shopConfig.shop_type' value='0,2'} active {/in}" onclick="goodsType(this, 0);">
                         <div class="tit">实体商品</div><div class="desc">物流发货</div><i class="iconfont e-duihao"></i>
                     </div>
-                    <div class="pro-type-item" onclick="goodsType(this, 1);">
+                    <div class="pro-type-item {in name='$shopConfig.shop_type' value='1'} active {/in}" onclick="goodsType(this, 1);">
                         <div class="tit">虚拟商品</div><div class="desc">无需物流</div><i class="iconfont e-duihao"></i>
                     </div>
                     <input type="hidden" id="prom_type" name="prom_type" value="0">
                 </dl>
                 <script type="text/javascript">
+                    $(document).ready(function() {
+                        var shop_type = '{$shopConfig.shop_type}';
+                        if (1 === parseInt(shop_type)) $('.pro-type .pro-type-item').eq(shop_type).click();
+                    });
+
                     function goodsType(obj, value) {
-                        $('.pro-type-item').removeClass('active');
+                        $('.pro-type .pro-type-item').removeClass('active');
                         $(obj).addClass('active');
                         $('#prom_type').val(value);
                         if (1 === parseInt(value)) {
@@ -158,6 +165,33 @@
                         <input type="hidden" id="tags_click_count">
                     </dd>
                 </dl>
+                <dl class="row">
+                    <dt class="tit"> <label>商品服务</label> </dt>
+                    <dd class="opt">
+                        <span id="goodsLabelList">
+                            {volist name='$goodsLabel' id='vo'}
+                            <label><input type="checkbox" name="goodsLabelID[]" value="{$vo.label_id}">{$vo.label_title}</label>&nbsp;
+                            {/volist}
+                        </span>
+                        <a href="javascript:void(0);" data-href="{:url('ShopProduct/goods_label')}" onclick="openFullframe(this, '设置商品服务', '80%', '80%');" class="ncap-btn ncap-btn-green">设置</a>
+                    </dd>
+                </dl>
+                <script type="text/javascript">
+                    function setGoodsLabelCallBack(res) {
+                        layer.closeAll();
+                        showSuccessMsg(res.msg, 1500);
+                        if (0 < parseInt(res.data.goodsLabel.length)) {
+                            var html = '';
+                            var goodsLabel = res.data.goodsLabel;
+                            for (var i = 0; i < goodsLabel.length; i++) {
+                                html += '<label><input type="checkbox" name="goodsLabelID[]" value="'+goodsLabel[i]['label_id']+'">'+goodsLabel[i]['label_title']+'</label> &nbsp;';
+                            }
+                            $('#goodsLabelList').empty().html(html);
+                        } else {
+                            $('#goodsLabelList').empty();
+                        }
+                    }
+                </script>
                 <dl class="row {empty name='$global.web_citysite_open'} none {/empty} ">
                     <dt class="tit"> <label>所属区域</label> </dt>
                     <dd class="opt"> 
@@ -694,7 +728,7 @@
             
             <!-- #weapp_div# -->
             <div class="ncap-form-default">
-                <div class="bot2" style="left: 110px;">
+                <div class="bot2" id="submit_bot2">
                     <input type="hidden" name="gourl" value="{$gourl|default=''}">
                     <input type="hidden" name="editor_addonFieldExt" id="editor_addonFieldExt" value="">
                     <a href="JavaScript:void(0);" onclick="check_submit();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>

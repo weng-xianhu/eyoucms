@@ -1,9 +1,6 @@
 <!-- 手机文本框 start -->
 <div class="form-group group_z">
     <div class="input-group">
-        <span class="input-group-addon">
-            <i class="fa fa-mobile"></i>
-        </span>
         {eyou:eq name="$vo.is_required" value="1"}<em class="tis">(必填)</em>{/eyou:eq}
         <input type="text" class="form-control" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" maxlength="11" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}">
     </div>

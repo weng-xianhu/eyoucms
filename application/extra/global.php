@@ -143,7 +143,7 @@ return array(
     // 栏目自定义字段的channel_id值
     'arctype_channel_id' => -99,
     // 栏目表内置字段
-    'arctype_table_fields' => array('id','channeltype','current_channel','parent_id','topid','typename','dirname','dirpath','diy_dirpath','rulelist','ruleview','englist_name','grade','typelink','litpic','templist','tempview','seo_title','seo_keywords','seo_description','sort_order','is_hidden','is_part','admin_id','is_del','del_method','status','is_release','weapp_code','lang','add_time','update_time','target','nofollow','typearcrank','empty_logic','page_limit'),
+    'arctype_table_fields' => array('id','channeltype','current_channel','parent_id','topid','typename','dirname','dirpath','diy_dirpath','rulelist','ruleview','englist_name','grade','typelink','litpic','templist','tempview','seo_title','seo_keywords','seo_description','sort_order','is_hidden','is_part','admin_id','is_del','del_method','status','is_release','weapp_code','lang','add_time','update_time','target','nofollow','typearcrank','empty_logic','page_limit','total_arc'),
     // 网络图片扩展名
     'image_ext' => 'jpg,jpeg,gif,bmp,ico,png,webp,svg',
     // 网络多媒体扩展名
@@ -193,6 +193,7 @@ return array(
         'tikTokPay'  => '抖音支付',
         'baiduPay'   => '百度支付',
         'Hupijiaopay' => '虎皮椒支付',
+        'PersonPay' => '支付宝',
     ),
     // 缩略图默认宽高度
     'thumb' => [
@@ -428,6 +429,57 @@ return array(
             'title' => '我的',
             'mca'  => 'user/Users/centre',
             'icon'  => 'geren',
+        ),
+        11 => array(
+            'id'   => 11,
+            'title' => '自定义',
+            'custom' => 1,
+            'mca'  => '',
+            'icon'  => 'xingxing',
+        ),
+    ),
+    // 前台PC会员中心左侧菜单配置选项
+    'pc_user_left_menu_config' => array(
+        1 => array(
+            'id'   => 1,
+            'title' => '个人中心',
+            'mca'  => 'user/Users/index',
+            'active_url'  => 'user/Users/index',
+        ),
+        2 => array(
+            'id'   => 2,
+            'title' => '我的信息',
+            'mca'  => 'user/Users/info',
+            'active_url'  => 'user/Users/info',
+        ),
+        3 => array(
+            'id'   => 3,
+            'title' => '我的收藏',
+            'mca'  => 'user/Users/collection_index',
+            'active_url'  => 'user/Users/collection_index',
+        ),
+        4 => array(
+            'id'   => 4,
+            'title' => '财务明细',
+            'mca'  => 'user/Pay/pay_consumer_details',
+            'active_url'  => 'user/Pay/pay_consumer_details|user/Users/score_index',
+        ),
+        5 => array(
+            'id'   => 5,
+            'title' => '账户充值',
+            'mca'  => 'user/Pay/pay_account_recharge',
+            'active_url'  => 'user/Pay/pay_account_recharge',
+        ),
+        6 => array(
+            'id'   => 6,
+            'title' => '会员升级',
+            'mca'  => 'user/Level/level_centre',
+            'active_url'  => 'user/Level/level_centre',
+        ),
+        7 => array(
+            'id'   => 7,
+            'title' => '自定义',
+            'mca'  => '',
         ),
     ),
 

@@ -238,6 +238,8 @@ class RecycleBin extends Base
                     Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
                     model('SqlCacheTable')->InsertSqlCacheTable(true);
                     /* END */
+                    model('Arctype')->hand_type_count(['typeid'=>[$del_id]]);//统计栏目文档数量
+
                     $this->success('操作成功');
                 }
             }
@@ -399,6 +401,8 @@ class RecycleBin extends Base
             Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
             model('SqlCacheTable')->InsertSqlCacheTable(true);
             /* END */
+            model('Arctype')->hand_type_count(['typeid'=>$post['del_id']]);//统计栏目文档数量
+
             $this->success('操作成功');
         }
         $this->error('非法访问');
@@ -776,6 +780,9 @@ class RecycleBin extends Base
                             /*清空sql_cache_table数据缓存表 并 添加查询执行语句到mysql缓存表*/
                             Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
                             model('SqlCacheTable')->InsertSqlCacheTable(true);
+
+                            model('Arctype')->hand_type_count(['aid'=>$id_arr]);//统计栏目文档数量
+
                             /* END */
                             $this->success('操作成功');
                         } else {

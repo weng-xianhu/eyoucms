@@ -162,6 +162,7 @@ class Field extends Base
             if (empty($channel_id)) $this->error("请选择所属模型");
             
             $post = input('post.', '', 'trim');
+            $post['title'] = htmlspecialchars($post['title']);
             // 判断是否存在|杠
             $IsData = strstr($post['dfvalue'], '|');
             if (!empty($IsData)) {
@@ -177,6 +178,10 @@ class Field extends Base
                 $this->error("字段名称不允许以type开头！");
             } else if (preg_match('/^ey_/', $post['name'])) {
                 $this->error("字段名称不允许以 ey_ 开头！");
+            }
+            
+            if (!is_string($post['dtype'])) {
+                $this->error("数据类型不正确！");
             }
 
             // 字段类型是否具备筛选功能
@@ -409,6 +414,7 @@ class Field extends Base
 
             $post = input('post.', '', 'trim');
             $post['id'] = intval($post['id']);
+            $post['title'] = htmlspecialchars($post['title']);
 
             if ('checkbox' == $post['old_dtype'] && in_array($post['dtype'], ['radio', 'select'])) {
                 $fieldtype_list = model('Field')->getFieldTypeAll('name,title', 'name');
@@ -425,6 +431,10 @@ class Field extends Base
                 $this->error("字段名称不允许以type开头！");
             } else if (preg_match('/^ey_/', $post['name'])) {
                 $this->error("字段名称不允许以 ey_ 开头！");
+            }
+            
+            if (!is_string($post['dtype'])) {
+                $this->error("数据类型不正确！");
             }
 
             $info = model('Channelfield')->getInfo($post['id'], 'ifsystem');
@@ -924,6 +934,10 @@ class Field extends Base
             } else if (preg_match('/^ey_/', $post['name'])) {
                 $this->error("字段名称不允许以 ey_ 开头！");
             }
+            
+            if (!is_string($post['dtype'])) {
+                $this->error("数据类型不正确！");
+            }
 
             /*去除中文逗号，过滤左右空格与空值*/
             $dfvalue    = str_replace('，', ',', $post['dfvalue']);
@@ -1088,6 +1102,10 @@ class Field extends Base
                 $this->error("字段名称格式不正确！");
             } else if (preg_match('/^ey_/', $post['name'])) {
                 $this->error("字段名称不允许以 ey_ 开头！");
+            }
+            
+            if (!is_string($post['dtype'])) {
+                $this->error("数据类型不正确！");
             }
 
             $info = model('Channelfield')->getInfoByWhere(['id'=>$post['id'],'channel_id'=>$channel_id], 'ifsystem');

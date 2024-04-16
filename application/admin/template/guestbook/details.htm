@@ -42,5 +42,17 @@
         <div style="width: 90%;">{$row.update_time|MyDate='Y-m-d H:i:s',###}</div>
     </div>
 </div>
+{notempty name='$row.reply'}
+<div class="page mt10 mb20">
+    <div style="display: flex;align-items: center;padding: 15px 0;">
+        <div style="width: 10%;min-width: 60px;"><strong>回复时间</strong></div>
+        <div style="width: 90%;">{$row.reply_time|MyDate='Y-m-d H:i:s',###}</div>
+    </div>
+    <div style="display: flex;align-items: center;padding: 15px 0;">
+        <div style="width: 10%;min-width: 60px;"><strong>回复内容</strong></div>
+        <div style="width: 90%;">{$row.reply}</div>
+    </div>
+</div>
+{/notempty}
 
 {include file="public/footer" /}

@@ -120,7 +120,7 @@ class UsersNotice extends Base
                         Db::name("users")->where(['users_id' => $users_id])->update(['unread_notice_num'=>0]);
                     }
 
-                    $this->success('操作成功');
+                    $this->success(foreign_lang('system12', $this->home_lang));
                 }
                 $this->error('未选择未读消息');
             }
@@ -156,8 +156,8 @@ class UsersNotice extends Base
             $users_id = $this->users_id;
             Db::name('users_notice_read')->where(['users_id'=>$users_id])->update(['is_read'=>1]);
             Db::name("users")->where(['users_id' => $users_id])->update(['unread_notice_num'=> 0]);
-            $this->success('操作成功');
+            $this->success(foreign_lang('system12', $this->home_lang));
         }
-        $this->error('未知错误');
+        $this->error(foreign_lang('system11', $this->home_lang));
     }
 }

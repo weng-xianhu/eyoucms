@@ -17,6 +17,7 @@
             <div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>
             <form class="navbar-form form-inline" action="{:url('Shop/order_express')}" method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
+                <input type="hidden" name="select" value="{$select}">
                 <div class="sDiv">
                     <div class="sDiv2">
                         <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="名称搜索...">

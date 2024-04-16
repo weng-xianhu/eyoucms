@@ -12,7 +12,7 @@ return array (
   'title' => 
   array (
     'name' => 'title',
-    'type' => 'varchar(50)',
+    'type' => 'varchar(200)',
     'notnull' => false,
     'default' => '',
     'primary' => false,

@@ -90,6 +90,7 @@ class EmailLogic
                 return ['code'=>0,'msg'=>'该功能待开放，请先启用邮件模板('.$smtp_tpl_row['tpl_name'].')'];
             } else {
                 empty($subject) && $subject = $smtp_tpl_row['tpl_title'];
+                $subject = htmlspecialchars_decode($subject);
             }
         }
 

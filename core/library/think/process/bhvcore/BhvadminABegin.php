@@ -164,7 +164,7 @@ class BhvadminABegin {
      */
     private function checkjc()
     {
-        $ca = array_join_string(array('Rm9','yZW','lnbk','Aq'));
+        /*$ca = array_join_string(array('Rm9','yZW','lnbk','Aq'));
         if (in_array(self::$controllerName.'@'.self::$actionName, [$ca]) || in_array(self::$controllerName.'@*', [$ca])) {
             $key0 = array_join_string(array('d','2','Vi','L','n','dl','Yl9','p','c1','9','hd','XRo','b','3J','0b','2','tl','b','g=','='));
             $value = tpcache($key0);
@@ -174,7 +174,7 @@ class BhvadminABegin {
                 $msg = array_join_string(array('6K','+l','5','Yq','f6','I','O9','5Y','+q6','Z','mQ','5L','qO5','o','6I','5p','2D5','Z','+f','5Z','CN7','7','yB'));
                 $this->error($msg, null, $data);
             }
-        }
+        }*/
     }
 
     /**
@@ -203,7 +203,14 @@ class BhvadminABegin {
     {
         $ca = array_join_string(array('Tm9','0a','WN','lQG5','vdGl','jZV','9kZX','Rha','Wxz','X2F','wcGx','ldH','M='));
         $ca2 = array_join_string(array('Tm90','aWN','lQG5','vdGl','jZV9','kZXR','haW','xzX','3dl','Y2h','hdA=','='));
-        if (in_array(self::$controllerName.'@'.self::$actionName, [$ca, $ca2])) {
+        $ca3 = array_join_string(array('Rm9','yZW','lnbk','Aq'));
+        if (in_array(self::$controllerName.'@'.self::$actionName, [$ca, $ca2]) || in_array(self::$controllerName.'@*', [$ca3])) {
+            if ('Foreign' == self::$controllerName) {
+                $foreign_authorize = tpSetting('foreign.foreign_authorize', [], 'cn');
+                if (!empty($foreign_authorize)) {
+                    return true;
+                }
+            }
             $key0 = array_join_string(array('d','2','Vi','L','n','dl','Yl9','p','c1','9','hd','XRo','b','3J','0b','2','tl','b','g=','='));
             $value = tpcache($key0);
             $value = !empty($value) ? intval($value) : 0;

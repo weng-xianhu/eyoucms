@@ -385,6 +385,15 @@ class Language extends Model
             Db::name('product_content')->where("aid",'IN',$aids)->delete(); // 产品内容表
             Db::name('product_img')->where("aid",'IN',$aids)->delete(); // 产品图集表
             Db::name('single_content')->where("aid",'IN',$aids)->delete(); // 单页内容表
+
+            Db::name('media_content')->where("aid",'IN',$aids)->delete(); // 视频内容表
+            Db::name('media_file')->where("aid",'IN',$aids)->delete(); // 视频文件表
+            Db::name('media_play_record')->where("aid",'IN',$aids)->delete(); // 视频播放记录表
+            Db::name('media_log')->where("aid",'IN',$aids)->delete(); // 视频日志表
+            Db::name('media_order')->where("lang",'IN',$lang_list)->delete(); // 视频订单表
+
+            Db::name('special_content')->where("aid",'IN',$aids)->delete(); // 专题内容表
+            Db::name('special_node')->where("lang",'IN',$lang_list)->delete(); // 专题节点表
             /*同步删除表单表数据*/
             Db::name('form')->where("lang",'IN',$lang_list)->delete();
             /*同步删除产品属性表数据*/
@@ -482,6 +491,7 @@ class Language extends Model
             $data['lang'] = $mark;
             $data['typename'] = $mark.$data['typename']; // 临时测试
             $data['parent_id'] = !empty($bindArctypeArr[$val['parent_id']]) ? $bindArctypeArr[$val['parent_id']] : 0;
+            $data['total_arc'] = 0;
             $typeid = $arctype_M->addData($data);
             if (empty($typeid)) {
                 return false; // 同步失败
@@ -761,6 +771,58 @@ class Language extends Model
             /*--end*/
         }
         /*--end*/
+
+        $langAttrData = [];
+
+        /*新增新产品参数分组ID与源新产品参数分组ID的绑定*/
+        $main_attrlist = Db::name('language_attr')->where(['attr_group'=>'shop_product_attrlist','lang'=>$copy_lang])->select();
+        foreach ($bindAttrlistArr as $key => $val) {
+            $info = [
+                'attr_name' => 'attrlist_'.$key,
+                'attr_value'    => $val,
+                'lang'  => $mark,
+                'attr_group' => 'shop_product_attrlist',
+                'add_time'  => getTime(),
+                'update_time'  => getTime(),
+            ];
+            $langAttrData[] = $info;
+
+            if (empty($main_attrlist)) {
+                $info['attr_value'] = $key;
+                $info['lang'] = $copy_lang;
+                $langAttrData[] = $info;
+            }
+        }
+        /*--end*/
+        /*新增新产品参数ID与源新产品参数ID的绑定*/
+        $main_attribute = Db::name('language_attr')->where(['attr_group'=>'shop_product_attribute','lang'=>$copy_lang])->select();
+        foreach ($bindAttributeArr as $key => $val) {
+            $info = [
+                'attr_name' => 'attribute_'.$key,
+                'attr_value'    => $val,
+                'lang'  => $mark,
+                'attr_group' => 'shop_product_attribute',
+                'add_time'  => getTime(),
+                'update_time'  => getTime(),
+            ];
+            $langAttrData[] = $info;
+
+            if (empty($main_attrlist)) {
+                $info['attr_value'] = $key;
+                $info['lang'] = $copy_lang;
+                $langAttrData[] = $info;
+            }
+        }
+        /*--end*/
+
+        // 批量存储
+        if (!empty($langAttrData)) {
+            $insertObject = model('LanguageAttr')->saveAll($langAttrData);
+            $insertNum = count($insertObject);
+            if ($insertNum != count($langAttrData)) {
+                return false;
+            }
+        }
 
         return true;
     }

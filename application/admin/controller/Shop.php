@@ -263,6 +263,12 @@ class Shop extends Base {
             $value['litpic'] = handle_subdir_pic(get_default_pic($value['litpic']));
             $DetailsData[$key] = $value;
         }
+        if (!empty($order_code_arr)){
+            //处理微信推送数据
+            $wsi_where['order_code'] = ['in',$order_code_arr];
+            $wsi_where['order_source'] = 2;
+            $wx_push_arr = Db::name('wx_shipping_info')->where($wsi_where)->getAllWithIndex('order_code');
+        }
 
         // 把订单详情数据植入订单数据
         $defaultDetails = [
@@ -300,6 +306,7 @@ class Shop extends Base {
             $value['add_time'] = date('Y-m-d H:i:s', $value['add_time']);
             // 更新时间
             $value['update_time'] = date('Y-m-d H:i:s', $value['update_time']);
+            if (!empty($wx_push_arr[$value['order_code']])) $value['wx_shipping_info'] = $wx_push_arr[$value['order_code']];
             // 重新赋值数据
             $list[$key] = $value;
         }
@@ -681,6 +688,11 @@ class Shop extends Base {
                 // 发送站内信给会员
                 $NickName = !empty($Users['nickname']) ? $Users['nickname'] : $Users['username'];
                 SendNotifyMessage($UpdateData, 6, 0, $post['users_id'], $NickName);
+
+                //小程序下单推送微信
+                $OrderData = $this->shop_order_db->where($Where)->find();
+                $WxPayOrderLogic = new \app\common\logic\WxPayOrderLogic();
+                $WxPayOrderLogic->minipro_send_goods($OrderData);
 
                 $this->success('发货成功', null, $Result);
             } else {
@@ -1985,7 +1997,324 @@ class Shop extends Base {
      */
     public function market_index()
     {
+        $assign_data = array();
+        $this->myShopWeapp($assign_data);
+        // 应用市场显示与否
+        $assign_data['weapp_plugin_open'] = $this->get_weapp_plugin_open();
+        // 渲染变量
+        $this->assign($assign_data);
+        // 渲染模板
         return $this->fetch();
+    }
+
+    /**
+     * 我的应用
+     * @param  array  &$assign_data [description]
+     * @return [type]               [description]
+     */
+    private function myShopWeapp(&$assign_data = [])
+    {
+        $condition   = array();
+        $condition['a.is_buy'] = ['=',0];
+        /*权限控制 by 小虎哥*/
+        $pluginsList = [];
+        if (0 < intval(session('admin_info.role_id'))) {
+            $auth_role_info = session('admin_info.auth_role_info');
+            if (!empty($auth_role_info)) {
+                if (!empty($auth_role_info['permission']['plugins'])) {
+                    foreach ($auth_role_info['permission']['plugins'] as $plugins) {
+                        if (isset($plugins['code'])) {
+                            $pluginsList[] = $plugins['code'];
+                        }
+                    }
+                }
+            }
+            if (!empty($pluginsList)) {
+                $condition['a.code'] = array('in', $pluginsList);
+            }
+        }
+        /*--end*/
+
+        $weappArr = array(); // 插件标识数组
+
+        /**
+         * 数据查询，搜索出主键ID的值
+         */
+        $count = DB::name('weapp')->alias('a')->where($condition)->count();// 查询满足要求的总记录数
+        $Page  = new Page($count, 100);// 实例化分页类 传入总记录数和每页显示的记录数
+        $list  = DB::name('weapp')
+            ->field('a.*')
+            ->alias('a')
+            ->where($condition)
+            ->order('a.sort_order asc, a.id desc')
+            ->limit($Page->firstRow . ',' . $Page->listRows)
+            ->getAllWithIndex('id');
+        foreach ($list as $key => $val) {
+            if (!isset($val['is_buy'])) $val['is_buy'] = 0;
+            $config = [];
+            if ($val['is_buy'] == 0) {
+                if (file_exists(WEAPP_PATH . $val['code'] . DS . 'config.php')) {
+                    $config                = include WEAPP_PATH . $val['code'] . DS . 'config.php';
+                    $config['description'] = filter_line_return($config['description'], '<br/>');
+                    $val['version']        = getWeappVersion($val['code']);
+                }
+            }else if ($val['is_buy'] == 1){
+                $config = json_decode($val['config'],true);
+            }
+            $config['litpic']      = !empty($config['litpic']) ? get_default_pic($config['litpic']) : get_default_pic();
+            $val['config']         = $config;
+
+            if (!empty($config['management']['href'])) {
+                $val['href'] = $config['management']['href'];
+                $val['target'] = empty($config['management']['target']) ? '_self' : $config['management']['target'];
+            } else {
+                $val['href'] = url('Weapp/execute',array('sm'=>$val['code'],'sc'=>$val['code'],'sa'=>'index'));
+                $val['target'] = '_self';
+            }
+
+            switch ($val['status']) {
+                case '-1':
+                    $status_text = '禁用';
+                    break;
+
+                case '1':
+                    $status_text = '启用';
+                    break;
+
+                default:
+                    $status_text = '未安装';
+                    break;
+            }
+            $val['status_text'] = $status_text;
+
+            $list[$key] = $val;
+
+            /*插件标识数组*/
+            $weappArr[$val['code']] = array(
+                'code'    => $val['code'],
+                'version' => $val['version'],
+            );
+            /*--end*/
+        }
+
+        // 应用渠道
+        try {
+            $post_data = [
+                'codeList' => get_arr_column($weappArr, 'code'),
+            ];
+            $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+            $upgradeLogic->GetKeyData($post_data);
+            $url       = 'http://plugins.eyoucms.com/user/ajax_memberplugin.php?action=myshop_weapp';
+            $response  = httpRequest2($url, 'POST', $post_data);
+            $params    = json_decode($response, true);
+            if (!empty($params['code']) && !empty($params['list'])) {
+                foreach ($list as $key => $val) {
+                    if (empty($params['list'][$val['code']])) {
+                        unset($list[$key]);
+                        continue;
+                    }
+                    $val['apply_channels'] = empty($params['list'][$val['code']]['apply_channels']) ? '' : "应用于".str_replace(',', '、', $params['list'][$val['code']]['apply_channels']);
+                    $list[$key] = $val;
+                }
+            }
+        } catch (\Exception $e) {
+            
+        }
+
+        $show                 = $Page->show(); // 分页显示输出
+        $assign_data['myShopPage']  = $show; // 赋值分页输出
+        $assign_data['myShopList']  = $list; // 赋值数据集
+        $assign_data['myShopPager'] = $Page; // 赋值分页对象
+    }
+
+    /**
+     * 应用市场
+     * @return [type]               [description]
+     */
+    public function pluginShopWeapp()
+    {
+        $is_pay    = input('param.is_pay/d', 0);
+        $keywords  = input('param.keywords/s', 0);
+        $url       = 'http://plugins.eyoucms.com/user/ajax_memberplugin.php?action=plugin';
+        $post_data = [
+            'page'      => input('param.p/d', 1),
+            'is_pay'    => $is_pay,
+            'keywords'  => $keywords,
+            'query_str' => input('param.'),
+            'pid'   => $this->php_servicemeal,
+            'diy_cjfl' => '商城应用',
+        ];
+        $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+        $upgradeLogic->GetKeyData($post_data);
+        $response  = httpRequest2($url, 'POST', $post_data);
+        $params    = json_decode($response, true);
+        if (empty($params['code'])) {
+            $msg = !empty($params['msg']) ? $params['msg'] : '连接远程插件接口失败！';
+            $this->error($msg);
+        }
+        $html = "";
+        $weappArr = array(); // 插件标识数组
+        $local = Db::name('weapp')->getAllWithIndex('code');
+        $list = $params['list'];
+        foreach ($list as $key =>$val){
+            $config = [];
+            if (file_exists(WEAPP_PATH . $val['weapp_code'] . DS . 'config.php')) {
+                $config                = include WEAPP_PATH . $val['weapp_code'] . DS . 'config.php';
+                $config['description'] = filter_line_return($config['description'], '<br/>');
+                $val['version']        = getWeappVersion($val['weapp_code']);
+                $config['litpic']      = !empty($config['litpic']) ? get_default_pic($config['litpic']) : get_default_pic();
+            }
+            $val['config']         = $config;
+
+            if ($val['meal']){
+                $val['meal'] = unserialize($val['meal']);
+            }
+            $val['install'] = 0;
+            if (!empty($local[$val['weapp_code']])) {
+                $val['status'] = $local[$val['weapp_code']]['status'];
+                if (1 == $local[$val['weapp_code']]['status']) {
+                    $val['install']=1;
+                }
+            }
+            $val['litpic'] = get_default_pic($val['litpic']);
+            $val['apply_channels'] = empty($val['apply_channels']) ? '' : "应用于".str_replace(',', '、', $val['apply_channels']);
+
+            if (!empty($val['config']['management']['href'])) {
+                $val['href'] = $val['config']['management']['href'];
+                $val['target'] = empty($val['config']['management']['target']) ? '_self' : $val['config']['management']['target'];
+            } else {
+                $val['href'] = url('Weapp/execute',array('sm'=>$val['weapp_code'],'sc'=>$val['weapp_code'],'sa'=>'index'));
+                $val['target'] = '_self';
+            }
+
+            $list[$key] = $val;
+
+            /*插件标识数组*/
+            $weappArr[$val['weapp_code']] = array(
+                'code'    => $val['weapp_code'],
+                'version' => $val['version'],
+            );
+            /*--end*/
+        }
+
+        /*检测更新*/
+        $weapp_upgrade = array();
+        if (!empty($weappArr)) {
+            // 标识
+            $codeArr = get_arr_column($weappArr, 'code');
+            $codeStr = implode(',', $codeArr);
+            // 版本号
+            $versionArr = get_arr_column($weappArr, 'version');
+            $versionStr = implode(',', $versionArr);
+            // URL参数
+            $values        = array(
+                'domain' => request()->host(true),
+                'ip'    => serverIP(),
+                'code'   => $codeStr,
+                'v'      => $versionStr,
+                'pid'   => $this->php_servicemeal,
+                // 'dev'   => 1,
+            );
+            tpCache('system', ['system_usecodelist'=>'']);
+            $upgradeLogic->GetKeyData($values);
+            $url = $upgradeLogic->getServiceUrl(true).'/index.php?m=api&c=Weapp&a=checkBatchVersion';
+            $response = @httpRequest($url, 'POST', $values, [], 5);
+            $batch_upgrade = json_decode($response, true);
+            if (is_array($batch_upgrade)) {
+                if (!empty($batch_upgrade)) {
+                    tpSetting('system', ['system_codelogic_1638857408'=>$batch_upgrade['Sample']]);
+                    $weappLogic = new \app\admin\logic\WeappLogic;
+                    $weapp_upgrade = $weappLogic->checkBatchVersion($batch_upgrade); //升级包消息 
+                }
+            }
+        }
+        /*--end*/
+
+        $cms_version = getCmsVersion();
+        foreach ($list as $key =>$val){
+            $apply_channels = $val['apply_channels'];
+            if (0 == $val['install']) {
+                if ('v'.$val['min_version'] > $cms_version) {
+                    $apply_channels = "<a class='red'>当前CMS版本太低，请升级系统！</a>";
+                }
+            }
+            else if (1 == $val['install'] && !empty($weapp_upgrade[$val['weapp_code']])) {
+                $weapp_upgrade_info = $weapp_upgrade[$val['weapp_code']];
+                if ($weapp_upgrade_info['code'] == 2) {
+                    $msg_upgrade = empty($weapp_upgrade_info['msg']['upgrade']) ? '' : $weapp_upgrade_info['msg']['upgrade'];
+                    $msg_intro = empty($weapp_upgrade_info['msg']['intro']) ? '' : $weapp_upgrade_info['msg']['intro'];
+                    $msg_notice = empty($weapp_upgrade_info['msg']['notice']) ? '' : $weapp_upgrade_info['msg']['notice'];
+                    $msg_tips = '当前插件有新版本，请升级！'; //empty($weapp_upgrade_info['msg']['tips']) ? '[新版本更新]' : $weapp_upgrade_info['msg']['tips'];
+                    $apply_channels =<<<EOF
+<textarea id="{$val['weapp_code']}_upgrade" class="none">{$msg_upgrade}</textarea> 
+<textarea id="{$val['weapp_code']}_intro" class="none">{$msg_intro}</textarea>
+<textarea id="{$val['weapp_code']}_notice" class="none">{$msg_notice}</textarea>
+<a href="javascript:void(0);" class="a_upgrade red" data-version="{$val['version']}" data-code="{$val['weapp_code']}" data-status="{$val['status']}" data-name="{$val['name']}" onclick="weapp_upgrade(this);">{$msg_tips}</a>
+EOF;
+                }
+            }
+
+            $btn = "";
+            if (empty($val['buy'])) {
+                if (empty($val['install'])) {
+                    if (empty($val['needmoney'])) {
+                        $btn_txt = "安装";
+                    } else {
+                        $btn_txt = "购买";
+                    }
+                    $btn = "<a href=\"javascript:void(0);\" onclick=\"goPage(this);\" data-id=\"{$val['id']}\" data-weapp_code=\"{$val['weapp_code']}\"  data-min_version=\"{$val['min_version']}\" data-buy=\"{$val['buy']}\" data-needmoney=\"{$val['needmoney']}\">{$btn_txt}</a>";
+                } else {
+                    if (!empty($val['target']) && '_blank' == $val['target']) {
+                        $btn = "<a href=\"{$val['href']}\" target=\"{$val['target']}\" class=\"yaz\">已安装</a>";
+                    } else {
+                        $btn = "<a href=\"javascript:void(0);\" data-href=\"{$val['href']}\" onclick=\"goto_url(this);\" class=\"yaz\">已安装</a>";
+                    }
+                }
+            } else {
+                if (empty($val['install'])) {
+                    $btn = "<a href=\"javascript:void(0);\" onclick=\"goPage(this);\" data-id=\"{$val['id']}\"  data-weapp_code=\"{$val['weapp_code']}\"  data-min_version=\"{$val['min_version']}\" data-buy=\"{$val['buy']}\" data-needmoney=\"{$val['needmoney']}\">安装</a>";
+                } else {
+                    if (!empty($val['target']) && '_blank' == $val['target']) {
+                        $btn = "<a href=\"{$val['href']}\" target=\"{$target}\">使用</a>";
+                    } else {
+                        $btn = "<a href=\"javascript:void(0);\" data-href=\"{$val['href']}\" onclick=\"goto_url(this);\" class=\"yaz\">已安装</a>";
+                    }
+                }
+            }
+
+            $html .=<<<EOF
+<li class="">
+    <div class="my">
+        <div class="pic"><a href="https://www.eyoucms.com/plus/view.php?aid={$val['id']}" target="_blank"><img src="{$val['litpic']}"></a></div>
+        <span>
+            <h2><a href="https://www.eyoucms.com/plus/view.php?aid={$val['id']}" target="_blank">{$val['name']}</a></h2>
+            <p>{$apply_channels}</p>
+        </span>
+        <div class="button">
+            {$btn}
+        </div>
+    </div>
+</li>
+EOF;
+        }
+        $this->success('请求成功', null, ['html'=>$html]);
+    }
+
+    /**
+     * 应用市场显示与否
+     * @return [type] [description]
+     */
+    private function get_weapp_plugin_open()
+    {
+        $weapp_plugin_open = (int)tpCache('php.php_weapp_plugin_open');
+        if (is_file('./data/conf/weapp_plugin_open.txt')) {
+            $is_exist = @file_get_contents('./data/conf/weapp_plugin_open.txt');
+            if ($is_exist !== false && empty($is_exist)) {
+                $weapp_plugin_open = 0;
+            }
+        }
+
+        return $weapp_plugin_open;
     }
 
     //会员编辑 订单数列表

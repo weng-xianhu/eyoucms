@@ -172,18 +172,30 @@ class Users extends Base
             ->alias('a')
             ->where($condition_bottom)
             ->order('a.sort_order asc, a.id asc')
-            ->limit(4)
+            ->limit(5)
             ->select();
+        static $request = null;
+        if (null === $request) {
+            $request = \think\Request::instance();
+        }
+        $root_dir = ROOT_DIR.'/';
+        foreach ($bottom_menu_list as $k => $v){
+            if ('xingxing' == $v['icon']){
+                if (!is_http_url($v['mca'])){
+                    $bottom_menu_list[$k]['mca'] = $request->domain().$root_dir.$v['mca'];
+                }
+            }
+        }
 
         $this->assign('bottom_menu_list', $bottom_menu_list);
 
         // 问候语
         $hour = date('H');
-        $greeting = '晚上好～';
+        $greeting = foreign_lang('users48', $this->home_lang);
         if (0 < intval($hour) && intval($hour) < 12) {
-            $greeting = '早上好～';
+            $greeting = foreign_lang('users49', $this->home_lang);;
         } else if (12 < intval($hour) && intval($hour) < 19) {
-            $greeting = '下午好～';
+            $greeting = foreign_lang('users50', $this->home_lang);;
         }
         $this->assign('greeting', $greeting);
 
@@ -411,6 +423,15 @@ EOF;
         $result = json_decode(httpRequest($url), true);
         // 授权过期，请重新授权
         if (empty($result) || (!empty($result['errcode']) && !empty($result['errmsg']))) $this->error('微信授权过期，请重新授权');
+        if (!empty($result['access_token'])) {
+            if (!empty($result['access_token'])) {
+                $setting_info = tpSetting(md5($appid));
+                if (!empty($setting_info['access_token'])){
+                    $setting_info['expires_time'] = getTime();
+                }
+                tpSetting(md5($appid), $setting_info);
+            }
+        }
         // 授权成功，记录授权信息并重定向回原页面
         if (!empty($result) && !empty($result['openid'])) {
             // 记录微信授权 cookie
@@ -496,6 +517,14 @@ EOF;
             $this->error('AppSecret错误或已过期', $this->root_dir.'/');
         }
 
+        if (!empty($WeChatData['access_token'])) {
+            $setting_info = tpSetting(md5($appid));
+            if (!empty($setting_info['access_token'])){
+                $setting_info['expires_time'] = getTime();
+            }
+            tpSetting(md5($appid), $setting_info);
+        }
+
         // 获取会员信息
         $get_userinfo = 'https://api.weixin.qq.com/sns/userinfo?access_token=' . $WeChatData["access_token"] . '&openid=' . $WeChatData["openid"] . '&lang=zh_CN';
         $UserInfo     = httpRequest($get_userinfo);
@@ -512,6 +541,9 @@ EOF;
                 'union_id' => $UserInfo['unionid'],
             ];
             $Users = $this->users_db->where($where)->find();
+            if (empty($Users)){
+                $Users = Db::name('wx_users')->where('unionid',$UserInfo['unionid'])->find();
+            }
         }
         if (empty($Users)){
             //根据openid和空union_id查询是否为老用户
@@ -519,6 +551,9 @@ EOF;
                 'open_id' => $UserInfo['openid'],
             ];
             $Users = $this->users_db->where($where)->find();
+            if (empty($Users)){
+                $Users = Db::name('wx_users')->where('openid',$UserInfo['openid'])->find();
+            }
         }
         if (!empty($Users)) {
             if (empty($Users['union_id']) && !empty($UserInfo['unionid'])){
@@ -664,22 +699,22 @@ EOF;
             $post['username'] = trim($post['username']);
 
             if (empty($post['username'])) {
-                $this->error('用户名不能为空！', null, ['status' => 1]);
+                $this->error(foreign_lang('users16', $this->home_lang), null, ['status' => 1]);
             } else if (!preg_match("/^[\x{4e00}-\x{9fa5}\w\-\_\.\@\#]{2,30}$/u", $post['username'])) {
-                $this->error('用户名不正确！', null, ['status' => 1]);
+                $this->error(foreign_lang('users17', $this->home_lang), null, ['status' => 1]);
             }
 
             if (empty($post['password']) || !trim($post['password'])) {
-                $this->error('密码不能为空！', null, ['status' => 1]);
+                $this->error(foreign_lang('users18', $this->home_lang), null, ['status' => 1]);
             }
 
             if (1 == $is_vertify) {
                 if (empty($post['vertify'])) {
-                    $this->error('图片验证码不能为空！', null, ['status' => 1]);
+                    $this->error(foreign_lang('users19', $this->home_lang), null, ['status' => 1]);
                 }
                 $verify = new Verify();
                 if (!$verify->check($post['vertify'], "users_login")) {
-                    $this->error('验证码错误', null, ['status' => 'vertify']);
+                    $this->error(foreign_lang('users20', $this->home_lang), null, ['status' => 'vertify']);
                 }
             }
 
@@ -701,11 +736,11 @@ EOF;
             if (!empty($users)) {
                 if (!empty($users['admin_id'])) {
                     // 后台账号不允许在前台通过账号密码登录，只能后台登录时同步到前台
-                    $this->error('前台禁止管理员登录！', null, ['status' => 'vertify']);
+                    $this->error(foreign_lang('users21', $this->home_lang), null, ['status' => 'vertify']);
                 }
 
                 if (empty($users['is_activation'])) {
-                    $this->error('该会员尚未激活，请联系管理员！', null, ['status' => 'vertify']);
+                    $this->error(foreign_lang('users22', $this->home_lang), null, ['status' => 'vertify']);
                 }
 
                 $users_id = $users['users_id'];
@@ -729,7 +764,7 @@ EOF;
                         if ($usersVerificationRow['update_time'] <= $users['reg_time']) {
                             // 判断是否需要后台审核
                             if ($usersVerificationRow['value'] == 1 && $users['is_activation'] == 0) {
-                                $this->error('管理员审核中，请稍等！', null, ['status' => 2]);
+                                $this->error(foreign_lang('users23', $this->home_lang), null, ['status' => 2]);
                             }
                         }
                     }
@@ -747,12 +782,12 @@ EOF;
                     }
                     // 是否绑定了微站点，否则自动绑定
                     auto_bind_wechatlogin($users, $referurl);
-                    $this->success('登录成功', $referurl);
+                    $this->success(foreign_lang('users24', $this->home_lang), $referurl);
                 } else {
-                    $this->error('密码不正确！', null, ['status' => 'vertify']);
+                    $this->error(foreign_lang('users25', $this->home_lang), null, ['status' => 'vertify']);
                 }
             } else {
-                $this->error('该用户名不存在，请注册！', null, ['status' => 'vertify']);
+                $this->error(foreign_lang('users26', $this->home_lang), null, ['status' => 'vertify']);
             }
         }
 
@@ -847,14 +882,14 @@ EOF;
         if (IS_AJAX_POST) {
             $post             = input('post.');
             if (empty($post['mobile'])){
-                $this->error('手机号码不能为空！', null, ['status' => 1]);
+                $this->error(foreign_lang('users28', $this->home_lang), null, ['status' => 1]);
             }
             if (!check_mobile($post['mobile'])){
-                $this->error('手机号码格式不正确！', null, ['status' => 1]);
+                $this->error(foreign_lang('users29', $this->home_lang), null, ['status' => 1]);
             }
 
             if (empty($post['mobile_code'])) {
-                $this->error('验证码不能为空！', null, ['status' => 1]);
+                $this->error(foreign_lang('users30', $this->home_lang), null, ['status' => 1]);
             }
 
             // 验证验证码
@@ -874,7 +909,7 @@ EOF;
                 // 更新数据
                 $this->sms_log_db->where($RecordWhere)->update($RecordData);
             }else{
-                $this->error('验证码已失效！', null, ['status' => 1]);
+                $this->error(foreign_lang('users31', $this->home_lang), null, ['status' => 1]);
             }
 
             $users = $this->users_db->where([
@@ -885,11 +920,11 @@ EOF;
             if (!empty($users)) {
                 if (!empty($users['admin_id'])) {
                     // 后台账号不允许在前台通过账号密码登录，只能后台登录时同步到前台
-                    $this->error('前台禁止管理员登录！', null, ['status' => 'vertify']);
+                    $this->error(foreign_lang('users21', $this->home_lang), null, ['status' => 'vertify']);
                 }
 
                 if (empty($users['is_activation'])) {
-                    $this->error('该会员尚未激活，请联系管理员！', null, ['status' => 'vertify']);
+                    $this->error(foreign_lang('users22', $this->home_lang), null, ['status' => 'vertify']);
                 }
 
                 // 判断是前台还是后台注册的会员，后台注册不受注册验证影响，1为后台注册，2为前台注册。
@@ -900,7 +935,7 @@ EOF;
                     if ($usersVerificationRow['update_time'] <= $users['reg_time']) {
                         // 判断是否需要后台审核
                         if ($usersVerificationRow['value'] == 1 && $users['is_activation'] == 0) {
-                            $this->error('管理员审核中，请稍等！', null, ['status' => 2]);
+                            $this->error(foreign_lang('users23', $this->home_lang), null, ['status' => 2]);
                         }
                     }
                 }
@@ -931,13 +966,13 @@ EOF;
                 // 是否绑定了微站点，否则自动绑定
                 auto_bind_wechatlogin($users, $referurl);
 
-                $this->success('登录成功', $referurl);
+                $this->success(foreign_lang('users24', $this->home_lang), $referurl);
 
             } else {
-                $this->error('该用户名不存在，请注册！', null, ['status' => 'vertify']);
+                $this->error(foreign_lang('users26', $this->home_lang), null, ['status' => 'vertify']);
             }
         }
-        $this->error('请求错误', null, ['status' => 'vertify']);
+        $this->error(foreign_lang('system11', $this->home_lang), null, ['status' => 'vertify']);
     }
 
     // 会员注册
@@ -965,23 +1000,23 @@ EOF;
                 $users_reg_notallow = explode(',', getUsersConfigData('users.users_reg_notallow'));
                 if (!empty($users_reg_notallow)) {
                     if (in_array($post['username'], $users_reg_notallow)) {
-                        $this->error('用户名为系统禁止注册！', null, ['status' => 1]);
+                        $this->error(foreign_lang('users33', $this->home_lang), null, ['status' => 1]);
                     }
                 }
 
                 if (empty($post['username'])) {
-                    $this->error('用户名不能为空！', null, ['status' => 1]);
+                    $this->error(foreign_lang('users16', $this->home_lang), null, ['status' => 1]);
                 } else if (!preg_match("/^[\x{4e00}-\x{9fa5}\w\-\_\@\#]{2,30}$/u", $post['username'])) {
-                    $this->error('请输入2-30位的汉字、英文、数字、下划线等组合', null, ['status' => 1]);
+                    $this->error(foreign_lang('users34', $this->home_lang), null, ['status' => 1]);
                 }
             }
 
             if (isset($post['password'])) {
                 if (empty($post['password']) || !trim($post['password'])) {
-                    $this->error('登录密码不能为空！', null, ['status' => 1]);
+                    $this->error(foreign_lang('users35', $this->home_lang), null, ['status' => 1]);
                 }
                 if (empty($post['password2']) || !trim($post['password2'])) {
-                    $this->error('重复密码不能为空！', null, ['status' => 1]);
+                    $this->error(foreign_lang('users36', $this->home_lang), null, ['status' => 1]);
                 }
                 /*等保密码复杂度验证 start*/
                 if (is_dir('./weapp/Equal/')) {
@@ -996,7 +1031,7 @@ EOF;
 
             if (1 == $is_vertify) {
                 if (empty($post['vertify'])) {
-                    $this->error('图片验证码不能为空！', null, ['status' => 1]);
+                    $this->error(foreign_lang('users19', $this->home_lang), null, ['status' => 1]);
                 }
             }
 
@@ -1005,7 +1040,7 @@ EOF;
                     'username' => $post['username'],
                 ])->count();
                 if (!empty($count)) {
-                    $this->error('用户名已存在！', null, ['status' => 1]);
+                    $this->error(foreign_lang('users37', $this->home_lang), null, ['status' => 1]);
                 }
             }
 
@@ -1013,10 +1048,10 @@ EOF;
                 $post['password'] = trim($post['password']);
                 $post['password2'] = trim($post['password2']);
                 if (empty($post['password']) && empty($post['password2'])) {
-                    $this->error('登录密码不能为空！', null, ['status' => 1]);
+                    $this->error(foreign_lang('users35', $this->home_lang), null, ['status' => 1]);
                 } else {
                     if ($post['password'] != $post['password2']) {
-                        $this->error('两次密码输入不一致！', null, ['status' => 1]);
+                        $this->error(foreign_lang('users38', $this->home_lang), null, ['status' => 1]);
                     }
                 }
             }
@@ -1054,7 +1089,7 @@ EOF;
             if (1 == $is_vertify) {
                 $verify = new Verify();
                 if (!$verify->check($post['vertify'], "users_reg")) {
-                    $this->error('图片验证码错误', null, ['status' => 'vertify']);
+                    $this->error(foreign_lang('users20', $this->home_lang), null, ['status' => 'vertify']);
                 }
             }
 
@@ -1219,31 +1254,31 @@ EOF;
                         $url = !empty($referurl) ? $referurl : url('user/Users/centre');
                         // 是否绑定了微站点，否则自动绑定
                         auto_bind_wechatlogin($data, $url);
-                        $this->success('注册成功，正在跳转中……', $url, ['status' => 3]);
+                        $this->success(foreign_lang('users39', $this->home_lang), $url, ['status' => 3]);
                     } else if (1 == $users_verification) {
                         // 需要后台审核
                         session('users_id', null);
                         $url = url('user/Users/login');
-                        $this->success('注册成功，等管理员激活才能登录！', $url, ['status' => 2]);
+                        $this->success(foreign_lang('users40', $this->home_lang), $url, ['status' => 2]);
                     } else if (2 == $users_verification) {
                         // 注册成功
                         $url = !empty($referurl) ? $referurl : url('user/Users/centre');
                         // 是否绑定了微站点，否则自动绑定
                         auto_bind_wechatlogin($data, $url);
-                        $this->success('注册成功，正在跳转中……', $url, ['status' => 0]);
+                        $this->success(foreign_lang('users39', $this->home_lang), $url, ['status' => 0]);
                     } else if (3 == $users_verification) {
                         // 注册成功
                         $url = !empty($referurl) ? $referurl : url('user/Users/centre');
                         // 是否绑定了微站点，否则自动绑定
                         auto_bind_wechatlogin($data, $url);
-                        $this->success('注册成功，正在跳转中……', $url, ['status' => 0]);
+                        $this->success(foreign_lang('users39', $this->home_lang), $url, ['status' => 0]);
                     }
                 } else {
                     $url = url('user/Users/login');
-                    $this->success('注册成功，请登录！', $url, ['status' => 2]);
+                    $this->success(foreign_lang('users41', $this->home_lang), $url, ['status' => 2]);
                 }
             }
-            $this->error('注册失败', null, ['status' => 4]);
+            $this->error(foreign_lang('system11', $this->home_lang), null, ['status' => 4]);
         }
 
         // 会员属性资料信息
@@ -1366,20 +1401,20 @@ EOF;
         if (IS_AJAX_POST) {
             $post             = input('post.');
             if (empty($post['mobile'])){
-                $this->error('手机号码不能为空！', null, ['status' => 1]);
+                $this->error(foreign_lang('users28', $this->home_lang), null, ['status' => 1]);
             }
             if (!check_mobile($post['mobile'])){
-                $this->error('手机号码格式不正确！', null, ['status' => 1]);
+                $this->error(foreign_lang('users29', $this->home_lang), null, ['status' => 1]);
             }
 
             //查询手机号是否已经注册过
             $is_reg = Db::name('users')->where('mobile',$post['mobile'])->find();
             if (!empty($is_reg)){
-                $this->error('手机号码已经注册！', null, ['status' => 1]);
+                $this->error(foreign_lang('users32', $this->home_lang), null, ['status' => 1]);
             }
 
             if (empty($post['mobile_code'])) {
-                $this->error('验证码不能为空！', null, ['status' => 1]);
+                $this->error(foreign_lang('users30', $this->home_lang), null, ['status' => 1]);
             }
 
             // 验证验证码
@@ -1399,7 +1434,7 @@ EOF;
                 // 更新数据
                 $this->sms_log_db->where($RecordWhere)->update($RecordData);
             }else{
-                $this->error('验证码已失效！', null, ['status' => 1]);
+                $this->error(foreign_lang('users31', $this->home_lang), null, ['status' => 1]);
             }
 
             // 会员设置
@@ -1451,31 +1486,31 @@ EOF;
                         $url = !empty($referurl) ? $referurl : url('user/Users/centre');
                         // 是否绑定了微站点，否则自动绑定
                         auto_bind_wechatlogin($data, $url);
-                        $this->success('注册成功，正在跳转中……', $url, ['status' => 3]);
+                        $this->success(foreign_lang('users39', $this->home_lang), $url, ['status' => 3]);
                     } else if (1 == $users_verification) {
                         // 需要后台审核
                         session('users_id', null);
                         $url = url('user/Users/login');
-                        $this->success('注册成功，等管理员激活才能登录！', $url, ['status' => 2]);
+                        $this->success(foreign_lang('users40', $this->home_lang), $url, ['status' => 2]);
                     } else if (2 == $users_verification) {
                         // 注册成功
                         $url = !empty($referurl) ? $referurl : url('user/Users/centre');
                         // 是否绑定了微站点，否则自动绑定
                         auto_bind_wechatlogin($data, $url);
-                        $this->success('注册成功，正在跳转中……', $url, ['status' => 0]);
+                        $this->success(foreign_lang('users39', $this->home_lang), $url, ['status' => 0]);
                     } else if (3 == $users_verification) {
                         // 注册成功
                         $url = !empty($referurl) ? $referurl : url('user/Users/centre');
                         // 是否绑定了微站点，否则自动绑定
                         auto_bind_wechatlogin($data, $url);
-                        $this->success('注册成功，正在跳转中……', $url, ['status' => 0]);
+                        $this->success(foreign_lang('users39', $this->home_lang), $url, ['status' => 0]);
                     }
                 } else {
                     $url = url('user/Users/login');
-                    $this->success('注册成功，请登录！', $url, ['status' => 2]);
+                    $this->success(foreign_lang('users41', $this->home_lang), $url, ['status' => 2]);
                 }
             }
-            $this->error('注册失败', null, ['status' => 4]);
+            $this->error(foreign_lang('system11', $this->home_lang), null, ['status' => 4]);
         }
     }
 
@@ -1520,7 +1555,7 @@ EOF;
 
             $nickname = trim($post['nickname']);
             if (!empty($post['nickname']) && empty($nickname)) {
-                $this->error('昵称不可为纯空格');
+                $this->error(foreign_lang('users42', $this->home_lang));
             }
 
             $ParaData = [];
@@ -1598,11 +1633,10 @@ EOF;
             $return = $this->users_db->where('users_id', $this->users_id)->update($usersData);
             if ($return !== false) {
                 \think\Cache::clear('users_list');
-                $this->success('操作成功');
+                $this->success(foreign_lang('system12', $this->home_lang));
             }
-            $this->error('操作失败');
         }
-        $this->error('访问错误！');
+        $this->error(foreign_lang('system11', $this->home_lang));
     }
 
     // 更改密码
@@ -1611,9 +1645,9 @@ EOF;
         if (IS_AJAX_POST) {
             $post = input('post.');
             if (empty($post['oldpassword']) || !trim($post['oldpassword'])) {
-                $this->error('原密码不能为空！');
+                $this->error(foreign_lang('users43', $this->home_lang));
             } else if (empty($post['password']) || !trim($post['password'])) {
-                $this->error('新密码不能为空！');
+                $this->error(foreign_lang('users44', $this->home_lang));
             } else if ($post['password'] != $post['password2']) {
                 $this->error('重复密码与新密码不一致！');
             }
@@ -1668,7 +1702,7 @@ EOF;
             }
             if (1 == $is_vertify) {
                 if (empty($post['vertify'])) {
-                    $this->error('图片验证码不能为空！');
+                    $this->error(foreign_lang('users19', $this->home_lang));
                 }
             }
             if (empty($post['email_code'])) {
@@ -1719,7 +1753,7 @@ EOF;
                     session('users_retrieve_password_email', $post['email']); // 标识邮箱验证通过
                     $em  = rand(10, 99) . base64_encode($post['email']) . '/=';
                     $url = url('user/Users/reset_password', ['em' => base64_encode($em)]);
-                    $this->success('操作成功', $url);
+                    $this->success(foreign_lang('system12', $this->home_lang), $url);
                 }
 
             } else {
@@ -1748,10 +1782,10 @@ EOF;
         if (IS_AJAX_POST) {
             $post = input('post.');
             if (empty($post['password']) || !trim($post['password'])) {
-                $this->error('新密码不能为空！');
+                $this->error(foreign_lang('users44', $this->home_lang));
             }
             if ($post['password'] != $post['password_']) {
-                $this->error('两次密码输入不一致！');
+                $this->error(foreign_lang('users38', $this->home_lang));
             }
             /*等保密码复杂度验证 start*/
             if (is_dir('./weapp/Equal/')) {
@@ -1780,10 +1814,10 @@ EOF;
                 if ($return) {
                     session('users_retrieve_password_email', null); // 标识邮箱验证通过
                     $url = url('user/Users/login');
-                    $this->success('重置成功！', $url);
+                    $this->success(foreign_lang('system12', $this->home_lang), $url);
                 }
             }
-            $this->error('重置失败！');
+            $this->error(foreign_lang('system11', $this->home_lang));
         }
 
         // 没有传入邮箱，重定向至找回密码页面
@@ -1869,10 +1903,10 @@ EOF;
             $post = input('post.');
 
             // POST数据基础判断
-            if (empty($post['mobile'])) $this->error('请输入手机号码');
-            if (empty($post['mobile_code'])) $this->error('请输入手机验证码');
+            if (empty($post['mobile'])) $this->error(foreign_lang('users28', $this->home_lang));
+            if (empty($post['mobile_code'])) $this->error(foreign_lang('users30', $this->home_lang));
             if (1 == $is_vertify) {
-                if (empty($post['vertify'])) $this->error('请输入图片验证码');
+                if (empty($post['vertify'])) $this->error(foreign_lang('users19', $this->home_lang));
             }
 
             // 判断会员输入的手机是否存在
@@ -1880,14 +1914,14 @@ EOF;
                 'info' => array('eq', $post['mobile']),
             );
             $ListData  = $this->users_list_db->where($ListWhere)->field('users_id')->find();
-            if (empty($ListData)) $this->error('手机号码不存在，不能找回密码！');
+            if (empty($ListData)) $this->error(foreign_lang('users45', $this->home_lang));
 
             // 判断会员输入的手机是否已绑定
             $UsersWhere = array(
                 'mobile' => array('eq', $post['mobile']),
             );
             $UsersData  = $this->users_db->where($UsersWhere)->field('is_mobile')->find();
-            if (empty($UsersData['is_mobile'])) $this->error('手机号码未绑定，不能找回密码！');
+            if (empty($UsersData['is_mobile'])) $this->error(foreign_lang('users46', $this->home_lang));
 
             // 判断验证码是否存在并且是否可用
             $RecordWhere = [
@@ -1901,7 +1935,7 @@ EOF;
                 $time = getTime();
                 $RecordData['add_time'] += Config::get('global.mobile_default_time_out');
                 if (1 == $RecordData['is_use'] || $RecordData['add_time'] <= $time) {
-                    $this->error('手机验证码已被使用或超时，请重新发送！');
+                    $this->error(foreign_lang('users47', $this->home_lang));
                 } else {
                     // 处理手机验证码
                     $RecordWhere = [
@@ -1943,7 +1977,7 @@ EOF;
             $post = input('post.');
             if (empty($post['password']) || !trim($post['password'])) $this->error('请输入新密码');
             if (empty($post['password_']) || !trim($post['password_'])) $this->error('请输入确认新密码');
-            if ($post['password'] != $post['password_']) $this->error('两次密码输入不一致！');
+            if ($post['password'] != $post['password_']) $this->error(foreign_lang('users38', $this->home_lang));
             /*等保密码复杂度验证 start*/
             if (is_dir('./weapp/Equal/')) {
                 $equalLogic = new \weapp\Equal\logic\EqualLogic;
@@ -2157,7 +2191,7 @@ EOF;
                             ];
                             $this->users_db->where(['users_id'=>$this->users_id])->update($update);
                             \think\Cache::clear('users_list');
-                            $this->success('操作成功');
+                            $this->success(foreign_lang('system12', $this->home_lang));
                         } else {
                             $this->error('未知错误，邮箱地址修改失败，请重新获取验证码');
                         }
@@ -2203,7 +2237,7 @@ EOF;
                     $smsLog['add_time'] += Config::get('global.mobile_default_time_out');
                     if (1 === intval($smsLog['is_use']) || $smsLog['add_time'] <= $time) {
                         // 验证码不可用
-                        $this->error('手机验证码已被使用或超时，请重新发送');
+                        $this->error(foreign_lang('users47', $this->home_lang));
                     } else {
                         // 查询会员输入的邮箱并且为绑定邮箱来源的所有验证码
                         $where = [
@@ -2262,7 +2296,7 @@ EOF;
                             ];
                             $this->users_db->where(['users_id'=>$this->users_id])->update($update);
                             \think\Cache::clear('users_list');
-                            $this->success('操作成功！');
+                            $this->success(foreign_lang('system12', $this->home_lang));
                         } else {
                             $this->error('未知错误，手机号码修改失败，请重新获取验证码');
                         }

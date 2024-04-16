@@ -132,6 +132,14 @@ class TagDiyurl extends Base
                         } else {
                             $parseStr = "";
                         }
+                        // $lang = input('param.lang/s');
+                        // if ($lang != self::$main_lang) {
+                        //     if (stristr($parseStr, '?')) {
+                        //         $parseStr = $parseStr."&lang=".$lang;
+                        //     } else {
+                        //         $parseStr = $parseStr."?lang=".$lang;
+                        //     }
+                        // }
                     }
                     break;
             }

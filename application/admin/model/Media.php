@@ -130,6 +130,7 @@ class Media extends Model
                 model('SqlCacheTable')->UpdateSqlCacheTable($post, $opt, 'media');
             }
         }
+        model('Arctype')->hand_type_count(['aid'=>[$aid]]);//统计栏目文档数量
     }
 
     /**

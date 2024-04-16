@@ -7,8 +7,8 @@
 -- Database       : dev165
 -- 
 -- Part : #1
--- Version : #v1.6.5
--- Date : 2024-03-18 14:46:41
+-- Version : #v1.6.6
+-- Date : 2024-04-16 15:03:47
 -- -----------------------------------------
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -114,7 +114,7 @@ CREATE TABLE `ey_admin` (
 -- -----------------------------
 -- Records of `ey_admin`
 -- -----------------------------
-INSERT INTO `ey_admin` VALUES ('1', 'admin', '', 'admin', '', '', '$2y$11$eda83328080b2a7395257eYcNtzQOwNzHUzlve0F1MSCRLSdHqCNG', '', '1710744347', '127.0.0.1', '2', 'rm5i34g5mltd424dg9ot4520g4', '0', '-1', 'cn', '1', '0', '', '0', '', '1710744342', '0');
+INSERT INTO `ey_admin` VALUES ('1', 'admin', '', 'admin', '', '', '$2y$11$ffefddb6035a71e307497OXXy/yQxu4aC543AriObKna.qq6ZV0yO', '', '1713250987', '127.0.0.1', '2', 'cibecb7oo027vqbetacftslt40', '0', '-1', 'cn', '1', '0', '', '0', '', '1713250982', '0');
 
 -- -----------------------------
 -- Table structure for `ey_admin_log`
@@ -129,12 +129,14 @@ CREATE TABLE `ey_admin_log` (
   `log_time` int(11) DEFAULT '0' COMMENT '日志时间',
   PRIMARY KEY (`log_id`),
   KEY `admin_id` (`admin_id`) USING BTREE
-) ENGINE=MyISAM AUTO_INCREMENT=667 DEFAULT CHARSET=utf8 COMMENT='管理员操作日志表';
+) ENGINE=MyISAM AUTO_INCREMENT=669 DEFAULT CHARSET=utf8 COMMENT='管理员操作日志表';
 
 -- -----------------------------
 -- Records of `ey_admin_log`
 -- -----------------------------
 INSERT INTO `ey_admin_log` VALUES ('666', '1', '后台登录', '127.0.0.1', '/login.php', '1710744347');
+INSERT INTO `ey_admin_log` VALUES ('667', '1', '后台登录', '127.0.0.1', '/login.php', '1713250987');
+INSERT INTO `ey_admin_log` VALUES ('668', '1', '系统在线升级：v1.6.5 -&gt; v1.6.6', '127.0.0.1', '/login.php', '1713251001');
 
 -- -----------------------------
 -- Table structure for `ey_admin_menu`
@@ -466,6 +468,7 @@ CREATE TABLE `ey_arctype` (
   `typearcrank` int(10) DEFAULT '0' COMMENT '阅读权限：0=开放浏览，-1=待审核稿件',
   `empty_logic` tinyint(1) DEFAULT '0' COMMENT '空内容逻辑',
   `page_limit` varchar(10) DEFAULT '0' COMMENT '限制页面 1-栏目页面 0-文档页面',
+  `total_arc` int(10) DEFAULT '0' COMMENT '栏目下文档数量',
   PRIMARY KEY (`id`),
   UNIQUE KEY `dirname` (`dirname`,`lang`) USING BTREE,
   KEY `parent_id` (`channeltype`,`parent_id`) USING BTREE
@@ -474,28 +477,28 @@ CREATE TABLE `ey_arctype` (
 -- -----------------------------
 -- Records of `ey_arctype`
 -- -----------------------------
-INSERT INTO `ey_arctype` VALUES ('1', '6', '6', '0', '0', '关于我们', 'guanyuwomen', '/guanyuwomen', '/guanyuwomen', '{栏目目录}/index.html', '{栏目目录}/{aid}.html', '', '0', '/index.php?m=home&amp;c=Lists&amp;a=index&amp;tid=8', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061SJ5D4.jpg', 'lists_single.htm', '', '', '', '', '1', '0', '1', '0', '0', '0', '1', '0', '', 'cn', '1526539465', '1690181692', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('2', '1', '1', '0', '0', '新闻动态', 'xinwendongtai', '/xinwendongtai', '/xinwendongtai', '', '', 'News &amp; Trends', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061SQ3C4.jpg', 'lists_article.htm', 'view_article.htm', '', '', '', '2', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526539487', '1609929495', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('3', '2', '2', '0', '0', '产品展示', 'chanpinzhanshi', '/chanpinzhanshi', '/chanpinzhanshi', '', '', 'Product show', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061SR5120.jpg', 'lists_product.htm', 'view_product.htm', '', '', '未来，期待与用户携手缔造一个更好的易而优CMS', '3', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539505', '1609929507', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('4', '3', '3', '0', '0', '解决方案', 'kehuanli', '/kehuanli', '/kehuanli', '', '', 'Case', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061ST0127.jpg', 'lists_images.htm', 'view_images.htm', '', '', '', '4', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539517', '1609929522', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('5', '4', '4', '0', '0', '资料下载', 'ziliaoxiazai', '/ziliaoxiazai', '/ziliaoxiazai', '', '', 'Download', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061S911K5.jpg', 'lists_download.htm', 'view_download.htm', '', '', '', '5', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539530', '1609929553', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('8', '6', '6', '1', '1', '公司简介', 'gongsijianjie', '/guanyuwomen/gongsijianjie', '/guanyuwomen/gongsijianjie', '', '', 'About Us', '1', '', '', 'lists_single.htm', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526540452', '1690181692', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('9', '6', '1', '1', '1', '公司荣誉', 'gsry', '/guanyuwomen/gsry', '/guanyuwomen/gsry', '', '', 'GLORIES Glories', '1', '', '', 'lists_article_img.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540478', '1690181692', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('10', '1', '1', '2', '2', '公司动态', 'gongsidongtai', '/xinwendongtai/gongsidongtai', '/xinwendongtai/gongsidongtai', '', '', '', '1', '', '', 'lists_article.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540530', '1609929495', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('11', '1', '1', '2', '2', '行业资讯', 'xingyezixun', '/xinwendongtai/xingyezixun', '/xinwendongtai/xingyezixun', '', '', '', '1', '', '', 'lists_article.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540543', '1609929495', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('12', '1', '1', '2', '2', '媒体报道', 'meitibaodao', '/xinwendongtai/meitibaodao', '/xinwendongtai/meitibaodao', '', '', '', '1', '', '', 'lists_article.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540554', '1609929495', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('20', '2', '2', '3', '3', '手机数码', 'shouji', '/chanpinzhanshi/shouji', '/chanpinzhanshi/shouji', '', '', '', '1', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612114', '1609929507', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('21', '2', '2', '3', '3', '电脑产品', 'diannao', '/chanpinzhanshi/diannao', '/chanpinzhanshi/diannao', '', '', '', '1', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612188', '1609929507', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('22', '2', '2', '3', '3', '周边配件', 'peijian', '/chanpinzhanshi/peijian', '/chanpinzhanshi/peijian', '', '', '', '1', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612218', '1609929507', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('24', '2', '2', '20', '3', '智能手机', 'zhinenshouji', '/chanpinzhanshi/shouji/zhinenshouji', '/chanpinzhanshi/shouji/zhinenshouji', '', '', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612571', '1610334638', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('25', '2', '2', '20', '3', '畅玩手机', 'changwanshouji', '/chanpinzhanshi/shouji/changwanshouji', '/chanpinzhanshi/shouji/changwanshouji', '', '', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612606', '1610334638', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('26', '2', '2', '21', '3', '笔记本电脑', 'bijibendiannao', '/chanpinzhanshi/diannao/bijibendiannao', '/chanpinzhanshi/diannao/bijibendiannao', '', '', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612635', '1610334638', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('27', '2', '2', '22', '3', '耳机', 'erji', '/chanpinzhanshi/peijian/erji', '/chanpinzhanshi/peijian/erji', '', '', '', '2', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612661', '1610334638', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('28', '2', '2', '22', '3', '音箱', 'yinxiang', '/chanpinzhanshi/peijian/yinxiang', '/chanpinzhanshi/peijian/yinxiang', '', '', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612678', '1610334638', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('29', '2', '2', '22', '3', '充电宝', 'chongdianbao', '/chanpinzhanshi/peijian/chongdianbao', '/chanpinzhanshi/peijian/chongdianbao', '', '', '', '2', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612691', '1610334638', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('30', '6', '6', '0', '0', '联系我们', 'lianxiwomen986', '/lianxiwomen986', '/lianxiwomen986', '{栏目目录}/index.html', '{栏目目录}/{aid}.html', 'Online Message', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061T032D7.jpg', 'lists_single_contact.htm', '', '', '', '', '7', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526634493', '1690166673', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('64', '3', '3', '4', '4', '系统方案', 'xitong', '/kehuanli/xitong', '/kehuanli/xitong', '', '', '', '1', '', '', 'lists_images.htm', 'view_images.htm', '', '', '', '100', '0', '0', '1', '0', '0', '1', '0', '', 'cn', '1565083870', '1609929522', '0', '0', '0', '0', '0');
-INSERT INTO `ey_arctype` VALUES ('66', '3', '3', '4', '4', '应用方案', 'yingyong', '/kehuanli/yingyong', '/kehuanli/yingyong', '', '', '', '1', '', '', 'lists_images.htm', 'view_images.htm', '', '', '', '100', '0', '0', '1', '0', '0', '1', '0', '', 'cn', '1565083875', '1609929522', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('1', '6', '6', '0', '0', '关于我们', 'guanyuwomen', '/guanyuwomen', '/guanyuwomen', '{栏目目录}/index.html', '{栏目目录}/{aid}.html', '', '0', '/index.php?m=home&amp;c=Lists&amp;a=index&amp;tid=8', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061SJ5D4.jpg', 'lists_single.htm', '', '', '', '', '1', '0', '1', '0', '0', '0', '1', '0', '', 'cn', '1526539465', '1690181692', '0', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('2', '1', '1', '0', '0', '新闻动态', 'xinwendongtai', '/xinwendongtai', '/xinwendongtai', '', '', 'News &amp; Trends', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061SQ3C4.jpg', 'lists_article.htm', 'view_article.htm', '', '', '', '2', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526539487', '1609929495', '0', '0', '0', '0', '0', '13');
+INSERT INTO `ey_arctype` VALUES ('3', '2', '2', '0', '0', '产品展示', 'chanpinzhanshi', '/chanpinzhanshi', '/chanpinzhanshi', '', '', 'Product show', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061SR5120.jpg', 'lists_product.htm', 'view_product.htm', '', '', '未来，期待与用户携手缔造一个更好的易而优CMS', '3', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539505', '1609929507', '0', '0', '0', '0', '0', '12');
+INSERT INTO `ey_arctype` VALUES ('4', '3', '3', '0', '0', '解决方案', 'kehuanli', '/kehuanli', '/kehuanli', '', '', 'Case', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061ST0127.jpg', 'lists_images.htm', 'view_images.htm', '', '', '', '4', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539517', '1609929522', '0', '0', '0', '0', '0', '6');
+INSERT INTO `ey_arctype` VALUES ('5', '4', '4', '0', '0', '资料下载', 'ziliaoxiazai', '/ziliaoxiazai', '/ziliaoxiazai', '', '', 'Download', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061S911K5.jpg', 'lists_download.htm', 'view_download.htm', '', '', '', '5', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526539530', '1609929553', '0', '0', '0', '0', '0', '4');
+INSERT INTO `ey_arctype` VALUES ('8', '6', '6', '1', '1', '公司简介', 'gongsijianjie', '/guanyuwomen/gongsijianjie', '/guanyuwomen/gongsijianjie', '', '', 'About Us', '1', '', '', 'lists_single.htm', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526540452', '1690181692', '0', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('9', '6', '1', '1', '1', '公司荣誉', 'gsry', '/guanyuwomen/gsry', '/guanyuwomen/gsry', '', '', 'GLORIES Glories', '1', '', '', 'lists_article_img.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540478', '1690181692', '0', '0', '0', '0', '0', '4');
+INSERT INTO `ey_arctype` VALUES ('10', '1', '1', '2', '2', '公司动态', 'gongsidongtai', '/xinwendongtai/gongsidongtai', '/xinwendongtai/gongsidongtai', '', '', '', '1', '', '', 'lists_article.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540530', '1609929495', '0', '0', '0', '0', '0', '4');
+INSERT INTO `ey_arctype` VALUES ('11', '1', '1', '2', '2', '行业资讯', 'xingyezixun', '/xinwendongtai/xingyezixun', '/xinwendongtai/xingyezixun', '', '', '', '1', '', '', 'lists_article.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540543', '1609929495', '0', '0', '0', '0', '0', '4');
+INSERT INTO `ey_arctype` VALUES ('12', '1', '1', '2', '2', '媒体报道', 'meitibaodao', '/xinwendongtai/meitibaodao', '/xinwendongtai/meitibaodao', '', '', '', '1', '', '', 'lists_article.htm', 'view_article.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '1', '', 'cn', '1526540554', '1609929495', '0', '0', '0', '0', '0', '5');
+INSERT INTO `ey_arctype` VALUES ('20', '2', '2', '3', '3', '手机数码', 'shouji', '/chanpinzhanshi/shouji', '/chanpinzhanshi/shouji', '', '', '', '1', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612114', '1609929507', '0', '0', '0', '0', '0', '4');
+INSERT INTO `ey_arctype` VALUES ('21', '2', '2', '3', '3', '电脑产品', 'diannao', '/chanpinzhanshi/diannao', '/chanpinzhanshi/diannao', '', '', '', '1', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612188', '1609929507', '0', '0', '0', '0', '0', '4');
+INSERT INTO `ey_arctype` VALUES ('22', '2', '2', '3', '3', '周边配件', 'peijian', '/chanpinzhanshi/peijian', '/chanpinzhanshi/peijian', '', '', '', '1', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612218', '1609929507', '0', '0', '0', '0', '0', '4');
+INSERT INTO `ey_arctype` VALUES ('24', '2', '2', '20', '3', '智能手机', 'zhinenshouji', '/chanpinzhanshi/shouji/zhinenshouji', '/chanpinzhanshi/shouji/zhinenshouji', '', '', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612571', '1610334638', '0', '0', '0', '0', '0', '3');
+INSERT INTO `ey_arctype` VALUES ('25', '2', '2', '20', '3', '畅玩手机', 'changwanshouji', '/chanpinzhanshi/shouji/changwanshouji', '/chanpinzhanshi/shouji/changwanshouji', '', '', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612606', '1610334638', '0', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('26', '2', '2', '21', '3', '笔记本电脑', 'bijibendiannao', '/chanpinzhanshi/diannao/bijibendiannao', '/chanpinzhanshi/diannao/bijibendiannao', '', '', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612635', '1610334638', '0', '0', '0', '0', '0', '4');
+INSERT INTO `ey_arctype` VALUES ('27', '2', '2', '22', '3', '耳机', 'erji', '/chanpinzhanshi/peijian/erji', '/chanpinzhanshi/peijian/erji', '', '', '', '2', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612661', '1610334638', '0', '0', '0', '0', '0', '2');
+INSERT INTO `ey_arctype` VALUES ('28', '2', '2', '22', '3', '音箱', 'yinxiang', '/chanpinzhanshi/peijian/yinxiang', '/chanpinzhanshi/peijian/yinxiang', '', '', '', '2', '', '', '', '', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612678', '1610334638', '0', '0', '0', '0', '0', '2');
+INSERT INTO `ey_arctype` VALUES ('29', '2', '2', '22', '3', '充电宝', 'chongdianbao', '/chanpinzhanshi/peijian/chongdianbao', '/chanpinzhanshi/peijian/chongdianbao', '', '', '', '2', '', '', 'lists_product.htm', 'view_product.htm', '', '', '', '100', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526612691', '1610334638', '0', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('30', '6', '6', '0', '0', '联系我们', 'lianxiwomen986', '/lianxiwomen986', '/lianxiwomen986', '{栏目目录}/index.html', '{栏目目录}/{aid}.html', 'Online Message', '0', '', 'https://update.eyoucms.com/demo/uploads/allimg/20210106/1-2101061T032D7.jpg', 'lists_single_contact.htm', '', '', '', '', '7', '0', '0', '0', '0', '0', '1', '0', '', 'cn', '1526634493', '1690166673', '0', '0', '0', '0', '0', '0');
+INSERT INTO `ey_arctype` VALUES ('64', '3', '3', '4', '4', '系统方案', 'xitong', '/kehuanli/xitong', '/kehuanli/xitong', '', '', '', '1', '', '', 'lists_images.htm', 'view_images.htm', '', '', '', '100', '0', '0', '1', '0', '0', '1', '0', '', 'cn', '1565083870', '1609929522', '0', '0', '0', '0', '0', '4');
+INSERT INTO `ey_arctype` VALUES ('66', '3', '3', '4', '4', '应用方案', 'yingyong', '/kehuanli/yingyong', '/kehuanli/yingyong', '', '', '', '1', '', '', 'lists_images.htm', 'view_images.htm', '', '', '', '100', '0', '0', '1', '0', '0', '1', '0', '', 'cn', '1565083875', '1609929522', '0', '0', '0', '0', '0', '2');
 
 -- -----------------------------
 -- Table structure for `ey_article_content`
@@ -764,7 +767,7 @@ CREATE TABLE `ey_channelfield` (
   `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
   `set_type` tinyint(3) DEFAULT '0' COMMENT '区域选择时使用是否为三级联动,1-是',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=541 DEFAULT CHARSET=utf8 COMMENT='自定义字段表';
+) ENGINE=MyISAM AUTO_INCREMENT=542 DEFAULT CHARSET=utf8 COMMENT='自定义字段表';
 
 -- -----------------------------
 -- Records of `ey_channelfield`
@@ -1305,6 +1308,7 @@ INSERT INTO `ey_channelfield` VALUES ('537', 'users_discount_type', '3', '产品
 INSERT INTO `ey_channelfield` VALUES ('538', 'crossed_price', '3', '商品划线价', 'decimal', 'decimal(10,2) unsigned', '10', '0.00', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
 INSERT INTO `ey_channelfield` VALUES ('539', 'free_shipping', '3', '商品是否包邮(1包邮(免运费)  0跟随系统)', 'switch', 'tinyint(1) unsigned', '1', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
 INSERT INTO `ey_channelfield` VALUES ('540', 'merchant_id', '3', '多商家ID', 'datetime', 'int(11) unsigned', '11', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1701047939', '1701047939', '0');
+INSERT INTO `ey_channelfield` VALUES ('541', 'total_arc', '-99', '栏目下文档数量', 'int', 'int(10)', '10', '0', '', '', '0', '0', '1', '0', '1', '1', '1', '100', '1', '1711942240', '1711942240', '0');
 
 -- -----------------------------
 -- Table structure for `ey_channelfield_bind`
@@ -1581,7 +1585,7 @@ INSERT INTO `ey_config` VALUES ('57', 'web_authortoken', '', 'web', '', 'cn', '0
 INSERT INTO `ey_config` VALUES ('60', 'web_attr_1', '400-12345-67890', 'web', '', 'cn', '0', '1667183895');
 INSERT INTO `ey_config` VALUES ('62', 'seo_inlet', '1', 'seo', '', 'cn', '0', '1553566003');
 INSERT INTO `ey_config` VALUES ('63', 'web_cmspath', '', 'web', '', 'cn', '0', '0');
-INSERT INTO `ey_config` VALUES ('64', 'web_sqldatapath', '/data/sqldata_sy8eEbsHzK4KorT8B1Dj', 'web', '', 'cn', '0', '1710744349');
+INSERT INTO `ey_config` VALUES ('64', 'web_sqldatapath', '/data/sqldata_qt1pa8sEpLdNagqdh99c', 'web', '', 'cn', '0', '1713250989');
 INSERT INTO `ey_config` VALUES ('65', 'web_cmsurl', '', 'web', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('66', 'web_templets_dir', '/template', 'web', '', 'cn', '0', '0');
 INSERT INTO `ey_config` VALUES ('67', 'web_templeturl', '/template', 'web', '', 'cn', '0', '0');
@@ -1607,8 +1611,8 @@ INSERT INTO `ey_config` VALUES ('171', 'web_language_switch', '0', 'web', '', 'c
 INSERT INTO `ey_config` VALUES ('174', 'web_is_https', '0', 'web', '', 'cn', '0', '1552968816');
 INSERT INTO `ey_config` VALUES ('176', 'smtp_syn_weapp', '1', 'smtp', '', 'cn', '0', '1553566547');
 INSERT INTO `ey_config` VALUES ('178', 'php_eyou_blacklist', '', 'php', '', 'cn', '0', '1553654429');
-INSERT INTO `ey_config` VALUES ('190', 'system_auth_code', '$2y$11$eda83328080b2a7395257f3', 'system', '', 'cn', '0', '1557733856');
-INSERT INTO `ey_config` VALUES ('192', 'system_upgrade_filelist', 'dmVuZG9yL2FsaXBheS9hb3AvQW9wQ2xpZW50LnBocDxicj52ZW5kb3IvYWxpcGF5L2xvZy50eHQ8YnI+YXBwbGljYXRpb24vY29uZmlnLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbG9naWMvTmF2aWdhdGlvbkxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbG9naWMvU2hvcENvbW1vbkxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbG9naWMvU21zTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9sb2dpYy9BcmN0eXBlTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9sb2dpYy9DaXR5c2l0ZUxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbG9naWMvQnVpbGRodG1sTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9jb250cm9sbGVyL0NvbW1vbi5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL1Rpa1Rvay5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL0ZvcmVpZ25QYWNrLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvT3JkZXJQcmVIYW5kbGUucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9tb2RlbC9Vc2Vyc1JlY2hhcmdlUGFjay5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL0xhbmd1YWdlLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvTGFuZ3VhZ2VBdHRyLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvRXlvdVVzZXJzLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvQXJjdHlwZS5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL1VzZXJzTGV2ZWwucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9tb2RlbC9TaG9wUHVibGljSGFuZGxlLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24ucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvaHRtbC5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb21tb24ucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvbG9naWMvU210cG1haWxMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vdXNlci9sb2dpYy9QYXlBcGlMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vdXNlci9sb2dpYy9QYXlMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vdXNlci9iZWhhdmlvci9Nb2R1bGVJbml0QmVoYXZpb3IucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9VcGxvYWRpZnkucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9NZWRpYS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL1Nob3AucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9Eb3dubG9hZC5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL0Jhc2UucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9Vc2Vycy5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL1BheS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL01lbWdpZnQucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9QYXlBcGkucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9BcnRpY2xlLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL2NvbnRyb2xsZXIvVXNlcnNOb3RpY2UucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9Vc2Vyc1JlbGVhc2UucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9TaG9wQ29tbWVudC5waHA8YnI+YXBwbGljYXRpb24vdXNlci9tb2RlbC9TaG9wLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL21vZGVsL1VzZXJzLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL21vZGVsL1BheUFwaS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9tb2RlbC9Vc2Vyc1JlbGVhc2UucGhwPGJyPmFwcGxpY2F0aW9uL2V4dHJhL2Vycm9yX2NvZGUucGhwPGJyPmFwcGxpY2F0aW9uL2V4dHJhL2V4dHJhX2NhY2hlX2tleS5waHA8YnI+YXBwbGljYXRpb24vZXh0cmEvZ2xvYmFsLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9odG1sLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb21tb24ucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2xvZ2ljL0FqYXhMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbG9naWMvVXBncmFkZUxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9sb2dpYy9Gb3JlaWduTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2xvZ2ljL01lbWJlckxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9sb2dpYy9BcmNoaXZlc0xvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9sb2dpYy9Bc2tMb2dpYy5waHA=', 'system', '', 'cn', '0', '1701045552');
+INSERT INTO `ey_config` VALUES ('190', 'system_auth_code', '$2y$11$ffefddb6035a71e307497a7', 'system', '', 'cn', '0', '1557733856');
+INSERT INTO `ey_config` VALUES ('192', 'system_upgrade_filelist', 'dmVuZG9yL2FsaXBheS9hb3AvQW9wQ2xpZW50LnBocDxicj52ZW5kb3IvUEhQRXhjZWwuemlwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9sb2dpYy9TaG9wQ29tbW9uTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9sb2dpYy9TbXNMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL2xvZ2ljL0FyY3R5cGVMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL2xvZ2ljL0VtYWlsTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9sb2dpYy9CdWlsZGh0bWxMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL2xvZ2ljL1d4UGF5T3JkZXJMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL2NvbnRyb2xsZXIvQ29tbW9uLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvVGlrVG9rLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvU2hvcEdvb2RzTGFiZWwucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9tb2RlbC9Gb3JlaWduUGFjay5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL09yZGVyUHJlSGFuZGxlLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvVXNlcnNSZWNoYXJnZVBhY2sucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9tb2RlbC9MYW5ndWFnZS5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL0JhaWR1UGF5LnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24vbW9kZWwvQXJjdHlwZS5waHA8YnI+YXBwbGljYXRpb24vY29tbW9uL21vZGVsL1VzZXJzTGV2ZWwucGhwPGJyPmFwcGxpY2F0aW9uL2NvbW1vbi9tb2RlbC9TaG9wUHVibGljSGFuZGxlLnBocDxicj5hcHBsaWNhdGlvbi9jb21tb24ucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvaHRtbC5waHA8YnI+YXBwbGljYXRpb24vdXNlci9sb2dpYy9QYXlBcGlMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vdXNlci9sb2dpYy9QYXlMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vdXNlci9sb2dpYy9NdWx0aU1lcmNoYW50TG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvYmVoYXZpb3IvVmlld0ZpbHRlckJlaGF2aW9yLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL2NvbnRyb2xsZXIvVXBsb2FkaWZ5LnBocDxicj5hcHBsaWNhdGlvbi91c2VyL2NvbnRyb2xsZXIvTWVkaWEucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9TaG9wLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL2NvbnRyb2xsZXIvRG93bmxvYWQucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9Vc2Vycy5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL1BheS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL1BheUFwaS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL0FydGljbGUucGhwPGJyPmFwcGxpY2F0aW9uL3VzZXIvY29udHJvbGxlci9Vc2Vyc05vdGljZS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9jb250cm9sbGVyL1VzZXJzUmVsZWFzZS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9tb2RlbC9TaG9wLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL21vZGVsL1VzZXJzLnBocDxicj5hcHBsaWNhdGlvbi91c2VyL21vZGVsL1BheS5waHA8YnI+YXBwbGljYXRpb24vdXNlci9tb2RlbC9QYXlBcGkucGhwPGJyPmFwcGxpY2F0aW9uL2V4dHJhL2V4dHJhX2NhY2hlX2tleS5waHA8YnI+YXBwbGljYXRpb24vZXh0cmEvZ2xvYmFsLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9jb21tb24ucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2xvZ2ljL0FqYXhMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbG9naWMvVXBncmFkZUxvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9sb2dpYy9Gb3JlaWduTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2xvZ2ljL0FyY2hpdmVzTG9naWMucGhwPGJyPmFwcGxpY2F0aW9uL2FkbWluL2xvZ2ljL0V5b3VDbXNMb2dpYy5waHA8YnI+YXBwbGljYXRpb24vYWRtaW4vbG9naWMvUHJvZHVjdExvZ2ljLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9iZWhhdmlvci9BY3Rpb25CZWdpbkJlaGF2aW9yLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi9iZWhhdmlvci9BdXRoUm9sZUJlaGF2aW9yLnBocDxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9ub3RpZnkvbm90aWZ5X3RwbC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc2hvcF9wcm9kdWN0L2luZGV4Lmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zaG9wX3Byb2R1Y3QvaGVscC5odG08YnI+YXBwbGljYXRpb24vYWRtaW4vdGVtcGxhdGUvc2hvcF9wcm9kdWN0L2dvb2RzX2xhYmVsLmh0bTxicj5hcHBsaWNhdGlvbi9hZG1pbi90ZW1wbGF0ZS9zaG9wX3Byb2R1Y3QvYXR0cmxpc3RfaW5kZXguaHRt', 'system', '', 'cn', '0', '1713250989');
 INSERT INTO `ey_config` VALUES ('366', 'web_recycle_switch', '1', 'web', '', 'cn', '0', '1701045570');
 INSERT INTO `ey_config` VALUES ('354', 'php_websensitive', '5aix5LmQfOWNmuW9qXzkuJbnlYzmna985aSc5bqXfOi1jOWNmnzmnqrmlK986aOO5pq0fGJvYnzmirzms6h8OyZhbXA7I3xh54mHfOWkp+eJh3zmrKfnvo58KOS4reWbvSl877yI5Lit5Zu977yJfOWNiuWym8K35L2T6IKy', 'php', '', 'cn', '0', '1690161726');
 INSERT INTO `ey_config` VALUES ('331', 'other_pcwapjs', '0', 'other', '', 'cn', '0', '1636442096');
@@ -1619,7 +1623,7 @@ INSERT INTO `ey_config` VALUES ('227', 'seo_html_arcdir', 'html', 'seo', '', 'cn
 INSERT INTO `ey_config` VALUES ('228', 'seo_html_listname', '2', 'seo', '', 'cn', '0', '1567578996');
 INSERT INTO `ey_config` VALUES ('229', 'seo_html_pagename', '2', 'seo', '', 'cn', '0', '1567578996');
 INSERT INTO `ey_config` VALUES ('230', 'seo_force_inlet', '1', 'seo', '', 'cn', '0', '1567578996');
-INSERT INTO `ey_config` VALUES ('193', 'system_version', 'v1.6.5', 'system', '', 'cn', '0', '1701045567');
+INSERT INTO `ey_config` VALUES ('193', 'system_version', 'v1.6.6', 'system', '', 'cn', '0', '1713251000');
 INSERT INTO `ey_config` VALUES ('195', 'web_users_switch', '1', 'web', '', 'cn', '0', '1563498413');
 INSERT INTO `ey_config` VALUES ('199', 'system_correctarctypedirpath', '1', 'system', '', 'cn', '0', '1563503940');
 INSERT INTO `ey_config` VALUES ('203', 'web_attr_13', 'https://update.eyoucms.com/demo/uploads/allimg/20210115/1-210115153Z9511.png', 'web', '', 'cn', '0', '1610696352');
@@ -1656,7 +1660,7 @@ INSERT INTO `ey_config` VALUES ('302', 'web_loginlogo', '/public/static/admin/im
 INSERT INTO `ey_config` VALUES ('303', 'web_loginbgimg', '/public/static/admin/images/login-bg.jpg', 'web', '', 'cn', '0', '1610352403');
 INSERT INTO `ey_config` VALUES ('304', 'syn_admin_logic_1608884981', '1', 'syn', '', 'cn', '0', '1610352406');
 INSERT INTO `ey_config` VALUES ('305', 'web_users_tpl_theme', '', 'web', '', 'cn', '0', '1610352449');
-INSERT INTO `ey_config` VALUES ('272', 'php_serviceinfo', '3249AwcFB1MJAAIEAFYBAVsAAlNeUwAFDQtQAANJRkZdARFWWUZeF1BGVxYKEARQURwFLQs1AHpufVlENQsVaUIIF3lVW1s6Q11cVQkKBFBrBwUDFzwAelACXn41fAlfQg4MQkVYWygACARVf30EQUlUViYsEj9bQ15dQxhfFwdQWy1KbV1VO3gHewdIWgQFVSxWLjEPFh5ceVwCGF8Wel4NFFwCDXwsagRAUWdQR2JUXAdWHy1TeVBHAWsXC1MGQSkEfGB7XhZuSV8MewEEfQowBigtHUQZG1JBRQpdFldRDwdeRFIVWRtsRwxSVAZtTVECUlY4EwBbCgxtFwUCBAk/FwdSBVU/TAhUA1RuRAVdVQM9E1ADBFhvQQZQBlxtTVVRCw9pQlUOBAFoRQQECQ84RVUDAlBpTFVSAVMQSBNZFhZbWEdaEF4BEA4SbkQJWgEFPRNRVAxfb0EJUlQAbU1XB1ACaUJaDwUCaEUHBAUOOEVVA1UHaUwFBwlabhEHD1dRb0IAAAdfbEcBBAJVbU0CVlFXRkoXWEZAWQ1ACUJfUUAJFWlCW1tVB2hFBwMIXjhFWVYCAmlMB1FSV24RCA5WUm9CAVJSCmxHAFUDUG1NUwJVXjgTAwoLDG0XBFMFCz8XBgBRUT9MBQYEVG5EV15UAUNKRgdATVtbQw9BAwAWVkAJFWlCW1tVB2hFBwMIXjhFWVYCAmlMB1FSV24RCA5WUm9CAVJSCmxHAFUDUG1NUwJVXjgTAwoLDG0XBFMFCz8XBgBRUT9MBQYEVG5EV15UAUNKRgdBSEZRQxtAAUBNBhFHFQ8VBkB5RX1aQgZ4VTIEAiEIH29vCgRQNQMIeFIMGn5dXgUufXFFUmNFWHxrLQYEHy4KUHFxRFIPZAJVfw8WaWR8ASx9aQJ5dHNGV2sTWSw1UFd8U0MDeA9kUFJ/DxtpYQwHAm4BXn1aXQV/UjVHLCImX3l6ek14CEJTeFU1VlBwWU45bwkCVWcDXXhSCwQvDDUReH1xDVczD1kTFEELVxUPAU8bVF1ZUVtfEwJGVRgJEUhdUhEYEwFdAFQaWUACVQEGBV9VAlUCC1QBDgcGUwAHUQwKBgJXVlNRCVoBBxEbF1IbSVlAUUNtWF8aXgBNRBAUTFZGQG4WWwlUGllSHxVWWwxKVW1DVVATCwhIEhYDBRZFZkNYRAVbCm5XEwddFQ8GTxtAW1ASCAMdGg1DPgkIAhcDAxgTEUYFRU0QQAkGGRUTUUBtVVxeXkZnF1UTEA0FUGZcRxNYEAFIcgkAAWVZfglWSH53ekZSA1sNfwgsBwJhYAdtSyBRAGViCCx0fVZTN2xJf05yUVVlYVVpCyQHAmFaSnp1ClEAZWFQL156XHsgc0RRBlNKeFtXDWgpM1UoYWgBbHk3ASplcVc6e2IGegloBGp8ZQB/S3IOaCkzVihhc15seTcAKUt5Gzp7YgR5GXAEanxlAWtmcgloKTNWKFhgA2x5NwAqZnEUK10HCBUe', 'php', '', 'cn', '0', '1710744353');
+INSERT INTO `ey_config` VALUES ('272', 'php_serviceinfo', 'bc36BAVSCAEJVgcEVAUHUwBUUAdUCVIAWQ5XBFBNQ0NXVUtRWxFRRVAQUhZeFgVTWUpQfAxpAiw2eF5GNg8QbEhcTX5XDFRoQwtZVV0MBVNjUVBSEGACLAgHWXw2eAxaSFpWRUcPVHoAXgFVK3sFQkECA3crTj0NG1taQRtbEgJaD3dNbwpaaXhRfgccXAUGXXoDfzZTFEgEfFsAG1sTf1RZTlsAWnN+alJFUTNWRmFcClIHGHFRLwhCBmkUD1YDS31ee2IsUURuH1oMLwcFfgJmU3kqQUZPQ1dGRwlZE1JbW11ZRgUaCxs6QgwGUgduRQdXA1FkEVYDDwtvFAEHAQNrTQBQUlptTF5RAwBoRQZVA1ZsFAwBUgBqRgRTAlloRwELDA0+TQcOUgRoEQIFCgduEAQEXlI/FFBVA1AUTRZTQkxcWhBVQl5XFQ5GaEUKUldQbBQNVloHakYLUVAFaEcDXVcAPk0ID1MHaBECAwoIbhAGVgxXPxQDBFcHahQBBgdcaEAEXgEIRBsWBUFEWl9ACEMGCkZZQ2pGCwNTVGhHAgoNUz5NCQkAU2gRAFVRBW4QCVcNVD8UAlYCUmoUAFcGWWhAVQoFATpCAlcMCG5FBFIEUmQRVlZSVW8UA1UEVmtNUlNSCRMVRFZBEFxfQF1BAgFPDUZZQ2pGCwNTVGhHAgoNUz5NCQkAU2gRAFVRBW4QCVcNVD8UAlYCUmoUAFcGWWhAVQoFATpCAlcMCG5FBFIEUmQRVlZSVW8UA1UEVmtNUlNSCRMVRFZAFUFVQElAAEEUXRcXQwwRVhh/Fn1YRw99WDQMUn4KTm4yDQBTZwMJeQtXHS01XUp+JXcWUmFAUXlmKw5UQCxbUSx2QFFdZANUJlQQOTJ/BX41f1R6WHZPeX1SS3hTI0J6N30GV0l4CVUpehQADGBVVyZaFW5hfg55YSsNf1MnQHksBEN7WnsMfw9LDTk5XkRSOXwNbAFlSFZiN1F+UyNOezBtR390cFxWMAVZQU0UWldDDFcYEFNXWVQLVhMDRFJNC0EeWlsQSRICVwAGQwwRAgMCUFJUUghVB1tdAQ8FAQYCVwcLAwdTVlVZUVsDVFYRTRQETEJeSlFGPVFfG1wHGEZAQktfRxFvFVEJBkMMAx9DVQ1bQVJnQ1AAGgsJShVDAVVAQm9CCUUGUQo8DkZWXUMMUBgQR1FQF1gKHRsPRGsLWFQQCgJJEhJMBRcURREJUBpDRFpHZ1VZDldGZhVSRhJdU1dvXRYSWxoBGitcUQEzWiheXU90d38WWwNaD3hdLldUZmkGPEojWwA3O119dCtVBWBnTnVOdwFcZWBXbl4mV1RmU0srdAlbADc4BX5eLF8td3hDWwZWGnFbVg9vfDEFfmZhAD14NAsqNygCa3s0BSxeYwNgfGBQdktzDG98MQZ+ZnpfPXg0CikZIE5rezQHL057A2B8YFFiZnMLb3wxBn5faQI9eDQKKjQoQXpdUQtDSQ', 'php', '', 'cn', '0', '1713250983');
 INSERT INTO `ey_config` VALUES ('352', 'web_status_mode', '0', 'web', '', 'cn', '0', '1667183867');
 INSERT INTO `ey_config` VALUES ('353', 'web_status_text', '网站暂时关闭，维护中……', 'web', '', 'cn', '0', '1667183867');
 INSERT INTO `ey_config` VALUES ('273', 'php_servicemeal', '2', 'php', '', 'cn', '0', '1703142156');
@@ -1709,7 +1713,7 @@ INSERT INTO `ey_config` VALUES ('340', 'seo_pagesize', '20', 'seo', '', 'cn', '0
 INSERT INTO `ey_config` VALUES ('341', 'basic_img_auto_wh', '0', 'basic', '', 'cn', '0', '1641949807');
 INSERT INTO `ey_config` VALUES ('342', 'basic_img_alt', '0', 'basic', '', 'cn', '0', '1641949807');
 INSERT INTO `ey_config` VALUES ('343', 'basic_img_title', '0', 'basic', '', 'cn', '0', '1641949807');
-INSERT INTO `ey_config` VALUES ('344', 'system_crypt_auth_code', '$2y$11$eda83328080b2a7395257f3', 'system', '', 'cn', '0', '1650263716');
+INSERT INTO `ey_config` VALUES ('344', 'system_crypt_auth_code', '$2y$11$ffefddb6035a71e307497a7', 'system', '', 'cn', '0', '1650263716');
 INSERT INTO `ey_config` VALUES ('345', 'web_citysite_open', '0', 'web', '', 'cn', '0', '1703142363');
 INSERT INTO `ey_config` VALUES ('346', 'admin_logic_1_1648775669', '1', 'syn', '', 'cn', '0', '1650263716');
 INSERT INTO `ey_config` VALUES ('347', 'web_stypeid_open', '0', 'web', '', 'cn', '0', '1653359674');
@@ -1723,8 +1727,8 @@ INSERT INTO `ey_config` VALUES ('357', 'editor_img_clear_link', '1', 'basic', ''
 INSERT INTO `ey_config` VALUES ('358', 'php_allow_service_os', 'eyJjb2RlIjoxLCJtc2ciOiJcdTY4YzBcdTZkNGJcdTUyMzBcdTY1YjBcdTcyNDhcdTY3MmMiLCJtc2cxIjoiXHU1NTQ2XHU3NTI4XHU3MjQ4XHU2NzJjXHU2NTJmXHU2MzAxXHU1NzI4XHU3ZWJmXHU2NmY0XHU2NWIwIn0=', 'php', '', 'cn', '0', '1703142156');
 INSERT INTO `ey_config` VALUES ('367', 'absolute_path_open', '0', 'web', '', 'cn', '0', '1701048818');
 INSERT INTO `ey_config` VALUES ('364', 'php_upgradelist', '', 'php', '', 'cn', '0', '1690161726');
-INSERT INTO `ey_config` VALUES ('359', 'php_atqueryrequest', 'eyIwIjp7ImV4cGlyZV90aW1lIjoxMjk2MDAwfSwiMSI6eyJleHBpcmVfdGltZSI6ODY0MDAwfSwiMS41Ijp7ImV4cGlyZV90aW1lIjo4NjQwMDB9LCIyIjp7ImV4cGlyZV90aW1lIjo4NjQwMDB9fQ==', 'php', '', 'cn', '0', '1686877580');
-INSERT INTO `ey_config` VALUES ('360', 'php_atqueryrequest_time', '0', 'php', '', 'cn', '0', '1710744401');
+INSERT INTO `ey_config` VALUES ('359', 'php_atqueryrequest', 'eyIwIjp7ImV4cGlyZV90aW1lIjoyNTkyMDAwfSwiMSI6eyJleHBpcmVfdGltZSI6MTI5NjAwMH0sIjEuNSI6eyJleHBpcmVfdGltZSI6MTI5NjAwMH0sIjIiOnsiZXhwaXJlX3RpbWUiOjEyOTYwMDB9fQ==', 'php', '', 'cn', '0', '1713250983');
+INSERT INTO `ey_config` VALUES ('360', 'php_atqueryrequest_time', '0', 'php', '', 'cn', '0', '1713251027');
 INSERT INTO `ey_config` VALUES ('361', 'search_tabu_words', '<\r\n>\r\n\"\r\n;\r\n,\r\n@\r\n&\r\n#\r\n\\\r\n*', 'search', '', 'cn', '0', '1686877656');
 INSERT INTO `ey_config` VALUES ('362', 'web_anti_brushing', '0', 'web', '', 'cn', '0', '1686877656');
 INSERT INTO `ey_config` VALUES ('363', 'php_atqueryrequest_time2', '0', 'php', '', 'cn', '0', '1710744401');
@@ -2100,7 +2104,7 @@ CREATE TABLE `ey_foreign_pack` (
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=55 DEFAULT CHARSET=utf8 COMMENT='外贸助手语言包变量';
+) ENGINE=MyISAM AUTO_INCREMENT=183 DEFAULT CHARSET=utf8 COMMENT='外贸助手语言包变量';
 
 -- -----------------------------
 -- Records of `ey_foreign_pack`
@@ -2159,6 +2163,134 @@ INSERT INTO `ey_foreign_pack` VALUES ('51', '1', 'page6', '第%s页', 'cn', '100
 INSERT INTO `ey_foreign_pack` VALUES ('52', '1', 'page6', '%s', 'en', '100', '1543890216', '1543890216');
 INSERT INTO `ey_foreign_pack` VALUES ('53', '3', 'system1', '图', 'cn', '100', '1543890216', '1543890216');
 INSERT INTO `ey_foreign_pack` VALUES ('54', '3', 'system1', 'pic', 'en', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('55', '3', 'system2', '确定', 'cn', '100', '1543890216', '1704164971');
+INSERT INTO `ey_foreign_pack` VALUES ('56', '3', 'system2', 'ok', 'en', '100', '1543890216', '1706859563');
+INSERT INTO `ey_foreign_pack` VALUES ('57', '3', 'system3', '取消', 'cn', '100', '1543890216', '1704164971');
+INSERT INTO `ey_foreign_pack` VALUES ('58', '3', 'system3', 'cancel', 'en', '100', '1543890216', '1704164971');
+INSERT INTO `ey_foreign_pack` VALUES ('59', '4', 'users1', '您的购物车还没有商品！', 'cn', '100', '1543890216', '1704164971');
+INSERT INTO `ey_foreign_pack` VALUES ('60', '4', 'users1', 'Your shopping cart doesn\'t have any products yet!', 'en', '100', '1543890216', '1704164971');
+INSERT INTO `ey_foreign_pack` VALUES ('61', '3', 'system4', '提示', 'cn', '100', '1543890216', '1704164971');
+INSERT INTO `ey_foreign_pack` VALUES ('62', '3', 'system4', 'prompt', 'en', '100', '1543890216', '1704164971');
+INSERT INTO `ey_foreign_pack` VALUES ('63', '4', 'users2', '%s不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('64', '4', 'users2', '%s cannot be empty!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('65', '4', 'users3', '%s格式不正确！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('66', '4', 'users3', '%s Incorrect format!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('67', '4', 'users4', '邮箱验证码已被使用或超时，请重新发送！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('68', '4', 'users4', 'The email verification code has been used or timed out. Please resend it!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('69', '4', 'users5', '邮箱验证码不正确，请重新输入！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('70', '4', 'users5', 'The email verification code is incorrect, please re-enter!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('71', '4', 'users6', '短信验证码不正确，请重新输入！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('72', '4', 'users6', 'The SMS verification code is incorrect, please re-enter!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('73', '4', 'users7', '%已存在！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('74', '4', 'users7', '% already exists!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('75', '3', 'system5', '是', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('76', '3', 'system5', 'yes', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('77', '3', 'system6', '否', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('78', '3', 'system6', 'no', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('79', '4', 'users8', '签到成功', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('80', '4', 'users8', 'Successful check-in', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('81', '4', 'users9', '今日已签过到', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('82', '4', 'users9', 'Signed in today', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('83', '3', 'system7', '请至少选择一项！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('84', '3', 'system7', 'Please select at least one item!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('85', '4', 'users10', '是否删除该收藏？', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('86', '4', 'users10', 'Do you want to delete this collection?', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('87', '4', 'users11', '确认批量删除收藏？', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('88', '4', 'users11', 'Confirm bulk deletion of favorites?', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('89', '3', 'system8', '正在处理', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('90', '3', 'system8', 'Processing', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('91', '3', 'system9', '请勿刷新页面', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('92', '3', 'system9', 'Do not refresh', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('93', '4', 'users12', '每日签到', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('94', '4', 'users12', 'Daily Attendance', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('95', '3', 'system10', '上传成功', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('96', '3', 'system10', 'Upload successful', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('97', '4', 'users13', '充值金额不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('98', '4', 'users13', 'Recharge amount cannot be empty!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('99', '4', 'users14', '请输入正确的充值金额！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('100', '4', 'users14', 'Please enter the correct recharge amount!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('101', '4', 'users15', '请选择支付方式！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('102', '4', 'users15', 'Please choose a payment method!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('103', '4', 'users16', '用户名不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('104', '4', 'users16', 'The username cannot be empty!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('105', '4', 'users17', '用户名不正确！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('106', '4', 'users17', 'The username is incorrect!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('107', '4', 'users18', '密码不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('108', '4', 'users18', 'Password cannot be empty!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('109', '4', 'users19', '图片验证码不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('110', '4', 'users19', 'The image verification code cannot be empty!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('111', '4', 'users20', '图片验证码错误', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('112', '4', 'users20', 'Image verification code error', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('113', '4', 'users21', '前台禁止管理员登录！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('114', '4', 'users21', 'The front desk prohibits administrators from logging in!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('115', '4', 'users22', '该会员尚未激活，请联系管理员！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('116', '4', 'users22', 'This member has not been activated yet. Please contact the administrator!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('117', '4', 'users23', '管理员审核中，请稍等！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('118', '4', 'users23', 'Administrator review in progress, please wait!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('119', '4', 'users24', '登录成功', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('120', '4', 'users24', 'Login succeeded', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('121', '4', 'users25', '密码不正确！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('122', '4', 'users25', 'The password is incorrect!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('123', '4', 'users26', '该用户名不存在，请注册！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('124', '4', 'users26', 'The username does not exist, please register!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('125', '4', 'users27', '看不清？点击更换验证码', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('126', '4', 'users27', 'Can\'t see clearly? Click to change the verification code', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('127', '4', 'users28', '手机号码不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('128', '4', 'users28', 'Mobile phone number cannot be empty!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('129', '4', 'users29', '手机号码格式不正确！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('130', '4', 'users29', 'The phone number format is incorrect!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('131', '4', 'users30', '手机验证码不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('132', '4', 'users30', 'Mobile verification code cannot be empty!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('133', '4', 'users31', '手机验证码已失效！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('134', '4', 'users31', 'The mobile verification code has expired!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('135', '4', 'users32', '手机号码已经注册！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('136', '4', 'users32', 'The phone number has been registered!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('137', '4', 'users33', '用户名为系统禁止注册！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('138', '4', 'users33', 'The username is prohibited from registration by the system!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('139', '4', 'users34', '请输入2-30位的汉字、英文、数字、下划线等组合', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('140', '4', 'users34', 'Please enter a combination of Chinese characters, English characters, numbers, underscores, etc. that are 2-30 digits long', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('141', '4', 'users35', '登录密码不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('142', '4', 'users35', 'Login password cannot be empty!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('143', '4', 'users36', '重复密码不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('144', '4', 'users36', 'The duplicate password cannot be empty!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('145', '4', 'users37', '用户名已存在', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('146', '4', 'users37', 'The username already exists', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('147', '4', 'users38', '两次密码输入不一致！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('148', '4', 'users38', 'The two password inputs are inconsistent!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('149', '4', 'users39', '注册成功，正在跳转中……', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('150', '4', 'users39', 'Registration successful, jumping in progress……', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('151', '4', 'users40', '注册成功，等管理员激活才能登录！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('152', '4', 'users40', 'Registration successful, wait for administrator activation before logging in!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('153', '4', 'users41', '注册成功，请登录！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('154', '4', 'users41', 'Registration successful, please log in!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('155', '3', 'system11', '操作失败', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('156', '3', 'system11', 'Operation failed', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('157', '3', 'system12', '操作成功', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('158', '3', 'system12', 'Operation successful', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('159', '4', 'users42', '昵称不可为纯空格', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('160', '4', 'users42', 'Nicknames cannot be pure spaces', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('161', '4', 'users43', '原密码不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('162', '4', 'users43', 'The original password cannot be empty!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('163', '4', 'users44', '新密码不能为空！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('164', '4', 'users44', 'The new password cannot be empty!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('165', '4', 'users45', '手机号码不存在，不能找回密码！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('166', '4', 'users45', 'Mobile phone number does not exist, password cannot be retrieved!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('167', '4', 'users46', '手机号码未绑定，不能找回密码！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('168', '4', 'users46', 'Mobile phone number is not bound, password cannot be retrieved!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('169', '4', 'users47', '手机验证码已被使用或超时，请重新发送！', 'cn', '100', '1543890216', '1543890216');
+INSERT INTO `ey_foreign_pack` VALUES ('170', '4', 'users47', 'The mobile verification code has been used or timed out. Please resend it!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('171', '4', 'users48', '晚上好～', 'cn', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('172', '4', 'users48', 'Good evening~', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('173', '4', 'users49', '早上好～', 'cn', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('174', '4', 'users49', 'Good morning~', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('175', '4', 'users50', '下午好～', 'cn', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('176', '4', 'users50', 'Good afternoon~', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('177', '3', 'system13', '含有敏感词，禁止搜索！', 'cn', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('178', '3', 'system13', 'Contains sensitive words, search prohibited!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('179', '3', 'system14', '过度频繁搜索，离解禁还有%s分钟！', 'cn', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('180', '3', 'system14', 'Excessive frequent searches, with %s minutes left before lifting the ban!', 'en', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('181', '3', 'system15', '关键词不能为空！', 'cn', '100', '1543890216', '1706580800');
+INSERT INTO `ey_foreign_pack` VALUES ('182', '3', 'system15', 'Keywords cannot be empty!', 'en', '100', '1543890216', '1706580800');
 
 -- -----------------------------
 -- Table structure for `ey_form`
@@ -2173,13 +2305,15 @@ CREATE TABLE `ey_form` (
   `lang` varchar(10) NOT NULL DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) NOT NULL DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  `open_reply` tinyint(1) DEFAULT '0' COMMENT '是否开启回复 0-未开启,1-开启',
+  `open_examine` tinyint(1) DEFAULT '0' COMMENT '是否开启审核 0-不审核,1-审核',
   PRIMARY KEY (`form_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='表单管理表';
 
 -- -----------------------------
 -- Records of `ey_form`
 -- -----------------------------
-INSERT INTO `ey_form` VALUES ('1', '联系我们', '', '1', '0', 'cn', '1690166712', '1690166716');
+INSERT INTO `ey_form` VALUES ('1', '联系我们', '', '1', '0', 'cn', '1690166712', '1690166716', '0', '0');
 
 -- -----------------------------
 -- Table structure for `ey_guestbook`
@@ -2199,6 +2333,10 @@ CREATE TABLE `ey_guestbook` (
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  `reply` varchar(1000) DEFAULT '' COMMENT '留言回复内容',
+  `admin_id` int(11) DEFAULT '0' COMMENT '回复管理员ID',
+  `reply_time` int(11) DEFAULT '0' COMMENT '回复时间',
+  `examine` tinyint(1) DEFAULT '1' COMMENT '0-未审核 1-审核通过 2-审核不通过',
   PRIMARY KEY (`aid`)
 ) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=utf8 COMMENT='留言主表';
 
@@ -2374,7 +2512,7 @@ CREATE TABLE `ey_language_attr` (
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `attr_value` (`attr_name`,`lang`)
-) ENGINE=MyISAM AUTO_INCREMENT=137 DEFAULT CHARSET=utf8 COMMENT='多语言模板变量关联绑定表';
+) ENGINE=MyISAM AUTO_INCREMENT=149 DEFAULT CHARSET=utf8 COMMENT='多语言模板变量关联绑定表';
 
 -- -----------------------------
 -- Records of `ey_language_attr`
@@ -2447,6 +2585,18 @@ INSERT INTO `ey_language_attr` VALUES ('133', 'attr_26', '26', 'form_attribute',
 INSERT INTO `ey_language_attr` VALUES ('134', 'attr_27', '27', 'form_attribute', 'cn', '1703142214', '1703142214');
 INSERT INTO `ey_language_attr` VALUES ('135', 'attr_28', '28', 'form_attribute', 'cn', '1703142214', '1703142214');
 INSERT INTO `ey_language_attr` VALUES ('136', 'attr_29', '29', 'form_attribute', 'cn', '1703142214', '1703142214');
+INSERT INTO `ey_language_attr` VALUES ('137', 'attrlist_1', '1', 'shop_product_attrlist', 'cn', '1713251003', '1713251003');
+INSERT INTO `ey_language_attr` VALUES ('138', 'attrlist_2', '2', 'shop_product_attrlist', 'cn', '1713251003', '1713251003');
+INSERT INTO `ey_language_attr` VALUES ('139', 'attrlist_3', '3', 'shop_product_attrlist', 'cn', '1713251003', '1713251003');
+INSERT INTO `ey_language_attr` VALUES ('140', 'attribute_1', '1', 'shop_product_attribute', 'cn', '1713251003', '1713251003');
+INSERT INTO `ey_language_attr` VALUES ('141', 'attribute_2', '2', 'shop_product_attribute', 'cn', '1713251003', '1713251003');
+INSERT INTO `ey_language_attr` VALUES ('142', 'attribute_3', '3', 'shop_product_attribute', 'cn', '1713251003', '1713251003');
+INSERT INTO `ey_language_attr` VALUES ('143', 'attribute_4', '4', 'shop_product_attribute', 'cn', '1713251003', '1713251003');
+INSERT INTO `ey_language_attr` VALUES ('144', 'attribute_5', '5', 'shop_product_attribute', 'cn', '1713251003', '1713251003');
+INSERT INTO `ey_language_attr` VALUES ('145', 'attribute_6', '6', 'shop_product_attribute', 'cn', '1713251003', '1713251003');
+INSERT INTO `ey_language_attr` VALUES ('146', 'attribute_7', '7', 'shop_product_attribute', 'cn', '1713251003', '1713251003');
+INSERT INTO `ey_language_attr` VALUES ('147', 'attribute_8', '8', 'shop_product_attribute', 'cn', '1713251003', '1713251003');
+INSERT INTO `ey_language_attr` VALUES ('148', 'attribute_9', '9', 'shop_product_attribute', 'cn', '1713251003', '1713251003');
 
 -- -----------------------------
 -- Table structure for `ey_language_attribute`
@@ -2461,7 +2611,7 @@ CREATE TABLE `ey_language_attribute` (
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`attr_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=72 DEFAULT CHARSET=utf8 COMMENT='多语言模板变量表';
+) ENGINE=MyISAM AUTO_INCREMENT=84 DEFAULT CHARSET=utf8 COMMENT='多语言模板变量表';
 
 -- -----------------------------
 -- Records of `ey_language_attribute`
@@ -2534,6 +2684,18 @@ INSERT INTO `ey_language_attribute` VALUES ('68', '称呼', 'attr_26', 'form_att
 INSERT INTO `ey_language_attribute` VALUES ('69', '手机', 'attr_27', 'form_attribute', '0', '1703142214', '1703142214');
 INSERT INTO `ey_language_attribute` VALUES ('70', '分类', 'attr_28', 'form_attribute', '0', '1703142214', '1703142214');
 INSERT INTO `ey_language_attribute` VALUES ('71', '内容', 'attr_29', 'form_attribute', '0', '1703142214', '1703142214');
+INSERT INTO `ey_language_attribute` VALUES ('72', '手机数码', 'attrlist_1', 'shop_product_attrlist', '0', '1713251003', '1713251003');
+INSERT INTO `ey_language_attribute` VALUES ('73', '电脑产品', 'attrlist_2', 'shop_product_attrlist', '0', '1713251003', '1713251003');
+INSERT INTO `ey_language_attribute` VALUES ('74', '耳机', 'attrlist_3', 'shop_product_attrlist', '0', '1713251003', '1713251003');
+INSERT INTO `ey_language_attribute` VALUES ('75', '操作系统', 'attribute_1', 'shop_product_attribute', '0', '1713251003', '1713251003');
+INSERT INTO `ey_language_attribute` VALUES ('76', '用户界面', 'attribute_2', 'shop_product_attribute', '0', '1713251003', '1713251003');
+INSERT INTO `ey_language_attribute` VALUES ('77', '键盘类型', 'attribute_3', 'shop_product_attribute', '0', '1713251003', '1713251003');
+INSERT INTO `ey_language_attribute` VALUES ('78', '产品型号', 'attribute_4', 'shop_product_attribute', '0', '1713251003', '1713251003');
+INSERT INTO `ey_language_attribute` VALUES ('79', '屏幕大小', 'attribute_5', 'shop_product_attribute', '0', '1713251003', '1713251003');
+INSERT INTO `ey_language_attribute` VALUES ('80', '整机净重', 'attribute_6', 'shop_product_attribute', '0', '1713251003', '1713251003');
+INSERT INTO `ey_language_attribute` VALUES ('81', '产品型号', 'attribute_7', 'shop_product_attribute', '0', '1713251003', '1713251003');
+INSERT INTO `ey_language_attribute` VALUES ('82', '支持蓝牙', 'attribute_8', 'shop_product_attribute', '0', '1713251003', '1713251003');
+INSERT INTO `ey_language_attribute` VALUES ('83', '机身内存', 'attribute_9', 'shop_product_attribute', '0', '1713251003', '1713251003');
 
 -- -----------------------------
 -- Table structure for `ey_language_mark`
@@ -3106,9 +3268,9 @@ CREATE TABLE `ey_product_spec_data` (
   `spec_id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `aid` int(10) DEFAULT '0' COMMENT '产品ID',
   `spec_mark_id` int(10) DEFAULT '0' COMMENT '规格标记ID',
-  `spec_name` varchar(100) DEFAULT '' COMMENT '规格名称',
+  `spec_name` varchar(255) DEFAULT '' COMMENT '规格名称',
   `spec_value_id` int(10) DEFAULT '0' COMMENT '规格值ID',
-  `spec_value` varchar(100) DEFAULT '' COMMENT '规格值',
+  `spec_value` varchar(255) DEFAULT '' COMMENT '规格值',
   `spec_is_select` tinyint(1) DEFAULT '0' COMMENT '是否选中（0=否，1=是）',
   `open_image` tinyint(1) unsigned DEFAULT '0' COMMENT '规格是否开启图片',
   `spec_image` varchar(255) DEFAULT '' COMMENT '规格图片',
@@ -3160,18 +3322,20 @@ INSERT INTO `ey_product_spec_data` VALUES ('33', '100', '1', '产品颜色', '3'
 -- -----------------------------
 DROP TABLE IF EXISTS `ey_product_spec_data_handle`;
 CREATE TABLE `ey_product_spec_data_handle` (
+  `handle_id` int(10) NOT NULL AUTO_INCREMENT,
   `spec_id` int(10) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
   `aid` int(10) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
   `spec_mark_id` int(10) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
-  `spec_name` varchar(100) DEFAULT '' COMMENT '对应 product_spec_data 数据表',
+  `spec_name` varchar(255) DEFAULT '' COMMENT '对应 product_spec_data 数据表',
   `spec_value_id` int(10) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
-  `spec_value` varchar(100) DEFAULT '' COMMENT '对应 product_spec_data 数据表',
+  `spec_value` varchar(255) DEFAULT '' COMMENT '对应 product_spec_data 数据表',
   `spec_is_select` tinyint(1) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
   `open_image` tinyint(1) unsigned DEFAULT '0' COMMENT '规格是否开启图片',
   `spec_image` varchar(255) DEFAULT '' COMMENT '规格图片',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '对应 product_spec_data 数据表',
   `add_time` int(11) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
-  `update_time` int(11) DEFAULT '0' COMMENT '对应 product_spec_data 数据表'
+  `update_time` int(11) DEFAULT '0' COMMENT '对应 product_spec_data 数据表',
+  PRIMARY KEY (`handle_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='商品规格表(product_spec_data)预处理规格数据表';
 
 
@@ -3273,7 +3437,7 @@ CREATE TABLE `ey_product_spec_value_handle` (
   `aid` int(10) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
   `spec_value_id` varchar(100) NOT NULL DEFAULT '' COMMENT '对应 product_spec_value 数据表',
   `spec_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '对应 product_spec_value 数据表',
-  `spec_crossed_price` decimal(10,2) unsigned NOT NULL DEFAULT '0.00' COMMENT '商品规格划线价',
+  `spec_crossed_price` decimal(10,2) unsigned NOT NULL DEFAULT '0.00' COMMENT '对应 product_spec_value 数据表',
   `spec_stock` int(10) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
   `spec_sales_num` int(10) NOT NULL DEFAULT '0' COMMENT '对应 product_spec_value 数据表',
   `lang` varchar(50) DEFAULT 'cn' COMMENT '对应 product_spec_value 数据表',
@@ -3335,10 +3499,10 @@ CREATE TABLE `ey_quickentry` (
 -- -----------------------------
 -- Records of `ey_quickentry`
 -- -----------------------------
-INSERT INTO `ey_quickentry` VALUES ('1', '产品', '产品列表', '1', 'Product', 'index', 'channel=2', '1', '0', '', '0', '1', '3', '1569232484', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('2', '下载', '下载列表', '1', 'Download', 'index', 'channel=4', '1', '0', '', '0', '1', '4', '1569232484', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('3', '文章', '文章列表', '1', 'Article', 'index', 'channel=1', '1', '0', '', '0', '1', '6', '1569232484', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('4', '图集', '图集列表', '1', 'Images', 'index', 'channel=3', '1', '0', '', '0', '1', '7', '1569232484', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('1', '产品', '产品列表', '1', 'Product', 'index', 'channel=2', '1', '0', '', '0', '1', '3', '1569232484', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('2', '下载', '下载列表', '1', 'Download', 'index', 'channel=4', '1', '0', '', '0', '1', '4', '1569232484', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('3', '文章', '文章列表', '1', 'Article', 'index', 'channel=1', '1', '0', '', '0', '1', '6', '1569232484', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('4', '图集', '图集列表', '1', 'Images', 'index', 'channel=3', '1', '0', '', '0', '1', '7', '1569232484', '1713251023');
 INSERT INTO `ey_quickentry` VALUES ('5', '内容管理', '内容列表', '1', 'Archives', 'index', '', '0', '0', '', '0', '1', '13', '1569232484', '1571893529');
 INSERT INTO `ey_quickentry` VALUES ('7', '回收站', '回收站', '1', 'RecycleBin', 'archives_index', '', '0', '1', '', '0', '1', '4', '1569232484', '1571893529');
 INSERT INTO `ey_quickentry` VALUES ('8', '栏目管理', '栏目管理', '1', 'Arctype', 'index', '', '0', '0', '', '0', '1', '5', '1569232484', '1571893529');
@@ -3356,23 +3520,23 @@ INSERT INTO `ey_quickentry` VALUES ('19', '友情链接', '友情链接', '1', '
 INSERT INTO `ey_quickentry` VALUES ('20', 'Tags管理', 'Tags管理', '1', 'Tags', 'index', '', '0', '1', '', '0', '1', '14', '1569232484', '1571893529');
 INSERT INTO `ey_quickentry` VALUES ('21', '管理员管理', '管理员管理', '1', 'Admin', 'index', '', '0', '0', '', '0', '1', '15', '1569232484', '1571893529');
 INSERT INTO `ey_quickentry` VALUES ('22', '接口配置', '接口配置', '1', 'System', 'api_conf', '', '0', '1', '', '0', '1', '16', '1569232484', '1571893529');
-INSERT INTO `ey_quickentry` VALUES ('23', '文章', '文章列表', '2', 'Article', 'index', 'channel=1', '1', '1', '', '0', '1', '1', '1569310798', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('24', '产品', '产品列表', '2', 'Product', 'index', 'channel=2', '1', '0', '', '0', '1', '2', '1569310798', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('25', '下载', '下载列表', '2', 'Download', 'index', 'channel=4', '1', '0', '', '0', '1', '4', '1569310798', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('26', '图集', '图集列表', '2', 'Images', 'index', 'channel=3', '1', '0', '', '0', '1', '3', '1569310798', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('23', '文章', '文章列表', '2', 'Article', 'index', 'channel=1', '1', '1', '', '0', '1', '1', '1569310798', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('24', '产品', '产品列表', '2', 'Product', 'index', 'channel=2', '1', '0', '', '0', '1', '2', '1569310798', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('25', '下载', '下载列表', '2', 'Download', 'index', 'channel=4', '1', '0', '', '0', '1', '4', '1569310798', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('26', '图集', '图集列表', '2', 'Images', 'index', 'channel=3', '1', '0', '', '0', '1', '3', '1569310798', '1713251023');
 INSERT INTO `ey_quickentry` VALUES ('27', '留言', '留言管理', '2', 'Form', 'index', '', '1', '0', '', '0', '1', '5', '1569310798', '1680508811');
 INSERT INTO `ey_quickentry` VALUES ('28', '广告', '广告管理', '2', 'AdPosition', 'index', '', '0', '1', '', '0', '1', '8', '1569232484', '1571898872');
 INSERT INTO `ey_quickentry` VALUES ('29', '友情链接', '友情链接', '2', 'Links', 'index', '', '0', '1', '', '0', '1', '9', '1569232484', '1571898872');
 INSERT INTO `ey_quickentry` VALUES ('30', 'Tags标签', 'Tags管理', '2', 'Tags', 'index', '', '0', '1', '', '0', '1', '10', '1569232484', '1571898872');
-INSERT INTO `ey_quickentry` VALUES ('31', '会员', '会员管理', '2', 'Member', 'users_index', '', '0', '0', '', '0', '1', '7', '1569232484', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('32', '插件应用', '插件应用', '1', 'Weapp', 'index', '', '0', '0', '', '0', '1', '17', '1569232484', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('33', '会员中心', '会员中心', '1', 'Member', 'users_index', '', '0', '0', '', '0', '1', '18', '1569232484', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('34', '商城中心', '商城中心', '1', 'Shop', 'index', '', '0', '0', '', '0', '0', '19', '1569232484', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('35', '订单', '订单管理', '2', 'Shop', 'index', '', '0', '0', '', '0', '0', '6', '1569232484', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('36', '人才招聘', '人才招聘列表', '1', 'Custom', 'index', 'channel=9', '1', '0', '', '0', '1', '100', '1574233851', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('37', '人才招聘', '人才招聘列表', '2', 'Custom', 'index', 'channel=9', '1', '0', '', '0', '1', '100', '1574233853', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('39', '专题', '专题列表', '2', 'Special', 'index', 'channel=7', '1', '0', '', '0', '0', '7', '1600078966', '1710744390');
-INSERT INTO `ey_quickentry` VALUES ('41', '视频', '视频列表', '2', 'Media', 'index', 'channel=5', '1', '0', '', '0', '0', '4', '1569310798', '1710744390');
+INSERT INTO `ey_quickentry` VALUES ('31', '会员', '会员管理', '2', 'Member', 'users_index', '', '0', '0', '', '0', '1', '7', '1569232484', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('32', '插件应用', '插件应用', '1', 'Weapp', 'index', '', '0', '0', '', '0', '1', '17', '1569232484', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('33', '会员中心', '会员中心', '1', 'Member', 'users_index', '', '0', '0', '', '0', '1', '18', '1569232484', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('34', '商城中心', '商城中心', '1', 'Shop', 'index', '', '0', '0', '', '0', '0', '19', '1569232484', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('35', '订单', '订单管理', '2', 'Shop', 'index', '', '0', '0', '', '0', '0', '6', '1569232484', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('36', '人才招聘', '人才招聘列表', '1', 'Custom', 'index', 'channel=9', '1', '0', '', '0', '1', '100', '1574233851', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('37', '人才招聘', '人才招聘列表', '2', 'Custom', 'index', 'channel=9', '1', '0', '', '0', '1', '100', '1574233853', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('39', '专题', '专题列表', '2', 'Special', 'index', 'channel=7', '1', '0', '', '0', '0', '7', '1600078966', '1713251023');
+INSERT INTO `ey_quickentry` VALUES ('41', '视频', '视频列表', '2', 'Media', 'index', 'channel=5', '1', '0', '', '0', '0', '4', '1569310798', '1713251023');
 INSERT INTO `ey_quickentry` VALUES ('42', '商品数', '商品总数', '21', 'ShopProduct', 'index', '', '1', '1', '', '6', '1', '1', '1569232484', '1681436771');
 INSERT INTO `ey_quickentry` VALUES ('43', '充值金额', '充值总额', '21', 'Member', 'money_index', 'status=2', '1', '0', '', '5', '1', '5', '1569232484', '1681436771');
 INSERT INTO `ey_quickentry` VALUES ('44', '会员数', '会员总数', '21', 'Member', 'users_index', '', '1', '0', '', '4', '1', '6', '1569232484', '1681436771');
@@ -7780,7 +7944,7 @@ CREATE TABLE `ey_setting` (
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `inc_type` (`inc_type`,`lang`)
-) ENGINE=MyISAM AUTO_INCREMENT=82 DEFAULT CHARSET=utf8 COMMENT='系统非全局配置表';
+) ENGINE=MyISAM AUTO_INCREMENT=89 DEFAULT CHARSET=utf8 COMMENT='系统非全局配置表';
 
 -- -----------------------------
 -- Records of `ey_setting`
@@ -7850,7 +8014,7 @@ INSERT INTO `ey_setting` VALUES ('62', 'admin_logic_1687676445', '1', 'syn', 'cn
 INSERT INTO `ey_setting` VALUES ('63', 'admin_logic_1685094852', '1', 'syn', 'cn', '1692667955');
 INSERT INTO `ey_setting` VALUES ('64', 'admin_logic_1687687709', '1', 'syn', 'cn', '1692667955');
 INSERT INTO `ey_setting` VALUES ('65', 'admin_logic_1692067658', '1', 'syn', 'cn', '1692667957');
-INSERT INTO `ey_setting` VALUES ('66', 'admin_logic_1697156935', 'v1.6.5', 'syn', 'cn', '1701045570');
+INSERT INTO `ey_setting` VALUES ('66', 'admin_logic_1697156935', 'v1.6.6', 'syn', 'cn', '1713251003');
 INSERT INTO `ey_setting` VALUES ('67', 'admin_logic_1698388181', '1', 'syn', 'cn', '1699840479');
 INSERT INTO `ey_setting` VALUES ('68', 'admin_logic_1698716726', '1', 'syn', 'cn', '1699840479');
 INSERT INTO `ey_setting` VALUES ('69', 'admin_logic_1700638990', '1', 'syn', 'cn', '1701045570');
@@ -7866,6 +8030,13 @@ INSERT INTO `ey_setting` VALUES ('78', 'admin_logic_1700621159', '1', 'syn', 'cn
 INSERT INTO `ey_setting` VALUES ('79', 'admin_logic_1701050542', '1', 'syn', 'cn', '1703142160');
 INSERT INTO `ey_setting` VALUES ('80', 'admin_logic_1693909371', '1', 'syn', 'cn', '1703142193');
 INSERT INTO `ey_setting` VALUES ('81', 'admin_logic_1701855768', '1', 'syn', 'cn', '1706510953');
+INSERT INTO `ey_setting` VALUES ('82', 'admin_logic_1682579646', '1', 'syn', 'cn', '1713251003');
+INSERT INTO `ey_setting` VALUES ('83', 'admin_logic_1707029785', '1', 'syn', 'cn', '1713251003');
+INSERT INTO `ey_setting` VALUES ('84', 'syn_admin_logic_1706842286', '1', 'syn', 'cn', '1713251003');
+INSERT INTO `ey_setting` VALUES ('85', 'syn_admin_logic_1703647730', '1', 'syn', 'cn', '1713251003');
+INSERT INTO `ey_setting` VALUES ('86', 'syn_admin_logic_1707201289', '1', 'syn', 'cn', '1713251003');
+INSERT INTO `ey_setting` VALUES ('87', 'admin_logic_1712548559', '1', 'syn', 'cn', '1713251003');
+INSERT INTO `ey_setting` VALUES ('88', 'admin_logic_1712548812', '1', 'syn', 'cn', '1713251003');
 
 -- -----------------------------
 -- Table structure for `ey_sharp_active`
@@ -8064,616 +8235,656 @@ CREATE TABLE `ey_shop_coupon_use` (
 DROP TABLE IF EXISTS `ey_shop_express`;
 CREATE TABLE `ey_shop_express` (
   `express_id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增id',
-  `express_code` varchar(32) NOT NULL DEFAULT '' COMMENT '物流code',
+  `express_code` varchar(32) NOT NULL DEFAULT '' COMMENT '物流code（快递100）',
   `express_name` varchar(32) NOT NULL DEFAULT '' COMMENT '物流名称',
   `express_lnitials` varchar(5) NOT NULL DEFAULT '' COMMENT '首字母',
   `is_choose` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '快递公司是否选中(0=否，1=是)',
   `sort_order` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '排序号',
   `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  `wx_delivery_id` varchar(20) DEFAULT '' COMMENT '微信快递编码',
   PRIMARY KEY (`express_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=598 DEFAULT CHARSET=utf8 COMMENT='快递公司表';
 
 -- -----------------------------
 -- Records of `ey_shop_express`
 -- -----------------------------
-INSERT INTO `ey_shop_express` VALUES ('1', 'yuantong', '圆通快递', 'Y', '1', '97', '1553911076', '1554974797');
-INSERT INTO `ey_shop_express` VALUES ('2', 'shentong', '申通快递', 'S', '1', '98', '1553911076', '1554974707');
-INSERT INTO `ey_shop_express` VALUES ('3', 'shunfeng', '顺丰快递', 'S', '1', '98', '1553911076', '1554974710');
-INSERT INTO `ey_shop_express` VALUES ('4', 'yunda', '韵达快递', 'Y', '1', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('5', 'debangwuliu', '德邦快递', 'D', '1', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('6', 'zhongtong', '中通快递', 'Z', '1', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('7', 'huitongkuaidi', '百世快递', 'B', '1', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('8', 'youzhengguonei', '邮政包裹', 'Y', '1', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('9', 'ems', 'EMS', 'E', '1', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('10', 'youzhengguoji', '邮政国际', 'Y', '1', '99', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('11', 'aolau', 'AOL澳通速递', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('12', 'a2u', 'A2U速递', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('13', 'aae', 'AAE快递', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('14', 'annengwuliu', '安能物流', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('15', 'anxl', '安迅物流', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('16', 'auexpress', '澳邮中国快运', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('17', 'exfresh', '安鲜达', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('18', 'anjie88', '安捷物流', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('19', 'adodoxm', '澳多多国际速递', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('20', 'ariesfar', '艾瑞斯远', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('21', 'qdants', 'ANTS EXPRESS', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('22', 'astexpress', '安世通快递', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('23', 'gda', '安的快递', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('24', 'ausexpress', '澳世速递', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('25', 'ibuy8', '爱拜物流', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('26', 'aplusex', 'Aplus物流', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('27', 'adapost', '安达速递', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('28', 'adiexpress', '安达易国际速递', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('29', 'maxeedexpress', '澳洲迈速快递', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('30', 'onway', '昂威物流', 'A', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('31', 'bcwelt', 'BCWELT', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('32', 'balunzhi', '巴伦支快递', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('33', 'xiaohongmao', '北青小红帽', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('34', 'bfdf', '百福东方物流', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('35', 'bangsongwuliu', '邦送物流', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('36', 'lbbk', '宝凯物流', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('37', 'bqcwl', '百千诚物流', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('38', 'idada', '百成大达物流', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('39', 'baishiwuliu', '百世快运', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('40', 'baitengwuliu', '百腾物流', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('41', 'birdex', '笨鸟海淘', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('42', 'bsht', '百事亨通', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('43', 'benteng', '奔腾物流', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('44', 'cuckooexpess', '布谷鸟速递', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('45', 'bgky100', '邦工快运', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('46', 'bosind', '堡昕德速递', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('47', 'banma', '斑马物联网', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('48', 'polarisexpress', '北极星快运', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('49', 'beijingfengyue', '北京丰越供应链', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('50', 'europe8', '败欧洲', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('51', 'bmlchina', '标杆物流', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('52', 'comexpress', '邦通国际', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('53', 'baotongkd', '宝通快递', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('54', 'beckygo', '佰麒快递', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('55', 'boyol', '贝业物流', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('56', 'bdatong', '八达通快递', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('57', 'bangbangpost', '帮帮发', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('58', 'baoxianda', '报通快递', 'B', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('59', 'coe', '中国东方(COE)', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('60', 'cloudexpress', 'CE易欧通国际速递', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('61', 'city100', '城市100', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('62', 'chuanxiwuliu', '传喜物流', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('63', 'chengjisudi', '城际速递', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('64', 'lijisong', '立即送', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('65', 'chukou1', '出口易', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('66', 'nanjingshengbang', '晟邦物流', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('67', 'flyway', '程光快递', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('68', 'cbo56', '钏博物流', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('69', 'cex', '城铁速递', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('70', 'cnup', 'CNUP 中联邮', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('71', 'clsp', 'CL日中速运', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('72', 'cnair', 'CNAIR', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('73', 'cangspeed', '仓鼠快递', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('74', 'spring56', '春风物流', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('75', 'cunto', '村通快递', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('76', 'longvast', '长风物流', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('77', 'changjiang', '长江国际速递', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('78', 'cncexp', 'C&C国际速递', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('79', 'parcelchina', '诚一物流', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('80', 'chengtong', '城通物流', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('81', 'otpexpress', '承诺达', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('82', 'sfpost', '曹操到', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('83', 'changwooair', '昌宇国际', 'C', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('84', 'dhl', 'DHL快递（中国件）', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('85', 'dhlen', 'DHL（国际件）', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('86', 'dhlde', 'DHL（德国件）', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('87', 'dtwl', '大田物流', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('88', 'disifang', '递四方', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('89', 'dayangwuliu', '大洋物流', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('90', 'dechuangwuliu', '德创物流', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('91', 'dskd', 'D速物流', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('92', 'donghanwl', '东瀚物流', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('93', 'dfpost', '达方物流', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('94', 'dongjun', '东骏快捷物流', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('95', 'dindon', '叮咚澳洲转运', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('96', 'dazhong', '大众佐川急便', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('97', 'ahdf', '德方物流', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('98', 'dehaoyi', '德豪驿', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('99', 'dhlpaket', 'DHL Paket', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('100', 'ubuy', '德国优拜物流', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('101', 'adlerlogi', '德国雄鹰速递', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('102', 'yunexpress', '德国云快递', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('103', 'di5pll', '递五方云仓', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('104', 'deguo8elog', '德国八易转运', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('105', 'camekong', '到了港', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('106', 'dbstation', 'db-station', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('107', 'dadaoex', '大道物流', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('108', 'dekuncn', '德坤物流', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('109', 'twkd56', '缔惠盛合', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('110', 'gslexpress', '德尚国际速递', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('111', 'eucpost', '德国 EUC POST', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('112', 'est365', '东方汇', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('113', 'ecotransite', '东西E全运', 'D', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('114', 'euexpress', 'EU-EXPRESS', 'E', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('115', 'emsguoji', 'EMS国际快递查询', 'E', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('116', 'eshunda', '俄顺达', 'E', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('117', 'ewe', 'EWE全球快递', 'E', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('118', 'easyexpress', 'EASYEXPRESS国际速递', 'E', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('119', 'edtexpress', 'e直运', 'E', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('120', 'ecallturn', 'E跨通', 'E', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('121', 'fedex', 'FedEx快递查询', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('122', 'fedexus', 'FedEx（美国）', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('123', 'fox', 'FOX国际速递', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('124', 'rufengda', '如风达快递', 'R', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('125', 'fkd', '飞康达物流', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('126', 'feibaokuaidi', '飞豹快递', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('127', 'fandaguoji', '颿达国际', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('128', 'feiyuanvipshop', '飞远配送', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('129', 'hnfy', '飞鹰物流', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('130', 'fengxingtianxia', '风行天下', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('131', 'flysman', '飞力士物流', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('132', 'fbkd', '飞邦快递', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('133', 'sccod', '丰程物流', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('134', 'crazyexpress', '疯狂快递', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('135', 'ftlexpress', '法翔速运', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('136', 'ftd', '富腾达快递', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('137', 'arkexpress', '方舟国际速递', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('138', 'fedroad', 'FedRoad 联邦转运', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('139', 'freakyquick', 'FQ狂派速递', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('140', 'fecobv', '丰客物流', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('141', 'fyex', '飞云快递系统', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('142', 'beebird', '锋鸟物流', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('143', 'shipgce', '飞洋快递', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('144', 'koali', '番薯国际货运', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('145', 'epanex', '泛捷国际速递', 'F', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('146', 'gaticn', 'GATI快递', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('147', 'gts', 'GTS快递', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('148', 'guotongkuaidi', '国通快递', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('149', 'ndkd', '能达速递', 'N', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('150', 'gongsuda', '共速达', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('151', 'gtongsudi', '广通速递（山东）', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('152', 'suteng', '速腾物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('153', 'gdkd', '港快速递', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('154', 'hre', '高铁速递', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('155', 'gscq365', '哥士传奇速递', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('156', 'gjwl', '冠捷物流', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('157', 'xdshipping', '国晶物流', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('158', 'ge2d', 'GE2D跨境物流', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('159', 'gaotieex', '高铁快运', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('160', 'gansuandi', '甘肃安的快递', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('161', 'gdct56', '广东诚通物流', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('162', 'ghtexpress', 'GHT物流', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('163', 'goldjet', '高捷快运', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('164', 'gtgogo', 'GT国际快运', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('165', 'gxwl', '光线速递', 'G', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('166', 'tdhy', '华宇物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('167', 'hl', '恒路物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('168', 'hlyex', '好来运快递', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('169', 'hebeijianhua', '河北建华', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('170', 'huaqikuaiyun', '华企快运', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('171', 'haosheng', '昊盛物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('172', 'hutongwuliu', '户通物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('173', 'hzpl', '华航快递', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('174', 'huangmajia', '黄马甲快递', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('175', 'ucs', '合众速递（UCS）', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('176', 'pfcexpress', '皇家物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('177', 'huoban', '伙伴物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('178', 'nedahm', '红马速递', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('179', 'huiwen', '汇文配送', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('180', 'nmhuahe', '华赫物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('181', 'hjs', '猴急送', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('182', 'hangyu', '航宇快递', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('183', 'huilian', '辉联物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('184', 'huanqiu', '环球速运', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('185', 'htwd', '华通务达物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('186', 'hipito', '海派通', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('187', 'hqtd', '环球通达', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('188', 'airgtc', '航空快递', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('189', 'haoyoukuai', '好又快物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('190', 'ccd', '河南次晨达', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('191', 'hfwuxi', '和丰同城', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('192', 'higo', '黑狗物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('193', 'hyytes', '恒宇运通', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('194', 'hengrui56', '恒瑞物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('195', 'hangrui', '上海航瑞货运', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('196', 'ghl', '环创物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('197', 'hnqst', '河南全速通', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('198', 'hitaoe', 'Hi淘易快递', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('199', 'hhair56', '华瀚快递', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('200', 'haimibuy', '海米派物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('201', 'ht22', '海淘物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('202', 'hivewms', '海沧无忧', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('203', 'hnht56', '鸿泰物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('204', 'hsgtsd', '海硕高铁速递', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('205', 'hltop', '海联快递', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('206', 'hlkytj', '互联快运', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('207', 'haidaibao', '海带宝转运', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('208', 'flowerkd', '花瓣转运', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('209', 'heimao56', '黑猫速运', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('210', 'logistics', '華信物流WTO', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('211', 'hgy56', '环国运物流', 'H', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('212', 'iparcel', 'i-parcel', 'I', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('213', 'jjwl', '佳吉物流', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('214', 'jywl', '佳怡物流', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('215', 'jymwl', '加运美快递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('216', 'jxd', '急先达物流', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('217', 'jgsd', '京广速递快件', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('218', 'jykd', '晋越快递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('219', 'jd', '京东物流', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('220', 'jietekuaidi', '捷特快递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('221', 'jiuyicn', '久易快递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('222', 'jiuyescm', '九曳供应链', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('223', 'junfengguoji', '骏丰国际速递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('224', 'jiajiatong56', '佳家通', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('225', 'jrypex', '吉日优派', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('226', 'jinchengwuliu', '锦程国际物流', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('227', 'jgwl', '景光物流', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('228', 'pzhjst', '急顺通', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('229', 'ruexp', '捷网俄全通', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('230', 'jialidatong', '嘉里大通', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('231', 'jmjss', '金马甲', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('232', 'jiacheng', '佳成快递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('233', 'jsexpress', '骏绅物流', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('234', 'hrex', '锦程快递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('235', 'jieanda', '捷安达国际速递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('236', 'newsway', '家家通快递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('237', 'mapleexpress', '今枫国际快运', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('238', 'jixiangyouau', '吉祥邮（澳洲）', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('239', 'jjx888', '佳捷翔物流', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('240', 'polarexpress', '极地快递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('241', 'jiazhoumao', '加州猫速递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('242', 'juzhongda', '聚中大', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('243', 'jieborne', '捷邦物流', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('244', 'jxfex', '集先锋速递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('245', 'jiugong', '九宫物流', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('246', 'jiujiuwl', '久久物流', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('247', 'jintongkd', '劲通快递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('248', 'jcsuda', '嘉诚速达', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('249', 'jingshun', '景顺物流', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('250', 'fastontime', '加拿大联通快运', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('251', 'khzto', '柬埔寨中通', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('252', 'kjkd', '快捷快递', 'K', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('253', 'kangliwuliu', '康力物流', 'K', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('254', 'kuayue', '跨越速运', 'K', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('255', 'kuaiyouda', '快优达速递', 'K', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('256', 'happylink', '开心快递', 'K', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('257', 'ksudi', '快速递', 'K', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('258', 'kyue', '跨跃国际', 'K', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('259', 'kfwnet', '快服务', 'K', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('260', 'kuai8', '快8速运', 'K', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('261', 'kuaidawuliu', '快达物流', 'K', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('262', 'lianb', '联邦快递（国内）', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('263', 'lhtwl', '联昊通物流', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('264', 'lb', '龙邦速递', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('265', 'lejiedi', '乐捷递', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('266', 'lanhukuaidi', '蓝弧快递', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('267', 'ltexp', '乐天速递', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('268', 'lutong', '鲁通快运', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('269', 'ledii', '乐递供应链', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('270', 'lundao', '论道国际物流', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('271', 'lasy56', '林安物流', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('272', 'lsexpress', '6LS EXPRESS', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('273', 'szuem', '联运通物流', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('274', 'blueskyexpress', '蓝天国际航空快递', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('275', 'lfexpress', '龙枫国际速递', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('276', 'gslhkd', '联合快递', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('277', 'longfx', '龙飞祥快递', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('278', 'luben', '陆本速递 LUBEN EXPRESS', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('279', 'unitedex', '联合速运', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('280', 'lbex', '龙邦物流', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('281', 'ltparcel', '联通快递', 'L', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('282', 'macroexpressco', 'ME物流', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('283', 'mh', '民航快递', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('284', 'meiguokuaidi', '美国快递', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('285', 'menduimen', '门对门', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('286', 'mingliangwuliu', '明亮物流', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('287', 'minbangsudi', '民邦速递', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('288', 'minshengkuaidi', '闽盛快递', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('289', 'yundaexus', '美国韵达', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('290', 'mchy', '木春货运', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('291', 'meiquick', '美快国际物流', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('292', 'valueway', '美通快递', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('293', 'cnmcpl', '马珂博逻', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('294', 'mailongdy', '迈隆递运', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('295', 'zsmhwl', '明辉物流', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('296', 'mosuda', '魔速达', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('297', 'meibang', '美邦国际快递', 'M', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('298', 'nuoyaao', '偌亚奥国际', 'N', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('299', 'nuoer', '诺尔国际物流', 'N', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('300', 'nell', '尼尔快递', 'N', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('301', 'ndwl', '南方传媒物流', 'N', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('302', 'canhold', '能装能送', 'N', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('303', 'wanjiatong', '宁夏万家通', 'N', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('304', 'nlebv', '欧亚专线', 'O', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('305', 'oborexpress', 'OBOR Express', 'O', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('306', 'pcaexpress', 'PCA Express', 'P', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('307', 'pingandatengfei', '平安达腾飞', 'P', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('308', 'peixingwuliu', '陪行物流', 'P', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('309', 'pengyuanexpress', '鹏远国际速递', 'P', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('310', 'postelbe', 'PostElbe', 'P', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('311', 'papascm', '啪啪供应链', 'P', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('312', 'bazirim', '皮牙子快递', 'P', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('313', 'qfkd', '全峰快递', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('314', 'qy', '全一快递', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('315', 'qrt', '全日通快递', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('316', 'qckd', '全晨快递', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('317', 'sevendays', '7天连锁物流', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('318', 'qbexpress', '秦邦快运', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('319', 'quanxintong', '全信通快递', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('320', 'quansutong', '全速通国际快递', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('321', 'qinyuan', '秦远物流', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('322', 'qichen', '启辰国际物流', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('323', 'quansu', '全速快运', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('324', 'qzx56', '全之鑫物流', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('325', 'qskdyxgs', '千顺快递', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('326', 'zqlwl', '青旅物流', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('327', 'quanchuan56', '全川物流', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('328', 'quantwl', '全通快运', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('329', 'yatexpress', '乾坤物流', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('330', 'guexp', '全联速运', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('331', 'bjqywl', '青云物流', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('332', 'signedexpress', '签收快递', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('333', 'express7th', '7号速递', 'Q', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('334', 'riyuwuliu', '日昱物流', 'R', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('335', 'rfsd', '瑞丰速递', 'R', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('336', 'rrs', '日日顺物流', 'R', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('337', 'rytsd', '日益通速递', 'R', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('338', 'rrskx', '日日顺快线', 'R', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('339', 'gdrz58', '容智快运', 'R', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('340', 'rrthk', '日日通国际', 'R', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('341', 'homecourier', '如家国际快递', 'R', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('342', 'sewl', '速尔快递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('343', 'haihongwangsong', '山东海红', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('344', 'sh', '盛辉物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('345', 'sfwl', '盛丰物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('346', 'shiyunkuaidi', '世运快递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('347', 'shangda', '上大物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('348', 'stsd', '三态速递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('349', 'saiaodi', '赛澳递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('350', 'ewl', '申通E物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('351', 'shenganwuliu', '圣安物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('352', 'sxhongmajia', '山西红马甲', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('353', 'suijiawuliu', '穗佳物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('354', 'syjiahuier', '沈阳佳惠尔', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('355', 'shlindao', '上海林道货运', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('356', 'sfift', '十方通物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('357', 'shunjiefengda', '顺捷丰达', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('358', 'subida', '速必达物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('359', 'stcd', '速通成达物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('360', 'stkd', '顺通快递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('361', 'sendtochina', '速递中国', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('362', 'sihaiet', '四海快递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('363', 'staky', '首通快运', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('364', 'hnssd56', '顺时达物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('365', 'superb', 'Superb Grace', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('366', 'sfjhd', '圣飞捷快递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('367', 'sofast56', '嗖一下同城快递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('368', 's2c', 'S2C', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('369', 'chinasqk', 'SQK国际速递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('370', 'shunshid', '顺士达速运', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('371', 'synship', 'SYNSHIP快递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('372', 'shandiantu', '闪电兔', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('373', 'sdsy888', '首达速运', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('374', 'sczpds', '速呈宅配', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('375', 'sureline', 'Sureline冠泰', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('376', 'stosolution', '申通国际', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('377', 'sycawl', '狮爱高铁物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('378', 'sxexpress', '三象速递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('379', 'shangqiao56', '商桥物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('380', 'shd56', '商海德物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('381', 'shenma', '神马快递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('382', 'sihiexpress', '四海捷运', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('383', 'superoz', '速配鸥翼', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('384', 'fastgoexpress', '速派快递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('385', 'zjstky', '苏通快运', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('386', 'suning', '苏宁物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('387', 'shaoke', '捎客物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('388', 'sdto', '速达通跨境物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('389', 'sut56', '速通物流', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('390', 'sundarexpress', '顺达快递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('391', 'sxjdfreight', '顺心捷达', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('392', 'shengtongscm', '盛通快递', 'S', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('393', 'tnt', 'TNT快递', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('394', 'tt', '天天快递', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('395', 'tianzong', '天纵物流', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('396', 'chinatzx', '同舟行物流', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('397', 'nntengda', '腾达速递', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('398', 'sd138', '泰国138', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('399', 'tongdaxing', '通达兴物流', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('400', 'tlky', '天联快运', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('401', 'ibenben', '途鲜物流', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('402', 'krtao', '淘韩国际快递', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('403', 'lntjs', '特急送', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('404', 'tny', 'TNY物流', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('405', 'djy56', '天翔东捷运', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('406', 'guoeryue', '天天快物流', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('407', 'tianma', '天马迅达', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('408', 'surpassgo', '天越物流', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('409', 'tianxiang', '天翔快递', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('410', 'tywl99', '天翼物流', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('411', 'shpost', '同城快寄', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('412', 'humpline', '驼峰国际', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('413', 'transrush', 'TransRush', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('414', 'tstexp', 'TST速运通', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('415', 'ctoexp', '泰国中通CTO', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('416', 'thaizto', '泰国中通ZTO', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('417', 'tswlcloud', '天使物流云', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('418', 'tzky', '铁中快运', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('419', 'tcxbthai', 'TCXB国际物流', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('420', 'taimek', '天美快递', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('421', 'taoplus', '淘布斯国际物流', 'T', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('422', 'ups', 'UPS快递查询', 'U', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('423', 'yskd', '优速快递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('424', 'usps', 'USPS美国邮政', 'U', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('425', 'ueq', 'UEQ快递', 'U', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('426', 'uex', 'UEX国际物流', 'U', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('427', 'utaoscm', 'UTAO 优到', 'U', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('428', 'wxwl', '万象物流', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('429', 'weitepai', '微特派', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('430', 'wjwl', '万家物流', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('431', 'wanboex', '万博快递', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('432', 'wtdchina', '威时沛运', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('433', 'wzhaunyun', '微转运', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('434', 'gswtkd', '万通快递', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('435', 'wandougongzhu', '豌豆物流', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('436', 'wjkwl', '万家康物流', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('437', 'vps', '维普恩物流', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('438', 'wykjt', '51跨境通', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('439', 'wherexpess', '威盛快递', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('440', 'weilaimingtian', '未来明天快递', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('441', 'wdm', '万达美', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('442', 'wto56kj', '温通物流', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('443', '56kuaiyun', '五六快运', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('444', 'wowvip', '沃埃家', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('445', 'grivertek', '潍鸿', 'W', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('446', 'xbwl', '新邦物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('447', 'xfwl', '信丰物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('448', 'newegg', '新蛋物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('449', 'xianglongyuntong', '祥龙运通物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('450', 'xianchengliansudi', '西安城联速递', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('451', 'xilaikd', '喜来快递', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('452', 'xsrd', '鑫世锐达', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('453', 'xtb', '鑫通宝物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('454', 'xintianjie', '信天捷快递', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('455', 'xaetc', '西安胜峰', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('456', 'xianfeng', '先锋快递', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('457', 'sunspeedy', '新速航', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('458', 'xipost', '西邮寄', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('459', 'sinatone', '信联通', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('460', 'sunjex', '新杰物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('461', 'alog', '心怡物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('462', 'csxss', '新时速物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('463', 'xiangteng', '翔腾物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('464', 'westwing', '西翼物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('465', 'littlebearbear', '小熊物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('466', 'huanqiuabc', '中国香港环球快运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('467', 'xinning', '新宁物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('468', 'wlwex', '星空国际', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('469', 'yyexp', '西安运逸快递', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('470', 'xiyoug', '西游寄', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('471', 'xlobo', 'xLobo', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('472', 'xunsuexpress', '迅速快递', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('473', 'whgjkd', '香港伟豪国际物流', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('474', 'xyd666', '鑫远东速运', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('475', 'xdexpress', '迅达速递', 'X', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('476', 'ytkd', '运通快递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('477', 'ycwl', '远成物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('478', 'yfsd', '亚风速递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('479', 'yishunhang', '亿顺航', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('480', 'yfwl', '越丰物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('481', 'yad', '源安达快递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('482', 'yfh', '原飞航物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('483', 'yinjiesudi', '银捷速递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('484', 'yitongfeihong', '一统飞鸿', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('485', 'yuxinwuliu', '宇鑫物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('486', 'yitongda', '易通达', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('487', 'youbijia', '邮必佳', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('488', 'yiqiguojiwuliu', '一柒物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('489', 'yinsu', '音素快运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('490', 'yilingsuyun', '亿领速运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('491', 'yujiawuliu', '煜嘉物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('492', 'gml', '英脉物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('493', 'leopard', '云豹国际货运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('494', 'czwlyn', '云南中诚', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('495', 'sdyoupei', '优配速运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('496', 'yongchang', '永昌物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('497', 'yufeng', '御风速运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('498', 'yousutongda', '优速通达', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('499', 'yongwangda', '永旺达快递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('500', 'yingchao', '英超物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('501', 'edlogistics', '益递物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('502', 'yjxlm', '宜家行', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('503', 'onehcang', '一号仓', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('504', 'ycgky', '远成快运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('505', 'yunfeng56', '韵丰物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('506', 'iyoungspeed', '驿扬国际速运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('507', 'zgyzt', '一站通快递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('508', 'eupackage', '易优包裹', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('509', 'ydglobe', '云达通', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('510', 'el56', 'YLTD', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('511', 'yundx', '运东西', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('512', 'yangbaoguo', '洋包裹', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('513', 'uluckex', '优联吉运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('514', 'ecmscn', '易客满', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('515', 'ubonex', '优邦速运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('516', 'yue777', '玥玛速运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('517', 'ywexpress', '远为快递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('518', 'ezhuanyuan', '易转运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('519', 'yiqisong', '一起送', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('520', 'yongbangwuliu', '永邦国际物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('521', 'yyox', '邮客全球速递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('522', 'yihangmall', '易航物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('523', 'yiouzhou', '易欧洲国际物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('524', 'ykouan', '洋口岸', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('525', 'youyou', '优优速递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('526', 'ytky168', '运通快运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('527', 'sixroad', '易普递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('528', 'yourscm', '雅澳物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('529', 'euguoji', '易邮国际', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('530', 'uscbexpress', '易境达国际物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('531', 'yfsuyun', '驭丰速运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('532', 'yimidida', '壹米滴答', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('533', 'ugoexpress', '邮鸽速运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('534', 'youban', '邮邦国际', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('535', 'hkems', '云邮跨境快递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('536', 'youlai', '邮来速递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('537', 'eta100', '易达国际速递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('538', 'yatfai', '一辉物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('539', 'yzswuliu', '亚洲顺物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('540', 'yifankd', '艺凡快递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('541', 'mantoo', '优能物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('542', 'vctrans', '越中国际物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('543', 'yhtlogistics', '宇航通物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('544', 'ycgglobal', 'YCG物流', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('545', 'yidihui', '驿递汇速递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('546', 'yuanhhk', '远航国际快运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('547', 'yiyou', '易邮速运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('548', 'eusacn', '优莎速运', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('549', 'uhi', '优海国际速递', 'Y', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('550', 'zjs', '宅急送', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('551', 'ztky', '中铁快运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('552', 'ztwl', '中铁物流', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('553', 'zywl', '中邮物流', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('554', 'zhimakaimen', '芝麻开门', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('555', 'zhengzhoujianhua', '郑州建华', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('556', 'zhongsukuaidi', '中速快件', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('557', 'zhongtianwanyun', '中天万运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('558', 'zhongruisudi', '中睿速递', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('559', 'zhongwaiyun', '中外运速递', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('560', 'zengyisudi', '增益速递', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('561', 'sujievip', '郑州速捷', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('562', 'ztong', '智通物流', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('563', 'zhichengtongda', '至诚通达快递', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('564', 'zhdwl', '众辉达物流', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('565', 'kuachangwuliu', '直邮易', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('566', 'topspeedex', '中运全速', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('567', 'otobv', '中欧快运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('568', 'zsky123', '准实快运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('569', 'cnws', '中国翼', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('570', 'zytdscm', '中宇天地', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('571', 'zhuanyunsifang', '转运四方', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('572', 'hrbzykd', '卓烨快递', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('573', 'zhuoshikuaiyun', '卓实快运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('574', 'chinaicip', '卓志速运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('575', 'ynztsy', '纵通速运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('576', 'zdepost', '直德邮', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('577', 'chinapostcb', '中邮电商', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('578', 'chunghwa56', '中骅物流', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('579', 'cosco', '中远e环球', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('580', 'zf365', '珠峰速运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('581', 'zhongtongkuaiyun', '中通快运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('582', 'eucnrail', '中欧国际物流', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('583', 'chnexp', '中翼国际物流', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('584', 'cccc58', '中集冷云', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('585', 'auvanda', '中联速递', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('586', 'zyzoom', '增速跨境', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('587', 'zhpex', '众派速递', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('588', 'byht', '展勤快递', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('589', 'zhongchuan', '众川国际', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('590', 'zhonghuanus', '中环转运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('591', 'zhonghuan', '中环快递', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('592', 'uszcn', '转运中国', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('593', 'zhitengwuliu', '志腾物流', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('594', 'zsda56', '转瞬达集运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('595', 'zjgj56', '振捷国际货运', 'Z', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('596', 'jtexpress', '极兔速递', 'J', '1', '100', '1553911076', '1553911076');
-INSERT INTO `ey_shop_express` VALUES ('597', 'fengwang', '丰网速运', 'F', '1', '100', '1553911076', '1647484768');
+INSERT INTO `ey_shop_express` VALUES ('1', 'yuantong', '圆通快递', 'Y', '1', '97', '1553911076', '1554974797', 'YTO');
+INSERT INTO `ey_shop_express` VALUES ('2', 'shentong', '申通快递', 'S', '1', '98', '1553911076', '1554974707', 'STO');
+INSERT INTO `ey_shop_express` VALUES ('3', 'shunfeng', '顺丰快递', 'S', '1', '98', '1553911076', '1554974710', 'SF');
+INSERT INTO `ey_shop_express` VALUES ('4', 'yunda', '韵达快递', 'Y', '1', '99', '1553911076', '1553911076', 'YD');
+INSERT INTO `ey_shop_express` VALUES ('5', 'debangwuliu', '德邦快递', 'D', '1', '99', '1553911076', '1553911076', 'DBL');
+INSERT INTO `ey_shop_express` VALUES ('6', 'zhongtong', '中通快递', 'Z', '1', '99', '1553911076', '1553911076', 'ZTO');
+INSERT INTO `ey_shop_express` VALUES ('7', 'huitongkuaidi', '百世快递', 'B', '1', '99', '1553911076', '1553911076', 'HTKY');
+INSERT INTO `ey_shop_express` VALUES ('8', 'youzhengguonei', '邮政包裹', 'Y', '1', '99', '1553911076', '1553911076', 'YZPY');
+INSERT INTO `ey_shop_express` VALUES ('9', 'ems', 'EMS', 'E', '1', '99', '1553911076', '1553911076', 'EMS');
+INSERT INTO `ey_shop_express` VALUES ('10', 'youzhengguoji', '邮政国际', 'Y', '1', '99', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('11', 'aolau', 'AOL澳通速递', 'A', '1', '100', '1553911076', '1553911076', 'AOL');
+INSERT INTO `ey_shop_express` VALUES ('12', 'a2u', 'A2U速递', 'A', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('13', 'aae', 'AAE快递', 'A', '1', '100', '1553911076', '1553911076', 'AAE');
+INSERT INTO `ey_shop_express` VALUES ('14', 'annengwuliu', '安能物流', 'A', '1', '100', '1553911076', '1553911076', 'ANE');
+INSERT INTO `ey_shop_express` VALUES ('15', 'anxl', '安迅物流', 'A', '1', '100', '1553911076', '1553911076', 'AX');
+INSERT INTO `ey_shop_express` VALUES ('16', 'auexpress', '澳邮中国快运', 'A', '1', '100', '1553911076', '1553911076', 'AUEXPRESS');
+INSERT INTO `ey_shop_express` VALUES ('17', 'exfresh', '安鲜达', 'A', '1', '100', '1553911076', '1553911076', 'AXD');
+INSERT INTO `ey_shop_express` VALUES ('18', 'anjie88', '安捷物流', 'A', '1', '100', '1553911076', '1553911076', 'AJ');
+INSERT INTO `ey_shop_express` VALUES ('19', 'adodoxm', '澳多多国际速递', 'A', '1', '100', '1553911076', '1553911076', 'ADD');
+INSERT INTO `ey_shop_express` VALUES ('20', 'ariesfar', '艾瑞斯远', 'A', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('21', 'qdants', 'ANTS EXPRESS', 'A', '1', '100', '1553911076', '1553911076', 'QDANTS');
+INSERT INTO `ey_shop_express` VALUES ('22', 'astexpress', '安世通快递', 'A', '1', '100', '1553911076', '1553911076', 'ASTEXPRESS');
+INSERT INTO `ey_shop_express` VALUES ('23', 'gda', '安的快递', 'A', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('24', 'ausexpress', '澳世速递', 'A', '1', '100', '1553911076', '1553911076', 'ZY_AUSE');
+INSERT INTO `ey_shop_express` VALUES ('25', 'ibuy8', '爱拜物流', 'A', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('26', 'aplusex', 'Aplus物流', 'A', '1', '100', '1553911076', '1553911076', 'APLUSEX');
+INSERT INTO `ey_shop_express` VALUES ('27', 'adapost', '安达速递', 'A', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('28', 'adiexpress', '安达易国际速递', 'A', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('29', 'maxeedexpress', '澳洲迈速快递', 'A', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('30', 'onway', '昂威物流', 'A', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('31', 'bcwelt', 'BCWELT', 'B', '1', '100', '1553911076', '1553911076', 'BCWELT');
+INSERT INTO `ey_shop_express` VALUES ('32', 'balunzhi', '巴伦支快递', 'B', '1', '100', '1553911076', '1553911076', 'BALUNZHI');
+INSERT INTO `ey_shop_express` VALUES ('33', 'xiaohongmao', '北青小红帽', 'B', '1', '100', '1553911076', '1553911076', 'BQXHM');
+INSERT INTO `ey_shop_express` VALUES ('34', 'bfdf', '百福东方物流', 'B', '1', '100', '1553911076', '1553911076', 'BFDF');
+INSERT INTO `ey_shop_express` VALUES ('35', 'bangsongwuliu', '邦送物流', 'B', '1', '100', '1553911076', '1553911076', 'BSWL');
+INSERT INTO `ey_shop_express` VALUES ('36', 'lbbk', '宝凯物流', 'B', '1', '100', '1553911076', '1553911076', 'BKWL');
+INSERT INTO `ey_shop_express` VALUES ('37', 'bqcwl', '百千诚物流', 'B', '1', '100', '1553911076', '1553911076', 'BQC');
+INSERT INTO `ey_shop_express` VALUES ('38', 'idada', '百成大达物流', 'B', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('39', 'baishiwuliu', '百世快运', 'B', '1', '100', '1553911076', '1553911076', 'BTWL');
+INSERT INTO `ey_shop_express` VALUES ('40', 'baitengwuliu', '百腾物流', 'B', '1', '100', '1553911076', '1553911076', 'BETWL');
+INSERT INTO `ey_shop_express` VALUES ('41', 'birdex', '笨鸟海淘', 'B', '1', '100', '1553911076', '1553911076', 'BN');
+INSERT INTO `ey_shop_express` VALUES ('42', 'bsht', '百事亨通', 'B', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('43', 'benteng', '奔腾物流', 'B', '1', '100', '1553911076', '1553911076', 'BNTWL');
+INSERT INTO `ey_shop_express` VALUES ('44', 'cuckooexpess', '布谷鸟速递', 'B', '1', '100', '1553911076', '1553911076', 'CUCKOOEXPRESS');
+INSERT INTO `ey_shop_express` VALUES ('45', 'bgky100', '邦工快运', 'B', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('46', 'bosind', '堡昕德速递', 'B', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('47', 'banma', '斑马物联网', 'B', '1', '100', '1553911076', '1553911076', '360ZEBRA');
+INSERT INTO `ey_shop_express` VALUES ('48', 'polarisexpress', '北极星快运', 'B', '1', '100', '1553911076', '1553911076', 'BJXKY');
+INSERT INTO `ey_shop_express` VALUES ('49', 'beijingfengyue', '北京丰越供应链', 'B', '1', '100', '1553911076', '1553911076', 'BEIJINGFENGYUE');
+INSERT INTO `ey_shop_express` VALUES ('50', 'europe8', '败欧洲', 'B', '1', '100', '1553911076', '1553911076', 'BEUROPE');
+INSERT INTO `ey_shop_express` VALUES ('51', 'bmlchina', '标杆物流', 'B', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('52', 'comexpress', '邦通国际', 'B', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('53', 'baotongkd', '宝通快递', 'B', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('54', 'beckygo', '佰麒快递', 'B', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('55', 'boyol', '贝业物流', 'B', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('56', 'bdatong', '八达通快递', 'B', '1', '100', '1553911076', '1553911076', 'BDT');
+INSERT INTO `ey_shop_express` VALUES ('57', 'bangbangpost', '帮帮发', 'B', '1', '100', '1553911076', '1553911076', 'BBFZY');
+INSERT INTO `ey_shop_express` VALUES ('58', 'baoxianda', '报通快递', 'B', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('59', 'coe', '中国东方(COE)', 'Z', '1', '100', '1553911076', '1553911076', 'COE');
+INSERT INTO `ey_shop_express` VALUES ('60', 'cloudexpress', 'CE易欧通国际速递', 'C', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('61', 'city100', '城市100', 'C', '1', '100', '1553911076', '1553911076', 'CITY100');
+INSERT INTO `ey_shop_express` VALUES ('62', 'chuanxiwuliu', '传喜物流', 'C', '1', '100', '1553911076', '1553911076', 'CXHY');
+INSERT INTO `ey_shop_express` VALUES ('63', 'chengjisudi', '城际速递', 'C', '1', '100', '1553911076', '1553911076', 'CJKD');
+INSERT INTO `ey_shop_express` VALUES ('64', 'lijisong', '立即送', 'L', '1', '100', '1553911076', '1553911076', 'LJS');
+INSERT INTO `ey_shop_express` VALUES ('65', 'chukou1', '出口易', 'C', '1', '100', '1553911076', '1553911076', 'CKY');
+INSERT INTO `ey_shop_express` VALUES ('66', 'nanjingshengbang', '晟邦物流', 'C', '1', '100', '1553911076', '1553911076', 'NJSBWL');
+INSERT INTO `ey_shop_express` VALUES ('67', 'flyway', '程光快递', 'C', '1', '100', '1553911076', '1553911076', 'CG');
+INSERT INTO `ey_shop_express` VALUES ('68', 'cbo56', '钏博物流', 'C', '1', '100', '1553911076', '1553911076', 'CBO');
+INSERT INTO `ey_shop_express` VALUES ('69', 'cex', '城铁速递', 'C', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('70', 'cnup', 'CNUP 中联邮', 'C', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('71', 'clsp', 'CL日中速运', 'C', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('72', 'cnair', 'CNAIR', 'C', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('73', 'cangspeed', '仓鼠快递', 'C', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('74', 'spring56', '春风物流', 'C', '1', '100', '1553911076', '1553911076', 'CFWL');
+INSERT INTO `ey_shop_express` VALUES ('75', 'cunto', '村通快递', 'C', '1', '100', '1553911076', '1553911076', 'CUNTO');
+INSERT INTO `ey_shop_express` VALUES ('76', 'longvast', '长风物流', 'C', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('77', 'changjiang', '长江国际速递', 'C', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('78', 'cncexp', 'C&C国际速递', 'C', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('79', 'parcelchina', '诚一物流', 'C', '1', '100', '1553911076', '1553911076', 'PARCELCHINA');
+INSERT INTO `ey_shop_express` VALUES ('80', 'chengtong', '城通物流', 'C', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('81', 'otpexpress', '承诺达', 'C', '1', '100', '1553911076', '1553911076', 'CND');
+INSERT INTO `ey_shop_express` VALUES ('82', 'sfpost', '曹操到', 'C', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('83', 'changwooair', '昌宇国际', 'C', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('84', 'dhl', 'DHL快递（中国件）', 'D', '1', '100', '1553911076', '1553911076', 'DHL_C');
+INSERT INTO `ey_shop_express` VALUES ('85', 'dhlen', 'DHL（国际件）', 'D', '1', '100', '1553911076', '1553911076', 'DHL_GLB');
+INSERT INTO `ey_shop_express` VALUES ('86', 'dhlde', 'DHL（德国件）', 'D', '1', '100', '1553911076', '1553911076', 'DHL_DE');
+INSERT INTO `ey_shop_express` VALUES ('87', 'dtwl', '大田物流', 'D', '1', '100', '1553911076', '1553911076', 'DTWL');
+INSERT INTO `ey_shop_express` VALUES ('88', 'disifang', '递四方', 'D', '1', '100', '1553911076', '1553911076', 'D4PX');
+INSERT INTO `ey_shop_express` VALUES ('89', 'dayangwuliu', '大洋物流', 'D', '1', '100', '1553911076', '1553911076', 'DYWL');
+INSERT INTO `ey_shop_express` VALUES ('90', 'dechuangwuliu', '德创物流', 'D', '1', '100', '1553911076', '1553911076', 'DCWL');
+INSERT INTO `ey_shop_express` VALUES ('91', 'dskd', 'D速物流', 'D', '1', '100', '1553911076', '1553911076', 'DSWL');
+INSERT INTO `ey_shop_express` VALUES ('92', 'donghanwl', '东瀚物流', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('93', 'dfpost', '达方物流', 'D', '1', '100', '1553911076', '1553911076', 'IDFWL');
+INSERT INTO `ey_shop_express` VALUES ('94', 'dongjun', '东骏快捷物流', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('95', 'dindon', '叮咚澳洲转运', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('96', 'dazhong', '大众佐川急便', 'D', '1', '100', '1553911076', '1553911076', 'SAGAWA');
+INSERT INTO `ey_shop_express` VALUES ('97', 'ahdf', '德方物流', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('98', 'dehaoyi', '德豪驿', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('99', 'dhlpaket', 'DHL Paket', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('100', 'ubuy', '德国优拜物流', 'D', '1', '100', '1553911076', '1553911076', 'YBWL');
+INSERT INTO `ey_shop_express` VALUES ('101', 'adlerlogi', '德国雄鹰速递', 'D', '1', '100', '1553911076', '1553911076', 'XYGJSD');
+INSERT INTO `ey_shop_express` VALUES ('102', 'yunexpress', '德国云快递', 'D', '1', '100', '1553911076', '1553911076', 'DGYKD');
+INSERT INTO `ey_shop_express` VALUES ('103', 'di5pll', '递五方云仓', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('104', 'deguo8elog', '德国八易转运', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('105', 'camekong', '到了港', 'D', '1', '100', '1553911076', '1553911076', 'DLG');
+INSERT INTO `ey_shop_express` VALUES ('106', 'dbstation', 'db-station', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('107', 'dadaoex', '大道物流', 'D', '1', '100', '1553911076', '1553911076', 'DDWL');
+INSERT INTO `ey_shop_express` VALUES ('108', 'dekuncn', '德坤物流', 'D', '1', '100', '1553911076', '1553911076', 'DEKUN');
+INSERT INTO `ey_shop_express` VALUES ('109', 'twkd56', '缔惠盛合', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('110', 'gslexpress', '德尚国际速递', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('111', 'eucpost', '德国 EUC POST', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('112', 'est365', '东方汇', 'D', '1', '100', '1553911076', '1553911076', 'EST365');
+INSERT INTO `ey_shop_express` VALUES ('113', 'ecotransite', '东西E全运', 'D', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('114', 'euexpress', 'EU-EXPRESS', 'E', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('115', 'emsguoji', 'EMS国际快递查询', 'E', '1', '100', '1553911076', '1553911076', 'EMS');
+INSERT INTO `ey_shop_express` VALUES ('116', 'eshunda', '俄顺达', 'E', '1', '100', '1553911076', '1553911076', '007EX');
+INSERT INTO `ey_shop_express` VALUES ('117', 'ewe', 'EWE全球快递', 'E', '1', '100', '1553911076', '1553911076', 'EWE');
+INSERT INTO `ey_shop_express` VALUES ('118', 'easyexpress', 'EASYEXPRESS国际速递', 'E', '1', '100', '1553911076', '1553911076', 'EASYEX');
+INSERT INTO `ey_shop_express` VALUES ('119', 'edtexpress', 'e直运', 'E', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('120', 'ecallturn', 'E跨通', 'E', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('121', 'fedex', 'FedEx快递查询', 'F', '1', '100', '1553911076', '1553911076', 'FEDEX');
+INSERT INTO `ey_shop_express` VALUES ('122', 'fedexus', 'FedEx（美国）', 'F', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('123', 'fox', 'FOX国际速递', 'F', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('124', 'rufengda', '如风达快递', 'R', '1', '100', '1553911076', '1553911076', 'RFD');
+INSERT INTO `ey_shop_express` VALUES ('125', 'fkd', '飞康达物流', 'F', '1', '100', '1553911076', '1553911076', 'FKD');
+INSERT INTO `ey_shop_express` VALUES ('126', 'feibaokuaidi', '飞豹快递', 'F', '1', '100', '1553911076', '1553911076', 'FBKD');
+INSERT INTO `ey_shop_express` VALUES ('127', 'fandaguoji', '颿达国际', 'F', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('128', 'feiyuanvipshop', '飞远配送', 'F', '1', '100', '1553911076', '1553911076', 'FYPS');
+INSERT INTO `ey_shop_express` VALUES ('129', 'hnfy', '飞鹰物流', 'F', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('130', 'fengxingtianxia', '风行天下', 'F', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('131', 'flysman', '飞力士物流', 'F', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('132', 'fbkd', '飞邦快递', 'F', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('133', 'sccod', '丰程物流', 'F', '1', '100', '1553911076', '1553911076', 'FCWL');
+INSERT INTO `ey_shop_express` VALUES ('134', 'crazyexpress', '疯狂快递', 'F', '1', '100', '1553911076', '1553911076', 'CRAZY');
+INSERT INTO `ey_shop_express` VALUES ('135', 'ftlexpress', '法翔速运', 'F', '1', '100', '1553911076', '1553911076', 'FX');
+INSERT INTO `ey_shop_express` VALUES ('136', 'ftd', '富腾达快递', 'F', '1', '100', '1553911076', '1553911076', 'FTD');
+INSERT INTO `ey_shop_express` VALUES ('137', 'arkexpress', '方舟国际速递', 'F', '1', '100', '1553911076', '1553911076', 'FZGJ');
+INSERT INTO `ey_shop_express` VALUES ('138', 'fedroad', 'FedRoad 联邦转运', 'F', '1', '100', '1553911076', '1553911076', 'ZY_LBZY');
+INSERT INTO `ey_shop_express` VALUES ('139', 'freakyquick', 'FQ狂派速递', 'F', '1', '100', '1553911076', '1553911076', 'FREAKYQUICK');
+INSERT INTO `ey_shop_express` VALUES ('140', 'fecobv', '丰客物流', 'F', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('141', 'fyex', '飞云快递系统', 'F', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('142', 'beebird', '锋鸟物流', 'F', '1', '100', '1553911076', '1553911076', 'BEEBIRD');
+INSERT INTO `ey_shop_express` VALUES ('143', 'shipgce', '飞洋快递', 'F', '1', '100', '1553911076', '1553911076', 'ZY_FY');
+INSERT INTO `ey_shop_express` VALUES ('144', 'koali', '番薯国际货运', 'F', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('145', 'epanex', '泛捷国际速递', 'F', '1', '100', '1553911076', '1553911076', 'PANEX');
+INSERT INTO `ey_shop_express` VALUES ('146', 'gaticn', 'GATI快递', 'G', '1', '100', '1553911076', '1553911076', 'GATICN');
+INSERT INTO `ey_shop_express` VALUES ('147', 'gts', 'GTS快递', 'G', '1', '100', '1553911076', '1553911076', 'GTSEXPRESS');
+INSERT INTO `ey_shop_express` VALUES ('148', 'guotongkuaidi', '国通快递', 'G', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('149', 'ndkd', '能达速递', 'N', '1', '100', '1553911076', '1553911076', 'NEDA');
+INSERT INTO `ey_shop_express` VALUES ('150', 'gongsuda', '共速达', 'G', '1', '100', '1553911076', '1553911076', 'GSD');
+INSERT INTO `ey_shop_express` VALUES ('151', 'gtongsudi', '广通速递（山东）', 'G', '1', '100', '1553911076', '1553911076', 'GTKD');
+INSERT INTO `ey_shop_express` VALUES ('152', 'suteng', '速腾物流', 'S', '1', '100', '1553911076', '1553911076', 'STWL');
+INSERT INTO `ey_shop_express` VALUES ('153', 'gdkd', '港快速递', 'G', '1', '100', '1553911076', '1553911076', 'GKSD');
+INSERT INTO `ey_shop_express` VALUES ('154', 'hre', '高铁速递', 'G', '1', '100', '1553911076', '1553911076', 'GTSD');
+INSERT INTO `ey_shop_express` VALUES ('155', 'gscq365', '哥士传奇速递', 'G', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('156', 'gjwl', '冠捷物流', 'G', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('157', 'xdshipping', '国晶物流', 'G', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('158', 'ge2d', 'GE2D跨境物流', 'G', '1', '100', '1553911076', '1553911076', 'GE2D');
+INSERT INTO `ey_shop_express` VALUES ('159', 'gaotieex', '高铁快运', 'G', '1', '100', '1553911076', '1553911076', 'GTKY');
+INSERT INTO `ey_shop_express` VALUES ('160', 'gansuandi', '甘肃安的快递', 'G', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('161', 'gdct56', '广东诚通物流', 'G', '1', '100', '1553911076', '1553911076', 'CHTWL');
+INSERT INTO `ey_shop_express` VALUES ('162', 'ghtexpress', 'GHT物流', 'G', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('163', 'goldjet', '高捷快运', 'G', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('164', 'gtgogo', 'GT国际快运', 'G', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('165', 'gxwl', '光线速递', 'G', '1', '100', '1553911076', '1553911076', 'SUNSHINE');
+INSERT INTO `ey_shop_express` VALUES ('166', 'tdhy', '华宇物流', 'H', '1', '100', '1553911076', '1553911076', 'TDHY');
+INSERT INTO `ey_shop_express` VALUES ('167', 'hl', '恒路物流', 'H', '1', '100', '1553911076', '1553911076', 'HLWL');
+INSERT INTO `ey_shop_express` VALUES ('168', 'hlyex', '好来运快递', 'H', '1', '100', '1553911076', '1553911076', 'HLYSD');
+INSERT INTO `ey_shop_express` VALUES ('169', 'hebeijianhua', '河北建华', 'H', '1', '100', '1553911076', '1553911076', 'HBJH');
+INSERT INTO `ey_shop_express` VALUES ('170', 'huaqikuaiyun', '华企快运', 'H', '1', '100', '1553911076', '1553911076', 'HQKY');
+INSERT INTO `ey_shop_express` VALUES ('171', 'haosheng', '昊盛物流', 'H', '1', '100', '1553911076', '1553911076', 'HSWL');
+INSERT INTO `ey_shop_express` VALUES ('172', 'hutongwuliu', '户通物流', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('173', 'hzpl', '华航快递', 'H', '1', '100', '1553911076', '1553911076', 'HHKD');
+INSERT INTO `ey_shop_express` VALUES ('174', 'huangmajia', '黄马甲快递', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('175', 'ucs', '合众速递（UCS）', 'H', '1', '100', '1553911076', '1553911076', 'ZY_UCS');
+INSERT INTO `ey_shop_express` VALUES ('176', 'pfcexpress', '皇家物流', 'H', '1', '100', '1553911076', '1553911076', 'HJWL');
+INSERT INTO `ey_shop_express` VALUES ('177', 'huoban', '伙伴物流', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('178', 'nedahm', '红马速递', 'H', '1', '100', '1553911076', '1553911076', 'SXHMJ');
+INSERT INTO `ey_shop_express` VALUES ('179', 'huiwen', '汇文配送', 'H', '1', '100', '1553911076', '1553911076', 'HFHW');
+INSERT INTO `ey_shop_express` VALUES ('180', 'nmhuahe', '华赫物流', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('181', 'hjs', '猴急送', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('182', 'hangyu', '航宇快递', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('183', 'huilian', '辉联物流', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('184', 'huanqiu', '环球速运', 'H', '1', '100', '1553911076', '1553911076', 'HQSY');
+INSERT INTO `ey_shop_express` VALUES ('185', 'htwd', '华通务达物流', 'H', '1', '100', '1553911076', '1553911076', 'ZY_HTONG');
+INSERT INTO `ey_shop_express` VALUES ('186', 'hipito', '海派通', 'H', '1', '100', '1553911076', '1553911076', 'HPTEX');
+INSERT INTO `ey_shop_express` VALUES ('187', 'hqtd', '环球通达', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('188', 'airgtc', '航空快递', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('189', 'haoyoukuai', '好又快物流', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('190', 'ccd', '河南次晨达', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('191', 'hfwuxi', '和丰同城', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('192', 'higo', '黑狗物流', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('193', 'hyytes', '恒宇运通', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('194', 'hengrui56', '恒瑞物流', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('195', 'hangrui', '上海航瑞货运', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('196', 'ghl', '环创物流', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('197', 'hnqst', '河南全速通', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('198', 'hitaoe', 'Hi淘易快递', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('199', 'hhair56', '华瀚快递', 'H', '1', '100', '1553911076', '1553911076', 'HHAIR56');
+INSERT INTO `ey_shop_express` VALUES ('200', 'haimibuy', '海米派物流', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('201', 'ht22', '海淘物流', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('202', 'hivewms', '海沧无忧', 'H', '1', '100', '1553911076', '1553911076', 'HIVEWMS');
+INSERT INTO `ey_shop_express` VALUES ('203', 'hnht56', '鸿泰物流', 'H', '1', '100', '1553911076', '1553911076', 'HTWL');
+INSERT INTO `ey_shop_express` VALUES ('204', 'hsgtsd', '海硕高铁速递', 'H', '1', '100', '1553911076', '1553911076', 'HSGTSD');
+INSERT INTO `ey_shop_express` VALUES ('205', 'hltop', '海联快递', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('206', 'hlkytj', '互联快运', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('207', 'haidaibao', '海带宝转运', 'H', '1', '100', '1553911076', '1553911076', 'ZY_HDB');
+INSERT INTO `ey_shop_express` VALUES ('208', 'flowerkd', '花瓣转运', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('209', 'heimao56', '黑猫速运', 'H', '1', '100', '1553911076', '1553911076', 'TCATCN');
+INSERT INTO `ey_shop_express` VALUES ('210', 'logistics', '華信物流WTO', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('211', 'hgy56', '环国运物流', 'H', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('212', 'iparcel', 'i-parcel', 'I', '1', '100', '1553911076', '1553911076', 'IPARCEL');
+INSERT INTO `ey_shop_express` VALUES ('213', 'jjwl', '佳吉物流', 'J', '1', '100', '1553911076', '1553911076', 'JIAJI');
+INSERT INTO `ey_shop_express` VALUES ('214', 'jywl', '佳怡物流', 'J', '1', '100', '1553911076', '1553911076', 'JYWL');
+INSERT INTO `ey_shop_express` VALUES ('215', 'jymwl', '加运美快递', 'J', '1', '100', '1553911076', '1553911076', 'JYM');
+INSERT INTO `ey_shop_express` VALUES ('216', 'jxd', '急先达物流', 'J', '1', '100', '1553911076', '1553911076', 'JXD');
+INSERT INTO `ey_shop_express` VALUES ('217', 'jgsd', '京广速递快件', 'J', '1', '100', '1553911076', '1553911076', 'JGSD');
+INSERT INTO `ey_shop_express` VALUES ('218', 'jykd', '晋越快递', 'J', '1', '100', '1553911076', '1553911076', 'JYKD');
+INSERT INTO `ey_shop_express` VALUES ('219', 'jd', '京东物流', 'J', '1', '100', '1553911076', '1553911076', 'JD');
+INSERT INTO `ey_shop_express` VALUES ('220', 'jietekuaidi', '捷特快递', 'J', '1', '100', '1553911076', '1553911076', 'JTKD');
+INSERT INTO `ey_shop_express` VALUES ('221', 'jiuyicn', '久易快递', 'J', '1', '100', '1553911076', '1553911076', 'JYSD');
+INSERT INTO `ey_shop_express` VALUES ('222', 'jiuyescm', '九曳供应链', 'J', '1', '100', '1553911076', '1553911076', 'JIUYE');
+INSERT INTO `ey_shop_express` VALUES ('223', 'junfengguoji', '骏丰国际速递', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('224', 'jiajiatong56', '佳家通', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('225', 'jrypex', '吉日优派', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('226', 'jinchengwuliu', '锦程国际物流', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('227', 'jgwl', '景光物流', 'J', '1', '100', '1553911076', '1553911076', 'JGWL');
+INSERT INTO `ey_shop_express` VALUES ('228', 'pzhjst', '急顺通', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('229', 'ruexp', '捷网俄全通', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('230', 'jialidatong', '嘉里大通', 'J', '1', '100', '1553911076', '1553911076', 'KERRYLOGISTICS');
+INSERT INTO `ey_shop_express` VALUES ('231', 'jmjss', '金马甲', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('232', 'jiacheng', '佳成快递', 'J', '1', '100', '1553911076', '1553911076', 'JCEX');
+INSERT INTO `ey_shop_express` VALUES ('233', 'jsexpress', '骏绅物流', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('234', 'hrex', '锦程快递', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('235', 'jieanda', '捷安达国际速递', 'J', '1', '100', '1553911076', '1553911076', 'JAD');
+INSERT INTO `ey_shop_express` VALUES ('236', 'newsway', '家家通快递', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('237', 'mapleexpress', '今枫国际快运', 'J', '1', '100', '1553911076', '1553911076', 'JFGJ');
+INSERT INTO `ey_shop_express` VALUES ('238', 'jixiangyouau', '吉祥邮（澳洲）', 'J', '1', '100', '1553911076', '1553911076', 'JXYKD');
+INSERT INTO `ey_shop_express` VALUES ('239', 'jjx888', '佳捷翔物流', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('240', 'polarexpress', '极地快递', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('241', 'jiazhoumao', '加州猫速递', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('242', 'juzhongda', '聚中大', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('243', 'jieborne', '捷邦物流', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('244', 'jxfex', '集先锋速递', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('245', 'jiugong', '九宫物流', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('246', 'jiujiuwl', '久久物流', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('247', 'jintongkd', '劲通快递', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('248', 'jcsuda', '嘉诚速达', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('249', 'jingshun', '景顺物流', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('250', 'fastontime', '加拿大联通快运', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('251', 'khzto', '柬埔寨中通', 'J', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('252', 'kjkd', '快捷快递', 'K', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('253', 'kangliwuliu', '康力物流', 'K', '1', '100', '1553911076', '1553911076', 'KLWL');
+INSERT INTO `ey_shop_express` VALUES ('254', 'kuayue', '跨越速运', 'K', '1', '100', '1553911076', '1553911076', 'KYSY');
+INSERT INTO `ey_shop_express` VALUES ('255', 'kuaiyouda', '快优达速递', 'K', '1', '100', '1553911076', '1553911076', 'KYDSD');
+INSERT INTO `ey_shop_express` VALUES ('256', 'happylink', '开心快递', 'K', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('257', 'ksudi', '快速递', 'K', '1', '100', '1553911076', '1553911076', 'KSDWL');
+INSERT INTO `ey_shop_express` VALUES ('258', 'kyue', '跨跃国际', 'K', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('259', 'kfwnet', '快服务', 'K', '1', '100', '1553911076', '1553911076', 'KFW');
+INSERT INTO `ey_shop_express` VALUES ('260', 'kuai8', '快8速运', 'K', '1', '100', '1553911076', '1553911076', 'KBSY');
+INSERT INTO `ey_shop_express` VALUES ('261', 'kuaidawuliu', '快达物流', 'K', '1', '100', '1553911076', '1553911076', 'KUAIDAWULIU');
+INSERT INTO `ey_shop_express` VALUES ('262', 'lianb', '联邦快递（国内）', 'L', '1', '100', '1553911076', '1553911076', 'FEDEX');
+INSERT INTO `ey_shop_express` VALUES ('263', 'lhtwl', '联昊通物流', 'L', '1', '100', '1553911076', '1553911076', 'LHT');
+INSERT INTO `ey_shop_express` VALUES ('264', 'lb', '龙邦速递', 'L', '1', '100', '1553911076', '1553911076', 'LB');
+INSERT INTO `ey_shop_express` VALUES ('265', 'lejiedi', '乐捷递', 'L', '1', '100', '1553911076', '1553911076', 'LJD');
+INSERT INTO `ey_shop_express` VALUES ('266', 'lanhukuaidi', '蓝弧快递', 'L', '1', '100', '1553911076', '1553911076', 'LHKD');
+INSERT INTO `ey_shop_express` VALUES ('267', 'ltexp', '乐天速递', 'L', '1', '100', '1553911076', '1553911076', 'LTIAN');
+INSERT INTO `ey_shop_express` VALUES ('268', 'lutong', '鲁通快运', 'L', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('269', 'ledii', '乐递供应链', 'L', '1', '100', '1553911076', '1553911076', 'LEDII');
+INSERT INTO `ey_shop_express` VALUES ('270', 'lundao', '论道国际物流', 'L', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('271', 'lasy56', '林安物流', 'L', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('272', 'lsexpress', '6LS EXPRESS', 'L', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('273', 'szuem', '联运通物流', 'L', '1', '100', '1553911076', '1553911076', 'LYT');
+INSERT INTO `ey_shop_express` VALUES ('274', 'blueskyexpress', '蓝天国际航空快递', 'L', '1', '100', '1553911076', '1553911076', 'BLUESKYEXPRESS');
+INSERT INTO `ey_shop_express` VALUES ('275', 'lfexpress', '龙枫国际速递', 'L', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('276', 'gslhkd', '联合快递', 'L', '1', '100', '1553911076', '1553911076', 'LHKDS');
+INSERT INTO `ey_shop_express` VALUES ('277', 'longfx', '龙飞祥快递', 'L', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('278', 'luben', '陆本速递 LUBEN EXPRESS', 'L', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('279', 'unitedex', '联合速运', 'L', '1', '100', '1553911076', '1553911076', 'LHKDS');
+INSERT INTO `ey_shop_express` VALUES ('280', 'lbex', '龙邦物流', 'L', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('281', 'ltparcel', '联通快递', 'L', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('282', 'macroexpressco', 'ME物流', 'M', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('283', 'mh', '民航快递', 'M', '1', '100', '1553911076', '1553911076', 'MHKD');
+INSERT INTO `ey_shop_express` VALUES ('284', 'meiguokuaidi', '美国快递', 'M', '1', '100', '1553911076', '1553911076', 'USEX');
+INSERT INTO `ey_shop_express` VALUES ('285', 'menduimen', '门对门', 'M', '1', '100', '1553911076', '1553911076', 'MDM');
+INSERT INTO `ey_shop_express` VALUES ('286', 'mingliangwuliu', '明亮物流', 'M', '1', '100', '1553911076', '1553911076', 'MLWL');
+INSERT INTO `ey_shop_express` VALUES ('287', 'minbangsudi', '民邦速递', 'M', '1', '100', '1553911076', '1553911076', 'MB');
+INSERT INTO `ey_shop_express` VALUES ('288', 'minshengkuaidi', '闽盛快递', 'M', '1', '100', '1553911076', '1553911076', 'MSKD');
+INSERT INTO `ey_shop_express` VALUES ('289', 'yundaexus', '美国韵达', 'M', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('290', 'mchy', '木春货运', 'M', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('291', 'meiquick', '美快国际物流', 'M', '1', '100', '1553911076', '1553911076', 'MK');
+INSERT INTO `ey_shop_express` VALUES ('292', 'valueway', '美通快递', 'M', '1', '100', '1553911076', '1553911076', 'VALUEWAY');
+INSERT INTO `ey_shop_express` VALUES ('293', 'cnmcpl', '马珂博逻', 'M', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('294', 'mailongdy', '迈隆递运', 'M', '1', '100', '1553911076', '1553911076', 'MRDY');
+INSERT INTO `ey_shop_express` VALUES ('295', 'zsmhwl', '明辉物流', 'M', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('296', 'mosuda', '魔速达', 'M', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('297', 'meibang', '美邦国际快递', 'M', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('298', 'nuoyaao', '偌亚奥国际', 'N', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('299', 'nuoer', '诺尔国际物流', 'N', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('300', 'nell', '尼尔快递', 'N', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('301', 'ndwl', '南方传媒物流', 'N', '1', '100', '1553911076', '1553911076', 'NFCM');
+INSERT INTO `ey_shop_express` VALUES ('302', 'canhold', '能装能送', 'N', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('303', 'wanjiatong', '宁夏万家通', 'N', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('304', 'nlebv', '欧亚专线', 'O', '1', '100', '1553911076', '1553911076', 'EUASIA');
+INSERT INTO `ey_shop_express` VALUES ('305', 'oborexpress', 'OBOR Express', 'O', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('306', 'pcaexpress', 'PCA Express', 'P', '1', '100', '1553911076', '1553911076', 'PCA');
+INSERT INTO `ey_shop_express` VALUES ('307', 'pingandatengfei', '平安达腾飞', 'P', '1', '100', '1553911076', '1553911076', 'PADTF');
+INSERT INTO `ey_shop_express` VALUES ('308', 'peixingwuliu', '陪行物流', 'P', '1', '100', '1553911076', '1553911076', 'PXWL');
+INSERT INTO `ey_shop_express` VALUES ('309', 'pengyuanexpress', '鹏远国际速递', 'P', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('310', 'postelbe', 'PostElbe', 'P', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('311', 'papascm', '啪啪供应链', 'P', '1', '100', '1553911076', '1553911076', 'PAPA');
+INSERT INTO `ey_shop_express` VALUES ('312', 'bazirim', '皮牙子快递', 'P', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('313', 'qfkd', '全峰快递', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('314', 'qy', '全一快递', 'Q', '1', '100', '1553911076', '1553911076', 'UAPEX');
+INSERT INTO `ey_shop_express` VALUES ('315', 'qrt', '全日通快递', 'Q', '1', '100', '1553911076', '1553911076', 'QRT');
+INSERT INTO `ey_shop_express` VALUES ('316', 'qckd', '全晨快递', 'Q', '1', '100', '1553911076', '1553911076', 'QCKD');
+INSERT INTO `ey_shop_express` VALUES ('317', 'sevendays', '7天连锁物流', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('318', 'qbexpress', '秦邦快运', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('319', 'quanxintong', '全信通快递', 'Q', '1', '100', '1553911076', '1553911076', 'QXT');
+INSERT INTO `ey_shop_express` VALUES ('320', 'quansutong', '全速通国际快递', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('321', 'qinyuan', '秦远物流', 'Q', '1', '100', '1553911076', '1553911076', 'CHINZ56');
+INSERT INTO `ey_shop_express` VALUES ('322', 'qichen', '启辰国际物流', 'Q', '1', '100', '1553911076', '1553911076', 'VENUCIA');
+INSERT INTO `ey_shop_express` VALUES ('323', 'quansu', '全速快运', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('324', 'qzx56', '全之鑫物流', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('325', 'qskdyxgs', '千顺快递', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('326', 'zqlwl', '青旅物流', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('327', 'quanchuan56', '全川物流', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('328', 'quantwl', '全通快运', 'Q', '1', '100', '1553911076', '1553911076', 'IQTWL');
+INSERT INTO `ey_shop_express` VALUES ('329', 'yatexpress', '乾坤物流', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('330', 'guexp', '全联速运', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('331', 'bjqywl', '青云物流', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('332', 'signedexpress', '签收快递', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('333', 'express7th', '7号速递', 'Q', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('334', 'riyuwuliu', '日昱物流', 'R', '1', '100', '1553911076', '1553911076', 'RLWL');
+INSERT INTO `ey_shop_express` VALUES ('335', 'rfsd', '瑞丰速递', 'R', '1', '100', '1553911076', '1553911076', 'RFEX');
+INSERT INTO `ey_shop_express` VALUES ('336', 'rrs', '日日顺物流', 'R', '1', '100', '1553911076', '1553911076', 'RRS');
+INSERT INTO `ey_shop_express` VALUES ('337', 'rytsd', '日益通速递', 'R', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('338', 'rrskx', '日日顺快线', 'R', '1', '100', '1553911076', '1553911076', 'RRS');
+INSERT INTO `ey_shop_express` VALUES ('339', 'gdrz58', '容智快运', 'R', '1', '100', '1553911076', '1553911076', 'GDRZ58');
+INSERT INTO `ey_shop_express` VALUES ('340', 'rrthk', '日日通国际', 'R', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('341', 'homecourier', '如家国际快递', 'R', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('342', 'sewl', '速尔快递', 'S', '1', '100', '1553911076', '1553911076', 'SURE');
+INSERT INTO `ey_shop_express` VALUES ('343', 'haihongwangsong', '山东海红', 'S', '1', '100', '1553911076', '1553911076', 'SDHH');
+INSERT INTO `ey_shop_express` VALUES ('344', 'sh', '盛辉物流', 'S', '1', '100', '1553911076', '1553911076', 'SHWL');
+INSERT INTO `ey_shop_express` VALUES ('345', 'sfwl', '盛丰物流', 'S', '1', '100', '1553911076', '1553911076', 'SFWL');
+INSERT INTO `ey_shop_express` VALUES ('346', 'shiyunkuaidi', '世运快递', 'S', '1', '100', '1553911076', '1553911076', 'SYKD');
+INSERT INTO `ey_shop_express` VALUES ('347', 'shangda', '上大物流', 'S', '1', '100', '1553911076', '1553911076', 'SDWL');
+INSERT INTO `ey_shop_express` VALUES ('348', 'stsd', '三态速递', 'S', '1', '100', '1553911076', '1553911076', 'STSD');
+INSERT INTO `ey_shop_express` VALUES ('349', 'saiaodi', '赛澳递', 'S', '1', '100', '1553911076', '1553911076', 'SAD');
+INSERT INTO `ey_shop_express` VALUES ('350', 'ewl', '申通E物流', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('351', 'shenganwuliu', '圣安物流', 'S', '1', '100', '1553911076', '1553911076', 'SAWL');
+INSERT INTO `ey_shop_express` VALUES ('352', 'sxhongmajia', '山西红马甲', 'S', '1', '100', '1553911076', '1553911076', 'SXHMJ');
+INSERT INTO `ey_shop_express` VALUES ('353', 'suijiawuliu', '穗佳物流', 'S', '1', '100', '1553911076', '1553911076', 'SJWL');
+INSERT INTO `ey_shop_express` VALUES ('354', 'syjiahuier', '沈阳佳惠尔', 'S', '1', '100', '1553911076', '1553911076', 'SYJHE');
+INSERT INTO `ey_shop_express` VALUES ('355', 'shlindao', '上海林道货运', 'S', '1', '100', '1553911076', '1553911076', 'LDXPRESS');
+INSERT INTO `ey_shop_express` VALUES ('356', 'sfift', '十方通物流', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('357', 'shunjiefengda', '顺捷丰达', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('358', 'subida', '速必达物流', 'S', '1', '100', '1553911076', '1553911076', 'SUBIDA');
+INSERT INTO `ey_shop_express` VALUES ('359', 'stcd', '速通成达物流', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('360', 'stkd', '顺通快递', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('361', 'sendtochina', '速递中国', 'S', '1', '100', '1553911076', '1553911076', 'SENDCN');
+INSERT INTO `ey_shop_express` VALUES ('362', 'sihaiet', '四海快递', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('363', 'staky', '首通快运', 'S', '1', '100', '1553911076', '1553911076', 'STONG');
+INSERT INTO `ey_shop_express` VALUES ('364', 'hnssd56', '顺时达物流', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('365', 'superb', 'Superb Grace', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('366', 'sfjhd', '圣飞捷快递', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('367', 'sofast56', '嗖一下同城快递', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('368', 's2c', 'S2C', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('369', 'chinasqk', 'SQK国际速递', 'S', '1', '100', '1553911076', '1553911076', 'CHINASQK');
+INSERT INTO `ey_shop_express` VALUES ('370', 'shunshid', '顺士达速运', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('371', 'synship', 'SYNSHIP快递', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('372', 'shandiantu', '闪电兔', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('373', 'sdsy888', '首达速运', 'S', '1', '100', '1553911076', '1553911076', 'SDSY');
+INSERT INTO `ey_shop_express` VALUES ('374', 'sczpds', '速呈宅配', 'S', '1', '100', '1553911076', '1553911076', 'SCZPDS');
+INSERT INTO `ey_shop_express` VALUES ('375', 'sureline', 'Sureline冠泰', 'S', '1', '100', '1553911076', '1553911076', 'GT');
+INSERT INTO `ey_shop_express` VALUES ('376', 'stosolution', '申通国际', 'S', '1', '100', '1553911076', '1553911076', 'STO_INTL');
+INSERT INTO `ey_shop_express` VALUES ('377', 'sycawl', '狮爱高铁物流', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('378', 'sxexpress', '三象速递', 'S', '1', '100', '1553911076', '1553911076', 'SXEXPRESS');
+INSERT INTO `ey_shop_express` VALUES ('379', 'shangqiao56', '商桥物流', 'S', '1', '100', '1553911076', '1553911076', 'SQWL');
+INSERT INTO `ey_shop_express` VALUES ('380', 'shd56', '商海德物流', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('381', 'shenma', '神马快递', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('382', 'sihiexpress', '四海捷运', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('383', 'superoz', '速配鸥翼', 'S', '1', '100', '1553911076', '1553911076', 'SUPEROZ');
+INSERT INTO `ey_shop_express` VALUES ('384', 'fastgoexpress', '速派快递', 'S', '1', '100', '1553911076', '1553911076', 'FASTGO');
+INSERT INTO `ey_shop_express` VALUES ('385', 'zjstky', '苏通快运', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('386', 'suning', '苏宁物流', 'S', '1', '100', '1553911076', '1553911076', 'SNWL');
+INSERT INTO `ey_shop_express` VALUES ('387', 'shaoke', '捎客物流', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('388', 'sdto', '速达通跨境物流', 'S', '1', '100', '1553911076', '1553911076', 'SDTO');
+INSERT INTO `ey_shop_express` VALUES ('389', 'sut56', '速通物流', 'S', '1', '100', '1553911076', '1553911076', 'ST');
+INSERT INTO `ey_shop_express` VALUES ('390', 'sundarexpress', '顺达快递', 'S', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('391', 'sxjdfreight', '顺心捷达', 'S', '1', '100', '1553911076', '1553911076', 'SX');
+INSERT INTO `ey_shop_express` VALUES ('392', 'shengtongscm', '盛通快递', 'S', '1', '100', '1553911076', '1553911076', 'STKD');
+INSERT INTO `ey_shop_express` VALUES ('393', 'tnt', 'TNT快递', 'T', '1', '100', '1553911076', '1553911076', 'TNT');
+INSERT INTO `ey_shop_express` VALUES ('394', 'tt', '天天快递', 'T', '1', '100', '1553911076', '1553911076', 'ZY_TTHT');
+INSERT INTO `ey_shop_express` VALUES ('395', 'tianzong', '天纵物流', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('396', 'chinatzx', '同舟行物流', 'T', '1', '100', '1553911076', '1553911076', 'WHTZX');
+INSERT INTO `ey_shop_express` VALUES ('397', 'nntengda', '腾达速递', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('398', 'sd138', '泰国138', 'T', '1', '100', '1553911076', '1553911076', 'TAILAND138');
+INSERT INTO `ey_shop_express` VALUES ('399', 'tongdaxing', '通达兴物流', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('400', 'tlky', '天联快运', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('401', 'ibenben', '途鲜物流', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('402', 'krtao', '淘韩国际快递', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('403', 'lntjs', '特急送', 'T', '1', '100', '1553911076', '1553911076', 'TJS');
+INSERT INTO `ey_shop_express` VALUES ('404', 'tny', 'TNY物流', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('405', 'djy56', '天翔东捷运', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('406', 'guoeryue', '天天快物流', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('407', 'tianma', '天马迅达', 'T', '1', '100', '1553911076', '1553911076', 'ZY_TM');
+INSERT INTO `ey_shop_express` VALUES ('408', 'surpassgo', '天越物流', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('409', 'tianxiang', '天翔快递', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('410', 'tywl99', '天翼物流', 'T', '1', '100', '1553911076', '1553911076', 'ZY_TY');
+INSERT INTO `ey_shop_express` VALUES ('411', 'shpost', '同城快寄', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('412', 'humpline', '驼峰国际', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('413', 'transrush', 'TransRush', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('414', 'tstexp', 'TST速运通', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('415', 'ctoexp', '泰国中通CTO', 'T', '1', '100', '1553911076', '1553911076', 'THAIZTO');
+INSERT INTO `ey_shop_express` VALUES ('416', 'thaizto', '泰国中通ZTO', 'T', '1', '100', '1553911076', '1553911076', 'THAIZTO');
+INSERT INTO `ey_shop_express` VALUES ('417', 'tswlcloud', '天使物流云', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('418', 'tzky', '铁中快运', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('419', 'tcxbthai', 'TCXB国际物流', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('420', 'taimek', '天美快递', 'T', '1', '100', '1553911076', '1553911076', 'TAIMEK');
+INSERT INTO `ey_shop_express` VALUES ('421', 'taoplus', '淘布斯国际物流', 'T', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('422', 'ups', 'UPS快递查询', 'U', '1', '100', '1553911076', '1553911076', 'UPS');
+INSERT INTO `ey_shop_express` VALUES ('423', 'yskd', '优速快递', 'Y', '1', '100', '1553911076', '1553911076', 'UC');
+INSERT INTO `ey_shop_express` VALUES ('424', 'usps', 'USPS美国邮政', 'U', '1', '100', '1553911076', '1553911076', 'USPS');
+INSERT INTO `ey_shop_express` VALUES ('425', 'ueq', 'UEQ快递', 'U', '1', '100', '1553911076', '1553911076', 'UEQ');
+INSERT INTO `ey_shop_express` VALUES ('426', 'uex', 'UEX国际物流', 'U', '1', '100', '1553911076', '1553911076', 'UEX');
+INSERT INTO `ey_shop_express` VALUES ('427', 'utaoscm', 'UTAO 优到', 'U', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('428', 'wxwl', '万象物流', 'W', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('429', 'weitepai', '微特派', 'W', '1', '100', '1553911076', '1553911076', 'WTP');
+INSERT INTO `ey_shop_express` VALUES ('430', 'wjwl', '万家物流', 'W', '1', '100', '1553911076', '1553911076', 'WJWL');
+INSERT INTO `ey_shop_express` VALUES ('431', 'wanboex', '万博快递', 'W', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('432', 'wtdchina', '威时沛运', 'W', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('433', 'wzhaunyun', '微转运', 'W', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('434', 'gswtkd', '万通快递', 'W', '1', '100', '1553911076', '1553911076', 'GSWTKD');
+INSERT INTO `ey_shop_express` VALUES ('435', 'wandougongzhu', '豌豆物流', 'W', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('436', 'wjkwl', '万家康物流', 'W', '1', '100', '1553911076', '1553911076', 'WJK');
+INSERT INTO `ey_shop_express` VALUES ('437', 'vps', '维普恩物流', 'W', '1', '100', '1553911076', '1553911076', 'WPE');
+INSERT INTO `ey_shop_express` VALUES ('438', 'wykjt', '51跨境通', 'W', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('439', 'wherexpess', '威盛快递', 'W', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('440', 'weilaimingtian', '未来明天快递', 'W', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('441', 'wdm', '万达美', 'W', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('442', 'wto56kj', '温通物流', 'W', '1', '100', '1553911076', '1553911076', 'WTWL');
+INSERT INTO `ey_shop_express` VALUES ('443', '56kuaiyun', '五六快运', 'W', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('444', 'wowvip', '沃埃家', 'W', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('445', 'grivertek', '潍鸿', 'W', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('446', 'xbwl', '新邦物流', 'X', '1', '100', '1553911076', '1553911076', 'XBWL');
+INSERT INTO `ey_shop_express` VALUES ('447', 'xfwl', '信丰物流', 'X', '1', '100', '1553911076', '1553911076', 'XFEX');
+INSERT INTO `ey_shop_express` VALUES ('448', 'newegg', '新蛋物流', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('449', 'xianglongyuntong', '祥龙运通物流', 'X', '1', '100', '1553911076', '1553911076', 'XLYT');
+INSERT INTO `ey_shop_express` VALUES ('450', 'xianchengliansudi', '西安城联速递', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('451', 'xilaikd', '喜来快递', 'X', '1', '100', '1553911076', '1553911076', 'XLKD');
+INSERT INTO `ey_shop_express` VALUES ('452', 'xsrd', '鑫世锐达', 'X', '1', '100', '1553911076', '1553911076', 'XSRD');
+INSERT INTO `ey_shop_express` VALUES ('453', 'xtb', '鑫通宝物流', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('454', 'xintianjie', '信天捷快递', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('455', 'xaetc', '西安胜峰', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('456', 'xianfeng', '先锋快递', 'X', '1', '100', '1553911076', '1553911076', 'ZY_XF');
+INSERT INTO `ey_shop_express` VALUES ('457', 'sunspeedy', '新速航', 'X', '1', '100', '1553911076', '1553911076', 'SUNSPEEDY');
+INSERT INTO `ey_shop_express` VALUES ('458', 'xipost', '西邮寄', 'X', '1', '100', '1553911076', '1553911076', 'XYJ');
+INSERT INTO `ey_shop_express` VALUES ('459', 'sinatone', '信联通', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('460', 'sunjex', '新杰物流', 'X', '1', '100', '1553911076', '1553911076', 'XJ');
+INSERT INTO `ey_shop_express` VALUES ('461', 'alog', '心怡物流', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('462', 'csxss', '新时速物流', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('463', 'xiangteng', '翔腾物流', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('464', 'westwing', '西翼物流', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('465', 'littlebearbear', '小熊物流', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('466', 'huanqiuabc', '中国香港环球快运', 'Z', '1', '100', '1553911076', '1553911076', 'HQSY');
+INSERT INTO `ey_shop_express` VALUES ('467', 'xinning', '新宁物流', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('468', 'wlwex', '星空国际', 'X', '1', '100', '1553911076', '1553911076', 'XKGJ');
+INSERT INTO `ey_shop_express` VALUES ('469', 'yyexp', '西安运逸快递', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('470', 'xiyoug', '西游寄', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('471', 'xlobo', 'xLobo', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('472', 'xunsuexpress', '迅速快递', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('473', 'whgjkd', '香港伟豪国际物流', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('474', 'xyd666', '鑫远东速运', 'X', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('475', 'xdexpress', '迅达速递', 'X', '1', '100', '1553911076', '1553911076', 'XDEXPRESS');
+INSERT INTO `ey_shop_express` VALUES ('476', 'ytkd', '运通快递', 'Y', '1', '100', '1553911076', '1553911076', 'YTKD');
+INSERT INTO `ey_shop_express` VALUES ('477', 'ycwl', '远成物流', 'Y', '1', '100', '1553911076', '1553911076', 'YCWL');
+INSERT INTO `ey_shop_express` VALUES ('478', 'yfsd', '亚风速递', 'Y', '1', '100', '1553911076', '1553911076', 'YFSD');
+INSERT INTO `ey_shop_express` VALUES ('479', 'yishunhang', '亿顺航', 'Y', '1', '100', '1553911076', '1553911076', 'YSH');
+INSERT INTO `ey_shop_express` VALUES ('480', 'yfwl', '越丰物流', 'Y', '1', '100', '1553911076', '1553911076', 'YFEX');
+INSERT INTO `ey_shop_express` VALUES ('481', 'yad', '源安达快递', 'Y', '1', '100', '1553911076', '1553911076', 'YAD');
+INSERT INTO `ey_shop_express` VALUES ('482', 'yfh', '原飞航物流', 'Y', '1', '100', '1553911076', '1553911076', 'YFHEX');
+INSERT INTO `ey_shop_express` VALUES ('483', 'yinjiesudi', '银捷速递', 'Y', '1', '100', '1553911076', '1553911076', 'YJSD');
+INSERT INTO `ey_shop_express` VALUES ('484', 'yitongfeihong', '一统飞鸿', 'Y', '1', '100', '1553911076', '1553911076', 'YTFH');
+INSERT INTO `ey_shop_express` VALUES ('485', 'yuxinwuliu', '宇鑫物流', 'Y', '1', '100', '1553911076', '1553911076', 'YXWL');
+INSERT INTO `ey_shop_express` VALUES ('486', 'yitongda', '易通达', 'Y', '1', '100', '1553911076', '1553911076', 'YTD');
+INSERT INTO `ey_shop_express` VALUES ('487', 'youbijia', '邮必佳', 'Y', '1', '100', '1553911076', '1553911076', 'YBJ');
+INSERT INTO `ey_shop_express` VALUES ('488', 'yiqiguojiwuliu', '一柒物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('489', 'yinsu', '音素快运', 'Y', '1', '100', '1553911076', '1553911076', 'YSKY');
+INSERT INTO `ey_shop_express` VALUES ('490', 'yilingsuyun', '亿领速运', 'Y', '1', '100', '1553911076', '1553911076', 'YLSY');
+INSERT INTO `ey_shop_express` VALUES ('491', 'yujiawuliu', '煜嘉物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('492', 'gml', '英脉物流', 'Y', '1', '100', '1553911076', '1553911076', 'YMWL');
+INSERT INTO `ey_shop_express` VALUES ('493', 'leopard', '云豹国际货运', 'Y', '1', '100', '1553911076', '1553911076', 'LEOPARDSCHINA');
+INSERT INTO `ey_shop_express` VALUES ('494', 'czwlyn', '云南中诚', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('495', 'sdyoupei', '优配速运', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('496', 'yongchang', '永昌物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('497', 'yufeng', '御风速运', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('498', 'yousutongda', '优速通达', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('499', 'yongwangda', '永旺达快递', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('500', 'yingchao', '英超物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('501', 'edlogistics', '益递物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('502', 'yjxlm', '宜家行', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('503', 'onehcang', '一号仓', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('504', 'ycgky', '远成快运', 'Y', '1', '100', '1553911076', '1553911076', 'YCSY');
+INSERT INTO `ey_shop_express` VALUES ('505', 'yunfeng56', '韵丰物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('506', 'iyoungspeed', '驿扬国际速运', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('507', 'zgyzt', '一站通快递', 'Y', '1', '100', '1553911076', '1553911076', 'YZTSY');
+INSERT INTO `ey_shop_express` VALUES ('508', 'eupackage', '易优包裹', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('509', 'ydglobe', '云达通', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('510', 'el56', 'YLTD', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('511', 'yundx', '运东西', 'Y', '1', '100', '1553911076', '1553911076', 'YUNDX');
+INSERT INTO `ey_shop_express` VALUES ('512', 'yangbaoguo', '洋包裹', 'Y', '1', '100', '1553911076', '1553911076', 'YBG');
+INSERT INTO `ey_shop_express` VALUES ('513', 'uluckex', '优联吉运', 'Y', '1', '100', '1553911076', '1553911076', 'YLJY');
+INSERT INTO `ey_shop_express` VALUES ('514', 'ecmscn', '易客满', 'Y', '1', '100', '1553911076', '1553911076', 'EKM');
+INSERT INTO `ey_shop_express` VALUES ('515', 'ubonex', '优邦速运', 'Y', '1', '100', '1553911076', '1553911076', 'UBONEX');
+INSERT INTO `ey_shop_express` VALUES ('516', 'yue777', '玥玛速运', 'Y', '1', '100', '1553911076', '1553911076', 'YMSY');
+INSERT INTO `ey_shop_express` VALUES ('517', 'ywexpress', '远为快递', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('518', 'ezhuanyuan', '易转运', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('519', 'yiqisong', '一起送', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('520', 'yongbangwuliu', '永邦国际物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('521', 'yyox', '邮客全球速递', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('522', 'yihangmall', '易航物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('523', 'yiouzhou', '易欧洲国际物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('524', 'ykouan', '洋口岸', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('525', 'youyou', '优优速递', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('526', 'ytky168', '运通快运', 'Y', '1', '100', '1553911076', '1553911076', 'YTKD');
+INSERT INTO `ey_shop_express` VALUES ('527', 'sixroad', '易普递', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('528', 'yourscm', '雅澳物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('529', 'euguoji', '易邮国际', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('530', 'uscbexpress', '易境达国际物流', 'Y', '1', '100', '1553911076', '1553911076', 'YJD');
+INSERT INTO `ey_shop_express` VALUES ('531', 'yfsuyun', '驭丰速运', 'Y', '1', '100', '1553911076', '1553911076', 'YFSUYUN');
+INSERT INTO `ey_shop_express` VALUES ('532', 'yimidida', '壹米滴答', 'Y', '1', '100', '1553911076', '1553911076', 'YMDD');
+INSERT INTO `ey_shop_express` VALUES ('533', 'ugoexpress', '邮鸽速运', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('534', 'youban', '邮邦国际', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('535', 'hkems', '云邮跨境快递', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('536', 'youlai', '邮来速递', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('537', 'eta100', '易达国际速递', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('538', 'yatfai', '一辉物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('539', 'yzswuliu', '亚洲顺物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('540', 'yifankd', '艺凡快递', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('541', 'mantoo', '优能物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('542', 'vctrans', '越中国际物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('543', 'yhtlogistics', '宇航通物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('544', 'ycgglobal', 'YCG物流', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('545', 'yidihui', '驿递汇速递', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('546', 'yuanhhk', '远航国际快运', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('547', 'yiyou', '易邮速运', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('548', 'eusacn', '优莎速运', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('549', 'uhi', '优海国际速递', 'Y', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('550', 'zjs', '宅急送', 'Z', '1', '100', '1553911076', '1553911076', 'ZJS');
+INSERT INTO `ey_shop_express` VALUES ('551', 'ztky', '中铁快运', 'Z', '1', '100', '1553911076', '1553911076', 'ZTWL');
+INSERT INTO `ey_shop_express` VALUES ('552', 'ztwl', '中铁物流', 'Z', '1', '100', '1553911076', '1553911076', 'ZTWL');
+INSERT INTO `ey_shop_express` VALUES ('553', 'zywl', '中邮物流', 'Z', '1', '100', '1553911076', '1553911076', 'ZYWL');
+INSERT INTO `ey_shop_express` VALUES ('554', 'zhimakaimen', '芝麻开门', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('555', 'zhengzhoujianhua', '郑州建华', 'Z', '1', '100', '1553911076', '1553911076', 'ZZJH');
+INSERT INTO `ey_shop_express` VALUES ('556', 'zhongsukuaidi', '中速快件', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('557', 'zhongtianwanyun', '中天万运', 'Z', '1', '100', '1553911076', '1553911076', 'ZTWY');
+INSERT INTO `ey_shop_express` VALUES ('558', 'zhongruisudi', '中睿速递', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('559', 'zhongwaiyun', '中外运速递', 'Z', '1', '100', '1553911076', '1553911076', 'ZWYSD');
+INSERT INTO `ey_shop_express` VALUES ('560', 'zengyisudi', '增益速递', 'Z', '1', '100', '1553911076', '1553911076', 'ZENY');
+INSERT INTO `ey_shop_express` VALUES ('561', 'sujievip', '郑州速捷', 'Z', '1', '100', '1553911076', '1553911076', 'SJ');
+INSERT INTO `ey_shop_express` VALUES ('562', 'ztong', '智通物流', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('563', 'zhichengtongda', '至诚通达快递', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('564', 'zhdwl', '众辉达物流', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('565', 'kuachangwuliu', '直邮易', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('566', 'topspeedex', '中运全速', 'Z', '1', '100', '1553911076', '1553911076', 'ZYQS');
+INSERT INTO `ey_shop_express` VALUES ('567', 'otobv', '中欧快运', 'Z', '1', '100', '1553911076', '1553911076', 'ZO');
+INSERT INTO `ey_shop_express` VALUES ('568', 'zsky123', '准实快运', 'Z', '1', '100', '1553911076', '1553911076', 'ZSKY');
+INSERT INTO `ey_shop_express` VALUES ('569', 'cnws', '中国翼', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('570', 'zytdscm', '中宇天地', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('571', 'zhuanyunsifang', '转运四方', 'Z', '1', '100', '1553911076', '1553911076', 'A4PX');
+INSERT INTO `ey_shop_express` VALUES ('572', 'hrbzykd', '卓烨快递', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('573', 'zhuoshikuaiyun', '卓实快运', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('574', 'chinaicip', '卓志速运', 'Z', '1', '100', '1553911076', '1553911076', 'ESDEX');
+INSERT INTO `ey_shop_express` VALUES ('575', 'ynztsy', '纵通速运', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('576', 'zdepost', '直德邮', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('577', 'chinapostcb', '中邮电商', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('578', 'chunghwa56', '中骅物流', 'Z', '1', '100', '1553911076', '1553911076', 'ZHWL');
+INSERT INTO `ey_shop_express` VALUES ('579', 'cosco', '中远e环球', 'Z', '1', '100', '1553911076', '1553911076', 'COSCO');
+INSERT INTO `ey_shop_express` VALUES ('580', 'zf365', '珠峰速运', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('581', 'zhongtongkuaiyun', '中通快运', 'Z', '1', '100', '1553911076', '1553911076', 'ZTOKY');
+INSERT INTO `ey_shop_express` VALUES ('582', 'eucnrail', '中欧国际物流', 'Z', '1', '100', '1553911076', '1553911076', 'ZO');
+INSERT INTO `ey_shop_express` VALUES ('583', 'chnexp', '中翼国际物流', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('584', 'cccc58', '中集冷云', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('585', 'auvanda', '中联速递', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('586', 'zyzoom', '增速跨境', 'Z', '1', '100', '1553911076', '1553911076', 'ZYZOOM');
+INSERT INTO `ey_shop_express` VALUES ('587', 'zhpex', '众派速递', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('588', 'byht', '展勤快递', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('589', 'zhongchuan', '众川国际', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('590', 'zhonghuanus', '中环转运', 'Z', '1', '100', '1553911076', '1553911076', 'ZHONGHUAN');
+INSERT INTO `ey_shop_express` VALUES ('591', 'zhonghuan', '中环快递', 'Z', '1', '100', '1553911076', '1553911076', 'ZHONGHUAN');
+INSERT INTO `ey_shop_express` VALUES ('592', 'uszcn', '转运中国', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('593', 'zhitengwuliu', '志腾物流', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('594', 'zsda56', '转瞬达集运', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('595', 'zjgj56', '振捷国际货运', 'Z', '1', '100', '1553911076', '1553911076', '');
+INSERT INTO `ey_shop_express` VALUES ('596', 'jtexpress', '极兔速递', 'J', '1', '100', '1553911076', '1553911076', 'JTSD');
+INSERT INTO `ey_shop_express` VALUES ('597', 'fengwang', '丰网速运', 'F', '1', '100', '1553911076', '1647484768', '');
+
+-- -----------------------------
+-- Table structure for `ey_shop_goods_label`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_shop_goods_label`;
+CREATE TABLE `ey_shop_goods_label` (
+  `label_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `label_title` varchar(60) NOT NULL DEFAULT '' COMMENT '标签标题',
+  `label_pic` varchar(60) NOT NULL DEFAULT '' COMMENT '标签路径',
+  `label_intro` varchar(500) NOT NULL DEFAULT '' COMMENT '标签描述',
+  `status` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '状态(1:启用; 2:禁用)',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`label_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COMMENT='商城商品服务标签';
+
+-- -----------------------------
+-- Records of `ey_shop_goods_label`
+-- -----------------------------
+INSERT INTO `ey_shop_goods_label` VALUES ('1', '运费险', '/public/static/admin/images/fuwu1.png', '卖家为您购买的商品投保退货运费险（保单生效以确认订单页展示的运费险为准）', '1', '1701250984', '1702626503');
+INSERT INTO `ey_shop_goods_label` VALUES ('2', '货到付款', '/public/static/admin/images/fuwu2.png', '支持送货上门后再收款，支持现金、POS机刷卡等方式', '1', '1701250984', '1702626503');
+INSERT INTO `ey_shop_goods_label` VALUES ('3', '闪电退款', '/public/static/admin/images/fuwu3.png', '闪电退款为会员提供的快速退款服务', '1', '1701250984', '1702626503');
+INSERT INTO `ey_shop_goods_label` VALUES ('4', '7天无理由退货', '/public/static/admin/images/fuwu4.png', '支持7天无理由退货(拆封后不支持)', '1', '1701250984', '1702626503');
+
+-- -----------------------------
+-- Table structure for `ey_shop_goods_label_bind`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_shop_goods_label_bind`;
+CREATE TABLE `ey_shop_goods_label_bind` (
+  `bind_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `aid` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '商品ID(archives 表 aid 字段)',
+  `label_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '商品服务标签ID(shop_goods_label 表 label_id 字段)',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '新增时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`bind_id`),
+  KEY `aid` (`aid`) USING BTREE,
+  KEY `label_id` (`label_id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='商城商品服务标签与商品ID关联绑定表';
+
 
 -- -----------------------------
 -- Table structure for `ey_shop_order`
@@ -8707,6 +8918,7 @@ CREATE TABLE `ey_shop_order` (
   `order_total_amount` decimal(10,2) DEFAULT '0.00' COMMENT '订单总价',
   `order_amount` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '应付款金额',
   `order_total_num` int(10) DEFAULT '0' COMMENT '订单总数',
+  `is_total_amount` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '订单是否已将实际支付金额(order表order_amount字段)累加到会员累计消费金额(users表order_total_amount字段) (0:未累计; 1:已累计;)',
   `country` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '国家',
   `province` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '省份',
   `city` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '城市',
@@ -9286,8 +9498,8 @@ CREATE TABLE `ey_sql_cache_table` (
 -- -----------------------------
 -- Records of `ey_sql_cache_table`
 -- -----------------------------
-INSERT INTO `ey_sql_cache_table` VALUES ('1', 'ArchivesMaxID', '106', '494a17e43cff13eeb4b9c9837c29026c', 'SELECT MAX(aid) AS tp_max FROM `ey_archives` LIMIT 1', '1710744387', '1710744387');
-INSERT INTO `ey_sql_cache_table` VALUES ('2', '|model|all|count|', '{\"1\":{\"channel\":1,\"total\":17},\"2\":{\"channel\":2,\"total\":12},\"3\":{\"channel\":3,\"total\":6},\"4\":{\"channel\":4,\"total\":4},\"6\":{\"channel\":6,\"total\":3}}', 'd5ac17fe5649c6d04f4b174c42f2d535', 'SELECT channel, count(aid) as total FROM `ey_archives` WHERE  `lang` = \'cn\'  AND `status` = 1  AND `is_del` = 0  AND (  (users_id = 0 OR (users_id > 0 AND arcrank >= 0)) ) GROUP BY `channel`', '1710744388', '1710744388');
+INSERT INTO `ey_sql_cache_table` VALUES ('1', 'ArchivesMaxID', '106', '494a17e43cff13eeb4b9c9837c29026c', 'SELECT MAX(aid) AS tp_max FROM `ey_archives` LIMIT 1', '1713251021', '1713251021');
+INSERT INTO `ey_sql_cache_table` VALUES ('2', '|model|all|count|', '{\"1\":{\"channel\":1,\"total\":17},\"2\":{\"channel\":2,\"total\":12},\"3\":{\"channel\":3,\"total\":6},\"4\":{\"channel\":4,\"total\":4},\"6\":{\"channel\":6,\"total\":3}}', 'd5ac17fe5649c6d04f4b174c42f2d535', 'SELECT channel, count(aid) as total FROM `ey_archives` WHERE  `lang` = \'cn\'  AND `status` = 1  AND `is_del` = 0  AND (  (users_id = 0 OR (users_id > 0 AND arcrank >= 0)) ) GROUP BY `channel`', '1713251023', '1713251023');
 
 -- -----------------------------
 -- Table structure for `ey_statistics_data`
@@ -9497,6 +9709,7 @@ CREATE TABLE `ey_users` (
   `level_maturity_days` varchar(20) DEFAULT '' COMMENT '会员级别到期天数',
   `discount` decimal(10,2) DEFAULT '1.00' COMMENT '会员折扣，默认1不享受',
   `total_amount` decimal(10,2) DEFAULT '0.00' COMMENT '消费累计额度',
+  `order_total_amount` decimal(10,2) unsigned DEFAULT '0.00' COMMENT '订单累计总额，用于会员自动升级。',
   `is_activation` tinyint(1) DEFAULT '1' COMMENT '是否激活，0否，1是。\r\n后台注册默认为1激活。\r\n前台注册时，当会员功能设置选择后台审核，需后台激活才可以登陆。',
   `register_place` tinyint(1) DEFAULT '2' COMMENT '注册位置。后台注册不受注册验证影响，1为后台注册，2为前台注册。默认为2。',
   `open_id` varchar(50) NOT NULL DEFAULT '' COMMENT '第三方唯一标识openid',
@@ -9684,10 +9897,14 @@ CREATE TABLE `ey_users_level` (
   `is_system` tinyint(1) DEFAULT '0' COMMENT '类型，1=系统，0=用户',
   `amount` decimal(10,2) DEFAULT '0.00' COMMENT '消费额度',
   `down_count` int(10) DEFAULT '0' COMMENT '每天下载次数限制',
+  `discount_type` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '升级条件类型(0:不设置折扣; 1:自定义折扣)',
   `discount` float(10,2) DEFAULT '100.00' COMMENT '折扣率，初始值为100即100%，无折扣',
   `posts_count` int(10) DEFAULT '5' COMMENT '会员投稿次数限制',
   `ask_is_release` tinyint(1) DEFAULT '1' COMMENT '允许在问答中发布问题，1=是，0=否',
   `ask_is_review` tinyint(1) DEFAULT '0' COMMENT '在问答中发布问题或回答是否需要审核，1=是，0=否',
+  `upgrade_type` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '升级条件类型(0:不自动升级; 1:订单金额)',
+  `upgrade_order_money` decimal(10,2) unsigned NOT NULL DEFAULT '0.00' COMMENT '累计完成订单金额满多少自动升级成当前会员等级',
+  `status` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '会员等级状态(0:禁用; 1:启用)',
   `lang` varchar(20) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
@@ -9697,9 +9914,9 @@ CREATE TABLE `ey_users_level` (
 -- -----------------------------
 -- Records of `ey_users_level`
 -- -----------------------------
-INSERT INTO `ey_users_level` VALUES ('1', '注册会员', '10', '1', '0.00', '100', '100', '5', '1', '0', 'cn', '0', '1551151513');
-INSERT INTO `ey_users_level` VALUES ('2', '中级会员', '50', '0', '0.00', '100', '100', '10', '1', '0', 'cn', '1564532901', '1564532901');
-INSERT INTO `ey_users_level` VALUES ('3', '高级会员', '100', '0', '0.00', '100', '100', '20', '1', '0', 'cn', '1564532901', '1564532901');
+INSERT INTO `ey_users_level` VALUES ('1', '注册会员', '10', '1', '0.00', '100', '1', '100', '5', '1', '0', '0', '0.00', '1', 'cn', '0', '1551151513');
+INSERT INTO `ey_users_level` VALUES ('2', '中级会员', '50', '0', '0.00', '100', '1', '100', '10', '1', '0', '0', '0.00', '1', 'cn', '1564532901', '1564532901');
+INSERT INTO `ey_users_level` VALUES ('3', '高级会员', '100', '0', '0.00', '100', '1', '100', '20', '1', '0', '0', '0.00', '1', 'cn', '1564532901', '1564532901');
 
 -- -----------------------------
 -- Table structure for `ey_users_like`
@@ -9786,7 +10003,7 @@ CREATE TABLE `ey_users_menu` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `title` varchar(30) DEFAULT '' COMMENT '导航名称',
   `version` varchar(10) DEFAULT 'weapp' COMMENT '分组',
-  `mca` varchar(50) DEFAULT '' COMMENT '分组/控制器/操作名',
+  `mca` varchar(200) DEFAULT '' COMMENT '分组/控制器/操作名',
   `active_url` varchar(500) DEFAULT '' COMMENT '标记为选中的url',
   `is_userpage` tinyint(1) DEFAULT '0' COMMENT '默认会员首页',
   `sort_order` int(10) DEFAULT '0' COMMENT '排序号',
@@ -9794,25 +10011,26 @@ CREATE TABLE `ey_users_menu` (
   `lang` varchar(20) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  `type` tinyint(3) DEFAULT '0' COMMENT '左侧菜单类型',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8 COMMENT='会员菜单表';
 
 -- -----------------------------
 -- Records of `ey_users_menu`
 -- -----------------------------
-INSERT INTO `ey_users_menu` VALUES ('1', '个人信息', 'v1', 'user/Users/index', '', '1', '100', '1', 'cn', '1555904190', '1555917737');
-INSERT INTO `ey_users_menu` VALUES ('2', '账户充值', 'v1', 'user/Pay/pay_consumer_details', '', '0', '100', '1', 'cn', '1555904190', '1563498414');
-INSERT INTO `ey_users_menu` VALUES ('3', '商城中心', 'v1', 'user/Shop/shop_centre', '', '0', '100', '1', 'cn', '1555904190', '1563498415');
-INSERT INTO `ey_users_menu` VALUES ('4', '会员升级', 'v1', 'user/Level/level_centre', '', '0', '100', '1', 'cn', '1555904190', '1564555772');
-INSERT INTO `ey_users_menu` VALUES ('5', '会员投稿', 'v1', 'user/UsersRelease/release_centre', '', '0', '100', '1', 'cn', '1555904190', '1564555773');
-INSERT INTO `ey_users_menu` VALUES ('6', '我的下载', 'v1', 'user/Download/index', '', '0', '100', '1', 'cn', '1590484667', '1602320126');
-INSERT INTO `ey_users_menu` VALUES ('7', '个人中心', 'v1', 'user/Users/index', '', '1', '100', '1', 'cn', '1608708057', '1609385363');
-INSERT INTO `ey_users_menu` VALUES ('11', '个人中心', 'v2', 'user/Users/index', 'user/Users/index|user/Pay/pay_account_recharge|user/Users/footprint_index|user/Level/level_centre|user/Download/index|user/Users/media_index', '1', '100', '1', 'cn', '1608708057', '1609385363');
-INSERT INTO `ey_users_menu` VALUES ('10', '财务明细', 'v1', 'user/Pay/pay_consumer_details', '', '0', '100', '1', 'cn', '1608709000', '1609387813');
-INSERT INTO `ey_users_menu` VALUES ('12', '我的信息', 'v2', 'user/Users/info', 'user/Users/info', '0', '100', '1', 'cn', '1608709100', '1609385363');
-INSERT INTO `ey_users_menu` VALUES ('13', '我的收藏', 'v2', 'user/Users/collection_index', 'user/Users/collection_index', '0', '100', '1', 'cn', '1608708100', '1609385363');
-INSERT INTO `ey_users_menu` VALUES ('14', '财务明细', 'v2', 'user/Pay/pay_consumer_details', 'user/Pay/pay_consumer_details|user/Users/score_index', '0', '100', '1', 'cn', '1608709000', '1609387813');
-INSERT INTO `ey_users_menu` VALUES ('15', '我的收藏', 'v1', 'user/Users/collection_index', '', '0', '100', '1', 'cn', '1590484667', '1614651537');
+INSERT INTO `ey_users_menu` VALUES ('1', '个人信息', 'v1', 'user/Users/index', '', '1', '100', '1', 'cn', '1555904190', '1555917737', '0');
+INSERT INTO `ey_users_menu` VALUES ('2', '账户充值', 'v1', 'user/Pay/pay_consumer_details', '', '0', '100', '1', 'cn', '1555904190', '1563498414', '0');
+INSERT INTO `ey_users_menu` VALUES ('3', '商城中心', 'v1', 'user/Shop/shop_centre', '', '0', '100', '1', 'cn', '1555904190', '1563498415', '0');
+INSERT INTO `ey_users_menu` VALUES ('4', '会员升级', 'v1', 'user/Level/level_centre', '', '0', '100', '1', 'cn', '1555904190', '1564555772', '0');
+INSERT INTO `ey_users_menu` VALUES ('5', '会员投稿', 'v1', 'user/UsersRelease/release_centre', '', '0', '100', '1', 'cn', '1555904190', '1564555773', '0');
+INSERT INTO `ey_users_menu` VALUES ('6', '我的下载', 'v1', 'user/Download/index', '', '0', '100', '1', 'cn', '1590484667', '1602320126', '0');
+INSERT INTO `ey_users_menu` VALUES ('7', '个人中心', 'v1', 'user/Users/index', '', '1', '100', '1', 'cn', '1608708057', '1609385363', '0');
+INSERT INTO `ey_users_menu` VALUES ('11', '个人中心', 'v2', 'user/Users/index', 'user/Users/index', '1', '100', '1', 'cn', '1608708057', '1609385363', '0');
+INSERT INTO `ey_users_menu` VALUES ('10', '财务明细', 'v1', 'user/Pay/pay_consumer_details', '', '0', '100', '1', 'cn', '1608709000', '1609387813', '0');
+INSERT INTO `ey_users_menu` VALUES ('12', '我的信息', 'v2', 'user/Users/info', 'user/Users/info', '0', '100', '1', 'cn', '1608709100', '1609385363', '0');
+INSERT INTO `ey_users_menu` VALUES ('13', '我的收藏', 'v2', 'user/Users/collection_index', 'user/Users/collection_index', '0', '100', '1', 'cn', '1608708100', '1609385363', '0');
+INSERT INTO `ey_users_menu` VALUES ('14', '财务明细', 'v2', 'user/Pay/pay_consumer_details', 'user/Pay/pay_consumer_details|user/Users/score_index', '0', '100', '1', 'cn', '1608709000', '1609387813', '0');
+INSERT INTO `ey_users_menu` VALUES ('15', '我的收藏', 'v1', 'user/Users/collection_index', '', '0', '100', '1', 'cn', '1590484667', '1614651537', '0');
 
 -- -----------------------------
 -- Table structure for `ey_users_money`
@@ -9845,7 +10063,7 @@ CREATE TABLE `ey_users_money` (
 DROP TABLE IF EXISTS `ey_users_notice`;
 CREATE TABLE `ey_users_notice` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` varchar(50) DEFAULT '' COMMENT '通知标题',
+  `title` varchar(200) DEFAULT '' COMMENT '通知标题',
   `users_id` text NOT NULL COMMENT '用户id',
   `usernames` text NOT NULL COMMENT '用户名字符串',
   `remark` text COMMENT '通知信息',
@@ -9888,7 +10106,7 @@ CREATE TABLE `ey_users_notice_tpl` (
   `add_time` int(11) DEFAULT '0' COMMENT '添加时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`tpl_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COMMENT='站内信模板表';
+) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 COMMENT='站内信模板表';
 
 -- -----------------------------
 -- Records of `ey_users_notice_tpl`
@@ -9897,6 +10115,7 @@ INSERT INTO `ey_users_notice_tpl` VALUES ('1', '留言表单', '您有新的留�
 INSERT INTO `ey_users_notice_tpl` VALUES ('5', '订单付款', '您有新的待发货订单消息，请到商城订单查看！', '${content}', '5', '1', 'cn', '1616460912', '1616460912');
 INSERT INTO `ey_users_notice_tpl` VALUES ('6', '订单发货', '您有新的待收货订单消息，请到会员订单查看！', '${content}', '6', '1', 'cn', '1616460912', '1616460912');
 INSERT INTO `ey_users_notice_tpl` VALUES ('7', '投稿提醒', '您有新的投稿文档，请及时查看！', '${content}', '20', '0', 'cn', '1616460912', '1616460912');
+INSERT INTO `ey_users_notice_tpl` VALUES ('8', '会员升级', '您有新的会员升级提醒！', '${content}', '21', '1', 'cn', '1710472930', '1710472930');
 
 -- -----------------------------
 -- Table structure for `ey_users_notice_tpl_content`
@@ -9913,6 +10132,7 @@ CREATE TABLE `ey_users_notice_tpl_content` (
   `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
   `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
+  `aid` int(11) DEFAULT '0' COMMENT '留言id',
   PRIMARY KEY (`content_id`),
   KEY `admin_id` (`admin_id`) USING BTREE,
   KEY `users_id` (`users_id`) USING BTREE
@@ -10110,6 +10330,51 @@ INSERT INTO `ey_weapp` VALUES ('16', 'ExportOrder', '订单导出', '{\"code\":\
 INSERT INTO `ey_weapp` VALUES ('17', 'Users', '会员个人主页展示', '{\"code\":\"Users\",\"name\":\"\\u4f1a\\u5458\\u4e2a\\u4eba\\u4e3b\\u9875\\u5c55\\u793a\",\"version\":\"v1.0.1\",\"min_version\":\"1.5.2\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/userup\\/5095\\/15b433108-4Q9.png\",\"description\":\"\\u529f\\u80fd\\u4e00\\uff1a\\u6dfb\\u52a0\\u4e86\\u4f1a\\u5458\\u4e4b\\u95f4\\u7684\\u5173\\u6ce8\\u529f\\u80fd \\u529f\\u80fd\\u4e8c\\uff1a\\u6dfb\\u52a0\\u4e86\\u6295\\u7a3f\\u6570\\u91cf\\u3001\\u88ab\\u5173\\u6ce8\\u7684\\u6570\\u91cf\\u548c\\u5173\\u6ce8\\u7684\\u6570\\u91cf \\u529f\\u80fd\\u4e09\\uff1a\\u5728\\u4e2a\\u4eba\\u4e2d\\u5fc3\\u53ef\\u4ee5\\u663e\\u793a\\u51fa\\u4f1a\\u5458\\u7684\\u4e2a\\u4eba\\u8d44\\u6599 \\u529f\\u80fd\\u56db\\uff1a\\u5728\\u4e2a\\u4eba\\u4f1a\\u5458\\u4e2d\\u5fc3\\u53ef\\u4ee5\\u67e5\\u770b\\u8be5\\u7528\\u6237\\u7684\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
 INSERT INTO `ey_weapp` VALUES ('18', 'Ask', '易优问答', '{\"code\":\"Ask\",\"name\":\"\\u6613\\u4f18\\u95ee\\u7b54\",\"version\":\"v1.3.3\",\"min_version\":\"1.5.8\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/200616\\/5-2006161F43V92.jpg\",\"description\":\"   \\u63d2\\u4ef6\\u63cf\\u8ff0   \\u6613\\u4f18\\u95ee\\u7b54\\u63d2\\u4ef6V1.0.1\\u662f\\u6613\\u4f18\\u56e2\\u961f\\u54cd\\u5e94\\u7528\\u6237\\u7684\\u9700\\u6c42\\u5f00\\u53d1\\u4e00\\u4e2a\\u4f1a\\u5458\\u53ef\\u4ee5\\u5728\\u7ebf\\u53d1\\u8d77\\u63d0\\u95ee\\u53ca\\u76f8\\u4e92\\u56de\\u7b54\\uff0c\\u5bf9\\u56de\\u7b54\\u70b9\\u8d5e\\u7684\\u63d2\\u4ef6\\u3002    \\u6700\\u65b0\\u66f4\\u65b0\\u7684v1.0.1\\u5df2\\u652f\\u6301\\u95ee\\u7b54\\u72ec\\u7acb\\u8bbe\\u7f6e\\u4f2a\\u9759\\u6001url\\u89c4\\u5219\\uff0c\\u5df2\\u5b89\\u88c5\\u7684\\u7528\\u6237\\u53ef\\u4ee5\\u5728\\u540e\\u53f0\\u66f4\\u65b0\\u8bbe\\u7f6e\\u5373\\u53ef\\uff082019.11.28\\uff09    \\u65b0\\u589e\\u95ee\\u7b54\\u60ac\\u8d4f\\u529f\\u80fd\\uff082022.06.20\\uff09    \\u5982\\u9700\\u67e5\\u770b\\u6f14\\u793a\\u53ef\\u6d4f\\u89c8\\u6613\\u4f18\\u5b98\\u65b9\\u95ee\\u7b54\\uff08\\u6f14\\u793a\\uff09    \\u6ce8\\u610f\\u4e8b\\u9879    1\\u3001\\u7cfb\\u7edf\\u7248\\u672c\\u9700\\u8981\\u5347\\u7ea7\\u52301.5.8\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
 INSERT INTO `ey_weapp` VALUES ('19', 'Verify', '商品核销', '{\"code\":\"Verify\",\"name\":\"\\u5546\\u54c1\\u6838\\u9500\",\"version\":\"v1.0.0\",\"min_version\":\"1.6.4\",\"author\":\"\\u533f\\u540d\",\"litpic\":\"https:\\/\\/www.eyoucms.com\\/uploads\\/user\\/9406\\/allimg\\/20230905\\/9406-230Z51H223K0.png\",\"description\":\"\\u5546\\u54c1\\u6838\\u9500\\uff0c\\u662f\\u5c06\\u7ebf\\u4e0a\\u8ba2\\u5355\\u5f15\\u5bfc\\u5230\\u7ebf\\u4e0b\\u6d88\\u8d39\\uff0c\\u5e76\\u5b8c\\u6210\\u8ba2\\u5355\\u6838\\u9500\\u7684\\u8fc7\\u7a0b\\uff0c\\u5b9e\\u73b0\\u7ebf\\u4e0a\\u548c\\u7ebf\\u4e0b\\u6d88\\u8d39\\u573a\\u666f\\u7684\\u6253\\u901a\\uff0c\\u8f7b\\u677e\\u4e3a\\u7ebf\\u4e0b\\u5e97\\u94fa\\u5f15\\u6d41\\u30021\\u3001\\u652f\\u6301\\u6838\\u9500\\u72b6\\u6001\\u67e5\\u770b2\\u3001\\u652f\\u6301\\u95e8\\u5e97\\u81ea\\u63d0\\u6838\\u95003\\u3001\\u652f\\u6301\\u6838\",\"scene\":\"0\",\"permission\":[]}', '', '0', '1', '0', 'default', '1', '1', '100', '1703142373', '1703142373', '100', '0');
+
+-- -----------------------------
+-- Table structure for `ey_wechat_template`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_wechat_template`;
+CREATE TABLE `ey_wechat_template` (
+  `tpl_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `tpl_title` varchar(128) NOT NULL DEFAULT '' COMMENT '模板标题',
+  `template_title` varchar(100) DEFAULT '' COMMENT '官方模板标题',
+  `template_code` varchar(30) DEFAULT '' COMMENT '模板编号',
+  `template_id` varchar(100) NOT NULL DEFAULT '' COMMENT '模板ID',
+  `tpl_data` text NOT NULL COMMENT '模板内容序列化',
+  `send_scene` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '发送场景',
+  `is_open` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '是否开启使用这个模板，1为是，0为否。',
+  `info` varchar(200) DEFAULT '' COMMENT '发送说明',
+  `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '添加时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`tpl_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='微信公众号消息发送模板';
+
+-- -----------------------------
+-- Records of `ey_wechat_template`
+-- -----------------------------
+INSERT INTO `ey_wechat_template` VALUES ('1', '留言表单', '客户需求提交成功通知', '0', '', '{\"keywordsList\":[{\"name\":\"\\u9700\\u6c42\\u9879\\u76ee\",\"example\":\"\\u57ce\\u4e61\\u73af\\u536b\\u4e00\\u4f53\\u5316\\u62db\\u6807\\u65b9\\u6848\\u5b9a\\u5236\",\"rule\":\"thing7\"},{\"name\":\"\\u9700\\u6c42\\u65f6\\u95f4\",\"example\":\"2023\\u5e7410\\u670831\\u65e5 12:23:34\",\"rule\":\"time6\"}]}', '1', '0', '客户提交留言后立即发送', 'cn', '1713251003', '1713251003');
+INSERT INTO `ey_wechat_template` VALUES ('2', '订单付款', '订单支付成功提醒', '0', '', '{\"keywordsList\":[{\"name\":\"\\u8ba2\\u5355\\u7f16\\u53f7\",\"example\":\"202304301347362851008422\",\"rule\":\"character_string3\"},{\"name\":\"\\u4ea7\\u54c1\\u540d\\u79f0\",\"example\":\"RS\\u8d27\\u6b3e\",\"rule\":\"thing11\"},{\"name\":\"\\u8ba2\\u5355\\u91d1\\u989d\",\"example\":\"\\uffe599.99\",\"rule\":\"amount4\"},{\"name\":\"\\u652f\\u4ed8\\u65f6\\u95f4\",\"example\":\"2022-10-23 14:23:26\",\"rule\":\"time7\"}]}', '9', '0', '买家付款成功后立即发送', 'cn', '1713251003', '1713251003');
+
+-- -----------------------------
+-- Table structure for `ey_wx_shipping_info`
+-- -----------------------------
+DROP TABLE IF EXISTS `ey_wx_shipping_info`;
+CREATE TABLE `ey_wx_shipping_info` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `users_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '会员ID',
+  `order_code` varchar(255) NOT NULL DEFAULT '' COMMENT '订单编号',
+  `order_source` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '订单来源(1:会员普通充值订单; 2:会员商城商品订单; 3:会员升级订单; 8:会员视频订单; 20:会员套餐充值订单;)',
+  `pay_success` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否支付成功(1:是; 0:否)',
+  `pay_config` varchar(500) NOT NULL DEFAULT '' COMMENT '订单支付时所使用的支付配置信息(serialize存入，需unserialize解析)',
+  `errcode` varchar(255) NOT NULL DEFAULT '' COMMENT '错误代码',
+  `errmsg` varchar(255) NOT NULL DEFAULT '' COMMENT '错误提示',
+  `add_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '添加时间',
+  `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='微信发货推送表';
+
 
 -- -----------------------------
 -- Table structure for `ey_wx_users`

@@ -51,7 +51,6 @@ class Arctype extends Base
             }
         }
         /*--end*/
-
     }
 
     public function index()

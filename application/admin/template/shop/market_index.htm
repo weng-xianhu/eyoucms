@@ -3,18 +3,21 @@
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 {include file="shop/left" /}
-<div class="page" style="padding: 0;background-color:transparent">
-    <div class="on-off_panel" style="margin-bottom: 0;">
-        <div class="title">营销功能</div>
-            <div class="on-off_list">
-                <div class="on-off_list b-icon">
+<div class="page min-hg-c-10" >
+    <div class="marketing_panel" style="margin-bottom: 0;">
+        <div class="title">我的应用</div>
+            <div class="marketing">
+                <div class="marketing_list b-icon">
                     <ul class="marketing-nav">
                         {if condition="true || in_array('sharp', $marketFunc)"}
                             {eq name="'Sharp@index'|is_check_access" value="1"}
-                                <li class="more_li">
-                                    <a href="{:url('Sharp/index')}">
+                                <li class="">
+                                    <a class="my" href="{:url('Sharp/index')}">
                                         <div class="icon" style="background-color: #fd5148;"><i class="iconfont e-zhengdianmiaosha"></i></div>
-                                        <span><h2>整点秒杀</h2><br><p>低价、限购，吸引更多会员</p></span>
+                                        <span>
+                                            <h2>整点秒杀</h2>
+                                            <p>应用于小程序</p>
+                                        </span>
                                     </a>
                                 </li>
                             {/eq}
@@ -22,38 +25,63 @@
 
                         {if condition="true || in_array('coupon', $marketFunc)"}
                             {eq name="'Coupon@index'|is_check_access" value="1"}
-                                <li class="more_li">
-                                    <a href="{:url('Coupon/index')}">
+                                <li class="">
+                                    <a class="my" href="{:url('Coupon/index')}">
                                         <div class="icon" style="background-color: #18a5ed;"><i class="iconfont e-youhuiquan"></i></div>
-                                        <span><h2>优惠券</h2><br><p>消费领取优惠券，增加二次消费</p></span>
+                                        <span>
+                                            <h2>优惠券（旧版）</h2>
+                                            <p>应用于小程序</p>
+                                        </span>
                                     </a>
                                 </li>
                             {/eq}
                         {/if}
 
-                        <!-- {eq name="'ShopComment@comment_index'|is_check_access" value="1"}
-                            <li class="more_li">
-                                <a href="{:url('ShopComment/comment_index')}">
-                                    <div class="icon" style="background-color: #2dc714;"><i class="iconfont e-keshihuabianji"></i></div>
-                                    <span><h2>商品评价</h2><br><p>分享商品感受、增加口碑</p></span>
+                        {foreach name="myShopList" item="vo" key="k" }
+                            <li class="">
+                                <a class="my" {if condition="!empty($vo['target']) && $vo['target'] == '_blank'"} href="{$vo['href']}" target="{$vo['target']|default='_self'}" {else/} href="javascript:void(0);" onclick="goto_url(this);" data-href="{$vo['href']}" {/if}>
+                                    <div class="pic"><img src="{$vo.config.litpic|get_default_pic=###}?v={$vo.config.version}" ></div>
+                                    <span>
+                                        <h2>{$vo.name}</h2>
+                                        <p>{$vo.apply_channels|default=''}</p>
+                                    </span>
                                 </a>
                             </li>
-                        {/eq} -->
-                        
-                        <!-- {eq name="'Discount@index'|is_check_access" value="1"}
-                        <li class="more_li">
-                            <a href="{:url('Discount/index')}">
-                                <div class="icon" style="background-color: #fd5148;"><i class="iconfont e-zhengdianmiaosha"></i></div>
-                                <span><h2>限时折扣</h2><br><p>低价、限购，吸引更多会员</p></span>
-                            </a>
-                        </li>
-                        {/eq} -->
+                        {/foreach}
                     </ul>
                 </div>
             </div>
         </div>
+        <script type="text/javascript">
+            function goto_url(obj)
+            {
+                setCookies('admin-weapp_index_gourl', 'Shop/market_index');
+                var url = $(obj).attr('data-href');
+                window.location.href = url;
+            }
+        </script>
+        {if condition="0 >= $Think.session.admin_info.role_id && $weapp_plugin_open == 1 && $global['web_weapp_switch'] == 1"}
+        <div class="marketing_panel" style="margin-bottom: 0;">
+            <div class="title">商城应用</div>
+            <div class="marketing">
+                <div class="marketing_list b-icon">
+                    <ul class="marketing-nav" id="plugin_weapp_list">
+                        <div class="no_row" style="margin-top: 100px;">
+                            <div class="no_pic"><img src="__SKIN__/images/loading.gif">&nbsp;努力加载中…</div>
+                        </div>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {/if}
     </div>
 </div>
+<form name="form2" id="form2" method="post" action="">
+    <input type="hidden" name="id" value=""/>
+    <input type="hidden" name="code" value=""/>
+    <input type="hidden" name="min_version" value=""/>
+    <input type="hidden" name="thorough" value="1"/>
+</form>
 <script>
     try{
         if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
@@ -64,6 +92,180 @@
             $(".page").css("min-width","auto");
         }
     }catch(e){}
+
+    function get_plugin_weapp_list()
+    {
+        $.ajax({
+            type : 'get',
+            url : "{:url('Shop/pluginShopWeapp')}",
+            data : {_ajax:1},
+            dataType : 'json',
+            success : function(res){
+                if(res.code == 1){
+                    $('#plugin_weapp_list').empty().html(res.data.html);
+                }else{
+                    $('#plugin_weapp_list div.no_pic').html(res.msg);
+                }
+            },
+            error: function(e){
+                $('#plugin_weapp_list div.no_pic').html('应用市场接口请求失败');
+            }
+        });
+    }
+    get_plugin_weapp_list();
+
+    function weapp_upgrade(obj)
+    {
+        var name = $(obj).attr('data-name');
+        var status = $(obj).attr('data-status');
+        if (0 == status) {
+            layer.alert('请先安装该插件！', {
+                title:false,//name,
+                icon: 0
+            });
+            return false;
+        }
+
+        var code = $(obj).attr('data-code');
+        var v = $("#"+code+"_upgrade").val();    
+        var intro = $("#"+code+"_intro").val();   
+        intro += '<style type="text/css">.layui-layer-content{height:270px!important;text-align:left!important;}</style>';
+        var notice = $("#"+code+"_notice").val(); 
+        v = notice + intro + '<br/>' + v;
+        //询问框
+        layer.confirm(v, {
+            shade: layer_shade,
+            area: ['580px','400px'],
+            move: false,
+            title: '新版本更新',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['升级','取消'], //按钮
+            success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
+        }, function(){
+            layer.closeAll();
+            setTimeout(function(){
+                upgrade(code); // 请求后台
+            },200);
+            
+        }, function(index){  
+            layer.close(index);
+        });    
+    }
+
+    function upgrade(code){
+        layer_loading('升级中');
+        $.ajax({
+            type : "GET",
+            url  : "{:url('Weapp/OneKeyUpgrade')}",
+            timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
+            data : {code:code, _ajax:1},
+            error: function(request) {
+                layer.closeAll();
+                layer.alert("升级失败！", {icon: 5, closeBtn: false, title:false}, function(){
+                    window.location.reload();
+                });
+            },
+            success: function(res) {
+                if(1 == res.code){
+                    $.ajax({
+                        type : 'GET',
+                        url : eyou_basefile+"?m=admin&c=Weapp&a=execute&sm="+code+"&sc="+code+"&sa=afterUpgrade&lang="+__lang__,
+                        timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
+                        data : {_ajax:1},
+                        dataType : 'json',
+                        success : function(res){
+                            layer.closeAll();
+                            layer.msg('已升级最新版本!', {time:1000}, function(){
+                                window.location.reload();
+                            });
+                        },
+                        error: function(e) {
+                            layer.closeAll();
+                            layer.msg('已升级最新版本!', {time:1000}, function(){
+                                window.location.reload();
+                            });
+                        }
+                    })
+                }
+                else{
+                    layer.closeAll();
+                    layer.alert(res.msg, {icon: 5, closeBtn: false, title:false}, function(){
+                        window.location.reload();
+                    });
+                }
+            }
+        });
+    }
+
+    function remoteInstall(code, min_version) {
+        var form2 = $('#form2');
+        form2.find('input[name=code]').val(code);
+        form2.find('input[name=min_version]').val(min_version);
+        var url = "{:url('Weapp/remoteInstall')}";
+        form2.attr('action', url);
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : url,
+            data : $('#form2').serialize(),
+            dataType : 'json',
+            success : function(res){
+                layer.closeAll();
+                if(res.code == 1){
+                    layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                        window.location.reload();
+                    });
+                }else{
+                    showErrorAlert(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+
+    function goPage(obj) {
+        event.stopPropagation();
+        var id = $(obj).attr('data-id');
+        var buy = $(obj).attr('data-buy');
+        var needmoney = $(obj).attr('data-needmoney');
+        var code = $(obj).attr('data-weapp_code');
+        var min_version = $(obj).attr('data-min_version');
+        if (buy == 1 ){
+            remoteInstall(code,min_version);
+        } else {
+            if (needmoney == 0){
+                remoteInstall(code,min_version);
+            }else {
+                window.open("https://www.eyoucms.com/plus/view.php?aid="+id);
+                layer.open({
+                    type: 1, 
+                    shade: layer_shade,
+                    title: '友情提示', 
+                    btn: ['购买成功', '购买失败'], 
+                    yes: function (index, layero) {
+                        layer.closeAll();
+                        remoteInstall(code, min_version);
+                    },
+                    btn2: function(index, layero){
+                        layer.close();
+                        // location.reload()//重新加载页面
+                    }, 
+                    cancel: function () {
+                        //右上角关闭回调
+                        // return false //开启该代码可禁止点击该按钮关闭
+                    },
+                    shadeClose: true, //点击遮罩关闭
+                    content: "<div style='padding:20px;'>购买成功可在线安装该插件！</div>"
+                });
+            }
+        }
+    }
 
 </script>
 {include file="public/footer" /}

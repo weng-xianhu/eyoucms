@@ -26,7 +26,32 @@
                     <p class="notic">前台表单字段会随着后台新增字段是否自动显示</p>
                 </dd>
             </dl>
-            <div class="bot">
+            <dl class="row">
+                <dt class="tit">
+                    <label>留言回复</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <label class="curpoin"><input type="radio" name="open_reply" value="1" {notempty name='$info.open_reply'} checked="checked" {/notempty}/>开启</label>&nbsp;&nbsp;
+                    <label class="curpoin"><input type="radio" name="open_reply" value="0" {empty name='$info.open_reply'} checked="checked" {/empty}/>关闭</label>&nbsp;&nbsp;
+                    <p class="notic">开启后将可以进行留言回复功能</p>
+                    {if condition="$php_servicemeal > 0"}
+                    <a href="javascript:void(0);" data-href="https://www.eyoucms.com/plus/view.php?aid=31220&origin_eycms=1" onclick="parent_openFullframe(this,'formreply 留言回复列表标签')" style="font-size: 12px;margin-left: 10px;">标签教程</a>
+                    {else /}
+                    <a href="javascript:void(0);" onclick="layer.msg('该功能只限于授权域名！');" class="grey">标签教程</a>
+                    {/if}
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>留言审核</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <label class="curpoin"><input type="radio" name="open_examine" value="1" {notempty name='$info.open_examine'} checked="checked" {/notempty}/>开启</label>&nbsp;&nbsp;
+                    <label class="curpoin"><input type="radio" name="open_examine" value="0" {empty name='$info.open_examine'} checked="checked" {/empty}/>关闭</label>&nbsp;&nbsp;
+                    <p class="notic">开启后留言信息需要审核后方可在前端显示</p>
+                </dd>
+            </dl>
+            <div class="bot mt30">
                 <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
             </div>
         </div>

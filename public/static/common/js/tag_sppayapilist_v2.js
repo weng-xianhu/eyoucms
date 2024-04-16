@@ -119,7 +119,15 @@ function SelectPayMethod(pay_id, pay_mark) {
         }
     });
 
-    if (a_alipay_url != "") newWinarticlepay2(a_alipay_url);
+    if (a_alipay_url != "") {
+        if ('alipay' == pay_mark) {
+            // 打开支付提示确认框
+            unifiedShowPayConfirmBox(json627847.is_wap, false, function() {
+                OrderPayPolling('showMsgCode');
+            });
+        }
+        newWinarticlepay2(a_alipay_url);
+    }
     return false;
 }
 
@@ -147,7 +155,7 @@ function AlertPayImg(data) {
 }
 
 // 订单轮询
-function OrderPayPolling() {
+function OrderPayPolling(showMsgCode) {
     var pay_id = $('#PayID').val();
     var pay_mark = $('#PayMark').val();
     var pay_type = $('#PayType').val();
@@ -199,6 +207,13 @@ function OrderPayPolling() {
                     layer.msg(res.msg, {time: 1500}, function() {
                         window.location.href = res.url;
                     });
+                } else {
+                    if (showMsgCode && res.msg) {
+                        $('#' + showMsgCode).show().html(res.msg);
+                        setTimeout(function() {
+                            $('#' + showMsgCode).hide().html('');
+                        }, 3000);
+                    }
                 }
             } else if (0 == res.code) {
                 layer.alert(res.msg, {icon:0, title: false, closeBtn: 0});
@@ -428,7 +443,14 @@ function UsersUpgradePay(obj) {
             }
         }
     });
-    if (a_alipay_url != ""){
+
+    if (a_alipay_url != "") {
+        if ('alipay' == res.data.pay_mark) {
+            // 打开支付提示确认框
+            unifiedShowPayConfirmBox(json627847.is_wap, function() {
+                OrderPayPolling('showMsgCode');
+            });
+        }
         newWinarticlepay2(a_alipay_url);
     }
     return false;
@@ -521,15 +543,31 @@ function SelectPayMethodLayer(pay_id, pay_mark) {
                     if (1 == json627847.IsMobile) {
                         _parent.window.location.href = res.url;
                     } else {
-                        _parent.layer.confirm('支付页面已在新窗口打开，请支付！', {
-                            btn: ['支付成功','支付失败'],
-                            title:false,
-                            closeBtn:0
-                        }, function(){
-                            _parent.window.location.reload();
-                        }, function(){
-                            _parent.window.location.reload();
-                        });
+                        // 打开支付提示确认框
+                        if (0 === parseInt(json627847.is_wap)) {
+                            _parent.layer.closeAll();
+                            _parent.layer.confirm('请在新打开的页面进行支付！', {
+                                move: false,
+                                closeBtn: 3,
+                                title: ey_foreign_system4,
+                                btnAlign: 'r',
+                                shade: layer_shade,
+                                area: ['480px;', '200px;'],
+                                btn: ['支付成功', '支付失败'],
+                                success: function () {
+                                    _parent.$(".layui-layer-content").css('text-align', 'left');
+                                },
+                                cancel: function() {
+                                    _parent.window.location.reload();
+                                }
+                            }, function () {
+                                // 确认操作
+                                _parent.OrderPayPolling(JSON.stringify(pollingData), 'showMsgCode');
+                            }, function (index) {
+                                // 取消操作
+                                _parent.window.location.reload();
+                            });
+                        }
                         _parent.window.open(res.url);
                     }
                     pollingData = JSON.stringify(pollingData);
@@ -656,7 +694,15 @@ function SelectPayMethod_2(pay_id, pay_mark, unifiedId, unifiedNumber, transacti
         }
     });
 
-    if (a_alipay_url != "") newWinarticlepay2(a_alipay_url);
+    if (a_alipay_url != "") {
+        if ('alipay' == pay_mark) {
+            // 打开支付提示确认框
+            unifiedShowPayConfirmBox(json627847.is_wap, function() {
+                OrderPayPolling('showMsgCode');
+            });
+        }
+        newWinarticlepay2(a_alipay_url);
+    }
     return false;
 }
 

@@ -122,6 +122,20 @@ EOF;
             $where['status'] = 1;
         }
         $attributeList = Db::name('ShopProductAttribute')->where($where)->order('sort_order asc, attr_id asc')->select();
+        
+        // 根据排序号升序排序
+        $attrList = Db::name('ShopProductAttr')->where(['aid'=>$aid])->order('sort_order asc')->getAllWithIndex('attr_id');
+        $sort_order = [];
+        foreach($attributeList as $key => $val) {
+            if (isset($attrList[$val['attr_id']]['sort_order'])) {
+                $val['sort_order'] = $attrList[$val['attr_id']]['sort_order'];
+            }
+            $sort_order[$key]  = $val['sort_order'];
+            $attributeList[$key] = $val;
+        }
+        array_multisort($sort_order, SORT_ASC, $attributeList);
+        // end
+
         $str = '';
         foreach($attributeList as $key => $val) {
             $attr_id = $val['attr_id'];

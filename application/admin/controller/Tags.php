@@ -177,14 +177,10 @@ class Tags extends Base
                     \think\Cache::clear('taglist');
                     adminLog('删除Tags标签：'.implode(',', $title_list));
                     $this->success('删除成功');
-                }else{
-                    $this->error('删除失败');
                 }
-            } else {
-                $this->error('参数有误');
             }
         }
-        $this->error('非法访问');
+        $this->error('删除失败');
     }
     
     public function clearall()

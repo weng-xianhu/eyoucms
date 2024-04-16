@@ -238,6 +238,8 @@ class UsersRelease extends Base
                 model('UsersRelease')->afterSave($aid, $data, 'add', $this->channelData['table']);
                 // 添加查询执行语句到mysql缓存表
                 model('SqlCacheTable')->InsertSqlCacheTable();
+                model('Arctype')->hand_type_count(['aid'=>[$aid]]);//统计栏目文档数量
+
                 // 发送站内信给后台
                 SendNotifyMessage($data, 20, 1, 0);
                 // 邮箱发送
@@ -335,6 +337,7 @@ EOF;
                 /*后置操作*/
                 $data['attr']['typeid'] = $data['old_typeid'];
                 model('UsersRelease')->afterSave($data['aid'], $data, 'edit', $this->channelData['table']);
+                model('Arctype')->hand_type_count(['aid'=>[$data['aid']]]);//统计栏目文档数量
                 /* END */
                 $url = url('user/UsersRelease/release_centre',['list'=>1]);
                 $this->success("编辑成功！", $url);

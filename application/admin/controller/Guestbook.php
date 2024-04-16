@@ -237,6 +237,7 @@ class Guestbook extends Base
             if ($r !== false) {
                 // ---------后置操作
                 model('Guestbook')->afterDel($id_arr);
+                model('Arctype')->hand_type_count(['aid'=>$id_arr]);//统计栏目文档数量
                 // ---------end
                 adminLog('删除留言-id：' . implode(',', $id_arr));
                 $this->success('删除成功');
@@ -750,6 +751,11 @@ class Guestbook extends Base
                     'update_time'   => $row['update_time'],
                 ]);
         }
+        //消息通知有的话也标记为已读
+        Db::name('users_notice_tpl_content')->where(['aid'=>$aid])->update([
+            'is_read'   => 1,
+            'update_time'   => getTime(),
+        ]);
         $this->assign('row', $row);
 
         // 留言属性

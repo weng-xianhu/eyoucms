@@ -203,6 +203,9 @@
                             closeBtn: 3,
                             area: ['800px','520px'],
                             btn: ['关闭'] ,//按钮
+                            success: function () {
+                                  $(".layui-layer-content").css('text-align', 'left');
+                              }
 
                         }, function(){
                             layer.close(confirm);

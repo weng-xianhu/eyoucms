@@ -241,7 +241,13 @@
                                         <span class="zt {eq name='$vo.order_status' value='3'}show{else/}none{/eq}" style="color: #19be6b;">已完成</span>
                                         <span class="zt {eq name='$vo.order_status' value='-1'}show{else/}none{/eq}" style="color: #939799;">已关闭</span>
                                     </p>
-                                    
+                                    {if condition="in_array($vo.order_status,[2,3]) && !empty($vo['wx_shipping_info'])"}
+                                        {eq name="$vo['wx_shipping_info']['errcode']" value="0"}
+                                        <p style="color: #19be6b">推送微信小程序成功</p>
+                                        {else /}
+                                        <p style="color: red" title="{$vo['wx_shipping_info']['errmsg']}" data-title="{$vo['wx_shipping_info']['errmsg']}" data-ordercode="{$vo.order_code}" data-source="2" data-usersid="{$vo.users_id}" onclick="push_shipping(this);">推送微信小程序失败</p>
+                                        {/eq}
+                                    {/if}
                                 </td>
                                 <td rowspan="{$vo.rowspan}">
                                     <div class="operation">
@@ -695,6 +701,50 @@
             });
         },function(index) {
             layer.closeAll(index);
+        });
+    }
+
+    //推送微信小程序发货
+    function push_shipping(obj) {
+        var order_code = $(obj).data('ordercode');
+        var source = $(obj).data('source');
+        var users_id = $(obj).data('usersid');
+        layer.confirm($(obj).data('title')+"<p>(提示:如重试一直失败请在在微信小程序后台手动发货)</p>", {
+            btn: ['重试', '手动发货标记成功'] //按钮
+        }, function(){
+            $.ajax({
+                url: "{:url('Shop/push_shipping')}",
+                data: {order_code: order_code, source: source, users_id:users_id, action:'retry', _ajax: 1},
+                type:'post',
+                dataType:'json',
+                success:function(res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {time: 1500},function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        layer.alert(res.msg);
+                    }
+                }
+            });
+        }, function(){
+            $.ajax({
+                url: "{:url('Shop/push_shipping')}",
+                data: {order_code: order_code, source: source, users_id:users_id, action:'mark', _ajax: 1},
+                type:'post',
+                dataType:'json',
+                success:function(res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {time: 1500},function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        layer.alert(res.msg);
+                    }
+                }
+            });
         });
     }
 </script>

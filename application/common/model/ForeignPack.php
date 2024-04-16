@@ -60,4 +60,48 @@ class ForeignPack extends Model
 
         return $data;
     }
+
+    /**
+     * 生成语言包文件
+     */
+    public function updateLangFile()
+    {
+        $foreign_is_status = tpSetting('foreign.foreign_is_status', [], 'cn');
+        if (!empty($foreign_is_status)) {
+            $lang = 'en';
+        } else {
+            $lang = 'cn';
+        }
+
+        $content =<<<EOF
+/**
+ * 外贸助手的JS文件的多语言包
+ */
+
+EOF;
+        $packRow = Db::name('foreign_pack')->field('name,value,lang')->where(['lang'=>$lang])->order('type asc,id asc')->select();
+        foreach ($packRow as $key => $val) {
+            $content .= "var ey_foreign_{$val['name']} = \"{$val['value']}\";" . PHP_EOL;
+        }
+        @file_put_contents(ROOT_PATH."public/static/common/js/lang/foreign_global.js", $content);
+    }
+
+    public function appendForeignGlobalJs(&$params = '')
+    {
+        $file = 'public/static/common/js/lang/foreign_global.js';
+        $foreign_is_status = tpSetting('foreign.foreign_is_status', [], 'cn');
+        if (!empty($foreign_is_status) && file_exists(ROOT_PATH . $file)) {
+            $root_dir = ROOT_DIR;
+            $file_time = getTime();
+            try{
+                $fileStat = stat(ROOT_PATH . $file);
+                $file_time = !empty($fileStat['mtime']) ? $fileStat['mtime'] : $file_time;
+            } catch (\Exception $e) {}
+            $replacement =<<<EOF
+<!-- 引入外贸助手的语言变量包 -->
+<script language="javascript" type="text/javascript" src="{$root_dir}/{$file}?v={$file_time}"></script>
+EOF;
+            $params = preg_replace('/(<script(\s+)([^>]*)src=(\'|\")([^\'\"]*)\/public\/plugins\/layer-v3.1.0\/layer.js([^\'\"]*)(\'|\")(\s*)>(\s*)<\/script>)/i', $replacement.PHP_EOL.'${1}', $params);
+        }
+    }
 }

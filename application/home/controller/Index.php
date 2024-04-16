@@ -141,7 +141,11 @@ class Index extends Base
         // 获取回调的参数
         $inputXml = file_get_contents("php://input");
         if (!empty($inputXml)) {
-            $jsonArr = json_decode(json_encode(simplexml_load_string($inputXml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
+            // 解析参数
+            $jsonXml = json_encode(simplexml_load_string($inputXml, 'SimpleXMLElement', LIBXML_NOCDATA));
+            // 转换数组
+            $jsonArr = json_decode($jsonXml, true);
+            // 是否与支付成功
             if (!empty($jsonArr) && 'SUCCESS' == $jsonArr['result_code'] && 'SUCCESS' == $jsonArr['return_code']) {
                 // 解析判断参数是否为微信支付
                 $attach = explode('|,|', $jsonArr['attach']);
@@ -181,7 +185,14 @@ class Index extends Base
     private function alipay_return()
     {
         $param = input('param.');
-        if (isset($param['transaction_type']) && isset($param['is_notify'])) {
+        if (isset($param['transaction_type']) && isset($param['is_notify']) && isset($param['person_pay']) && isset($param['users_id'])) {
+            // 跳转处理回调信息
+            $personPayWeapp = model('ShopPublicHandle')->getWeappInfo('PersonPay');
+            if (!empty($personPayWeapp['status'])) {
+                $personPayLogic = new \weapp\PersonPay\logic\PersonPayLogic($personPayWeapp['config']);
+                $personPayLogic->asyncNotifyHandle($param);
+            }
+        } else if (isset($param['transaction_type']) && isset($param['is_notify'])) {
             // 跳转处理回调信息
             $pay_logic = new PayLogic();
             $pay_logic->alipay_return();

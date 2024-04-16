@@ -7,7 +7,7 @@ function CancelOrder(order_id) {
     layer.confirm('确定要取消订单？', {
         title: false,
         skin: 'xin-demo-btn',
-        btn: ['确定', '取消'], //按钮
+        btn: [ey_foreign_system2, ey_foreign_system3], //按钮
         closeBtn: 0,
         shadeClose: true
     }, function() {
@@ -35,7 +35,7 @@ function OrderRemind(order_id, order_code) {
     layer.confirm('需要提醒管理员发货？', {
         title: false,
         skin: 'xin-demo-btn',
-        btn: ['确定', '取消'], //按钮
+        btn: [ey_foreign_system2, ey_foreign_system3], //按钮
         closeBtn: 0,
         shadeClose: true
     }, function() {
@@ -57,7 +57,7 @@ function Confirm(order_id, order_code) {
     layer.confirm('您确认已收到货物？', {
         title: false,
         skin: 'xin-demo-btn',
-        btn: ['确定', '取消'], //按钮
+        btn: [ey_foreign_system2, ey_foreign_system3], //按钮
         closeBtn: 0,
         shadeClose: true
     }, function() {

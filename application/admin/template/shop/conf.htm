@@ -87,19 +87,15 @@
 
                 <dl class="row">
                     <dt class="tit">
-                        <label for="uname">产品类型</label>
+                        <label for="uname">主营产品</label>
                     </dt>
                     <dd class="opt">
                         <label>
-                            <input type="radio" name="shop[shop_type]" value="0" {if condition="!isset($userConfig.shop_type) || empty($userConfig.shop_type)"}checked="checked"{/if}/>实物
+                            <input type="radio" name="shop[shop_type]" value="0" {if condition="!isset($userConfig.shop_type) || empty($userConfig.shop_type) || 2 == $userConfig.shop_type"}checked="checked"{/if}/>实物
                         </label>
                         &nbsp;&nbsp;&nbsp;
                         <label>
                             <input type="radio" name="shop[shop_type]" value="1" {if condition="$userConfig.shop_type == 1"}checked="checked"{/if}/>虚拟
-                        </label>
-                        &nbsp;&nbsp;&nbsp;
-                        <label>
-                            <input type="radio" name="shop[shop_type]" value="2" {if condition="$userConfig.shop_type == 2"}checked="checked"{/if}/>两者均有
                         </label>
                     </dd>
                 </dl>

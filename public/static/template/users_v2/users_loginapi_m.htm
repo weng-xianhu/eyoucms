@@ -1,19 +1,16 @@
-
 {eyou:if condition="!empty($weapp_wxlogin) || !empty($weapp_qqlogin) || !empty($weapp_wblogin)"}
-    <div class="login_type text-xs-center m-t-20">
-        <!-- <p>第三方账号登录</p> -->
-        <ul class="blocks-3 m-0">
-            {eyou:notempty name="$weapp_qqlogin"}
-            <li class="m-b-0"><a title="QQ登录" href="{eyou:url link='plugins/QqLogin/login' seo_pseudo='1' seo_inlet='0' /}"><i class="fa fa-qq font-size-30"></i></a></li>
-            {/eyou:notempty}
+    <!-- <p>第三方账号登录</p> -->
+    <div class="account-login">
+        {eyou:notempty name="$weapp_qqlogin"}
+        <a data-href="{eyou:url link='plugins/QqLogin/login' seo_pseudo='1' seo_inlet='0' /}" class="qq-login"></a>
+        {/eyou:notempty}
 
-            {eyou:notempty name="$weapp_wxlogin"}
-            <li class="m-b-0"><a title="微信登录" href="{eyou:url link='plugins/WxLogin/login' seo_pseudo='1' seo_inlet='0' /}"><i class="fa fa-weixin light-green-600 font-size-30"></i></a></li>
-            {/eyou:notempty}
+        {eyou:notempty name="$weapp_wxlogin"}
+        <a data-href="{eyou:url link='plugins/WxLogin/login' seo_pseudo='1' seo_inlet='0' /}" class="wechat-login"></a>
+        {/eyou:notempty}
 
-            {eyou:notempty name="$weapp_wblogin"}
-            <li class="m-b-0"><a title="微博登录" href="{eyou:url link='plugins/Wblogin/login' seo_pseudo='1' seo_inlet='0' /}"><i class="fa fa-weibo light-green-600 font-size-30"></i></a></li>
-            {/eyou:notempty}
-        </ul>
+        {eyou:notempty name="$weapp_wblogin"}
+        <a data-href="{eyou:url link='plugins/Wblogin/login' seo_pseudo='1' seo_inlet='0' /}" class="weibo-login"></a>
+        {/eyou:notempty}
     </div>
 {/eyou:if}

@@ -1,0 +1,87 @@
+<div class="bDiv" style="height: auto; min-height: auto;">
+    <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+        <table style="width: 100%">
+            <tbody id="Template">
+            {empty name="list"}
+                <tr>
+                    <div class="">
+                        <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                    </div>
+                </tr>
+            {else/}
+                {foreach name="list" item="vo" key="k" }
+                <tr class="tr" id="tr_{$vo.level_id}">
+                    <td class="sign none">
+                        <div class="w20 tc">
+                            <input type="hidden" name="level_id[]" value="{$vo.level_id}">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="w80 tc">
+                            {$vo.level_value}
+                        </div>
+                    </td>
+                    <td style="width: 100%">
+                        <div class="text-l10">
+                            {$vo.level_name}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="w500 text-l10">
+                            {eq name="$vo.upgrade_type" value="0"}不自动升级{else/}已完成的订单金额{$vo.upgrade_order_money}元{/eq}
+                        </div>
+                    </td>
+                    {eq name='$isShowDownCount' value='1'}
+                    <td>
+                        <div class="w100 tc">
+                            {eq name="'Member@level_add'|is_check_access" value="1"}
+                                <input type="text" name="down_count[]" value="{$vo.down_count}" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')" onchange="changeTableVal('users_level','level_id','{$vo.level_id}','down_count',this);" class="tc w80" autocomplete="off">
+                            {else /}
+                                {$vo.down_count}
+                            {/eq}
+                        </div>
+                    </td>
+                    {/eq}
+                    <td>
+                        <div class="w160 tc">
+                            {eq name="$vo.discount" value="0"}无{else/}{$vo.discount}折{/eq}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="w120 tc">
+                            {$vo.users_num}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="w120 tc">
+                            <span id="status_1_{$vo.level_id}" class="{eq name='$vo.status' value='1'}green{else/}red{/eq}">{eq name='$vo.status' value='1'}已启用{else/}未启用{/eq}</span>
+                        </div>
+                    </td>
+                    <td  class="">
+                        <div class="w200">
+                            {eq name="$vo.is_system" value="1"}
+                            <a class="btn grey" href="javascript:void(0);">禁用</a>
+                            {else /}
+                            <a class="btn red" href="javascript:void(0);" onclick="levelStatus(this)" data-url="{:url('Member/level_status')}" data-level_id="{$vo.level_id}" data-level_name="{$vo.level_name}" data-status="{$vo.status}">{eq name="$vo.status" value="1"}禁用{else/}启用{/eq}</a>
+                            {/eq}
+                            <a class="btn red" href="{:url('Member/users_index', ['level' => $vo.level_id])}">会员统计</a>
+                            <a class="btn red" href="javascript:void(0);" data-href="{:url('Member/level_edit', ['level_id' => $vo.level_id])}" onclick="openFullframe(this, '编辑级别', '50%', '70%');">编辑</a>
+                            {eq name="$vo.is_system" value="0"}
+                            <a class="btn red" href="javascript:void(0);" onclick="levelDel(this);" data-url="{:url('Member/level_del')}" data-level_id="{$vo.level_id}" data-level_name="{$vo.level_name}" data-manage_num="{$vo.manage_num}">删除</a>
+                            {else /}
+                            <a class="btn grey" href="javascript:void(0);">删除</a>
+                            {/eq}
+                        </div>
+                    </td>
+                </tr>
+                {/foreach}
+            {/empty}
+            </tbody>
+        </table>
+    </div>
+    <div class="iDiv" style="display: none;"></div>
+</div>
+<div class="footer-oper">
+    {include file="public/page" /}
+</div>
+<div style="clear:both"></div>

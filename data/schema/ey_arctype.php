@@ -333,4 +333,13 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'total_arc' => 
+  array (
+    'name' => 'total_arc',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
 );

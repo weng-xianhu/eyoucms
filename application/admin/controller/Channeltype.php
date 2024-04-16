@@ -211,8 +211,11 @@ class Channeltype extends Base
      */
     public function edit()
     {
-        $id = input('id/d');
+        $assign_data = array();
+        $system_is_article_pay = tpSetting('system.system_is_article_pay', [], 'cn');
+        $assign_data['system_is_article_pay'] = $system_is_article_pay;
 
+        $id = input('id/d');
         if (IS_POST) {
             $post = input('post.');
             if(!empty($post['id'])){
@@ -248,6 +251,12 @@ class Channeltype extends Base
                         $this->error('该模型标识已存在，请检查', url('Channeltype/index'));
                     }
                 }
+
+                if (!empty($post['data']['is_article_pay']) && empty($system_is_article_pay) && $this->php_servicemeal < 2) {
+                    $msg = array_join_string(array('5paH56u','g5LuY','6LS55Yqf','6IO95Y+q6','ZmQ5LqO5Li','T5Lia5o6I','5p2D5Z+f5','ZCN77yB'));
+                    $this->error($msg, url('Channeltype/index'));
+                }
+
                 $ori_data = $this->channeltype_db->where(['id'=>$post['id']])->value('data');
                 if (!empty($ori_data)){
                     $ori_data = json_decode($ori_data,'true');
@@ -320,8 +329,6 @@ class Channeltype extends Base
             }
             $this->error("操作失败");
         }
-
-        $assign_data = array();
 
         $info = $this->channeltype_db->field('a.*')
             ->alias('a')

@@ -1,10 +1,11 @@
+
 {include file="public/layout" /}
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit; height: calc( 100% - 40px );">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 {include file="member/left" /}
 <div class="page min-hg-c-20" style="min-width:auto;margin-left:100px;">
-    <!-- <div class="fixed-bar">
+    <div class="fixed-bar">
         <div class="item-title">
             <ul class="tab-base nc-row">
                 {eq name="'Member@level_index'|is_check_access" value="1"}
@@ -14,34 +15,50 @@
                     </a>
                 </li>
                 {/eq}
+                {eq name="'Level@index'|is_check_access" value="1"}
+                <li>
+                    <a {if condition="in_array($Request.action, ['index'])"}class="current"{/if} href='{:U('Level/index')}'>
+                        <span>升级套餐管理</span>
+                    </a>
+                </li>
+                {/eq}
             </ul>
         </div>
-    </div> -->
+    </div>
     <div class="flexigrid">
         <!-- 操作说明 -->
         <div id="explanation" class="explanation">
-            <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
-                <h4 title="提示相关设置操作时应注意的要点">提示</h4>
-                <span title="收起提示" id="explanationZoom" style="display: block;"></span>
-            </div>
             <ul>
-                <li>等级值越高权根越高</li>
+                <li>级别权重越高权根越高</li>
+                <li>会员级别自动升级后，该级别对应会员期限默认是永久期限</li>
             </ul>
         </div>
-        <br/>
+        {eq name="$Think.const.CONTROLLER_NAME.'@level_add'|is_check_access" value="1"}
+        <div class="mDiv mt10">
+            <div class="ftitle">
+                <div class="fbutton">
+                    <a href="javascript:void(0);" data-href="{:url('Member/level_add')}" onclick="openFullframe(this, '新增级别', '50%', '65%');">
+                        <div class="add" title="新增级别">
+                            <span><i class="layui-icon layui-icon-addition"></i>新增级别</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {/eq}
         <div class="hDiv">
             <div class="hDivBox">
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
                     <thead>
                     <tr>
-                        <th class="sign w20 none" axis="col0">
-                            <div class="tc"></div>
+                        <th abbr="article_time" axis="col4" class="w80">
+                            <div class="tc">级别权重</div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div style="padding-left: 15px;">级别名称</div>
+                            <div class="text-l10">级别名称</div>
                         </th>
-                        <th abbr="article_time" axis="col4" class="w160">
-                            <div class="tc">会员等级值</div>
+                        <th abbr="article_time" axis="col4" class="w500">
+                            <div class="text-l10">升级条件</div>
                         </th>
                         {eq name='$isShowDownCount' value='1'}
                         <th abbr="article_time" axis="col4" class="w100">
@@ -49,251 +66,26 @@
                         </th>
                         {/eq}
                         <th abbr="article_time" axis="col4" class="w160">
-                            <div class="tc">折扣率(%)</div>
+                            <div class="tc">折扣权益</div>
                         </th>
-                        <th axis="col1" class="w150">
-                            <div class="tc">操作</div>
+                        <th abbr="article_time" axis="col4" class="w120">
+                            <div class="tc">会员数量</div>
+                        </th>
+                        <th abbr="article_time" axis="col4" class="w120">
+                            <div class="tc">状态</div>
+                        </th>
+                        <th axis="col1" class="w200">
+                            <div class="text-l10">操作</div>
                         </th>
                     </tr>
                     </thead>
                 </table>
             </div>
         </div>
-        <div class="bDiv" style="height: auto; min-height: auto;">
-            <form id="PostForm">
-                <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
-                    <table style="width: 100%">
-                        <tbody id="Template">
-                        {empty name="list"}
-                            <tr>
-                                <div class="">
-                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
-                                </div>
-                            </tr>
-                        {else/}
-                            {foreach name="list" item="vo" key="k" }
-                            <tr class="tr">
-                                <td class="sign none">
-                                    <div class="w20 tc">
-                                        <input type="hidden" name="level_id[]" value="{$vo.level_id}">
-                                    </div>
-                                </td>
-                                <td style="width: 100%">
-                                    <div style="padding-left: 10px;">
-                                        {eq name="'Member@level_add'|is_check_access" value="1"}
-                                            <input type="text" name="level_name[]" value="{$vo.level_name}" class="w180">
-                                        {else /}
-                                            {$vo.level_name}
-                                        {/eq}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="w160 tc">
-                                        {eq name="'Member@level_add'|is_check_access" value="1"}
-                                            <input type="text" name="level_value[]" value="{$vo.level_value}" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" class="tc w80">
-                                        {else /}
-                                            {$vo.level_value}
-                                        {/eq}
-                                    </div>
-                                </td>
-                                {eq name='$isShowDownCount' value='1'}
-                                <td>
-                                    <div class="w100 tc">
-                                        {eq name="'Member@level_add'|is_check_access" value="1"}
-                                            <input type="text" name="down_count[]" value="{$vo.down_count}" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'')" class="tc w80">
-                                        {else /}
-                                            {$vo.down_count}
-                                        {/eq}
-                                    </div>
-                                </td>
-                                {/eq}
-                                <td>
-                                    <div class="w160 tc">
-                                        {eq name="'Member@level_add'|is_check_access" value="1"}
-                                            <input type="text" name="discount[]" value="{$vo.discount}" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'')" class="tc w80">
-                                        {else /}
-                                            {$vo.discount}
-                                        {/eq}
-                                    </div>
-                                </td>
-                                <td  class="operation">
-                                    <div class="w150 tc">
-                                        {eq name="'Member@level_del'|is_check_access" value="1"}
-                                            <!-- 判断是否属于系统定义级别，0为会员级别 -->
-                                            {eq name="$vo.is_system" value="0"}  
-                                                <!-- 判断是否级别下是否存在会员，是否可以删除。0可删除 -->
-                                                {if condition="empty($levelgroup[$vo['level_id']])"}
-                                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Member/level_del')}" data-level_name="{$vo.level_name}" data-id="{$vo.level_id}" onClick="usersdel(this);">删除</a>
-                                                {else/}
-                                                    正在使用
-                                                {/if}
-                                            {else /}
-                                                系统内置
-                                            {/eq}
-                                        {/eq}
-                                    </div>
-                                </td>
-                            </tr>
-                            {/foreach}
-                        {/empty}
-                        </tbody>
-                    </table>
-                </div>
-            </form>
-            <div class="iDiv" style="display: none;"></div>
-        </div>
-        <div class="footer-oper">
-            {eq name="$Think.const.CONTROLLER_NAME.'@level_add'|is_check_access" value="1"}
-			
-			<div class="fbutton">
-                <a href="javascript:void(0);" data-url="{:url('Member/level_add', ['_ajax'=>1])}" onclick="AddLevelData(this);" class="layui-btn layui-btn-primary">
-                    <span class="">保存</span>
-                </a>
-            </div>
-			
-            <div class="fbutton">
-                <a href="javascript:void(0);" onclick="AddLevelType();" class="layui-btn layui-btn-primary">
-                    <span>新增级别</span>
-                </a>
-            </div>
-            
-            
-            {/eq}
-            {eq name="'Level@index'|is_check_access" value="1"}
-            <div class="fbutton">
-                <a href="javascript:void(0);" data-href="{:U('Level/index')}" onclick="openFullframe(this, '升级套餐管理', '80%', '80%');" class="layui-btn layui-btn-primary">
-                    <span class="red">升级套餐管理</span>
-                </a>
-            </div>
-            {/eq}
-			{include file="public/page" /}
-        </div>
-        <div style="clear:both"></div>
+        <!-- 等级列表页面 -->
+        <div id="levelListPage">{include file="member/level_list" /}</div>
+        <!-- 等级列表页面 -->
     </div>
 </div>
-<script>
-    $(document).ready(function(){
-        // 表格行点击选中切换
-        $('#flexigrid > table>tbody >tr').click(function(){
-            $(this).toggleClass('trSelected');
-        });
-
-        // 点击刷新数据
-        $('.fa-refresh').click(function(){
-            location.href = location.href;
-        });
-    });
-
-    // tr数,取唯一标识
-    var tr_id = $('#Template .tr').length;
-
-    function AddLevelType(){
-        var isShowDownCount = {$isShowDownCount};
-        var AddHtml = [];
-        AddHtml += 
-            '<tr class="tr" id="tr_'+tr_id+'">'+
-                '<td class="sign none">'+
-                    '<div class="w20 tc"><input type="hidden" name="level_id[]"></div>'+
-                '</td>'+
-
-                '<td style="width: 100%">'+
-                    '<div style="padding-left: 10px;">'+
-                        '<input type="text" name="level_name[]" class="w180">'+
-                    '</div>'+
-                '</td>'+
-
-                '<td>'+
-                    '<div class="w160 tc">'+
-                        '<input type="text" name="level_value[]" onkeyup="this.value=this.value.replace(/[^0-9]/g,\'\')" class="tc w80">'+
-                    '</div>'+
-                '</td>';
-        if (isShowDownCount == 1) {
-            AddHtml += 
-                '<td>'+
-                    '<div class="w100 tc">'+
-                        '<input type="text" name="down_count[]" class="tc w80" value="100">'+
-                    '</div>'+
-                '</td>';
-        }
-        AddHtml += 
-                '<td>'+
-                    '<div class="w160 tc">'+
-                        '<input type="text" name="discount[]" class="tc w80" value="100">'+
-                    '</div>'+
-                '</td>'+
-
-                '<td class="">'+
-                    '<div class="w150 tc">'+
-                        '<a class="btn red" href="javascript:void(0);" data-trid="tr_'+tr_id+'" onclick="DelHtml(this)"><i class="fa fa-trash-o"></i>删除</a>'+
-                    '</div>'+
-                '</td>'+
-            '</tr>';
-        $('#Template').append(AddHtml);
-        tr_id += 1;
-    }
-
-    // 删除未保存的级别
-    function DelHtml(obj){
-        $('#'+$(obj).attr('data-trid')).remove();
-    }
-
-    // 提交
-    function AddLevelData(obj){
-        layer_loading('正在处理');
-        $.ajax({
-            type : 'post',
-            url : $(obj).attr('data-url'),
-            data : $('#PostForm').serialize(),
-            dataType : 'json',
-            success : function(data){
-                layer.closeAll();
-                if(data.code == 1){
-                    layer.msg(data.msg, {icon: 1, time:1000},function(){
-                        window.location.reload();
-                    });
-                }else{
-                    layer.alert(data.msg, {icon: 2, title:false});
-                }
-            }
-        })
-    }
-
-    // 删除
-    function usersdel(obj){
-        layer.confirm('确认彻底删除<span style="color:red;">'+$(obj).attr('data-level_name')+'</span>？', {
-            shade: layer_shade,
-            area: ['480px', '190px'],
-            move: false,
-            title: '提示',
-            btnAlign:'r',
-            closeBtn: 3,
-            btn: ['确定','取消'] ,//按钮
-            success: function () {
-                  $(".layui-layer-content").css('text-align', 'left');
-              }
-        }, function(){
-            layer_loading('正在处理');
-            // 确定
-            $.ajax({
-                type : 'post',
-                url : $(obj).attr('data-url'),
-                data : {del_id:$(obj).attr('data-id'), _ajax:1},
-                dataType : 'json',
-                success : function(data){
-                    layer.closeAll();
-                    if(data.code == 1){
-                        layer.msg(data.msg, {icon: 1});
-                        window.location.reload();
-                    }else{
-                        layer.alert(data.msg, {icon: 2, title:false});
-                    }
-                }
-            })
-        }, function(index){
-            layer.close(index);
-        });
-        return false;
-    }
-</script>
-
+<script type="text/javascript" src="__SKIN__/js/users_level.js?v={$version}"></script>
 {include file="public/footer" /}

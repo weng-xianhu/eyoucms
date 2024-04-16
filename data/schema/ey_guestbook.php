@@ -117,4 +117,40 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'reply' => 
+  array (
+    'name' => 'reply',
+    'type' => 'varchar(1000)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'admin_id' => 
+  array (
+    'name' => 'admin_id',
+    'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'reply_time' => 
+  array (
+    'name' => 'reply_time',
+    'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'examine' => 
+  array (
+    'name' => 'examine',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
 );

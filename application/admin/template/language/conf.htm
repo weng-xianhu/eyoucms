@@ -5,6 +5,13 @@
 <div id="ajaxwaitid"></div>
 <div class="page min-hg-c-10">
     {include file="language/bar" /}
+    <!-- 操作说明 -->
+    <div id="" class="explanation">
+        <ul>
+            <li>语言分离关闭时，其它语言数据将会和主语言数据同步，其它语言数据不可单独操作，只能对主语言数据进行操作。</li>
+            <li>语言分离开启时，数据不再同步，这些模块可以单独操作（栏目、文档，广告、友情链接、留言表单等），模板栏目变量将自动隐藏并失效。</li>
+        </ul>
+    </div>
     <form class="form-horizontal" id="post_form" action="{:url('Language/conf')}" method="post">
         <div class="ncap-form-default">
             <dl class="row">
@@ -14,7 +21,7 @@
                 <dd class="opt" style="width: auto;">
                     <label class="curpoin"><input type="radio" id="language_split_1" name="language[language_split]" value="1" {notempty name="$global['language_split']"} checked="checked" {/notempty}/>开启</label>&nbsp;&nbsp;
                     <label class="curpoin"><input type="radio" id="language_split_0" name="language[language_split]" value="0" {empty name="$global['language_split']"} checked="checked" {/empty}/>关闭</label>&nbsp;&nbsp;
-                    <p class="notic">开启后，数据不再同步，这些模块可以单独操作（栏目、广告、友情链接、留言表单等）</p>
+                    <p class="notic">开启后，数据不再同步，这些模块可以单独操作（栏目、文档内容，广告、友情链接、留言表单等）</p>
                     <input type="hidden" id="language_split_old" value="{$global['language_split']|default=0}">
                 </dd>
             </dl>

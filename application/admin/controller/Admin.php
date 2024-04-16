@@ -39,7 +39,7 @@ class Admin extends Base {
 
         $condition = array();
         if (!empty($keywords)) {
-            $condition['a.user_name|a.true_name'] = array('LIKE', "%{$keywords}%");
+            $condition['a.user_name|a.true_name|a.pen_name'] = array('LIKE', "%{$keywords}%");
         }
 
         /*权限控制 by 小虎哥*/
@@ -955,7 +955,7 @@ EOF;
                 $user_names = get_arr_column($result, 'user_name');
 
                 $r = Db::name('admin')->where("admin_id",'IN',$id_arr)->delete();
-                if($r){
+                if($r !== false){
                     if (file_exists('./weapp/PasswordRemind/model/PasswordRemindModel.php')) {
                         $PasswordRemindModel = new \weapp\PasswordRemind\model\PasswordRemindModel;
                         $PasswordRemindModel->updateInfo($id_arr,'del');
@@ -967,14 +967,10 @@ EOF;
                     /*end*/
 
                     $this->success('删除成功');
-                }else{
-                    $this->error('删除失败');
                 }
-            }else{
-                $this->error('参数有误');
             }
         }
-        $this->error('非法操作');
+        $this->error('删除失败');
     }
 
     /*
@@ -1179,7 +1175,8 @@ EOF;
         $admin_id = input('param.admin_id/d');
         $gourl = input('param.gourl/s');
         $gourl = htmlspecialchars_decode($gourl);
-        $redirect_uri = url('Admin/wechat_callback', ['bind'=>1,'admin_id'=>$admin_id,'origin'=>$origin,'gourl'=>$gourl], true, true);
+        $cur_admin_id = mchStrCode($this->admin_info['admin_id'], 'ENCODE');
+        $redirect_uri = url('Admin/wechat_callback', ['bind'=>1,'admin_id'=>$admin_id,'cur_admin_id'=>$cur_admin_id,'origin'=>$origin,'gourl'=>$gourl], true, true);
         $redirect_uri = urlencode($redirect_uri);//该回调需要url编码
         $security     = tpSetting('security');
         $scope        = "snsapi_login";//写死，微信暂时只支持这个值
@@ -1324,6 +1321,13 @@ EOF;
      */
     private function wechat_bind_handle($openid = '', $unionid = '', $wx_info = [], $admin_id = 0, $origin = '')
     {
+        $cur_admin_id = input('param.cur_admin_id/s');
+        $cur_admin_id = (int)mchStrCode(htmlspecialchars_decode($cur_admin_id), 'DECODE');
+        $cur_admin_info = Db::name('admin')->where(['admin_id'=>$cur_admin_id])->find();
+        if (!empty($cur_admin_info)) {
+            $this->admin_info = adminLoginAfter($cur_admin_info['admin_id'], session_id());
+        }
+        
         if (empty($this->admin_info['parent_id']) && -1 == $this->admin_info['role_id']) { // 创始人
             $is_founder = 1;
             empty($admin_id) && $admin_id = $this->admin_info['admin_id'];

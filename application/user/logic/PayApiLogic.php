@@ -70,24 +70,47 @@ class PayApiLogic extends Model
     {
         if (empty($post['pay_mark'])) $this->error('支付API异常，请刷新重试');
 
-        //先查虎皮椒支付有没有配置
-        $hupijiao_pay_config = $this->pay_api_config_db->where(['pay_mark'=>'Hupijiaopay'])->find();
-        if (!empty($hupijiao_pay_config)) {
-            $hupijiao_pay_config['pay_info'] = unserialize($hupijiao_pay_config['pay_info']);
-            $hupijiaoInfo = Db::name('weapp')->where(['code'=>'Hupijiaopay','status'=>1])->find();
-            if (empty($hupijiaoInfo) || !isset($hupijiao_pay_config['pay_info']['is_open_pay']) || 1 == $hupijiao_pay_config['pay_info']['is_open_pay']) {
-                $Config = $this->GetOtherPayApiConfig($post);
-            } else {
-                //兼容订单轮询查支付配置
-                if ($post['pay_mark'] != 'Hupijiaopay') {
-                    if (empty($hupijiao_pay_config['pay_info'][$post['pay_mark'] . '_appid'])) {
-                        $Config = $this->GetOtherPayApiConfig($post);
+        // 如果是支付宝支付则先查询是否已有支付宝当面付插件(支付宝当面付功能)
+        if ('alipay' == $post['pay_mark']) {
+            $Config = $this->pay_api_config_db->where(['pay_mark'=>'PersonPay'])->find();
+            $personPay = Db::name('weapp')->where(['code'=>'PersonPay','status'=>1])->find();
+            $Config['pay_info'] = !empty($Config['pay_info']) ? unserialize($Config['pay_info']) : [];
+            if (empty($personPay) || !isset($Config['pay_info']['is_open_pay']) || 1 === intval($Config['pay_info']['is_open_pay'])) $Config = [];
+        }
+
+        if (empty($Config)) {
+            //先查虎皮椒支付有没有配置
+            $hupijiao_pay_config = $this->pay_api_config_db->where(['pay_mark'=>'Hupijiaopay'])->find();
+            if (!empty($hupijiao_pay_config)) {
+                $hupijiao_pay_config['pay_info'] = unserialize($hupijiao_pay_config['pay_info']);
+                $hupijiaoInfo = Db::name('weapp')->where(['code'=>'Hupijiaopay','status'=>1])->find();
+                if (empty($hupijiaoInfo) || !isset($hupijiao_pay_config['pay_info']['is_open_pay']) || 1 == $hupijiao_pay_config['pay_info']['is_open_pay']) {
+                    $Config = $this->GetOtherPayApiConfig($post);
+                } else {
+                    //兼容订单轮询查支付配置
+                    if ($post['pay_mark'] != 'Hupijiaopay') {
+                        if (empty($hupijiao_pay_config['pay_info'][$post['pay_mark'] . '_appid'])) {
+                            $Config = $this->GetOtherPayApiConfig($post);
+                        } else {
+                            $new_pay_info = [];
+                            $new_pay_info['is_open_pay'] = 0;
+                            $new_pay_info['appid'] = $hupijiao_pay_config['pay_info'][$post['pay_mark'] . '_appid'];
+                            $new_pay_info['appsecret'] = $hupijiao_pay_config['pay_info'][$post['pay_mark'] . '_appsecret'];
+                            $new_pay_info['pay_type'] = $post['pay_mark'];
+                            if (!empty($hupijiao_pay_config['pay_info']['gateway_domain'])) {
+                                $new_pay_info['gateway_domain'] = $hupijiao_pay_config['pay_info']['gateway_domain'];
+                            } else {
+                                $new_pay_info['gateway_domain'] = 'https://api.xunhupay.com';
+                            }
+                            $hupijiao_pay_config['pay_info'] = $new_pay_info;
+                            $Config = $hupijiao_pay_config;
+                        }
                     } else {
                         $new_pay_info = [];
                         $new_pay_info['is_open_pay'] = 0;
-                        $new_pay_info['appid'] = $hupijiao_pay_config['pay_info'][$post['pay_mark'] . '_appid'];
-                        $new_pay_info['appsecret'] = $hupijiao_pay_config['pay_info'][$post['pay_mark'] . '_appsecret'];
-                        $new_pay_info['pay_type'] = $post['pay_mark'];
+                        $new_pay_info['appid'] = $hupijiao_pay_config['pay_info'][$post['pay_type'] . '_appid'];
+                        $new_pay_info['appsecret'] = $hupijiao_pay_config['pay_info'][$post['pay_type'] . '_appsecret'];
+                        $new_pay_info['pay_type'] = $post['pay_type'];
                         if (!empty($hupijiao_pay_config['pay_info']['gateway_domain'])) {
                             $new_pay_info['gateway_domain'] = $hupijiao_pay_config['pay_info']['gateway_domain'];
                         } else {
@@ -96,23 +119,10 @@ class PayApiLogic extends Model
                         $hupijiao_pay_config['pay_info'] = $new_pay_info;
                         $Config = $hupijiao_pay_config;
                     }
-                } else {
-                    $new_pay_info = [];
-                    $new_pay_info['is_open_pay'] = 0;
-                    $new_pay_info['appid'] = $hupijiao_pay_config['pay_info'][$post['pay_type'] . '_appid'];
-                    $new_pay_info['appsecret'] = $hupijiao_pay_config['pay_info'][$post['pay_type'] . '_appsecret'];
-                    $new_pay_info['pay_type'] = $post['pay_type'];
-                    if (!empty($hupijiao_pay_config['pay_info']['gateway_domain'])) {
-                        $new_pay_info['gateway_domain'] = $hupijiao_pay_config['pay_info']['gateway_domain'];
-                    } else {
-                        $new_pay_info['gateway_domain'] = 'https://api.xunhupay.com';
-                    }
-                    $hupijiao_pay_config['pay_info'] = $new_pay_info;
-                    $Config = $hupijiao_pay_config;
                 }
+            } else {
+                $Config = $this->GetOtherPayApiConfig($post);
             }
-        } else {
-            $Config = $this->GetOtherPayApiConfig($post);
         }
 
         return $Config;
@@ -171,7 +181,7 @@ class PayApiLogic extends Model
                 if (in_array($OrderData['status'], [2, 3])) {
                     // 订单已完成
                     if ('wechat' === trim($OrderData['pay_method'])) {
-                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_number'], 1, '充值');
+                        model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_number'], 1, '充值');
                     }
                     $this->success('订单已支付，即将跳转', $url, true);
                 } else if ($OrderData['status'] == 4) {
@@ -213,7 +223,7 @@ class PayApiLogic extends Model
                 else if (!empty($OrderData['status']) && 1 !== intval($OrderData['status'])) {
                     // 订单已完成
                     if (in_array($OrderData['status'], [2, 3]) && 'wechat' === trim($OrderData['pay_method'])) {
-                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_number'], 1, '充值', $config);
+                        model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_number'], 1, '充值', $config);
                     }
                     echo 'SUCCESS'; exit;
                 }
@@ -240,7 +250,7 @@ class PayApiLogic extends Model
                     if ('v3' == getUsersTplVersion() && 0 <= $submit_order_type && 1 == $OrderData['order_status']) $url = urldecode(url('user/Shop/shop_centre'));
                     // 订单已完成
                     if ((0 < intval($OrderData['prom_type']) || (0 === intval($OrderData['prom_type']) && 2 === intval($OrderData['logistics_type']))) && in_array($OrderData['order_status'], [2, 3]) && 'wechat' === trim($OrderData['pay_name'])) {
-                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_code'], 2);
+                        model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_code'], 2);
                     }
                     $this->success('订单已支付，即将跳转', $url, $returnData['data']);
                 } else if ($OrderData['order_status'] == 4) {
@@ -284,7 +294,7 @@ class PayApiLogic extends Model
                 else if (isset($OrderData['order_status']) && 0 !== intval($OrderData['order_status'])) {
                     // 订单已完成
                     if ((0 < intval($OrderData['prom_type']) || (0 === intval($OrderData['prom_type']) && 2 === intval($OrderData['logistics_type']))) && in_array($OrderData['order_status'], [2, 3]) && 'wechat' === trim($OrderData['pay_name'])) {
-                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_code'], 2, $config);
+                        model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_code'], 2, $config);
                     }
                     echo 'SUCCESS'; exit;
                 }
@@ -312,7 +322,7 @@ class PayApiLogic extends Model
                 if (!empty($OrderData['status']) && in_array($OrderData['status'], [2, 3])) {
                     // 订单已完成
                     if ('wechat' === trim($OrderData['pay_name'])) {
-                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_number'], 3, '会员升级');
+                        model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_number'], 3, '会员升级');
                     }
                     $this->success('订单已支付，即将跳转', $url, true);
                 } else if ($OrderData['status'] == 4) {
@@ -328,7 +338,7 @@ class PayApiLogic extends Model
                 else if (!empty($OrderData['status']) && 1 !== intval($OrderData['status'])) {
                     // 订单已完成
                     if (in_array($OrderData['status'], [2, 3]) && 'wechat' === trim($OrderData['pay_name'])) {
-                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_number'], 3, '会员升级', $config);
+                        model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_number'], 3, '会员升级', $config);
                     }
                     echo 'SUCCESS'; exit;
                 }
@@ -484,7 +494,7 @@ class PayApiLogic extends Model
                 } else if (!empty($OrderData['order_status']) && 1 < intval($OrderData['order_status'])) {
                     // 订单已完成
                     if (in_array($OrderData['order_status'], [2, 3]) && 'wechat' === trim($OrderData['order_pay_name'])) {
-                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_pay_code'], 20, '充值');
+                        model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_pay_code'], 20, '充值');
                     }
                     $this->success('支付完成');
                 }
@@ -498,7 +508,7 @@ class PayApiLogic extends Model
                 else if (!empty($OrderData['order_status']) && 1 < intval($OrderData['order_status'])) {
                     // 订单已完成
                     if (in_array($OrderData['order_status'], [2, 3]) && 'wechat' === trim($OrderData['order_pay_name'])) {
-                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_pay_code'], 20, '充值', $config);
+                        model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $OrderData['order_pay_code'], 20, '充值', $config);
                     }
                     echo 'SUCCESS'; exit;
                 }
@@ -790,7 +800,7 @@ class PayApiLogic extends Model
 
                         // 推送微信发货推送表记录
                         if ('wechat' === trim($Order['pay_method'])) {
-                            // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_number'], 1, '充值', $config);
+                            model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_number'], 1, '充值', $config);
                         }
 
                         // 同步处理
@@ -894,7 +904,7 @@ class PayApiLogic extends Model
                     if (!empty($resultID)) {
                         // 推送微信发货推送表记录
                         if ('wechat' === trim($Order['pay_method'])) {
-                            // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_number'], 3, '会员升级', $config);
+                            model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_number'], 3, '会员升级', $config);
                         }
                         if (!empty($this->fromApplets)) $url = 1 == input('param.fenbao/d') ? '' : '/pages/user/index';
                         $result_0['url'] = $url;
@@ -923,29 +933,28 @@ class PayApiLogic extends Model
             // 付款成功后，订单并未修改状态时，修改订单状态并返回
             if (empty($Order['order_status'])) {
                 // 订单更新条件
-                $OrderWhere = [
+                $where = [
                     'order_id'  => $Order['order_id'],
                     'users_id'  => $this->users_id,
                     'lang'      => $this->home_lang
                 ];
-
                 // 订单更新数据，更新为已付款
-                $OrderData = [
+                $update = [
                     'order_status' => 1,
                     'pay_details'  => serialize($PayDetails),
                     'pay_time'     => getTime(),
                     'update_time'  => getTime()
                 ];
-
                 // 订单更新
-                $ResultID = Db::name('media_order')->where($OrderWhere)->update($OrderData);
-
+                $resultID = Db::name('media_order')->where($where)->update($update);
                 // 订单更新后续操作
-                if (!empty($ResultID)) {
+                if (!empty($resultID)) {
                     // 推送微信发货推送表记录
                     if ('wechat' === trim($Order['pay_name'])) {
-                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_code'], 8, $Order['product_name'], $config);
+                        model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_code'], 8, $Order['product_name'], $config);
                     }
+                    // 处理会员订单累计总额，用于会员自动升级
+                    model('UsersLevel')->handleUsersOrderTotalAmount($this->users, $Order);
                     // 订单操作完成，返回跳转
                     $ViewUrl = cookie($this->users_id . '_' . $Order['product_id'] . '_EyouMediaViewUrl');
                     $this->success('支付成功，处理订单完成', $ViewUrl, true);
@@ -957,29 +966,28 @@ class PayApiLogic extends Model
             // 付款成功后，订单并未修改状态时，修改订单状态并返回
             if (empty($Order['order_status'])) {
                 // 订单更新条件
-                $OrderWhere = [
+                $where = [
                     'order_id'  => $Order['order_id'],
                     'users_id'  => $this->users_id,
                     'lang'      => $this->home_lang
                 ];
-
                 // 订单更新数据，更新为已付款
-                $OrderData = [
+                $update = [
                     'order_status' => 1,
                     'pay_details'  => serialize($PayDetails),
                     'pay_time'     => getTime(),
                     'update_time'  => getTime()
                 ];
-
                 // 订单更新
-                $ResultID = Db::name('article_order')->where($OrderWhere)->update($OrderData);
-
+                $resultID = Db::name('article_order')->where($where)->update($update);
                 // 订单更新后续操作
-                if (!empty($ResultID)) {
+                if (!empty($resultID)) {
                     // 推送微信发货推送表记录
                     if ('wechat' === trim($Order['pay_name'])) {
-                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_code'], 9, $Order['product_name'], $config);
+                        model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_code'], 9, $Order['product_name'], $config);
                     }
+                    // 处理会员订单累计总额，用于会员自动升级
+                    model('UsersLevel')->handleUsersOrderTotalAmount($this->users, $Order);
                     // 订单操作完成，返回跳转
                     $ViewUrl = cookie($this->users_id . '_' . $Order['product_id'] . '_EyouArticleViewUrl');
                     $this->success('支付成功，处理订单完成', $ViewUrl, true);
@@ -991,29 +999,28 @@ class PayApiLogic extends Model
             // 付款成功后，订单并未修改状态时，修改订单状态并返回
             if (empty($Order['order_status'])) {
                 // 订单更新条件
-                $OrderWhere = [
+                $where = [
                     'order_id'  => $Order['order_id'],
                     'users_id'  => $this->users_id,
                     'lang'      => $this->home_lang
                 ];
-
                 // 订单更新数据，更新为已付款
-                $OrderData = [
+                $update = [
                     'order_status' => 1,
                     'pay_details'  => serialize($PayDetails),
                     'pay_time'     => getTime(),
                     'update_time'  => getTime()
                 ];
-
                 // 订单更新
-                $ResultID = Db::name('download_order')->where($OrderWhere)->update($OrderData);
-
+                $resultID = Db::name('download_order')->where($where)->update($update);
                 // 订单更新后续操作
-                if (!empty($ResultID)) {
+                if (!empty($resultID)) {
                     // 推送微信发货推送表记录
                     if ('wechat' === trim($Order['pay_name'])) {
-                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_code'], 10, $Order['product_name'], $config);
+                        model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_code'], 10, $Order['product_name'], $config);
                     }
+                    // 处理会员订单累计总额，用于会员自动升级
+                    model('UsersLevel')->handleUsersOrderTotalAmount($this->users, $Order);
                     // 订单操作完成，返回跳转
                     $ViewUrl = cookie($this->users_id . '_' . $Order['product_id'] . '_EyouDownloadViewUrl');
                     $this->success('支付成功，处理订单完成', $ViewUrl, true);
@@ -1071,8 +1078,12 @@ class PayApiLogic extends Model
 
                     // 推送微信发货推送表记录
                     if ('wechat' === trim($Order['order_pay_name'])) {
-                        // model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_pay_code'], 20, '充值', $config);
+                        model('ShopPublicHandle')->pushWxShippingInfo($this->users_id, $Order['order_pay_code'], 20, '充值', $config);
                     }
+
+                    // 处理会员订单累计总额，用于会员自动升级
+                    $Order['unified_amount'] = !empty($Order['unified_amount']) ? $Order['unified_amount'] : $Order['order_pay_prices'];
+                    model('UsersLevel')->handleUsersOrderTotalAmount($this->users, $Order);
 
                     // 同步处理
                     if (empty($this->fromAsync)) {

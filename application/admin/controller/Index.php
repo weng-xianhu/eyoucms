@@ -600,7 +600,7 @@ class Index extends Base
             $destination = realpath('public/static/admin/images/logo.png');
             @copy($source, $destination);
 
-            adminLog('验证商业授权');
+            adminLog('验证授权');
             $this->success('授权校验成功', $this->request->baseFile(), '', 1, [], '_parent');
         }
         $msg = empty($redata['msg']) ? '域名（'.$this->request->host(true).'）未授权' : $redata['msg'];
@@ -780,6 +780,9 @@ class Index extends Base
                 // 文档属性表
                 case 'archives_flag':
                     {
+                        if (in_array($field, ['flag_name'])) {
+                            $value = htmlspecialchars($value);
+                        }
                         if ('sort_order' == $field) {
                             $data['refresh'] = 1;
                             $data['time'] = 500;
@@ -831,6 +834,33 @@ class Index extends Base
                         if ('sort_order' == $field) {
                             $data['refresh'] = 1;
                             $data['time'] = 500;
+                        }
+                    }
+                    break;
+
+                // 邮箱自定义模板表
+                case 'smtp_tpl':
+                    {
+                        if (in_array($field, ['tpl_title'])) {
+                            $value = htmlspecialchars($value);
+                        }
+                    }
+                    break;
+
+                // 站内信自定义模板表
+                case 'users_notice_tpl':
+                    {
+                        if (in_array($field, ['tpl_title'])) {
+                            $value = htmlspecialchars($value);
+                        }
+                    }
+                    break;
+
+                // 手机端会员中心底部菜单
+                case 'users_bottom_menu':
+                    {
+                        if (in_array($field, ['title'])) {
+                            $value = htmlspecialchars($value);
                         }
                     }
                     break;
@@ -896,6 +926,7 @@ class Index extends Base
                     case 'archives':
                     {
                         if ('arcrank' == $field) {
+                            model('Arctype')->hand_type_count(['aid'=>[$id_value]]);//统计栏目文档数量
                             Db::name('taglist')->where('aid', $id_value)->update([
                                 'arcrank'=>$value,
                                 'update_time'   => getTime(),
@@ -1371,6 +1402,9 @@ class Index extends Base
         // 列出功能地图里已使用的模块
         $useFunc = $shopLogic->useFuncLogic();
         $this->assign('useFunc', $useFunc);
+
+        $foreign_authorize = tpSetting('foreign.foreign_authorize', [], 'cn');
+        $this->assign('foreign_authorize', $foreign_authorize);
 
         return $this->fetch();
     }

@@ -42,7 +42,8 @@ class Uploadimgnew extends Base
     public function upload()
     {
         $assign_data = [];
-        $type_id = input('param.type_id/d');
+        $type_id_selected = (int)tpSetting('system.system_uploads_type_id_selected', [], 'cn');
+        $type_id = input('param.type_id/d', $type_id_selected);
         $assign_data['type_id'] = $type_id;
         // 基础配置 - 附件配置
         $basicConfig = tpCache('basic');
@@ -64,15 +65,15 @@ class Uploadimgnew extends Base
             'is_water' => $is_water,
         );
         $assign_data['info'] = $info;
-        $assign_data['default_upload_list_url'] = url('Uploadimgnew/get_upload_list', ['type_id'=>0, 'info'=>base64_encode(json_encode($info))]);
-        $assign_data['current_upload_list_url'] = url('Uploadimgnew/get_upload_list', ['type_id'=>$type_id, 'info'=>base64_encode(json_encode($info))]);
+        $assign_data['default_upload_list_url'] = url('Uploadimgnew/get_upload_list', ['type_id'=>0, 'info'=>mchStrCode(json_encode($info), 'ENCODE')]);
+        $assign_data['current_upload_list_url'] = url('Uploadimgnew/get_upload_list', ['type_id'=>$type_id, 'info'=>mchStrCode(json_encode($info), 'ENCODE')]);
 
         // 侧边栏我的分组
         $uploads_total_list = Db::name('uploads')->field('type_id, count(img_id) as total')->where(['is_del'=>0])->group('type_id')->getAllWithIndex('type_id');
         $uploads_type_list = Db::name('uploads_type')->order('id asc')->select();
         foreach ($uploads_type_list as $key => $val) {
             $val['total'] = !empty($uploads_total_list[$val['id']]['total']) ? $uploads_total_list[$val['id']]['total'] : 0;
-            $val['url'] = url('Uploadimgnew/get_upload_list', ['type_id'=>$val['id'], 'info'=>base64_encode(json_encode($info))]);
+            $val['url'] = url('Uploadimgnew/get_upload_list', ['type_id'=>$val['id'], 'info'=>mchStrCode(json_encode($info), 'ENCODE')]);
             $uploads_type_list[$key] = $val;
         }
         $assign_data['uploads_type_list'] = $uploads_type_list;
@@ -135,13 +136,20 @@ class Uploadimgnew extends Base
         $assign_data = [];
 
         $type_id = input('param.type_id/d', 0);
+        tpSetting('system', ['system_uploads_type_id_selected'=>$type_id], 'cn');
         $assign_data['type_id'] = $type_id;
 
         $pageNum = input('param.p/d', 1);
         $assign_data['pageNum'] = $pageNum;
 
         $info = input('param.info/s');
-        $info = json_decode(base64_decode($info), true);
+        $info = json_decode(mchStrCode($info, 'DECODE'), true);
+        $info['num'] = intval($info['num']);
+        $info['size'] = preg_replace('/([^\d]*)/i', '', $info['size']);
+        $info['input'] = preg_replace('/([^\w\-]*)/i', '', $info['input']);
+        $info['func'] = preg_replace('/([^\w\-]*)/i', '', $info['func']);
+        $info['path'] = preg_replace('/([^\w\-\/\\\]*)/i', '', $info['path']);
+        $info['is_water'] = intval($info['is_water']);
         $info['upload'] = url('Ueditor/imageUp',array('savepath'=>$info['path'],'type_id'=>$type_id,'pictitle'=>'banner','dir'=>'images','is_water'=>$info['is_water']));
         $info['image_accept'] = $this->image_accept;
         $assign_data['info'] = $info;

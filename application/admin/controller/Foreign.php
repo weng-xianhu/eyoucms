@@ -31,7 +31,12 @@ class Foreign extends Base {
         parent::__construct();
         $this->logic = new ForeignLogic;
         $functionLogic = new \app\common\logic\FunctionLogic;
-        $functionLogic->validate_authorfile(1);
+        $foreign_authorize = tpSetting('foreign.foreign_authorize', [], 'cn');
+        if (!empty($foreign_authorize)) {
+            $functionLogic->validate_authorfile(1);
+        } else {
+            $functionLogic->validate_authorfile(2);
+        }
     }
 
     /**
@@ -94,6 +99,8 @@ class Foreign extends Base {
             $foreignData['foreign_is_status'] = intval($post['foreign_is_status']);
             $foreignData['foreign_clear_htmlfilename'] = intval($post['foreign_clear_htmlfilename']);
             tpSetting('foreign', $foreignData, 'cn');
+            // 生成语言包文件
+            model('ForeignPack')->updateLangFile();
 
             // 插件配置
             if (is_dir('./weapp/Waimao/')) {
@@ -107,6 +114,7 @@ class Foreign extends Base {
                 Db::name('weapp')->where(['code'=>'Waimao'])->update($saveData);
             }
 
+            Cache::clear('foreign_pack');
             $this->success("操作成功");
         }
         $this->error("操作失败");

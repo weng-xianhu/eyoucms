@@ -1,10 +1,31 @@
-{include file="public/layout" /}
 
-<body class="bodystyle">
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit; height: calc( 100% - 40px );">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page" style="min-width:auto;">
-    <div class="flexigrid">
+{include file="member/left" /}
+<div class="page min-hg-c-20" style="min-width:auto;margin-left:100px;">
+<div class="fixed-bar">
+    <div class="item-title">
+        <ul class="tab-base nc-row">
+            {eq name="'Member@level_index'|is_check_access" value="1"}
+            <li>
+                <a {if condition="in_array($Request.action, ['level_index','level_add','level_edit'])"}class="current"{/if} href='{:url("Member/level_index")}'>
+                    <span>会员级别</span>
+                </a>
+            </li>
+            {/eq}
+            {eq name="'Level@index'|is_check_access" value="1"}
+            <li>
+                <a {if condition="in_array($Request.action, ['index'])"}class="current"{/if} href='{:U('Level/index')}'>
+                    <span>升级套餐管理</span>
+                </a>
+            </li>
+            {/eq}
+        </ul>
+    </div>
+</div>
+<div class="flexigrid">
         <div class="hDiv">
             <div class="hDivBox">
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
@@ -14,13 +35,13 @@
                             <div class="tc"></div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="text-l10">产品名称</div>
+                            <div class="text-l10">套餐名称</div>
                         </th>
                         <th abbr="article_time" axis="col4" class="w120">
                             <div class="tc">会员级别</div>
                         </th>
                         <th abbr="article_time" axis="col4" class="w100">
-                            <div class="tc">产品价格(元)</div>
+                            <div class="tc">套餐价格(元)</div>
                         </th>
                         <th abbr="article_time" axis="col4" class="w120">
                             <div class="tc">会员期限(天)</div>
@@ -154,7 +175,7 @@
 
     // 删除
     function LevelTypeDel(obj){
-        layer.confirm('确认彻底删除<span style="color:red;">'+$(obj).attr('data-name')+'</span>？', {
+        layer.confirm('确认删除'+$(obj).attr('data-name')+'？', {
             shade: layer_shade,
             area: ['480px', '190px'],
             move: false,

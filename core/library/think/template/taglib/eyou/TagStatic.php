@@ -228,6 +228,7 @@ EOF;
             case 'bmp':
             case 'gif':
             case 'webp':
+            case 'svg':
                 $file = get_absolute_url($file);
                 $parseStr .= $file . $update_time_str;
                 break;

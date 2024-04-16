@@ -480,6 +480,7 @@ class Query
             $result = Cache::get($guid);
         }
         if (false === $result) {
+            $result = [];
             if (isset($this->options['field'])) {
                 unset($this->options['field']);
             }

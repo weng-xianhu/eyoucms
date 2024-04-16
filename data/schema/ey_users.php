@@ -234,6 +234,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'order_total_amount' => 
+  array (
+    'name' => 'order_total_amount',
+    'type' => 'decimal(10,2) unsigned',
+    'notnull' => false,
+    'default' => '0.00',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'is_activation' => 
   array (
     'name' => 'is_activation',

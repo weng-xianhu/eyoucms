@@ -39,6 +39,8 @@ class ViewFilterBehavior {
         $this->thirdcode($params); // 自动加上第三方统计代码
         $this->AppEndJsCode($params); // 自动追加阅读权限JS事件
         $this->AppFootprintJsCode($params); //自动追加足迹js事件
+        // 外贸助手的语言包
+        model('ForeignPack')->appendForeignGlobalJs($params);
     }
     
     /**

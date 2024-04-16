@@ -997,7 +997,7 @@ class Ajax extends Base
                 if (!empty($Result)) $this->error('120秒内只能发送一次');
 
                 // 图形验证码判断
-                if (empty($post['code'])) $this->error('请输入图片验证码');
+                if (empty($post['code'])) $this->error(foreign_lang('users19', $this->home_lang));
                 $verify = new \think\Verify();
                 if (!$verify->check($post['code'], $post['code_token'])) $this->error('图片验证码错误');
 
@@ -1088,7 +1088,7 @@ class Ajax extends Base
                         'mobile' => 'require|token:__mobile_1_token__',
                     ];
                     $message = [
-                        'mobile.require' => '请输入手机号码！',
+                        'mobile.require' => foreign_lang('users28', $this->home_lang),
                     ];
                     $validate = new \think\Validate($rule, $message);
                     if (!$validate->batch()->check($post)) {
@@ -1566,7 +1566,7 @@ class Ajax extends Base
                 $result['status_name'] = ''; //status_name 要求会员等级时会员级别名称
                 $result['play_auth'] = 0; //播放权限
                 $result['vip_status'] = 0; //status_value=3时使用 vip_status=1则已升级会员暂未购买
-                $users_price = get_discount_price($UsersData['level_discount'], $archivesInfo['users_price']);
+                $users_price = get_discount_price($UsersData, $archivesInfo['users_price']);
 
                 /*是否需要付费*/
                 if (0 < $archivesInfo['users_price'] && (empty($archivesInfo['users_free']) || !empty($archivesInfo['no_vip_pay']))) {
@@ -1660,8 +1660,8 @@ class Ajax extends Base
                 }*/
 
                 if ($result['status_value'] == 0) {
-                    $result['button'] = '免费';
-                    $result['status_name'] = '免费';
+                    $result['button'] = '免费观看';
+                    $result['status_name'] = '';
                 } else if ($result['status_value'] == 1) { // 所有人付费
                     $result['button'] = '付费';
                     if (!empty($is_pay)) {
@@ -1679,10 +1679,10 @@ class Ajax extends Base
                         }
                     }
                 } else if ($result['status_value'] == 3) { // 会员付费
-                    // if(1 == $result['vip_status']){
-                    //     $result['button'] = '立即购买';
-                    //     $result['button_url'] = 'MediaOrderBuy_v878548();';
-                    // }else
+//                     if(1 == $result['vip_status']){
+//                         $result['button'] = '立即购买';
+//                         $result['button_url'] = 'MediaOrderBuy_v878548();';
+//                     }else
                     if (2 == $result['vip_status']) {
                         $result['button'] = 'VIP';
                         $result['button_url'] = "window.location.href = '" . url('user/Level/level_centre', ['aid' => $archivesInfo['aid']]) . "'";
@@ -1869,17 +1869,17 @@ class Ajax extends Base
                         'score' => '+' . $scores_step,
                         'devote' => $scores_step,
                         'money' => 0.00,
-                        'info' => '每日签到',
+                        'info' => foreign_lang('users12', $this->home_lang),
                         'lang' => $this->home_lang,
                         'add_time' => getTime(),
                         'update_time' => getTime(),
                         'current_score' => $users_scores,
                     ]);
-                    $this->success('签到成功', null, ['scores' => $users_scores]);
+                    $this->success(foreign_lang('users8', $this->home_lang), null, ['scores' => $users_scores]);
                 }
                 $this->error('未知错误', null);
             }
-            $this->error('今日已签过到', null);
+            $this->error(foreign_lang('users9', $this->home_lang), null);
         }
         abort(404);
     }
@@ -1930,10 +1930,10 @@ class Ajax extends Base
             }
             /*end*/
             $users_id = session('users_id');
-            !empty($users_id) && $UsersData = GetUsersLatestData();
+            $UsersData = empty($users_id) ? [] : GetUsersLatestData();
 
             $result['content'] = $free_content;
-            $result['users_price'] = get_discount_price($UsersData['level_discount'], $artData['users_price']);
+            $result['users_price'] = get_discount_price($UsersData, $artData['users_price']);
 
             if (1 == $artData['restric_type']) { // 付费
                 $result['display'] = 1; // 1-显示购买 0-不显示
@@ -2035,196 +2035,196 @@ class Ajax extends Base
     /**
      * 获取表单数据信息
      */
-    public function form_submit()
-    {
-        $form_id = input('post.form_id/d');
-        if (IS_POST && !empty($form_id)) {
-            $post = input('post.');
-            $ip = clientIP();
-
-            /*提交间隔限制*/
-            $channel_guestbook_interval = tpSetting('channel_guestbook.channel_guestbook_interval');
-            $channel_guestbook_interval = is_numeric($channel_guestbook_interval) ? intval($channel_guestbook_interval) : 60;
-            if (0 < $channel_guestbook_interval) {
-                $map = array(
-                    'ip' => $ip,
-                    'form_id' => $form_id,
-                    'lang' => $this->home_lang,
-                    'add_time' => array('gt', getTime() - $channel_guestbook_interval),
-                );
-                $count = Db::name('form_list')->where($map)->count('list_id');
-                if ($count > 0) {
-                    if ($this->home_lang == 'cn') {
-                        $msg = '同一个IP在' . $channel_guestbook_interval . '秒之内不能重复提交！';
-                    } else if ($this->home_lang == 'zh') {
-                        $msg = '同一個IP在' . $channel_guestbook_interval . '秒之內不能重複提交！';
-                    } else {
-                        $msg = 'The same IP cannot be submitted repeatedly within ' . $channel_guestbook_interval . ' seconds!';
-                    }
-                    $this->error($msg);
-                }
-            }
-            /*end*/
-
-            $come_url = input('post.come_url/s');
-            $parent_come_url = input('post.parent_come_url/s');
-            $come_url = !empty($parent_come_url) ? $parent_come_url : $come_url;
-            $come_from = input('post.come_from/s');
-            $city = "";
-            $newData = array(
-                'form_id' => $form_id,
-                'ip' => $ip,
-                'aid' => !empty($post['aid']) ? $post['aid'] : 0,
-                'come_from' => $come_from,
-                'come_url' => $come_url,
-                'city' => $city,
-                'lang' => $this->home_lang,
-                'add_time' => getTime(),
-                'update_time' => getTime(),
-            );
-            $data = array_merge($post, $newData);
-            // 数据验证
-            $token = '__token__';
-            foreach ($post as $key => $val) {
-                if (preg_match('/^__token__/i', $key)) {
-                    $token = $key;
-                    break;
-                }
-            }
-            $rule = [
-                'form_id' => 'require|token:' . $token,
-            ];
-            $message = [
-                'form_id.require' => '表单缺少标签属性{$field.hidden}',
-            ];
-            $validate = new \think\Validate($rule, $message);
-            if (!$validate->batch()->check($data)) {
-                $error = $validate->getError();
-                $error_msg = array_values($error);
-                $this->error($error_msg[0]);
-            } else {
-                $formlistRow = [];
-                /*处理是否重复表单数据的提交*/
-                $formdata = $data;
-                foreach ($formdata as $key => $val) {
-                    if (in_array($key, ['form_id', 'ip', 'aid']) || preg_match('/^field_(\d+)$/i', $key)) {
-                        continue;
-                    }
-                    unset($formdata[$key]);
-                }
-                $md5data = md5(serialize($formdata));
-                $data['md5data'] = $md5data;
-                $formlistRow = Db::name('form_list')->field('list_id')->where(['md5data' => $md5data])->find();
-                /*--end*/
-                if (empty($formlistRow)) { // 非重复表单的才能写入数据库
-                    $list_id = Db::name('form_list')->insertGetId($data);
-                    if ($list_id > 0) {
-                        $this->saveFormValue($list_id, $form_id, $post);
-                    }
-                } else {
-                    // 存在重复数据的表单，将在后台显示在最前面
-                    $list_id = $formlistRow['list_id'];
-                    Db::name('form_list')->where('list_id', $list_id)->update([
-                        'is_read' => 0,
-                        'add_time' => getTime(),
-                        'update_time' => getTime(),
-                    ]);
-                }
-
-                if ($this->home_lang == 'cn') {
-                    $msg = '操作成功';
-                } else if ($this->home_lang == 'zh') {
-                    $msg = '操作成功';
-                } else {
-                    $msg = 'success';
-                }
-                $this->success($msg, null, ['form_id' => $form_id, 'list_id' => $list_id]);
-            }
-        }
-
-        $this->error('表单缺少标签属性{$field.hidden}');
-    }
+//    public function form_submit()
+//    {
+//        $form_id = input('post.form_id/d');
+//        if (IS_POST && !empty($form_id)) {
+//            $post = input('post.');
+//            $ip = clientIP();
+//
+//            /*提交间隔限制*/
+//            $channel_guestbook_interval = tpSetting('channel_guestbook.channel_guestbook_interval');
+//            $channel_guestbook_interval = is_numeric($channel_guestbook_interval) ? intval($channel_guestbook_interval) : 60;
+//            if (0 < $channel_guestbook_interval) {
+//                $map = array(
+//                    'ip' => $ip,
+//                    'form_id' => $form_id,
+//                    'lang' => $this->home_lang,
+//                    'add_time' => array('gt', getTime() - $channel_guestbook_interval),
+//                );
+//                $count = Db::name('form_list')->where($map)->count('list_id');
+//                if ($count > 0) {
+//                    if ($this->home_lang == 'cn') {
+//                        $msg = '同一个IP在' . $channel_guestbook_interval . '秒之内不能重复提交！';
+//                    } else if ($this->home_lang == 'zh') {
+//                        $msg = '同一個IP在' . $channel_guestbook_interval . '秒之內不能重複提交！';
+//                    } else {
+//                        $msg = 'The same IP cannot be submitted repeatedly within ' . $channel_guestbook_interval . ' seconds!';
+//                    }
+//                    $this->error($msg);
+//                }
+//            }
+//            /*end*/
+//
+//            $come_url = input('post.come_url/s');
+//            $parent_come_url = input('post.parent_come_url/s');
+//            $come_url = !empty($parent_come_url) ? $parent_come_url : $come_url;
+//            $come_from = input('post.come_from/s');
+//            $city = "";
+//            $newData = array(
+//                'form_id' => $form_id,
+//                'ip' => $ip,
+//                'aid' => !empty($post['aid']) ? $post['aid'] : 0,
+//                'come_from' => $come_from,
+//                'come_url' => $come_url,
+//                'city' => $city,
+//                'lang' => $this->home_lang,
+//                'add_time' => getTime(),
+//                'update_time' => getTime(),
+//            );
+//            $data = array_merge($post, $newData);
+//            // 数据验证
+//            $token = '__token__';
+//            foreach ($post as $key => $val) {
+//                if (preg_match('/^__token__/i', $key)) {
+//                    $token = $key;
+//                    break;
+//                }
+//            }
+//            $rule = [
+//                'form_id' => 'require|token:' . $token,
+//            ];
+//            $message = [
+//                'form_id.require' => '表单缺少标签属性{$field.hidden}',
+//            ];
+//            $validate = new \think\Validate($rule, $message);
+//            if (!$validate->batch()->check($data)) {
+//                $error = $validate->getError();
+//                $error_msg = array_values($error);
+//                $this->error($error_msg[0]);
+//            } else {
+//                $formlistRow = [];
+//                /*处理是否重复表单数据的提交*/
+//                $formdata = $data;
+//                foreach ($formdata as $key => $val) {
+//                    if (in_array($key, ['form_id', 'ip', 'aid']) || preg_match('/^field_(\d+)$/i', $key)) {
+//                        continue;
+//                    }
+//                    unset($formdata[$key]);
+//                }
+//                $md5data = md5(serialize($formdata));
+//                $data['md5data'] = $md5data;
+//                $formlistRow = Db::name('form_list')->field('list_id')->where(['md5data' => $md5data])->find();
+//                /*--end*/
+//                if (empty($formlistRow)) { // 非重复表单的才能写入数据库
+//                    $list_id = Db::name('form_list')->insertGetId($data);
+//                    if ($list_id > 0) {
+//                        $this->saveFormValue($list_id, $form_id, $post);
+//                    }
+//                } else {
+//                    // 存在重复数据的表单，将在后台显示在最前面
+//                    $list_id = $formlistRow['list_id'];
+//                    Db::name('form_list')->where('list_id', $list_id)->update([
+//                        'is_read' => 0,
+//                        'add_time' => getTime(),
+//                        'update_time' => getTime(),
+//                    ]);
+//                }
+//
+//                if ($this->home_lang == 'cn') {
+//                    $msg = '操作成功';
+//                } else if ($this->home_lang == 'zh') {
+//                    $msg = '操作成功';
+//                } else {
+//                    $msg = 'success';
+//                }
+//                $this->success($msg, null, ['form_id' => $form_id, 'list_id' => $list_id]);
+//            }
+//        }
+//
+//        $this->error('表单缺少标签属性{$field.hidden}');
+//    }
 
     /**
      *  给指定报名信息添加表单值到 form_value
      * @param int $list_id 报名id
      * @param int $form_id 表单id
      */
-    private function saveFormValue($list_id, $form_id, $post)
-    {
-        /*上传图片或附件*/
-        $arr = explode(',', config('global.image_ext'));
-        foreach ($_FILES as $fileElementId => $file) {
-            try {
-                if (!empty($file['name']) && !is_array($file['name'])) {
-                    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-                    if (in_array($ext, $arr)) {
-                        $uplaod_data = func_common($fileElementId, 'allimg');
-                    } else {
-                        $uplaod_data = func_common_doc($fileElementId, 'files');
-                    }
-                    if (0 == $uplaod_data['errcode']) {
-                        $post[$fileElementId] = $uplaod_data['img_url'];
-                    } else {
-//                                return $uplaod_data['errmsg'];
-                        $post[$fileElementId] = '';
-                    }
-                }
-            } catch (\Exception $e) {
-            }
-        }
-        /*end*/
-        $notify_content_arr = []; // 添加站内信所需参数
-        $send_content_str = "";   //发送短信内容
-        $field_list = Db::name("form_field")->where(['form_id' => $form_id])->getField("field_id,field_name,field_type");
-        // post 提交的属性  以 field_id _ 和值的 组合为键名
-        foreach ($post as $key => $val) {
-            if (!strstr($key, 'field_'))
-                continue;
-            $val = addslashes(htmlspecialchars(strip_tags($val)));
-            $field_id = str_replace('field_', '', $key);
-            $field_id = intval($field_id);
-            is_array($val) && $val = implode(',', $val);
-            $val = trim($val);
-            $field_value = stripslashes(filter_line_return($val, '。'));
-            $adddata = array(
-                'form_id' => $form_id,
-                'list_id' => $list_id,
-                'field_id' => $field_id,
-                'field_value' => $field_value,
-                'add_time' => getTime(),
-                'update_time' => getTime(),
-            );
-            Db::name('form_value')->add($adddata);
-            $field_value = get_form_read_value($field_value, $field_list[$field_id]['field_type'], true);
-            array_push($notify_content_arr, $field_value);  //添加站内信数据
-            $send_content_str .= $field_list[$field_id]['field_name'] . '：' . $field_value . '<br/>';
-
-        }
-        /*发送站内信给后台*/
-        SendNotifyMessage($notify_content_arr, 1, 1, 0);
-        /* END */
-        /* 发送短信 */
-        $is_open = Db::name('smtp_tpl')->where(['send_scene' => 1, 'lang' => $this->home_lang])->value('is_open');
-        $smtp_config = tpCache('smtp');
-        if (empty($is_open) || empty($smtp_config['smtp_user']) || empty($smtp_config['smtp_pwd'])) {
-            return false;
-        }
-        $send_email_scene = config('send_email_scene');
-        $scene = $send_email_scene[1]['scene'];
-        $web_name = tpCache('web.web_name');    //title
-        $web_name .= "-表单消息";
-        $html = "<p style='text-align: left;'>{$web_name}</p><p style='text-align: left;'>{$send_content_str}</p>";
-        if (isMobile()) {
-            $html .= "<p style='text-align: left;'>——来源：移动端</p>";
-        } else {
-            $html .= "<p style='text-align: left;'>——来源：电脑端</p>";
-        }
-        // 发送邮件
-        $res = send_email(null, null, $html, $scene);
-        /* END */
-        return $res;
-    }
+//    private function saveFormValue($list_id, $form_id, $post)
+//    {
+//        /*上传图片或附件*/
+//        $arr = explode(',', config('global.image_ext'));
+//        foreach ($_FILES as $fileElementId => $file) {
+//            try {
+//                if (!empty($file['name']) && !is_array($file['name'])) {
+//                    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+//                    if (in_array($ext, $arr)) {
+//                        $uplaod_data = func_common($fileElementId, 'allimg');
+//                    } else {
+//                        $uplaod_data = func_common_doc($fileElementId, 'files');
+//                    }
+//                    if (0 == $uplaod_data['errcode']) {
+//                        $post[$fileElementId] = $uplaod_data['img_url'];
+//                    } else {
+////                                return $uplaod_data['errmsg'];
+//                        $post[$fileElementId] = '';
+//                    }
+//                }
+//            } catch (\Exception $e) {
+//            }
+//        }
+//        /*end*/
+//        $notify_content_arr = []; // 添加站内信所需参数
+//        $send_content_str = "";   //发送短信内容
+//        $field_list = Db::name("form_field")->where(['form_id' => $form_id])->getField("field_id,field_name,field_type");
+//        // post 提交的属性  以 field_id _ 和值的 组合为键名
+//        foreach ($post as $key => $val) {
+//            if (!strstr($key, 'field_'))
+//                continue;
+//            $val = addslashes(htmlspecialchars(strip_tags($val)));
+//            $field_id = str_replace('field_', '', $key);
+//            $field_id = intval($field_id);
+//            is_array($val) && $val = implode(',', $val);
+//            $val = trim($val);
+//            $field_value = stripslashes(filter_line_return($val, '。'));
+//            $adddata = array(
+//                'form_id' => $form_id,
+//                'list_id' => $list_id,
+//                'field_id' => $field_id,
+//                'field_value' => $field_value,
+//                'add_time' => getTime(),
+//                'update_time' => getTime(),
+//            );
+//            Db::name('form_value')->add($adddata);
+//            $field_value = get_form_read_value($field_value, $field_list[$field_id]['field_type'], true);
+//            array_push($notify_content_arr, $field_value);  //添加站内信数据
+//            $send_content_str .= $field_list[$field_id]['field_name'] . '：' . $field_value . '<br/>';
+//
+//        }
+//        /*发送站内信给后台*/
+//        SendNotifyMessage($notify_content_arr, 1, 1, 0);
+//        /* END */
+//        /* 发送短信 */
+//        $is_open = Db::name('smtp_tpl')->where(['send_scene' => 1, 'lang' => $this->home_lang])->value('is_open');
+//        $smtp_config = tpCache('smtp');
+//        if (empty($is_open) || empty($smtp_config['smtp_user']) || empty($smtp_config['smtp_pwd'])) {
+//            return false;
+//        }
+//        $send_email_scene = config('send_email_scene');
+//        $scene = $send_email_scene[1]['scene'];
+//        $web_name = tpCache('web.web_name');    //title
+//        $web_name .= "-表单消息";
+//        $html = "<p style='text-align: left;'>{$web_name}</p><p style='text-align: left;'>{$send_content_str}</p>";
+//        if (isMobile()) {
+//            $html .= "<p style='text-align: left;'>——来源：移动端</p>";
+//        } else {
+//            $html .= "<p style='text-align: left;'>——来源：电脑端</p>";
+//        }
+//        // 发送邮件
+//        $res = send_email(null, null, $html, $scene);
+//        /* END */
+//        return $res;
+//    }
 
     //下载付费
     public function get_download($aid = 0)
@@ -2461,4 +2461,55 @@ class Ajax extends Base
         }
     }
 
+    //留言回复列表
+    public function get_formreply_list()
+    {
+        if (!IS_AJAX) {
+            abort(404);
+        }
+
+        $page = input('page/d', 1);
+        $pagesize = input('pagesize/d', 20);
+        $typeid = input('typeid/d', 0);
+        $totalpage = input('totalpage/d', 1);
+        $ordermode = input('ordermode/s', 'desc');
+        $tagid = 'block001';
+        if (empty($typeid) || empty($page)) {
+            $this->error('参数有误');
+        }
+
+        $tagFormreply = new \think\template\taglib\eyou\TagFormreply;
+        $attr_list = $tagFormreply->getFormreply($typeid, $page,$pagesize,$ordermode);
+        if (!empty($attr_list) ) {
+            $tpl_content = '';
+            $filename = './template/' . THEME_STYLE_PATH . '/' . 'system/formreply_' . $tagid . '.' . \think\Config::get('template.view_suffix');
+            if (!file_exists($filename)) {
+                $data['code'] = -1;
+                $data['msg'] = "模板追加文件 formreply_{$tagid}.htm 不存在！";
+                $this->error("标签模板不存在", null, $data);
+            } else {
+                $tpl_content = @file_get_contents($filename);
+            }
+            if (empty($tpl_content)) {
+                $data['code'] = -1;
+                $data['msg'] = "模板追加文件 formreply_{$tagid}.htm 没有HTML代码！";
+                $this->error("标签模板不存在", null, $data);
+            }
+
+            /*拼接完整的formreply标签语法*/
+            $innertext = "{eyou:formreply typeid='{$typeid}' page='{$page}' pagesize='{$pagesize}' ordermode='{$ordermode}'}";
+            $innertext .= $tpl_content;
+            $innertext .= "{/eyou:formreply}";
+            /*--end*/
+            $msg = $this->display($innertext); // 渲染模板标签语法
+            $data['msg'] = $msg;
+
+            //是否到了最终页
+            if ($totalpage == $page) {
+                $data['lastpage'] = 1;
+            }
+        }
+
+        $this->success('请求成功', null, $data);
+    }
 }

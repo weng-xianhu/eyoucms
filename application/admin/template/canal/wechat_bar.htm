@@ -1,0 +1,12 @@
+
+{if condition="$php_servicemeal >= 2"}
+<ul class="tab-base nc-row">
+    {eq name="'Canal@conf_wechat'|is_check_access" value="1"}
+    <li><a href="{:url('Canal/conf_wechat')}" {if condition="'conf_wechat'==$Think.const.ACTION_NAME"}class="current"{/if}><span>公众号配置</span></a></li>
+    {/eq}
+
+    {eq name="'Canal@wechat_push_notice'|is_check_access" value="1"}
+    <li><a href="{:url('Canal/wechat_push_notice')}" {if condition="'wechat_push_notice'==$Think.const.ACTION_NAME"}class="current"{/if}><span>推送消息</span></a></li>
+    {/eq}
+</ul>
+{/if}

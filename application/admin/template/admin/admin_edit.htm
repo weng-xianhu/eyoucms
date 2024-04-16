@@ -109,6 +109,92 @@
                     <p class="notic"></p>
                 </dd>
             </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>关注公众号</label>
+                </dt>
+                <dd class="opt">
+                    <span id="span_wechat_followed">{empty name="$info['wechat_followed']"}未关注{else /}已关注{/empty}</span> &nbsp;
+                    <a href="javascript:void(0);" data-id="{$info.admin_id}" onclick="wechatFollowed(this);" class="ncap-btn ncap-btn-green" {notempty name='$info.wechat_followed'} style="display: none;" {/notempty}>扫码关注</a>
+                    <p class="notic">通过此处扫码关注公众号则会将账号与微信号进行关联绑定，才能接收微信公众号的消息通知！</p>
+                </dd>
+            </dl>
+            <script type="text/javascript">
+                function wechatFollowed(obj) {
+                    var admin_id = $(obj).data('id');
+                    layer_loading('正在加载');
+                    $.ajax({
+                        type: 'POST',
+                        url : "{:url('Admin/wechat_followed')}",
+                        data: {admin_id: admin_id, _ajax: 1},
+                        dataType: "JSON",
+                        success: function(res){
+                            layer.closeAll();
+                            if (1 == res.code) {
+                                var htmlContent = '<img src="'+ res.url +'" style="width: 250px; height: 250px;"><p style="color: red; padding: 8px 0; font-size: 15px; text-align: center;">打开微信扫一扫</p> <script type="text/javascript"> pollingWechatFollowed("'+admin_id+'"); <\/script>';
+                                layer.open({
+                                    type: 1,
+                                    title:'微信扫码绑定',
+                                    id: 'layer_wechat_followed',
+                                    shadeClose: false,
+                                    content: htmlContent,
+                                    end: function() {
+                                        clearWechatFollowed();
+                                    }
+                                });
+                            } else {
+                                showErrorAlert(res.msg);
+                            }
+                        },
+                        error: function(e) {
+                            layer.closeAll();
+                            showErrorAlert(e.responseText);
+                        }
+                    });
+                }
+
+                function pollingWechatFollowed(admin_id) {
+                    pollingFollowed = setTimeout(function(){
+                        $.ajax({
+                            type: 'POST',
+                            url : "{:url('Admin/polling_wechat_followed')}",
+                            data: {admin_id: admin_id, _ajax:1},
+                            dataType: "JSON",
+                            success: function(res) {
+                                if (1 == res.data.code) {
+                                    layer.closeAll();
+                                    clearWechatFollowed();
+                                    layer.msg(res.msg, {shade: layer_shade, time: 2000}, function() {
+                                        window.location.reload();
+                                    });
+                                } else if (0 == res.code) {
+                                    layer.closeAll();
+                                    clearWechatFollowed();
+                                    layer.alert(res.msg, {icon: 5, title: false, closeBtn: false}, function() {
+                                        window.location.reload();
+                                    });
+                                } else if (2 == res.data.code) {
+                                    pollingWechatFollowed(admin_id);
+                                }
+                            },
+                            error: function(e){
+                                layer.closeAll();
+                                clearWechatFollowed();
+                                layer.alert('扫码检测异常，重新尝试！', {icon: 5, title: false, closeBtn: false}, function() {
+                                    window.location.reload();
+                                });
+                            }
+                        });
+                    }, 2000);
+                }
+
+                function clearWechatFollowed() {
+                    if (pollingFollowed > 0) {
+                        clearTimeout(pollingFollowed);
+                        pollingFollowed = null;
+                    }
+                }
+            </script>
 
             {if condition="!empty($thirdata['data']['security_wechat_open'])"}
                 <dl class="row">
@@ -691,7 +777,7 @@
                 error: function(e){
                     layer.closeAll();
                     clearNotify();
-                    layer.alert('扫码检测异常，重新尝试！', {icon: 5, title:false, closeBtn:false}, function(){
+                    layer.alert(e.responseText, {icon: 5, title:false, closeBtn:false}, function(){
                         window.location.reload();
                     });
                 }

@@ -838,11 +838,8 @@ class Special extends Base
         /*回收站数据不显示*/
         $condition['a.is_del'] = array('eq', 0);
 
-        /**
-         * 数据查询，搜索出主键ID的值
-         */
-        $count = Db::name('archives')->alias('a')->where($condition)->count('aid');// 查询满足要求的总记录数
-        $Page = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
+        $count = Db::name('archives')->alias('a')->where($condition)->count('aid');
+        $Page = new Page($count, config('paginate.list_rows'));
         $list = Db::name('archives')
             ->field("a.aid")
             ->alias('a')
@@ -851,10 +848,6 @@ class Special extends Base
             ->limit($Page->firstRow.','.$Page->listRows)
             ->getAllWithIndex('aid');
 
-        /**
-         * 完善数据集信息
-         * 在数据量大的情况下，经过优化的搜索逻辑，先搜索出主键ID，再通过ID将其他信息补充完整；
-         */
         if ($list) {
             $aids = array_keys($list);
             $fields = "b.*, a.*, a.aid as aid";
@@ -868,10 +861,10 @@ class Special extends Base
                 $list[$key] = $row[$val['aid']];
             }
         }
-        $show = $Page->show(); // 分页显示输出
-        $assign_data['page'] = $show; // 赋值分页输出
-        $assign_data['list'] = $list; // 赋值数据集
-        $assign_data['pager'] = $Page; // 赋值分页对象
+        $show = $Page->show();
+        $assign_data['page'] = $show;
+        $assign_data['list'] = $list;
+        $assign_data['pager'] = $Page;
 
         /*允许发布文档列表的栏目*/
         $allow_release_channel = !empty($channels) ? explode(',', $channels) : config('global.allow_release_channel');

@@ -4305,7 +4305,7 @@ if (!function_exists('GetUsersLatestData'))
         $users_id = empty($users_id) ? session('users_id') : $users_id;
         if(!empty($users_id)) {
             // 查询会员数据
-            $field = 'b.*, b.discount as level_discount, a.*';
+            $field = 'b.*, b.discount as level_discount, b.status as level_status, a.*';
             $users = \think\Db::name('users')->field($field)
                 ->alias('a')
                 ->join('__USERS_LEVEL__ b', 'a.level = b.level_id', 'LEFT')
@@ -4316,6 +4316,9 @@ if (!function_exists('GetUsersLatestData'))
                 ])->find();
             // 会员不存在则返回空
             if (empty($users)) return false;
+
+            // 如果没有设置会员级别折扣或者已禁用相关会员级别则将会员折扣率设为100(无折扣)
+            if (0 === intval($users['discount_type']) || 0 === intval($users['level_status'])) $users['level_discount'] = 100;
 
             // 删除登录密码及支付密码
             unset($users['paypwd']);
@@ -4687,11 +4690,11 @@ if (!function_exists('pay_success_logic'))
 
                 // 保存微信发货推送表记录(需要物流发货订单)
                 if (1 === intval($orderData['logistics_type']) && 1 !== intval($orderData['prom_type']) && 'wechat' === trim($paycode)) {
-                    // model('ShopPublicHandle')->saveWxShippingInfo($orderData['users_id'], $orderData['order_code'], 2, $config);
+                    model('ShopPublicHandle')->saveWxShippingInfo($orderData['users_id'], $orderData['order_code'], 2, $config);
                 }
                 // 推送微信发货推送表记录(核销订单)
                 else if (2 === intval($orderData['logistics_type']) && 1 !== intval($orderData['prom_type']) && 'wechat' === trim($paycode)) {
-                    // model('ShopPublicHandle')->pushWxShippingInfo($orderData['users_id'], $orderData['order_code'], 2, '', $config);
+                    model('ShopPublicHandle')->pushWxShippingInfo($orderData['users_id'], $orderData['order_code'], 2, '', $config);
                 }
 
                 // 订单操作完成，返回跳转
@@ -4961,6 +4964,20 @@ if (!function_exists('SendNotifyMessage'))
                     'update_time' => $times
                 ];
                 M('users_notice')->add($ContentData);
+            }
+            // 会员升级
+            else if (21 === intval($SendScene)) {
+                $content = '您已消费'.$GetContentArr['total_amount'].'元，会员级别已升级为'.$GetContentArr['level_name'].'(终身)';
+                $insert = [
+                    'title'       => $Notice['tpl_title'],
+                    'users_id'    => $UsersID,
+                    'usernames'   => $UsersName,
+                    'remark'      => $content,
+                    'lang'        => $homeLang,
+                    'add_time'    => $times,
+                    'update_time' => $times
+                ];
+                M('users_notice')->insert($insert);
             }
         }
     }
@@ -5321,18 +5338,14 @@ if (!function_exists('get_discount_price'))
     /**
      * 获取会员折扣价格
      */
-    function get_discount_price( $discount = 100 , $price = 0 )
+    function get_discount_price($users = [], $price = 0)
     {
-        if (0 < $price){
-            // static $discount = null;
-            // if (null === $discount) {
-            //     $discount = \think\Db::name('users_level')->where(['level_id'=>$level_id])->value('discount');
-            // }
-            if (!empty($discount)) {
-                $price = round($price * ($discount/100),2);
-            } else {
-                $price = 0;
-            }
+        if (0 < $price) {
+            // 计算折扣率
+            $discountPrice = 1;
+            if (isset($users['level_discount']) && !empty($users['level_status'])) $discountPrice = $users['level_discount'] / 100;
+            // 计算折扣价
+            $price = unifyPriceHandle($price * $discountPrice);
         }
         return $price;
     }
@@ -6685,6 +6698,9 @@ if (!function_exists('get_weixin_access_token'))
         } else if ('openSource' == $applets) {
             $data = tpSetting("OpenMinicode.conf_weixin");
             $data = !empty($data) ? json_decode($data, true) : [];
+            // 获取原生小程序插件配置
+            if (empty($data['appid'])) $data = model('ShopPublicHandle')->getSpecifyAppletsConfig();
+            // 如果没有存在配置则提示
             if (empty($data['appid'])) {
                 return [
                     'code'  => 0,
@@ -6745,6 +6761,11 @@ if (!function_exists('get_wechat_access_token'))
                 'msg' => '请先完成微信公众号配置',
             ];
         }
+        $setting_info = tpSetting(md5($data['appid']));
+        if (!empty($setting_info)) {
+            $data = array_merge($data, $setting_info);
+            $data['appsecret'] = $data['secret'];
+        }
         if (false === $resetToken && !empty($data['access_token']) && !empty($data['expire_time']) && $data['expire_time'] > getTime()) {
             return [
                 'code'  => 1,
@@ -6759,6 +6780,14 @@ if (!function_exists('get_wechat_access_token'))
             $data['access_token']  = $params['access_token'];
             $data['expire_time']  = getTime() + $params['expires_in'] - 1000;
             tpSetting('OpenMinicode', ['conf_wechat' => json_encode($data)]);
+
+            $setting_info = [
+                'appid' => $data['appid'],
+                'secret' => $data['appsecret'],
+                'access_token' => $data['access_token'],
+                'expires_time' => $data['expire_time'] //提前200s过期
+            ];
+            tpSetting(md5($data['appid']), $setting_info);
             return [
                 'code'  => 1,
                 'access_token' => $access_token,
@@ -6803,6 +6832,14 @@ if (!function_exists('eyou_send_notice'))
                 'users_id' => $users_id,
             ];
             $apiModel->sendAppletsNotice($result_id, $send_scene, $data);
+        }
+        // 留言表单通知
+        else if ($send_scene == 1) {
+            // 公众号通知
+            $admin_list = Db::name('admin')->where(['wechat_followed'=>1])->select();
+            foreach ($admin_list as $key => $admin_info) {
+                $apiModel->sendWechatNotice($result_id, $send_scene, $admin_info);
+            }
         }
 
         return ['code'=>1, 'msg'=>'success'];

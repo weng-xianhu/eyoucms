@@ -254,7 +254,23 @@
             $('#a_'+nid+'pay').removeClass('none');
 
             if ('article' == nid) {
-                layer.alert('开启文章付费需添加相关标签，请查看标签教程修改', {
+                var php_servicemeal = {$php_servicemeal|default=0};
+                var system_is_article_pay = {$system_is_article_pay|default=0};
+                if (php_servicemeal < 2 && system_is_article_pay == 0) {
+                    $('input[name="data[is_article_pay]"]').eq(1).prop('checked', true);
+                    var alert1 = layer.alert('付'+'费'+'功'+'能'+'只'+'限'+'于'+'专'+'业'+'授'+'权'+'域'+'名'+'！', {
+                        icon: 4,
+                        shade: layer_shade,
+                        title:false,
+                        btn: ['购买授权']
+                    }, function(){
+                        window.open('https://www.eyoucms.com/buy');
+                        layer.close(alert1);
+                    });
+                    return false;
+                }
+                var a = '<a href="javascript:void(0);" onclick="openPage(this);" data-url="https://www.eyoucms.com/index.php?m=home&c=View&a=index&aid=11810&origin_eycms=1" data-title="articlepay 文章模型付费阅读标签">标签教程</a>';
+                layer.alert('开启文章付费需添加相关标签，请查看'+ a +'修改', {
                     shade: layer_shade,
                     move: false,
                     title: '提示',
@@ -265,7 +281,8 @@
                     }
                 });
             } else if ('download' == nid) {
-                layer.alert('开启下载付费需添加相关标签，请查看标签教程修改', {
+                var a = '<a href="javascript:void(0);" onclick="openPage(this);" data-url="https://www.eyoucms.com/index.php?m=home&c=View&a=index&aid=28561&origin_eycms=1" data-title="downloadpay 下载模型付费标签">标签教程</a>';
+                layer.alert('开启下载付费需添加相关标签，请查看'+ a +'修改', {
                     shade: layer_shade,
                     move: false,
                     title: '提示',
@@ -280,6 +297,12 @@
             $('#a_'+nid+'pay').addClass('none');
         }
     }
+
+    function openPage(obj) {
+        layer.closeAll();
+        click_to_eyou_1575506523($(obj).data('url'), $(obj).data('title'))
+    }
+
     // 七牛云上传开启
     function qiniuyun_open(obj)
     {

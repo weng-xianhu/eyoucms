@@ -132,13 +132,14 @@
                                         <i></i>
                                     {/eq}
                                     {eq name="'Tags@edit'|is_check_access" value="1"}
-                                        <a class="btn blue hint hint-top" data-hint="可以编辑tag页面seo设置" href="javascript:void(0);" data-href="{:url('Tags/edit', ['id'=>$vo.id])}" onclick="openFullframe(this, 'TAG标签 - 编辑', '100%', '100%');" >编辑</a>
+                                        <a class="btn blue" href="javascript:void(0);" data-href="{:url('Tags/edit', ['id'=>$vo.id])}" onclick="openFullframe(this, 'TAG标签 - 编辑', '850px', '520px');" >编辑</a>
                                         <i></i>
                                     {/eq}
                                     {eq name="'Tags@del'|is_check_access" value="1"}
                                         <a class="btn red"  href="javascript:void(0);" data-url="{:url('Tags/del')}" data-id="{$vo.id}" onclick="delfun(this);">删除</a>
+                                        <i></i>
                                     {/eq}
-                                    
+                                    <a class="btn" href="{$vo['id']|get_tagurl=###}" target="_blank">浏览</a>
                                 </div>
                             </td>
                         </tr>

@@ -202,7 +202,7 @@ function PayIsRecharge(msg ,url,unified_id,unified_number,transaction_type) {
 }
 
 // 订单轮询
-function OrderPayPolling(data) {
+function OrderPayPolling(data, showMsgCode) {
     data = JSON.parse(data);
     if (!data.pay_id || !data.pay_mark || !data.unified_id || !data.unified_number || !data.transaction_type) {
         layer.msg('订单异常，刷新重试', {time: 1500}, function() {
@@ -237,6 +237,13 @@ function OrderPayPolling(data) {
                     layer.msg(res.msg, {time: 1500}, function() {
                         window.location.href = res.url;
                     });
+                } else {
+                    if (showMsgCode && res.msg) {
+                        $('#' + showMsgCode).show().html(res.msg);
+                        setTimeout(function() {
+                            $('#' + showMsgCode).hide().html('');
+                        }, 3000);
+                    }
                 }
             } else if (0 == res.code) {
                 layer.alert(res.msg, {icon:0, title: false, closeBtn: 0});

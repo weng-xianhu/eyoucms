@@ -147,14 +147,14 @@
                                     {else /}
                                         <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',['typeid'=>$vo['id']])}" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
                                     {/if}
-                                    <i class="arctotal">（文档：{$vo.id|get_total_arc=###}条）</i>
+                                    <i class="arctotal">（文档：{$vo.total_arc}条）</i>
                                 {elseif condition="$vo['current_channel'] == 5"}
                                     {if condition="$php_servicemeal > 1"}
                                         <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',['typeid'=>$vo['id']])}" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
                                     {else /}
                                     <a href="javascript:void(0);" class="btn grey" title="该功能仅限专业版授权！" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
                                     {/if}
-                                    <i class="arctotal">（文档：{$vo.id|get_total_arc=###}条）</i>
+                                    <i class="arctotal">（文档：{$vo.total_arc}条）</i>
                                 {elseif condition="$vo['current_channel'] == 51"}
                                     {if condition="$php_servicemeal >= 2"}
                                         <a href="{:url('Ask/index')}" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
@@ -167,7 +167,7 @@
                                     {else /}
                                         <a href="{:url($channeltype_list[$vo['current_channel']]['ctl_name'].'/index',['typeid'=>$vo['id']])}" {neq name='$main_lang' value='$admin_lang'}title="{$main_arctype_list[$vo['id']]['typename']|default=$vo['typename']}"{/neq}>{$vo.typename}</a>
                                     {/if}
-                                    <i class="arctotal">（文档：{$vo.id|get_total_arc=###}条）</i>
+                                    <i class="arctotal">（文档：{$vo.total_arc}条）</i>
                                 {/if}
                             {/if}
                             </div>

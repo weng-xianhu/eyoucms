@@ -511,6 +511,9 @@ function SpecSelect(spec_mark_id, spec_value_id, discount_price) {
                     document.getElementById('totol_price').innerText = parseFloat(users_price.toFixed(2));
                 }
             }
+            if (document.getElementById('spec_price')) {
+                document.getElementById('spec_price').innerText = parseFloat(users_price.toFixed(2));
+            }
             if (document.getElementById('stock_count')) {
                 document.getElementById('stock_count').innerText = SpecData[i]['spec_stock'];
             }

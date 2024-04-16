@@ -6,11 +6,7 @@
 <div class="page" style="min-width: auto;box-shadow:none;">
     {include file="canal/bar" /}
     <!-- 操作说明 -->
-    <div id="explanation" class="explanation" style="color: rgb(44, 188, 163); background-color: rgb(237, 251, 248); margin-bottom: 15px;">
-        <div id="checkZoom" class="title"><i class="fa fa-lightbulb-o"></i>
-            <h4 title="提示相关设置操作时应注意的要点">提示</h4>
-            <span title="收起提示" id="explanationZoom" style="display: block;"></span>
-        </div>
+    <div id="" class="explanation mb15">
         <ul>
             <li>1，API接口：API接口不限于：原生小程序、uni-app小程序、vue制作的h5端等可想象的应用场景。为防止API接口被盗用，建议大家开启接口密钥，且一定要<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=28345','API接口密钥的验证逻辑代码教程')" class="red">【查看教程】</a>加入这段验证逻辑。本系统推荐一款 <a href="https://gitee.com/weng_xianhu/eymini" target="_blank">易优微信开源小程序</a>，有基础能力的可以下载体验。</li>
             <li>2，微信小程序：登录 <a href="https://mp.weixin.qq.com" target="_blank">微信小程序平台</a> ，在“开发管理->开发设置”里获取AppID、AppSecret的值。微信支付配置：登录 <a href="https://pay.weixin.qq.com" target="_blank">微信支付商户平台</a> ，具体点击<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=8829&origin_eycms=1','微信支付配置教程')" class="red">查看教程</a>操作。配置主要用于开源微信小程序。</li>
@@ -446,6 +442,45 @@
                         <p class="notic">App Secret(智能小程序密匙)</p>
                     </dd>
                 </dl>
+
+                <dl class="row"><dt class="tit"><label><b>百度支付</b></label></dt><dd class="opt">[开发者平台 - 管理 - 功能设置 - 支付管理]</dd></dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="baidu_payAppid">APP ID</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="baidu_payAppid" id="baidu_payAppid" value="{$baidu_data.payAppid|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">[支付设置 - 支付服务信息 - APP ID]</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="baidu_payAppkey">APP KEY</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="baidu_payAppkey" id="baidu_payAppkey" value="{$baidu_data.payAppkey|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">[支付设置 - 支付服务信息 - APP KEY]</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="baidu_payDealId">dealId</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="baidu_payDealId" id="baidu_payDealId" value="{$baidu_data.payDealId|default=''}" class="input-txt" autocomplete="off">
+                        <p class="notic">[支付设置 - 支付服务信息 - dealId]</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="baidu_paySecret">RSA加密私钥</label>
+                    </dt>
+                    <dd class="opt">
+                        <textarea rows="5" cols="51" name="baidu_paySecret" id="baidu_paySecret" style="height: 100px;" autocomplete="off">{$baidu_data.paySecret|default=''}</textarea>
+                        <p class="notic">生成RSA加密公钥、私钥的时所生成的RSA加密私钥</p>
+                    </dd>
+                </dl>
+
                 <div class="bot">
                     <a href="JavaScript:void(0);" onclick="checkBaiduForm();" class="ncap-btn-big ncap-btn-green" id="submitBaiduBtn">确认提交</a>
                 </div>

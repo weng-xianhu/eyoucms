@@ -92,7 +92,7 @@ class TagSppurchase extends Base
         // 空规格数据包
         $result['ReturnData'] = $ReturnData;
         // 折扣率百分比
-        if (isset($this->users['level_discount'])) {
+        if (isset($this->users['level_discount']) && !empty($this->users['level_status'])) {
             $result['discount_price'] = $this->users['level_discount'] / 100;
         } else {
             $result['discount_price'] = 1;
@@ -172,41 +172,41 @@ class TagSppurchase extends Base
         // 价格处理
         if (empty($ReturnData) && !empty($this->users['level_id']) && 1 === intval($archivesInfo['users_discount_type'])) {
             // 商品原价
-            $result['old_price'] = "<span id='old_price'>".$archivesInfo['users_price']."</span>";
+            $result['old_price'] = "<span id='old_price'>".unifyPriceHandle($archivesInfo['users_price'])."</span>";
             // 商品规格价
-            $result['spec_price'] = "<span id='spec_price'>".$archivesInfo['users_price']."</span>";
+            $result['spec_price'] = "<span id='spec_price'>".unifyPriceHandle($archivesInfo['users_price'])."</span>";
             // 查询会员折扣价列表
             $archivesInfo['users_price'] = model('ShopPublicHandle')->handleUsersDiscountPrice($archivesInfo['aid'], $this->users['level_id']);
             // 商品会员价
-            $result['users_price'] = "<span id='users_price'>".$archivesInfo['users_price']."</span>";
+            $result['users_price'] = "<span id='users_price'>".unifyPriceHandle($archivesInfo['users_price'])."</span>";
             // 商品售价
-            $result['sell_price'] = "<span id='sell_price'>".$archivesInfo['users_price']."</span>";
+            $result['sell_price'] = "<span id='sell_price'>".unifyPriceHandle($archivesInfo['users_price'])."</span>";
             // 商品总价
-            $result['totol_price'] = "<span id='totol_price'>".$archivesInfo['users_price']."</span>";
-        } else if (empty($this->users_id) || 100 == $this->users['level_discount'] || 2 === intval($archivesInfo['users_discount_type'])) {
+            $result['totol_price'] = "<span id='totol_price'>".unifyPriceHandle($archivesInfo['users_price'])."</span>";
+        } else if (empty($this->users_id) || 100 == $this->users['level_discount'] || empty($this->users['level_status']) || 2 === intval($archivesInfo['users_discount_type'])) {
             // 商品会员价
-            $result['users_price'] = "<span id='users_price'>".$archivesInfo['users_price']."</span>";
+            $result['users_price'] = "<span id='users_price'>".unifyPriceHandle($archivesInfo['users_price'])."</span>";
             // 商品原价
-            $result['old_price'] = "<span id='old_price'>".$archivesInfo['users_price']."</span>";
+            $result['old_price'] = "<span id='old_price'>".unifyPriceHandle($archivesInfo['users_price'])."</span>";
             // 商品售价
-            $result['sell_price'] = "<span id='sell_price'>".$archivesInfo['users_price']."</span>";
+            $result['sell_price'] = "<span id='sell_price'>".unifyPriceHandle($archivesInfo['users_price'])."</span>";
             // 商品规格价
-            $result['spec_price'] = "<span id='spec_price'>".$archivesInfo['users_price']."</span>";
+            $result['spec_price'] = "<span id='spec_price'>".unifyPriceHandle($archivesInfo['users_price'])."</span>";
             // 商品总价
-            $result['totol_price'] = "<span id='totol_price'>".$archivesInfo['users_price']."</span>";
+            $result['totol_price'] = "<span id='totol_price'>".unifyPriceHandle($archivesInfo['users_price'])."</span>";
         } else {
             // 计算折扣后的价格
             $discount_price = $archivesInfo['users_price'] * ($result['discount_price']);
             // 商品会员价、商品原价一起
-            $result['users_price'] = "<span id='users_price'>".$discount_price."</span> &nbsp; &nbsp; &nbsp; <span style='text-decoration:line-through;' id='old_price'>".$archivesInfo['users_price']."</span>";
+            $result['users_price'] = "<span id='users_price'>".unifyPriceHandle($discount_price)."</span> &nbsp; &nbsp; &nbsp; <span style='text-decoration:line-through;' id='old_price'>".unifyPriceHandle($archivesInfo['users_price'])."</span>";
             // 商品原价
-            $result['old_price'] = "<span style='text-decoration:line-through;' id='old_price'>".$archivesInfo['users_price']."</span>";
+            $result['old_price'] = "<span style='text-decoration:line-through;' id='old_price'>".unifyPriceHandle($archivesInfo['users_price'])."</span>";
             // 商品售价
-            $result['sell_price'] = "<span id='sell_price'>".floatval(sprintf("%.2f", $discount_price))."</span>";
+            $result['sell_price'] = "<span id='sell_price'>".unifyPriceHandle($discount_price)."</span>";
             // 商品规格价
-            $result['spec_price'] = "<span id='spec_price'>".floatval(sprintf("%.2f", $discount_price))."</span>";
+            $result['spec_price'] = "<span id='spec_price'>".unifyPriceHandle($discount_price)."</span>";
             // 商品总价
-            $result['totol_price'] = "<span id='totol_price'>".floatval(sprintf("%.2f", $discount_price))."</span>";
+            $result['totol_price'] = "<span id='totol_price'>".unifyPriceHandle($discount_price)."</span>";
         }
 
         // JS方式及ID参数

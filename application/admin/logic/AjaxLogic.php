@@ -750,6 +750,59 @@ EOF;
             tpSetting('syn', ['admin_logic_1685584104'=>1], 'cn');
         }
 
+        // 初始化消息通知公众号模板的数据
+        $admin_logic_1682579646 = tpSetting('syn.admin_logic_1682579646', [], 'cn');
+        if (empty($admin_logic_1682579646)) {
+            $info1 = [
+                'tpl_title' => '留言表单',
+                'template_title' => '客户需求提交成功通知',
+                'template_code' => 0,
+                'template_id' => '',
+                'tpl_data' => '{"keywordsList":[{"name":"\u9700\u6c42\u9879\u76ee","example":"\u57ce\u4e61\u73af\u536b\u4e00\u4f53\u5316\u62db\u6807\u65b9\u6848\u5b9a\u5236","rule":"thing7"},{"name":"\u9700\u6c42\u65f6\u95f4","example":"2023\u5e7410\u670831\u65e5 12:23:34","rule":"time6"}]}',
+                'send_scene' => 1,
+                'is_open' => 0,
+                'info' => '客户提交留言后立即发送',
+                'lang' => get_main_lang(),
+                'add_time' => getTime(),
+                'update_time' => getTime(),
+            ];
+            $info9 = [
+                'tpl_title' => '订单付款',
+                'template_title' => '订单支付成功提醒',
+                'template_code' => 0,
+                'template_id' => '',
+                'tpl_data' => '{"keywordsList":[{"name":"\u8ba2\u5355\u7f16\u53f7","example":"202304301347362851008422","rule":"character_string3"},{"name":"\u4ea7\u54c1\u540d\u79f0","example":"RS\u8d27\u6b3e","rule":"thing11"},{"name":"\u8ba2\u5355\u91d1\u989d","example":"\uffe599.99","rule":"amount4"},{"name":"\u652f\u4ed8\u65f6\u95f4","example":"2022-10-23 14:23:26","rule":"time7"}]}',
+                'send_scene' => 9,
+                'is_open' => 0,
+                'info' => '买家付款成功后立即发送',
+                'lang' => get_main_lang(),
+                'add_time' => getTime(),
+                'update_time' => getTime(),
+            ];
+            /*多语言*/
+            $data = [];
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->order('id asc')
+                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                    ->select();
+                foreach ($langRow as $key => $val) {
+                    $info1['lang'] = $val['mark'];
+                    $data[] = $info1;
+
+                    $info9['lang'] = $val['mark'];
+                    $data[] = $info9;
+                }
+            } else {
+                $data[] = $info1;
+                $data[] = $info9;
+            }
+            /*--end*/
+            $r = Db::name('wechat_template')->insertAll($data);
+            if ($r !== false) {
+                tpSetting('syn', ['admin_logic_1682579646'=>1], 'cn');
+            }
+        }
+
         // 处理网站防止被刷的默认开关值
         $admin_logic_1682580429 = tpSetting('syn.admin_logic_1682580429', [], 'cn');
         if (empty($admin_logic_1682580429)) {
@@ -804,11 +857,145 @@ EOF;
     private function eyou_v166_handle_data()
     {
         $this->syn_handle166_table_data();
+        $this->syn_handle_shop_product_attrlist();
+        $this->syn_handle_shop_product_attribute();
+    }
+
+    /**
+     * 同步处理在添加多语言时，新商品参数分组没有同步到其他语言里
+     * @return [type] [description]
+     */
+    private function syn_handle_shop_product_attrlist()
+    {
+        $admin_logic_1712548559 = tpSetting('syn.admin_logic_1712548559', [], 'cn');
+        if (empty($admin_logic_1712548559)) {
+            $r = true;
+            $main_lang = get_main_lang();
+            $attrlistRow = Db::name('shop_product_attrlist')->order('lang asc, list_id asc')->select();
+
+            $languageAttributeList = Db::name('language_attribute')->where(['attr_group'=>'shop_product_attrlist'])->order('attr_name asc')->getAllWithIndex('attr_name');
+            $addData = [];
+            foreach ($attrlistRow as $key => $val) {
+                if ($main_lang == $val['lang']) {
+                    if (!isset($languageAttributeList['attrlist_'.$val['list_id']])) {
+                        $addData[] = [
+                            'attr_title' => $val['list_name'],
+                            'attr_name' => "attrlist_{$val['list_id']}",
+                            'attr_group' => 'shop_product_attrlist',
+                            'add_time' => getTime(),
+                            'update_time' => getTime(),
+                        ];
+                    }
+                }
+            }
+            if (!empty($addData)) {
+                $r = Db::name('language_attribute')->insertAll($addData);
+            }
+
+            if ($r !== false) {
+                $languageAttrList = Db::name('language_attr')->where(['attr_group'=>'shop_product_attrlist'])->order('lang asc, attr_name asc')->getAllWithIndex('attr_value');
+                $addData = [];
+                foreach ($attrlistRow as $key => $val) {
+                    if (!isset($languageAttrList[$val['list_id']])) {
+                        $addData[] = [
+                            'attr_name' => "attrlist_{$val['list_id']}",
+                            'attr_value' => $val['list_id'],
+                            'attr_group' => 'shop_product_attrlist',
+                            'lang' => $val['lang'],
+                            'add_time' => getTime(),
+                            'update_time' => getTime(),
+                        ];
+                    }
+                }
+                if (!empty($addData)) {
+                    $r = Db::name('language_attr')->insertAll($addData);
+                }
+                if ($r !== false) {
+                    tpSetting('syn', ['admin_logic_1712548559'=>1], 'cn');
+                }
+            }
+        }
+    }
+
+    /**
+     * 同步处理在添加多语言时，新商品参数值没有同步到其他语言里
+     * @return [type] [description]
+     */
+    private function syn_handle_shop_product_attribute()
+    {
+        $admin_logic_1712548812 = tpSetting('syn.admin_logic_1712548812', [], 'cn');
+        if (empty($admin_logic_1712548812)) {
+            $r = true;
+            $main_lang = get_main_lang();
+            $attributeRow = Db::name('shop_product_attribute')->order('lang asc, attr_id asc')->select();
+
+            $languageAttributeList = Db::name('language_attribute')->where(['attr_group'=>'shop_product_attribute'])->order('attr_name asc')->getAllWithIndex('attr_name');
+            $addData = [];
+            foreach ($attributeRow as $key => $val) {
+                if ($main_lang == $val['lang']) {
+                    if (!isset($languageAttributeList['attribute_'.$val['attr_id']])) {
+                        $addData[] = [
+                            'attr_title' => $val['attr_name'],
+                            'attr_name' => "attribute_{$val['attr_id']}",
+                            'attr_group' => 'shop_product_attribute',
+                            'add_time' => getTime(),
+                            'update_time' => getTime(),
+                        ];
+                    }
+                }
+            }
+            if (!empty($addData)) {
+                $r = Db::name('language_attribute')->insertAll($addData);
+            }
+
+            if ($r !== false) {
+                $languageAttrList = Db::name('language_attr')->where(['attr_group'=>'shop_product_attribute'])->order('lang asc, attr_name asc')->getAllWithIndex('attr_value');
+                $addData = [];
+                foreach ($attributeRow as $key => $val) {
+                    if (!isset($languageAttrList[$val['attr_id']])) {
+                        $addData[] = [
+                            'attr_name' => "attribute_{$val['attr_id']}",
+                            'attr_value' => $val['attr_id'],
+                            'attr_group' => 'shop_product_attribute',
+                            'lang' => $val['lang'],
+                            'add_time' => getTime(),
+                            'update_time' => getTime(),
+                        ];
+                    }
+                }
+                if (!empty($addData)) {
+                    $r = Db::name('language_attr')->insertAll($addData);
+                }
+                if ($r !== false) {
+                    tpSetting('syn', ['admin_logic_1712548812'=>1], 'cn');
+                }
+            }
+        }
     }
 
     private function syn_handle166_table_data()
     {
         $Prefix = config('database.prefix');
+
+        $syn_admin_logic_1706842286 = tpSetting('syn.syn_admin_logic_1706842286', [], 'cn');
+        if (empty($syn_admin_logic_1706842286)) {
+            try {
+                $foreignData = tpSetting('foreign', [], 'cn');
+                if (!empty($foreignData['foreign_is_status'])) {
+                    $foreignData['foreign_authorize'] = 1;
+                    tpSetting('foreign', $foreignData, 'cn');
+                }
+
+                $data = Db::name('channeltype')->where(['id'=>1])->value('data');
+                $data = empty($data) ? [] : json_decode($data, true);
+                if (!empty($data['is_article_pay'])) {
+                    tpSetting('system', ['system_is_article_pay'=>$data['is_article_pay']], 'cn');
+                }
+
+                tpSetting('syn', ['syn_admin_logic_1706842286' => 1], 'cn');
+            } catch (\Exception $e) {
+            }
+        }
 
         /*$syn_admin_logic_1703473857 = tpSetting('syn.syn_admin_logic_1703473857', [], 'cn');
         if (empty($syn_admin_logic_1703473857)) {
@@ -841,6 +1028,59 @@ EOF;
                 @Db::execute("UPDATE `{$Prefix}archives` SET `reason`='';");
                 schemaTable('archives');
             } catch (\Exception $e) {}
+        }
+
+
+        // WAP底部菜单 内置多一条数据(一共5条)
+        $syn_admin_logic_1703647730 = tpSetting('syn.syn_admin_logic_1703647730', [], 'cn');
+        if (empty($syn_admin_logic_1703647730)) {
+            try {
+                $r = true;
+                $users_bottom_menu_count = Db::name('users_bottom_menu')->count();
+                if (5 > $users_bottom_menu_count) {
+                    $insert = [
+                        'title' => '自定义',
+                        'icon' => 'xingxing',
+                        'display' => 0,
+                        'add_time' => getTime(),
+                        'update_time' => getTime(),
+                    ];
+                    $r = Db::name('users_bottom_menu')->insert($insert);
+                }
+                if ($r !== false) {
+                    tpSetting('syn', ['syn_admin_logic_1703647730' => 1], 'cn');
+                }
+            } catch (\Exception $e) {
+            }
+        }
+
+        $tableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}users_menu");
+        $tableInfo = get_arr_column($tableInfo, 'Field');
+        if (!empty($tableInfo) && !in_array('type', $tableInfo)){
+            try {
+                $sql = "ALTER TABLE `{$Prefix}users_menu` ADD COLUMN `type` tinyint(3) NULL DEFAULT 0 COMMENT '左侧菜单类型' AFTER `update_time`;";
+                @Db::execute($sql);
+                schemaTable('users_menu');
+                $pc_user_left_menu_config = Config::get('global.pc_user_left_menu_config');
+                $users_menu_list = Db::name('users_menu')->where('version','neq','weapp')->select();
+                foreach ($users_menu_list as $key => $val){
+                    foreach ($pc_user_left_menu_config as $k => $v){
+                        if ($val['mca'] == $v['mca']){
+                            Db::name('users_menu')->where('id',$val['id'])->update(['type'=>$v['id'],'update_time'=>getTime()]);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {}
+        }
+
+        // 栏目文章数量统计
+        $syn_admin_logic_1707201289 = tpSetting('syn.syn_admin_logic_1707201289', [], 'cn');
+        if (empty($syn_admin_logic_1707201289)) {
+            try {
+                model('Arctype')->hand_type_count();//统计栏目文档数量
+                tpSetting('syn', ['syn_admin_logic_1707201289' => 1], 'cn');
+            } catch (\Exception $e) {
+            }
         }
     }
 
@@ -1077,96 +1317,275 @@ EOF;
     private function syn_handle_foreign_pack()
     {
         $Prefix = config('database.prefix');
-/*
-        $admin_logic_1699261141 = tpSetting('syn.admin_logic_1699261141', [], 'cn');
-        if (empty($admin_logic_1699261141)) {
-            $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'foreign_pack\'');
-            if (empty($isTable)) {
-                $tableSql = <<<EOF
-CREATE TABLE IF NOT EXISTS `{$Prefix}foreign_pack` (
-  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-  `type` int(4) DEFAULT '0' COMMENT '分类：1=列表，2=留言',
-  `name` varchar(50) NOT NULL DEFAULT '' COMMENT '变量名',
-  `value` text NOT NULL COMMENT '变量值',
-  `lang` varchar(50) DEFAULT 'cn' COMMENT '语言标识',
-  `sort_order` int(10) DEFAULT '0' COMMENT '排序号',
-  `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
-  `update_time` int(11) DEFAULT '0' COMMENT '更新时间',
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='外贸助手语言包变量';
-EOF;
-                $r = @Db::execute($tableSql);
-                if ($r !== false) {
-                    schemaTable('foreign_pack');
-                    try {
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('1', '1', 'page1', '首页', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('2', '1', 'page2', '上一页', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('3', '1', 'page3', '下一页', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('4', '1', 'page4', '末页', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('5', '1', 'page5', '共<strong>%s</strong>页 <strong>%s</strong>条', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('6', '1', 'page1', 'Home', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('7', '1', 'page2', 'Pre', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('8', '1', 'page3', 'Next', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('9', '1', 'page4', 'Last', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('10', '1', 'page5', 'Road <strong>%s</strong> page <strong>%s</strong> strip', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('11', '2', 'gbook1', '操作成功', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('12', '2', 'gbook1', 'success', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('14', '2', 'gbook2', 'The same IP cannot be submitted repeatedly within %s seconds!', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('13', '2', 'gbook2', '同一个IP在%s秒之内不能重复提交！', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('15', '2', 'gbook3', '%s不能为空！', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('16', '2', 'gbook3', '%s Cannot be empty!', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('17', '2', 'gbook4', '%s格式不正确！', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('18', '2', 'gbook4', '%s Incorrect format!', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('19', '2', 'gbook5', '图片验证码不能为空！', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('20', '2', 'gbook5', 'Picture verification code cannot be empty!', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('21', '2', 'gbook6', '图片验证码不正确！', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('22', '2', 'gbook6', 'The picture verification code is incorrect!', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('23', '2', 'gbook7', '请输入手机号码！', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('24', '2', 'gbook7', 'Please enter your mobile number!', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('25', '2', 'gbook8', '手机号码和手机验证码不一致，请重新输入！', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('26', '2', 'gbook8', 'Mobile phone number and mobile phone verification code are inconsistent, please re-enter!', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('27', '2', 'gbook9', '手机验证码已被使用或超时，请重新发送！', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('28', '2', 'gbook9', 'The mobile phone verification code has been used or timed out. Please resend it!', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('29', '2', 'gbook10', '请输入手机验证码！', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('30', '2', 'gbook10', 'Please enter the mobile phone verification code!', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('31', '2', 'gbook11', '表单缺少标签属性{\$field.hidden}', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('32', '2', 'gbook11', 'The form is missing label attribute {\$field.hidden}', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('33', '2', 'gbook12', '页面自动 %s跳转%s 等待时间：', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('34', '2', 'gbook12', 'Page automatic %sjump%s waiting time：', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('35', '2', 'gbook13', '%s至少选择一项！', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('36', '2', 'gbook13', 'Select at least one item to %s', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('37', '2', 'gbook14', '请选择%s', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('38', '2', 'gbook14', 'Please select %s', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('39', '2', 'gbook15', '请输入正确的手机号码！', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('40', '2', 'gbook15', 'Please enter the correct mobile number！', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('41', '2', 'gbook16', '图片验证码', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('42', '2', 'gbook16', 'Picture verification code', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('43', '2', 'gbook17', '手机验证码', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('44', '2', 'gbook17', 'Mobile verification code', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('45', '2', 'gbook18', '获取验证码', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('46', '2', 'gbook18', 'Get verification code', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('47', '2', 'gbook19', '看不清？点击更换验证码', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('48', '2', 'gbook19', 'Can\'t see clearly? Click to change the verification code', 'en', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('49', '2', 'gbook20', '看不清？%s点击更换%s', 'cn', '100', '1543890216', '1543890216');");
-                        @Db::execute("INSERT INTO `{$Prefix}foreign_pack` VALUES ('50', '2', 'gbook20', 'Can\'t see clearly? %sClick to replace%s', 'en', '100', '1543890216', '1543890216');");
-                    } catch (\Exception $e) {
-                        
-                    }
-                }
-                tpSetting('syn', ['admin_logic_1699261141'=>1], 'cn');
-            }
-        }
-*/
-        $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'foreign_pack\'');
-        if (!empty($isTable)) {
-            $row = Db::name('foreign_pack')->where(['type'=>3,'name'=>'system1'])->count();
-            if (empty($row)) {
-                try {
+        $admin_logic_1707029785 = tpSetting('syn.admin_logic_1707029785', [], 'cn');
+        if (empty($admin_logic_1707029785)) {
+            try {
+                $row = Db::name('foreign_pack')->column('name');
+                if (empty($row) || !in_array('system1', $row)) {
                     @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system1', '图', 'cn', '100', '1543890216', '1543890216');");
                     @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system1', 'pic', 'en', '100', '1543890216', '1543890216');");
-                } catch (\Exception $e) {
-                    
                 }
+                if (empty($row) || !in_array('system2', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system2', '确定', 'cn', '100', '1543890216', '1704164971');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system2', 'ok', 'en', '100', '1543890216', '1706859563');");
+                }
+                if (empty($row) || !in_array('system3', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system3', '取消', 'cn', '100', '1543890216', '1704164971');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system3', 'cancel', 'en', '100', '1543890216', '1704164971');");
+                }
+                if (empty($row) || !in_array('users1', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users1', '您的购物车还没有商品！', 'cn', '100', '1543890216', '1704164971');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users1', 'Your shopping cart doesn\'t have any products yet!', 'en', '100', '1543890216', '1704164971');");
+                }
+                if (empty($row) || !in_array('system4', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system4', '提示', 'cn', '100', '1543890216', '1704164971');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system4', 'prompt', 'en', '100', '1543890216', '1704164971');");
+                }
+                if (empty($row) || !in_array('users2', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users2', '%s不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users2', '%s cannot be empty!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users3', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users3', '%s格式不正确！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users3', '%s Incorrect format!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users4', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users4', '邮箱验证码已被使用或超时，请重新发送！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users4', 'The email verification code has been used or timed out. Please resend it!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users5', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users5', '邮箱验证码不正确，请重新输入！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users5', 'The email verification code is incorrect, please re-enter!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users6', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users6', '短信验证码不正确，请重新输入！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users6', 'The SMS verification code is incorrect, please re-enter!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users7', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users7', '%已存在！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users7', '% already exists!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('system5', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system5', '是', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system5', 'yes', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('system6', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system6', '否', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system6', 'no', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users8', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users8', '签到成功', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users8', 'Successful check-in', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users9', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users9', '今日已签过到', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users9', 'Signed in today', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('system7', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system7', '请至少选择一项！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system7', 'Please select at least one item!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users10', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users10', '是否删除该收藏？', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users10', 'Do you want to delete this collection?', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users11', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users11', '确认批量删除收藏？', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users11', 'Confirm bulk deletion of favorites?', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('system8', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system8', '正在处理', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system8', 'Processing', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('system9', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system9', '请勿刷新页面', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system9', 'Do not refresh', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users12', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users12', '每日签到', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users12', 'Daily Attendance', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('system10', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system10', '上传成功', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system10', 'Upload successful', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users13', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users13', '充值金额不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users13', 'Recharge amount cannot be empty!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users14', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users14', '请输入正确的充值金额！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users14', 'Please enter the correct recharge amount!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users15', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users15', '请选择支付方式！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users15', 'Please choose a payment method!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users16', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users16', '用户名不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users16', 'The username cannot be empty!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users17', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users17', '用户名不正确！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users17', 'The username is incorrect!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users18', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users18', '密码不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users18', 'Password cannot be empty!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users19', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users19', '图片验证码不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users19', 'The image verification code cannot be empty!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users20', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users20', '图片验证码错误', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users20', 'Image verification code error', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users21', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users21', '前台禁止管理员登录！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users21', 'The front desk prohibits administrators from logging in!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users22', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users22', '该会员尚未激活，请联系管理员！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users22', 'This member has not been activated yet. Please contact the administrator!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users23', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users23', '管理员审核中，请稍等！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users23', 'Administrator review in progress, please wait!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users24', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users24', '登录成功', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users24', 'Login succeeded', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users25', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users25', '密码不正确！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users25', 'The password is incorrect!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users26', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users26', '该用户名不存在，请注册！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users26', 'The username does not exist, please register!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users27', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users27', '看不清？点击更换验证码', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users27', 'Can\'t see clearly? Click to change the verification code', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users28', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users28', '手机号码不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users28', 'Mobile phone number cannot be empty!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users29', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users29', '手机号码格式不正确！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users29', 'The phone number format is incorrect!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users30', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users30', '手机验证码不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users30', 'Mobile verification code cannot be empty!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users31', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users31', '手机验证码已失效！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users31', 'The mobile verification code has expired!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users32', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users32', '手机号码已经注册！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users32', 'The phone number has been registered!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users33', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users33', '用户名为系统禁止注册！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users33', 'The username is prohibited from registration by the system!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users34', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users34', '请输入2-30位的汉字、英文、数字、下划线等组合', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users34', 'Please enter a combination of Chinese characters, English characters, numbers, underscores, etc. that are 2-30 digits long', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users35', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users35', '登录密码不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users35', 'Login password cannot be empty!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users36', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users36', '重复密码不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users36', 'The duplicate password cannot be empty!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users37', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users37', '用户名已存在', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users37', 'The username already exists', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users38', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users38', '两次密码输入不一致！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users38', 'The two password inputs are inconsistent!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users39', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users39', '注册成功，正在跳转中……', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users39', 'Registration successful, jumping in progress……', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users40', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users40', '注册成功，等管理员激活才能登录！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users40', 'Registration successful, wait for administrator activation before logging in!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users41', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users41', '注册成功，请登录！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users41', 'Registration successful, please log in!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('system11', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system11', '操作失败', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system11', 'Operation failed', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('system12', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system12', '操作成功', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system12', 'Operation successful', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users42', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users42', '昵称不可为纯空格', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users42', 'Nicknames cannot be pure spaces', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users43', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users43', '原密码不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users43', 'The original password cannot be empty!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users44', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users44', '新密码不能为空！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users44', 'The new password cannot be empty!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users45', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users45', '手机号码不存在，不能找回密码！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users45', 'Mobile phone number does not exist, password cannot be retrieved!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users46', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users46', '手机号码未绑定，不能找回密码！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users46', 'Mobile phone number is not bound, password cannot be retrieved!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users47', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users47', '手机验证码已被使用或超时，请重新发送！', 'cn', '100', '1543890216', '1543890216');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users47', 'The mobile verification code has been used or timed out. Please resend it!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users48', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users48', '晚上好～', 'cn', '100', '1543890216', '1706580800');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users48', 'Good evening~', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users49', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users49', '早上好～', 'cn', '100', '1543890216', '1706580800');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users49', 'Good morning~', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('users50', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users50', '下午好～', 'cn', '100', '1543890216', '1706580800');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('4', 'users50', 'Good afternoon~', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('system13', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system13', '含有敏感词，禁止搜索！', 'cn', '100', '1543890216', '1706580800');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system13', 'Contains sensitive words, search prohibited!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('system14', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system14', '过度频繁搜索，离解禁还有%s分钟！', 'cn', '100', '1543890216', '1706580800');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system14', 'Excessive frequent searches, with %s minutes left before lifting the ban!', 'en', '100', '1543890216', '1706580800');");
+                }
+                if (empty($row) || !in_array('system15', $row)) {
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system15', '关键词不能为空！', 'cn', '100', '1543890216', '1706580800');");
+                    @Db::execute("INSERT INTO `{$Prefix}foreign_pack` (`type`, `name`, `value`, `lang`, `sort_order`, `add_time`, `update_time`) VALUES ('3', 'system15', 'Keywords cannot be empty!', 'en', '100', '1543890216', '1706580800');");
+                }
+                model('ForeignPack')->updateLangFile();
+                \think\Cache::clear('foreign_pack');
+                tpSetting('syn', ['admin_logic_1707029785'=>1], 'cn');
+            } catch (\Exception $e) {
+                
             }
         }
     }

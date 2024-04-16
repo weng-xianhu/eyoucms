@@ -404,7 +404,11 @@ class ArctypeLogic extends Model
             $dirname = get_pinyin($typename);
         }
         if (strval(intval($dirname)) == strval($dirname)) {
-            $dirname .= get_rand_str(3,0,2);
+            if (preg_match('/^([0-9]+)$/i', $dirname)) {
+                $dirname .= get_rand_str(3,0,0);
+            } else {
+                $dirname .= get_rand_str(3,0,2);
+            }
         }
         $dirname = preg_replace('/(\s)+/', '_', $dirname);
         if (!$this->dirname_unique($dirname, $id, $newDirnameArr)) {

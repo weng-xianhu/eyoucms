@@ -50,6 +50,10 @@ class Pay extends Model
         foreach ($details_data as &$key) {
             if ($key['prom_type'] == 0 || $key['prom_type'] == 1 || $key['prom_type'] == 4) {
                 $autoSendGoods = false;
+                // 保存微信发货推送表记录 不自动发货的情况下要写入订单记录
+                if ('wechat' === trim($orderData['pay_name'])) {
+                    model('ShopPublicHandle')->saveWxShippingInfo($orderData['users_id'], $orderData['order_code'], 2, $config);
+                }
                 break;    //只要存在一个需要手动发货的就结束循环，并且不进入自动发货
             }
         }
@@ -74,7 +78,7 @@ class Pay extends Model
             }
             // 推送微信发货推送表记录
             if ('wechat' === trim($orderData['pay_name'])) {
-                // model('ShopPublicHandle')->pushWxShippingInfo($orderData['users_id'], $orderData['order_code'], 2, '', $config);
+                model('ShopPublicHandle')->pushWxShippingInfo($orderData['users_id'], $orderData['order_code'], 2, '', $config);
             }
         }
 

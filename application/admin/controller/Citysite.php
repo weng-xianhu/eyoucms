@@ -259,6 +259,9 @@ class Citysite extends Base
                     'update_time'    => getTime(),
                 ];
             }
+            if (empty($addData)) {
+                $this->error('区域名称已全部存在！');
+            }
             $res = Db::name('citysite')->insertAll($addData);
             if (false !== $res) {
                 \think\Cache::clear('citysite');

@@ -30,7 +30,7 @@ return array (
   'spec_name' => 
   array (
     'name' => 'spec_name',
-    'type' => 'varchar(100)',
+    'type' => 'varchar(255)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -48,7 +48,7 @@ return array (
   'spec_value' => 
   array (
     'name' => 'spec_value',
-    'type' => 'varchar(100)',
+    'type' => 'varchar(255)',
     'notnull' => false,
     'default' => '',
     'primary' => false,

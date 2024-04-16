@@ -477,6 +477,9 @@ class ShopProduct extends Base
                     model('ProductNetdisk')->saveProductNetdisk($aid, $data);
                 }
 
+                // 保存商品服务标签绑定
+                if (!empty($post['goodsLabelID'])) model('ShopGoodsLabel')->saveGoodsLabelBind($aid, $post['goodsLabelID']);
+
                 // 生成静态页面代码
                 $successData = [
                     'aid' => $aid,
@@ -605,6 +608,9 @@ class ShopProduct extends Base
 
         // 获取核销插件数据
         $assign_data['weappVerify'] = model('ShopPublicHandle')->getWeappVerifyInfo();
+
+        // 商品服务标签
+        $assign_data['goodsLabel'] = model('ShopGoodsLabel')->getGoodsLabelList();
 
         $this->assign($assign_data);
         return $this->fetch();
@@ -894,6 +900,9 @@ class ShopProduct extends Base
                 // 系统商品操作时，积分商品的被动处理
                 model('ShopPublicHandle')->pointsGoodsPassiveHandle([$data['aid']]);
 
+                // 保存商品服务标签绑定
+                if (!empty($post['goodsLabelID'])) model('ShopGoodsLabel')->saveGoodsLabelBind($data['aid'], $post['goodsLabelID']);
+
                 // 生成静态页面代码
                 $successData = [
                     'aid' => $data['aid'],
@@ -1040,6 +1049,9 @@ class ShopProduct extends Base
         // 获取核销插件数据
         $assign_data['weappVerify'] = model('ShopPublicHandle')->getWeappVerifyInfo();
 
+        // 商品服务标签
+        $assign_data['goodsLabel'] = model('ShopGoodsLabel')->getGoodsLabelList($info['aid']);
+
         // dump($assign_data);exit;
         $this->assign($assign_data);
         return $this->fetch();
@@ -1104,6 +1116,14 @@ class ShopProduct extends Base
         if (IS_AJAX_POST) {
             $post = input('post.');
             if (empty($post['aid']) || !isset($post['openSpec'])) $this->error('数据异常，刷新重试');
+            if (1 == $post['openSpec']){
+                $post['sales_all'] = 0;
+                foreach ($post['spec_sales'] as $k => $v){
+                    $post['sales_all'] += intval($v['spec_sales_num']);
+                }
+            }else{
+                $post['sales_all'] = $post['virtual_sales'];
+            }
             // 更新商品表数据
             $where = [
                 'aid' => intval($post['aid']),
@@ -1545,6 +1565,9 @@ class ShopProduct extends Base
             $ReturnId = Db::name('shop_product_attrlist')->insertGetId($SaveData);
             if ($ReturnId) {
                 adminLog('新增商品参数：' . $post['list_name']);
+                // 同步新产品参数分组ID到多语言的模板变量里，添加多语言新产品参数分组
+                $this->syn_add_language_attrlist($ReturnId);
+
                 if (!empty($post['attr_name'])) {
                     //数据拼接
                     $saveAttrData = [];
@@ -1576,6 +1599,15 @@ class ShopProduct extends Base
                         if ($rdata !== false) {
                             // 参数值合计增加
                             Db::name('shop_product_attrlist')->where('list_id', $ReturnId)->setInc('attr_count', count($post['attr_name']));
+                            /*多语言*/
+                            if (is_language()) {
+                                foreach ($rdata as $k1 => $v1) {
+                                    $attr_data = $v1->getData();
+                                    // 同步多语言
+                                    $this->syn_add_language_attribute($attr_data['attr_id']);
+                                }
+                            }
+                            /*end*/
                         }
                     }
                 }
@@ -2039,5 +2071,123 @@ class ShopProduct extends Base
         }
     }
 
+    /**
+     * 同步新增新产品参数分组ID到多语言的模板变量里
+     */
+    private function syn_add_language_attrlist($list_id)
+    {
+        /*单语言情况下不执行多语言代码*/
+        if (!is_language() || tpCache('language.language_split')) {
+            return true;
+        }
+        /*--end*/
 
+        $attr_group = 'shop_product_attrlist';
+        $admin_lang = $this->admin_lang;
+        $main_lang = $this->main_lang;
+        $languageRow = Db::name('language')->field('mark')->order('id asc')->select();
+        if (!empty($languageRow) && $admin_lang == $main_lang) { // 当前语言是主体语言，即语言列表最早新增的语言
+            $attrlist_db = Db::name('shop_product_attrlist');
+            $result = $attrlist_db->find($list_id);
+            $attr_name = 'attrlist_'.$list_id;
+            $r = Db::name('language_attribute')->save([
+                'attr_title'    => $result['list_name'],
+                'attr_name'     => $attr_name,
+                'attr_group'    => $attr_group,
+                'add_time'      => getTime(),
+                'update_time'   => getTime(),
+            ]);
+            if (false !== $r) {
+                $data = [];
+                foreach ($languageRow as $key => $val) {
+                    /*同步新产品参数分组到其他语言新产品参数分组列表*/
+                    if ($val['mark'] != $admin_lang) {
+                        $addsaveData = $result;
+                        $addsaveData['lang']  = $val['mark'];
+                        $addsaveData['list_name'] = $val['mark'].$addsaveData['list_name'];
+                        unset($addsaveData['list_id']);
+                        $list_id = $attrlist_db->insertGetId($addsaveData);
+                    }
+                    /*--end*/
+                    
+                    /*所有语言绑定在主语言的ID容器里*/
+                    $data[] = [
+                        'attr_name' => $attr_name,
+                        'attr_value'    => $list_id,
+                        'lang'  => $val['mark'],
+                        'attr_group'    => $attr_group,
+                        'add_time'      => getTime(),
+                        'update_time'   => getTime(),
+                    ];
+                    /*--end*/
+                }
+                if (!empty($data)) {
+                    model('LanguageAttr')->saveAll($data);
+                }
+            }
+        }
+    }
+
+    /**
+     * 同步新增产品参数值ID到多语言的模板变量里
+     */
+    private function syn_add_language_attribute($attr_id)
+    {
+        /*单语言情况下不执行多语言代码*/
+        if (!is_language() || tpCache('language.language_split')) {
+            return true;
+        }
+        /*--end*/
+
+        $attr_group = 'shop_product_attribute';
+        $admin_lang = $this->admin_lang;
+        $main_lang = $this->main_lang;
+        $languageRow = Db::name('language')->field('mark')->order('id asc')->select();
+        if (!empty($languageRow) && $admin_lang == $main_lang) { // 当前语言是主体语言，即语言列表最早新增的语言
+            $attribute_db = Db::name('shop_product_attribute');
+            $result = $attribute_db->find($attr_id);
+            $attr_name = 'attribute_'.$attr_id;
+            $r = Db::name('language_attribute')->save([
+                'attr_title'    => $result['attr_name'],
+                'attr_name'     => $attr_name,
+                'attr_group'    => $attr_group,
+                'add_time'      => getTime(),
+                'update_time'   => getTime(),
+            ]);
+            if (false !== $r) {
+                $data = [];
+                foreach ($languageRow as $key => $val) {
+                    /*同步新产品参数值到其他语言产品参数值列表*/
+                    if ($val['mark'] != $admin_lang) {
+                        $addsaveData = $result;
+                        $addsaveData['lang'] = $val['mark'];
+                        $new_list_id = Db::name('language_attr')->where([
+                                'attr_name' => 'attrlist_'.$result['list_id'],
+                                'attr_group'    => 'shop_product_attrlist',
+                                'lang'  => $val['mark'],
+                            ])->getField('attr_value');
+                        $addsaveData['list_id']   = $new_list_id;
+                        $addsaveData['attr_name'] = $val['mark'].$addsaveData['attr_name'];
+                        unset($addsaveData['attr_id']);
+                        $attr_id = $attribute_db->insertGetId($addsaveData);
+                    }
+                    /*--end*/
+                    
+                    /*所有语言绑定在主语言的ID容器里*/
+                    $data[] = [
+                        'attr_name'   => $attr_name,
+                        'attr_value'  => $attr_id,
+                        'lang'        => $val['mark'],
+                        'attr_group'  => $attr_group,
+                        'add_time'    => getTime(),
+                        'update_time' => getTime(),
+                    ];
+                    /*--end*/
+                }
+                if (!empty($data)) {
+                    model('LanguageAttr')->saveAll($data);
+                }
+            }
+        }
+    }
 }

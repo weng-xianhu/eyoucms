@@ -66,9 +66,8 @@ class Poster extends Base
         }
         // 会员ID
         $this->users_id = !empty($post['mid']) ? $post['mid'] :0;
-        if ('v2' == $this->version){
-            $this->users = $this->getUsersInfo();
-        }
+        if ('v2' == $this->version) $this->users = $this->getUsersInfo();
+
         // 分销商会员ID
         $this->usersID = !empty($post['users_id']) ? $post['users_id'] :0;
         // 分销商ID
@@ -118,9 +117,9 @@ class Poster extends Base
         $this->appletsQrcode = $this->getAppletsQrcode($appletsType);
 
         // 组合并返回商品分享海报图片
-        if ('v2' == $this->version){
+        if ('v2' == $this->version) {
             return $this->getProductSharePosterImageV2();
-        }else{
+        } else {
             return $this->getProductSharePosterImage();
         }
     }
@@ -131,7 +130,7 @@ class Poster extends Base
         if (empty($users)) $this->error('请先登录');
         // 商品图片处理
         $users['head_pic'] = handle_subdir_pic($users['head_pic'],'img',false,true);
-        if (is_http_url($users['head_pic'])){
+        if (is_http_url($users['head_pic'])) {
             //打开输出缓冲区并获取远程图片
             ob_start();
             $context = stream_context_create(
@@ -150,30 +149,14 @@ class Poster extends Base
             !is_dir($this->posterPath) && tp_mkdir($this->posterPath);
             file_put_contents($LitpicSavePath, $img);
 
-            //     // 保存图片的完整路径
-            // $LitpicSavePath = $this->posterPath . 'users_' . md5($this->users_id) . '.png';
-            // // 若文件夹不存在则创建
-            // !is_dir($this->posterPath) && tp_mkdir($this->posterPath);
-
-            // // 图片保存到文件处理
-            // $ch = curl_init($users['head_pic']);
-            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            // curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
-            // // https请求 不验证证书和hosts
-            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);   //重要,源文件链接带https的话就必须使用
-            // curl_setopt($ch, CURLOPT_TIMEOUT, 60);
-
-            // $img = curl_exec($ch);
-            // curl_close($ch);
-            // $fp = fopen($LitpicSavePath, 'w');
-            // fwrite($fp, $img);
-            // fclose($fp);
             // 返回数据
             $users['head_pic'] = "./".$LitpicSavePath;
-        }else {
+        } else {
             $users['head_pic'] = ".".$users['head_pic'];
         }
+
+        // 如果这张图片已经被删除则执行
+        if (!file_exists($users['head_pic'])) $users['head_pic'] = ROOT_PATH . "public/static/admin/images/admint.png";
 
         return $users;
     }

@@ -114,29 +114,25 @@ if (!function_exists('foreign_lang')) {
      */
     function foreign_lang($name = '', $lang = '')
     {
-        if (!in_array(MODULE_NAME, ['admin'])) {
-            empty($lang) && $lang = get_current_lang();
-            static $foreignData = null;
-            if (null === $foreignData) {
-                $foreignData = tpSetting('foreign', [], 'cn');
-            }
-            $foreign_is_status = empty($foreignData['foreign_is_status']) ? 0 : intval($foreignData['foreign_is_status']);
-            if (empty($foreign_is_status)) {
-                $lang = 'cn';
+        empty($lang) && $lang = get_current_lang();
+        static $foreignData = null;
+        if (null === $foreignData) {
+            $foreignData = tpSetting('foreign', [], 'cn');
+        }
+        $foreign_is_status = empty($foreignData['foreign_is_status']) ? 0 : intval($foreignData['foreign_is_status']);
+        if (empty($foreign_is_status)) {
+            $lang = 'cn';
+        } else {
+            $lang_switch_on = config('lang_switch_on');
+            if (!$lang_switch_on) {
+                $lang = 'en';
             } else {
-                $lang_switch_on = config('lang_switch_on');
-                if (!$lang_switch_on) {
-                    $lang = 'en';
+                if (in_array($lang, ['cn','zh'])) {
+                    $lang = 'cn';
                 } else {
-                    if (in_array($lang, ['cn','zh'])) {
-                        $lang = 'cn';
-                    } else {
-                        $lang = 'en';
-                    }
+                    $lang = 'en';
                 }
             }
-        } else {
-            $lang = 'cn';
         }
 
         $cacheKey = md5('common_ForeignPack_getForeignPack_list');

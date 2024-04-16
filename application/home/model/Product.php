@@ -79,6 +79,9 @@ class Product extends Model
             $result['tags'] = $tags;
         }
 
+        // 商品服务标签关联绑定数据
+        if (!empty($result)) $result['goodsLabel'] = model('ShopGoodsLabel')->getGoodsLabelList($aid, true);
+
         return $result;
     }
 }

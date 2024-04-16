@@ -264,7 +264,7 @@ class Media extends Base
             ];
             $list = Db::name('archives')->where($where)->find();
             if (empty($list)) $this->error('操作异常，请刷新重试');
-            $list['users_price'] = get_discount_price($this->users['level_discount'], $list['users_price']);
+            $list['users_price'] = get_discount_price($this->users, $list['users_price']);
 
             // 订单生成规则
             $time = getTime();

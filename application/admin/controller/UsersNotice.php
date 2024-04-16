@@ -81,11 +81,9 @@ class UsersNotice extends Base
      */
     public function add()
     {
-        $web_is_authortoken = tpCache('global.web_is_authortoken');
-        if (-1 == $web_is_authortoken) {
-            $this->error('该功能仅限于商业授权域名！');
-        }
-        
+        $functionLogic = new \app\common\logic\FunctionLogic;
+        $functionLogic->validate_authorfile(1);
+
         if (IS_POST) {
             $post = input('post.');
 
@@ -244,7 +242,10 @@ class UsersNotice extends Base
                 'is_read'     => 1,
                 'update_time' => getTime()
             ];
-            Db::name('users_notice_tpl_content')->update($update);
+           $r =  Db::name('users_notice_tpl_content')->update($update);
+           if (false !== $r){
+               if (!empty($Find['aid'])) Db::name('guestbook')->where('aid',$Find['aid'])->update(['is_read'=>1,'update_time'=>getTime()]);
+           }
         }
 
         $this->assign('find', $Find);

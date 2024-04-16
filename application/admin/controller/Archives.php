@@ -622,6 +622,9 @@ class Archives extends Base
                 Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
                 model('SqlCacheTable')->InsertSqlCacheTable(true);
                 /* END */
+
+                model('Arctype')->hand_type_count();//统计栏目文档数量
+
                 $this->success('操作成功');
             }
             $this->error('操作失败');

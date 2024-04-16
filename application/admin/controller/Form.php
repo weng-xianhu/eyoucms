@@ -179,9 +179,11 @@ class Form extends Base
                 }
                 $attr_list[$val['aid']][] = $val;
             }
-            $formList = Db::name('form')->field('form_id,form_name')->where(['form_id'=>['IN',$formids]])->getAllWithIndex('form_id');
+            $formList = Db::name('form')->field('form_id,form_name,open_reply,open_examine')->where(['form_id'=>['IN',$formids]])->getAllWithIndex('form_id');
             $arctypeList = Db::name('arctype')->field('id,typename')->where(['id'=>['IN',$typeids]])->getAllWithIndex('id');
             foreach ($list as $key => $val) {
+                $val['open_reply'] = !empty($formList[$val['typeid']]['open_reply']) ? $formList[$val['typeid']]['open_reply'] : 0;
+                $val['open_examine'] = !empty($formList[$val['typeid']]['open_examine']) ? $formList[$val['typeid']]['open_examine'] : 0;
                 if (1 == $val['form_type']) {
                     $val['form_name'] = empty($formList[$val['typeid']]) ? '' : $formList[$val['typeid']]['form_name'];
                 } else {
@@ -877,6 +879,8 @@ class Form extends Base
                 $data = array(
                     'form_name'     => $post['form_name'],
                     'attr_auto'     => intval($post['attr_auto']),
+                    'open_reply'         => intval($post['open_reply']),
+                    'open_examine'         => intval($post['open_examine']),
                     'update_time'   => getTime(),
                 );
                 $resultID = Db::name('form')->where(['form_id'=>$post['form_id']])->cache(true,null,'form')->update($data);

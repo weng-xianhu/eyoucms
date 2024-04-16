@@ -8,7 +8,7 @@
                         微信小程序
                     {elseif condition="$Think.const.ACTION_NAME == 'conf_baidu'" /}
                         百度小程序
-                    {elseif condition="$Think.const.ACTION_NAME == 'conf_wechat'" /}
+                    {elseif condition="in_array($Think.const.ACTION_NAME, ['conf_wechat','wechat_push_notice'])" /}
                         微信公众号
                     {elseif condition="$Think.const.ACTION_NAME == 'microsite'" /}
                         微站点
@@ -18,5 +18,9 @@
                 </h3>
                 <h5></h5>
             </div>
+            {if condition="in_array($Think.const.ACTION_NAME, ['conf_wechat','wechat_push_notice'])"}
+                {include file="canal/wechat_bar" /}
+            {/if}
         </div>
     </div>
+

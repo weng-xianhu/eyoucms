@@ -124,7 +124,7 @@ class PayApi extends Base {
                 $ResultData = $UnifyController->OtherPayProcessing($PayInfo, $post['unified_number'], $post['transaction_type']);
                 if (is_array($ResultData)) {
                     // 订单数据更新处理
-                    $ResultData['out_trade_no'] = '';
+                    $ResultData['out_trade_no'] = !empty($ResultData['out_trade_no']) ? $ResultData['out_trade_no'] : '';
                     if (!empty($ResultData['orderId'])) $ResultData['out_trade_no'] = $ResultData['orderId'];
                     if (!empty($ResultData['out_trade_order'])) $ResultData['out_trade_no'] = $ResultData['out_trade_order'];
                     $this->PayApiLogic->OrderProcessing($post, $Order, $ResultData, $Config);

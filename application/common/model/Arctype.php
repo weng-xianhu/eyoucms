@@ -1256,4 +1256,97 @@ class Arctype extends Model
             return false;
         }
     }
+
+    //获取文档所属栏目
+    public function get_arc_type($param = [])
+    {
+        $typeids = [];
+        if (!empty($param['aid'])) {
+            //查出与文档有关联的什么栏目ID,包括父栏目等
+            $type_data = Db::name('archives')->alias('a')->where('a.aid', 'in', $param['aid'])->join('arctype b', 'a.typeid = b.id')->field('b.id,b.topid')->select();
+            $ids = get_arr_column($type_data, 'id');
+            $topids = get_arr_column($type_data, 'topid');
+            $typeids = array_merge($ids, $topids);
+        }
+        if (!empty($param['typeid'])) {
+            $type_data = Db::name('arctype')->where('id', 'in', $param['typeid'])->field('id,topid')->select();
+            $ids = get_arr_column($type_data, 'id');
+            $topids = get_arr_column($type_data, 'topid');
+            if (!empty($typeids)) {
+                $typeids = array_merge($typeids, $ids, $topids);
+            } else {
+                $typeids = array_merge($ids, $topids);
+            }
+        }
+        if (!empty($typeids)) {
+            $typeids = array_filter($typeids); //过滤空值
+            if (!empty($typeids)) {
+                $top_typeids = Db::name('arctype')->where('topid', 'in', $typeids)->column('id');
+                if (!empty($top_typeids)) $typeids = array_merge($typeids, $top_typeids);
+            }
+
+            $typeids = array_filter($typeids); //过滤空值
+            $typeids = array_unique($typeids);//过滤重复值
+        }
+
+
+        return $typeids;
+    }
+
+    //统计栏目文档数 只统计 开放浏览 且 未删除 的
+    public function hand_type_count($param = [])
+    {
+        $typeids = [];
+        if (!empty($param['aid']) || !empty($param['typeid'])) {
+            $typeids = $this->get_arc_type($param);
+        }
+        $where['is_del'] = 0;
+        $where['arcrank'] = 0;
+        $where['lang'] = !empty($param['lang']) ? $param['lang'] : get_admin_lang();
+        if (!empty($typeids)) $where['typeid'] = ['in', $typeids];
+        $arc_count = Db::name('archives')->where($where)->field('count(aid) as count,typeid')->group('typeid')->getAllWithIndex('typeid');
+        if (empty($arc_count)) return true;
+
+        $channel_ids = Db::name('channeltype')->where('nid', 'in', ['single', 'ask'])->column('id');
+
+        $type_where['is_del'] = 0;
+        $type_where['weapp_code'] = '';
+        $type_where['lang'] = !empty($param['lang']) ? $param['lang'] : get_admin_lang();
+        if (!empty($typeids)) $type_where['id'] = ['in', $typeids];
+        $type_count = Db::name('arctype')->where($type_where)->field('parent_id,topid,id,grade,typename,current_channel')->order('grade desc')->getAllWithIndex('id');
+        foreach ($type_count as $k => $v) {
+            $v['child'] = $type_count[$v['id']]['child'];
+            $v['child'][] = $v['id'];
+            if (!empty($v['child']) && !in_array($v['current_channel'], $channel_ids)) {
+                $sum = 0;
+                foreach ($v['child'] as $k1 => $v1) {
+                    $sum += $arc_count[$v1]['count'];
+                }
+                if ($sum > 0) {
+                    $type_count[$k]['sum'] = $sum;
+                }
+            }
+            if (!empty($v['parent_id'])) {
+                if (!empty($type_count[$v['parent_id']]['child'])) {
+                    $child = array_merge($type_count[$v['parent_id']]['child'], $v['child']);
+                    $type_count[$v['parent_id']]['child'] = array_unique($child);;
+                } else {
+                    $type_count[$v['parent_id']]['child'] = $v['child'];
+                }
+            }
+        }
+
+        $saveAll = [];
+        foreach ($type_count as $k => $v) {
+            if (!empty($v['id'])) {
+                $saveAll[] = [
+                    'id' => $v['id'],
+                    'total_arc' => !empty($v['sum']) ? $v['sum'] : 0
+                ];
+            }
+        }
+        if (!empty($saveAll)) {
+            model('Arctype')->saveAll($saveAll);
+        }
+    }
 }

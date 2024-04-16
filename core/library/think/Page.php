@@ -15,20 +15,7 @@ class Page{
     public $nowPage = 1;
 
     // 分页显示定制
-    private $config  = array(
-        'header' => '<span class="rows">共 %TOTAL_ROW% 条记录</span>',
-        /*
-        'prev'   => '<<',
-        'next'   => '>>',
-        'first'  => '1...',
-        'last'   => '...%TOTAL_PAGE%',
-        */
-        'prev'   => '<',
-        'next'   => '>',
-        'first'  => '首页',
-        'last'   => '尾页',
-        'theme'  => '%FIRST% %UP_PAGE% %LINK_PAGE% %DOWN_PAGE% %END%',
-    );
+    private $config  = array();
 
     /**
      * 架构函数
@@ -55,12 +42,27 @@ class Page{
         if (isMobile()) {
             $this->config = [
                 'header' => '<span class="rows">共 %TOTAL_ROW% 条记录</span>',
-                'prev'   => '上一页',
-                'next'   => '下一页',
-                'first'  => '首页',
-                'last'   => '尾页',
+                'prev'   => lang('sys2'),
+                'next'   => lang('sys3'),
+                'first'  => lang('sys1'),
+                'last'   => lang('sys4'),
                 'theme'  => '%FIRST% %UP_PAGE% %LINK_PAGE% %DOWN_PAGE% %END%',
             ];
+        } else {
+            $this->config  = array(
+                'header' => '<span class="rows">共 %TOTAL_ROW% 条记录</span>',
+                /*
+                'prev'   => '<<',
+                'next'   => '>>',
+                'first'  => '1...',
+                'last'   => '...%TOTAL_PAGE%',
+                */
+                'prev'   => '<',
+                'next'   => '>',
+                'first'  => lang('sys1'),
+                'last'   => lang('sys4'),
+                'theme'  => '%FIRST% %UP_PAGE% %LINK_PAGE% %DOWN_PAGE% %END%',
+            );
         }
     }
 
@@ -114,7 +116,7 @@ class Page{
         $now_cool_page      = $this->rollPage/2;
         $now_cool_page_ceil = ceil($now_cool_page);
         $this->lastSuffix && $this->config['last'] = $this->totalPages;
-        $this->config['last'] = '尾页';
+        $this->config['last'] = lang('sys4');
         //上一页
         $up_row  = $this->nowPage - 1;
         $up_page = $up_row > 0 ? '<li id="example1_previous" class="paginate_button previous"><a class="prev" href="' . $this->url($up_row) . '">' . $this->config['prev'] . '</a></li>' : '';

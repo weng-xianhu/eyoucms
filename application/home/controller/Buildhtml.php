@@ -43,6 +43,7 @@ class Buildhtml extends Base
      */
     private function clearCache()
     {
+        Cache::clear('buildhtml');
         cache("channel_page_total_serialize".$this->php_sessid, null);
         cache("channel_info_serialize".$this->php_sessid, null);
         cache("has_children_Row_serialize".$this->php_sessid, null);
@@ -174,6 +175,7 @@ class Buildhtml extends Base
      */
     private function handleBuildIndex()
     {
+        delFile(HTML_ROOT.'index');
         $msg = '';
         $indexurl = $this->request->domain().$this->root_dir;
         // 保存的文件名

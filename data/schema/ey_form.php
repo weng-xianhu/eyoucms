@@ -72,4 +72,22 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'open_reply' => 
+  array (
+    'name' => 'open_reply',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'open_examine' => 
+  array (
+    'name' => 'open_examine',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
 );

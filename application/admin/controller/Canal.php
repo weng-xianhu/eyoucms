@@ -152,7 +152,7 @@ class Canal extends Base
                     if ($params['errcode'] == 40164) {
                         preg_match_all('#(\d{1,3}\.){3}\d{1,3}#i', $params['errmsg'], $matches);
                         $ip = !empty($matches[0][0]) ? $matches[0][0] : '';
-                        $ipTips = "<font color='red'>请将IP：{$ip} 加入微信小程序的IP白名单里！</font>";
+                        $ipTips = "请将IP：{$ip} 加入微信小程序的<font color='red'>IP白名单</font>里！";
                         $this->error($ipTips);
                     } else {
                         $this->error($params['errmsg']);
@@ -245,35 +245,30 @@ class Canal extends Base
     {
         if (IS_AJAX_POST) {
             $post = input('post.');
-            $appid = !empty($post['appid']) ? trim($post['appid']) : trim($post['baidu_appid']);
-            $appkey = !empty($post['appkey']) ? trim($post['appkey']) : trim($post['baidu_appkey']);
-            $appsecret = !empty($post['appsecret']) ? trim($post['appsecret']) : trim($post['baidu_appsecret']);
 
-            if (!empty($appid) || !empty($appkey) || !empty($appsecret)) {
-                if (empty($appid)) {
-                    $this->error('AppID不能为空！');
-                }
-                if (empty($appkey)) {
-                    $this->error('AppKey不能为空！');
-                }
-                if (empty($appsecret)) {
-                    $this->error('AppSecret不能为空！');
-                }
+            // 百度登录配置
+            $config['appid'] = !empty($post['appid']) ? trim($post['appid']) : trim($post['baidu_appid']);
+            $config['appkey'] = !empty($post['appkey']) ? trim($post['appkey']) : trim($post['baidu_appkey']);
+            $config['appsecret'] = !empty($post['appsecret']) ? trim($post['appsecret']) : trim($post['baidu_appsecret']);
+            if (empty($config['appid'])) $this->error('百度登录App ID不允许为空');
+            if (empty($config['appkey'])) $this->error('百度登录App Key不允许为空');
+            if (empty($config['appsecret'])) $this->error('百度登录App Secret不允许为空');
 
-                $url = "https://openapi.baidu.com/oauth/2.0/token?grant_type=client_credentials&client_id={$appkey}&client_secret={$appsecret}&scope=smartapp_snsapi_base";
-                $response = httpRequest($url);
-                $params = json_decode($response, true);
-                if (!isset($params['access_token'])) {
-                    $this->error('AppID或AppSecret不正确！');
-                }
-            }
+            // 百度支付配置
+            $config['payAppid'] = !empty($post['payAppid']) ? trim($post['payAppid']) : trim($post['baidu_payAppid']);
+            $config['payAppkey'] = !empty($post['payAppkey']) ? trim($post['payAppkey']) : trim($post['baidu_payAppkey']);
+            $config['payDealId'] = !empty($post['payDealId']) ? trim($post['payDealId']) : trim($post['baidu_payDealId']);
+            $config['paySecret'] = !empty($post['paySecret']) ? trim($post['paySecret']) : trim($post['baidu_paySecret']);
 
-            $data = [
-                'appid'  => $appid,
-                'appkey' => $appkey,
-                'appsecret'  => $appsecret,
-            ];
-            tpSetting('OpenMinicode', ['conf_baidu' => json_encode($data)], $this->main_lang);
+            // 调用百度支付模型
+            $baiduPayModel = new \app\common\model\BaiduPay($config, true);
+            // 验证登录配置
+            if (!empty($config['appid']) && !empty($config['appkey']) && !empty($config['appsecret'])) $config = $baiduPayModel->getBaiduAccessToken();
+            // 验证支付配置
+            if (!empty($config['payAppid']) && !empty($config['payAppkey']) && !empty($config['payDealId'])  && !empty($config['paySecret'])) $config = $baiduPayModel->queryOrderPayResult();
+
+            // 保存配置信息
+            tpSetting('OpenMinicode', ['conf_baidu' => json_encode($config)], $this->main_lang);
             $this->success("操作成功");
         }
 
@@ -411,10 +406,18 @@ class Canal extends Base
                 if ($res['errcode'] == 40164) {
                     preg_match_all('#(\d{1,3}\.){3}\d{1,3}#i', $res['errmsg'], $matches);
                     $ip = !empty($matches[0][0]) ? $matches[0][0] : '';
-                    $ipTips = "<font color='red'>请将IP：{$ip} 加入微信公众号的IP白名单里，具体点击<a href=\"JavaScript:void(0);\" onclick=\"click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=9432&origin_eycms=1','IP白名单配置教程')\">查看教程</a>！</font>";
+                    $ipTips = "请将IP：<font color='red'>{$ip} </font>加入微信公众号的<font color='red'>IP白名单</font>里，具体点击<a href=\"JavaScript:void(0);\" onclick=\"click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=9432&origin_eycms=1','IP白名单配置教程')\">查看教程</a>！";
                 } else {
                     $ipTips = "<font color='red'>{$res['errmsg']}</font>";
                 }
+            } else if (isset($res['access_token'])) {
+                $setting_info = [
+                    'appid' => $data['appid'],
+                    'secret' => $data['appsecret'],
+                    'access_token' => $res['access_token'],
+                    'expires_time' => getTime() + $res['expires_in'] - 1000, //提前200s过期
+                ];
+                tpSetting(md5($data['appid']), $setting_info);
             }
         }
         $this->assign('ipTips', $ipTips);
@@ -455,6 +458,154 @@ class Canal extends Base
             tpSetting('OpenMinicode', ['conf' => json_encode($data)], $this->main_lang);
             $this->success('操作成功');
         }
+    }
+
+    /**
+     * 推送微信公众号消息
+     * @return [type] [description]
+     */
+    public function wechat_push_notice()
+    {
+        $assign_data = [];
+        $notice_wechat_tpl = [
+            1 => ['id' => '51345','keyword_name'=>['需求项目','需求时间']], // 留言表单成功通知
+            9 => ['id' => '51617','keyword_name'=>['订单编号','产品名称','订单金额','支付时间']], // 订单支付成功通知
+        ];
+
+        if (IS_POST) {
+            // 是否填写微信公众号配置
+            $wechat_data = tpSetting("OpenMinicode.conf_wechat");
+            $wechat_data = !empty($wechat_data) ? json_decode($wechat_data, true) : [];
+            if (empty($wechat_data['appid'])) {
+                $this->error("请先完善公众号配置");
+            }
+
+            $send_scene_arr = input('post.send_scene_arr/a');
+            if (empty($send_scene_arr)) {
+                Db::name('wechat_template')->where(['tpl_id'=>['gt', 0]])->update(['is_open'=>0]);
+                $this->success('操作成功');
+            } else {
+                foreach ($send_scene_arr as $_key => $send_scene) {
+                    $where = [
+                        'lang' => $this->main_lang,
+                        'send_scene' => $send_scene
+                    ];
+                    $info = Db::name('wechat_template')->where($where)->find();
+                    if (empty($info['template_code']) || $notice_wechat_tpl[$send_scene]['id'] != $info['template_code']) {
+                        $info['tpl_data'] = empty($info['tpl_data']) ? [] : json_decode($info['tpl_data'], true);
+                        $tokenData = get_wechat_access_token();
+                        if (!empty($tokenData['code'])) {
+                            // 添加消息模板
+                            $url = "https://api.weixin.qq.com/cgi-bin/template/api_add_template?access_token=".$tokenData['access_token'];
+                            $post_data = array(
+                                'template_id_short' => $notice_wechat_tpl[$send_scene]['id'],
+                                'keyword_name_list' => $notice_wechat_tpl[$send_scene]['keyword_name'],
+                            );
+                            $response = httpRequest($url, 'POST', json_encode($post_data, JSON_UNESCAPED_UNICODE));
+                            $params = json_decode($response, true);
+                            if (!empty($params['template_id'])) {
+                                $update = [
+                                    'template_code' => $notice_wechat_tpl[$send_scene]['id'],
+                                    'template_id' => $params['template_id'],
+                                ];
+                                // 获取模板的关键词列表 start
+                                $url = "https://api.weixin.qq.com/cgi-bin/template/get_all_private_template?access_token=".$tokenData['access_token'];
+                                $response = httpRequest($url);
+                                $params2 = json_decode($response,true);
+                                if (isset($params2['template_list'])) {
+                                    $params2['template_list'] = convert_arr_key($params2['template_list'], 'template_id');
+                                    $template_data = !empty($params2['template_list'][$params['template_id']]) ? $params2['template_list'][$params['template_id']] : [];
+                                    $keywordsList = [];
+                                    if (!empty($template_data)) {
+                                        $update['template_title'] = $template_data['title'];
+                                        $template_data['content'] = str_replace(["\n\r","\r\n"], '|', $template_data['content']);
+                                        $template_data['content'] = str_replace(["\n","\r"], '|', $template_data['content']);
+                                        $arr = explode('|', $template_data['content']);
+                                        foreach ($arr as $_k => $_v) {
+                                            $_v = trim($_v);
+                                            if (!stristr($_v, '{{')) {
+                                                unset($arr[$_k]);
+                                            }
+                                        }
+                                        $template_data['content'] = $arr;
+                                        $template_data['example'] = str_replace(["\n\r","\r\n"], '|', $template_data['example']);
+                                        $template_data['example'] = str_replace(["\n","\r"], '|', $template_data['example']);
+                                        $arr = explode('|', $template_data['example']);
+                                        foreach ($arr as $_k => $_v) {
+                                            $_v = trim($_v);
+                                            if (!stristr($_v, ':') && !stristr($_v, '：')) {
+                                                unset($arr[$_k]);
+                                            }
+                                        }
+                                        $template_data['example'] = $arr;
+                                        foreach ($template_data['content'] as $key => $val) {
+                                            if (stristr($val, '{{first.')) {
+                                                !empty($template_data['example'][$key]) && $update['template_title'] = trim($template_data['example'][$key]);
+                                                $update['template_title'] = '您有一笔退货订单，买家已发货';
+                                            } else if (stristr($val, '{{remark.')) {
+                                                $keywordsList[$key]['name'] = '备注';
+                                                $keywordsList[$key]['example'] = !empty($template_data['example'][$key]) ? $template_data['example'][$key] : '';
+                                                $keywordsList[$key]['example'] = '请注意查收，记得及时处理哦！';
+                                                $keywordsList[$key]['rule'] = 'remark';
+                                            } else {
+                                                $example_name = preg_replace('/^(.*)(\:|\：)(.*)$/i', '${1}', $val);
+                                                $example_val = empty($template_data['example'][$key]) ? '' : $template_data['example'][$key];
+                                                $example_val = preg_replace('/^'.str_replace('/', '\/', $example_name).'(:|：)?/i', '', $template_data['example'][$key]);
+                                                $keywordsList[$key] = [
+                                                    'name' => $example_name,
+                                                    'example' => $example_val,
+                                                    'rule' =>preg_replace('/^(.*)\{\{([^\.]+)(.*)$/i', '${2}', $val),
+                                                ];
+                                            }
+                                        }
+                                    }
+                                    $info['tpl_data']['keywordsList'] = $keywordsList;
+                                    $update['tpl_data'] = json_encode($info['tpl_data']);
+                                } else {
+                                    // 删除新增失败的消息模板
+                                    $url = "https://api.weixin.qq.com/cgi-bin/template/del_private_template?access_token=".$tokenData['access_token'];
+                                    $post_data = array(
+                                        "template_id" => $params['template_id'],
+                                    );
+                                    httpRequest($url, 'POST', $post_data);
+                                }
+                                // 获取模板的关键词列表 end
+        
+                                Db::name('wechat_template')->where(['send_scene'=>$send_scene])->update($update);
+
+                                // 删除旧的消息模板
+                                $url = "https://api.weixin.qq.com/cgi-bin/template/del_private_template?access_token=".$tokenData['access_token'];
+                                $post_data = array(
+                                    "template_id" => $info['template_id'],
+                                );
+                                httpRequest($url, 'POST', $post_data);
+                            } else {
+                                $msg = !empty($params['errmsg']) ? $params['errmsg'] : '保存失败';
+                                $this->error($msg);
+                            }
+                        } else {
+                            $this->error($tokenData['msg']);
+                        }
+                    }
+                }
+                Db::name('wechat_template')->where(['send_scene'=>['NOTIN', $send_scene_arr]])->update(['is_open'=>0]);
+                Db::name('wechat_template')->where(['send_scene'=>['IN', $send_scene_arr]])->update(['is_open'=>1]);
+                $this->success('操作成功');
+            }
+        }
+
+        $assign_data['admin_id'] = session('admin_id');
+        $assign_data['notice_wechat_tpl'] = $notice_wechat_tpl;
+
+        $list = Db::name('wechat_template')->where(['lang'=>$this->admin_lang])->select();
+        foreach ($list as $key => $val) {
+            $val['tpl_data'] = !empty($val['tpl_data']) ? json_decode($val['tpl_data'], true) : [];
+            $list[$key] = $val;
+        }
+        $assign_data['list'] = $list;
+
+        $this->assign($assign_data);
+        return $this->fetch();
     }
 
 }

@@ -57,14 +57,17 @@
                                     </div>
                                 </td>
                                 <td style="width: 100%">
-                                    <div style="">
+                                    <div style="display: flex;">
                                         <select onchange="chooseMenu({$vo.id},this);">
                                             <option value="">请选择</option>
                                             {eyou:volist name="$mobile_user_bottom_menu_config" id="voo"}
-                                                <option value="{$key}" data-title="{$voo.title}" data-mca="{$voo.mca}" data-icon="{$voo.icon}" {if $vo.mca==$voo.mca}selected{/if}>{$voo.title}</option>
+                                                <option value="{$key}" data-title="{$voo.title}" data-mca="{$voo.mca}" data-icon="{$voo.icon}" {if condition="$vo.mca==$voo.mca || $vo.icon == $voo.icon"}selected{/if}>{$voo.title}</option>
                                             {/eyou:volist}
                                         </select>
+                                        <!--{$vo.mca}-->
+                                        <input class="ml10" type="text" id="custom_url_{$vo.id}" onchange="changeMca({$vo.id},this);" value="{$vo.mca}" style="width: 300px;{neq name='$vo.icon' value='xingxing'}display: none;{/neq}" placeholder="请输入自定义链接 http://">
                                     </div>
+                                    
                                 </td>
                                 <td class="">
                                     <div class="w100 tc">
@@ -114,12 +117,20 @@
             var new_title = $(obj).find("option:selected").attr("data-title");
             var new_mca = $(obj).find("option:selected").attr("data-mca");
             var new_icon = $(obj).find("option:selected").attr("data-icon");
+            if ('xingxing' != new_icon){
+                //内置
+                $("#custom_url_"+id).hide();
+            }else{
+                //自定义
+                $("#custom_url_"+id).show();
+                new_mca = '';
+            }
 
             $("#title_" + id).val(new_title);
             $("#mca_" + id).val(new_mca);
             $("#icon_" + id).val(new_icon);
-            changeTableVal_1609402253('users_bottom_menu', 'id', id, 'title', new_title);
             changeTableVal_1609402253('users_bottom_menu', 'id', id, 'mca', new_mca);
+            changeTableVal_1609402253('users_bottom_menu', 'id', id, 'title', new_title);
             changeTableVal_1609402253('users_bottom_menu', 'id', id, 'icon', new_icon);
         }
 

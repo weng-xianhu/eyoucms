@@ -217,6 +217,14 @@ class PayLogic extends Model
                     if (is_array($returnData)) {
                         if (1 == $returnData['code']) {
                             if (1 == $param['is_notify']) {
+                                // 发送邮箱
+                                if (!empty($returnData['data']['email']['url'])) {
+                                    httpRequest(request()->domain() . $returnData['data']['email']['url'], 'POST', $returnData['data']['email']['data']);
+                                }
+                                // 发送手机
+                                if (!empty($returnData['data']['mobile']['url'])) {
+                                    httpRequest(request()->domain() . $returnData['data']['mobile']['url'], 'POST', $returnData['data']['mobile']['data']);
+                                }
                                 return "success";
                             } else {
                                 $retData = [

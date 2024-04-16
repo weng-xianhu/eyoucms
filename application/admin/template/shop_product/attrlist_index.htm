@@ -6,7 +6,7 @@
         {include file="shop/left" /}
     {/empty}
 	<div id="geduan_div" class="h10"></div>
-	<div id="page_div" class="page min-hg-c-66" {empty name='$oldinlet'}style="min-width:auto;margin-left:110px;"{/empty}>
+	<div id="page_div" class="page min-hg-c-66" style="min-width: auto;box-shadow: none;">
         <div class="flexigrid">
             <div class="mDiv">
 				<div class="ftitle">
@@ -190,7 +190,7 @@
     $(function(){
         try{
             if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
-                $(".page").css("margin-left","");
+                $(".page").css("margin-left","10px");
                 $(".page").css("min-width","");
             }else{
                 $(".page").css("margin-left","110px");

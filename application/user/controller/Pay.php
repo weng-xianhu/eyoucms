@@ -232,19 +232,38 @@ class Pay extends Base
                                 unset($PayApiList[$key]);
                             }
                         } else if (0 == $value['system_built']) {
-                            if (0 == $PayInfo['is_open_pay']) {
-                                $is_set = false;
-                                foreach ($PayInfo as $kk => $vv) {
-                                    if ((stristr($kk, 'appid') || stristr($kk, 'appsecret')) && !empty($vv)) {
-                                        $is_set = true;
-                                        break;
+                            // Paypal支付
+                            if ('Paypal' == $value['pay_mark']) {
+                                $PayApiList[$key]['bgColor'] = '#013088';
+                                if (!empty($PayInfo) && 0 == $PayInfo['is_open_pay']) {
+                                    foreach ($PayInfo as $kk => $vv) {
+                                        if ('business' == $kk && empty($vv)) {
+                                            unset($PayApiList[$key]);
+                                            break;
+                                        }
                                     }
-                                }
-                                if (false === $is_set) {
-                                    unset($PayApiList[$key]); 
+                                } else {
+                                    unset($PayApiList[$key]);
                                 }
                             } else {
-                                unset($PayApiList[$key]);
+                                if (!empty($PayInfo) && 0 == $PayInfo['is_open_pay']) {
+                                    foreach ($PayInfo as $kk => $vv) {
+                                        if ('is_open_pay' != $kk && empty($vv)) {
+                                            unset($PayApiList[$key]);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    unset($PayApiList[$key]);
+                                }
+                            }
+                            if (!empty($PayApiList[$key])) {
+                                // Paypal支付
+                                if ('Paypal' == $value['pay_mark']) {
+                                    $isPaypal = 1;
+                                    $paypalBusiness = $PayInfo['business'];
+                                }
+                                // $PayApiList[$key]['pay_img'] = get_default_pic('/weapp/'.$value['pay_mark'].'/pay.png');
                             }
                             if (!empty($PayApiList[$key])) {
                                 $PayApiList[$key]['pay_img'] = get_default_pic('/weapp/'.$value['pay_mark'].'/pay.png');
@@ -369,7 +388,7 @@ class Pay extends Base
                 }
                 $this->error('充值表单提交失败');
             }
-            $this->error('请输入正确的充值金额！');
+            $this->error(foreign_lang('users14', $this->home_lang));
         }
 
         $money = input('param.money/f');
@@ -1423,6 +1442,9 @@ class Pay extends Base
                 'lang'     => $this->home_lang,
             ];
             $open_id = input('post.openid') ? input('post.openid') : $this->users_db->where($where)->getField('open_id');
+            if (empty($open_id)) {
+                $open_id = Db::name('wx_users')->where('users_id',$this->users_id)->value('openid');
+            }
             // if (empty($open_id)) $this->error('手机端微信使用本站账号登录仅可余额支付！');
 
             if (2 == $transaction_type) {

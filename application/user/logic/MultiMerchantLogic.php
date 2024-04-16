@@ -55,7 +55,7 @@ class MultiMerchantLogic extends Model
     public function multiMerchantOrderHandle($list = [], $post = [])
     {
         // 请选择支付方式
-        if (empty($post['payment_type'])) $this->error('请选择支付方式');
+        if (empty($post['payment_type'])) $this->error(foreign_lang('users15', $this->home_lang));
 
         // 对商品数据以商家进行商家分组
         $groupList = group_same_key($list, 'merchant_id');

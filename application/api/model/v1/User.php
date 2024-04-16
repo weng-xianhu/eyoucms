@@ -51,6 +51,7 @@ class User extends UserBase
         } else {
             $result = GetUsersLatestData($users_id);
             $result['head_pic'] = handle_subdir_pic($result['head_pic'], 'img', true);
+            $result['daily_check_in'] = Db::name('users_signin')->where('users_id',$users_id)->whereTime('add_time','today')->count();
             $address_default = []; // 默认收货地址
             $address = Db::name('shop_address')->where(['users_id' => $users_id])->order('is_default desc')->select(); // 收货地址列表
             if (!empty($address)) {
@@ -750,6 +751,12 @@ class User extends UserBase
                 ->where([
                     'id' => ['in',$channel],
                 ])->getAllWithIndex('id');
+            $content_arr = [];
+            foreach($channelRow as $k => $v){
+                $tableExt = $v['table'] . "_content";
+                $channel_content_arr = Db::name($tableExt)->where('aid','in',$aids)->field('content_ey_m,content,aid')->getAllWithIndex('aid');
+                $content_arr[$v['id']] = $channel_content_arr;
+            }
             $count_arr = Db::name($type)->where('aid','in',$aids)->field('aid,count(id) as count')->group('aid')->getAllWithIndex('aid');
             foreach ($result['data'] as $key => $val) {
                 $val['is_litpic'] = 0;
@@ -763,10 +770,17 @@ class User extends UserBase
                 $val['update_time'] = date('Y-m-d H:i:s',$val['update_time']);
                 $val['count'] = !empty($count_arr[$val['aid']]) ? $count_arr[$val['aid']]['count'] : 0;
                 // 内容扩展表数据
-                $tableExt = $channelRow[$val['channel']]['table'] . "_content";
-                $content = Db::name($tableExt)->where(['aid' => $val['aid']])->value('content');
-                $content = htmlspecialchars_decode($content);
-                $val['img_list'] = $this->get_content_img($content);
+                $content_data = $content_arr[$val['channel']][$val['aid']];
+                if (!empty($content_data['content_ey_m'])){
+                    $content = $content_data['content_ey_m'];
+                }else{
+                    $content = $content_data['content'];
+                }
+                $val['img_list'] = [];
+                if (!empty($content)){
+                    $content = htmlspecialchars_decode($content);
+                    $val['img_list'] = $this->get_content_img($content);
+                }
                 $result['data'][$key] = $val;
             }
         }

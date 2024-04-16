@@ -38,11 +38,13 @@ class Uploadify extends Base
      */
     public function upload()
     {
-        $func = input('func');
+        // 基础配置 - 附件配置
+        $basicConfig = tpCache('basic');
+        $func = input('param.func/s', 'undefined');
         $path = input('path','allimg');
-        $num  = input('num/d', '1');
+        $num  = input('num/d', 1);
         $is_water  = input('is_water/d', 1);
-        $default_size = intval(tpCache('basic.file_size') * 1024 * 1024); // 单位为b
+        $default_size = intval($basicConfig['file_size'] * 1024 * 1024); // 单位为b
         $size = input('size/d'); // 单位为kb
         $size = empty($size) ? $default_size : $size*1024;
         $info = array(
@@ -112,7 +114,6 @@ class Uploadify extends Base
             $dirArr[$key]['name'] = preg_replace('/^(.*)\/([^\/]+)$/i', '${2}', $val['dirpath']);
             !empty($countFile) && $dirArr[$key]['name'] .= "({$countFile})"; // 图库显示数量
         }
-
         $zNodes = json_encode($dirArr,true);
         $this->assign('zNodes', $zNodes);
         return $this->fetch();
@@ -147,8 +148,8 @@ class Uploadify extends Base
         $this->assign('common_pic', $common_pic);
 
         // 图片列表
-        $images_data = glob($images_path.'/*');
         $list = [];
+        $images_data = glob($images_path.'/*');
         if (!empty($images_data)) {
             // 图片类型数组
             $image_ext = explode(',', $this->imageExt);
@@ -304,35 +305,6 @@ class Uploadify extends Base
     {
         echo 1;
         exit;
-            
-        if (IS_POST) {
-            $action = input('action','del');  
-            $filename= input('filename/s');
-            $filename= empty($filename) ? input('url') : $filename;
-            $filename= str_replace(['(',')',',',' ','../','..','./'],'',$filename);
-            $filename= trim($filename,'.');
-            $filename = preg_replace('#^(/[/\w\-]+)?(/public/upload/|/uploads/|/public/static/admin/logo/)#i', '$2', $filename);
-            if(eyPreventShell($filename) && $action=='del' && !empty($filename) && is_file('.'.$filename) && stristr($filename, 'uploads/')){
-                if (stristr($filename, '/admin/logo/')) {
-                    $filetype = preg_replace('/^(.*)\.(\w+)$/i', '$2', $filename);
-                    $phpfile = strtolower(strstr($filename,'.php'));  //排除PHP文件
-                    $size = getimagesize('.'.$filename);
-                    $fileInfo = explode('/',$size['mime']);
-                    if($fileInfo[0] != 'image' || $phpfile || !in_array($filetype, explode(',', $this->imageExt))){
-                        exit;
-                    }
-                    if(@unlink('.'.$filename)){
-                        echo 1;
-                    }else{
-                        echo 0;
-                    }  
-                    exit;
-                }
-            }
-
-            echo 1;
-            exit;
-        }
     }
     
     public function fileList(){

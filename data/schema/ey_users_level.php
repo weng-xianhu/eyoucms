@@ -54,6 +54,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'discount_type' => 
+  array (
+    'name' => 'discount_type',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'discount' => 
   array (
     'name' => 'discount',
@@ -87,6 +96,33 @@ return array (
     'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'upgrade_type' => 
+  array (
+    'name' => 'upgrade_type',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'upgrade_order_money' => 
+  array (
+    'name' => 'upgrade_order_money',
+    'type' => 'decimal(10,2) unsigned',
+    'notnull' => false,
+    'default' => '0.00',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'status' => 
+  array (
+    'name' => 'status',
+    'type' => 'tinyint(1) unsigned',
+    'notnull' => false,
+    'default' => '1',
     'primary' => false,
     'autoinc' => false,
   ),

@@ -855,12 +855,14 @@ class Api extends Base
             }
             $md5data         = md5(serialize($formdata));
             $data['md5data'] = $md5data;
-            $guestbookRow    = M('guestbook')->field('aid')->where(['md5data' => $md5data])->find();
+            $guestbookRow    = Db::name('guestbook')->field('aid')->where(['md5data' => $md5data])->find();
             /*--end*/
 
             $aid = !empty($guestbookRow['aid']) ? $guestbookRow['aid'] : 0;
             if (empty($guestbookRow)) { // 非重复表单的才能写入数据库
-                $aid = M('guestbook')->insertGetId($data);
+                $examine = Db::name('form')->where('form_id',$typeid)->value('open_examine');
+                $data['examine'] = empty($examine) ? 1 : 0;
+                $aid = Db::name('guestbook')->insertGetId($data);
                 if ($aid > 0) {
                     $res = model('v1.Api')->saveGuestbookAttr($post, $aid, $typeid, $form_type);
                     if ($res){
@@ -876,7 +878,7 @@ class Api extends Base
             }
             @unlink($session_file);
             // 发送站内信给后台
-            SendNotifyMessage($ContentArr, 1, 1, 0);
+            SendNotifyMessage($ContentArr, 1, 1, 0,'',['aid'=>$aid]);
             // 发送留言短信
             $this->sendGbookSms();
             $this->renderSuccess(['aid'=>$aid], '提交成功');

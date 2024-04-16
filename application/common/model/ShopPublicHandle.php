@@ -474,14 +474,14 @@ class ShopPublicHandle
                 $PayInfo = unserialize($value['pay_info']);
                 if ('wechat' == $value['pay_mark']) {
                     // 微信判断
-                    if ((isset($PayInfo['is_open_wechat']) && 0 == $PayInfo['is_open_wechat']) || false === $this->findHupijiaoPay('wechat')) {
+                    if ((isset($PayInfo['is_open_wechat']) && 0 == $PayInfo['is_open_wechat']) || false === $this->getHupijiaoPay('wechat')) {
                         $usePayType = 1;
                         $payTypeHidden = '<input type="hidden" name="payment_method" id="payment_method" value="0"><input type="hidden" name="payment_type" id="payment_type" value="zxzf_wechat">';
                         break;
                     }
                 } else if ('alipay' == $value['pay_mark']) {
                     // 支付宝判断
-                    if ((isset($PayInfo['is_open_alipay']) && 0 == $PayInfo['is_open_alipay']) || false === $this->findHupijiaoPay('alipay')) {
+                    if ((isset($PayInfo['is_open_alipay']) && 0 == $PayInfo['is_open_alipay']) || false === $this->getHupijiaoPay('alipay') || false === $this->getPersonPay()) {
                         $usePayType = 1;
                         $payTypeHidden = '<input type="hidden" name="payment_method" id="payment_method" value="0"><input type="hidden" name="payment_type" id="payment_type" value="zxzf_alipay">';
                         break;
@@ -515,7 +515,7 @@ class ShopPublicHandle
     }
 
     //查询虎皮椒支付有没有配置相应的(微信or支付宝)支付
-    public function findHupijiaoPay($type = '')
+    public function getHupijiaoPay($type = '')
     {
         $hupijiaoInfo = Db::name('weapp')->where(['code'=>'Hupijiaopay','status'=>1])->find();
         $hupijiaoPay = Db::name('pay_api_config')->where(['pay_mark'=>'Hupijiaopay'])->find();
@@ -526,6 +526,20 @@ class ShopPublicHandle
         if (!isset($payInfo['is_open_pay']) || $payInfo['is_open_pay'] == 1) return true;
         $type .= '_appid';
         if (!isset($payInfo[$type]) || empty($payInfo[$type])) return true;
+
+        return false;
+    }
+
+    // 查询是否已有支付宝当面付插件(支付宝当面付功能)
+    public function getPersonPay()
+    {
+        $personPay = Db::name('weapp')->where(['code'=>'PersonPay','status'=>1])->find();
+        $payApiConfig = Db::name('pay_api_config')->where(['pay_mark'=>'PersonPay'])->find();
+        if (empty($payApiConfig) || empty($personPay)) return true;
+        if (empty($payApiConfig['pay_info'])) return true;
+        $payInfo = unserialize($payApiConfig['pay_info']);
+        if (empty($payInfo)) return true;
+        if (!isset($payInfo['is_open_pay']) || 1 === intval($payInfo['is_open_pay'])) return true;
 
         return false;
     }
@@ -852,5 +866,58 @@ EOF;
         }
 
         return $is_change_price;
+    }
+
+    public function order_coupon_handle($coupon_where = [],$list = [],$users_discount = 100)
+    {
+        $coupon_table = 'shop_coupon';
+        $coupon_use_table = 'shop_coupon_use';
+        $weappInfo = $this->getWeappInfo("Coupons");
+        if (!empty($weappInfo['status']) && 1 == $weappInfo['status']) {
+            $coupon_table = 'weapp_coupons';
+            $coupon_use_table = 'weapp_coupons_use';
+        }
+
+        $coupon_where['a.start_time'] = ['<=',getTime()];
+        $coupon_where['a.end_time'] = ['>=',getTime()];
+        $coupon_info = Db::name($coupon_use_table)
+            ->alias('a')
+            ->join("{$coupon_table} b",'a.coupon_id = b.coupon_id','left')
+            ->where($coupon_where)
+            ->find();
+        if ($users_discount != 1 && !empty($coupon_info['use_limit'])) return [];
+        if (!empty($coupon_info)){
+            if (2 == $coupon_info['coupon_form']) {
+                $coupon_discount = 1 - ($coupon_info['coupon_discount'] / 10); //优惠的折扣
+                if (1 == $coupon_info['coupon_type']) {
+                    $coupon_discount_money = 0;
+                    foreach ($list as $key => $value) {
+                        if (empty($coupon_info['use_limit']) || ( !empty($coupon_info['use_limit']) && empty($value['use_discount_price']) )){
+                            $coupon_discount_money += unifyPriceHandle($value['users_price'] * $value['product_num']);
+                        }
+                    }
+                    $coupon_info['coupon_price'] = unifyPriceHandle($coupon_discount_money * $coupon_discount);
+                } elseif (2 == $coupon_info['coupon_type']) {
+                    $coupon_product_ids = explode(',',$coupon_info['product_id']);
+                    $coupon_discount_money = 0;
+                    foreach ($list as $key => $value) {
+                        if (empty($coupon_info['use_limit']) || ( !empty($coupon_info['use_limit']) && empty($value['use_discount_price']) )){
+                            if (in_array($value['aid'],$coupon_product_ids) ) $coupon_discount_money += unifyPriceHandle($value['users_price'] * $value['product_num']);
+                        }
+                    }
+                    $coupon_info['coupon_price'] = unifyPriceHandle($coupon_discount_money * $coupon_discount);
+                } elseif (3 == $coupon_info['coupon_type']) {
+                    $coupon_arctype_ids = explode(',',$coupon_info['arctype_id']);
+                    $coupon_discount_money = 0;
+                    foreach ($list as $key => $value) {
+                        if (empty($coupon_info['use_limit']) || ( !empty($coupon_info['use_limit']) && empty($value['use_discount_price']) )){
+                            if (in_array($value['typeid'],$coupon_arctype_ids)) $coupon_discount_money += unifyPriceHandle($value['users_price'] * $value['product_num']);
+                        }
+                    }
+                    $coupon_info['coupon_price'] = unifyPriceHandle($coupon_discount_money * $coupon_discount);
+                }
+            }
+        }
+        return $coupon_info;
     }
 }

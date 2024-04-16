@@ -222,38 +222,43 @@ class Controller
             }
         }
 
-        $web_anti_brushing = config('tpcache.web_anti_brushing');
-        if (!empty($web_anti_brushing)) {
-            if ('home' == MODULE_NAME && 'Index' == CONTROLLER_NAME && 'index' == ACTION_NAME) {
-                $varsarr = ['clear','lang','site','templet','uiset','v','bd_vid','clickid'];
-                if (1 == config('ey_config.seo_pseudo') || isset($params['uiset'])) {
-                    $varsarr = array_merge($varsarr, ['m','c','a']);
-                }
-                $agentcode = config('tpcache.php_agentcode');
-                if (1 == $agentcode) {
-                    $varsarr[] = 'aid';
-                }
-                $params = $this->request->param();
-                if (empty($params['a']) || !in_array($params['a'], ['wechat_return','alipay_return','Express100','ey_agent'])) {
-                    foreach ($params as $key => $val) {
-                        if (!in_array($key, $varsarr)) {
-                            abort(404,'页面不存在');
-                        } else if ('clear' == $key) {
-                            if ($val != 1) {
+        $is_notify = $this->request->param('is_notify');
+        if (!empty($is_notify) && 1 === intval($is_notify)) {
+            // 支付异步回调....
+        } else {
+            $web_anti_brushing = config('tpcache.web_anti_brushing');
+            if (!empty($web_anti_brushing)) {
+                if ('home' == MODULE_NAME && 'Index' == CONTROLLER_NAME && 'index' == ACTION_NAME) {
+                    $varsarr = ['clear','lang','site','templet','uiset','v','bd_vid','clickid'];
+                    if (1 == config('ey_config.seo_pseudo') || isset($params['uiset'])) {
+                        $varsarr = array_merge($varsarr, ['m','c','a']);
+                    }
+                    $agentcode = config('tpcache.php_agentcode');
+                    if (1 == $agentcode) {
+                        $varsarr[] = 'aid';
+                    }
+                    $params = $this->request->param();
+                    if (empty($params['a']) || !in_array($params['a'], ['wechat_return','alipay_return','Express100','ey_agent'])) {
+                        foreach ($params as $key => $val) {
+                            if (!in_array($key, $varsarr)) {
                                 abort(404,'页面不存在');
-                            }
-                        } else if ('lang' == $key) {
-                            if ((isset($params['uiset']) || is_language()) && 2 == strlen($val)) {
+                            } else if ('clear' == $key) {
+                                if ($val != 1) {
+                                    abort(404,'页面不存在');
+                                }
+                            } else if ('lang' == $key) {
+                                if ((isset($params['uiset']) || is_language()) && 2 == strlen($val)) {
 
-                            } else {
-                                abort(404,'页面不存在');
+                                } else {
+                                    abort(404,'页面不存在');
+                                }
                             }
                         }
                     }
-                }
-            } else {
-                if ((stristr($this->request->url(true), '/home/View/index/') || stristr($this->request->url(true), '/home/Lists/index/')) && 'Buildhtml' != CONTROLLER_NAME) {
-                    abort(404,'页面不存在');
+                } else {
+                    if ((stristr($this->request->url(true), '/home/View/index/') || stristr($this->request->url(true), '/home/Lists/index/')) && 'Buildhtml' != CONTROLLER_NAME) {
+                        abort(404,'页面不存在');
+                    }
                 }
             }
         }
@@ -297,7 +302,35 @@ class Controller
         if ( (CONTROLLER_NAME == 'Lists' && isset($param['sort'])) || isset($param['clear']) || Config::get('app_debug') === true) {
 
         } else {
-            read_html_cache(); // 尝试从缓存中读取
+            $read_cache = true;
+
+            // 支付异步回调不走页面缓存，避免导致异步回调失败
+            $inputXml = file_get_contents("php://input");
+            if (!empty($inputXml)) {
+                // 解析参数
+                $jsonXml = json_encode(simplexml_load_string($inputXml, 'SimpleXMLElement', LIBXML_NOCDATA));
+                // 转换数组
+                $jsonArr = json_decode($jsonXml, true);
+                // 是否与支付成功
+                if (!empty($jsonArr['attach'])) {
+                    // 解析判断参数是否为微信支付
+                    $attach = explode('|,|', $jsonArr['attach']);
+                    if (!empty($attach[1]) && 'is_notify' == $attach[1]) {
+                        $read_cache = false;
+                    }
+                }
+            }
+
+            if ($read_cache) {
+                // 其他支付的异步回调不走页面缓存
+                if (isset($param['is_notify'])) {
+                    $read_cache = false;
+                }
+            }
+
+            if ($read_cache) {
+                read_html_cache(); // 尝试从缓存中读取
+            }
         }
 
         // 控制器初始化

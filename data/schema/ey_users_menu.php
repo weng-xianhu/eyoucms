@@ -30,7 +30,7 @@ return array (
   'mca' => 
   array (
     'name' => 'mca',
-    'type' => 'varchar(50)',
+    'type' => 'varchar(200)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -94,6 +94,15 @@ return array (
   array (
     'name' => 'update_time',
     'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'type' => 
+  array (
+    'name' => 'type',
+    'type' => 'tinyint(3)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

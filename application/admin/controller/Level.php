@@ -108,12 +108,26 @@ class Level extends Base {
             ->order('a.moneyid desc')
             ->limit($Page->firstRow.','.$Page->listRows)
             ->select();
+        $order_number_arr = [];
         foreach ($list as $key => $value) {
+            if (in_array($value['status'],[2,3])  && 'wechat' == $value['pay_method']) $order_number_arr[] = $value['order_number'];
             $value['username'] = !empty($value['nickname']) ? $value['nickname'] : $value['username'];
             // 反序列化参数
             $value['cause'] = unserialize($value['cause']);
             $value['head_pic'] = get_head_pic($value['head_pic']);
             $list[$key] = $value;
+        }
+
+        if (!empty($order_number_arr)){
+            //处理微信推送数据
+            $wsi_where['order_code'] = ['in',$order_number_arr];
+            $wsi_where['order_source'] = 3;
+            $wx_push_arr = Db::name('wx_shipping_info')->where($wsi_where)->getAllWithIndex('order_code');
+            if(!empty($wx_push_arr)){
+                foreach ($list as $key => $value) {
+                    if (!empty($wx_push_arr[$value['order_number']])) $list[$key]['wx_shipping_info'] = $wx_push_arr[$value['order_number']];
+                }
+            }
         }
         $show = $Page->show();
         $this->assign('page', $show);
@@ -185,6 +199,8 @@ class Level extends Base {
             // 删除会员升级级别
             $return = $this->users_type_manage_db->where($where)->delete();
             if ($return) {
+                \think\Cache::clear('users_level');
+                \think\Cache::clear('users_type_manage');
                 adminLog('删除会员升级级别：'.$type_name_list);
                 $this->success('删除成功');
             }else{
@@ -238,6 +254,8 @@ class Level extends Base {
 
             // 返回
             if (!empty($ReturnId)) {
+                \think\Cache::clear('users_level');
+                \think\Cache::clear('users_type_manage');
                 $this->success('保存成功');
             }else{
                 $this->error('保存失败');

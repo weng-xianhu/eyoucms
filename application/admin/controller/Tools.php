@@ -337,6 +337,7 @@ class Tools extends Base {
                 if(Backup::install($sqls)){
                     /*清除缓存*/
                     delFile(RUNTIME_PATH);
+                    \think\Cache::clear();
                     /*--end*/
                     $this->success("执行sql成功", url('Tools/restore'));
                 }else{
@@ -413,6 +414,7 @@ class Tools extends Base {
                     adminLog('还原数据库');
                     session('backup_list', null);
                     delFile(RUNTIME_PATH);
+                    \think\Cache::clear();
                     respose(array('code'=>1, 'msg'=>"还原完成...", 'rate'=>'100%'));
                     // $this->success('还原完成！');
                 }
@@ -485,6 +487,7 @@ class Tools extends Base {
                         tpCache('web', $tpCacheData);
                     }
                     delFile(RUNTIME_PATH); // 清除缓存
+                    \think\Cache::clear();
                     adminLog('还原数据库');
                     verify_authortoken();
                     $this->success('操作成功', request()->baseFile(), '', 1, [], '_parent');

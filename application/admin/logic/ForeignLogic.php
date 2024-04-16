@@ -39,8 +39,9 @@ class ForeignLogic
             $seo_config = tpCache('seo');
             $seo_pseudo = !empty($seo_config['seo_pseudo']) ? intval($seo_config['seo_pseudo']) : 0;
             if (in_array($seo_pseudo, [2,3])) {
+                $foreign_is_status = tpSetting('foreign.foreign_is_status', '', 'cn');
                 $seo_titleurl_format = !empty($seo_config['seo_titleurl_format']) ? intval($seo_config['seo_titleurl_format']) : 0;
-                if (!empty($seo_titleurl_format)) {
+                if (!empty($foreign_is_status) && !empty($seo_titleurl_format)) {
                     $htmlfilename = $post['htmlfilename'].'_'.$aid;
                     Db::name('archives')->where(['aid'=>$aid])->update(['htmlfilename'=>$htmlfilename]);
                 }
@@ -61,8 +62,9 @@ class ForeignLogic
             $globalConfig = tpCache('global');
         }
         if (in_array($globalConfig['seo_pseudo'], [2,3])) {
+            $foreign_is_status = tpSetting('foreign.foreign_is_status', '', 'cn');
             $seo_titleurl_format = (int)$globalConfig['seo_titleurl_format'];
-            if (!empty($seo_titleurl_format)) {
+            if (!empty($foreign_is_status) && !empty($seo_titleurl_format)) {
                 $htmlfilename = $this->get_title_htmlfilename(trim($post['title']));
                 if ('edit' == $opt) {
                     $htmlfilename .= '_'.$post['aid'];
@@ -117,15 +119,11 @@ class ForeignLogic
                         } else {
                             $restr .= $pinyins[$c][0];
                         }
-                    // } else if ('_' == $str[$i]) {
-                    //     $restr .= $str[$i];
                     } else {
                         $restr .= "-";
                     }
                 } else if (preg_match("/[a-z0-9]/i", $str[$i])) {
                     $restr .= $str[$i];
-                // } else if ('_' == $str[$i]) {
-                //     $restr .= $str[$i];
                 } else {
                     $restr .= "-";
                 }

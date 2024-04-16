@@ -73,6 +73,7 @@ class ArchivesLogic extends Model
             // 删除静态文件
             $buildhtmlLogic = new \app\common\logic\BuildhtmlLogic;
             $buildhtmlLogic->delViewHtml($id_arr);
+            $suc_del_typeid = model('Arctype')->get_arc_type(['aid'=>$id_arr]);
 
             if (1 == $thorough) { // 直接删除，跳过回收站
                 $err = 0;
@@ -123,6 +124,7 @@ class ArchivesLogic extends Model
 
                 // 系统商品操作时，积分商品的被动处理
                 model('ShopPublicHandle')->pointsGoodsPassiveHandle($id_arr);
+                if (!empty($suc_del_typeid)) model('Arctype')->hand_type_count(['typeid'=>$suc_del_typeid]); //统计栏目文档数量
 
                 $this->success('删除成功！');
             } else if ($err < count($data)) {
@@ -228,6 +230,9 @@ class ArchivesLogic extends Model
                 // 产品多规格组装表
                 $productSpecValueRow = Db::name('product_spec_value')->field('value_id', true)->where(['aid'=>['IN', $aids]])->select();
                 $productSpecValueRow = group_same_key($productSpecValueRow, 'aid');
+                // 新商品参数属性值表
+                $shopProductAttrRow = Db::name('shop_product_attr')->field('product_attr_id', true)->where(['aid'=>['IN', $aids]])->select();
+                $shopProductAttrRow = group_same_key($shopProductAttrRow, 'aid');
             }
             else if ('media' == $channeltypeRow['nid']) { // 视频模型的特性表数据
                 // 附件表
@@ -267,8 +272,8 @@ class ArchivesLogic extends Model
                         $downloadFileInfo = $downloadFileData = [];
                         $mediaFileInfo = $mediaFileData = [];
                         $specialNodeInfo = $specialNodeData = [];
-                        $productAttrInfo = $productImgInfo = $productNetdiskInfo = $productSpecInfo = $productSpecValueInfo = [];
-                        $productAttrData = $productImgData = $productNetdiskData = $productSpecData = $productSpecValueData = [];
+                        $productAttrInfo = $productImgInfo = $productNetdiskInfo = $productSpecInfo = $productSpecValueInfo = $shopProductAttrInfo = [];
+                        $productAttrData = $productImgData = $productNetdiskData = $productSpecData = $productSpecValueData = $shopProductAttrData = [];
                         if ('images' == $channeltypeRow['nid']) { // 图集模型的特性表数据
                             $imgUploadInfo = !empty($imgUploadRow[$val['aid']]) ? $imgUploadRow[$val['aid']] : [];
                         } else if ('download' == $channeltypeRow['nid']) { // 下载模型的特性表数据
@@ -278,6 +283,8 @@ class ArchivesLogic extends Model
                             if ($typeid_old == $typeid) {
                                 $productAttrInfo = !empty($productAttrRow[$val['aid']]) ? $productAttrRow[$val['aid']] : [];
                             }
+                            // 新商品参数属性值表
+                            $shopProductAttrInfo = !empty($shopProductAttrRow[$val['aid']]) ? $shopProductAttrRow[$val['aid']] : [];
                             // 产品图集表
                             $productImgInfo = !empty($productImgRow[$val['aid']]) ? $productImgRow[$val['aid']] : [];
                             // 产品虚拟表
@@ -338,6 +345,11 @@ class ArchivesLogic extends Model
                                     $specv_v['aid'] = $aid_new;
                                     $productSpecValueData[] = $specv_v;
                                 }
+                                // 新商品参数属性值表
+                                foreach ($shopProductAttrInfo as $attr_k => $attr_v) {
+                                    $attr_v['aid'] = $aid_new;
+                                    $shopProductAttrData[] = $attr_v;
+                                }
                             } else if ('media' == $channeltypeRow['nid']) {
                                 // 附件表
                                 foreach ($mediaFileInfo as $file_k => $file_v) {
@@ -374,6 +386,8 @@ class ArchivesLogic extends Model
                             !empty($productSpecData) && model('ProductSpecData')->saveAll($productSpecData);
                             // 产品多规格组装表
                             !empty($productSpecValueData) && model('ProductSpecValue')->saveAll($productSpecValueData);
+                            // 新商品参数属性值表
+                            !empty($shopProductAttrData) && Db::name('shop_product_attr')->insertAll($shopProductAttrData);
                         } else if ('media' == $channeltypeRow['nid']) {
                             // 附件表
                             !empty($mediaFileData) && model('MediaFile')->saveAll($mediaFileData);
@@ -390,6 +404,9 @@ class ArchivesLogic extends Model
             /*清空sql_cache_table数据缓存表 并 添加查询执行语句到mysql缓存表*/
             Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
             model('SqlCacheTable')->InsertSqlCacheTable(true);
+
+            model('Arctype')->hand_type_count(['typeid'=>[$typeid]]);//统计栏目文档数量
+
             /* END */
             $this->success('复制成功！');
         } else {
@@ -440,6 +457,8 @@ class ArchivesLogic extends Model
                     $productSpecRow = Db::name('product_spec_data')->where(['aid' => ['IN', $aids]])->delete();
                     // 产品多规格组装表
                     $productSpecValueRow = Db::name('product_spec_value')->where(['aid' => ['IN', $aids]])->delete();
+                    // 新商品参数属性值表
+                    $shopProductAttrRow = Db::name('shop_product_attr')->where(['aid' => ['IN', $aids]])->delete();
                 } else if ('media' == $v['nid']) { // 视频模型的特性表数据
                     // 附件表
                     $mediaFileRow = Db::name('media_file')->where(['aid' => ['IN', $aids]])->delete();
@@ -450,7 +469,8 @@ class ArchivesLogic extends Model
             }
         }
         //删除已有数据 结束
-
+        //给专题关联的文档用
+        $compare_aid = [];
         //新建数据开始
         $channel_ids = Db::name('archives')->where(['lang' => 'cn', 'is_del' => 0,'channel'=>['neq',6]])->group('channel')->column('channel');
         // 获取复制栏目的模型ID
@@ -486,20 +506,21 @@ class ArchivesLogic extends Model
                 $contentRow = Db::name($tableExt)->field('id', true)->where(['aid' => ['IN', $aids]])->getAllWithIndex('aid');
                 // 原语言栏目
                 $typeids_arr = [];
-                foreach ($typeids as $key => $val){
-                    $typeids_arr[] = 'tid' . $val;
+                foreach ($typeids as $k => $v){
+                    $typeids_arr[] = 'tid' . $v;
                 }
                 // 源语言关联的多语言栏目
                 $lang_typeids = Db::name('language_attr')->where(['attr_group' => 'arctype', 'attr_name' => ['in',$typeids_arr],'lang'=>$lang])->field('attr_value,attr_name')->getAllWithIndex('attr_name');
                 // 拥有特性模型的其他数据处理
-                if ('images' == $v['nid']) { // 图集模型的特性表数据
+
+                if ('images' == $channeltypeRow[$val['channel']]['nid']) { // 图集模型的特性表数据
                     $imgUploadRow = Db::name('images_upload')->field('img_id', true)->where(['aid' => ['IN', $aids]])->select();
                     $imgUploadRow = group_same_key($imgUploadRow, 'aid');
-                } else if ('download' == $v['nid']) { // 下载模型的特性表数据
+                } else if ('download' == $channeltypeRow[$val['channel']]['nid']) { // 下载模型的特性表数据
                     // 附件表
                     $downloadFileRow = Db::name('download_file')->field('file_id', true)->where(['aid' => ['IN', $aids]])->select();
                     $downloadFileRow = group_same_key($downloadFileRow, 'aid');
-                } else if ('product' == $v['nid']) { // 产品模型的特性表数据
+                } else if ('product' == $channeltypeRow[$val['channel']]['nid']) { // 产品模型的特性表数据
                     // 属性值表
                     $productAttrRow = Db::name('product_attr')->field('product_attr_id', true)->where(['aid' => ['IN', $aids]])->select();
                     $productAttrRow = group_same_key($productAttrRow, 'aid');
@@ -515,11 +536,20 @@ class ArchivesLogic extends Model
                     // 产品多规格组装表
                     $productSpecValueRow = Db::name('product_spec_value')->field('value_id', true)->where(['aid' => ['IN', $aids]])->select();
                     $productSpecValueRow = group_same_key($productSpecValueRow, 'aid');
-                } else if ('media' == $v['nid']) { // 视频模型的特性表数据
+                    // 新商品参数属性值表
+                    $shopProductAttrRow = Db::name('shop_product_attr')->field('product_attr_id', true)->where(['aid' => ['IN', $aids]])->select();
+                    $shopProductAttrRow = group_same_key($shopProductAttrRow, 'aid');
+                    // 多语言关联
+                    $language_attr = [];
+                    $row = Db::name('language_attr')->where(['lang'=>$lang])->select();
+                    foreach ($row as $_atk => $_atv) {
+                        $language_attr[$_atv['attr_group']][$_atv['attr_name']] = $_atv['attr_value'];
+                    }
+                } else if ('media' == $channeltypeRow[$val['channel']]['nid']) { // 视频模型的特性表数据
                     // 附件表
                     $mediaFileRow = Db::name('media_file')->field('file_id', true)->where(['aid' => ['IN', $aids]])->select();
                     $mediaFileRow = group_same_key($mediaFileRow, 'aid');
-                } else if ('special' == $v['nid']) { // 专题模型的特性表数据
+                } else if ('special' == $channeltypeRow[$val['channel']]['nid']) { // 专题模型的特性表数据
                     // 节点表
                     $specialNodeRow = Db::name('special_node')->field('node_id', true)->where(['aid' => ['IN', $aids]])->select();
                     $specialNodeRow = group_same_key($specialNodeRow, 'aid');
@@ -541,10 +571,13 @@ class ArchivesLogic extends Model
                     $archivesInfo['lang'] = $lang;
                     // $archivesInfo['add_time'] = getTime();
                     // $archivesInfo['update_time'] = getTime();
-
+                    if (!empty($language_attr['shop_product_attrlist']['attrlist_'.$archivesInfo['attrlist_id']])) {
+                        $archivesInfo['attrlist_id'] = $language_attr['shop_product_attrlist']['attrlist_'.$archivesInfo['attrlist_id']];
+                    }
                     if (!empty($archivesInfo)) {
                         $new_aid = Db::name('archives')->insertGetId($archivesInfo);
                         if ($new_aid) {
+                            $compare_aid[$aid] = $new_aid;
                             $channelfield_bind_list = Db::name('channelfield_bind')->where('typeid',$typeid_old)->select();
                             if (!empty($channelfield_bind_list)){
                                 $field_ids = get_arr_column($channelfield_bind_list,'field_id');
@@ -575,17 +608,19 @@ class ArchivesLogic extends Model
                             $downloadFileInfo = $downloadFileData = [];
                             $mediaFileInfo = $mediaFileData = [];
                             $specialNodeInfo = $specialNodeData = [];
-                            $productAttrInfo = $productImgInfo = $productNetdiskInfo = $productSpecInfo = $productSpecValueInfo = [];
-                            $productAttrData = $productImgData = $productNetdiskData = $productSpecData = $productSpecValueData = [];
-                            if ('images' == $v['nid']) { // 图集模型的特性表数据
+                            $productAttrInfo = $productImgInfo = $productNetdiskInfo = $productSpecInfo = $productSpecValueInfo = $shopProductAttrInfo = [];
+                            $productAttrData = $productImgData = $productNetdiskData = $productSpecData = $productSpecValueData = $shopProductAttrData = [];
+                            if ('images' == $channeltypeRow[$val['channel']]['nid']) { // 图集模型的特性表数据
                                 $imgUploadInfo = !empty($imgUploadRow[$val['aid']]) ? $imgUploadRow[$val['aid']] : [];
-                            } else if ('download' == $v['nid']) { // 下载模型的特性表数据
+                            } else if ('download' == $channeltypeRow[$val['channel']]['nid']) { // 下载模型的特性表数据
                                 $downloadFileInfo = !empty($downloadFileRow[$val['aid']]) ? $downloadFileRow[$val['aid']] : [];
-                            } else if ('product' == $v['nid']) { // 新房模型的特性表数据
+                            } else if ('product' == $channeltypeRow[$val['channel']]['nid']) { // 新房模型的特性表数据
                                 // 属性值表 - 只复制同栏目的属性值
                                 if ($typeid_old == $typeid) {
                                     $productAttrInfo = !empty($productAttrRow[$val['aid']]) ? $productAttrRow[$val['aid']] : [];
                                 }
+                                // 新商品参数属性值表
+                                $shopProductAttrInfo = !empty($shopProductAttrRow[$val['aid']]) ? $shopProductAttrRow[$val['aid']] : [];
                                 // 产品图集表
                                 $productImgInfo = !empty($productImgRow[$val['aid']]) ? $productImgRow[$val['aid']] : [];
                                 // 产品虚拟表
@@ -594,25 +629,25 @@ class ArchivesLogic extends Model
                                 $productSpecInfo = !empty($productSpecRow[$val['aid']]) ? $productSpecRow[$val['aid']] : [];
                                 // 产品多规格组装表
                                 $productSpecValueInfo = !empty($productSpecValueRow[$val['aid']]) ? $productSpecValueRow[$val['aid']] : [];
-                            } else if ('media' == $v['nid']) { // 视频模型的特性表数据
+                            } else if ('media' == $channeltypeRow[$val['channel']]['nid']) { // 视频模型的特性表数据
                                 $mediaFileInfo = !empty($mediaFileRow[$val['aid']]) ? $mediaFileRow[$val['aid']] : [];
-                            } else if ('special' == $v['nid']) { // 专题模型的特性表数据
+                            } else if ('special' == $channeltypeRow[$val['channel']]['nid']) { // 专题模型的特性表数据
                                 $specialNodeInfo = !empty($specialNodeRow[$val['aid']]) ? $specialNodeRow[$val['aid']] : [];
                             }
 
                             // 图集模型
-                            if ('images' == $v['nid']) {
+                            if ('images' == $channeltypeRow[$val['channel']]['nid']) {
                                 foreach ($imgUploadInfo as $img_k => $img_v) {
                                     $img_v['aid'] = $new_aid;
                                     $imgUploadData[] = $img_v;
                                 }
-                            } else if ('download' == $v['nid']) {
+                            } else if ('download' == $channeltypeRow[$val['channel']]['nid']) {
                                 // 附件表
                                 foreach ($downloadFileInfo as $file_k => $file_v) {
                                     $file_v['aid'] = $new_aid;
                                     $downloadFileData[] = $file_v;
                                 }
-                            } else if ('product' == $v['nid']) {
+                            } else if ('product' == $channeltypeRow[$val['channel']]['nid']) {
                                 // 属性值表
                                 foreach ($productAttrInfo as $attr_k => $attr_v) {
                                     $attr_v['aid'] = $new_aid;
@@ -638,16 +673,25 @@ class ArchivesLogic extends Model
                                     $specv_v['aid'] = $new_aid;
                                     $productSpecValueData[] = $specv_v;
                                 }
-                            } else if ('media' == $v['nid']) {
+                                // 新增商品参数属性值表
+                                foreach ($shopProductAttrInfo as $attr_k => $attr_v) {
+                                    $attr_v['aid'] = $new_aid;
+                                    if (!empty($language_attr['shop_product_attribute']['attribute_'.$attr_v['attr_id']])) {
+                                        $attr_v['attr_id'] = $language_attr['shop_product_attribute']['attribute_'.$attr_v['attr_id']];
+                                    }
+                                    $shopProductAttrData[] = $attr_v;
+                                }
+                            } else if ('media' == $channeltypeRow[$val['channel']]['nid']) {
                                 // 附件表
                                 foreach ($mediaFileInfo as $file_k => $file_v) {
                                     $file_v['aid'] = $new_aid;
                                     $mediaFileData[] = $file_v;
                                 }
-                            } else if ('special' == $v['nid']) {
+                            } else if ('special' == $channeltypeRow[$val['channel']]['nid']) {
                                 // 附件表
                                 foreach ($specialNodeInfo as $node_k => $node_v) {
                                     $node_v['aid'] = $new_aid;
+                                    $node_v['lang'] = $lang;
                                     $specialNodeData[] = $node_v;
                                 }
                             }
@@ -657,12 +701,12 @@ class ArchivesLogic extends Model
                                 Db::name($tableExt)->insert($contentInfo);
                             }
                             // 批量写入图集模型的图片表
-                            if ('images' == $v['nid']) {
+                            if ('images' == $channeltypeRow[$val['channel']]['nid']) {
                                 !empty($imgUploadData) && model('ImagesUpload')->saveAll($imgUploadData);
-                            } else if ('download' == $v['nid']) {
+                            } else if ('download' == $channeltypeRow[$val['channel']]['nid']) {
                                 // 附件表
                                 !empty($downloadFileData) && model('DownloadFile')->saveAll($downloadFileData);
-                            } else if ('product' == $v['nid']) {
+                            } else if ('product' == $channeltypeRow[$val['channel']]['nid']) {
                                 // 属性值表
                                 !empty($productAttrData) && Db::name('product_attr')->insertAll($productAttrData);
                                 // 产品图集表
@@ -673,19 +717,43 @@ class ArchivesLogic extends Model
                                 !empty($productSpecData) && model('ProductSpecData')->saveAll($productSpecData);
                                 // 产品多规格组装表
                                 !empty($productSpecValueData) && model('ProductSpecValue')->saveAll($productSpecValueData);
-                            } else if ('media' == $v['nid']) {
+                                // 新商品参数属性值表
+                                !empty($shopProductAttrData) && Db::name('shop_product_attr')->insertAll($shopProductAttrData);
+                            } else if ('media' == $channeltypeRow[$val['channel']]['nid']) {
                                 // 附件表
                                 !empty($mediaFileData) && model('MediaFile')->saveAll($mediaFileData);
-                            } else if ('special' == $v['nid']) {
-                                // 附件表
+                            } else if ('special' == $channeltypeRow[$val['channel']]['nid']) {
+                                // 专题节点表
                                 !empty($specialNodeData) && model('SpecialNode')->saveAll($specialNodeData);
                             }
                         } else {
                             $error_aid[] = $aid;
-                            adminLog("文档{$aid}复制失败");
+                            adminLog("文档{$aid}同步失败");
                         }
                     }
                 }
+            }
+
+            //处理专题节点
+            $specialNodeList = Db::name('special_node')->where('lang',$lang)->field('node_id,aidlist')->select();
+            if (!empty($specialNodeList)){
+                $updateSpecialNodeList = [];
+                foreach ($specialNodeList as $k => $v){
+                    if (!empty($v['aidlist'])) {
+                        $aidlist = [];
+                        $v['aidlist'] = explode(',',$v['aidlist']);
+                        foreach ($v['aidlist'] as $m => $n){
+                            if (!empty($compare_aid[$n])) $aidlist[] = $compare_aid[$n];
+                        }
+                        if (!empty($aidlist)) {
+                            $aidlist = implode(',',$aidlist);
+                        }else{
+                            $aidlist = '';
+                        }
+                        $updateSpecialNodeList[] = ['node_id'=>$v['node_id'],'aidlist'=>$aidlist];
+                    }
+                }
+                !empty($updateSpecialNodeList) && model('SpecialNode')->saveAll($updateSpecialNodeList);
             }
 
             //同步栏目内容

@@ -42,6 +42,7 @@ class TagSppayapilist extends Base
         $this->users_id = !empty($this->users_id) ? $this->users_id : 0;
         $this->usersTplVersion = getUsersTplVersion();
         $this->usersTpl2xVersion = getUsersTpl2xVersion();
+        $this->shopPublicHandleModel = model('ShopPublicHandle');
     }
 
     /**
@@ -181,7 +182,7 @@ class TagSppayapilist extends Base
         $where = [
             'status' => 1,
         ];
-        if ((isMobile() && isWeixin()) || isWeixinApplets()) $where['pay_mark'] = ['NEQ', 'alipay'];
+        if (isWeixinApplets()) $where['pay_mark'] = ['NEQ', 'alipay'];
         $PayApiList = Db::name('pay_api_config')->where($where)->select();
 
         $isPaypal = 0;
@@ -196,7 +197,7 @@ class TagSppayapilist extends Base
                     $PayApiList[$key]['bgColor'] = '#22d465';
                     $PayApiList[$key]['pay_img'] = $tagStatic->getStatic('users/skin/images/pay_'.$value['pay_mark'].'.png');
                     if (!empty($PayInfo['is_open_wechat'])) {
-                        $r1 = $this->findHupijiaoIsExis('wechat');
+                        $r1 = $this->shopPublicHandleModel->getHupijiaoPay('wechat');
                         if ($r1 == true) unset($PayApiList[$key]);
                     }
                 }
@@ -205,8 +206,9 @@ class TagSppayapilist extends Base
                     $PayApiList[$key]['bgColor'] = '#0090ce';
                     $PayApiList[$key]['pay_img'] = $tagStatic->getStatic('users/skin/images/pay_'.$value['pay_mark'].'.png');
                     if (!empty($PayInfo['is_open_alipay'])) {
-                        $r1 = $this->findHupijiaoIsExis('alipay');
-                        if ($r1 == true) unset($PayApiList[$key]);
+                        $r1 = $this->shopPublicHandleModel->getHupijiaoPay('alipay');
+                        $r2 = $this->shopPublicHandleModel->getPersonPay();
+                        if ($r1 == true && $r2 == true) unset($PayApiList[$key]);
                     }
                 }
                 // 第三方支付
@@ -245,6 +247,8 @@ class TagSppayapilist extends Base
                         $PayApiList[$key]['pay_img'] = get_default_pic('/weapp/'.$value['pay_mark'].'/pay.png');
                     }
 
+                    // 如果是支付宝当面付插件则删除(支付宝当面付插件已融入系统的支付宝支付，不需要单独展示)
+                    if ('PersonPay' == $value['pay_mark']) unset($PayApiList[$key]);
                     // 如果是虎皮椒支付插件则删除(虎皮椒支付插件已融入系统的微信和支付宝支付，不需要单独展示)
                     if ('Hupijiaopay' == $value['pay_mark']) unset($PayApiList[$key]);
                 }

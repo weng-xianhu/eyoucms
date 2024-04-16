@@ -137,3 +137,14 @@
     /*.plug-item-content .plug-item-bottm a, .plug-item-content .plug-status .yes {
         color: #3398cc !important;
     }*/
+    .ncap-form-default dd.opt .layui-btn{
+        background-color: #3398cc !important;
+    }
+    .marketing_panel .title::before{
+        background-color: #3398cc !important;
+    }
+    .marketing_panel .marketing_list ul.marketing-nav li a .button button {
+        color: #3398cc !important;
+        border: 1px solid #3398cc !important;
+    }
+      

@@ -827,7 +827,7 @@ class Uploadify extends Base {
             $file_path = UPLOAD_PATH.$this->savePath.$info->getSaveName();
             $return = array(
                 'code'      => 1,
-                'msg'       => '上传成功',
+                'msg'       => foreign_lang('system10'),
                 'file_url'  => '/' . UPLOAD_PATH.$this->savePath.$fileName,
                 'file_mime' => $file->getInfo('type'),
                 'file_name' => $fileName,

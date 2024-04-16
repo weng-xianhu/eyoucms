@@ -17,11 +17,13 @@
     <script type="text/javascript">
         try{
             if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
-                $(".page").css("margin-left","");
+                $(".page").css("margin-left","10px");
                 $(".page").css("min-width","");
+                $('#submit_bot2').css('left', "10px");
             }else{
                 $(".page").css("margin-left","110px");
                 $(".page").css("min-width","auto");
+                $('#submit_bot2').css('left', "110px");
             }
         }catch(e){}
     </script>
@@ -69,8 +71,13 @@
                     <input type="hidden" id="prom_type" name="prom_type" value="{$field.prom_type}">
                 </dl>
                 <script type="text/javascript">
+                    $(document).ready(function() {
+                        var shop_type = '{$field.prom_type}';
+                        if (0 <= parseInt(shop_type)) $('.pro-type .pro-type-item').eq(parseInt(shop_type)).click();
+                    });
+
                     function goodsType(obj, value) {
-                        $('.pro-type-item').removeClass('active');
+                        $('.pro-type .pro-type-item').removeClass('active');
                         $(obj).addClass('active');
                         $('#prom_type').val(value);
                         if (1 === parseInt(value)) {
@@ -159,6 +166,33 @@
                         <input type="hidden" id="tags_click_count">
                     </dd>
                 </dl>
+                <dl class="row">
+                    <dt class="tit"> <label>商品服务</label> </dt>
+                    <dd class="opt">
+                        <span id="goodsLabelList">
+                            {volist name='$goodsLabel' id='vo'}
+                            <label><input type="checkbox" name="goodsLabelID[]" value="{$vo.label_id}" {$vo.checked}>{$vo.label_title}</label>&nbsp;
+                            {/volist}
+                        </span>
+                        <a href="javascript:void(0);" data-href="{:url('ShopProduct/goods_label', ['aid'=>$field.aid])}" onclick="openFullframe(this, '设置商品服务', '80%', '80%');" class="ncap-btn ncap-btn-green">设置</a>
+                    </dd>
+                </dl>
+                <script type="text/javascript">
+                    function setGoodsLabelCallBack(res) {
+                        layer.closeAll();
+                        showSuccessMsg(res.msg, 1500);
+                        if (0 < parseInt(res.data.goodsLabel.length)) {
+                            var html = '';
+                            var goodsLabel = res.data.goodsLabel;
+                            for (var i = 0; i < goodsLabel.length; i++) {
+                                html += '<label><input type="checkbox" name="goodsLabelID[]" value="'+goodsLabel[i]['label_id']+'" '+goodsLabel[i]['checked']+'>'+goodsLabel[i]['label_title']+'</label> &nbsp;';
+                            }
+                            $('#goodsLabelList').empty().html(html);
+                        } else {
+                            $('#goodsLabelList').empty();
+                        }
+                    }
+                </script>
                 <dl class="row {empty name='$global.web_citysite_open'} none {/empty} ">
                     <dt class="tit"> <label>所属区域</label> </dt>
                     <dd class="opt"> 
@@ -364,6 +398,12 @@
                         UpPrice('{$field.users_price|default=0}');
                         // 合并单元格
                         MergeCells();
+                        var specChecked = false;
+                        $('#SpecSelectName .prset-box').each(function() {
+                            specChecked = $(this).find('.specNameSpan label input').is(':checked');
+                            if (true === specChecked) return false;
+                        })
+                        if (false === specChecked) $('#SpecSelectName .prset-box').eq(0).find('.specNameSpan label').show();
                     });
                 </script>
                 <script type="text/javascript" src="__SKIN__/js/admin_shop_product.js?v={$version}"></script>
@@ -743,7 +783,7 @@
 
             <!-- #weapp_div# -->
             <div class="ncap-form-default">
-                <div class="bot2" style="left: 110px;">
+                <div class="bot2" id="submit_bot2">
                     <input type="hidden" name="gourl" value="{$gourl|default=''}">
                     <input type="hidden" name="aid" value="{$field.aid|default='0'}">
                     <input type="hidden" name="editor_addonFieldExt" id="editor_addonFieldExt" value="">

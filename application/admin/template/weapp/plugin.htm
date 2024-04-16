@@ -167,61 +167,6 @@
         });
     });
 
-    function install(obj) {
-        var code = $(obj).attr('data-weapp_code');
-        var min_version = $(obj).attr('data-min_version');
-        pay(code,min_version);
-    }
-
-    function pay(code,min_version) {
-        layer_loading('正在处理');
-        $.ajax({
-            type: 'post',
-            url: "{$service_ey}/index.php?m=api&c=Pay&a=alipayPay",
-            data: {
-                domain: window.location.host,
-                code: code,
-                url: '__SITE_URL__'+eyou_basefile+'?m=admin&c=Weapp&a=pay_success&lang='+__lang__,
-                cms_version:"{$version}",
-                ip:"{$ip}",
-                n:"{$serial_number}"
-            },
-            dataType: 'jsonp',
-            jsonpCallback: "callback", /*设置一个回调函数，名字随便取，和下面的函数里的名字相同就行*/
-            success: function (res) {
-                layer.closeAll();
-                if (res.code == 0){
-                    layer.alert(res.msg, {icon: 2, title: false});
-                }else if (res.code == 2){
-                    remoteInstall(code,min_version)
-                }else if (res.code ==1){
-                    var payForm = $('#payForm');
-                    payForm.attr('action', res.payurl);
-                    payForm.submit();
-                    // window.open(res.payurl);
-                    layer.open({
-                        type: 1
-                        , btn: ['支付成功', '支付失败']
-                        , yes: function (index, layero) {
-                            remoteInstall(code,min_version);
-                        }
-                        ,btn2: function(index, layero){
-                            layer.close();
-                            // location.reload()//重新加载页面
-                        }
-                        , cancel: function () {
-                            //右上角关闭回调
-                            // return false //开启该代码可禁止点击该按钮关闭
-                        }
-                        ,shadeClose: true //点击遮罩关闭
-                        ,content: '\<\div style="padding:20px;">支付成功可下载安装该插件！\<\/div>'
-                    });
-                }
-
-            }
-        })
-    }
-
     function remoteInstall(code, min_version) {
         var form2 = $('#form2');
         form2.find('input[name=code]').val(code);

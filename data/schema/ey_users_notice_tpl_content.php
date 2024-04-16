@@ -90,4 +90,13 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'aid' => 
+  array (
+    'name' => 'aid',
+    'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
 );

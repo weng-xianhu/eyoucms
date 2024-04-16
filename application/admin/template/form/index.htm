@@ -81,7 +81,7 @@
                       <div class="guestbook-box">
                         <div class="guestbook-box-header">
                             <span>
-                                <a href="{:url('Form/index', ['typeid'=>$vo.typeid,'form_type'=>$vo['form_type']])}">{$vo.form_name|default='<i class="red">数据出错！</i>'}</a>
+                                <a href="{:url('Form/index', ['typeid'=>$vo.typeid,'form_type'=>$vo['form_type']])}">{$vo.form_name|default='<i class="red">数据出错！</i>'}-{$vo.aid}</a>
                             </span>
                             <div class="more-wrapper">
                                 <div id="td_is_read_{$vo.aid}">
@@ -109,9 +109,31 @@
                           </div>
                           <div class="guestbook-btn-more">
                             <a href="javascript:void(0);" data-is_star="{$vo['is_star']}" data-btn1="{empty name='$vo.is_star'}设为星标{else /}取消星标{/empty}" data-href="{:url('Guestbook/details', ['aid'=>$vo['aid'],'form_type'=>$vo['form_type']])}" onclick="openDetails(this, {$vo.aid});">查看</a>
+                              {notempty name="$vo.open_examine"}
+                              {if condition="0 == $vo.examine"}
+                              <i></i>
+                              <a href="javascript:void(0);" data-aid="{$vo.aid}" onclick="to_examine(this);">待审核</a>
+                              {elseif condition="1 == $vo.examine"/}
+                              <i></i>
+                              <a href="javascript:void(0);" class="grey">已审核</a>
+                              {elseif condition="2 == $vo.examine"/}
+                              <i></i>
+                              <a href="javascript:void(0);" class="grey">已拒绝</a>
+                              {/if}
+                              {/notempty}
+
+                            {notempty name="$vo.open_reply"}
+                              {empty name="$vo.reply"}
+                                <i></i>
+                                <a href="javascript:void(0);" data-aid="{$vo.aid}" onclick="guest_reply(this);">待回复</a>
+                              {else/}
+                                <i></i>
+                                <a href="javascript:void(0);" class="grey" title="{$vo.reply}">已回复</a>
+                              {/empty}
+                             {/notempty}
                             {eq name="'Guestbook@del'|is_check_access" value="1"}
-                            <i></i>
-                            <a href="javascript:void(0);" data-url="{:url('Guestbook/del',['form_type'=>$vo['form_type']])}" data-id="{$vo.aid}" onClick="delfun(this);">删除</a>
+                                <i></i>
+                                <a href="javascript:void(0);" data-url="{:url('Guestbook/del',['form_type'=>$vo['form_type']])}" data-id="{$vo.aid}" onClick="delfun(this);">删除</a>
                             {/eq}
                           </div>
                         </div>
@@ -256,6 +278,95 @@
                     $('.layui-layer-btn0').html(btn1).addClass('layui-layer-btn-star');
                 }
             }
+        });
+    }
+
+    function guest_reply(obj){
+        var aid = $(obj).attr('data-aid');
+        layer.prompt({
+            formType: 2,
+            shade: layer_shade,
+            placeholder: '输入留言回复',
+            title: '请输入留言回复',
+            btnAlign:'r',
+            closeBtn: 3,
+            value: $(obj).attr('data-reply'),
+        }, function(value, index, elem){
+            layer.close(index);
+            $.ajax({
+                type : 'post',
+                url : "{:url('Form/editReply')}",
+                data : {aid:aid,reply:value, _ajax:1},
+                dataType : 'json',
+                success : function(res){
+                    layer.closeAll();
+                    if(res.code == 1){
+                        layer.msg(res.msg, {icon: 1, time:1000}, function(){
+                            window.location.reload();
+                        });
+                    }else{
+                        layer.msg(res.msg, {icon: 2, time:1000});
+                    }
+                },
+                error:function(){
+                    layer.closeAll();
+                    layer.alert('未知错误', {icon: 2, title:false});
+                }
+            })
+
+        });
+
+    }
+
+    function to_examine(obj) {
+        layer.confirm('确认审核表单信息，并显示在前端', {
+            area: ['480px', '190px'],
+            shade: layer_shade,
+            title: '提示',
+            closeBtn: 3,
+            btnAlign:'r',
+            btn: ['审核','拒绝','取消'],
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
+        }, function() {
+            layer_loading('正在处理');
+            $.ajax({
+                url: "{:url('Form/to_examine')}",
+                data: {aid: $(obj).data('aid'), examine: 1, _ajax: 1},
+                type:'post',
+                dataType:'json',
+                success:function(res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {time: 1500},function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        layer.msg(res.msg, {time: 1500});
+                    }
+                }
+            });
+        }, function() {
+            layer_loading('正在处理');
+            $.ajax({
+                url: "{:url('Form/to_examine')}",
+                data: {aid: $(obj).data('aid'), examine: 2, _ajax: 1},
+                type:'post',
+                dataType:'json',
+                success:function(res) {
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {time: 1500},function(){
+                            window.location.reload();
+                        });
+                    } else {
+                        layer.msg(res.msg, {time: 1500});
+                    }
+                }
+            });
+        },function(index) {
+            layer.closeAll(index);
         });
     }
 </script>

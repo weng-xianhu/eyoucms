@@ -684,7 +684,7 @@ class Shop extends UserBase
         if (!empty($post['deliveryShow']) && 1 === intval($post['deliveryShow'])) {
             if (empty($post['addr_id']) || $post['addr_id'] == 'undefined') $this->error('请添加收货地址');
         }
-        if (empty($post['pay_type'])) $this->error('请选择支付方式');
+        if (empty($post['pay_type'])) $this->error(foreign_lang('users15', get_home_lang()));
 
         // 获取商城配置信息
         $ConfigData = getUsersConfigData('shop');
@@ -956,6 +956,13 @@ class Shop extends UserBase
                             // 统计销售额
                             eyou_statistics_data(2);
                             eyou_statistics_data(3, $OrderData['order_amount']);
+
+                            // 订单支付通知
+                            $params = [
+                               'users_id' => $post['users_id'],
+                               'result_id' => $OrderId,
+                            ];
+                            eyou_send_notice(9, $params);
                             $result['tmplData'] = [];
 
                             // 邮箱发送

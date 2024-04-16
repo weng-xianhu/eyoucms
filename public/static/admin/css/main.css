@@ -1077,7 +1077,7 @@ width: 150px; height: 20px; margin-bottom: 5px; *zoom: 1;
 .item-title a.return i{font-size: 16px;margin-right: 4px;color: #5c5c5c;}
 .item-title a.tit_z {height: 43px;line-height: 43px;font-size: 18px;color: #373737;cursor: pointer;position: relative;}
 /*注释说明帮助*/
-.explanation { color: #0ba4da !important; background-color: rgba(79, 192, 232, 0.11) !important; display: block; width: 100%; height: 100%; padding: 6px 0; position: relative; overflow: hidden; }
+.explanation { color: #0ba4da !important; background-color: rgba(79, 192, 232, 0.11) !important; display: block; width: 100%; height: 100%; padding: 10px 0; position: relative; overflow: hidden; }
 /*.explanation:before{content: "";background-image: url(../images/wave.png); width: 100%;height: 100%;position: absolute;top: 0px;left: 0px;border-radius: 5px;background-repeat: no-repeat;background-size: cover;}*/
 .explanation .title {padding: 0 10px !important;height: unset !important;line-height: unset;white-space: nowrap;margin-bottom: 8px;position: relative;cursor: pointer; }
 .explanation .title h4 { font-size: 14px; font-weight: normal; line-height: 20px; height: 20px; display: inline-block; }
@@ -1085,6 +1085,7 @@ width: 150px; height: 20px; margin-bottom: 5px; *zoom: 1;
 .explanation .title span { background: url(../images/combine_img.png) no-repeat -580px -200px; width: 20px; height: 20px; position: absolute; z-index: 1; top: -6px; right: 0px; }
 .explanation ul { padding: 0 10px;color: #748A8F; margin-left: 10px; }
 .explanation li { line-height: 20px; background: url(../images/macro_arrow.gif) no-repeat 0 10px; padding-left: 10px; margin-bottom: 4px;  }
+.explanation li:last-child { margin-bottom: 0;  }
 /* 宽度\高度\尺寸
 ------------------------------------------------------------------- */
 .w18pre { width: 18%; }
@@ -2439,12 +2440,14 @@ div.bot3 .item-selected{
 }
 .plug-item-content .plug-item-top{
     overflow: hidden;
-    padding:10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: initial;
 }
 
 .plug-item-content .plug-item-top .plug-img {
-    float: left;
-    display: block;
     margin-right: 10px;
     width: 80px;
     height: 80px;
@@ -2455,25 +2458,19 @@ div.bot3 .item-selected{
 }
 
 .plug-item-content .plug-item-top .plug-text {
-    display: flex;
-    height: 84px;
-    flex-direction: column;
-    justify-content: center;
-    text-align: left;
+    overflow: hidden;
 }
 
 .plug-item-content .plug-item-top .plug-text .plug-text-title {
+    overflow:hidden;
+    text-overflow:ellipsis; 
+    white-space:nowrap;
     color: #333;
     font-size: 16px;
     line-height: 24px;
     height: 24px;
 }
 .plug-item-content .plug-item-top .plug-text .plug-text-title .title-l{
-    display: inline-block;
-    width: calc(100% - 175px);
-    overflow:hidden;
-    text-overflow:ellipsis; 
-    white-space:nowrap;
 }
 .plug-item-content .plug-item-top .plug-text .plug-text-title .title-r{
     width: 175px;
@@ -2772,12 +2769,6 @@ div.bot3 .item-selected{
     box-sizing: border-box;
     -webkit-box-sizing: border-box;
 }
-.on-off_panel .on-off_list .marketing-nav li{
-    width: 20%;
-}
-.on-off_panel .on-off_list ul.marketing-nav > li:nth-child(6n) {
-  padding-right:15px;
-}
 .on-off_panel .on-off_list li a{
     display: flex;
     align-items: center;
@@ -2864,6 +2855,157 @@ div.bot3 .item-selected{
 .on-off_panel .on-off_list.b-icon .more_li i{
     font-size: 20px;
     margin-right: 10px;
+}
+/* 营销 */
+.marketing_panel {
+    position: relative;
+    box-sizing: border-box;
+    height: auto;
+    width: 100%;
+    overflow: hidden;
+    transition: all .1s ease-out;
+}
+.marketing_panel .title{
+    position: relative;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+    line-height: 22px;
+    display: block;
+    width: 100%;
+    padding: 5px 0 5px 14px;
+}
+.marketing_panel .title::before{
+    position: absolute;
+    left: 0;
+    top:50%;
+    margin-top: -9px;
+    content: "";
+    display: inline-block;
+    height:18px;
+    width: 4px;
+    background-color: #197971;
+    border-radius: 2px;
+}
+.marketing_panel .marketing_list {
+    margin-bottom: 30px;
+}
+.marketing_panel .marketing_list ul {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0 1px;
+}
+.marketing_panel .marketing_list .marketing-nav li{
+    padding: 15px 15px;
+    margin: 0 10px 10px 0;
+    width: calc((100% - 40px) / 5);
+    background-color: #fff;
+    border-radius: 2px;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-shadow: 0 1px 8px -2px rgba(0,0,0,.2);
+    transition: -webkit-transform .3s ease,-webkit-box-shadow .3s ease;
+    transition: transform .3s ease,box-shadow .3s ease;
+    transition: transform .3s ease,box-shadow .3s ease,-webkit-transform .3s ease,-webkit-box-shadow .3s ease;
+}
+.marketing_panel .marketing_list ul.marketing-nav li:hover {
+    box-shadow: 0 2px 10px 0px rgba(197,197,197,0.53);
+    transform: translate3d(0,0,0);
+}
+.marketing_panel .marketing_list ul.marketing-nav li:nth-child(5n) {
+    margin-right:0;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my {
+    display: flex;
+    align-items: center;
+    color: #333;
+    font-size: 15px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background-color: #ffffff;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my .icon {
+    width: 56px;
+    height: 56px;
+    line-height: 56px;
+    display: inline-block;
+    text-align: center;
+    background-color: #eee;
+    border-radius: 50px;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my .icon i {
+    font-size: 30px !important;
+    margin-right: 0 !important;
+    color: #fff;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my .pic {
+    width: 56px;
+    height: 56px;
+    display: inline-block;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my .pic img{
+    width: 100%;
+    height: 100%;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my span {
+    margin-left: 10px;
+    flex: 1;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 16px;
+    line-height: 1.5;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my span>h2 {
+    display: block;
+    font-size: 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 10px;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my span>h2 a {
+    color: #333;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my span>h2 a:hover {
+    color: #333;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my span>p {
+    font-size: 12px;
+    color: #999;
+    display: block;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my span>p a{
+    cursor: pointer;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my .button a {
+    padding: 2px 5px;
+    font-size: 14px;
+    border-width: 1px;
+    border-style: outset;
+    border: 1px solid #3398cc;
+    color: #3398cc;
+    background: transparent;
+    outline: none;
+    border-radius: 4px;
+    line-height: inherit;
+    cursor: pointer;
+}
+.marketing_panel .marketing_list ul.marketing-nav li .my .button a.yaz {
+    padding: 2px 5px;
+    font-size: 14px;
+    border-width: 1px;
+    border-style: outset;
+    border: 1px solid rgb(158, 163, 167);
+    color: rgb(158, 163, 167);
+    background: transparent;
+    outline: none;
+    border-radius: 4px;
+    line-height: inherit;
+    cursor: pointer;
 }
     
 /*广告图片列表*/
@@ -3807,7 +3949,6 @@ cursor: pointer; }
 }
 .flexigrid-xin .mDiv .ftitle {
     height: 40px;
-    line-height: 34px;
     margin-bottom: 0;
 }
 .flexigrid-xin .tableDiv thead {

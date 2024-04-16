@@ -10,11 +10,11 @@
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
                     <thead>
                     <tr>
-                        <th class="sign w20" axis="col0">
-                            <div class="tc"></div>
+                        <th abbr="ac_id" axis="col4" class="w250">
+                            <div class="text-l10">菜单名称</div>
                         </th>
                         <th abbr="ac_id" axis="col4">
-                            <div class="text-l10">菜单名称</div>
+                            <div class="tl text-l10">菜单选择</div>
                         </th>
                         <th abbr="article_time" axis="col4" class="w60">
                             <div class="tc">显示</div>
@@ -25,6 +25,9 @@
                         <th abbr="article_time" axis="col6" class="w60">
                             <div class="tc">排序</div>
                         </th>
+                        <th axis="col1" class="w150">
+                            <div class="tc">操作</div>
+                        </th>
                     </tr>
                     </thead>
                 </table>
@@ -32,8 +35,9 @@
         </div>
         <div class="bDiv" style="height: auto; min-height: auto;">
             <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <form action="" id="post_form">
                 <table style="width: 100%">
-                    <tbody>
+                    <tbody id="Template">
                     {empty name="list"}
                         <tr>
                             <div class="no_row">
@@ -42,17 +46,25 @@
                         </tr>
                     {else/}
                         {foreach name="list" item="vo" key="k" }
-                        <tr>
-                            <td class="sign">
-                                <div class="w20 tc">
+                        <tr class="tr" id="tr_{$k}">
+                            <td>
+                                <div class="w250 pl10">
+                                    <input type="text" id="title_{$k}" name="data[{$k}][title]" value="{$vo.title}">
+                                    <input type="hidden" name="data[{$k}][id]" value="{$vo.id}">
                                 </div>
                             </td>
                             <td style="width: 100%">
-                                <div style="">
-                                    <input type="text" name="title" value="{$vo.title}" onchange="changeTableVal('users_menu','id','{$vo.id}','title',this);">
+                                <div style="display: flex;">
+                                    <select name="data[{$k}][type]" onchange="chooseMenu({$k},this);">
+                                        <option value="">请选择</option>
+                                        {eyou:volist name="$menu_list" id="voo"}
+                                        <option value="{$voo.id}" data-title="{$voo.title}" {if condition="$vo.type==$voo.id"}selected{/if}>{$voo.title}</option>
+                                        {/eyou:volist}
+                                    </select>
+                                    <input class="ml10" type="text" name="data[{$k}][mca]" id="custom_url_{$k}" value="{$vo.mca}" style="width: 200px;{neq name='$vo.type' value='7'}display:none;{/neq}" placeholder="请输入自定义链接">
                                 </div>
                             </td>
-                            <td class="">
+                            <td>
                                 <div class="w60 tc">
                                     {eq name="$vo['status']" value='1'}
                                         <span class="yes" onClick="changeTableVal('users_menu','id','{$vo.id}','status',this);"><i class="fa fa-check-circle"></i>是</span>
@@ -61,7 +73,7 @@
                                     {/eq}
                                 </div>
                             </td>
-                            <td class="">
+                            <td>
                                 <div class="w100 tc">
                                     {eq name="$vo['is_userpage']" value='1'}
                                         <span class="yes" onClick="changeTableVal('users_menu','id','{$vo.id}','is_userpage',this);"><i class="fa fa-check-circle"></i>是</span>
@@ -72,7 +84,12 @@
                             </td>
                             <td class="sort">
                                 <div class="w60 tc">
-                                    <input type="text" onchange="changeTableVal('users_menu','id','{$vo.id}','sort_order',this);" size="4"  value="{$vo.sort_order}" class="tc" />
+                                    <input type="text" name="data[{$k}][sort_order]" size="4"  value="{$vo.sort_order}" class="tc" />
+                                </div>
+                            </td>
+                            <td  class="operation">
+                                <div class="w150 tc">
+                                    <a class="btn red"  href="javascript:void(0);" data-url="{:url('Member/del_users_menu')}" data-id="{$vo.id}" data-title="{$vo.title}" onClick="usersdel(this);">删除</a>
                                 </div>
                             </td>
                         </tr>
@@ -80,16 +97,28 @@
                     {/empty}
                     </tbody>
                 </table>
-                
+                </form>
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
-        <div class="tDiv">
-            <div class="tDiv2">
-                {include file="public/page" /}
+        <div class="footer-oper">
+            {eq name="$Think.const.CONTROLLER_NAME.'@save_users_menu'|is_check_access" value="1"}
+            <div class="fbutton">
+                <a href="javascript:void(0);" data-url="{:url('Member/save_users_menu', ['_ajax'=>1])}" onclick="AddMenuData(this);" class="layui-btn layui-btn-primary">
+                    <span>保存</span>
+                </a>
             </div>
-            <div style="clear:both"></div>
+
+            <div class="fbutton">
+                <a href="javascript:void(0);" onclick="AddLevelType();" class="layui-btn layui-btn-primary">
+                    <span>新增</span>
+                </a>
+            </div>
+            {/eq}
+
+            {include file="public/page" /}
         </div>
+        <div style="clear:both"></div>
     </div>
 </div>
 <script>
@@ -104,6 +133,148 @@
             location.href = location.href;
         });
     });
+
+    function chooseMenu(key,obj) {
+        if ($(obj).find("option:selected").val() == 7) {
+            $("#custom_url_" + key).val('');
+            $("#custom_url_" + key).show();
+        } else {
+            $("#custom_url_" + key).hide();
+        }
+        var title = $(obj).find("option:selected").data('title');
+        $("#title_" + key).val(title);
+    }
+
+    function changeMenuField(field,trid,obj) {
+    // <span class="yes" onClick="changeTableVal('users_menu','id','{$vo.id}','is_userpage',this);"><i class="fa fa-check-circle"></i>是</span>
+    //         <span class="no" onClick="changeTableVal('users_menu','id','{$vo.id}','is_userpage',this);"><i class="fa fa-ban"></i>否</span>
+
+        var val = $("#"+field+'_'+trid).val();
+        if (1 == val) {
+            $(obj).removeClass('yes');
+            $(obj).addClass('no');
+            $(obj).html("<i class=\"fa fa-ban\"></i>否");
+            $("#"+field+'_'+trid).val(0);
+        }else{
+            $("#"+field+'_'+trid).val(1);
+            $(obj).removeClass('no');
+            $(obj).addClass('yes');
+            $(obj).html("<i class=\"fa fa-check-circle\"></i>是");
+        }
+    }
+
+    // tr数,取唯一标识
+    var tr_id = $('#Template .tr').length;
+
+    function AddLevelType(){
+        var AddHtml = [];
+        AddHtml +=
+            '<tr class="tr" id="tr_'+tr_id+'">'+
+            '<td>\n' +
+            '<div class="w250 pl10">'+
+            '   <input type="text" id="title_'+tr_id+'" name="data['+tr_id+'][title]" value="">\n' +
+            '   <input type="hidden" name="data['+tr_id+'][id]" value="">'+
+            '</div>\n' +
+            '</td>'+
+
+            '<td style="width: 100%">\n' +
+            '   <div style="display: flex;">\n' +
+            '   <select name="data['+tr_id+'][type]" onchange="chooseMenu('+tr_id+',this);">\n' +
+            '   {eyou:volist name="$menu_list" id="voo"}\n' +
+            '   <option value="{$voo.id}" data-title="{$voo.title}" >{$voo.title}</option>\n' +
+            '   {/eyou:volist}\n' +
+            '   </select>\n' +
+            '   <input class="ml10" type="text" name="data['+tr_id+'][mca]" id="custom_url_'+tr_id+'" style="width: 200px;display:none;" placeholder="请输入自定义链接">\n' +
+            '   </div>\n' +
+            '</td>'+
+            '<td>\n' +
+            '                                <div class="w60 tc">\n' +
+            '                                        <span class="yes" onClick="changeMenuField(\'status\','+tr_id+',this);"><i class="fa fa-check-circle"></i>是</span>\n' +
+            '                                       <input class="ml10" type="hidden" name="data['+tr_id+'][status]" id="status_'+tr_id+'" value="1">\n' +
+            '                                </div>\n' +
+            '                            </td>\n' +
+            '                            <td>\n' +
+            '                                <div class="w100 tc">\n' +
+            '                                       <span class="no"><i class="fa fa-ban"></i>否</span>\n\n' +
+            '                                </div>\n' +
+            '                            </td>\n' +
+            '                            <td class="sort">\n' +
+            '                                <div class="w60 tc">\n' +
+            '                                    <input type="text" name="data['+tr_id+'][sort_order]" size="4"  value="100" class="tc" />\n' +
+            '                                </div>\n' +
+            '                            </td>\n' +
+            '                            <td  class="operation">\n' +
+            '                                <div class="w150 tc">\n' +
+            '                                    <a class="btn red"  href="javascript:void(0);"  data-trid="tr_'+tr_id+'" onClick="DelHtml(this);">删除</a>\n' +
+            '                                </div>\n' +
+            '                            </td>'+
+            '</tr>';
+        $('#Template').append(AddHtml);
+        tr_id += 1;
+    }
+
+    // 删除未保存的级别
+    function DelHtml(obj){
+        $('#'+$(obj).attr('data-trid')).remove();
+    }
+
+    // 提交
+    function AddMenuData(obj){
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : $(obj).attr('data-url'),
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(data){
+                layer.closeAll();
+                if(data.code == 1){
+                    layer.msg(data.msg, {icon: 1, time:1000},function(){
+                        window.location.reload();
+                    });
+                }else{
+                    layer.alert(data.msg, {icon: 2, title:false});
+                }
+            }
+        })
+    }
+
+    // 删除
+    function usersdel(obj){
+        layer.confirm('确认删除菜单-'+$(obj).attr('data-title')+'？', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            btn: ['确定','取消'] ,//按钮
+            success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            }
+        }, function(){
+            layer_loading('正在处理');
+            // 确定
+            $.ajax({
+                type : 'post',
+                url : $(obj).attr('data-url'),
+                data : {del_id:$(obj).attr('data-id'), _ajax:1},
+                dataType : 'json',
+                success : function(data){
+                    layer.closeAll();
+                    if(data.code == 1){
+                        layer.msg(data.msg, {icon: 1});
+                        window.location.reload();
+                    }else{
+                        layer.alert(data.msg, {icon: 2, title:false});
+                    }
+                }
+            })
+        }, function(index){
+            layer.close(index);
+        });
+        return false;
+    }
 </script>
 
 {include file="public/footer" /}

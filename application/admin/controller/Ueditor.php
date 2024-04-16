@@ -108,14 +108,6 @@ class Ueditor extends Base
             case 'uploadimage':
                 $fieldName = $CONFIG2['imageFieldName'];
                 $result = $this->upFile($fieldName);
-
-                /*同步到第三方对象存储空间*/
-                $result = json_decode($result, true);
-                $bucket_data = SynImageObjectBucket($result['url']);
-                $result = array_merge($result, $bucket_data);
-                $result = json_encode($result);
-                /*end*/
-
                 break;
             /* 上传涂鸦 */
             case 'uploadscrawl':
@@ -276,7 +268,7 @@ class Ueditor extends Base
             $return_url = '/'.UPLOAD_PATH.$this->savePath.$info->getSaveName();
             $data = array(
                 'state' => 'SUCCESS',
-                'url' => $return_url,
+                'url' => ROOT_DIR.$return_url,
                 'title' => '',//$info->getSaveName(),
                 'original' => $file->getInfo('name'),
                 'time' => date("Y-m-d H:i:s"),
@@ -289,8 +281,11 @@ class Ueditor extends Base
             $fileextArr = explode(',', $this->image_type);
             if (stristr($file_type, 'image') && 'ico' != $file_ext) {
                 print_water($data['url']);
+                /*同步到第三方对象存储空间*/
+                $bucket_data = SynImageObjectBucket($data['url']);
+                $data = array_merge($data, $bucket_data);
+                /*end*/
             }
-            $data['url'] = ROOT_DIR.$data['url']; // 支持子目录
             
             /*-------------------------保存上传图片记录 start-----------------------*/
             $img_info = [];
@@ -298,7 +293,10 @@ class Ueditor extends Base
                 $img_info = @getimagesize('.'.$return_url);
                 $width = isset($img_info[0]) ? $img_info[0] : 0;
                 $height = isset($img_info[1]) ? $img_info[1] : 0;
-                $mime = isset($img_info['mime']) ? $img_info['mime'] : $info->getMime();
+                $mime = '';
+                if (!is_http_url($data['url'])) {
+                    $mime = isset($img_info['mime']) ? $img_info['mime'] : $info->getMime();
+                }
 
                 $data['time'] = getTime();
                 $data['width'] = $width;

@@ -139,7 +139,7 @@
                                         <div id="upgrade_filelist" style="display:none;"></div>
                                         <div id="upgrade_intro" style="display:none;"></div>
                                         <div id="upgrade_notice" style="display:none;"></div>
-                                        <a href="javascript:void(0);" id="a_upgrade" data-version="" data-max_version="" data-curent_version="{$sys_info.curent_version|default='v1.0'}" data-iframe="workspace" title="" data-tips_url="{:url('Upgrade/setPopupUpgrade')}" data-upgrade_url="{:url('Upgrade/OneKeyUpgrade')}" data-check_authority="{:url('Upgrade/check_authority')}">{if condition='!empty($security_patch)'}正在版本检测中……{else/}{eq name="upgrade" value="true"}正在版本检测中……{else/}已是最新版{/eq}{/if}</a>
+                                        <a href="javascript:void(0);" id="a_upgrade" data-version="" data-max_version="" data-curent_version="{$sys_info.curent_version|default='v1.0'}" data-iframe="workspace" title="" data-tips_url="{:url('Upgrade/setPopupUpgrade')}" data-upgrade_url="{:url('Upgrade/OneKeyUpgrade')}" data-check_authority="{:url('Upgrade/check_authority')}" data-php_servicemeal="{$php_servicemeal|default=0}">{if condition='!empty($security_patch)'}正在版本检测中……{else/}{eq name="upgrade" value="true"}正在版本检测中……{else/}已是最新版{/eq}{/if}</a>
                                     </td>
                                     <td class="gray_bg">当前版本：</td>
                                     <td>{$sys_info.curent_version|default='v1.0'}</td>
@@ -309,6 +309,13 @@
                             {if condition="-1 != $web_show_popup_upgrade AND (0 >= $Think.session.admin_info.role_id OR 1 == $Think.session.admin_info.auth_role_info.online_update)"}
                                 btn_upgrade($("#a_upgrade"), 1);
                             {/if}
+                        } else if (99 == res.data.code) {
+                            try {
+                                $('#a_upgrade', window.parent.document).attr('data-max_version',res.data.max_version).show();
+                            } catch(e) {}
+
+                            $('#a_upgrade').attr('data-max_version', res.data.max_version).attr('title', res.data.tips);
+                            $('#a_upgrade').html(res.data.msg).css('color', '#F00');
                         } else {
                             $('#td_upgrade_msg').html(res.data.msg);
                         }

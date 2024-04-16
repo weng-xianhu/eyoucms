@@ -58,6 +58,9 @@ class OrderPreHandle extends Model
 
             // 查询 分销商的分销订单执行分销订单结算分佣处理
             if ('users' == $action) $this->eyou_dealerOrderSettlementHandle();
+
+            // 查询 (尚未累计用户消费额 && 不可维权) 订单，执行累计用户消费额
+            if ('users' == $action) $this->eyou_handleUsersOrderTotalAmount();
         }
     }
 
@@ -382,4 +385,32 @@ class OrderPreHandle extends Model
         }
     }
 
+    // 查询 (尚未累计用户消费额 && 不可维权) 订单，执行累计用户消费额
+    private function eyou_handleUsersOrderTotalAmount()
+    {
+        // 查询订单
+        $where = [
+            'order_status' => 3,
+            'allow_service' => 1,
+            'is_total_amount' => 0,
+            'order_amount' => ['>', 0],
+            'users_id' => intval($this->users_id),
+        ];
+        $usersData = GetUsersLatestData($this->users_id);
+        // 查询订单id数组用于添加订单操作记录
+        $shopOrder = Db::name('shop_order')->field('order_id, users_id, order_amount as unified_amount, is_total_amount')->where($where)->select();
+        if (!empty($shopOrder)) {
+            // 处理会员订单累计总额，用于会员自动升级
+            $usersLevelModel = model('UsersLevel');
+            foreach ($shopOrder as $key => $value) {
+                if (!empty($usersData)) $usersLevelModel->handleUsersOrderTotalAmount($usersData, $value);
+            }
+            // 批量修改订单状态
+            $update = [
+                'is_total_amount' => 1,
+                'update_time' => getTime(),
+            ];
+            Db::name('shop_order')->where($where)->update($update);
+        }
+    }
 }

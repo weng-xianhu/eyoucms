@@ -46,6 +46,7 @@ class Ajax extends Base {
         }
         $this->success("移动排序成功");
     }
+    
     /*
      *  添加、删除左侧菜单栏目
      */
@@ -114,6 +115,7 @@ class Ajax extends Base {
 
         $this->error('请求错误');
     }
+
     /**
      * 进入欢迎页面需要异步处理的业务
      */
@@ -153,23 +155,42 @@ class Ajax extends Base {
     public function check_upgrade_version()
     {
         \think\Session::pause(); // 暂停session，防止session阻塞机制
-        $upgradeLogic = new \app\admin\logic\UpgradeLogic;
-        $security_patch = tpSetting('upgrade.upgrade_security_patch');
-        if (!empty($security_patch) && 1 == $security_patch) {
-            $upgradeMsg = $upgradeLogic->checkSecurityVersion(); // 安全补丁包消息
+        if ($this->admin_lang != $this->main_lang) {
+            $upgradeMsg = ['code' => 1, 'msg' => '已是最新版'];
         } else {
-            $upgradeMsg = $upgradeLogic->checkVersion(); // 升级包消息
-        }
+            if ($this->php_servicemeal > 0) {
+                $upgradeLogic = new \app\admin\logic\UpgradeLogic;
+                $security_patch = tpSetting('upgrade.upgrade_security_patch');
+                if (!empty($security_patch) && 1 == $security_patch) {
+                    $upgradeMsg = $upgradeLogic->checkSecurityVersion(); // 安全补丁包消息
+                } else {
+                    $upgradeMsg = $upgradeLogic->checkVersion(); // 升级包消息
+                }
+            } else {
+                $cur_version = getCmsVersion();
+                $file_url = 'ht'.'tp'.':/'.'/'.'up'.'da'.'te'.'.e'.'yo'.'uc'.'m'.'s.'.'co'.'m/'.'pa'.'ck'.'ag'.'e/'.'ve'.'rs'.'io'.'n.'.'tx'.'t';
+                $max_version = @file_get_contents($file_url);
+                $max_version = empty($max_version) ? '' : $max_version;
+                if (!empty($max_version) && $cur_version >= $max_version) {
+                    $upgradeMsg = ['code' => 1, 'msg' => '已是最新版'];
+                } else {
+                    $data = [
+                        'max_version' => $max_version,
+                        'tips' => "检测到新版本[点击查看]",
+                    ];
+                    $upgradeMsg = ['code' => 99, 'msg' => "检测到新版本{$max_version}[点击查看]", 'data'=>$data];
+                }
+            }
 
-        // 权限控制 by 小虎哥
-        $admin_info = session('admin_info');
-        if (0 < intval($admin_info['role_id'])) {
-            $auth_role_info = $admin_info['auth_role_info'];
-            if (isset($auth_role_info['online_update']) && 1 != $auth_role_info['online_update']) {
-                $upgradeMsg = ['code' => 1, 'msg' => '已是最新版'];
+            // 权限控制 by 小虎哥
+            $admin_info = session('admin_info');
+            if (0 < intval($admin_info['role_id'])) {
+                $auth_role_info = $admin_info['auth_role_info'];
+                if (isset($auth_role_info['online_update']) && 1 != $auth_role_info['online_update']) {
+                    $upgradeMsg = ['code' => 1, 'msg' => '已是最新版'];
+                }
             }
         }
-
         $this->success('检测成功', null, $upgradeMsg);  
     }
 

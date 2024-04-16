@@ -94,11 +94,11 @@
                                                     <div class="source">
                                                         <div class="users-tooltip">
                                                             <div class="users-tooltip-rel" style=" display: table-cell; ">
-                                                                {eq name='$info.is_mobile' value='1'}
+                                                                {if condition="$info['is_mobile'] == 1 && !empty($info['mobile'])"}
                                                                 <img src="__SKIN__/images/r_phone.png">
                                                                 {else /}
                                                                 <img src="__SKIN__/images/r_phone_no.png">
-                                                                {/eq}
+                                                                {/if}
                                                             </div>
                                                         </div>
                                                         <div class="users-tooltip">
@@ -234,7 +234,7 @@
                                                 <button type="button" class="users-btn users-btn-text"
                                                         href="javascript:void(0);"
                                                         data-href="{:url('Member/users_edit_money',['users_id'=>$info.users_id])}"
-                                                        onclick="openFullframe(this, '余额充值', '640px', '430px');">
+                                                        onclick="openFullframe(this, '余额充值', '640px', '490px');">
                                                     <span>充值</span>
                                                 </button>
                                                 <button type="button" class="users-btn users-btn-text" onclick="openFullframe(this, '余额明细', '1150px', '720px');"
@@ -256,7 +256,7 @@
                                                 <button type="button" class="users-btn users-btn-text"
                                                         href="javascript:void(0);"
                                                         data-href="{:url('Member/users_edit_score',['users_id'=>$info.users_id])}"
-                                                        onclick="openFullframe(this, '积分充值', '640px', '430px');">
+                                                        onclick="openFullframe(this, '积分充值', '640px', '490px');">
                                                     <span>充值</span>
                                                 </button>
                                                 <button type="button" class="users-btn users-btn-text"
@@ -273,7 +273,7 @@
                                 </div>
                             </div>
                         </div>
-                    {if condition='1 == $usersConfig.shop_open && 1 == $usersConfig.pay_open'}
+                        {if condition='1 == $usersConfig.shop_open && 1 == $usersConfig.pay_open'}
                         <div class="deal">
                             <div class="form-title hasMargin">
                                 订单信息
@@ -315,7 +315,8 @@
                                 </div>
                             </div>
                         </div>
-                    {/if}
+                        {/if}
+                    </div>
                 </div>
             </form>
         </div>

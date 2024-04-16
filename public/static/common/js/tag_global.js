@@ -1,3 +1,25 @@
+// PC端编辑器工具
+var ueditor_toolbars = [[
+    'fullscreen', 'source', '|', 'undo', 'redo', '|',
+    'bold', 'italic', 'underline', 'fontborder', 'strikethrough', 'superscript', 'subscript', 'selectall', 'removeformat', 'formatmatch', 'autotypeset', 'blockquote', 'pasteplain', '|', 'forecolor', 'backcolor', 'insertorderedlist', 'insertunorderedlist', '|',
+    'rowspacingtop', 'rowspacingbottom', 'lineheight', '|',
+    'customstyle', 'paragraph', 'fontfamily', 'fontsize', '|',
+    'directionalityltr', 'directionalityrtl', 'indent', '|',
+    'justifyleft', 'justifycenter', 'justifyright', 'justifyjustify', '|', 'touppercase', 'tolowercase', '|',
+    'link', 'unlink', 'anchor', '|', 'imagenone', 'imageleft', 'imageright', 'imagecenter', '|',
+    'simpleupload', 'insertimage', 'emotion', 'insertvideo', 'attachment', 'map', 'insertframe', 'insertcode', '|',
+    'horizontal', 'spechars', '|',
+    'inserttable', 'deletetable', 'insertparagraphbeforetable', 'insertrow', 'deleterow', 'insertcol', 'deletecol', 'mergecells', 'mergeright', 'mergedown', 'splittocells', 'splittorows', 'splittocols', 'charts', '|',
+    'preview', 'searchreplace', 'drafts'
+]];
+// 手机端编辑器工具 previewmobile
+var ueditor_toolbars_ey_m = [[
+    'fullscreen', 'source', '|', 'removeformat' , 'undo', 'redo', '|',
+    'fontsize', 'forecolor', 'bold', 'italic', 'underline', '|',
+    'justifyleft', 'justifycenter', 'justifyright', 'justifyjustify', '|',
+    'lineheight', 'simpleupload', 'insertimage', 'link', 'unlink', 'anchor', '|',
+    'insertvideo'
+]];
 // 当分页不足以显示隐藏div
 $(function() {
     if (parseInt($('div.dataTables_paginate li').length) > 0) {
@@ -30,7 +52,7 @@ function showMbErrorMsg(msg) {
 
 function showMbErrorAlert(msg) {
     layer.open({
-        content: '<font color="red">提示：'+msg+'</font>', btn: '确定'
+        content: '<font color="red">'+ey_foreign_system4+'：'+msg+'</font>', btn: ey_foreign_system2
     });
 }
 
@@ -150,8 +172,17 @@ function GetUploadify_mobile(num, url, title)
 
 // 加载层
 function layer_loading(msg){
+    if (!msg || '正在处理' == msg) {
+        if (typeof ey_foreign_system8 === 'undefined') {
+            ey_foreign_system8 = "正在处理";
+        }
+        msg = ey_foreign_system8;
+    }
+    if (typeof ey_foreign_system9 === 'undefined') {
+        ey_foreign_system9 = "请勿刷新页面";
+    }
     var loading = layer.msg(
-    msg+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请勿刷新页面', 
+    msg+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+ey_foreign_system9, 
     {
         icon: 1,
         time: 3600000, //1小时后后自动关闭
@@ -268,13 +299,13 @@ var layer_shade = [0.7, '#fafafa'];
 // 统一提示确认框
 function unifiedConfirmBox(msg, width, height, callback_1, btn, callback_2, callback_cancel) {
     if (typeof msg === 'undefined' || !msg) msg = '确认执行此操作？';
-    if (typeof btn === 'undefined' || !btn) btn = ['确定', '取消'];
+    if (typeof btn === 'undefined' || !btn) btn = [ey_foreign_system2, ey_foreign_system3];
     if (typeof width === 'undefined' || !width) width = '480px;';
     if (typeof height === 'undefined' || !height) height = '200px;';
     layer.confirm(msg, {
         move: false,
         closeBtn: 3,
-        title: '提示',
+        title: ey_foreign_system4,
         btnAlign: 'r',
         shade: layer_shade,
         btn: btn,
@@ -304,15 +335,51 @@ function unifiedRemindBox(msg, width, height) {
     layer.confirm(msg, {
         move: false,
         closeBtn: 3,
-        title: '提示',
+        title: ey_foreign_system4,
         btnAlign: 'r',
         shade: layer_shade,
-        btn: ['确定'],
+        btn: [ey_foreign_system2],
         area: [width, height],
         success: function () {
             $(".layui-layer-content").css('text-align', 'left');
         }
     });
+}
+
+function unifiedShowPayConfirmBox(is_wap, successCallback, failCallback, cancelCallback) {
+    if (0 === parseInt(is_wap)) {
+        layer.closeAll();
+        layer.confirm('请在新打开的页面进行支付！', {
+            move: false,
+            closeBtn: 3,
+            title: ey_foreign_system4,
+            btnAlign: 'r',
+            shade: layer_shade,
+            area: ['480px;', '200px;'],
+            btn: ['支付成功', '支付失败'],
+            success: function () {
+                $(".layui-layer-content").css('text-align', 'left');
+            },
+            cancel: function() {
+                if (typeof cancelCallback !== 'undefined') {
+                    cancelCallback();
+                } else {
+                    window.location.reload();
+                }
+            }
+        }, function () {
+            // 确认操作
+            if (typeof successCallback !== 'undefined') successCallback();
+        }, function (index) {
+            // 取消操作
+            if (typeof failCallback !== 'undefined') {
+                failCallback();
+            } else {
+                window.location.reload();
+            }
+            layer.close(index);
+        });
+    }
 }
 
 function windowOpen(url) {

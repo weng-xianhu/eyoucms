@@ -100,7 +100,7 @@ class Search extends Base
         }
         $word = $this->request->param('keywords');
         if(empty($word)){
-            $this->error('关键词不能为空！');
+            $this->error(foreign_lang('system15', $this->home_lang));
         }
         $page = $this->request->param('page');
         if(!empty($word) && 2 > $page)
@@ -117,7 +117,7 @@ class Search extends Base
             if (!empty($searchConf['search_tabu_words'])) {
                 foreach ($searchConf['search_tabu_words'] as $key => $val) {
                     if (strstr($word_decode, $val)) {
-                        $this->error('含有敏感词，禁止搜索！');
+                        $this->error(foreign_lang('system13', $this->home_lang));
                     }
                 }
             }
@@ -206,7 +206,8 @@ class Search extends Base
                         $surplus_time = $locking_time + $searchConf['search_locking'] - $nowTime;
                         if ($surplus_time > 0) {
                             $minute = ceil($surplus_time/60);
-                            $this->error("过度频繁搜索，离解禁还有".$minute."分钟！", null, [], $surplus_time);
+                            $msg = sprintf(foreign_lang('system14', $this->home_lang), $minute);
+                            $this->error($msg, null, [], $surplus_time);
                         }
                     }
                 }

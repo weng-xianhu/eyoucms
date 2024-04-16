@@ -197,6 +197,15 @@ class Shop extends Model
                 'wechat_token_time'  => $time,
             ];
             getUsersConfigData('wechat',$WechatData);
+
+            $setting_info = [
+                'appid' => $appid,
+                'secret' => $secret,
+                'access_token' => $TokenData['access_token'],
+                'expires_time' => getTime() + $TokenData['expires_in'] - 1000, //提前200s过期
+            ];
+            tpSetting(md5($appid), $setting_info);
+            
             $data = [
                 'status' => true,
                 'token'  => $WechatData['wechat_token_value'],
