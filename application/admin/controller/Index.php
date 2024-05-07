@@ -1655,6 +1655,7 @@ class Index extends Base
     public function ajax_theme_tplfile_add()
     {
         $type = input('param.type/s', '');
+        $view_suffix = config('template.view_suffix');
         $tpldirpath = '';
         if ('welcome' == $type) {
             $select_input_id = 'welcome_tplname';
@@ -1663,7 +1664,6 @@ class Index extends Base
             $select_input_id = 'login_tplname';
             $tpldirpath = '/application/admin/template/theme';
         }
-        $view_suffix = config('template.view_suffix');
 
         if (IS_POST) {
             $post = input('post.', '', null);

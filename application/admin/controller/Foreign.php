@@ -32,10 +32,8 @@ class Foreign extends Base {
         $this->logic = new ForeignLogic;
         $functionLogic = new \app\common\logic\FunctionLogic;
         $foreign_authorize = tpSetting('foreign.foreign_authorize', [], 'cn');
-        if (!empty($foreign_authorize)) {
+        if (empty($foreign_authorize)) {
             $functionLogic->validate_authorfile(1);
-        } else {
-            $functionLogic->validate_authorfile(2);
         }
     }
 

@@ -230,7 +230,7 @@
         /*$('#theme_login_style').find('li').click(function(){
             $('#theme_login_style').find('li>img').removeClass('active');
             $(this).find('img').addClass('active');
-            $(this).find('input[type=radio]').attr('checked', true);
+            $(this).find('input[type=radio]').prop('checked', true);
             var theme_id = $(this).find('input[type=radio]').val();
             $.ajax({
                 type: "GET",

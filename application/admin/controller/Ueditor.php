@@ -1002,7 +1002,7 @@ class Ueditor extends Base
 
             $data['url'] = ROOT_DIR . $data['url']; // 支持子目录
         } else {
-            $data = array('state' => 'ERROR' . $info->getError());
+            $data = json_encode(array('state' => 'ERROR' . $info->getError()));
         }
         return $data;
     }

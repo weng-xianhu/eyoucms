@@ -1265,5 +1265,24 @@ class Users extends Base
             }
         }
     }
+    
+    // 查询会员等级列表(已开启并且设置订单升级)
+    public function getUsersUpgradeLevelList()
+    {
+        // 查询会员等级列表
+        $where = [
+            'status' => 1,
+            'upgrade_type' => 1
+        ];
+        $upgrade_level = Db::name('users_level')->where($where)->order('level_value asc')->select();
+    
+        // 返回数据
+        $result = [
+            'users' => $this->users,
+            'upgrade_level' => $upgrade_level,
+        ];
+        // dump($result);exit;
+        return $this->renderSuccess($result);
+    }
 
 }

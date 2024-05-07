@@ -24,6 +24,118 @@ class Api extends Base
         parent::_initialize();
     }
 
+    public function get_all_region()
+    {
+        $not_arr = [46047,41103,47494,47495,47493];//新疆  西藏   香港  澳门   台湾 海外 除外
+        $list = Db::name('region')->order('level asc,parent_id asc')->getAllWithIndex('id');
+        $province = [];
+        $city = [];
+        $area = [];
+        foreach ($list as $k => $v) {
+            if('海外' == $v['name']){
+                $not_arr[] = $v['id'];
+            }
+            if ( in_array($v['id'],$not_arr) || in_array($v['parent_id'],$not_arr) ) {
+                continue;
+            }
+            if (1 == $v['level']) {
+                $province[$k] = $v;
+            } else if (2 == $v['level']) {
+                $city[$k] = $v;
+            } else if (3 == $v['level']) {
+                $area[] = $v;
+            }
+        }
+        foreach ($area as $k => $v) {
+            if(!empty($city[$v['parent_id']])){
+              $city[$v['parent_id']]['child'][] = $v;
+            }
+        }
+        $city = array_merge($city);
+        foreach ($city as $k => $v) {
+            if(!empty($province[$v['parent_id']])){
+                $province[$v['parent_id']]['child'][] = $v;
+            }
+        }
+        $province = array_merge($province);
+        // dump($province);exit;
+        $this->success('success','',$province);
+    }
+
+    //处理静态页面分享路径
+    public function handle_share_url()
+    {
+        $url = input('post.share_url/s', '');
+        $url = urldecode(htmlspecialchars_decode($url));
+        if (!is_http_url($url)) {
+            $this->error('失败！');
+        }
+
+        $this->success('成功！', null, $this->getSignPackage($url));
+    }
+
+    private function get_jsapi_ticket($row = [], $access_token = '')
+    {
+        $url = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token={$access_token}&type=jsapi";
+        $data = httpRequest($url);
+        $WeChatData = json_decode($data, true);
+        if (empty($WeChatData) || (!empty($WeChatData['errcode']) && !empty($WeChatData['errmsg']))) {
+            $errmsg = !empty($WeChatData['errmsg']) ? $WeChatData['errmsg'] : '获取jsapi_ticket失败';
+            $this->error($errmsg);
+        }
+        $update = [
+            'ticket' => $WeChatData['ticket'],
+            'ticket_expires_time' => getTime() + $WeChatData['expires_in'] + 200,
+        ];
+        $this->wechatLogic->update_ticket($row['appid'], $update);
+
+        return $update['ticket'];
+    }
+
+    private function getSignPackage($url = '')
+    {
+        $apiModel = model('v1.Api');
+        $tokenData = $apiModel->get_access_token();
+        if (empty($tokenData['code'])) {
+            $this->error($tokenData['msg']);
+        }
+        $jsapiTicket = $this->get_jsapi_ticket($tokenData, $tokenData['access_token']);
+
+        // 注意 URL 一定要动态获取，不能 hardcode.
+        $url = $url ? $url : request()->domain() . ROOT_DIR;
+
+        $timestamp = getTime();
+        $nonceStr = $this->createNonceStr();
+
+        // 这里参数的顺序要按照 key 值 ASCII 码升序排序
+        $string = "jsapi_ticket=$jsapiTicket&noncestr=$nonceStr&timestamp=$timestamp&url=$url";
+
+        $signature = sha1($string);
+
+        $web_logo = tpCache('web.web_logo');
+        $signPackage = array(
+            "appId" => $tokenData['appid'],
+            "nonceStr" => $nonceStr,
+            "timestamp" => $timestamp,
+            "url" => $url,
+            "signature" => $signature,
+            "rawString" => $string,
+            "jsapiTicket" => $jsapiTicket,
+            "web_logo" => $web_logo,
+        );
+        return $signPackage;
+    }
+
+    private function createNonceStr($length = 16)
+    {
+        $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        $str = "";
+        for ($i = 0; $i < $length; $i++) {
+            $str .= substr($chars, mt_rand(0, strlen($chars) - 1), 1);
+        }
+        return $str;
+    }
+
     /**
      * 首页
      */
@@ -245,9 +357,9 @@ class Api extends Base
         if (empty($this->globalConfig['web_users_switch'])) {
             $this->error('后台会员中心尚未开启！');
         }
-        
+
         // 当前用户信息
-        $users = $this->getUser(false);
+        $users = model('v1.User')->getUser(false);
         $data = [
             'userInfo' => $users,
         ];
@@ -328,8 +440,8 @@ class Api extends Base
 // </xml>
 // EOF;
         $userModel = model('v1.User');
-
-        if (!$xml = file_get_contents('php://input')) {
+        $xml = file_get_contents('php://input');
+        if (!$xml) {
             $userModel->returnCode(false, 'Not found DATA');
         }
         // 将服务器返回的XML数据转化为数组
@@ -471,7 +583,7 @@ class Api extends Base
     {
         if (IS_AJAX_POST) {
             // 海报模型
-            $diyminiproMallPosterModel = model('v1.Poster');
+            $posterModel = model('v1.Poster');
 
             // 调用接口生成海报
             $post = input('post.');
@@ -483,7 +595,7 @@ class Api extends Base
                 $post['users_id'] = intval($users['dealer']['users_id']);
                 $post['dealer_id'] = intval($users['dealer']['dealer_id']);
             }
-            $qrcodePoster = $diyminiproMallPosterModel->getCreateGoodsShareQrcodePoster($post, 2);
+            $qrcodePoster = $posterModel->getCreateGoodsShareQrcodePoster($post, 2);
             if (!empty($qrcodePoster) && !empty($qrcodePoster['poster'])) {
                 $this->success('海报生成成功', null, $qrcodePoster);
             } else {
@@ -491,18 +603,19 @@ class Api extends Base
             }
         }
     }
+
     // 生成文章二维码海报
     public function createArticleShareQrcodePoster()
     {
         if (IS_AJAX_POST) {
             // 海报模型
-            $diyminiproMallPosterModel = model('v1.Poster');
+            $posterModel = model('v1.Poster');
 
             // 调用接口生成海报
             $post = input('post.');
             $post['aid'] = intval($post['aid']);
             $post['typeid'] = intval($post['typeid']);
-            $QrcodePoster = $diyminiproMallPosterModel->GetCreateGoodsShareQrcodePoster($post, 1);
+            $QrcodePoster = $posterModel->GetCreateGoodsShareQrcodePoster($post, 1);
             if (!empty($QrcodePoster) && !empty($QrcodePoster['poster'])) {
                 $this->success('海报生成成功', null, $QrcodePoster);
             } else {

@@ -253,7 +253,7 @@ class AdPosition extends Base
         }
 
         // 上传通道
-        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos'])->select();
+        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos', 'AwsOss'])->select();
         $WeappOpen = [];
         foreach ($WeappConfig as $value) {
             if ('Qiniuyun' == $value['code']) {
@@ -262,6 +262,8 @@ class AdPosition extends Base
                 $WeappOpen['oss_open'] = $value['status'];
             } else if ('Cos' == $value['code']) {
                 $WeappOpen['cos_open'] = $value['status'];
+            } else if ('AwsOss' == $value['code']) {
+                $WeappOpen['aws_open'] = $value['status'];
             }
         }
         $this->assign('WeappOpen', $WeappOpen);
@@ -499,7 +501,7 @@ class AdPosition extends Base
         $assign_data['ad_data'] = $ad_data;
 
         // 上传通道
-        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos'])->select();
+        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos', 'AwsOss'])->select();
         $WeappOpen = [];
         foreach ($WeappConfig as $value) {
             if ('Qiniuyun' == $value['code']) {
@@ -508,6 +510,8 @@ class AdPosition extends Base
                 $WeappOpen['oss_open'] = $value['status'];
             } else if ('Cos' == $value['code']) {
                 $WeappOpen['cos_open'] = $value['status'];
+            } else if ('AwsOss' == $value['code']) {
+                $WeappOpen['aws_open'] = $value['status'];
             }
         }
         $this->assign('WeappOpen', $WeappOpen);

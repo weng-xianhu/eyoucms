@@ -509,7 +509,7 @@ class Canal extends Base
                                     'template_id' => $params['template_id'],
                                 ];
                                 // 获取模板的关键词列表 start
-                                $url = "https://api.weixin.qq.com/cgi-bin/template/get_all_private_template?access_token=".$tokenData['access_token'];
+                                /*$url = "https://api.weixin.qq.com/cgi-bin/template/get_all_private_template?access_token=".$tokenData['access_token'];
                                 $response = httpRequest($url);
                                 $params2 = json_decode($response,true);
                                 if (isset($params2['template_list'])) {
@@ -568,7 +568,7 @@ class Canal extends Base
                                         "template_id" => $params['template_id'],
                                     );
                                     httpRequest($url, 'POST', $post_data);
-                                }
+                                }*/
                                 // 获取模板的关键词列表 end
         
                                 Db::name('wechat_template')->where(['send_scene'=>$send_scene])->update($update);

@@ -229,7 +229,7 @@ class Controller
             $web_anti_brushing = config('tpcache.web_anti_brushing');
             if (!empty($web_anti_brushing)) {
                 if ('home' == MODULE_NAME && 'Index' == CONTROLLER_NAME && 'index' == ACTION_NAME) {
-                    $varsarr = ['clear','lang','site','templet','uiset','v','bd_vid','clickid'];
+                    $varsarr = ['clear','lang','site','templet','uiset','v','bd_vid','clickid','spm'];
                     if (1 == config('ey_config.seo_pseudo') || isset($params['uiset'])) {
                         $varsarr = array_merge($varsarr, ['m','c','a']);
                     }

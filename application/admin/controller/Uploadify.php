@@ -595,6 +595,12 @@ class Uploadify extends Base
                         $cosModel = new \weapp\Cos\model\CosModel;
                         $cosModel->del_local($filename);
                     }
+                } else if (!empty($weappList['AwsOss']) && 1 == $weappList['AwsOss']['status']) {
+                    $awsData = json_decode($weappList['AwsOss']['data'], true);
+                    if (!empty($awsData['local_save']) && $awsData['local_save'] == 1) {
+                        $awsModel = new \weapp\AwsOss\model\AwsOssModel;
+                        $awsModel->del_local($filename);
+                    }
                 }
             }
         }

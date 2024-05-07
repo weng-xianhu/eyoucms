@@ -252,25 +252,6 @@ class Ajax extends Base
     {
         \think\Cache::clear();
         delFile(RUNTIME_PATH);
-
-        // 重新生成全部数据表缓存字段文件
-        // $dbtables = \think\Db::query('SHOW TABLE STATUS');
-        // $tableList = [];
-        // foreach ($dbtables as $k => $v) {
-        //     if (preg_match('/^'.PREFIX.'/i', $v['Name'])) {
-        //         /*调用命令行的指令*/
-        //         \think\Console::call('optimize:schema', ['--table', $v['Name']]);
-        //         /*--end*/
-        //     }
-        // }
-
-        // try {
-        //     /*清除大数据缓存表 -- 陈风任*/
-        //     Db::name('sql_cache_table')->execute('TRUNCATE TABLE '.config('database.prefix').'sql_cache_table');
-        //     model('SqlCacheTable')->InsertSqlCacheTable(true);
-        //     /* END */
-        // } catch (\Exception $e) {}
-    
         exit('success');
     }
 
@@ -907,9 +888,12 @@ class Ajax extends Base
                     $val['attr_value'] = implode('', $val['attr_value']);
                 } else if ($val['attr_input_type'] == 4) {
                     $val['attr_value'] = filter_line_return($val['attr_value'], '、');
-                } else if (10 == $val['attr_input_type']) {
+                } else if (5 == $val['attr_input_type']) {//单张图
+                    $val['attr_value'] = handle_subdir_pic($val['attr_value'], 'img', true);
+                    $val['attr_value'] = "<a href='{$val['attr_value']}' target='_blank'><img src='{$val['attr_value']}' width='60' height='60' style='float: unset;cursor: pointer;' /></a>";
+                } else if (10 == $val['attr_input_type']) {//时间类型
                     $val['attr_value'] = date('Y-m-d H:i:s', $val['attr_value']);
-                } else if (11 == $val['attr_input_type']) {
+                } else if (11 == $val['attr_input_type']) {//多张图
                     $attr_value_arr = explode(",", $val['attr_value']);
                     $attr_value_str = "";
                     foreach ($attr_value_arr as $attr_value_k => $attr_value_v) {
@@ -1875,7 +1859,7 @@ class Ajax extends Base
                         'update_time' => getTime(),
                         'current_score' => $users_scores,
                     ]);
-                    $this->success(foreign_lang('users8', $this->home_lang), null, ['scores' => $users_scores]);
+                    $this->success(foreign_lang('users8', $this->home_lang), null, ['scores' => $users_scores,'score'=>$scores_step,'score_name'=>getUsersConfigData('score.score_name')]);
                 }
                 $this->error('未知错误', null);
             }
@@ -2028,6 +2012,10 @@ class Ajax extends Base
             // 同步图片到COS
             $CosData = json_decode($weappList['Cos']['data'], true);
             $third_domain = $CosData['domain'];
+        } else if (!empty($weappList['AwsOss']) && 1 == $weappList['AwsOss']['status']) {
+            // 同步图片到亚马逊S3
+            $awsData = json_decode($weappList['AwsOss']['data'], true);
+            $third_domain = $awsData['domain'];
         }
         $this->success('success', null, $third_domain);
     }
@@ -2363,16 +2351,23 @@ class Ajax extends Base
 
         // 获取微信用户信息
         $url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid=' . strval($conf_wechat['appid']) . '&secret=' . strval($conf_wechat['appsecret']) . '&code=' . $code . '&grant_type=authorization_code';
-        $result = json_decode(httpRequest($url), true);
-        if (empty($result) || (!empty($result['errcode']) && !empty($result['errmsg']))) $this->error('Code已过期，请重新生成二维码并扫码！');
+        $userInfo = json_decode(httpRequest($url), true);
+        if (empty($userInfo) || (!empty($userInfo['errcode']) && !empty($userInfo['errmsg']))) $this->error('Code已过期，请重新生成二维码并扫码！');
 
         // 获取成功则进行关联绑定
-        if (!empty($result['openid']) && !empty($admin_id)) {
+        if (!empty($userInfo['openid']) && !empty($admin_id)) {
+            // 检测是否已经关联绑定过其他账号
+            $row = Db::name('admin')->where(['wechat_open_id'=>$userInfo['openid']])->find();
+            if (!empty($row)) {
+                $this->error('当前微信已被绑定', null, '', 10);
+            }
             $update = [
-                'wechat_open_id' => $result['openid'],
+                'wechat_open_id' => $userInfo['openid'],
                 'update_time' => getTime(),
             ];
             Db::name('admin')->where('admin_id', $admin_id)->update($update);
+            // 后台扫码登录插件
+            model('AdminWxlogin')->save_data($admin_id, 3, $userInfo);
         }
 
         // 查询用户是否关注了公众号
@@ -2384,12 +2379,16 @@ class Ajax extends Base
             // 关注则执行关联关注
             if (!empty($userInfo['subscribe']) && $userInfo['openid'] == $result['openid']) {
                 $update = [
+                    'wechat_appid' => $conf_wechat['appid'],
                     'wechat_followed' => 1,
+                    'union_id' => empty($userInfo['unionid']) ? '' : $userInfo['unionid'],
                     'update_time' => getTime(),
                 ];
                 Db::name('admin')->where('admin_id', $admin_id)->update($update);
+                // 后台扫码登录插件
+                model('AdminWxlogin')->save_data($admin_id, 3, $userInfo);
                 // 显示成功信息
-                $this->redirect(url('api/Ajax/showSuccessInfo', ['info' => '您已关注过，绑定成功！'], true, true));
+                $this->redirect(url('api/Ajax/showSuccessInfo', ['info' => '绑定成功'], true, true));
             }
         } else {
             $this->error($tokenData['msg']);
@@ -2402,7 +2401,38 @@ class Ajax extends Base
     public function showSuccessInfo()
     {
         $info = input('param.info/s', '');
-        echo '<div style="color: red; text-align: center; padding-top: 50%; font-size: 60px;">' . $info . '</div>';
+        $html =<<<EOF
+<div style="text-align: center; padding-top: 50%;">
+    <div style="color: red; font-size: 60px;">
+        {$info}
+    </div>
+    <div style="margin-top: 50px; font-size: 40px;">
+        <span href="javascript:void(0)" id="closeWindow">关闭窗口</span>
+    </div>
+</div>
+<script type="text/javascript">
+    var readyFunc = function onBridgeReady() {
+        var curid;
+        var curAudioId;
+        var playStatus = 0;
+        
+        // 关闭当前webview窗口 - closeWindow
+        document.querySelector('#closeWindow').addEventListener('click', function(e){
+            WeixinJSBridge.invoke('closeWindow',{
+            },function(res){
+                //alert(res.err_msg);
+           });
+        });
+    }
+
+    if (typeof WeixinJSBridge === "undefined") {
+        document.addEventListener('WeixinJSBridgeReady', readyFunc, false);
+    } else {
+        readyFunc();
+    }
+</script>
+EOF;
+        echo $html;
         exit;
     }
 
@@ -2423,7 +2453,7 @@ class Ajax extends Base
         // 检测图片是否存在
         if (file_exists($qrcodeUrl)) {
             $showQrcode = request()->domain() . ROOT_DIR . '/' . $qrcodeUrl;
-            echo '<div style="color: red; text-align: center; padding-top: 25%;"> <img src=' . $showQrcode . ' style="width: 90%;"> <div style="font-size: 40px;"> 绑定成功，请长按二维码识别公众号并关注公众号 </div> </div>';
+            echo '<div style="color: red; text-align: center; padding-top: 25%;"> <img src=' . $showQrcode . ' style="width: 90%;"> <div style="font-size: 40px;"> 第二步：长按识别并关注公众号 </div> </div>';
             exit;
         }
 
@@ -2433,8 +2463,8 @@ class Ajax extends Base
             if (!empty($tokenData)) {
                 // 调用微信接口，返回生成二维码的ticket参数
                 $url = 'https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=' . $tokenData['access_token'];
-                // 永久二维码
-                $data = '{"action_name": "QR_LIMIT_STR_SCENE", "action_info": {"scene": {"scene_str": "' . $admin_id . '"}}}';
+                // 永久二维码，目前暂时没用到 scene_str 里参数值
+                $data = '{"action_name": "QR_LIMIT_STR_SCENE", "action_info": {"scene": {"scene_str": "bind|'.$admin_id.'"}}}';
                 // 调用接口获取数据，解析返回的数据
                 $ticketData = json_decode(httpRequest($url, 'POST', $data), true);
                 if (empty($ticketData['ticket'])) $this->error('数据错误，请重新生成二维码并扫码！');
@@ -2452,7 +2482,7 @@ class Ajax extends Base
                 // 将资源加载到图片并返回
                 if (@file_put_contents($qrcodeUrl, $result)) {
                     $showQrcode = request()->domain() . ROOT_DIR . '/' . $qrcodeUrl;
-                    echo '<div style="color: red; text-align: center; padding-top: 25%;"> <img src=' . $showQrcode . ' style="width: 90%;"> <div style="font-size: 40px;"> 绑定成功，请长按二维码识别公众号并关注公众号 </div> </div>';
+                    echo '<div style="color: red; text-align: center; padding-top: 25%;"> <img src=' . $showQrcode . ' style="width: 90%;"> <div style="font-size: 40px;"> 第二步：长按识别并关注公众号 </div> </div>';
                     exit;
                 }
             } else {

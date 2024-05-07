@@ -786,7 +786,7 @@
                         {/eq}
 
                         {eq name="'Foreign@index'|is_check_access" value="1"}
-                            {if condition="($php_servicemeal >= 2 || $foreign_authorize == 1) && $main_lang == $admin_lang"}
+                            {if condition="($php_servicemeal >= 1 || $foreign_authorize == 1) && $main_lang == $admin_lang"}
                             <li class="more_li" id="li_2004026" {if condition="in_array('2004026',$admin_menu_id_arr) || in_array('2004026',$not_role_menu_id_arr)"}style="display:none"{/if}>
                                 <div class="flex-dir-row flex-a-center">
                                     <div class="icon_bg icon_bg_no">

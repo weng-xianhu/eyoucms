@@ -291,17 +291,17 @@
   }
 
   // 清除缓存
-  function clear_cache(clearall)
+  function clear_cache(clearAll)
   {
-      if (!clearall) {
-          clearall = 0;
+      if (!clearAll) {
+          clearAll = 0;
       }
       layer_loading('正在清除');
       $.ajax({
           url: "{:url('System/clear_cache', ['_ajax'=>1])}",
           type: 'post',
           dataType: 'JSON',
-          data: {clearall: clearall},
+          data: {clearAll: clearAll},
           success: function(res){
               layer.closeAll();
               if (res.code == 1) {

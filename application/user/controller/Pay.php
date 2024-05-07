@@ -190,94 +190,26 @@ class Pay extends Base
                 'status' => 1,
                 'pay_info' => ['NEQ', '']
             ];
-            $PayApiList = Db::name('pay_api_config')->where($where)->select();
+            $payApiList = Db::name('pay_api_config')->where($where)->select();
             $is_open_wechat = 1;
-            if (!empty($PayApiList)) {
-                foreach ($PayApiList as $key => $value) {
-                    if (!empty($value['pay_info'])) {
-                        if ('wechat' == $value['pay_mark']) $is_open_wechat = 0;
-                        
-                        $PayInfo = unserialize($value['pay_info']);
+            if (!empty($payApiList)) {
+                foreach ($payApiList as $key => $value) {
+                    if (!empty($value['pay_info']) && 'wechat' == $value['pay_mark']) {
+                        $is_open_wechat = 0;
+                        $payInfo = unserialize($value['pay_info']);
                         if ('wechat' == $value['pay_mark']) {
-                            if (0 == $PayInfo['is_open_wechat']) {
-                                if (empty($PayInfo['appid']) || empty($PayInfo['mchid']) || empty($PayInfo['key'])) {
-                                    $is_open_wechat = 1;
-                                    unset($PayApiList[$key]);
-                                }
+                            if (0 === intval($payInfo['is_open_wechat'])) {
+                                if (empty($payInfo['appid']) || empty($payInfo['mchid']) || empty($payInfo['key'])) $is_open_wechat = 1;
                             } else {
                                 $is_open_wechat = 1;
-                                unset($PayApiList[$key]);
-                            }
-                        } else if ('alipay' == $value['pay_mark']) {
-                            if (0 == $PayInfo['is_open_alipay']) {
-                                if (version_compare(PHP_VERSION,'5.5.0','<')) {
-                                    // 旧版支付宝
-                                    if (empty($PayInfo['account']) || empty($PayInfo['code']) || empty($PayInfo['id'])) {
-                                        unset($PayApiList[$key]);
-                                    }
-                                } else {
-                                    if (1 == $PayInfo['version']) {
-                                        // 旧版支付宝
-                                        if (empty($PayInfo['account']) || empty($PayInfo['code']) || empty($PayInfo['id'])) {
-                                            unset($PayApiList[$key]);
-                                        }
-                                    } else {
-                                        // 新版支付宝
-                                        if (empty($PayInfo['app_id']) || empty($PayInfo['merchant_private_key']) || empty($PayInfo['alipay_public_key'])) {
-                                            unset($PayApiList[$key]);
-                                        }
-                                    }
-                                }
-                            } else {
-                                unset($PayApiList[$key]);
-                            }
-                        } else if (0 == $value['system_built']) {
-                            // Paypal支付
-                            if ('Paypal' == $value['pay_mark']) {
-                                $PayApiList[$key]['bgColor'] = '#013088';
-                                if (!empty($PayInfo) && 0 == $PayInfo['is_open_pay']) {
-                                    foreach ($PayInfo as $kk => $vv) {
-                                        if ('business' == $kk && empty($vv)) {
-                                            unset($PayApiList[$key]);
-                                            break;
-                                        }
-                                    }
-                                } else {
-                                    unset($PayApiList[$key]);
-                                }
-                            } else {
-                                if (!empty($PayInfo) && 0 == $PayInfo['is_open_pay']) {
-                                    foreach ($PayInfo as $kk => $vv) {
-                                        if ('is_open_pay' != $kk && empty($vv)) {
-                                            unset($PayApiList[$key]);
-                                            break;
-                                        }
-                                    }
-                                } else {
-                                    unset($PayApiList[$key]);
-                                }
-                            }
-                            if (!empty($PayApiList[$key])) {
-                                // Paypal支付
-                                if ('Paypal' == $value['pay_mark']) {
-                                    $isPaypal = 1;
-                                    $paypalBusiness = $PayInfo['business'];
-                                }
-                                // $PayApiList[$key]['pay_img'] = get_default_pic('/weapp/'.$value['pay_mark'].'/pay.png');
-                            }
-                            if (!empty($PayApiList[$key])) {
-                                $PayApiList[$key]['pay_img'] = get_default_pic('/weapp/'.$value['pay_mark'].'/pay.png');
                             }
                         }
-                    } else {
-                        unset($PayApiList[$key]);
                     }
                 }
-                if (empty($PayApiList)) $this->error('网站支付配置未完善，充值服务暂停使用');
             } else {
                 $this->error('网站支付配置未完善，充值服务暂停使用');
             }
-            
+
             // 判断传入的数据
             $money = input('post.money/f');
             $unified_number = input('post.unified_number/s', '');
@@ -341,7 +273,7 @@ class Pay extends Base
 
                 // 添加状态
                 if (!empty($moneyid)) {
-                    if (isMobile() && isWeixin() && 0 == $is_open_wechat) {
+                    if (isMobile() && isWeixin() && 0 === intval($is_open_wechat)) {
                         $ReturnOrderData = [
                             'unified_id'       => $moneyid,
                             'unified_number'   => $order_number,

@@ -373,11 +373,12 @@ class Channeltype extends Base
         /*下载/视频模型*/
         $weappRow = [];
         $weappList = Db::name('weapp')->field('code, status')->where([
-                'code'  => ['IN', ['Qiniuyun','AliyunOss','Cos']]
+                'code'  => ['IN', ['Qiniuyun','AliyunOss','Cos','AwsOss']]
             ])->getAllWithIndex('code');
         if (!empty($weappList['AliyunOss']['status'])) $weappRow['AliyunOss'] = 1;
         if (!empty($weappList['Qiniuyun']['status'])) $weappRow['Qiniuyun'] = 1;
         if (!empty($weappList['Cos']['status'])) $weappRow['Cos'] = 1;
+        if (!empty($weappList['AwsOss']['status'])) $weappRow['AwsOss'] = 1;
         $assign_data['weappRow'] = $weappRow;
         /*下载/视频模型*/
 
@@ -1038,6 +1039,26 @@ EOF;
         }
     }
 
+    /**
+     * 亚马逊S3开关检测
+     */
+    public function ajax_aws_open()
+    {
+        if (IS_AJAX) {
+            $weappInfo = Db::name('weapp')->where('code', 'AwsOss')->field('id, status, data')->find();
+            if (empty($weappInfo)) {
+                $this->error('请先安装配置【亚马逊S3对象存储】插件!', null, ['code'=>-1]);
+            } else if (1 != $weappInfo['status']) {
+                $this->error('请先安装配置【亚马逊S3对象存储】插件!', null, ['code'=>-2,'id'=>$weappInfo['id']]);
+            } else {
+                $Aws = json_decode($weappInfo['data'], true);
+                if (empty($Aws)) {
+                    $this->error('请先安装配置【亚马逊S3对象存储】插件!', null, ['code'=>-3]);
+                }
+            }
+            $this->success('检测通过!');
+        }
+    }
     /*---------------------------------问答模板 start-------------------------*/
 
     /**

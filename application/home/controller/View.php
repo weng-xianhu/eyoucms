@@ -77,7 +77,7 @@ class View extends Base
                             $dirname = empty($s_arr[count($s_arr) - 2]) ? '' : $s_arr[count($s_arr) - 2];
                             $cur_typeids = Db::name('arctype')->where(['dirname'=>$dirname, 'lang'=>$this->home_lang])->column('id');
                         } else if (in_array($seo_rewrite_view_format, [1])) {
-                            if ($this->home_lang == $this->main_lang) {
+                            if ($this->home_lang == get_default_lang()) {
                                 $dirname = $s_arr[0];
                             } else {
                                 $dirname = $s_arr[1];
@@ -708,6 +708,34 @@ EOF;
                 }
             }
         } catch (\Exception $e) {}
+    }
+
+    /**
+     * 自定义字段的本地附件下载
+     */
+    public function custom_download_file()
+    {
+        $aid = input('param.aid/d');
+        $field_name = input('param.field/s');
+        $archivesInfo = Db::name('archives')->field('aid,channel')->where(['aid'=>$aid])->find();
+        if (empty($archivesInfo) || empty($field_name)) {
+            $this->error('下载地址出错！');
+        }
+        $table = Db::name('channeltype')->where(['id'=>$archivesInfo['channel']])->value('table');
+        $down_url  = Db::name($table.'_content')->where(['aid'=>$aid])->value($field_name);
+        if (empty($down_url)) {
+            $this->error('下载地址出错！');
+        }
+        $down_arr = explode('|', $down_url);
+        if (1 >= count($down_arr) || empty($down_arr[1])) {
+            $this->redirect($down_arr[0]);
+            exit;
+        } else {
+            $down_url = $down_arr[0];
+            $down_name = $down_arr[1];
+            download_file($down_url, '', $down_name);
+            exit;
+        }
     }
 
     /**

@@ -45,10 +45,11 @@ class Poster extends Base
         $this->appletsQrcode = [];
         $this->post = [];
         $this->users = [];
+        $this->appletsType = 1;
     }
 
     // 商品海报生成处理
-    // $appletsType: 1=开源小程序，2=可视化小程序
+    // $appletsType: 1=开源小程序，2=可视化小程序，3=微信公众号
     public function getCreateGoodsShareQrcodePoster($post = [], $channel = 1, $appletsType = 1)
     {
         $this->post = $post;
@@ -66,14 +67,15 @@ class Poster extends Base
         }
         // 会员ID
         $this->users_id = !empty($post['mid']) ? $post['mid'] :0;
-        if ('v2' == $this->version) $this->users = $this->getUsersInfo();
-
+        if ('v2' == $this->version){
+            $this->users = $this->getUsersInfo();
+        }
         // 分销商会员ID
-        $this->usersID = !empty($post['users_id']) ? $post['users_id'] :0;
+        $this->usersID = !empty($post['users_id']) ? intval($post['users_id']) : 0;
         // 分销商ID
-        $this->dealerID = !empty($post['dealer_id']) ? $post['dealer_id'] : 0;
+        $this->dealerID = !empty($post['dealer_id']) ? intval($post['dealer_id']) : 0;
         // 模型ID
-        $this->channel = $channel;
+        $this->channel = intval($channel);
 
         // 背景图片处理
         if (1 == $this->channel) {
@@ -87,34 +89,41 @@ class Poster extends Base
 
         // 获取商品信息
         $this->product = $this->getProductData();
-        $fenbao = input('param.fenbao/d');
-        $page = 'pages/';
-        if (!empty($fenbao)) $page = 'otherpages/';
-        // 生成小程序二维码需携带参数
-        if (1 === intval($appletsType)) {
-            if (!empty($post['seckill_goods_id'])) {
-                $page .= "seckill/detail";
-            } else {
-                $page .= "archives/product/view";
-            }
-        } else if (2 === intval($appletsType)) {
-            $page .= "article/view";
+        
+        // 来源类型
+        $this->appletsType = !empty($post['appletsType']) ? intval($post['appletsType']) : intval($appletsType);
+        if (3 === intval($this->appletsType)) {
+            $this->appletsQrcode = $this->weChatGoodsShareQrcodePoster();
         } else {
-            $page .= "index/index";
+            $fenbao = input('param.fenbao/d');
+            $page = 'pages/';
+            if (!empty($fenbao)) $page = 'otherpages/';
+            // 生成小程序二维码需携带参数
+            if (1 === intval($this->appletsType)) {
+                if (!empty($post['seckill_goods_id'])) {
+                    $page .= "seckill/detail";
+                } else {
+                    $page .= "archives/product/view";
+                }
+            } else if (2 === intval($this->appletsType)) {
+                $page .= "article/view";
+            } else {
+                $page .= "index/index";
+            }
+            $scene = 'aid=' . $this->aid;
+            if (!empty($this->typeid)) {
+                //生成二维码scene长度有限制  所有typeid为空就不传了
+                $scene .= '&typeid=' . $this->typeid;
+            }
+            if (!empty($post['seckill_goods_id'])) {
+                $scene = 'gid=' . $post['seckill_goods_id'];
+            }
+            $width = '430';
+            $this->postData = compact('page', 'scene', 'width');
+    
+            // 小程序二维码处理
+            $this->appletsQrcode = $this->getAppletsQrcode();
         }
-        $scene = 'aid=' . $this->aid;
-        if (!empty($this->typeid)) {
-            //生成二维码scene长度有限制  所有typeid为空就不传了
-            $scene .= '&typeid=' . $this->typeid;
-        }
-        if (!empty($post['seckill_goods_id'])) {
-            $scene = 'gid=' . $post['seckill_goods_id'];
-        }
-        $width = '430';
-        $this->postData = compact('page', 'scene', 'width');
-
-        // 小程序二维码处理
-        $this->appletsQrcode = $this->getAppletsQrcode($appletsType);
 
         // 组合并返回商品分享海报图片
         if ('v2' == $this->version) {
@@ -122,6 +131,24 @@ class Poster extends Base
         } else {
             return $this->getProductSharePosterImage();
         }
+    }
+
+    private function weChatGoodsShareQrcodePoster()
+    {
+        // 保存图片的完整路径
+        $qrCodeSavePath = 'qrcode_' . md5($this->usersID . $this->aid) . '_h5.png';
+        if (!empty($this->ajaxGet)) $qrCodeSavePath = 'qrcode_' . md5($this->ajaxGet . $this->aid) . '_h5.png';
+        $qrCodeSavePath = $this->posterPath . $qrCodeSavePath;
+        // 二维码URL
+        $qrCodeSaveUrl = request()->domain() . ROOT_DIR . '/h5/#/otherpages/archives/product/view?aid=' . $this->aid;
+        // 生成二维码
+        vendor('wechatpay.phpqrcode.phpqrcode');
+        $qrcode = new \QRcode;
+        $qrcode->png($qrCodeSaveUrl, $qrCodeSavePath);
+        return [
+            'status' => true,
+            'qrcode' => $qrCodeSavePath,
+        ];
     }
 
     public function getUsersInfo()
@@ -219,7 +246,7 @@ class Poster extends Base
     }
 
     // 返回已处理的小程序二维码
-    private function getAppletsQrcode($appletsType = 1)
+    private function getAppletsQrcode()
     {
         // 保存图片的完整路径
         $qrcodeSavePath = $this->posterPath . 'qrcode_' . md5($this->aid . $this->typeid) . '.png';
@@ -228,9 +255,9 @@ class Poster extends Base
         !is_dir($this->posterPath) && tp_mkdir($this->posterPath);
 
         // 是否配置小程序信息
-        if (1 === intval($appletsType)) {
+        if (1 === intval($this->appletsType)) {
             $applets = 'openSource';
-        } else if (2 === intval($appletsType)) {
+        } else if (2 === intval($this->appletsType)) {
             $applets = 'visualization';
         }
         $appletsToken = get_weixin_access_token(true, $applets);
@@ -363,7 +390,7 @@ class Poster extends Base
         return $content;
     }
 
-// 返回商品分享海报图片 第二套 需要登录,分享商品带用户信息,分享文章应该使用第一套
+    // 返回商品分享海报图片 第二套 需要登录,分享商品带用户信息,分享文章应该使用第一套
     private function getProductSharePosterImageV2()
     {
         $Grafika = new Grafika;
@@ -413,7 +440,8 @@ class Poster extends Base
 
         // 打开小程序码
         if (!empty($this->appletsQrcode['status'])) {
-            $this->CircularImage($this->appletsQrcode['qrcode'], $this->appletsQrcode['qrcode']);
+            // 如果不是微信公众号生成的海报则将二维码处理成圆形
+            if (!in_array($this->appletsType, [3])) $this->CircularImage($this->appletsQrcode['qrcode'], $this->appletsQrcode['qrcode']);
             $editor->open($qrcodeImage, $this->appletsQrcode['qrcode']);
             // 重设小程序码宽高
             $editor->resizeExact($qrcodeImage, 120, 120);

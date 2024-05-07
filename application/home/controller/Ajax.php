@@ -143,7 +143,7 @@ class Ajax extends Base
             ->join('__SHOP_ORDER_DETAILS__ b', 'a.details_id = b.details_id', 'LEFT')
             ->join('__USERS__ u', 'a.users_id = u.users_id', 'LEFT')
             ->join('__USERS_LEVEL__ l', 'u.level = l.level_id', 'LEFT')
-            ->order('a.comment_id desc')
+            ->order('a.add_time desc')
             ->limit($Page->firstRow . ',' . $Page->listRows)
             ->select();
         $Comment = !empty($Comment) ? $Comment : [];

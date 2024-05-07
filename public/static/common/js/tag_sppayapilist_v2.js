@@ -120,12 +120,12 @@ function SelectPayMethod(pay_id, pay_mark) {
     });
 
     if (a_alipay_url != "") {
-        if ('alipay' == pay_mark) {
+        /*if ('alipay' == pay_mark) {
             // 打开支付提示确认框
             unifiedShowPayConfirmBox(json627847.is_wap, false, function() {
                 OrderPayPolling('showMsgCode');
             });
-        }
+        }*/
         newWinarticlepay2(a_alipay_url);
     }
     return false;
@@ -208,12 +208,12 @@ function OrderPayPolling(showMsgCode) {
                         window.location.href = res.url;
                     });
                 } else {
-                    if (showMsgCode && res.msg) {
+                    /*if (showMsgCode && res.msg) {
                         $('#' + showMsgCode).show().html(res.msg);
                         setTimeout(function() {
                             $('#' + showMsgCode).hide().html('');
                         }, 3000);
-                    }
+                    }*/
                 }
             } else if (0 == res.code) {
                 layer.alert(res.msg, {icon:0, title: false, closeBtn: 0});
@@ -445,12 +445,12 @@ function UsersUpgradePay(obj) {
     });
 
     if (a_alipay_url != "") {
-        if ('alipay' == res.data.pay_mark) {
+        /*if ('alipay' == res.data.pay_mark) {
             // 打开支付提示确认框
             unifiedShowPayConfirmBox(json627847.is_wap, function() {
                 OrderPayPolling('showMsgCode');
             });
-        }
+        }*/
         newWinarticlepay2(a_alipay_url);
     }
     return false;
@@ -695,12 +695,12 @@ function SelectPayMethod_2(pay_id, pay_mark, unifiedId, unifiedNumber, transacti
     });
 
     if (a_alipay_url != "") {
-        if ('alipay' == pay_mark) {
+        /*if ('alipay' == pay_mark) {
             // 打开支付提示确认框
             unifiedShowPayConfirmBox(json627847.is_wap, function() {
                 OrderPayPolling('showMsgCode');
             });
-        }
+        }*/
         newWinarticlepay2(a_alipay_url);
     }
     return false;

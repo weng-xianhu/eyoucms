@@ -1179,7 +1179,7 @@ function showSuccessMsg(msg, time, callback){
 
 function showErrorMsg(msg, time, callback){
     if (!time && time != 0) {
-        time = 2000;
+        time = 2500;
     }
     layer.msg(msg, {icon: 2, time: time}, function(){
         if (typeof callback !== 'undefined') {

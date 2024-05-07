@@ -351,12 +351,12 @@ class Shop extends UserBase
     public function ShopBuyNow($post = [])
     {
         // 查询条件
-        $ArchivesWhere = [
+        $where = [
             'aid'     => $post['product_id'],
             'lang'    => get_home_lang(),
             'arcrank' => ['>=', 0]
         ];
-        $count         = Db::name('archives')->where($ArchivesWhere)->count();
+        $count = Db::name('archives')->where($where)->count();
         // 加入购物车处理
         if (!empty($count)) {
             // 对ID和订单号加密，拼装url路径
@@ -385,7 +385,7 @@ class Shop extends UserBase
             } else {
                 $url = '/pages/product_buy/index?querystr=' . $querystr;
             }
-            $this->success('数据正确', $url, ['url'=>$url]);
+            $this->success('数据正确', $url, ['querystr'=>$querystr, 'url'=>$url]);
         } else {
             $this->error('该商品不存在或已下架！');
         }
@@ -899,18 +899,49 @@ class Shop extends UserBase
 
                 // 微信支付
                 if (1 === intval($post['pay_type'])) {
-                    // 调用微信支付接口
-                    $weChatPay = model('ShopPublicHandle')->getWechatAppletsPay($post['users_id'], $OrderData['order_code'], $OrderData['order_amount']);
-                    $result = [
-                        'WeChatPay' => $weChatPay,
-                        'OrderData' => [
-                            'order_id'   => $OrderId,
-                            'order_code' => $OrderData['order_code']
-                        ]
-                    ];
-                    $result['tmplData'] = [];
-                    // 返回提示
-                    $this->success('正在支付', null, $result);
+                    if ('h5' == self::$provider) {
+                        $openid = Db::name('users')->where('users_id', $post['users_id'])->value('open_id');
+                        $row = $this->wechatLogic->get_wechat_pay_config();
+                        $order_id = $OrderId;
+                        $order_code = $OrderData['order_code'];
+                        $order_amount = $OrderData['order_amount'];
+
+                        $payApiModel = new \app\user\model\PayApi;
+                        $weChatPay = $payApiModel->getWechatPay($openid, $order_code, $order_amount, $row);
+                        if (!empty($weChatPay['postCode']) && 'error' === $weChatPay['postCode']) {
+                            $this->error($weChatPay['return_msg']);
+                        } else if (!empty($weChatPay)) {
+                            $result = [
+                                'weChatPay' => $weChatPay,
+                                'orderData' => [
+                                    'order_id' => $order_id,
+                                    'order_code' => $order_code,
+                                ]
+                            ];
+                            $this->success('正在支付', null, $result);
+                        }
+                    } else {
+                        // 调用微信支付接口
+                        $weChatPay = model('ShopPublicHandle')->getWechatAppletsPay($post['users_id'], $OrderData['order_code'], $OrderData['order_amount']);
+                        $result = [
+                            'WeChatPay' => $weChatPay,
+                            'OrderData' => [
+                                'order_id'   => $OrderId,
+                                'order_code' => $OrderData['order_code']
+                            ]
+                        ];
+                        // 已开启的微信订阅消息模板
+                        // $where = [
+                        //    'is_open' => 1,
+                        //    'send_scene' => ['IN', [7]],
+                        //    'template_code' => ['GT', 0],
+                        // ];
+                        // $tmplData = Db::name('applets_template')->where($where)->order('send_scene asc')->getAllWithIndex('template_id');
+                        // $result['tmplData'] = $tmplData;
+                        $result['tmplData'] = [];
+                        // 返回提示
+                        $this->success('正在支付', null, $result); 
+                    }
                 }
                 // 余额支付
                 else if (2 === intval($post['pay_type'])) {
@@ -963,6 +994,15 @@ class Shop extends UserBase
                                'result_id' => $OrderId,
                             ];
                             eyou_send_notice(9, $params);
+
+                            // // 已开启的微信订阅消息模板
+                            // $where = [
+                            //    'is_open' => 1,
+                            //    'send_scene' => ['IN', [7]],
+                            //    'template_code' => ['GT', 0],
+                            // ];
+                            // $tmplData = Db::name('applets_template')->where($where)->order('send_scene asc')->getAllWithIndex('template_id');
+                            // $result['tmplData'] = $tmplData;
                             $result['tmplData'] = [];
 
                             // 邮箱发送
@@ -991,6 +1031,14 @@ class Shop extends UserBase
                             'order_code' => $OrderData['order_code']
                         ]
                     ];
+                    // 已开启的微信订阅消息模板
+                    // $where = [
+                    //    'is_open' => 1,
+                    //    'send_scene' => ['IN', [7]],
+                    //    'template_code' => ['GT', 0],
+                    // ];
+                    // $tmplData = Db::name('applets_template')->where($where)->order('send_scene asc')->getAllWithIndex('template_id');
+                    // $result['tmplData'] = $tmplData;
                     $result['tmplData'] = [];
                     // 返回提示
                     $this->success('正在支付', null, $result);
@@ -1005,6 +1053,14 @@ class Shop extends UserBase
                             'order_code' => $OrderData['order_code']
                         ]
                     ];
+                    // 已开启的微信订阅消息模板
+                    // $where = [
+                    //    'is_open' => 1,
+                    //    'send_scene' => ['IN', [7]],
+                    //    'template_code' => ['GT', 0],
+                    // ];
+                    // $tmplData = Db::name('applets_template')->where($where)->order('send_scene asc')->getAllWithIndex('template_id');
+                    // $result['tmplData'] = $tmplData;
                     $result['tmplData'] = [];
                     // 返回提示
                     $this->success('正在支付', null, $result);
@@ -1105,15 +1161,38 @@ class Shop extends UserBase
                 }
                 // 微信支付
                 else {
-                    // 调用微信支付接口
-                    $weChatPay = model('ShopPublicHandle')->getWechatAppletsPay($post['users_id'], $post['order_code'], $Result['order_amount'], 2);
-                    $resultData = [
-                        'WeChatPay' => $weChatPay,
-                        'OrderData' => [
-                            'order_id'   => $post['order_id'],
-                            'order_code' => $post['order_code']
-                        ]
-                    ];
+                    if ('h5' == self::$provider) {
+                        $openid = Db::name('users')->where('users_id', $post['users_id'])->value('open_id');
+                        $row = $this->wechatLogic->get_wechat_pay_config();
+                        $order_id = $post['order_id'];
+                        $order_code = $post['order_code'];
+                        $order_amount = $Result['order_amount'];
+
+                        $payApiModel = new \app\user\model\PayApi;
+                        $weChatPay = $payApiModel->getWechatPay($openid, $order_code, $order_amount, $row);
+                        if (!empty($weChatPay['postCode']) && 'error' === $weChatPay['postCode']) {
+                            $this->error($weChatPay['return_msg']);
+                        } else if (!empty($weChatPay)) {
+                            $result = [
+                                'weChatPay' => $weChatPay,
+                                'orderData' => [
+                                    'order_id' => $order_id,
+                                    'order_code' => $order_code,
+                                ]
+                            ];
+                            $this->success('正在支付', null, $result);
+                        }
+                    } else {
+                        // 调用微信支付接口
+                        $weChatPay = model('ShopPublicHandle')->getWechatAppletsPay($post['users_id'], $post['order_code'], $Result['order_amount'], 2);
+                        $resultData = [
+                            'WeChatPay' => $weChatPay,
+                            'OrderData' => [
+                                'order_id'   => $post['order_id'],
+                                'order_code' => $post['order_code']
+                            ]
+                        ];
+                    }
                 }
                 $url = 1 == input('param.fenbao/d') ? '' : '/pages/user/index';
                 $this->success('正在支付', $url, $resultData);
@@ -1133,6 +1212,19 @@ class Shop extends UserBase
     {
         // 调用微信支付接口
         return model('ShopPublicHandle')->getWechatAppletsPay($this->users_id, $out_trade_no, $total_fee, 2);
+    }
+
+    // 微信支付签名
+    private function getPaySign($appid = '', $nonceStr = '', $prepay_id = '',$time = '',$apikey = '')
+    {
+        $result = [
+            'appId'     => $appid,
+            'nonceStr'  => $nonceStr,
+            'package'   => 'prepay_id=' . $prepay_id,
+            'signType'  => 'MD5',
+            'timeStamp' => strval($time),
+        ];
+        return $this->ParamsSign($result,$apikey);
     }
 
     private function ParamsSign($values, $apikey)
@@ -3489,6 +3581,55 @@ class Shop extends UserBase
             $LogNote = '服务单被取消，服务结束！';
         }
         OrderServiceLog($param['service_id'], $param['order_id'], $param['users_id'], 0, $LogNote);
+    }
+
+    //获取支付信息
+    public function get_payment_info($data = [])
+    {
+        $openid = Db::name('users')->where('users_id', $data['users_id'])->value('open_id');
+        $row = $this->wechatLogic->get_wechat_pay_config();
+        $order_code = $data['order_code'];
+        $order_amount = $data['order_amount'];
+        $order_id = $data['order_id'];
+        $time = getTime();
+        // 调用支付接口参数
+        $params = [
+            'appid' => $row['appid'],
+            'attach' => $order_code . '|,|' . session('users_id'),
+            'body' => "订单号: {$order_code}",//不能太长
+            'mch_id' => $row['mchid'],
+            'nonce_str' => md5($time . $openid),
+            'notify_url' => request()->domain() . ROOT_DIR . '/index.php?m=plugins&c=Supde&a=wechat_callback', // 异步地址
+            'openid' => $openid,
+            'out_trade_no' => $order_code,
+            'spbill_create_ip' => getClientIP(),
+            'total_fee' => strval($order_amount * 100),
+            'trade_type' => 'JSAPI'
+        ];
+        // 微信小程序参数签名
+        $params['sign'] = $this->ParamsSign($params, $row['key']);
+        // 调用接口返回数据
+        $url = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
+        $result = $this->ResultXml($this->HttpsPost($url, $this->ParamsXml($params)));
+
+        // 请求接口成功
+        if (!empty($result['return_code']) && $result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK') {
+            // 返回支付所需参数
+            $return_data = [
+                'order_id' => $order_id,
+                'appId' => $row['appid'],
+                'nonceStr' => $params['nonce_str'],
+                'timeStamp' => strval($time),
+                'package' => 'prepay_id=' . $result['prepay_id'],
+                'signType' => 'MD5',
+                // 微信小程序支付签名
+                'paySign' => $this->getPaySign($row['appid'], $params['nonce_str'], $result['prepay_id'],$time,$row['key']),
+            ];
+
+            return $return_data;
+        } else{// 请求接口失败
+            return $result['return_msg'];
+        }
     }
 
     /**************************     限时折扣 开始    ****************************/

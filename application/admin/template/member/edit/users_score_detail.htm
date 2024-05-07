@@ -10,14 +10,17 @@
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
                     <thead>
                     <tr>
-                        <th abbr="download_title" axis="col3" class="w150">
-                            <div class="tc">变化积分</div>
-                        </th>
-                        <th abbr="download_title" axis="col3" class="w150">
-                            <div class="tc">当前积分</div>
+                        <th abbr="download_title" axis="col3" class="w80">
+                            <div class="tc">序号</div>
                         </th>
                         <th align="center"  axis="col6" class="">
-                            <div class="tl text-l10">备注</div>
+                            <div class="tl text-l10">变动原因</div>
+                        </th>
+                        <th abbr="download_title" axis="col3" class="w150">
+                            <div class="tc">积分变动</div>
+                        </th>
+                        <th abbr="download_title" axis="col3" class="w150">
+                            <div class="tc">变动后积分</div>
                         </th>
                         <th abbr="download_title" axis="col3" class="w150">
                             <div class="tc">操作人</div>
@@ -46,17 +49,12 @@
                     {foreach name="list" item="vo" key="k" }
                     <tr>
                         <td>
-                            <div class="pad-tb12 tc w150" >
-                                {if condition='$vo.score < 0'}
-                                <span style="color: red;">{$vo.score}</span>
-                                {elseif condition="$vo.score > 0"}
-                                <span style="color: green;">{$vo.score}</span>
+                            <div class="pad-tb12 tc w80" >
+                                {if condition="$pager->nowPage > 1"}
+                                    {$pager->listRows * ($pager->nowPage-1) + $k+1}
+                                {else /}
+                                    {$k+1}
                                 {/if}
-                            </div>
-                        </td>
-                        <td  >
-                            <div class="pad-tb12 tc w150" >
-                                {$vo.current_score}
                             </div>
                         </td>
                         <td style="width: 100%;">
@@ -86,16 +84,29 @@
                                     积分兑换取消
                                     {/if}
                                 {/notempty}
-
                             </div>
                         </td>
                         <td>
                             <div class="pad-tb12 tc w150" >
-                                {empty name='$vo.admin_id'}
-                                    {$vo.nickname}
-                                {else /}
-                                    {$vo.user_name}
-                                {/empty}
+                                {if condition='$vo.score < 0'}
+                                <span style="color: red;">{$vo.score}</span>
+                                {elseif condition="$vo.score > 0"}
+                                <span style="color: green;">{$vo.score}</span>
+                                {/if}
+                            </div>
+                        </td>
+                        <td  >
+                            <div class="pad-tb12 tc w150" >
+                                {$vo.current_score}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="pad-tb12 tc w150" >
+                            {empty name='$vo.admin_id'}
+                                {$vo.nickname}
+                            {else /}
+                                {$vo.user_name}
+                            {/empty}
                             </div>
                         </td>
                         <td  >

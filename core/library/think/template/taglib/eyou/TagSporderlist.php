@@ -23,6 +23,7 @@ use think\Cookie;
 class TagSporderlist extends Base
 {
     public $users_id = 0;
+    public $usersTpl2xVersion    = '';
 
     //初始化
     protected function _initialize()
@@ -31,6 +32,7 @@ class TagSporderlist extends Base
         $this->users_id = session('users_id');
         // 是否安装核销插件
         $this->weappInfo = model('ShopPublicHandle')->getWeappVerifyInfo();
+        $this->usersTpl2xVersion = getUsersTpl2xVersion();
     }
 
     /**
@@ -357,12 +359,13 @@ EOF;
             }
         }
         $result['All'] = !empty($ShopOrder) ? count($ShopOrder) : 0;
-        // 退换货个数总计
-        $result['AfterService'] = Db::name('shop_order_service')->where($where)->count();
-        $result['AfterService'] = !empty($result['AfterService']) ? intval($result['AfterService']) : 0;
         // 评价个数总计
         $result['CommentList'] = Db::name('shop_order_comment')->where($where)->count();
         $result['CommentList'] = !empty($result['CommentList']) ? intval($result['CommentList']) : 0;
+        // 退换货个数总计
+        $where['status'] = ['IN', [1, 2, 4, 5]];
+        $result['AfterService'] = Db::name('shop_order_service')->where($where)->count();
+        $result['AfterService'] = !empty($result['AfterService']) ? intval($result['AfterService']) : 0;
         // 当前页面url参数
         $result['access_action'] = request()->action();
         $result['access_controller'] = request()->controller();

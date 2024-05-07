@@ -226,6 +226,11 @@ class Uploadimgnew extends Base
             if (!empty($cosData['secretName'])) {
                 $storageTitle = '腾讯云COS';
             }
+        } else if (!empty($weappList['AwsOss']['data'])) {
+            $awsData = json_decode($weappList['AwsOss']['data'], true);
+            if (!empty($awsData['secretName'])) {
+                $storageTitle = '亚马逊S3';
+            }
         }
         $assign_data['storageTitle'] = $storageTitle;
         /*----------------------------第三方存储插件 start------------------------*/

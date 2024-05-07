@@ -54,6 +54,8 @@ class Base
     static $globalConfig = null;
     static $usersConfig = null;
 
+    static $provider = null;
+
     //构造函数
     function __construct()
     {
@@ -67,6 +69,9 @@ class Base
         $this->tid = input("param.typeid/d", 0);
         $this->aid = input("param.aid/d", 0);
         $this->root_dir = ROOT_DIR;
+        if (null == self::$provider) {
+            self::$provider = input("param.provider/s", 'v1');
+        }
         if (null == self::$request) {
             self::$request = Request::instance();
         }

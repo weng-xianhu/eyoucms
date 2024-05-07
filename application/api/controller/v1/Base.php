@@ -15,6 +15,7 @@ namespace app\api\controller\v1;
 
 use think\Db;
 use app\api\logic\v1\ApiLogic;
+use app\api\logic\v1\WechatLogic;
 
 class Base extends \app\api\controller\Base
 {
@@ -24,6 +25,7 @@ class Base extends \app\api\controller\Base
      * 实例化业务逻辑对象
      */
     public $apiLogic;
+    public $wechatLogic;
 
     /**
      * 系统配置
@@ -69,6 +71,7 @@ class Base extends \app\api\controller\Base
 
         $this->appId = input('param.appId/s');
         $this->apiLogic = new ApiLogic;
+        $this->wechatLogic = new WechatLogic;
         $this->globalConfig = tpCache('global');
         $this->php_servicemeal = $this->globalConfig['php_servicemeal'];
         $this->get_name();

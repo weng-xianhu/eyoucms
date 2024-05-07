@@ -85,6 +85,10 @@ if (!function_exists('login_third_type'))
                     $data['gzh']['switch'] = 1;
                     $redata['data'] = $data['gzh'];
                 }
+                else if ('userGzhLogin' == $data['mode']) {
+                    $data['usergzh']['switch'] = 1;
+                    $redata['data'] = $data['usergzh'];
+                }
                 else if ('WechatLogin' == $data['mode']) {
                     $security = tpSetting('security');
                     $redata['data'] = $security;
@@ -972,6 +976,11 @@ if (!function_exists('handle_subdir_pic'))
                                 $cosModel = new \weapp\Cos\model\CosModel;
                                 $str = $cosModel->handle_subdir_pic($cosData, $StrData, $str);
                             }
+                            else if (!empty($weappList['AwsOss']) && 1 == $weappList['AwsOss']['status']) {
+                                $awsData = json_decode($weappList['AwsOss']['data'], true);
+                                $awsModel = new \weapp\AwsOss\model\AwsOssModel;
+                                $str = $awsModel->handle_subdir_pic($awsData, $StrData, $str);
+                            }
                             else {
                                 // 关闭
                                 $str = $add_root_dir.$StrData['path'];
@@ -1056,6 +1065,11 @@ if (!function_exists('handle_subdir_pic'))
                             $cosData = json_decode($weappList['Cos']['data'], true);
                             $cosModel = new \weapp\Cos\model\CosModel;
                             $str = $cosModel->handle_subdir_pic($cosData, $StrData, $str);
+                        }
+                        else if (!empty($weappList['AwsOss']) && 1 == $weappList['AwsOss']['status']) {
+                            $awsData = json_decode($weappList['AwsOss']['data'], true);
+                            $awsModel = new \weapp\AwsOss\model\AwsOssModel;
+                            $str = $awsModel->handle_subdir_pic($awsData, $StrData, $str);
                         }
                     }
                 }
@@ -3278,9 +3292,18 @@ if (!function_exists('SynImageObjectBucket'))
                 $result['url'] = !empty($ResultCos['url']) ? $ResultCos['url'] : '';
                 $result['state'] = !empty($ResultCos['state']) ? $ResultCos['state'] : '';
             }
+        } else if (!empty($weappList['AwsOss']) && 1 == $weappList['AwsOss']['status']) {
+            // 同步图片到aws s3
+            $awsData = json_decode($weappList['AwsOss']['data'], true);
+            $awsModel = new \weapp\AwsOss\model\AwsOssModel;
+            $ResultAws = $awsModel->Synchronize($awsData, $images);
+            // 数据覆盖
+            if (!empty($ResultAws) && is_array($ResultAws)) {
+                $result['local_save'] = !empty($awsData['local_save']) ? $awsData['local_save'] : '';
+                $result['url'] = !empty($ResultAws['url']) ? $ResultAws['url'] : '';
+                $result['state'] = !empty($ResultAws['state']) ? $ResultAws['state'] : '';
+            }
         }
-
-
         return is_array($result) ? $result : [];
     }
 }
@@ -3310,6 +3333,9 @@ if (!function_exists('getWeappObjectBucket'))
         } else if (!empty($weappList['Cos']) && 1 == $weappList['Cos']['status']) {
             // COS
             $data = json_decode($weappList['Cos']['data'], true);
+        } else if (!empty($weappList['AwsOss']) && 1 == $weappList['AwsOss']['status']) {
+            // 亚马逊S3
+            $data = json_decode($weappList['AwsOss']['data'], true);
         }
 
         return is_array($data) ? $data : [];
@@ -5468,12 +5494,14 @@ if (!function_exists('adminLoginAfter')) {
             }
 
             // 第三方扫码登录
-            if (in_array($third_type, ['WechatLogin','EyouGzhLogin'])) {
+            if (in_array($third_type, ['WechatLogin','EyouGzhLogin','userGzhLogin'])) {
                 $map = ['admin_id'=>$admin_id];
                 if ('EyouGzhLogin' == $third_type) {
                     $map['type'] = 1;
                 } else if ('WechatLogin' == $third_type) {
                     $map['type'] = 2;
+                } else if ('userGzhLogin' == $third_type) {
+                    $map['type'] = 3;
                 }
                 $admin_info['openid'] = \think\Db::name('admin_wxlogin')->where($map)->value('openid');
             }
@@ -6770,6 +6798,8 @@ if (!function_exists('get_wechat_access_token'))
             return [
                 'code'  => 1,
                 'access_token' => $data['access_token'],
+                'appid' => $data['appid'],
+                'appsecret' => $data['appsecret'],
             ];
         }
         $url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=".$data['appid']."&secret=".$data['appsecret'];
@@ -6791,7 +6821,8 @@ if (!function_exists('get_wechat_access_token'))
             return [
                 'code'  => 1,
                 'access_token' => $access_token,
-                'appid' => !empty($data['appid']) ? $data['appid'] : '',
+                'appid' => $data['appid'],
+                'appsecret' => $data['appsecret'],
             ];
         }
 

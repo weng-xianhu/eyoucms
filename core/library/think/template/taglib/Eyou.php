@@ -135,7 +135,7 @@ class Eyou extends Taglib
         // 视频列表
         'videolist'  => ['attr' => 'aid,empty,id,mod,key,autoplay,player'],
         // 获取网站搜索的热门关键字
-        'hotwords'        => ['attr' => 'subday,num,id,key,mod,maxlength,empty,orderby,ordermode,orderway', 'alias' => 'hotkeywords'],
+        'hotwords'        => ['attr' => 'subday,num,id,key,mod,maxlength,empty,orderby,ordermode,orderway,screen', 'alias' => 'hotkeywords'],
         // 插件标签通用
         'weapptaglib'     => ['attr' => 'name,id,offset,length,key,mod,limit,row,loop'],
         // 问答模型问题列表标签通用
@@ -3978,12 +3978,13 @@ class Eyou extends Taglib
                 $ordermode = !empty($tag['orderway']) ? $tag['orderway'] : $ordermode;
             }
         }
+        $screen    = isset($tag['screen']) ? $tag['screen'] : '';
 
         $parseStr = '<?php ';
 
         // 查询数据库获取的数据集
         $parseStr .= ' $tagHotwords = new \think\template\taglib\eyou\TagHotwords;';
-        $parseStr .= ' $_result = $tagHotwords->getHotwords("'.$num.'", "'.$subday.'", "'.$maxlength.'", "'.$orderby.'", "'.$ordermode.'");';
+        $parseStr .= ' $_result = $tagHotwords->getHotwords("'.$num.'", "'.$subday.'", "'.$maxlength.'", "'.$orderby.'", "'.$ordermode.'", "'.$screen.'");';
         $parseStr .= ' if(is_array($_result) || $_result instanceof \think\Collection || $_result instanceof \think\Paginator): $' . $key . ' = 0; $e = 1;';
         // 设置了输出数组长度
         if ('null' != $num) {

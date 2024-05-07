@@ -90,7 +90,7 @@ EOF;
     {
         $file = 'public/static/common/js/lang/foreign_global.js';
         $foreign_is_status = tpSetting('foreign.foreign_is_status', [], 'cn');
-        if (!empty($foreign_is_status) && file_exists(ROOT_PATH . $file)) {
+        if (/*!empty($foreign_is_status) && */file_exists(ROOT_PATH . $file)) {
             $root_dir = ROOT_DIR;
             $file_time = getTime();
             try{

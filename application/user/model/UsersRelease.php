@@ -597,7 +597,7 @@ class UsersRelease extends Model
                             $val['dfvalue'] = handle_subdir_pic($addonRow[$val['name']],'media');
                         }
                         $val['upload_flag'] = 'local';
-                        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos'])->where('status',1)->select();
+                        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos', 'AwsOss'])->where('status',1)->select();
                         foreach ($WeappConfig as $value) {
                             if ('Qiniuyun' == $value['code']) {
                                 $val['upload_flag'] = 'qny';
@@ -605,6 +605,8 @@ class UsersRelease extends Model
                                 $val['upload_flag'] = 'oss';
                             } else if ('Cos' == $value['code']) {
                                 $val['upload_flag'] = 'cos';
+                            } else if ('AwsOss' == $value['code']) {
+                                $val['upload_flag'] = 'aws';
                             }
                         }
 

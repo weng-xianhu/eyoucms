@@ -82,6 +82,8 @@ $admin_config = array(
         'Admin@wechat_callback', // 扫码微信应用回调
         'Admin@mp_getqrcode', // 获取微信公众号二维码
         'Admin@mp_bingwxgzhopenid', // 绑定微信公众号二维码
+        'Admin@ajax_admin_wechat_login', // 后台管理插件（手机版）--微信公众号登录
+        'Admin@get_admin_wechat_users', // 后台管理插件（手机版）--获取微信登录用户信息
     ),
     
     // 无需验证权限的操作

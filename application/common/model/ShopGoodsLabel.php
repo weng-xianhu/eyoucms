@@ -80,11 +80,11 @@ class ShopGoodsLabel extends Model
     // 保存商品服务标签与商品关联绑定数据
     public function saveGoodsLabelBind($aid = 0, $goodsLabelID = [])
     {
-        if (!empty($goodsLabelID)) {
-            // 删除指定商品服务标签与商品关联绑定数据
-            if (!empty($aid)) $this->shopGoodsLabelBindDb->where(['aid' => intval($aid)])->delete(true);
+        // 删除指定商品服务标签与商品关联绑定数据
+        if (!empty($aid)) $this->shopGoodsLabelBindDb->where(['aid' => intval($aid)])->delete(true);
 
-            // 保存指定商品服务标签与商品关联绑定数据
+        // 保存指定商品服务标签与商品关联绑定数据
+        if (!empty($goodsLabelID)) {
             $insertAll = [];
             foreach ($goodsLabelID as $key => $value) {
                 $insertAll[] = [

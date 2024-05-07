@@ -237,6 +237,19 @@
                     </dd>
                 </dl>
                 {/eq}
+                {eq name='$weappRow.AwsOss' value='1'}
+                <dl class="row">
+                    <dt class="tit">
+                        <label>亚马逊S3存储</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin"><input id="aws_open1" name="data[aws_open]" value="1" type="radio" {if condition="isset($field.data.aws_open) && $field.data.aws_open eq 1"} checked="checked"{/if} onclick="aws_open(this);">开启</label>
+                        &nbsp;
+                        <label class="curpoin"><input id="aws_open0" name="data[aws_open]" value="0" type="radio" {if condition="empty($field.data.aws_open)"} checked="checked"{/if} onclick="aws_open(this);">关闭</label>
+                        <p class="notic">开启前，请先安装插件【亚马逊S3对象存储】</p>
+                    </dd>
+                </dl>
+                {/eq}
             {/in}
 
             <div class="bot">
@@ -314,11 +327,11 @@
                 dataType: "JSON",
                 success: function(res1) {
                     if (1 == res1.code) {
-                        // 七牛云开启，关闭腾讯云COS、阿里云OSS
-                        $('label[for=cos_open1], label[for=oss_open1]').removeClass('selected');
-                        $('#cos_open1, #oss_open1').attr('checked','');
-                        $('label[for=cos_open0], label[for=oss_open0]').addClass('selected');
-                        $('#cos_open0, #oss_open0').attr('checked','checked');
+                        // 七牛云开启，关闭腾讯云COS、阿里云OSS、亚马逊S3
+                        $('label[for=cos_open1], label[for=oss_open1], label[for=aws_open1]').removeClass('selected');
+                        $('#cos_open1, #oss_open1, #aws_open1').attr('checked','');
+                        $('label[for=cos_open0], label[for=oss_open0], label[for=aws_open0]').addClass('selected');
+                        $('#cos_open0, #oss_open0, #aws_open0').attr('checked','checked');
                     } else {
                         $('label[for=qiniuyun_open1]').removeClass('selected');
                         $('#qiniuyun_open1').attr('checked','');
@@ -395,11 +408,11 @@
                 dataType: "JSON",
                 success: function(res1) {
                     if (1 == res1.code) {
-                        // 阿里云OSS开启，关闭腾讯云COS、七牛云
-                        $('label[for=cos_open1], label[for=qiniuyun_open1]').removeClass('selected');
-                        $('#cos_open1, #qiniuyun_open1').attr('checked','');
-                        $('label[for=cos_open0], label[for=qiniuyun_open0]').addClass('selected');
-                        $('#cos_open0, #qiniuyun_open0').attr('checked','checked');
+                        // 阿里云OSS开启，关闭腾讯云COS、七牛云、亚马逊S3
+                        $('label[for=cos_open1], label[for=qiniuyun_open1], label[for=aws_open1]').removeClass('selected');
+                        $('#cos_open1, #qiniuyun_open1, #aws_open1').attr('checked','');
+                        $('label[for=cos_open0], label[for=qiniuyun_open0], label[for=aws_open0]').addClass('selected');
+                        $('#cos_open0, #qiniuyun_open0, #aws_open0').attr('checked','checked');
                     } else {
                         $('label[for=oss_open1]').removeClass('selected');
                         $('#oss_open1').attr('checked','');
@@ -475,11 +488,11 @@
                 dataType: "JSON",
                 success: function(res1) {
                     if (1 == res1.code) {
-                        // 腾讯云COS开启，关闭七牛云、阿里云OSS
-                        $('label[for=qiniuyun_open1], label[for=oss_open1]').removeClass('selected');
-                        $('#qiniuyun_open1, #oss_open1').attr('checked','');
-                        $('label[for=qiniuyun_open0], label[for=oss_open0]').addClass('selected');
-                        $('#qiniuyun_open0, #oss_open0').attr('checked','checked');
+                        // 腾讯云COS开启，关闭七牛云、阿里云OSS、亚马逊S3
+                        $('label[for=qiniuyun_open1], label[for=oss_open1], label[for=aws_open1]').removeClass('selected');
+                        $('#qiniuyun_open1, #oss_open1, #aws_open1').attr('checked','');
+                        $('label[for=qiniuyun_open0], label[for=oss_open0], label[for=aws_open0]').addClass('selected');
+                        $('#qiniuyun_open0, #oss_open0, #aws_open0').attr('checked','checked');
                     } else {
                         $('label[for=cos_open1]').removeClass('selected');
                         $('#cos_open1').attr('checked','');
@@ -529,6 +542,85 @@
                                     maxmin: false, //开启最大化最小化按钮
                                     area: ['80%', '80%'],
                                     content: "{:weapp_url('Cos/Cos/index')}"
+                                });
+                            }, function (index) {
+                                layer.closeAll();
+                            });
+                        } else {
+                            showErrorMsg(res1.msg);
+                        }
+                    }
+                },
+                error: function(e){
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }
+    }
+    // 亚马逊上传开启
+    function aws_open(obj) {
+        if ($(obj).val() == 1) {
+            $.ajax({
+                type: 'GET',
+                url : "{:url('Channeltype/ajax_aws_open')}",
+                data: {_ajax: 1},
+                dataType: "JSON",
+                success: function(res1) {
+                    if (1 == res1.code) {
+                        // 亚马逊S3开启，关闭七牛云、阿里云OSS,腾讯云
+                        $('label[for=qiniuyun_open1], label[for=oss_open1], label[for=cos_open1]').removeClass('selected');
+                        $('#qiniuyun_open1, #oss_open1,#cos_open1').attr('checked','');
+                        $('label[for=qiniuyun_open0], label[for=oss_open0], label[for=cos_open0]').addClass('selected');
+                        $('#qiniuyun_open0, #oss_open0, #cos_open0').attr('checked','checked');
+                    } else {
+                        $('label[for=aws_open1]').removeClass('selected');
+                        $('#aws_open1').attr('checked','');
+                        $('label[for=aws_open0]').addClass('selected');
+                        $('#aws_open0').attr('checked','checked');
+
+                        if (res1.data.code == -1) {
+                            showErrorMsg(res1.msg);
+                        } else if (res1.data.code == -2) {
+                            layer.alert(res1.msg, {icon: 5, title: false, btn:['启用']}, function(index){
+                                layer.close(index);
+                                layer_loading('正在启用');
+                                $.ajax({
+                                    type: 'POST',
+                                    url: "{:url('Index/changeTableVal')}",
+                                    data: {table:'weapp', id_name:'id', id_value:res1.data.id, field:'status', value:1, _ajax:1},
+                                    dataType: "JSON",
+                                    success: function (res) {
+                                        layer.closeAll();
+                                        if (res.code == 1) {
+                                            // $('label[for=cos_open1]').addClass('selected');
+                                            // $('#cos_open1').attr('checked','checked');
+                                            // $('label[for=cos_open0]').removeClass('selected');
+                                            // $('#cos_open0').attr('checked','');
+                                        } else {
+                                            showErrorMsg(res.msg);
+                                        }
+                                    }
+                                })
+                            });
+                        } else if (res1.data.code == -3) {
+                            layer.confirm(res1.msg, {
+                                icon: 5,
+                                title: false,
+                                btn: ['立即配置']
+                            }, function () {
+                                layer.closeAll();
+                                //iframe窗
+                                layer.open({
+                                    type: 2,
+                                    title: false,
+                                    fixed: true, //不固定
+                                    shadeClose: false,
+                                    shade: layer_shade,
+                                    btnAlign:'r',
+                                    closeBtn: 3,
+                                    maxmin: false, //开启最大化最小化按钮
+                                    area: ['80%', '80%'],
+                                    content: "{:weapp_url('AwsOss/AwsOss/index')}"
                                 });
                             }, function (index) {
                                 layer.closeAll();

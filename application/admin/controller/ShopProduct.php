@@ -901,7 +901,8 @@ class ShopProduct extends Base
                 model('ShopPublicHandle')->pointsGoodsPassiveHandle([$data['aid']]);
 
                 // 保存商品服务标签绑定
-                if (!empty($post['goodsLabelID'])) model('ShopGoodsLabel')->saveGoodsLabelBind($data['aid'], $post['goodsLabelID']);
+                if (empty($post['goodsLabelID'])) $post['goodsLabelID'] = [];
+                model('ShopGoodsLabel')->saveGoodsLabelBind($data['aid'], $post['goodsLabelID']);
 
                 // 生成静态页面代码
                 $successData = [

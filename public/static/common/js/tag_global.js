@@ -217,6 +217,13 @@ function showEditor_1597892187(elemtid) {
         UE.getEditor(elemtid).destroy();
     }catch(e){}
 
+    // 检测手机端的标识
+    var is_mobile = navigator.userAgent.toLowerCase().match(/(ipod|iphone|android|coolpad|mmp|smartphone|midp|wap|xoom|symbian|j2me|blackberry|wince)/i) != null;
+    // 判断手机端并且跳转
+    if (is_mobile) {
+        ueditor_toolbars = ueditor_toolbars_ey_m;
+    }
+
     var serverUrl = __root_dir__+'/index.php?m=user&c=Uploadify&a=index&savepath=ueditor&lang='+__lang__;
     var options = {
         serverUrl : serverUrl,
@@ -228,7 +235,7 @@ function showEditor_1597892187(elemtid) {
         removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
         pasteplain:false, //是否默认为纯文本粘贴。false为不使用纯文本粘贴，true为使用纯文本粘贴
         autoHeightEnabled: false,
-        toolbars: [['fullscreen', 'forecolor', 'backcolor', 'removeformat', '|', 'simpleupload', 'unlink', '|', 'paragraph', 'fontfamily', 'fontsize']],
+        toolbars: ueditor_toolbars,
         // xss 过滤是否开启,inserthtml等操作
         xssFilterRules: true,
         //input xss过滤

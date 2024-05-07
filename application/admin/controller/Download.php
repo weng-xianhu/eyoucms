@@ -378,12 +378,14 @@ class Download extends Base
         $assign_data['qiniu_open'] = 0;
         $assign_data['oss_open'] = 0;
         $assign_data['cos_open'] = 0;
+        $assign_data['aws_open'] = 0;
         $channelRow = Db::name('channeltype')->where('id', $this->channeltype)->find();
         if(!empty($channelRow)){
             $channelRow['data'] = json_decode($channelRow['data'], true);
             $assign_data['qiniu_open'] = !empty($channelRow['data']['qiniuyun_open']) ? $channelRow['data']['qiniuyun_open'] : 0;
             $assign_data['oss_open'] = !empty($channelRow['data']['oss_open']) ? $channelRow['data']['oss_open'] : 0;
             $assign_data['cos_open'] = !empty($channelRow['data']['cos_open']) ? $channelRow['data']['cos_open'] : 0;
+            $assign_data['aws_open'] = !empty($channelRow['data']['aws_open']) ? $channelRow['data']['aws_open'] : 0;
         }
         $assign_data['channelRow'] = $channelRow;
 
@@ -728,12 +730,14 @@ class Download extends Base
         $assign_data['qiniu_open'] = 0;
         $assign_data['oss_open'] = 0;
         $assign_data['oss_open'] = 0;
+        $assign_data['aws_open'] = 0;
         $channelRow = Db::name('channeltype')->where('id', $this->channeltype)->find();
         if(!empty($channelRow)){
             $channelRow['data'] = json_decode($channelRow['data'], true);
             $assign_data['qiniu_open'] = !empty($channelRow['data']['qiniuyun_open']) ? $channelRow['data']['qiniuyun_open'] : 0;
             $assign_data['oss_open'] = !empty($channelRow['data']['oss_open']) ? $channelRow['data']['oss_open'] : 0;
             $assign_data['cos_open'] = !empty($channelRow['data']['cos_open']) ? $channelRow['data']['cos_open'] : 0;
+            $assign_data['aws_open'] = !empty($channelRow['data']['aws_open']) ? $channelRow['data']['aws_open'] : 0;
         }
         $assign_data['channelRow'] = $channelRow;
 

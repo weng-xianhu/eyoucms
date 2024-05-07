@@ -29,7 +29,7 @@ class ApiLogic extends Model
         'apiAdv','apiAd','apiFlink','apiGlobal','apiCollect','apiDiscount','apiLikearticle','apiLike','apiForm',
         'apiCommentlist','apiChannellist','apiDownloadpayList','apiSpecnode','apiNavigation','apiUsersTypeManage',
         'apiMediaOrderList','apiMediaOrderDetails','apiPlayList','apiUpgradeLevelOrderList',
-        'apiWeappSeckillList','apiWeappSeckillView','apiCouponList','apiCouponGoodList'];
+        'apiWeappSeckillList','apiWeappSeckillView','apiCouponList','apiCouponGoodList','apiHotSearch'];
 
     /**
      * 析构函数
@@ -307,6 +307,11 @@ class ApiLogic extends Model
             }else if ('apiCouponGoodList' == $key){ //某优惠券可使用的商品列表
                 $tagCoupon = new \think\template\taglib\api\TagCoupon;
                 $result[$key][$ekey] = $tagCoupon->getGoodsList($parse);
+            }else if ($key == 'apiHotSearch') { // 搜索列表
+                $pagesize = !empty($parse['pagesize']) ? $parse['pagesize'] : 10;
+                $keyword = !empty($parse['keyword']) ? $parse['keyword'] : '';
+                $tagList = new \think\template\taglib\api\TagSearch;
+                $result[$key][$ekey] = $tagList->apiHotSearch($pagesize, $keyword);
             }
         }
 

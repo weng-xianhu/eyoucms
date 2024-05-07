@@ -107,11 +107,9 @@ class System extends Base
                     unset($param['web_ico']);
                 } else {
                     /*修复copy一句话图片木马漏洞*/
-                    $image_ext = config('global.image_ext');
-                    $image_ext_arr = explode(',', $image_ext);
                     $source_ext = pathinfo($source, PATHINFO_EXTENSION);
-                    if (!empty($source_ext) && !in_array($source_ext, $image_ext_arr)) {
-                        $this->error('地址栏图标必须是ico扩展名的图片');
+                    if (!empty($source_ext) && !in_array($source_ext, ['ico'])) {
+                        $this->error('地址栏图标必须是扩展名为ico的图片');
                     }
                     /*end*/
                     if (file_exists($source) && @copy($source, $destination)) {
@@ -834,13 +832,15 @@ class System extends Base
         /*支付接口*/
         $pay_api_list = Db::name('pay_api_config')->where('status', 1)->order('pay_id asc')->select();
         foreach ($pay_api_list as $key => $val) {
-            if (1 == $val['system_built']) {
+            $val['pay_info'] = !empty($val['pay_info']) ? unserialize($val['pay_info']) : [];
+            if (1 === intval($val['system_built'])) {
                 $val['litpic'] = $this->root_dir . "/public/static/admin/images/{$val['pay_mark']}.png";
             } else {
                 $val['litpic'] = $this->root_dir . "/weapp/{$val['pay_mark']}/logo.png";
             }
             $pay_api_list[$key] = $val;
         }
+        $pay_api_list = convert_arr_key($pay_api_list, 'pay_mark');
         $this->assign('pay_api_list', $pay_api_list);
         /* END */
 
@@ -863,8 +863,10 @@ class System extends Base
             $goback = input('param.goback/s');
             $param = input('post.');
             if (!empty($param['tpl_id'])){
-                Db::name('smtp_tpl')->where('tpl_id','in',$param['tpl_id'])->update(['is_open'=>1,'update_time'=>getTime()]);
-                Db::name('smtp_tpl')->where('tpl_id','not in',$param['tpl_id'])->update(['is_open'=>0,'update_time'=>getTime()]);
+                $open_send_scene = Db::name('smtp_tpl')->where('tpl_id','in',$param['tpl_id'])->column('send_scene');
+                Db::name('smtp_tpl')->where('send_scene','in',$open_send_scene)->update(['is_open'=>1,'update_time'=>getTime()]);
+                $close_send_scene = Db::name('smtp_tpl')->where('tpl_id','not in',$param['tpl_id'])->column('send_scene');
+                Db::name('smtp_tpl')->where('send_scene','not in',$close_send_scene)->update(['is_open'=>0,'update_time'=>getTime()]);
             }else{
                 Db::name('smtp_tpl')->where('tpl_id','>',0)->update(['is_open'=>0,'update_time'=>getTime()]);
             }
@@ -1737,12 +1739,32 @@ class System extends Base
             '2' => '多行文本',
             '3' => '上传图片',
             '4' => '开关类型',
+            '5' => '多媒体类型',
         ];
         $this->assign('attr_input_type',$attr_input_type);  //类型列表
         $pageStr = $pageObj->show();
         $this->assign('page',$pageStr);
         $this->assign('list',$list);
         $this->assign('pager',$pageObj);
+
+        $upload_conf = [];
+        $upload_conf['upload_flag'] = 'local';
+        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos', 'AwsOss'])->where('status',1)->select();
+        foreach ($WeappConfig as $value) {
+            if ('Qiniuyun' == $value['code']) {
+                $upload_conf['upload_flag'] = 'qny';
+            } else if ('AliyunOss' == $value['code']) {
+                $upload_conf['upload_flag'] = 'oss';
+            } else if ('Cos' == $value['code']) {
+                $upload_conf['upload_flag'] = 'cos';
+            } else if ('AwsOss' == $value['code']) {
+                $upload_conf['upload_flag'] = 'aws';
+            }
+        }
+        $ext = tpCache('basic.media_type');
+        $upload_conf['ext'] = !empty($ext) ? $ext : config('global.media_ext');
+        $upload_conf['filesize'] = upload_max_filesize();
+        $this->assign('upload_conf',$upload_conf);
 
         return $this->fetch();
     }
@@ -1768,6 +1790,9 @@ class System extends Base
                     }else if($post['attr_input_type'] == 3){
                         $img_url = get_default_pic($post['attr_value']);
                         $post['attr_value'] = '<img src="'.$img_url.'" height="50">';
+                    }else if($post['attr_input_type'] == 5){
+                        $media_url = handle_subdir_pic($post['attr_value'], 'media');
+                        $post['attr_value'] = $media_url;
                     }
                     $this->success("修改成功",null,['attr_value'=> $post['attr_value'] ]);
                 }
@@ -1932,12 +1957,9 @@ class System extends Base
                 }
                 adminLog('删除自定义变量：'.$attr_var_name);
                 $this->success('删除成功');
-            }else{
-                $this->error('删除失败');
             }
-        }else{
-            $this->error('参数有误');
         }
+        $this->error('删除失败');
     }
 
     /**

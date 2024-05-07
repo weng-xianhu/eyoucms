@@ -522,6 +522,7 @@ if (!function_exists('httpRequest')) {
         if ($ssl) {
             curl_setopt($ci, CURLOPT_SSL_VERIFYPEER, FALSE); // https请求 不验证证书和hosts
             curl_setopt($ci, CURLOPT_SSL_VERIFYHOST, FALSE); // 不从证书中检查SSL加密算法是否存在
+            // curl_setopt($ci, CURLOPT_SSLVERSION, 4);   //因为之前的POODLE 病毒爆发，许多网站禁用了sslv3（nginx默认是禁用的，ssl_protocols 默认值为TLSv1 TLSv1.1 TLSv1.2;），最新使用sslv4
         }
         //curl_setopt($ci, CURLOPT_HEADER, true); /*启用时会将头文件的信息作为数据流输出*/
         if (ini_get('open_basedir') == '' && ini_get('safe_mode' == 'Off')) {
@@ -602,6 +603,7 @@ if (!function_exists('httpRequest2')) {
         if ($ssl) {
             curl_setopt($ci, CURLOPT_SSL_VERIFYPEER, FALSE); // https请求 不验证证书和hosts
             curl_setopt($ci, CURLOPT_SSL_VERIFYHOST, FALSE); // 不从证书中检查SSL加密算法是否存在
+            // curl_setopt($ci, CURLOPT_SSLVERSION, 4);   //因为之前的POODLE 病毒爆发，许多网站禁用了sslv3（nginx默认是禁用的，ssl_protocols 默认值为TLSv1 TLSv1.1 TLSv1.2;），最新使用sslv4
         }
         //curl_setopt($ci, CURLOPT_HEADER, true); /*启用时会将头文件的信息作为数据流输出*/
         if (ini_get('open_basedir') == '' && ini_get('safe_mode' == 'Off')) {
@@ -612,15 +614,17 @@ if (!function_exists('httpRequest2')) {
         curl_setopt($ci, CURLINFO_HEADER_OUT, true);
         /*curl_setopt($ci, CURLOPT_COOKIE, $Cookiestr); * *COOKIE带过去** */
         $response    = curl_exec($ci);
-        $requestinfo = curl_getinfo($ci);
-        $http_code   = curl_getinfo($ci, CURLINFO_HTTP_CODE);
+        // $http_code   = curl_getinfo($ci, CURLINFO_HTTP_CODE);
         if ($debug) {
             echo "=====post data======\r\n";
             var_dump($postfields);
             echo "=====info===== \r\n";
+            $requestinfo = curl_getinfo($ci);
             print_r($requestinfo);
             echo "=====response=====\r\n";
             print_r($response);
+            echo "=====error=====\r\n";
+            print_r(curl_error($ci));
         }
         curl_close($ci);
         return $response;
@@ -1412,6 +1416,11 @@ if (!function_exists('saveRemote')) {
             $cosData = json_decode($weappList['Cos']['data'], true);
             if (!empty($cosData['domain'])) {
                 $storageDomain = $cosData['domain'];
+            }
+        } else if (!empty($weappList['AwsOss']['data'])) {
+            $awsData = json_decode($weappList['AwsOss']['data'], true);
+            if (!empty($awsData['domain'])) {
+                $storageDomain = $awsData['domain'];
             }
         }
         //http开头验证
@@ -2247,6 +2256,17 @@ if (!function_exists('strip_sql')) {
      */
     function strip_sql($string)
     {
+        static $web_xss_filter = null;
+        if (null === $web_xss_filter) {
+            $file = DATA_PATH.'conf'.DS.'web_xss_filter.txt';
+            if (file_exists($file)) {
+                $web_xss_filter = @file_get_contents($file);
+            }
+        }
+        if (empty($web_xss_filter) && is_numeric($web_xss_filter)) {
+            return $string;
+        }
+
         $pattern_arr = array(
             "/(\s+)union(\s+)/i",
             "/\bselect\b/i",
@@ -2835,6 +2855,11 @@ if (!function_exists('remote_to_local')) {
             $cosData = json_decode($weappList['Cos']['data'], true);
             if (!empty($cosData['domain'])) {
                 $storageDomain = $cosData['domain'];
+            }
+        } else if (!empty($weappList['AwsOss']['data'])) {
+            $awsData = json_decode($weappList['AwsOss']['data'], true);
+            if (!empty($awsData['domain'])) {
+                $storageDomain = $awsData['domain'];
             }
         }
 

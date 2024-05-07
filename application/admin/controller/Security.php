@@ -256,6 +256,7 @@ class Security extends Base
             }
             // 编辑器防注入
             $param['web_xss_filter'] = intval($post['web_xss_filter']);
+            $this->setWebXssFilter($param['web_xss_filter']);
             // 网站防止被刷
             $param['web_anti_brushing'] = intval($post['web_anti_brushing']);
             /*-------------------后台安全配置 end-------------------*/
@@ -318,6 +319,22 @@ class Security extends Base
             $this->success('操作成功', url('Security/index'));
         }
         $this->error('操作失败');
+    }
+
+    /**
+     * 编辑器防注入是否开启与关闭
+     */
+    private function setWebXssFilter($web_xss_filter = 0)
+    {
+        $tfile = DATA_PATH.'conf'.DS.'web_xss_filter.txt';
+        $fp = @fopen($tfile,'w');
+        if(!$fp) {
+            @file_put_contents($tfile, $web_xss_filter);
+        }
+        else {
+            fwrite($fp, $web_xss_filter);
+            fclose($fp);
+        }
     }
 
     /**

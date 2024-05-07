@@ -205,7 +205,7 @@ class Index extends Base
     private function baiduPay_return()
     {
         $param = input('param.');
-        if (!empty($param)) {
+        if (!empty($param['returnData'])) {
             $param['returnData'] = json_decode(htmlspecialchars_decode($param['returnData']), true);
             if (empty($param['tpOrderId']) || empty($param['status']) || 2 !== intval($param['status'])) return false;
             if (empty($param['returnData']['payType']) || 'baiduPay' !== trim($param['returnData']['payType'])) return false;

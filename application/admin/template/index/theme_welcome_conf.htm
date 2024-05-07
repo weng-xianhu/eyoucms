@@ -56,7 +56,7 @@
                     showErrorMsg(msg);
                     return false;
                 }
-                $(this).find('input[type=radio]').attr('checked', true);
+                $(this).find('input[type=radio]').prop('checked', true);
                 var theme_id = $(this).find('input[type=radio]').attr('data-theme_id');
                 $.ajax({
                     type: "GET",

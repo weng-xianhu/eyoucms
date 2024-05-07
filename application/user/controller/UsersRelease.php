@@ -571,7 +571,7 @@ EOF;
 
             $servername_arr = unserialize(tpCache('download.download_select_servername'));
             $data['download']['default_servername'] = $servername_arr?$servername_arr[0]:'立即下载';
-            $weapp = Db::name('weapp')->where('code','in',['Qiniuyun','AliyunOss','Cos'])->where('status',1)->getAllWithIndex('code');
+            $weapp = Db::name('weapp')->where('code','in',['Qiniuyun','AliyunOss','Cos','AwsOss'])->where('status',1)->getAllWithIndex('code');
             $config = Db::name('channeltype')->where('nid','download')->value('data');
             $config = json_decode($config,true);
             $upload_flag_name = '';
@@ -584,6 +584,9 @@ EOF;
             } else if (!empty($config['cos_open']) && '1' == $config['cos_open'] && !empty($weapp['Cos'])) {
                 $upload_flag = 'cos';
                 $upload_flag_name = '腾讯云';
+            } else if (!empty($config['aws_open']) && '1' == $config['aws_open'] && !empty($weapp['AwsOss'])) {
+                $upload_flag = 'aws';
+                $upload_flag_name = '亚马逊S3';
             }else{
                 $upload_flag = 'local';
             }

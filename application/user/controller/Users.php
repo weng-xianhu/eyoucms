@@ -424,13 +424,12 @@ EOF;
         // 授权过期，请重新授权
         if (empty($result) || (!empty($result['errcode']) && !empty($result['errmsg']))) $this->error('微信授权过期，请重新授权');
         if (!empty($result['access_token'])) {
-            if (!empty($result['access_token'])) {
-                $setting_info = tpSetting(md5($appid));
-                if (!empty($setting_info['access_token'])){
-                    $setting_info['expires_time'] = getTime();
-                }
-                tpSetting(md5($appid), $setting_info);
+            $setting_info = tpSetting(md5($appid));
+            if (!empty($setting_info['access_token'])){
+                $setting_info['access_token'] = $result['access_token'];
+                $setting_info['expires_time']  = getTime() + $result['expires_in'] - 1000;
             }
+            tpSetting(md5($appid), $setting_info);
         }
         // 授权成功，记录授权信息并重定向回原页面
         if (!empty($result) && !empty($result['openid'])) {
@@ -520,7 +519,8 @@ EOF;
         if (!empty($WeChatData['access_token'])) {
             $setting_info = tpSetting(md5($appid));
             if (!empty($setting_info['access_token'])){
-                $setting_info['expires_time'] = getTime();
+                $setting_info['access_token'] = $WeChatData['access_token'];
+                $setting_info['expires_time']  = getTime() + $result['expires_in'] - 1000;
             }
             tpSetting(md5($appid), $setting_info);
         }

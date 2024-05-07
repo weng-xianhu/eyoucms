@@ -2159,7 +2159,7 @@ class Shop extends Base
         $orderCode = input('param.order_code');
         $statusArrEd = [3, 6, 7, 8];
         $statusArrIng = [1, 2, 4, 5];
-        $ServiceInfo = $this->shop_model->GetAllServiceInfo($this->users_id, $order_code, $status, $keywords, $statusArrEd, $statusArrIng);
+        $ServiceInfo = $this->shop_model->GetAllServiceInfo($this->users_id, $orderCode, $status, $keywords, $statusArrEd, $statusArrIng);
 
         $where = [
             'lang' => $this->home_lang,

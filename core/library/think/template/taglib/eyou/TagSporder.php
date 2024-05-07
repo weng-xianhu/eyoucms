@@ -276,13 +276,13 @@ class TagSporder extends Base
                 // 封装获取订单支付方式名称
                 $pay_method_arr = Config::get('global.pay_method_arr');
                 if (!empty($result['OrderData']['payment_method'])) {
-                    $result['OrderData']['pay_name'] = '货到付款（ 快递代收 ）';
+                    $result['OrderData']['pay_name'] = '货到付款';
                 } else {
                     $pay_name = '未支付';
                     if (!empty($result['OrderData']['pay_name'])){
                         $pay_name = !empty($pay_method_arr[$result['OrderData']['pay_name']]) ? $pay_method_arr[$result['OrderData']['pay_name']] : '第三方支付';
                     }
-                    $result['OrderData']['pay_name'] = '在线支付（ '.$pay_name.' ）';
+                    $result['OrderData']['pay_name'] = $pay_name;
                 }
                 // 封装取消订单JS
                 $result['OrderData']['CancelOrder']   = " onclick=\"CancelOrder('{$order_id}');\" ";

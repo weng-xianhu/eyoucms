@@ -133,7 +133,9 @@ class Shop extends Model
             }
             $OrderWhere['order_status'] = $select_status;
             if (3 == $select_status){
-                $OrderWhere['is_comment'] = 0;
+                if (!in_array(getUsersTpl2xVersion(), ['v2.x'])) {
+                    $OrderWhere['is_comment'] = 0;
+                }
             }
         }
 

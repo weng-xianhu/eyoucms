@@ -10,14 +10,17 @@
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
                     <thead>
                     <tr>
-                        <th abbr="download_title" axis="col3" class="w150">
-                            <div class="tc">变化余额</div>
-                        </th>
-                        <th abbr="download_title" axis="col3" class="w150">
-                            <div class="tc">变化后余额</div>
+                        <th abbr="download_title" axis="col3" class="w80">
+                            <div class="tc">序号</div>
                         </th>
                         <th align="center"  axis="col6" class="">
-                            <div class="tl text-l10">备注</div>
+                            <div class="tl text-l10">变动原因</div>
+                        </th>
+                        <th abbr="download_title" axis="col3" class="w150">
+                            <div class="tc">余额变动</div>
+                        </th>
+                        <th abbr="download_title" axis="col3" class="w150">
+                            <div class="tc">变动后余额</div>
                         </th>
                         <th abbr="download_title" axis="col3" class="w150">
                             <div class="tc">操作人</div>
@@ -46,6 +49,28 @@
                     {foreach name="list" item="vo" key="k" }
                     <tr>
                         <td>
+                            <div class="pad-tb12 tc w80" >
+                                {if condition="$pager->nowPage > 1"}
+                                    {$pager->listRows * ($pager->nowPage-1) + $k+1}
+                                {else /}
+                                    {$k+1}
+                                {/if}
+                            </div>
+                        </td>
+                        <td style="width: 100%;">
+                            <div class="pad-tb12 tl text-l10">
+                                {notempty name='$vo.cause'}
+                                    {eq name='$vo.cause_type' value='0'}
+                                        购买{$vo.cause.type_name}
+                                    {else /}
+                                        {$vo.cause}
+                                    {/eq}
+                                {else /}
+                                    {$pay_cause_type_arr[$vo.cause_type]}
+                                {/notempty}
+                            </div>
+                        </td>
+                        <td>
                             <div class="pad-tb12 tc w150" >
                                 {if condition="in_array($vo.cause_type, $increase_type)"}
                                 <span style="color: red;">-￥{$vo.money}</span>
@@ -56,24 +81,7 @@
                         </td>
                         <td  >
                             <div class="pad-tb12 tc w150" >
-                                {if condition="in_array($vo.cause_type, $increase_type)"}
-                                <span style="color: red;">￥{$vo.users_money}</span>
-                                {else /}
-                                <span style="color: green;">￥{$vo.users_money}</span>
-                                {/if}
-                            </div>
-                        </td>
-                        <td style="width: 100%;">
-                            <div class="pad-tb12 tl text-l10">
-                            {notempty name='$vo.cause'}
-                                {eq name='$vo.cause_type' value='0'}
-                                    {$vo.cause.type_name}
-                                {else /}
-                                    {$vo.cause}
-                                {/eq}
-                            {else /}
-                                {$pay_cause_type_arr[$vo.cause_type]}
-                            {/notempty}
+                                ￥{$vo.users_money}
                             </div>
                         </td>
                         <td>

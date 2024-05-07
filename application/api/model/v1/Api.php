@@ -28,6 +28,72 @@ class Api extends Base
     }
 
     /**
+     * 返回微信公众号 access_token
+     * @param  string $appid [description]
+     * @return [type]            [description]
+     */
+    public function get_access_token($row = [], $resetToken = false)
+    {
+        if (empty($row['appid'])) {
+            $row = $this->wechatLogic->get_wechat_config();
+        }
+
+        // 微信配置信息
+        $appid = empty($row['appid']) ? '' : $row['appid'];
+        $secret = empty($row['appsecret']) ? '' : $row['appsecret'];
+        if (empty($secret)) {
+            return [
+                'code' => 0,
+                'msg' => "请先完善 [公众号配置]",
+            ];
+        }
+
+        $appid_md5 = md5($appid);
+        $setting_info = tpSetting($appid_md5);
+        //安装[微信分享美化]插件会影响access_token缓存,如安装,实时查询access_token
+        $is_weshare = Db::name('weapp')->where('code', 'Weshare')->count();
+        if (!empty($is_weshare)) {
+            $setting_info = [];
+        }
+
+        if (false == $resetToken && !empty($setting_info['access_token']) && !empty($setting_info['expires_time']) && $setting_info['expires_time'] > getTime()) {
+            return [
+                'code' => 1,
+                'appid' => $appid,
+                'secret' => $secret,
+                'access_token' => $setting_info['access_token'],
+            ];
+        } else {
+            $url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={$appid}&secret={$secret}";
+            $response = httpRequest($url);
+            $params = json_decode($response, true);
+            if (isset($params['access_token'])) {
+                $this->wechatLogic->set_access_token($params, ['appid' => $appid, 'appsecret' => $secret]);
+                return [
+                    'code' => 1,
+                    'appid' => $appid,
+                    'secret' => $secret,
+                    'access_token' => $params['access_token'],
+                ];
+            }
+
+            if (!empty($params['errcode']) && $params['errcode'] == 40164) {
+                preg_match_all('#(\d{1,3}\.){3}\d{1,3}#i', $params['errmsg'], $matches);
+                $server_ip = !empty($matches[0][0]) ? $matches[0][0] : '';
+                if (!empty($server_ip)) {
+                    $params['errmsg'] = "请将IP：{$server_ip} 加入微信公众号的IP白名单里，具体点击<a href=\"JavaScript:void(0);\" onclick=\"click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=9432&origin_eycms=1','IP白名单配置教程')\">查看教程</a>，如果已添加请等待3-5分钟！";
+                }
+            }
+
+            return [
+                'code' => 0,
+                'errcode' => !empty($params['errcode']) ? $params['errcode'] : 0,
+                'msg' => !empty($params['errmsg']) ? $params['errmsg'] : '请检查公众号AppId和AppSecret是否正确',
+            ];
+        }
+    }
+
+    /**
      * 文档详情
      * @param int $aid 文档ID
      */
@@ -218,6 +284,7 @@ class Api extends Base
                     //购物车数量
                     $detail['cart_total_num'] = Db::name('shop_cart')->where(['users_id' => $users['users_id']])->sum('product_num');
                 }
+                if(!empty($users['level_name'])) $detail['users_level_name'] = $users['level_name'];
             } else if (3 == $detail['channel']) { // 图集模型
                 unset($detail['users_price']);
                 unset($detail['users_free']);
@@ -400,16 +467,15 @@ class Api extends Base
             $detail['customField'] = !empty($customField) ? $customField : false;
             $detail['users_discount_price'] = !empty($detail['users_price']) ? $detail['users_price'] : 0;
             if (!empty($detail['users_price']) && !empty($users['users_id']) && 0 === intval($detail['users_discount_type'])) {
-                $discount = Db::name('users_level')->where('level_id',$users['level'])->value('discount');
-                if (100 > $discount) {
-                    $detail['users_discount_price'] = sprintf("%.2f",$detail['users_price']*($discount/100));
-                }
+                $detail['users_discount_price'] = unifyPriceHandle($detail['users_price'] * ($users['level_discount'] / 100));
             }
 
             // 商品是 单规格 且 设置会员折扣价 则处理
             if (empty($detail['spec_attr']['spec_data']) && 1 === intval($detail['users_discount_type']) && !empty($users['level_id'])) {
                 $detail['users_discount_price'] = model('ShopPublicHandle')->handleUsersDiscountPrice($aid, $users['level_id']);
             }
+
+            $detail['users_discount_price_arr'] = explode('.', sprintf("%.2f", $detail['users_discount_price']));
             
             $result['detail'] = $detail;
         }
@@ -984,7 +1050,7 @@ class Api extends Base
             'a.is_show' => 1,
         ];
         if (!empty($param['total_score'])) $condition['a.total_score'] = $param['total_score'];
-        if ('img' == $type) $condition['a.upload_img'] = ['neq',''];
+        if ('img' == $type) $condition['a.upload_img'] = ['not in',['','s:0:"";']];
 
         $args = [$goods_id,$page,$pagesize,$total_score];
         $cacheKey = 'api-'.md5(__CLASS__.__FUNCTION__.json_encode($args));
@@ -1008,9 +1074,15 @@ class Api extends Base
                 }
                 if (!empty($val['upload_img'])){
                     $val['upload_img'] = unserialize($val['upload_img']);
-                    $val['upload_img'] = explode(',',$val['upload_img']);
-                    foreach ($val['upload_img'] as $k => $v){
-                        $val['upload_img'][$k] = get_default_pic($v,true);
+                    if (!empty($val['upload_img'])){
+                        $val['upload_img'] = explode(',',$val['upload_img']);
+                        foreach ($val['upload_img'] as $k => $v){
+                            if (!empty($v)) {
+                                $val['upload_img'][$k] = get_default_pic($v,true);
+                            }else{
+                                unset($val['upload_img'][$k]);
+                            }
+                        }
                     }
                 }
                 if (!empty($val['content'])){
@@ -1032,7 +1104,7 @@ class Api extends Base
             $result['count']['all'] = $result['count']['goods']+$result['count']['middle']+$result['count']['bad'] ;
 
             cache($cacheKey, $result, null, 'getGoodsCommentList');
-            $condition['a.upload_img'] = ['neq',''];
+            $condition['a.upload_img'] = ['not in',['','s:0:"";']];
             $result['have_img_count'] = Db::name('shop_order_comment')->alias('a')->where($condition)->count();
         }
         return $result;
@@ -1476,7 +1548,6 @@ class Api extends Base
         $send_scene = $template_info['send_scene'];
         // 订单支付成功通知
         if (9 == $send_scene) {
-            $pagepath = "/pages/order/detail?order_id={$result_id}";
             $gourl = url('user/Shop/shop_order_details', ['order_id' => $result_id]);
             $orderInfo = Db::name('shop_order')->where(['order_id' => $result_id])->find();
             $orderDetailsInfo = Db::name('shop_order_details')->where(['order_id' => $orderInfo['order_id']])->order('details_id asc')->select();

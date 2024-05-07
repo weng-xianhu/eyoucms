@@ -242,6 +242,109 @@
         });
     }
 
+    /*-----------------------------绑定与解绑微信公众号 start------------------------*/
+
+    /*function wechatFollowed(obj, opt) {
+        if ('bind' == opt) {
+            var admin_id = $(obj).data('id');
+            layer_loading('正在加载');
+            $.ajax({
+                type: 'POST',
+                url : "{:url('Admin/wechat_followed')}",
+                data: {admin_id: admin_id, opt:opt, _ajax: 1},
+                dataType: "JSON",
+                success: function(res){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        var htmlContent = '<img src="' + res.url + '?t='+ Math.floor(Math.random()*10000000) +'" style="width: 250px; height: 250px;"><p style="color: red; padding: 8px 0; font-size: 15px; text-align: center;">打开微信扫一扫</p> <script type="text/javascript"> pollingWechatFollowed("' + admin_id + '"); <\/script>';
+                        layer.open({
+                            type: 1,
+                            title:'微信扫码绑定且关注',
+                            id: 'layer_wechat_followed',
+                            shadeClose: false,
+                            content: htmlContent,
+                            end: function() {
+                                clearWechatFollowed();
+                            }
+                        });
+                    } else {
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error: function(e) {
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        } else if ('unbind' == opt) {
+            var admin_id = $(obj).data('id');
+            layer_loading('正在处理');
+            $.ajax({
+                type: 'POST',
+                url: '{:url("Admin/wechat_followed")}',
+                data: {admin_id:admin_id, opt:opt, _ajax:1},
+                dataType: "JSON",
+                success: function(res){
+                    layer.closeAll();
+                    if (1 == res.code){
+                        layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    }else{
+                        showErrorAlert(res.msg);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
+                }
+            });
+        }
+    }
+
+    var pollingFollowed = null;
+    function pollingWechatFollowed(admin_id) {
+        pollingFollowed = setTimeout(function(){
+            $.ajax({
+                type: 'POST',
+                url : "{:url('Admin/polling_wechat_followed')}",
+                data: {admin_id: admin_id, _ajax:1},
+                dataType: "JSON",
+                success: function(res) {
+                    if (1 == res.data.code) {
+                        layer.closeAll();
+                        clearWechatFollowed();
+                        layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            window.location.reload();
+                        });
+                    } else if (0 == res.code) {
+                        layer.closeAll();
+                        clearWechatFollowed();
+                        layer.alert(res.msg, {icon: 5, title: false, closeBtn: false}, function() {
+                            window.location.reload();
+                        });
+                    } else if (2 == res.data.code) {
+                        pollingWechatFollowed(admin_id);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    clearWechatFollowed();
+                    layer.alert(e.responseText, {icon: 5, title: false, closeBtn: false}, function() {
+                        window.location.reload();
+                    });
+                }
+            });
+        }, 2000);
+    }
+
+    function clearWechatFollowed() {
+        if (pollingFollowed > 0) {
+            clearTimeout(pollingFollowed);
+            pollingFollowed = null;
+        }
+    }*/
+
     /*-----------------------------绑定与解绑微信 start------------------------*/
 
     /**

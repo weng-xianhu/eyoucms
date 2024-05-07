@@ -95,6 +95,8 @@ class User extends UserBase
             $userInfo = !empty($post['user_info']) ? json_decode($post['user_info'], true) : [];
             $users_id = $this->register($session['openid'], $userInfo);
             $session['unionid'] = '';
+        } elseif (self::$provider == 'h5') {
+            return $this->h5_login($post);
         } else {
             // 微信登录 获取session_key
             $session = $this->wxlogin($post['code']);
@@ -157,6 +159,138 @@ class User extends UserBase
         $this->token = $this->token($session['unionid'], $session['session_key'], $users_id, $session['openid']);
 
         return $users_id;
+    }
+
+    /**
+     * h5登录
+     * @param  [type] $post [description]
+     * @return [type]       [description]
+     */
+    private function h5_login($post)
+    {
+        $row = $this->wechatLogic->get_wechat_config();
+        if (empty($row['appid']) || empty($row['appsecret'])) {
+            $this->error("请先完善插件里 [公众号配置]");
+        }
+
+        // 微信配置信息
+        $appid = $row['appid'];
+        $secret = $row['appsecret'];
+        $code = $post['code'];
+        
+        // 获取到会员openid
+        $get_token_url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid=' . $appid . '&secret=' . $secret . '&code=' . $code . '&grant_type=authorization_code';
+        $data = httpRequest($get_token_url);
+        $WeChatData = json_decode($data, true);
+        if (empty($WeChatData) || (!empty($WeChatData['errcode']) && !empty($WeChatData['errmsg']))) {
+            $this->error('AppSecret错误或已过期');
+        }
+
+        // 获取会员信息
+        $get_userinfo_url = 'https://api.weixin.qq.com/sns/userinfo?access_token=' . $WeChatData["access_token"] . '&openid=' . $WeChatData["openid"] . '&lang=zh_CN';
+        $userInfo = httpRequest($get_userinfo_url);
+        $userInfo = json_decode($userInfo, true);
+        if (empty($userInfo['nickname']) && empty($userInfo['headimgurl'])) {
+            $this->error('用户授权异常，建议清理手机缓存再进行登录');
+        }
+        $userInfo['unionid'] = !empty($userInfo['unionid']) ? $userInfo['unionid'] : '';
+        if (!empty($userInfo['unionid'])) {
+            $where['unionid'] = $userInfo['unionid'];
+        } elseif (!empty($userInfo['openid'])) {
+            $where['open_id'] = $userInfo['openid'];
+        }
+
+        $users_id = Db::name('users')->where($where)->value('users_id');
+        if (empty($users_id)) {
+            $users_id = $this->h5_users_register($userInfo);
+            $post['is_new'] = 1;
+        }
+        $this->token = $this->token('' , '', $users_id, $userInfo['openid']);
+
+        return $users_id;
+    }
+
+    // h5 - 自动注册users表用户
+    private function h5_users_setReg($userInfo)
+    {
+        // 生成用户名
+        $username = rand_username('', 'U', 3);
+        // 用户昵称
+        $nickname = !empty($userInfo['nickname']) ? filterNickname($userInfo['nickname']) : '';
+        // 创建用户账号
+        $addData = [
+            'username' => $username,//用户名-生成
+            'nickname' => !empty($nickname) ? trim($nickname) : $username,//昵称，同微信用户名
+            'level' => 1,
+            'thirdparty' => 6,
+            'source' => 3,
+            'union_id' => !empty($userInfo['unionid']) ? $userInfo['unionid'] : '',
+            'open_id' => !empty($userInfo['openid']) ? $userInfo['openid'] : '',
+            'register_place' => 2,
+            'open_level_time' => getTime(),
+            'level_maturity_days' => 0,
+            'reg_time' => getTime(),
+            'head_pic' => !empty($userInfo['headimgurl']) ? $userInfo['headimgurl'] : ROOT_DIR . '/public/static/common/images/dfboy.png',
+            'mobile' => !empty($userInfo['mobile']) ? $userInfo['mobile'] : '',
+            'is_mobile' => !empty($userInfo['mobile']) ? 1 : 0,
+        ];
+        $users_id = Db::name('users')->insertGetId($addData);
+
+        return $users_id;
+    }
+
+    // h5 - 自动注册用户
+    private function h5_users_register($userInfo = [])
+    {
+        if (!empty($userInfo['unionid'])) {
+            $u_where['union_id'] = $w_where['unionid'] = $userInfo['unionid'];
+            $users_id = Db::name('users')->where($u_where)->value('users_id');
+            if (!empty($users_id)) return $users_id;
+        } else {
+            $w_where['openid'] = $userInfo['openid'];
+        }
+
+        // 查询用户是否已存在
+        $we_user = Db::name('wx_users')->field('users_id')->where($w_where)->find();
+        if (empty($we_user)) {
+            $users_id = $this->h5_users_setReg($userInfo);
+            if (!empty($users_id)) {
+                //微信用户信息存在表里
+                $wxuser_id = Db::name('wx_users')->insertGetId([
+                    'users_id' => $users_id,
+                    'openid' => $userInfo['openid'],
+                    'unionid' => $userInfo['unionid'],
+                    'nickname' => !empty($userInfo['nickname']) ? filterNickname($userInfo['nickname']) : '',
+                    'headimgurl' => !empty($userInfo['headimgurl']) ? filterNickname($userInfo['headimgurl']) : '',
+                    'provider' => 'gzh',
+                    'add_time' => getTime(),
+                ]);
+                if (!empty($wxuser_id)) {
+                    return $users_id;
+                } else {
+                    Db::name('users')->where(['users_id' => $users_id])->delete();
+                }
+            }
+            $this->error('用户注册失败！');
+        } else {
+            $users = Db::name('users')->field('users_id')->where([
+                'users_id' => $we_user['users_id'],
+            ])->find();
+            if (empty($users)) {
+                $users_id = $this->h5_users_setReg($userInfo);
+                if (!empty($users_id)) {
+                    Db::name('wx_users')->where($w_where)->update([
+                        'users_id' => $users_id,
+                        'update_time' => getTime(),
+                    ]);
+                    return $users_id;
+                } else {
+                    $this->error('用户注册失败！');
+                }
+            } else {
+                return $we_user['users_id'];
+            }
+        }
     }
 
     //头条登录

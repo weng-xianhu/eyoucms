@@ -340,18 +340,24 @@ class Field extends Model
                         $val[$val['name'].'_eyou_is_remote'] = 0;
                         $val[$val['name'].'_eyou_remote'] = '';
                         $val[$val['name'].'_eyou_local'] = '';
+                        $val[$val['name'].'_filename'] = '';
                         if (array_key_exists($val['name'], $addonRow)) {
                             if (is_http_url($addonRow[$val['name']])) {
                                 $val[$val['name'].'_eyou_is_remote'] = 1;
                                 $val[$val['name'].'_eyou_remote'] = handle_subdir_pic($addonRow[$val['name']]);
                             } else {
                                 $val[$val['name'].'_eyou_is_remote'] = 0;
+                                if (!empty($addonRow[$val['name']]) && stristr($addonRow[$val['name']], '|')) {
+                                    $arr = explode('|', $addonRow[$val['name']]);
+                                    $addonRow[$val['name']] = $arr[0];
+                                    $val[$val['name'].'_filename'] = empty($arr[1]) ? '' : $arr[1];
+                                }
                                 $val[$val['name'].'_eyou_local'] = handle_subdir_pic($addonRow[$val['name']]);
                             }
                         }
                         $val['dfvalue'] = handle_subdir_pic($addonRow[$val['name']]);
                         $val['upload_flag'] = 'local';
-                        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos'])->where('status',1)->select();
+                        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos', 'AwsOss'])->where('status',1)->select();
                         foreach ($WeappConfig as $value) {
                             if ('Qiniuyun' == $value['code']) {
                                 $val['upload_flag'] = 'qny';
@@ -359,6 +365,8 @@ class Field extends Model
                                 $val['upload_flag'] = 'oss';
                             } else if ('Cos' == $value['code']) {
                                 $val['upload_flag'] = 'cos';
+                            } else if ('AwsOss' == $value['code']) {
+                                $val['upload_flag'] = 'aws';
                             }
                         }
                         $val['ext'] = tpCache('basic.file_type');
@@ -369,7 +377,7 @@ class Field extends Model
                     {
                         $val['dfvalue'] = $addonRow[$val['name']];
                         $val['upload_flag'] = 'local';
-                        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos'])->where('status',1)->select();
+                        $WeappConfig = Db::name('weapp')->field('code, status')->where('code', 'IN', ['Qiniuyun', 'AliyunOss', 'Cos', 'AwsOss'])->where('status',1)->select();
                         foreach ($WeappConfig as $value) {
                             if ('Qiniuyun' == $value['code']) {
                                 $val['upload_flag'] = 'qny';
@@ -377,6 +385,8 @@ class Field extends Model
                                 $val['upload_flag'] = 'oss';
                             } else if ('Cos' == $value['code']) {
                                 $val['upload_flag'] = 'cos';
+                            } else if ('AwsOss' == $value['code']) {
+                                $val['upload_flag'] = 'aws';
                             }
                         }
                         $ext = tpCache('basic.media_type');
@@ -535,6 +545,9 @@ class Field extends Model
                             $val = $dataExt[$key.'_eyou_remote'];
                         } else {
                             $val = $dataExt[$key.'_eyou_local'];
+                            if (!empty($dataExt[$key.'_filename'])) {
+                                $val .= '|' . $dataExt[$key.'_filename'];
+                            }
                         }
                         break;
                     }

@@ -149,7 +149,15 @@ class FieldLogic extends Model
                     }
                     case 'file':
                         {
-                            $val = handle_subdir_pic($val);
+                            $data[$key.'_filename'] = '';
+                            if (stristr($val, '|')) {
+                                $arr = explode('|', $val);
+                                $val = $arr[0];
+                                $data[$key.'_filename'] = empty($arr[1]) ? '' : $arr[1];
+                                $val = ROOT_DIR . "/index.php?m=home&c=View&a=custom_download_file&aid={$data['aid']}&field={$key}";
+                            } else {
+                                $val = handle_subdir_pic($val);
+                            }
                             break;
                         }
                     case 'checkbox':

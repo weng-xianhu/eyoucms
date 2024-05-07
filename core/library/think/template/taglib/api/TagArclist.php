@@ -263,10 +263,13 @@ class TagArclist extends Base
 
             $val['old_price'] = unifyPriceHandle($val['users_price']);
             $val['crossed_price'] = model('ShopPublicHandle')->getGoodsSpecCrossedPrice($val['crossed_price'], $val['aid']);
-            $resultData = $this->handle_price($val['users_price'], $users, $val['aid'], $val['users_discount_type']);
-            $val['users_price'] = $resultData['users_price'];
-            $val['level_discount'] = $resultData['level_discount'];
-            $val['users_price_arr'] = explode('.', $val['users_price']);
+            if (!empty($users)) {
+                $resultData = $this->handle_price($val['users_price'], $users, $val['aid'], $val['users_discount_type']);
+                $val['users_price'] = $resultData['users_price'];
+                $val['level_discount'] = $resultData['level_discount'];
+            }
+            // $val['users_price_arr'] = explode('.', $val['users_price']);
+            $val['users_price_arr'] = explode('.', sprintf("%.2f", $val['users_price']));
             
             $val['real_sales'] = $val['sales_num']; // 真实总销量
             $val['sales_num'] = $val['sales_all']; // 总虚拟销量

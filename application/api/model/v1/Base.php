@@ -17,6 +17,7 @@ use think\Db;
 use think\Model;
 use think\Request;
 use think\template\taglib\api\Base as BaseTag;
+use app\api\logic\v1\WechatLogic;
 
 /**
  * 小程序基类模型
@@ -56,6 +57,8 @@ class Base extends Model
     public $globalConfig = [];
     public $usersConfig = [];
 
+    public $wechatLogic = [];
+
     //初始化
     protected function initialize()
     {
@@ -70,6 +73,7 @@ class Base extends Model
         // $cmstype = input('param.cmstype');
         $this->globalConfig = BaseTag::$globalConfig;
         $this->usersConfig = BaseTag::$usersConfig;
+        $this->wechatLogic = new WechatLogic;
     }
 
     /**

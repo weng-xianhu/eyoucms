@@ -674,6 +674,8 @@ EOF;
         $this->eyou_v165_handle_data();
         // 升级v1.6.6版本要处理的数据
         $this->eyou_v166_handle_data();
+        // 升级v1.6.7版本要处理的数据
+        $this->eyou_v167_handle_data();
     }
 
     // 升级v1.6.3版本要处理的数据
@@ -859,6 +861,43 @@ EOF;
         $this->syn_handle166_table_data();
         $this->syn_handle_shop_product_attrlist();
         $this->syn_handle_shop_product_attribute();
+    }
+
+    // 升级v1.6.7版本要处理的数据
+    private function eyou_v167_handle_data()
+    {
+        $Prefix = config('database.prefix');
+        $adminTableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}admin");
+        $adminTableInfo = get_arr_column($adminTableInfo, 'Field');
+        if (!empty($adminTableInfo) && !in_array('wechat_appid', $adminTableInfo)){
+            $sql = "ALTER TABLE `{$Prefix}admin` ADD COLUMN `wechat_appid`  varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '公众号appid' AFTER `desc`;";
+            @Db::execute($sql);
+        }
+        if (!empty($adminTableInfo) && !in_array('union_id', $adminTableInfo)){
+            $sql = "ALTER TABLE `{$Prefix}admin` ADD COLUMN `union_id`  varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '微信用户的unionId' AFTER `wechat_open_id`;";
+            @Db::execute($sql);
+        }
+        schemaTable('admin');
+
+        // 编辑器防注入是否开启与关闭
+        $syn_admin_logic_1714458348 = tpSetting('syn.syn_admin_logic_1714458348', [], 'cn');
+        if (empty($syn_admin_logic_1714458348)) {
+            try {
+                $web_xss_filter = (int)tpCache('web.web_xss_filter');
+                $tfile = DATA_PATH.'conf'.DS.'web_xss_filter.txt';
+                $fp = @fopen($tfile,'w');
+                if(!$fp) {
+                    @file_put_contents($tfile, $web_xss_filter);
+                }
+                else {
+                    fwrite($fp, $web_xss_filter);
+                    fclose($fp);
+                }
+
+                tpSetting('syn', ['syn_admin_logic_1714458348' => 1], 'cn');
+            } catch (\Exception $e) {
+            }
+        }
     }
 
     /**

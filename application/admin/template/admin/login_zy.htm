@@ -175,7 +175,7 @@
                     <input type="button" name="submit" class="btn btn-lg btn-primary btn-block show-dialog" value="登录">
                 </form>
             </div>
-            {if condition="$third_login == 'EyouGzhLogin'"}
+            {if condition="in_array($third_login, ['EyouGzhLogin','userGzhLogin'])"}
                 <div class="box ercodeSignBox" {if condition="$login_type != 3"}style="display:none;"{/if}>
                     {eq name='$login_type' value='2'}<div class="switch-input"><i class="iconfont e-pc1"></i> </div>{/eq}
                     <div class="ercodecon">
@@ -195,7 +195,7 @@
             $(function () {
                 var login_type = {$login_type|default='1'};
                 if (3 == login_type) {
-                    if ('EyouGzhLogin' == third_login) {
+                    if (0 <= $.inArray(third_login, ['EyouGzhLogin','userGzhLogin'])) {
                         getQrCode();
                         qrcodePolling = setInterval(function(){getQrCode();}, 5*60*1000);
                     }
@@ -220,7 +220,7 @@
 
             $(".swicth-ercode").click(function (e) {
                 e.preventDefault();
-                if ('EyouGzhLogin' == third_login) {
+                if (0 <= $.inArray(third_login, ['EyouGzhLogin','userGzhLogin'])) {
                     $(".SignBox").hide();
                     $(".ercodeSignBox").show();
                     getQrCode();

@@ -103,6 +103,15 @@ class Admin extends Base {
      */
     public function login()
     {
+        // 两步验证
+        $double_check = input('param.double_check/d', 0);
+        if (!empty($double_check)) {
+            if (IS_POST && function_exists('login_double')) {
+                $redata = login_double();
+                respose($redata);
+            }
+        }
+
         if (session('?admin_id') && session('admin_id') > 0) {
             $web_adminbasefile = tpCache('global.web_adminbasefile');
             $web_adminbasefile = !empty($web_adminbasefile) ? $web_adminbasefile : $this->root_dir.'/login.php';
@@ -131,6 +140,12 @@ class Admin extends Base {
         $thirdata = login_third_type();
         $third_login = !empty($thirdata['type']) ? $thirdata['type'] : '';
         if ('EyouGzhLogin' == $third_login) {
+            if (empty($thirdata['data']['force'])){
+                $login_type = 2; //2-账号密码登录&微信扫码登录
+            } else {
+                $login_type = 3; //仅微信扫码登录
+            }
+        } else if ('userGzhLogin' == $third_login) {
             if (empty($thirdata['data']['force'])){
                 $login_type = 2; //2-账号密码登录&微信扫码登录
             } else {
@@ -242,9 +257,22 @@ class Admin extends Base {
                             adminLog('登录失败(用户名被禁用)');
                             $this->error('用户名被禁用！');
                         }
-                        $admin_info = adminLoginAfter($admin_info['admin_id'], $this->session_id);
+
                         // 检查密码复杂度
                         session('admin_login_pwdlevel', checkPasswordLevel($password));
+
+                        // 两步验证
+                        if (function_exists('double_login_open') && double_login_open()) {
+                            $data = double_login_logic('login_action_begin', $admin_info);
+                            if (isset($data['code']) && 0 === $data['code']) {
+                                $this->error($data['msg']);
+                            } else {
+                                $this->success('正在检测', $data['url']);
+                            }
+                        }
+
+                        // 登录逻辑
+                        $admin_info = adminLoginAfter($admin_info['admin_id'], $this->session_id);
 
                         adminLog('后台登录');
                         $url = session('from_url') ? session('from_url') : $this->request->baseFile();
@@ -277,6 +305,8 @@ class Admin extends Base {
             $this->error("用户名或密码错误！");
         }
 
+        $assign_data = [];
+
         $ajaxLogic = new AjaxLogic;
         $ajaxLogic->login_handle();
         
@@ -285,9 +315,8 @@ class Admin extends Base {
         //     $this->wechatLogin();
         // }
 
-        $this->global = tpCache('global');
-        $this->assign('global', $this->global);
-        $this->assign('time', getTime());
+        $assign_data['global'] = tpCache('global');
+        $assign_data['time'] = getTime();
 
         /*等保密码复杂度验证 start*/
         $pwdJsCode = '';
@@ -298,7 +327,7 @@ class Admin extends Base {
         if ('close' == $pwdJsCode) {
             $pwdJsCode = '';
         }
-        $this->assign('pwdJsCode', $pwdJsCode);
+        $assign_data['pwdJsCode'] = $pwdJsCode;
         /*等保密码复杂度验证 end*/
         
         session('admin_info', null);
@@ -319,10 +348,23 @@ class Admin extends Base {
                 $viewfile = 'weapp/Mbackend/template/admin/login_zy_m.htm';
             }
             // 是否配置微信公众号登录信息
-            $wechat = tpSetting("OpenMinicode.conf_wechat") ? json_decode(tpSetting("OpenMinicode.conf_wechat"), true) : [];
-            $this->assign('wechat', $wechat);
+            $mbackendLogic = new \weapp\Mbackend\logic\MbackendLogic;
+            if (method_exists($mbackendLogic, 'login_assign')) {
+                $mbackendLogic->login_assign($assign_data);
+            } else {
+                $wechat = tpSetting("OpenMinicode.conf_wechat") ? json_decode(tpSetting("OpenMinicode.conf_wechat"), true) : [];
+                $this->assign('wechat', $wechat);
+            }
+            $this->assign($assign_data);
             return $this->fetch("{$viewfile}");
         } else {
+            // 两步验证
+            if (function_exists('double_login_logic')) {
+                $data = double_login_logic('login_view');
+                if (!empty($data['viewfile'])) $viewfile = $data['viewfile'];
+                if (!empty($data['assign_data'])) $assign_data = array_merge($assign_data, $data['assign_data']);
+            }
+            $this->assign($assign_data);
             return $this->fetch(":{$viewfile}");
         }
     }
@@ -1520,21 +1562,40 @@ EOF;
     // 微信公众号扫码关注
     public function wechat_followed()
     {
-        $admin_id = input('post.admin_id/d', 0);
-        // 默认授权页面链接
-        $defaultAuthorize = request()->domain() . ROOT_DIR . '/index.php?m=api&c=Ajax&a=defaultAuthorize&admin_id=' . $admin_id;
-        // 二维码图片完整目录
-        $defaultAuthorizePic = UPLOAD_PATH . 'system/wechat_followed/' . $admin_id . '/';
-        // 创建文件夹
-        @mkdir($defaultAuthorizePic, 0777, true);
-        // 二维码图片完整链接
-        $defaultAuthorizePic = $defaultAuthorizePic . md5($admin_id) . '.png';
-        // 生成二维码
-        vendor('wechatpay.phpqrcode.phpqrcode');
-        $qrcode = new \QRcode;
-        $qrcode->png($defaultAuthorize, $defaultAuthorizePic);
-        $defaultAuthorizePic = handle_subdir_pic(get_default_pic('/' . $defaultAuthorizePic, true));
-        $this->success("获取成功", $defaultAuthorizePic);
+        $opt = input('param.opt/s');
+        if ('bind' == $opt) {
+            $admin_id = input('post.admin_id/d', 0);
+            // 默认授权页面链接
+            $defaultAuthorize = request()->domain() . ROOT_DIR . '/index.php?m=api&c=Ajax&a=defaultAuthorize&admin_id=' . $admin_id;
+            // 二维码图片完整目录
+            $defaultAuthorizePic = UPLOAD_PATH . 'system/wechat_followed/' . $admin_id . '/';
+            // 创建文件夹
+            @mkdir($defaultAuthorizePic, 0777, true);
+            // 二维码图片完整链接
+            $defaultAuthorizePic = $defaultAuthorizePic . md5($admin_id) . '.png';
+            // 生成二维码
+            vendor('wechatpay.phpqrcode.phpqrcode');
+            $qrcode = new \QRcode;
+            $qrcode->png($defaultAuthorize, $defaultAuthorizePic);
+            $defaultAuthorizePic = handle_subdir_pic(get_default_pic('/' . $defaultAuthorizePic, true));
+            $this->success("获取成功", $defaultAuthorizePic);
+        }
+        else if ('unbind' == $opt) {
+            $admin_id = input('post.admin_id/d', 0);
+            $update = [
+                'wechat_appid' => '',
+                'wechat_followed' => 0,
+                'wechat_open_id' => '',
+                'union_id' => '',
+                'update_time' => getTime(),
+            ];
+            $r = Db::name('admin')->where('admin_id', $admin_id)->update($update);
+            if ($r !== false) {
+                Db::name('admin_wxlogin')->where(['admin_id'=>$admin_id, 'type'=>3])->delete();
+                $this->success("操作成功");
+            }
+            $this->error("操作失败");
+        }
     }
 
     public function polling_wechat_followed()
@@ -1550,11 +1611,16 @@ EOF;
                     $userInfo = json_decode(httpRequest($userInfo), true);
                     // 关注则执行关联关注
                     if (!empty($userInfo['subscribe']) && $userInfo['openid'] == $admin['wechat_open_id']) {
+                        $wechat = tpSetting("OpenMinicode.conf_wechat") ? json_decode(tpSetting("OpenMinicode.conf_wechat"), true) : [];
                         $update = [
+                            'wechat_appid' => empty($wechat['appid']) ? '' : $wechat['appid'],
                             'wechat_followed' => 1,
+                            'union_id' => empty($userInfo['unionid']) ? '' : $userInfo['unionid'],
                             'update_time' => getTime(),
                         ];
                         Db::name('admin')->where('admin_id', $admin_id)->update($update);
+                        // 后台扫码登录插件
+                        model('AdminWxlogin')->save_data($admin_id, 3, $userInfo);
                         // 显示成功信息
                         $this->success("关注公众号成功！", null, ['code' => 1]);
                     }

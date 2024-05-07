@@ -134,6 +134,12 @@ class TagField extends Base
 
                     }
                 }
+            } else if ('file' == $dtype) {
+                if (stristr($parseStr, '|')) {
+                    $arr = explode('|', $parseStr);
+                    $parseStr = $arr[0];
+                    $parseStr = ROOT_DIR . "/index.php?m=home&c=View&a=custom_download_file&aid={$aid}&field={$fieldname}";
+                }
             }
         }
         /*--end*/

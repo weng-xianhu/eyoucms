@@ -30,7 +30,7 @@ class TagHotwords extends Base
      * 获取网站搜索的热门关键字
      * @author wengxianhu by 2018-4-20
      */
-    public function getHotwords($num = 0, $subday = 0, $maxlength = 0, $orderby = '', $ordermode = '')
+    public function getHotwords($num = 0, $subday = 0, $maxlength = 0, $orderby = '', $ordermode = '', $screen = '')
     {
         $nowtime = getTime();
         if(empty($subday)) $subday = 365;
@@ -41,8 +41,13 @@ class TagHotwords extends Base
         $mintime = $nowtime - ($subday * 24 * 3600);
         $orderby = $this->getOrderBy($orderby, $ordermode, true);
 
+        $where = [];
+        if ('is_hot' == $screen) {
+            $where['is_hot'] = 1;
+        }
+        $where[] = Db::raw("update_time > {$mintime} AND length(word) < {$maxlength}");
         $result = Db::name('search_word')->field('word,searchNum')
-            ->where("update_time > {$mintime} AND length(word) < {$maxlength}")
+            ->where($where)
             ->orderRaw($orderby)
             ->limit($num)
             ->select();
